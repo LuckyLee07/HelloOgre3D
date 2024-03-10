@@ -1118,7 +1118,7 @@ void Sandbox::SetProfileTime(const ProfileTime profile, const long long time)
 {
     if (profile < PROFILE_TIME_COUNT)
     {
-        profileTimes_[profile] = time;
+        //profileTimes_[profile] = time;
     }
 }
 

@@ -179,7 +179,7 @@ void SandboxApplication::Initialize()
 
     lastUpdateTimeInMicro_ = timer_.getMilliseconds();
 
-    AddResourceLocation("../../../src/demo_framework/script");
+    //AddResourceLocation("../../../src/demo_framework/script");
 
     Gorilla::Silverback* mSilverback = new Gorilla::Silverback();
     mSilverback->loadAtlas("fonts/dejavu/dejavu");

@@ -26,5 +26,7 @@
 --------------------------------------------------------------------------------
 SandboxDemos = {
 	-- Sandbox showing all the available assets.
+  "chapter_0_helloworld",
+
 	"chapter_1_introduction",
 };
