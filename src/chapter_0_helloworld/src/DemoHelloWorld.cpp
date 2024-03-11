@@ -18,33 +18,9 @@ DemoHelloWorld::~DemoHelloWorld()
 {
 }
 
-void DemoHelloWorld::customInit()
-{
-	const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
-
-	GetRenderWindow()->getViewport(0)->setBackgroundColour(ambient);
-	GetSceneManager()->setAmbientLight(ambient);
-	GetSceneManager()->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-
-	GetCamera()->setFarClipDistance(1000.0f);
-	GetCamera()->setNearClipDistance(0.1f);
-	GetCamera()->setAutoAspectRatio(true);
-
-	GetRenderWindow()->setDeactivateOnFocusChange(false);
-
-	Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
-}
-
 void DemoHelloWorld::Initialize()
 {
-    //SandboxApplication::Initialize();
-	this->customInit();
-
-	//Gorilla::Silverback* mSilverback = new Gorilla::Silverback();
-	//AddResourceLocation("../../../src/demo_framework/script");
-    //AddResourceLocation("../../../src/chapter_1_introduction/script");
-
-    //CreateSandbox("Sandbox.lua");
+    Application::Initialize();
 
 	GetCamera()->setPosition(Ogre::Vector3(7, 5, -18));
 	const Ogre::Quaternion rotation = LuaScriptUtilities::QuaternionFromRotationDegrees(-160, 0, -180);

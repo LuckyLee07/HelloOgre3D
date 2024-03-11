@@ -11,7 +11,8 @@ Application::Application(const Ogre::String& applicationTitle)
     sceneManager_(NULL),
     renderWindow_(NULL),
     resourceConfig_(Ogre::StringUtil::BLANK),
-    applicationTitle_(applicationTitle)
+    applicationTitle_(applicationTitle),
+    obfuscatedZipFactory_(NULL)
 {
 }
 
@@ -105,7 +106,19 @@ Ogre::SceneManager* Application::GetSceneManager()
 
 void Application::Initialize()
 {
+    const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
 
+    GetRenderWindow()->getViewport(0)->setBackgroundColour(ambient);
+    GetSceneManager()->setAmbientLight(ambient);
+    GetSceneManager()->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+
+    GetCamera()->setFarClipDistance(1000.0f);
+    GetCamera()->setNearClipDistance(0.1f);
+    GetCamera()->setAutoAspectRatio(true);
+
+    GetRenderWindow()->setDeactivateOnFocusChange(false);
+
+    Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
 }
 
 void Application::LoadResources(void)

@@ -13,9 +13,6 @@ public:
     virtual void Initialize();
 
     virtual void Update();
-
-private:
-	void customInit();
 };
 
 #endif  // __DEMO_HELLOWORLD_H__
