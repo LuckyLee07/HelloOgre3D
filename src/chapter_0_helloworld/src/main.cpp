@@ -1,3 +1,4 @@
+
 #include "chapter_0_helloworld/include/DemoHelloWorld.h"
 #include "ogre3d/include/OgreException.h"
 
@@ -14,11 +15,9 @@ int main()
     }
     catch(Ogre::Exception& error)
     {
-        MessageBox(
-            NULL,
-            error.getFullDescription().c_str(),
-            "An exception has occurred!",
-            MB_OK | MB_ICONERROR | MB_TASKMODAL);
+		const char* pTitle = error.getFullDescription().c_str();
+		const char* pCaption = "An exception has occurred!";
+        MessageBox(NULL, pTitle, pCaption, MB_OK | MB_ICONERROR | MB_TASKMODAL);
     }
 
     return 0;

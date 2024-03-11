@@ -1,12 +1,12 @@
-#ifndef CHAPTER_0_HELLOWORLD_H
-#define CHAPTER_0_HELLOWORLD_H
+#ifndef __DEMO_HELLOWORLD_H__
+#define __DEMO_HELLOWORLD_H__
 
-#include "demo_framework/include/SandboxApplication.h"
+#include "Application.h"
 
-class DemoHelloWorld : public SandboxApplication
+class DemoHelloWorld : public Application
 {
 public:
-    DemoHelloWorld(void);
+	DemoHelloWorld(void);
 
     virtual ~DemoHelloWorld(void);
 
@@ -15,8 +15,7 @@ public:
     virtual void Update();
 
 private:
-    DemoHelloWorld(const DemoHelloWorld&);
-    DemoHelloWorld& operator=(const DemoHelloWorld&);
+	void customInit();
 };
 
-#endif  // CHAPTER_0_HELLOWORLD_H
+#endif  // __DEMO_HELLOWORLD_H__
