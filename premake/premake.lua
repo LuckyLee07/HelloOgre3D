@@ -23,20 +23,6 @@ solution( "HelloOgre3D" )
 	editandcontinue "Off"
 	staticruntime  "On"
 
-	vpaths( {
-		["include/*"] = {
-			"src/%{prj.name}/include/**.h",
-			"src/%{prj.name}/include/**.hpp"
-		},
-		["script/*"] = {
-			"src/%{prj.name}/script/**.lua"
-		},
-		["src/*"] = {
-			"src/%{prj.name}/src/**.c",
-			"src/%{prj.name}/src/**.cpp"
-		}
-	} )
-
 -- platform(windows/linux) specific configurations
 	configuration( "windows" )
 -- fatal linker warnings
@@ -92,7 +78,7 @@ solution( "HelloOgre3D" )
 -- freeimage v3.15.4 static library
 	project( "freeimage" )
 		kind( "StaticLib" )
-		location( "../build/projects/freeimage" )
+		location( "../build/external/freeimage" )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4127\"", "/wd\"4189\"", "/wd\"4244\"",
 			"/wd\"4611\"", "/wd\"4389\"", "/wd\"4324\"", "/wd\"4702\"",
@@ -127,7 +113,7 @@ solution( "HelloOgre3D" )
 -- freetype v2.4.12 static library
 	project( "freetype" )
 		kind( "StaticLib" )
-		location( "../build/projects/freetype" )
+		location( "../build/external/freetype" )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4244\"", "/wd\"4245\"", "/wd\"4701\"",
 			"/wd\"4267\"", "/wd\"4324\"", "/wd\"4306\"", "/wd\"4703\""
@@ -190,7 +176,7 @@ solution( "HelloOgre3D" )
 -- libjpeg 8d static library
 	project( "libjpeg" )
 		kind( "StaticLib" )
-		location( "../build/projects/libjpeg" )
+		location( "../build/external/libjpeg" )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4244\"", "/wd\"4127\"", "/wd\"4267\""
 		} )
@@ -200,7 +186,7 @@ solution( "HelloOgre3D" )
 -- libopenjpeg v1.5.1 static library
 	project( "libopenjpeg" )
 		kind( "StaticLib" )
-		location( "../build/projects/libopenjpeg" )
+		location( "../build/external/libopenjpeg" )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4244\"", "/wd\"4127\"", "/wd\"4267\"",
 			"/wd\"4701\"", "/wd\"4706\""
@@ -214,7 +200,7 @@ solution( "HelloOgre3D" )
 -- libpng v1.5.13 static library
 	project( "libpng" )
 		kind( "StaticLib" )
-		location( "../build/projects/libpng" )
+		location( "../build/external/libpng" )
 		buildoptions( { "/wd\"4127\"" } )
 		includedirs( { "../src/external//zlib/include/" } )
 		files( { "../src/external/libpng/include/**.h", "../src/external/libpng/src/**.c" } )
@@ -223,7 +209,7 @@ solution( "HelloOgre3D" )
 -- libraw v1.5.13 static library
 	project( "libraw" )
 		kind( "StaticLib" )
-		location( "../build/projects/libraw" )
+		location( "../build/external/libraw" )
 		buildoptions( {
 			"/wd\"4244\"", "/wd\"4189\"", "/wd\"4101\"", "/wd\"4706\"",
 			"/wd\"4100\"", "/wd\"4018\"", "/wd\"4305\"", "/wd\"4309\"",
@@ -242,7 +228,7 @@ solution( "HelloOgre3D" )
 -- libtiff4 v4.0.3 static library
 	project( "libtiff4" )
 		kind( "StaticLib" )
-		location( "../build/projects/libtiff4" )
+		location( "../build/external/libtiff4" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4244\"", "/wd\"4706\"", "/wd\"4702\"",
 			"/wd\"4701\"", "/wd\"4018\"", "/wd\"4306\"", "/wd\"4305\"",
@@ -258,7 +244,7 @@ solution( "HelloOgre3D" )
 -- ogre3d v1.8.1 static library
 	project( "ogre3d" )
 		kind( "StaticLib" )
-		location( "../build/projects/ogre3d" )
+		location( "../build/external/ogre3d" )
 		pchheader( "OgreStableHeaders.h" )
 		pchsource( "../src/external/ogre3d/src/OgrePrecompiledHeaders.cpp" )
 		buildoptions( {
@@ -301,7 +287,7 @@ solution( "HelloOgre3D" )
 -- ogre3d direct3d9 plugin v1.8.1 static library
 	project( "ogre3d_direct3d9" )
 		kind( "StaticLib" )
-		location( "../build/projects/ogre3d_direct3d9" )
+		location( "../build/external/ogre3d_direct3d9" )
 		includedirs( { "../src/external/ogre3d/include/" } )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4189\"", "/wd\"4018\"", "/wd\"4193\"",
@@ -325,7 +311,7 @@ solution( "HelloOgre3D" )
 -- ogre3d particlefx plugin v1.8.1 static library
 	project( "ogre3d_particlefx" )
 		kind( "StaticLib" )
-		location( "../build/projects/ogre3d_particlefx" )
+		location( "../build/external/ogre3d_particlefx" )
 		includedirs( { "../src/external/ogre3d/include/" } )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4189\"", "/wd\"4018\"", "/wd\"4193\"",
@@ -349,7 +335,7 @@ solution( "HelloOgre3D" )
 -- ogre3d procedural v0.2 static library
 	project( "ogre3d_procedural" )
 		kind( "StaticLib" )
-		location( "../build/projects/ogre3d_procedural" )
+		location( "../build/external/ogre3d_procedural" )
 		pchheader( "ProceduralStableHeaders.h" )
 		pchsource( "../src/external/ogre3d_procedural/src/ProceduralPrecompiledHeaders.cpp" )
 		includedirs( { "../src/external/ogre3d/include/" } )
@@ -367,7 +353,7 @@ solution( "HelloOgre3D" )
 -- openexr v1.5.13 static library
 	project( "openexr" )
 		kind( "StaticLib" )
-		location( "../build/projects/openexr" )
+		location( "../build/external/openexr" )
 		buildoptions( {
 			"/wd\"4244\"", "/wd\"4305\"", "/wd\"4100\"", "/wd\"4127\"",
 			"/wd\"4245\"", "/wd\"4512\"", "/wd\"4706\"", "/wd\"4267\"",
@@ -389,7 +375,7 @@ solution( "HelloOgre3D" )
 -- zlib v1.2.8 static library
 	project( "zlib" )
 		kind( "StaticLib" )
-		location( "../build/projects/zlib" )
+		location( "../build/external/zlib" )
 		buildoptions( {
 			"/wd\"4131\"", "/wd\"4996\"", "/wd\"4244\"", "/wd\"4127\""
 		} )
@@ -399,7 +385,7 @@ solution( "HelloOgre3D" )
 -- zziplib v0.13.62 static library
 	project( "zzip" )
 		kind( "StaticLib" )
-		location( "../build/projects/zzip" )
+		location( "../build/external/zzip" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4996\"", "/wd\"4706\"", "/wd\"4244\"",
 			"/wd\"4267\"", "/wd\"4028\"", "/wd\"4305\""

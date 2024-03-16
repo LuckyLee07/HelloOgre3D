@@ -1,7 +1,7 @@
 function CreateGameProject( projectName )
   project( projectName )
     kind( "ConsoleApp" )
-    location( "../build/projects/%{prj.name}" )
+    location( "../build/%{prj.name}" )
     debugdir( "$(OutDir)" )
     -- increase precompiled header allocation limit
     buildoptions( { "/Zm256" } )
@@ -38,26 +38,29 @@ function CreateGameProject( projectName )
       linkoptions( "OgreWin32Resources.res" )
     configuration( { "windows", "x32", "Debug" } )
       libdirs( {
-        "\"../build/projects/ogre3d/obj/x32/Debug\"",
+        "\"../build/external/ogre3d/obj/x32/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x32", "Release" } )
       libdirs( {
-        "\"../build/projects/ogre3d/obj/x32/Release\"",
+        "\"../build/external/ogre3d/obj/x32/Release\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x64", "Debug" } )
       libdirs( {
-        "\"../build/projects/ogre3d/obj/x64/Debug\"",
+        "\"../build/external/ogre3d/obj/x64/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( { "windows", "x64", "Release" } )
       libdirs( {
-        "\"../build/projects/ogre3d/obj/x64/Release\"",
+        "\"../build/external/ogre3d/obj/x64/Release\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( "*" )
     includedirs( {
+      "../src/%{prj.name}/",
+      "../src/%{prj.name}/game",
+      "../src/%{prj.name}/sandbox",     
       "../src/external/zzip/include/",
       "../src/external/ogre3d/include/",
       "../src/external/ogre3d_direct3d9/include/",
