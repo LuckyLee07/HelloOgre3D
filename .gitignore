@@ -1,4 +1,6 @@
-/lib/*
-/bin/*
 /build/*
-/decoda/*
+/bin/*.log
+/bin/*.exe
+/bin/*.pdb
+/libs/*.lib
+/libs/*.pdb
