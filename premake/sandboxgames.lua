@@ -20,7 +20,9 @@ function CreateGameProject( projectName )
       "ogre3d_procedural",
       "openexr",
       "zlib",
-      "zzip"
+      "zzip",
+      "lua",
+      "tolua",
     } )
     configuration( { "windows" } )
       -- add the directx include directory
@@ -60,7 +62,9 @@ function CreateGameProject( projectName )
     includedirs( {
       "../src/%{prj.name}/",
       "../src/%{prj.name}/game",
-      "../src/%{prj.name}/sandbox",     
+      "../src/%{prj.name}/sandbox",
+      "../src/external/lua/lua",
+      "../src/external/lua/tolua",
       "../src/external/zzip/include/",
       "../src/external/ogre3d/include/",
       "../src/external/ogre3d_direct3d9/include/",

@@ -2,8 +2,13 @@
 #include "DemoHelloWorld.h"
 #include "Ogre.h"
 #include "Procedural.h"
+#include "ScriptLuaVM.h"
+#include "LuaInterface.h"
+#include "CCLogSystem.h"
 
 #define DEFAULT_MATERIAL "White"
+
+extern int tolua_open_all(lua_State* tolua_S);
 
 static Ogre::Quaternion QuaternionFromRotationDegrees(
 	Ogre::Real xRotation, Ogre::Real yRotation, Ogre::Real zRotation)
@@ -55,6 +60,20 @@ DemoHelloWorld::~DemoHelloWorld()
 void DemoHelloWorld::Initialize()
 {
     Application::Initialize();
+
+	// 设置ToLua对象 
+	ScriptLuaVM* pScriptVM = ScriptLuaVM::GetInstance();
+	tolua_open_all(pScriptVM->getLuaState());
+
+	// 设置lua可用的c++对象 
+	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
+
+	pScriptVM->callFile("res/scripts/script_init.lua");
+	pScriptVM->callString("sayhello('Hello', 11, 99)");
+	int result = 0;
+	pScriptVM->callFunction("sayhello", "sis>i", "HelloWorld", 11, "hh", &result);
+	pScriptVM->callFunction("sayhello", "sii>i", "HelloWorld", 11, 99, &result);
+	CCLOG_INFO("Fxkk======>>> %d", result);
 
 	GetCamera()->setPosition(Ogre::Vector3(7, 5, -18));
 	const Ogre::Quaternion rotation = QuaternionFromRotationDegrees(-160, 0, -180);

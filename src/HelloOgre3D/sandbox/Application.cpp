@@ -27,6 +27,23 @@ Application::~Application()
     }
 }
 
+void Application::Initialize()
+{
+    const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
+
+    GetRenderWindow()->getViewport(0)->setBackgroundColour(ambient);
+    GetSceneManager()->setAmbientLight(ambient);
+    GetSceneManager()->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+
+    GetCamera()->setFarClipDistance(1000.0f);
+    GetCamera()->setNearClipDistance(0.1f);
+    GetCamera()->setAutoAspectRatio(true);
+
+    GetRenderWindow()->setDeactivateOnFocusChange(false);
+
+    Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
+}
+
 void Application::ChooseSceneManager()
 {
     // The sandbox is only built with the generic scene manager.
@@ -102,23 +119,6 @@ Ogre::RenderWindow* Application::GetRenderWindow()
 Ogre::SceneManager* Application::GetSceneManager()
 {
     return sceneManager_;
-}
-
-void Application::Initialize()
-{
-    const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
-
-    GetRenderWindow()->getViewport(0)->setBackgroundColour(ambient);
-    GetSceneManager()->setAmbientLight(ambient);
-    GetSceneManager()->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-
-    GetCamera()->setFarClipDistance(1000.0f);
-    GetCamera()->setNearClipDistance(0.1f);
-    GetCamera()->setAutoAspectRatio(true);
-
-    GetRenderWindow()->setDeactivateOnFocusChange(false);
-
-    Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
 }
 
 void Application::LoadResources(void)

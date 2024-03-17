@@ -23,6 +23,8 @@ solution( "HelloOgre3D" )
 	editandcontinue "Off"
 	staticruntime  "On"
 
+	buildoptions({ "/wd\"4819\"" })
+
 -- platform(windows/linux) specific configurations
 	configuration( "windows" )
 -- fatal linker warnings
@@ -393,3 +395,23 @@ solution( "HelloOgre3D" )
 		includedirs( { "../src/external/zlib/include/" } )
 		files( { "../src/external/zzip/include/**.h", "../src/external/zzip/src/**.c" } )
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
+
+-- lua v5.1.4 static library
+	project( "lua" )
+		kind( "StaticLib" )
+		location( "../build/external/lua/lua" )
+		buildoptions( {
+			"/wd\"4131\"", "/wd\"4996\"", "/wd\"4244\"", "/wd\"4127\""
+		} )
+		files( { "../src/external/lua/lua/**.h", "../src/external/lua/lua/**.c" } )
+		defines( { "WIN32" } )
+
+-- tolua v1.0.92 static library
+	project( "tolua" )
+		kind( "StaticLib" )
+		location( "../build/external/lua/tolua" )
+		buildoptions( {
+			"/wd\"4131\"", "/wd\"4996\"", "/wd\"4244\"", "/wd\"4127\""
+		} )
+		includedirs( { "../src/external/lua/lua", "../src/external/lua/tolua"} )
+		files( { "../src/external/lua/tolua/**.h", "../src/external/lua/tolua/**.c" } )
