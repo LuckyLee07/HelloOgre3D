@@ -9,7 +9,7 @@ extern "C" {
 #include <iostream>
 #include "tolua++.h"
 #include "FileManager.h"
-#include "CCLogSystem.h"
+#include "LogSystem.h"
 
 // LuaStack自动清理
 class LuaStackBackup
@@ -276,6 +276,16 @@ void ScriptLuaVM::showLuaError(lua_State* L, const char* msg)
 	
 	//弹出lua报错弹窗
 	//pop_MessageBox(errStr.c_str(), title);
+}
+
+static ScriptLuaVM* s_ScriptLuaVM = nullptr;
+ScriptLuaVM* GetScriptLuaVM()
+{
+	if (s_ScriptLuaVM == nullptr)
+	{
+		s_ScriptLuaVM = new ScriptLuaVM();
+	}
+	return s_ScriptLuaVM;
 }
 
 

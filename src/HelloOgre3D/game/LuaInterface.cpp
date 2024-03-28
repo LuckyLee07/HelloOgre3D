@@ -1,5 +1,5 @@
 #include "LuaInterface.h"
-#include "CCLogSystem.h"
+#include "LogSystem.h"
 #include <windows.h>
 #include <tchar.h>
 #include <codecvt>

@@ -34,6 +34,8 @@ private:
 	lua_State *m_pState;
 };
 
+ScriptLuaVM* GetScriptLuaVM(); // 获取单例
+
 //------------require自定义loader_Lua------------
 extern int myLuaLoader(lua_State * m_state);
 extern void addLuaLoader(lua_State* L, lua_CFunction func);

@@ -19,7 +19,7 @@ const int CREATE_PMODE = S_IREAD | S_IWRITE;
 #define O_BINARY (0)
 const int CREATE_PMODE = S_IRWXU | S_IRWXG | S_IRWXO;
 #endif
-#include "CCLogSystem.h"
+#include "LogSystem.h"
 
 //int g_openfiles = 0;
 FileAutoClose::FileAutoClose(const std::string &path, int flags)

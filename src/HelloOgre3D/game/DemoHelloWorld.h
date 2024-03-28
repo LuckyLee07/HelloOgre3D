@@ -13,6 +13,8 @@ public:
     virtual void Initialize();
 
     virtual void Update();
+
+    virtual void Run();
 };
 
 #endif  // __DEMO_HELLOWORLD_H__

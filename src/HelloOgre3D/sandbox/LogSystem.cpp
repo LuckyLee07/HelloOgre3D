@@ -1,4 +1,4 @@
-#include "CCLogSystem.h"
+#include "LogSystem.h"
 #include "OgreLogManager.h"
 
 namespace Fancy
@@ -8,7 +8,7 @@ namespace Fancy
 	static const char *s_pFuncName;
 	static Ogre::LogMessageLevel s_LogLevel;
 
-	void CCLogSetParam(const char *filename, const char *funcname, int line, Ogre::LogMessageLevel level)
+	void LogSetParam(const char *filename, const char *funcname, int line, Ogre::LogMessageLevel level)
 	{
 		s_iLine = line;
 		s_LogLevel = level;
@@ -66,7 +66,7 @@ namespace Fancy
 		return "--";
 	}
 
-	void CCLogMessage(const char *format, ...)
+	void LogMessage(const char *format, ...)
 	{
 		if (format == NULL) format = "";
 

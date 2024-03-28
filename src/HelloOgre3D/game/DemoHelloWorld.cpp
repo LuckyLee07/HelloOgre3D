@@ -4,20 +4,12 @@
 #include "Procedural.h"
 #include "ScriptLuaVM.h"
 #include "LuaInterface.h"
-#include "CCLogSystem.h"
+#include "LogSystem.h"
+#include "SandboxDef.h"
 
 #define DEFAULT_MATERIAL "White"
 
 extern int tolua_open_all(lua_State* tolua_S);
-
-static Ogre::Quaternion QuaternionFromRotationDegrees(
-	Ogre::Real xRotation, Ogre::Real yRotation, Ogre::Real zRotation)
-{
-	Ogre::Matrix3 matrix;
-	matrix.FromEulerAnglesXYZ(
-		Ogre::Degree(xRotation), Ogre::Degree(yRotation), Ogre::Degree(zRotation));
-	return Ogre::Quaternion(matrix);
-}
 
 Ogre::SceneNode* CreatePlane(
 	Ogre::SceneNode* const parentNode,
@@ -59,10 +51,8 @@ DemoHelloWorld::~DemoHelloWorld()
 
 void DemoHelloWorld::Initialize()
 {
-    Application::Initialize();
-
 	// 设置ToLua对象 
-	ScriptLuaVM* pScriptVM = ScriptLuaVM::GetInstance();
+	ScriptLuaVM* pScriptVM = GetScriptLuaVM();
 	tolua_open_all(pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
@@ -75,16 +65,17 @@ void DemoHelloWorld::Initialize()
 	pScriptVM->callFunction("sayhello", "sii>i", "HelloWorld", 11, 99, &result);
 	CCLOG_INFO("Fxkk======>>> %d", result);
 
-	GetCamera()->setPosition(Ogre::Vector3(7, 5, -18));
+	GetSandboxMgr()->GetCamera()->setPosition(Ogre::Vector3(7, 5, -18));
 	const Ogre::Quaternion rotation = QuaternionFromRotationDegrees(-160, 0, -180);
-	GetCamera()->setOrientation(rotation);
+	GetSandboxMgr()->GetCamera()->setOrientation(rotation);
 
 	const Ogre::Quaternion orientation = QuaternionFromRotationDegrees(-160, 0, -180);
 
-	Ogre::SceneNode* const pSandboxRootNode = GetSceneManager()->getRootSceneNode()->createChildSceneNode();
+	Ogre::SceneNode* const pSandboxRootNode = GetSandboxMgr()->GetSceneManager()->getRootSceneNode();
 	pSandboxRootNode->getCreator()->setSkyBox(true, "ThickCloudsWaterSkyBox", 5000.0f, true, orientation);
 
 	pSandboxRootNode->getCreator()->setAmbientLight(Ogre::ColourValue(0.3, 0.3, 0.3));
+
 	Ogre::SceneNode* const light = pSandboxRootNode->createChildSceneNode();
 	Ogre::Light* const lightEntity = pSandboxRootNode->getCreator()->createLight();
 
@@ -114,5 +105,15 @@ void DemoHelloWorld::Initialize()
 
 void DemoHelloWorld::Update()
 {
-    //SandboxApplication::Update();
+    Application::Update();
+}
+
+void DemoHelloWorld::Run()
+{
+	if (!Application::Setup()) 
+		return;
+	
+	this->Initialize();
+
+	Application::Draw();
 }
