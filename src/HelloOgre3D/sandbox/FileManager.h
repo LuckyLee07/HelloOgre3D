@@ -29,7 +29,7 @@ private:
 	int m_FP;
 };
 
-class FileManager : public Singleton<FileManager>
+class FileManager : public Fancy::Singleton<FileManager>
 {
 public:
 	FileManager(void);

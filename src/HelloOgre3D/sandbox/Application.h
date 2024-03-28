@@ -1,13 +1,13 @@
 #ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
-#include "OgreString.h"
-#include "SandboxManager.h"
+#include <string>
 
+class SandboxManager;
 class Application
 {
 public:
-	Application(const Ogre::String& applicationTitle = "");
+	Application(const std::string& appTitle = "");
 
     virtual ~Application();
 
@@ -19,6 +19,8 @@ public:
     
     virtual void Update();
 
-};  // class Application
+private:
+    SandboxManager* m_pSandboxManager;
+};
 
 #endif  // __APPLICATION_H__

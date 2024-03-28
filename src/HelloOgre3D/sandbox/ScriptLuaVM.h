@@ -10,7 +10,7 @@ extern "C" {
 #include <lua.h>
 }
 //struct lua_State;
-class ScriptLuaVM : public Singleton<ScriptLuaVM>
+class ScriptLuaVM : public Fancy::Singleton<ScriptLuaVM>
 {
 public:
 	ScriptLuaVM(void);

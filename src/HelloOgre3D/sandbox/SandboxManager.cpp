@@ -7,6 +7,8 @@
 #include "OgreD3D9Plugin.h"
 #include "OgreParticleFXPlugin.h"
 
+using namespace Ogre;
+
 SandboxManager::SandboxManager() 
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr)
@@ -15,24 +17,30 @@ SandboxManager::SandboxManager()
 
 SandboxManager::~SandboxManager()
 {
+    delete m_pRoot;
 }
 
-Ogre::Camera* SandboxManager::GetCamera() const
+Ogre::Camera* SandboxManager::getCamera()
 {
 	return m_pCamera;
 }
 
-Ogre::RenderWindow* SandboxManager::GetRenderWindow() const
+RenderWindow* SandboxManager::getRenderWindow()
 {
 	return m_pRenderWindow;
 }
 
-Ogre::SceneManager* SandboxManager::GetSceneManager() const
+SceneManager* SandboxManager::getSceneManager()
 {
 	return m_pSceneManager;
 }
 
-void SandboxManager::SetAppTitle(const Ogre::String& appTitle)
+SceneNode* SandboxManager::getRootSceneNode()
+{
+    return m_pSceneManager->getRootSceneNode();
+}
+
+void SandboxManager::SetAppTitle(const String& appTitle)
 {
     m_applicationTitle = appTitle;
 }

@@ -1,1 +1,2 @@
 $cfile "game/LuaInterface.h"
+$cfile "game/OgreWrapper.h"

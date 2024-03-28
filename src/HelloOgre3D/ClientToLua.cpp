@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Mar 17 11:15:24 2024.
+** Generated automatically by tolua++-1.0.92 on Thu Mar 28 23:30:03 2024.
 */
 
 #ifndef __cplusplus
@@ -14,11 +14,14 @@
 TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 
 #include "game/LuaInterface.h"
+#include "game/OgreWrapper.h"
 
 /* function to register type */
 static void tolua_reg_types (lua_State* tolua_S)
 {
  tolua_usertype(tolua_S,"LuaInterface");
+ tolua_usertype(tolua_S,"OgreWrapper");
+ tolua_usertype(tolua_S,"Ogre::SceneNode");
 }
 
 /* method: log of class  LuaInterface */
@@ -54,6 +57,42 @@ static int tolua_ClientToLua_LuaInterface_log00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: CreatePlane of class  OgreWrapper */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_OgreWrapper_CreatePlane00
+static int tolua_ClientToLua_OgreWrapper_CreatePlane00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"OgreWrapper",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  OgreWrapper* self = (OgreWrapper*)  tolua_tousertype(tolua_S,1,0);
+  int length = ((int)  tolua_tonumber(tolua_S,2,0));
+  int width = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreatePlane'", NULL);
+#endif
+  {
+   Ogre::SceneNode* tolua_ret = (Ogre::SceneNode*)  self->CreatePlane(length,width);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::SceneNode");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'CreatePlane'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* Open function */
 TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
 {
@@ -64,6 +103,10 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"LuaInterface","LuaInterface","",NULL);
   tolua_beginmodule(tolua_S,"LuaInterface");
    tolua_function(tolua_S,"log",tolua_ClientToLua_LuaInterface_log00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"OgreWrapper","OgreWrapper","",NULL);
+  tolua_beginmodule(tolua_S,"OgreWrapper");
+   tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_OgreWrapper_CreatePlane00);
   tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

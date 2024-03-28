@@ -2,7 +2,6 @@
 #define __SANDBOX_MANAGER__
 
 #include "Singleton.h"
-#include "BaseEntity.h"
 #include <unordered_map>
 #include "OgreString.h"
 
@@ -15,7 +14,7 @@ namespace Ogre
 }
 class ObfuscatedZipFactory;
 
-class SandboxManager : public Singleton<SandboxManager>
+class SandboxManager : public Fancy::Singleton<SandboxManager>
 {
 public:
 	SandboxManager(void);
@@ -30,9 +29,10 @@ public:
 	void SetAppTitle(const Ogre::String& appTitle);
 
 public:
-	Ogre::Camera* GetCamera() const;
-	Ogre::SceneManager* GetSceneManager() const;
-	Ogre::RenderWindow* GetRenderWindow() const;
+	Ogre::Camera* getCamera();
+	Ogre::SceneManager* getSceneManager();
+	Ogre::RenderWindow* getRenderWindow();
+	Ogre::SceneNode* getRootSceneNode();
 
 private:
 	void ChooseSceneManager();
@@ -42,7 +42,6 @@ private:
 	void LoadResources();
 	void SetupResources();
 	
-
 private:
 	Ogre::Root* m_pRoot;
 	Ogre::Camera* m_pCamera;

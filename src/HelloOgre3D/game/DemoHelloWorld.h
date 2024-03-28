@@ -10,11 +10,13 @@ public:
 
     virtual ~DemoHelloWorld(void);
 
-    virtual void Initialize();
-
     virtual void Update();
 
     virtual void Run();
+
+private:
+    void InitLuaEnv();
+    void InitGameScene();
 };
 
 #endif  // __DEMO_HELLOWORLD_H__

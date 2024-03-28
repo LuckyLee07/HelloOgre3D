@@ -5,7 +5,7 @@
 #include "Singleton.h"
 
 class LuaInterface : //tolua_exports
-	public Singleton<LuaInterface>
+	public Fancy::Singleton<LuaInterface>
 { //tolua_exports
 public:
 	LuaInterface();

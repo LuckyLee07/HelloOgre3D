@@ -1,32 +1,40 @@
 #include "Application.h"
 #include "SandboxDef.h"
 #include "SandboxManager.h"
+#include "OgreWrapper.h"
 
-Application::Application(const Ogre::String& applicationTitle)
+Application::Application(const std::string& appTitle)
 {
-    GetSandboxMgr()->SetAppTitle(applicationTitle);
+    m_pSandboxManager = GetSandboxMgr();
+    m_pSandboxManager->SetAppTitle(appTitle);
 }
 
 Application::~Application()
 {
+    delete m_pSandboxManager;
 }
 
 bool Application::Setup()
 {
-    return GetSandboxMgr()->Setup();
+    bool setupSucc = m_pSandboxManager->Setup();
+    if (!setupSucc) return false;
+
+    g_OgreWrapper = new OgreWrapper(m_pSandboxManager->getSceneManager());
+
+    return true;
 }
 
 void Application::Cleanup()
 {
-    GetSandboxMgr()->Cleanup();
+    m_pSandboxManager->Cleanup();
 }
 
 void Application::Draw()
 {
-    GetSandboxMgr()->Draw();
+    m_pSandboxManager->Draw();
 }
 
 void Application::Update()
 {
-    GetSandboxMgr()->Update();
+    m_pSandboxManager->Update();
 }
