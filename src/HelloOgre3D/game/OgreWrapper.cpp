@@ -3,6 +3,7 @@
 #include "Procedural.h"
 #include "SandboxDef.h"
 #include <algorithm>
+#include "SandboxManager.h"
 
 using namespace Ogre;
 
@@ -25,10 +26,10 @@ OgreWrapper* OgreWrapper::GetInstance()
 	return g_OgreWrapper;
 }
 
-SceneNode* OgreWrapper::CreatePlane(int length, int width)
+SceneNode* OgreWrapper::CreatePlane(float length, float width)
 {
-	const Ogre::Real clampedLength = Ogre::Real(std::max(0, length));
-	const Ogre::Real clampedWidth = Ogre::Real(std::max(0, width));
+	const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
+	const Ogre::Real clampedWidth = Ogre::Real(std::max(0.0f, width));
 
 	Procedural::PlaneGenerator planeGenerator;
 	planeGenerator.setSizeX(clampedLength);
@@ -49,4 +50,15 @@ SceneNode* OgreWrapper::CreatePlane(int length, int width)
 	plane->attachObject(planeEntity);
 
 	return plane;
+}
+
+void OgreWrapper::CreateSkyBox(const Ogre::String materialName, Ogre::Vector3& rotation)
+{
+	const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
+	m_pRootSceneNode->getCreator()->setSkyBox(true, materialName, 5000.0f, true, newOrientation);
+}
+
+Camera* OgreWrapper::GetCamera()
+{
+	return GetSandboxMgr()->getCamera();
 }

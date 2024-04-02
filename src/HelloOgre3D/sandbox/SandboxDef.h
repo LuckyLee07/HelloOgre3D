@@ -16,6 +16,7 @@
 #define APPLICATION_RESOURCES	"SandboxResources.cfg"
 #endif
 
+//tolua_begin
 // 给定的三个角度（分别沿X、Y、Z轴的旋转），创建表示这个旋转的Ogre::Quaternion四元数
 inline Ogre::Quaternion QuaternionFromRotationDegrees(Ogre::Real xRotation, Ogre::Real yRotation, Ogre::Real zRotation)
 {
@@ -24,5 +25,5 @@ inline Ogre::Quaternion QuaternionFromRotationDegrees(Ogre::Real xRotation, Ogre
 
 	return Ogre::Quaternion(matrix);
 }
-
+//tolua_end
 #endif  // __SANDBOX_MANAGER__

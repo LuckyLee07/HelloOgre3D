@@ -1,6 +1,7 @@
 #ifndef __OGRE_WRAPPER_H__  
 #define __OGRE_WRAPPER_H__
 
+#include "OgreString.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 
@@ -14,7 +15,12 @@ public:
 
 public:
 	//tolua_begin
-	Ogre::SceneNode* CreatePlane(int length, int width);
+	Ogre::Camera* GetCamera();
+
+	Ogre::SceneNode* CreatePlane(float length, float width);
+
+	void CreateSkyBox(const Ogre::String materialName, Ogre::Vector3& rotation);
+
 	//tolua_end
 
 private:

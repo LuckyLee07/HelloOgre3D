@@ -46,19 +46,16 @@ void DemoHelloWorld::InitLuaEnv()
 	tolua_open_all(pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
-	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 	pScriptVM->setUserTypePointer("OgreWrapper", "OgreWrapper", OgreWrapper::GetInstance());
+	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 
 	pScriptVM->callFile("res/scripts/script_init.lua");
-	pScriptVM->callString("sayhello('Hello', 11, 99)");
-	int result = 0;
-	pScriptVM->callFunction("sayhello", "sis>i", "HelloWorld", 11, "hh", &result);
-	pScriptVM->callFunction("sayhello", "sii>i", "HelloWorld", 11, 99, &result);
-	CCLOG_INFO("Fxkk======>>> %d", result);
 }
 
 void DemoHelloWorld::InitGameScene()
 {
+	GetScriptLuaVM()->callFunction("Sandbox_Initialize", ">");
+	/*
 	GetSandboxMgr()->getCamera()->setPosition(Ogre::Vector3(7, 5, -18));
 	const Ogre::Quaternion rotation = QuaternionFromRotationDegrees(-160, 0, -180);
 	GetSandboxMgr()->getCamera()->setOrientation(rotation);
@@ -95,4 +92,5 @@ void DemoHelloWorld::InitGameScene()
 	{
 		planeEntity->setMaterialName("Ground2");
 	}
+	*/
 }

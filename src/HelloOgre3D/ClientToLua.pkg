@@ -1,2 +1,34 @@
-$cfile "game/LuaInterface.h"
+
+$#include "OgreVector3.h"
+namespace Ogre
+{
+	typedef float Real;
+	typedef std::string String;
+
+	class Vector3
+	{
+	public:
+		Vector3(){}
+		Vector3(const Vector3 &rhs);
+		Vector3(float x1, float y1, float z1);
+		Vector3(float v);
+	};
+
+	class Quaternion
+	{
+	public:
+		Quaternion();
+	};
+
+	class Camera
+	{
+	public:
+		void setPosition(const Vector3& vec);
+		void setOrientation(const Quaternion& q);
+	};
+}
+
 $cfile "game/OgreWrapper.h"
+$cfile "game/LuaInterface.h"
+$cfile "sandbox/SandboxDef.h"
+
