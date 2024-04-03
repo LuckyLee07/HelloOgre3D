@@ -1,32 +1,42 @@
-#include "OgreWrapper.h"
+#include "GameManager.h"
 #include "Ogre.h"
 #include "Procedural.h"
 #include "SandboxDef.h"
 #include <algorithm>
-#include "SandboxManager.h"
+#include "ClientManager.h"
 
 using namespace Ogre;
 
-OgreWrapper* g_OgreWrapper = nullptr;
+GameManager* g_GameManager = nullptr;
 
-OgreWrapper::OgreWrapper(SceneManager* sceneManager)
+GameManager::GameManager(SceneManager* sceneManager)
 	: m_pSceneManager(sceneManager)
 {
 	m_pRootSceneNode = m_pSceneManager->getRootSceneNode();
 }
 
-OgreWrapper::~OgreWrapper()
+GameManager::~GameManager()
 {
 	m_pSceneManager = nullptr;
 	m_pRootSceneNode = nullptr;
 }
 
-OgreWrapper* OgreWrapper::GetInstance()
+GameManager* GameManager::GetInstance()
 {
-	return g_OgreWrapper;
+	return g_GameManager;
 }
 
-SceneNode* OgreWrapper::CreatePlane(float length, float width)
+Camera* GameManager::GetCamera()
+{
+	return GetClientMgr()->getCamera();
+}
+
+SceneManager* GameManager::GetSceneManager()
+{
+	return m_pRootSceneNode->getCreator();
+}
+
+SceneNode* GameManager::CreatePlane(float length, float width)
 {
 	const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
 	const Ogre::Real clampedWidth = Ogre::Real(std::max(0.0f, width));
@@ -52,13 +62,15 @@ SceneNode* OgreWrapper::CreatePlane(float length, float width)
 	return plane;
 }
 
-void OgreWrapper::CreateSkyBox(const Ogre::String materialName, Ogre::Vector3& rotation)
+void GameManager::CreateSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
 {
 	const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	m_pRootSceneNode->getCreator()->setSkyBox(true, materialName, 5000.0f, true, newOrientation);
+	GetSceneManager()->setSkyBox(true, materialName, 5000.0f, true, newOrientation);
 }
 
-Camera* OgreWrapper::GetCamera()
+void GameManager::SetAmbientLight(const Ogre::Vector3& colourValue)
 {
-	return GetSandboxMgr()->getCamera();
+	Ogre::ColourValue tempColor(colourValue.x, colourValue.y, colourValue.z);
+	GetSceneManager()->setAmbientLight(tempColor);
 }
+

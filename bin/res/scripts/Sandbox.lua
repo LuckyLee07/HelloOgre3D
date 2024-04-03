@@ -2,16 +2,17 @@
 function Sandbox_Initialize(ctype)
 
     -- Initialize the camera position to focus on the soldier.
-    local camera = OgreWrapper:GetCamera();
+    local camera = SandboxMgr:GetCamera();
     camera:setPosition(Vector3(7, 5, -18));
     camera:setOrientation(Quaternion(-160, 0, -180));
 
-    OgreWrapper:CreateSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
-    
-    --[[
-    -- Create Lighting.
-    Sandbox.SetAmbientLight(sandbox, Vector.new(0.3));
+    -- Create The Sky.
+    SandboxMgr:CreateSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
+    -- Create Lighting.
+    SandboxMgr:SetAmbientLight(Vector(0.3));
+
+    --[[
     local directional =
         Core.CreateDirectionalLight(sandbox, Vector.new(1, -1, 1));
     Core.SetLightDiffuse(directional, Vector.new(1.8, 1.4, 0.9));

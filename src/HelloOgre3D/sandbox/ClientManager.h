@@ -1,5 +1,5 @@
-#ifndef __SANDBOX_MANAGER__
-#define __SANDBOX_MANAGER__
+#ifndef __CLIENT_MANAGER__
+#define __CLIENT_MANAGER__
 
 #include "Singleton.h"
 #include <unordered_map>
@@ -14,11 +14,11 @@ namespace Ogre
 }
 class ObfuscatedZipFactory;
 
-class SandboxManager : public Fancy::Singleton<SandboxManager>
+class ClientManager : public Fancy::Singleton<ClientManager>
 {
 public:
-	SandboxManager(void);
-	~SandboxManager();
+	ClientManager(void);
+	~ClientManager();
 	
 	bool Setup();
 	void Initialize();
@@ -53,6 +53,6 @@ private:
 	Ogre::String m_resourceConfig;
 };
 
-SandboxManager* GetSandboxMgr();
+ClientManager* GetClientMgr();
 
-#endif  // __SANDBOX_MANAGER__
+#endif  // __CLIENT_MANAGER__

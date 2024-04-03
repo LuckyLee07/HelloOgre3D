@@ -5,21 +5,25 @@
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 
-class OgreWrapper //tolua_exports
+class GameManager //tolua_exports
 { //tolua_exports
 public:
-	OgreWrapper(Ogre::SceneManager* sceneManager);
-	~OgreWrapper();
+	GameManager(Ogre::SceneManager* sceneManager);
+	~GameManager();
 	
-	static OgreWrapper* GetInstance();
+	static GameManager* GetInstance();
 
 public:
 	//tolua_begin
 	Ogre::Camera* GetCamera();
 
+	Ogre::SceneManager* GetSceneManager();
+
 	Ogre::SceneNode* CreatePlane(float length, float width);
 
-	void CreateSkyBox(const Ogre::String materialName, Ogre::Vector3& rotation);
+	void CreateSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
+
+	void SetAmbientLight(const Ogre::Vector3& colourValue);
 
 	//tolua_end
 
@@ -29,6 +33,6 @@ private:
 
 }; //tolua_exports
 
-extern OgreWrapper* g_OgreWrapper;
+extern GameManager* g_GameManager;
 
 #endif;

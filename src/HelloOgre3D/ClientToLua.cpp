@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Tue Apr  2 02:39:54 2024.
+** Generated automatically by tolua++-1.0.92 on Wed Apr  3 17:10:36 2024.
 */
 
 #ifndef __cplusplus
@@ -14,7 +14,7 @@
 TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 
 #include "OgreVector3.h"
-#include "game/OgreWrapper.h"
+#include "game/GameManager.h"
 #include "game/LuaInterface.h"
 #include "sandbox/SandboxDef.h"
 
@@ -40,11 +40,12 @@ static int tolua_collect_Ogre__Vector3 (lua_State* tolua_S)
 /* function to register type */
 static void tolua_reg_types (lua_State* tolua_S)
 {
+ tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
+ tolua_usertype(tolua_S,"Ogre::SceneManager");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
- tolua_usertype(tolua_S,"OgreWrapper");
  tolua_usertype(tolua_S,"Ogre::Camera");
 }
 
@@ -389,14 +390,78 @@ static int tolua_ClientToLua_Ogre_Camera_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: CreatePlane of class  OgreWrapper */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_OgreWrapper_CreatePlane00
-static int tolua_ClientToLua_OgreWrapper_CreatePlane00(lua_State* tolua_S)
+/* method: GetCamera of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_GetCamera00
+static int tolua_ClientToLua_GameManager_GetCamera00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"OgreWrapper",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCamera'", NULL);
+#endif
+  {
+   Ogre::Camera* tolua_ret = (Ogre::Camera*)  self->GetCamera();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::Camera");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCamera'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetSceneManager of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_GetSceneManager00
+static int tolua_ClientToLua_GameManager_GetSceneManager00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetSceneManager'", NULL);
+#endif
+  {
+   Ogre::SceneManager* tolua_ret = (Ogre::SceneManager*)  self->GetSceneManager();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::SceneManager");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetSceneManager'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: CreatePlane of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_CreatePlane00
+static int tolua_ClientToLua_GameManager_CreatePlane00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
@@ -405,9 +470,9 @@ static int tolua_ClientToLua_OgreWrapper_CreatePlane00(lua_State* tolua_S)
  else
 #endif
  {
-  OgreWrapper* self = (OgreWrapper*)  tolua_tousertype(tolua_S,1,0);
-  int length = ((int)  tolua_tonumber(tolua_S,2,0));
-  int width = ((int)  tolua_tonumber(tolua_S,3,0));
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  float length = ((float)  tolua_tonumber(tolua_S,2,0));
+  float width = ((float)  tolua_tonumber(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreatePlane'", NULL);
 #endif
@@ -425,25 +490,25 @@ static int tolua_ClientToLua_OgreWrapper_CreatePlane00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: CreateSkyBox of class  OgreWrapper */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_OgreWrapper_CreateSkyBox00
-static int tolua_ClientToLua_OgreWrapper_CreateSkyBox00(lua_State* tolua_S)
+/* method: CreateSkyBox of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_CreateSkyBox00
+static int tolua_ClientToLua_GameManager_CreateSkyBox00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"OgreWrapper",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  OgreWrapper* self = (OgreWrapper*)  tolua_tousertype(tolua_S,1,0);
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
   const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-  Ogre::Vector3* rotation = ((Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSkyBox'", NULL);
 #endif
@@ -460,33 +525,34 @@ static int tolua_ClientToLua_OgreWrapper_CreateSkyBox00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetCamera of class  OgreWrapper */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_OgreWrapper_GetCamera00
-static int tolua_ClientToLua_OgreWrapper_GetCamera00(lua_State* tolua_S)
+/* method: SetAmbientLight of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_SetAmbientLight00
+static int tolua_ClientToLua_GameManager_SetAmbientLight00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"OgreWrapper",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  OgreWrapper* self = (OgreWrapper*)  tolua_tousertype(tolua_S,1,0);
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* colourValue = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCamera'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetAmbientLight'", NULL);
 #endif
   {
-   Ogre::Camera* tolua_ret = (Ogre::Camera*)  self->GetCamera();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::Camera");
+   self->SetAmbientLight(*colourValue);
   }
  }
- return 1;
+ return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetCamera'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'SetAmbientLight'.",&tolua_err);
  return 0;
 #endif
 }
@@ -612,11 +678,13 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_Ogre_Camera_setOrientation00);
    tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
-  tolua_cclass(tolua_S,"OgreWrapper","OgreWrapper","",NULL);
-  tolua_beginmodule(tolua_S,"OgreWrapper");
-   tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_OgreWrapper_CreatePlane00);
-   tolua_function(tolua_S,"CreateSkyBox",tolua_ClientToLua_OgreWrapper_CreateSkyBox00);
-   tolua_function(tolua_S,"GetCamera",tolua_ClientToLua_OgreWrapper_GetCamera00);
+  tolua_cclass(tolua_S,"GameManager","GameManager","",NULL);
+  tolua_beginmodule(tolua_S,"GameManager");
+   tolua_function(tolua_S,"GetCamera",tolua_ClientToLua_GameManager_GetCamera00);
+   tolua_function(tolua_S,"GetSceneManager",tolua_ClientToLua_GameManager_GetSceneManager00);
+   tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_GameManager_CreatePlane00);
+   tolua_function(tolua_S,"CreateSkyBox",tolua_ClientToLua_GameManager_CreateSkyBox00);
+   tolua_function(tolua_S,"SetAmbientLight",tolua_ClientToLua_GameManager_SetAmbientLight00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"LuaInterface","LuaInterface","",NULL);
   tolua_beginmodule(tolua_S,"LuaInterface");

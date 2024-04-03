@@ -3,7 +3,7 @@
 
 #include <string>
 
-class SandboxManager;
+class ClientManager;
 class Application
 {
 public:
@@ -20,7 +20,7 @@ public:
     virtual void Update();
 
 private:
-    SandboxManager* m_pSandboxManager;
+    ClientManager* m_pClientManager;
 };
 
 #endif  // __APPLICATION_H__

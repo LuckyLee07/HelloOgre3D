@@ -28,7 +28,7 @@ namespace Ogre
 	};
 }
 
-$cfile "game/OgreWrapper.h"
+$cfile "game/GameManager.h"
 $cfile "game/LuaInterface.h"
 $cfile "sandbox/SandboxDef.h"
 

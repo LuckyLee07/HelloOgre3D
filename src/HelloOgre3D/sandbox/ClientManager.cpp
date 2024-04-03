@@ -1,4 +1,4 @@
-#include "SandboxManager.h"
+#include "ClientManager.h"
 #include "SandboxDef.h"
 
 #include "ObfuscatedZip.h"
@@ -9,43 +9,43 @@
 
 using namespace Ogre;
 
-SandboxManager::SandboxManager() 
+ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr)
 {
 }
 
-SandboxManager::~SandboxManager()
+ClientManager::~ClientManager()
 {
     delete m_pRoot;
 }
 
-Ogre::Camera* SandboxManager::getCamera()
+Ogre::Camera* ClientManager::getCamera()
 {
 	return m_pCamera;
 }
 
-RenderWindow* SandboxManager::getRenderWindow()
+RenderWindow* ClientManager::getRenderWindow()
 {
 	return m_pRenderWindow;
 }
 
-SceneManager* SandboxManager::getSceneManager()
+SceneManager* ClientManager::getSceneManager()
 {
 	return m_pSceneManager;
 }
 
-SceneNode* SandboxManager::getRootSceneNode()
+SceneNode* ClientManager::getRootSceneNode()
 {
     return m_pSceneManager->getRootSceneNode();
 }
 
-void SandboxManager::SetAppTitle(const String& appTitle)
+void ClientManager::SetAppTitle(const String& appTitle)
 {
     m_applicationTitle = appTitle;
 }
 
-void SandboxManager::SetupResources()
+void ClientManager::SetupResources()
 {
     // Load resource paths from config file
     Ogre::ConfigFile cfg;
@@ -70,7 +70,7 @@ void SandboxManager::SetupResources()
     }
 }
 
-bool SandboxManager::Configure()
+bool ClientManager::Configure()
 {
     // Show the configuration dialog and initialise the system
     // You can skip this and use root.restoreConfig() to load configuration
@@ -89,13 +89,13 @@ bool SandboxManager::Configure()
     }
 }
 
-void SandboxManager::ChooseSceneManager()
+void ClientManager::ChooseSceneManager()
 {
     // The sandbox is only built with the generic scene manager.
     m_pSceneManager = m_pRoot->createSceneManager(Ogre::ST_EXTERIOR_CLOSE);
 }
 
-void SandboxManager::CreateCamera()
+void ClientManager::CreateCamera()
 {
     m_pCamera = m_pSceneManager->createCamera("PlayerCamera");
 
@@ -108,7 +108,7 @@ void SandboxManager::CreateCamera()
     m_pCamera->setAutoAspectRatio(true);
 }
 
-void SandboxManager::CreateViewports()
+void ClientManager::CreateViewports()
 {
     // Create one viewport, entire window
     Ogre::Viewport* vp = m_pRenderWindow->addViewport(m_pCamera);
@@ -118,12 +118,12 @@ void SandboxManager::CreateViewports()
     m_pCamera->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 }
 
-void SandboxManager::LoadResources(void)
+void ClientManager::LoadResources(void)
 {
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
-bool SandboxManager::Setup(void)
+bool ClientManager::Setup(void)
 {
     m_pRoot = new Ogre::Root("", APPLICATION_CONFIG, APPLICATION_LOG);
     m_pRoot->installPlugin(new Ogre::D3D9Plugin());
@@ -152,7 +152,7 @@ bool SandboxManager::Setup(void)
     return true;
 }
 
-void SandboxManager::Initialize()
+void ClientManager::Initialize()
 {
     const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
 
@@ -169,26 +169,26 @@ void SandboxManager::Initialize()
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
 }
 
-void SandboxManager::Draw()
+void ClientManager::Draw()
 {
     m_pRoot->startRendering();
 }
 
-void SandboxManager::Update()
+void ClientManager::Update()
 {
 
 }
-void SandboxManager::Cleanup()
+void ClientManager::Cleanup()
 {
 
 }
 
-static SandboxManager* s_SandboxMgr = nullptr;
-SandboxManager* GetSandboxMgr()
+static ClientManager* s_ClientMgr = nullptr;
+ClientManager* GetClientMgr()
 {
-	if (s_SandboxMgr == nullptr)
+	if (s_ClientMgr == nullptr)
 	{
-		s_SandboxMgr = new SandboxManager();
+        s_ClientMgr = new ClientManager();
 	}
-	return s_SandboxMgr;
+	return s_ClientMgr;
 }
