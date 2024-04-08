@@ -26,6 +26,32 @@ namespace Ogre
 		void setPosition(const Vector3& vec);
 		void setOrientation(const Quaternion& q);
 	};
+
+	class Node
+    {
+    public:
+    	void setPosition(const Vector3& pos);
+    	void setOrientation(const Quaternion& rotation);
+    };
+
+    class ColourValue
+	{
+	public:
+    	ColourValue(float red=1.0f, float green=1.0f, float blue=1.0f, float alpha=1.0f);
+	};
+
+    class Light
+    {
+    public:
+    	void setDiffuseColour(const ColourValue& colour);
+    	void setSpecularColour(const ColourValue& colour);
+    	void setDiffuseColour(Real red, Real green, Real blue);
+    	void setSpecularColour(Real red, Real green, Real blue);
+    };
+    
+    class SceneNode : public Node
+    {
+    };
 }
 
 $cfile "game/GameManager.h"

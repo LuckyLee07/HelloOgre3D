@@ -62,7 +62,7 @@ SceneNode* GameManager::CreatePlane(float length, float width)
 	return plane;
 }
 
-void GameManager::CreateSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
+void GameManager::SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
 {
 	const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
 	GetSceneManager()->setSkyBox(true, materialName, 5000.0f, true, newOrientation);
@@ -74,3 +74,52 @@ void GameManager::SetAmbientLight(const Ogre::Vector3& colourValue)
 	GetSceneManager()->setAmbientLight(tempColor);
 }
 
+Ogre::Light* GameManager::CreateDirectionalLight(const Ogre::Vector3& direction)
+{
+	Ogre::SceneNode* const lightNode = m_pRootSceneNode->createChildSceneNode();
+
+	Ogre::Light* const lightEntity = GetSceneManager()->createLight();
+
+	lightEntity->setCastShadows(true);
+	lightEntity->setType(Ogre::Light::LT_DIRECTIONAL);
+
+	lightEntity->setDiffuseColour(1.0f, 1.0f, 1.0f);
+	lightEntity->setSpecularColour(0, 0, 0);
+	lightEntity->setDirection(direction);
+
+	lightNode->attachObject(lightEntity);
+
+	return lightEntity;
+}
+
+void GameManager::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName)
+{
+	Ogre::SceneNode::ObjectIterator it = pNode->getAttachedObjectIterator();
+
+	while (it.hasMoreElements())
+	{
+		const Ogre::String movableType =
+			it.current()->second->getMovableType();
+
+		if (movableType == Ogre::EntityFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::Entity* const entity =
+				static_cast<Ogre::Entity*>(it.current()->second);
+			entity->setMaterialName(materialName);
+		}
+		else if (movableType ==
+			Ogre::ManualObjectFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::ManualObject* const entity =
+				static_cast<Ogre::ManualObject*>(it.current()->second);
+			unsigned int sections = entity->getNumSections();
+
+			for (unsigned int id = 0; id < sections; ++id)
+			{
+				entity->setMaterialName(id, materialName);
+			}
+		}
+
+		it.getNext();
+	}
+}

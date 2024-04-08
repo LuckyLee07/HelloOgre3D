@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Wed Apr  3 17:10:36 2024.
+** Generated automatically by tolua++-1.0.92 on Mon Apr  8 19:10:39 2024.
 */
 
 #ifndef __cplusplus
@@ -34,17 +34,27 @@ static int tolua_collect_Ogre__Vector3 (lua_State* tolua_S)
 	Mtolua_delete(self);
 	return 0;
 }
+
+static int tolua_collect_Ogre__ColourValue (lua_State* tolua_S)
+{
+ Ogre::ColourValue* self = (Ogre::ColourValue*) tolua_tousertype(tolua_S,1,0);
+	Mtolua_delete(self);
+	return 0;
+}
 #endif
 
 
 /* function to register type */
 static void tolua_reg_types (lua_State* tolua_S)
 {
+ tolua_usertype(tolua_S,"Ogre::ColourValue");
+ tolua_usertype(tolua_S,"LuaInterface");
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
- tolua_usertype(tolua_S,"LuaInterface");
- tolua_usertype(tolua_S,"Ogre::Quaternion");
+ tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"Ogre::SceneManager");
+ tolua_usertype(tolua_S,"Ogre::Quaternion");
+ tolua_usertype(tolua_S,"Ogre::Node");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"Ogre::Camera");
 }
@@ -390,6 +400,275 @@ static int tolua_ClientToLua_Ogre_Camera_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setPosition of class  Ogre::Node */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Node_setPosition00
+static int tolua_ClientToLua_Ogre_Node_setPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Node",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::Node* self = (Ogre::Node*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* pos = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
+#endif
+  {
+   self->setPosition(*pos);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setOrientation of class  Ogre::Node */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Node_setOrientation00
+static int tolua_ClientToLua_Ogre_Node_setOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Node",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::Node* self = (Ogre::Node*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Quaternion* rotation = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOrientation'", NULL);
+#endif
+  {
+   self->setOrientation(*rotation);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: new of class  Ogre::ColourValue */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_ColourValue_new00
+static int tolua_ClientToLua_Ogre_ColourValue_new00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertable(tolua_S,1,"Ogre::ColourValue",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  float red = ((float)  tolua_tonumber(tolua_S,2,1.0f));
+  float green = ((float)  tolua_tonumber(tolua_S,3,1.0f));
+  float blue = ((float)  tolua_tonumber(tolua_S,4,1.0f));
+  float alpha = ((float)  tolua_tonumber(tolua_S,5,1.0f));
+  {
+   Ogre::ColourValue* tolua_ret = (Ogre::ColourValue*)  Mtolua_new((Ogre::ColourValue)(red,green,blue,alpha));
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::ColourValue");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'new'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: new_local of class  Ogre::ColourValue */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_ColourValue_new00_local
+static int tolua_ClientToLua_Ogre_ColourValue_new00_local(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertable(tolua_S,1,"Ogre::ColourValue",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  float red = ((float)  tolua_tonumber(tolua_S,2,1.0f));
+  float green = ((float)  tolua_tonumber(tolua_S,3,1.0f));
+  float blue = ((float)  tolua_tonumber(tolua_S,4,1.0f));
+  float alpha = ((float)  tolua_tonumber(tolua_S,5,1.0f));
+  {
+   Ogre::ColourValue* tolua_ret = (Ogre::ColourValue*)  Mtolua_new((Ogre::ColourValue)(red,green,blue,alpha));
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::ColourValue");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'new'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setDiffuseColour of class  Ogre::Light */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Light_setDiffuseColour00
+static int tolua_ClientToLua_Ogre_Light_setDiffuseColour00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Light",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::Light* self = (Ogre::Light*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::ColourValue* colour = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setDiffuseColour'", NULL);
+#endif
+  {
+   self->setDiffuseColour(*colour);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setDiffuseColour'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setSpecularColour of class  Ogre::Light */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Light_setSpecularColour00
+static int tolua_ClientToLua_Ogre_Light_setSpecularColour00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Light",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::Light* self = (Ogre::Light*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::ColourValue* colour = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setSpecularColour'", NULL);
+#endif
+  {
+   self->setSpecularColour(*colour);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setSpecularColour'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setDiffuseColour of class  Ogre::Light */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Light_setDiffuseColour01
+static int tolua_ClientToLua_Ogre_Light_setDiffuseColour01(lua_State* tolua_S)
+{
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Light",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+ {
+  Ogre::Light* self = (Ogre::Light*)  tolua_tousertype(tolua_S,1,0);
+   float red = ((  float)  tolua_tonumber(tolua_S,2,0));
+   float green = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float blue = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setDiffuseColour'", NULL);
+#endif
+  {
+   self->setDiffuseColour(red,green,blue);
+  }
+ }
+ return 0;
+tolua_lerror:
+ return tolua_ClientToLua_Ogre_Light_setDiffuseColour00(tolua_S);
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setSpecularColour of class  Ogre::Light */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Light_setSpecularColour01
+static int tolua_ClientToLua_Ogre_Light_setSpecularColour01(lua_State* tolua_S)
+{
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::Light",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+ {
+  Ogre::Light* self = (Ogre::Light*)  tolua_tousertype(tolua_S,1,0);
+   float red = ((  float)  tolua_tonumber(tolua_S,2,0));
+   float green = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float blue = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setSpecularColour'", NULL);
+#endif
+  {
+   self->setSpecularColour(red,green,blue);
+  }
+ }
+ return 0;
+tolua_lerror:
+ return tolua_ClientToLua_Ogre_Light_setSpecularColour00(tolua_S);
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetCamera of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_GetCamera00
 static int tolua_ClientToLua_GameManager_GetCamera00(lua_State* tolua_S)
@@ -454,6 +733,74 @@ static int tolua_ClientToLua_GameManager_GetSceneManager00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetSkyBox of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_SetSkyBox00
+static int tolua_ClientToLua_GameManager_SetSkyBox00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetSkyBox'", NULL);
+#endif
+  {
+   self->SetSkyBox(materialName,*rotation);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetSkyBox'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetAmbientLight of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_SetAmbientLight00
+static int tolua_ClientToLua_GameManager_SetAmbientLight00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* colourValue = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetAmbientLight'", NULL);
+#endif
+  {
+   self->SetAmbientLight(*colourValue);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetAmbientLight'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: CreatePlane of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_CreatePlane00
 static int tolua_ClientToLua_GameManager_CreatePlane00(lua_State* tolua_S)
@@ -490,44 +837,9 @@ static int tolua_ClientToLua_GameManager_CreatePlane00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: CreateSkyBox of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_CreateSkyBox00
-static int tolua_ClientToLua_GameManager_CreateSkyBox00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,4,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSkyBox'", NULL);
-#endif
-  {
-   self->CreateSkyBox(materialName,*rotation);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'CreateSkyBox'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetAmbientLight of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_SetAmbientLight00
-static int tolua_ClientToLua_GameManager_SetAmbientLight00(lua_State* tolua_S)
+/* method: CreateDirectionalLight of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_CreateDirectionalLight00
+static int tolua_ClientToLua_GameManager_CreateDirectionalLight00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -541,18 +853,55 @@ static int tolua_ClientToLua_GameManager_SetAmbientLight00(lua_State* tolua_S)
 #endif
  {
   GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* colourValue = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetAmbientLight'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateDirectionalLight'", NULL);
 #endif
   {
-   self->SetAmbientLight(*colourValue);
+   Ogre::Light* tolua_ret = (Ogre::Light*)  self->CreateDirectionalLight(*rotation);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::Light");
   }
  }
- return 0;
+ return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetAmbientLight'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'CreateDirectionalLight'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setMaterial of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_setMaterial00
+static int tolua_ClientToLua_GameManager_setMaterial00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"Ogre::SceneNode",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  Ogre::SceneNode* pNode = ((Ogre::SceneNode*)  tolua_tousertype(tolua_S,2,0));
+  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
+#endif
+  {
+   self->setMaterial(pNode,materialName);
+   tolua_pushcppstring(tolua_S,(const char*)materialName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setMaterial'.",&tolua_err);
  return 0;
 #endif
 }
@@ -677,14 +1026,41 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"setPosition",tolua_ClientToLua_Ogre_Camera_setPosition00);
     tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_Ogre_Camera_setOrientation00);
    tolua_endmodule(tolua_S);
+   tolua_cclass(tolua_S,"Node","Ogre::Node","",NULL);
+   tolua_beginmodule(tolua_S,"Node");
+    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_Ogre_Node_setPosition00);
+    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_Ogre_Node_setOrientation00);
+   tolua_endmodule(tolua_S);
+   #ifdef __cplusplus
+   tolua_cclass(tolua_S,"ColourValue","Ogre::ColourValue","",tolua_collect_Ogre__ColourValue);
+   #else
+   tolua_cclass(tolua_S,"ColourValue","Ogre::ColourValue","",NULL);
+   #endif
+   tolua_beginmodule(tolua_S,"ColourValue");
+    tolua_function(tolua_S,"new",tolua_ClientToLua_Ogre_ColourValue_new00);
+    tolua_function(tolua_S,"new_local",tolua_ClientToLua_Ogre_ColourValue_new00_local);
+    tolua_function(tolua_S,".call",tolua_ClientToLua_Ogre_ColourValue_new00_local);
+   tolua_endmodule(tolua_S);
+   tolua_cclass(tolua_S,"Light","Ogre::Light","",NULL);
+   tolua_beginmodule(tolua_S,"Light");
+    tolua_function(tolua_S,"setDiffuseColour",tolua_ClientToLua_Ogre_Light_setDiffuseColour00);
+    tolua_function(tolua_S,"setSpecularColour",tolua_ClientToLua_Ogre_Light_setSpecularColour00);
+    tolua_function(tolua_S,"setDiffuseColour",tolua_ClientToLua_Ogre_Light_setDiffuseColour01);
+    tolua_function(tolua_S,"setSpecularColour",tolua_ClientToLua_Ogre_Light_setSpecularColour01);
+   tolua_endmodule(tolua_S);
+   tolua_cclass(tolua_S,"SceneNode","Ogre::SceneNode","Ogre::Node",NULL);
+   tolua_beginmodule(tolua_S,"SceneNode");
+   tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"GameManager","GameManager","",NULL);
   tolua_beginmodule(tolua_S,"GameManager");
    tolua_function(tolua_S,"GetCamera",tolua_ClientToLua_GameManager_GetCamera00);
    tolua_function(tolua_S,"GetSceneManager",tolua_ClientToLua_GameManager_GetSceneManager00);
-   tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_GameManager_CreatePlane00);
-   tolua_function(tolua_S,"CreateSkyBox",tolua_ClientToLua_GameManager_CreateSkyBox00);
+   tolua_function(tolua_S,"SetSkyBox",tolua_ClientToLua_GameManager_SetSkyBox00);
    tolua_function(tolua_S,"SetAmbientLight",tolua_ClientToLua_GameManager_SetAmbientLight00);
+   tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_GameManager_CreatePlane00);
+   tolua_function(tolua_S,"CreateDirectionalLight",tolua_ClientToLua_GameManager_CreateDirectionalLight00);
+   tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_GameManager_setMaterial00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"LuaInterface","LuaInterface","",NULL);
   tolua_beginmodule(tolua_S,"LuaInterface");

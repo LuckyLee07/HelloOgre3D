@@ -18,12 +18,16 @@ public:
 	Ogre::Camera* GetCamera();
 
 	Ogre::SceneManager* GetSceneManager();
+	
+	void SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
+
+	void SetAmbientLight(const Ogre::Vector3& colourValue);
 
 	Ogre::SceneNode* CreatePlane(float length, float width);
 
-	void CreateSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
+	Ogre::Light* CreateDirectionalLight(const Ogre::Vector3& rotation);
 
-	void SetAmbientLight(const Ogre::Vector3& colourValue);
+	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
 
 	//tolua_end
 

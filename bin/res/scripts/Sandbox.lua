@@ -2,27 +2,27 @@
 function Sandbox_Initialize(ctype)
 
     -- Initialize the camera position to focus on the soldier.
-    local camera = SandboxMgr:GetCamera();
+    local camera = Sandbox:GetCamera();
     camera:setPosition(Vector3(7, 5, -18));
     camera:setOrientation(Quaternion(-160, 0, -180));
 
     -- Create The Sky.
-    SandboxMgr:CreateSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create Lighting.
-    SandboxMgr:SetAmbientLight(Vector(0.3));
+    Sandbox:SetAmbientLight(Vector3(0.3));
+
+    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
+    directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
+
+
+    local plane = Sandbox:CreatePlane(200, 200);
+    plane:setOrientation(Quaternion(0, 0, 0));
+    plane:setPosition(Vector3(0, 0, 0));
+    Sandbox:setMaterial(plane, "Ground2");
 
     --[[
-    local directional =
-        Core.CreateDirectionalLight(sandbox, Vector.new(1, -1, 1));
-    Core.SetLightDiffuse(directional, Vector.new(1.8, 1.4, 0.9));
-    Core.SetLightSpecular(directional, Vector.new(1.8, 1.4, 0.9));
-
-    local plane = Sandbox.CreatePlane(sandbox, 200, 200);
-    Core.SetRotation(plane, Vector.new(0, 0, 0));
-    Core.SetPosition(plane, Vector.new(0, 0, 0));
-    Core.SetMaterial(plane, "Ground2");
-
     -- misc meshes
     SandboxUtilities_CreateObject(
         sandbox, "modular_block", Vector.new(-3, 0, 0));

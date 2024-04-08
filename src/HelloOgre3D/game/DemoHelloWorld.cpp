@@ -46,7 +46,7 @@ void DemoHelloWorld::InitLuaEnv()
 	tolua_open_all(pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
-	pScriptVM->setUserTypePointer("SandboxMgr", "GameManager", GameManager::GetInstance());
+	pScriptVM->setUserTypePointer("Sandbox", "GameManager", GameManager::GetInstance());
 	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 
 	pScriptVM->callFile("res/scripts/script_init.lua");
