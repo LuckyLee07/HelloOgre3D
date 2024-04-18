@@ -4,6 +4,8 @@
 #include "OgreString.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
+#include "SandboxObject.h"
+#include <map>
 
 class GameManager //tolua_exports
 { //tolua_exports
@@ -29,11 +31,19 @@ public:
 
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
 
+	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
+
 	//tolua_end
+
+private:
+	unsigned int getNextObjectId() { return m_objectIndex++; }
 
 private:
 	Ogre::SceneManager* m_pSceneManager;
 	Ogre::SceneNode* m_pRootSceneNode;
+
+	unsigned int m_objectIndex;
+	std::map<unsigned int, SandboxObject*> m_pObjects;
 
 }; //tolua_exports
 

@@ -57,4 +57,6 @@ namespace Ogre
 $cfile "game/GameManager.h"
 $cfile "game/LuaInterface.h"
 $cfile "sandbox/SandboxDef.h"
+$cfile "sandbox/BaseObject.h"
+$cfile "sandbox/SandboxObject.h"
 

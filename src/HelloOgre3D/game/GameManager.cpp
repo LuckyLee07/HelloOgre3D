@@ -10,7 +10,7 @@ using namespace Ogre;
 GameManager* g_GameManager = nullptr;
 
 GameManager::GameManager(SceneManager* sceneManager)
-	: m_pSceneManager(sceneManager)
+	: m_pSceneManager(sceneManager), m_objectIndex(0)
 {
 	m_pRootSceneNode = m_pSceneManager->getRootSceneNode();
 }
@@ -122,4 +122,15 @@ void GameManager::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materi
 
 		it.getNext();
 	}
+}
+
+SandboxObject* GameManager::CreateSandboxObject(const Ogre::String& meshFilePath)
+{
+	SandboxObject* pObject = new SandboxObject(getNextObjectId(), meshFilePath);
+
+	m_pObjects[pObject->getObjId()] = pObject;
+
+	pObject->Initialize();
+
+	return pObject;
 }

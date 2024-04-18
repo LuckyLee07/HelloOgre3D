@@ -47,17 +47,13 @@ function CreateSandboxObject(objectName, position, rotation)
 
     local filePath = NewSandboxUtilities.Objects[objectName].file;
     local fileMass = NewSandboxUtilities.Objects[objectName].mass;
+
+    local object = Sandbox:CreateSandboxObject(filePath);
+    if fileMass >= 0 then object:setMass(fileMass); end
     
-    local object = Sandbox.CreateObject(sandbox, filePath);
-    object:SetMass(fileMass)
+    if position ~= nil then object:setPosition(position); end
     
-    if position ~= nil then
-        Core.SetPosition(object, position);
-    end
-    
-    if rotation ~= nil then
-        Core.SetRotation(object, rotation);
-    end
+    if rotation ~= nil then object:SetRotation(rotation); end
     
     return object;
 end
