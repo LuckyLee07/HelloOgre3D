@@ -23,6 +23,9 @@ function CreateGameProject( projectName )
       "zzip",
       "lua",
       "tolua",
+      "bullet_collision",
+      "bullet_dynamics",
+      "bullet_linearmath",
     } )
     configuration( { "windows" } )
       -- add the directx include directory
@@ -70,6 +73,9 @@ function CreateGameProject( projectName )
       "../src/external/ogre3d_direct3d9/include/",
       "../src/external/ogre3d_particlefx/include/",
       "../src/external/ogre3d_procedural/include/",
+      "../src/external/bullet_collision/include/",
+      "../src/external/bullet_dynamics/include/",
+      "../src/external/bullet_linearmath/include/",
     } )
     -- TODO(David Young 6-8-13): the current premake-dev doesn't support
     -- %{prj.name} within "files"

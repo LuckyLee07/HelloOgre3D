@@ -415,3 +415,64 @@ solution( "HelloOgre3D" )
 		} )
 		includedirs( { "../src/external/lua/lua", "../src/external/lua/tolua"} )
 		files( { "../src/external/lua/tolua/**.h", "../src/external/lua/tolua/**.c" } )
+
+-- bullet collision v2.81 revision 2613
+	project( "bullet_collision" )
+		kind( "StaticLib" )
+		location( "../build/external/bullet_collision" )
+		buildoptions( {
+			"/wd\"4127\"", "/wd\"4100\"", "/wd\"4244\"", "/wd\"4702\"",
+			"/wd\"4512\"", "/wd\"4267\""
+		} )
+		includedirs( {
+			"../src/external/bullet_collision/include/BulletCollision/BroadphaseCollision",
+			"../src/external/bullet_collision/include/BulletCollision/CollisionDispatch",
+			"../src/external/bullet_collision/include/BulletCollision/CollisionShapes",
+			"../src/external/bullet_collision/include/BulletCollision/Gimpact",
+			"../src/external/bullet_collision/include/BulletCollision/NarrowPhaseCollision",
+			"../src/external/bullet_linearmath/include"
+		} )
+		files( {
+			"../src/external/bullet_collision/include/**.h",
+			"../src/external/bullet_collision/src/**.cpp"
+		} )
+		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
+
+-- bullet dynamics v2.81 revision 2613
+	project( "bullet_dynamics" )
+		kind( "StaticLib" )
+		location( "../build/external/bullet_dynamics" )
+		buildoptions( {
+			"/wd\"4127\"", "/wd\"4100\"", "/wd\"4244\"", "/wd\"4702\"",
+			"/wd\"4512\"", "/wd\"4267\"", "/wd\"4305\""
+		} )
+		includedirs( {
+			"../src/external/bullet_collision/include/",
+			"../src/external/bullet_dynamics/include/BulletDynamics/Character",
+			"../src/external/bullet_dynamics/include/BulletDynamics/ConstraintSolver",
+			"../src/external/bullet_dynamics/include/BulletDynamics/Dynamics",
+			"../src/external/bullet_dynamics/include/BulletDynamics/Vehicle",
+			"../src/external/bullet_linearmath/include"
+		} )
+		files( {
+			"../src/external/bullet_dynamics/include/**.h",
+			"../src/external/bullet_dynamics/src/**.cpp"
+		} )
+		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
+
+-- bullet linearmath v2.81 revision 2613
+	project( "bullet_linearmath" )
+		kind( "StaticLib" )
+		location( "../build/external/bullet_linearmath" )
+		buildoptions( {
+			"/wd\"4127\"", "/wd\"4245\"", "/wd\"4244\"", "/wd\"4267\"",
+			"/wd\"4701\""
+		} )
+		includedirs( {
+			"../src/external/bullet_linearmath/include/LinearMath"
+		} )
+		files( {
+			"../src/external/bullet_linearmath/include/**.h",
+			"../src/external/bullet_linearmath/src/**.cpp"
+		} )
+		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
