@@ -13,6 +13,9 @@ GameManager::GameManager(SceneManager* sceneManager)
 	: m_pSceneManager(sceneManager), m_objectIndex(0)
 {
 	m_pRootSceneNode = m_pSceneManager->getRootSceneNode();
+
+	m_pPhysicsWorld = new PhysicsWorld();
+	m_pPhysicsWorld->initilize();
 }
 
 GameManager::~GameManager()
@@ -131,6 +134,8 @@ SandboxObject* GameManager::CreateSandboxObject(const Ogre::String& meshFilePath
 	m_pObjects[pObject->getObjId()] = pObject;
 
 	pObject->Initialize();
+
+	m_pPhysicsWorld->addRigidBody(pObject->getRigidBody());
 
 	return pObject;
 }

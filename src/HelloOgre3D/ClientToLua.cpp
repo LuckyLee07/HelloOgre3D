@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Thu Apr 18 08:10:37 2024.
+** Generated automatically by tolua++-1.0.92 on Fri Apr 19 21:55:03 2024.
 */
 
 #ifndef __cplusplus
@@ -63,6 +63,7 @@ static int tolua_collect_SandboxObject (lua_State* tolua_S)
 /* function to register type */
 static void tolua_reg_types (lua_State* tolua_S)
 {
+ tolua_usertype(tolua_S,"btRigidBody");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
  tolua_usertype(tolua_S,"SandboxObject");
  tolua_usertype(tolua_S,"Ogre::SceneManager");
@@ -1321,6 +1322,38 @@ static int tolua_ClientToLua_SandboxObject_Initialize00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getRigidBody of class  SandboxObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_getRigidBody00
+static int tolua_ClientToLua_SandboxObject_getRigidBody00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getRigidBody'", NULL);
+#endif
+  {
+   btRigidBody* tolua_ret = (btRigidBody*)  self->getRigidBody();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"btRigidBody");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getRigidBody'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setMass of class  SandboxObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_setMass00
 static int tolua_ClientToLua_SandboxObject_setMass00(lua_State* tolua_S)
@@ -1395,7 +1428,7 @@ static int tolua_ClientToLua_SandboxObject_setOrientation00(lua_State* tolua_S)
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
@@ -1403,12 +1436,12 @@ static int tolua_ClientToLua_SandboxObject_setOrientation00(lua_State* tolua_S)
 #endif
  {
   SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOrientation'", NULL);
 #endif
   {
-   self->setOrientation(*quaternion);
+   self->setOrientation(*rotation);
   }
  }
  return 0;
@@ -1532,6 +1565,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,".call",tolua_ClientToLua_SandboxObject_new00_local);
    tolua_function(tolua_S,"delete",tolua_ClientToLua_SandboxObject_delete00);
    tolua_function(tolua_S,"Initialize",tolua_ClientToLua_SandboxObject_Initialize00);
+   tolua_function(tolua_S,"getRigidBody",tolua_ClientToLua_SandboxObject_getRigidBody00);
    tolua_function(tolua_S,"setMass",tolua_ClientToLua_SandboxObject_setMass00);
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_SandboxObject_setPosition00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_SandboxObject_setOrientation00);

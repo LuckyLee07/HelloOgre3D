@@ -1,11 +1,12 @@
-#ifndef __OGRE_WRAPPER_H__  
-#define __OGRE_WRAPPER_H__
+#ifndef __GAME_MANAGER_H__  
+#define __GAME_MANAGER_H__
 
 #include "OgreString.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 #include "SandboxObject.h"
 #include <map>
+#include "PhysicsWorld.h"
 
 class GameManager //tolua_exports
 { //tolua_exports
@@ -41,6 +42,7 @@ private:
 private:
 	Ogre::SceneManager* m_pSceneManager;
 	Ogre::SceneNode* m_pRootSceneNode;
+	PhysicsWorld* m_pPhysicsWorld;
 
 	unsigned int m_objectIndex;
 	std::map<unsigned int, SandboxObject*> m_pObjects;
@@ -49,4 +51,4 @@ private:
 
 extern GameManager* g_GameManager;
 
-#endif;
+#endif; // __GAME_MANAGER_H__

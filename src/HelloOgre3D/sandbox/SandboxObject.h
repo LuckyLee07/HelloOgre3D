@@ -10,6 +10,8 @@ namespace Ogre {
 	class Entity;
 }
 
+class btRigidBody;
+
 class SandboxObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
@@ -19,15 +21,21 @@ public:
 
 	void Initialize();
 
+	btRigidBody* getRigidBody() { return m_pRigidBody; }
+
 	void setMass(const Ogre::Real mass);
 
 	void setPosition(const Ogre::Vector3& position);
 
-	void setOrientation(const Ogre::Quaternion& quaternion);
+	void setOrientation(const Ogre::Vector3& rotation);
 	//tolua_end
+
+	void updateWorldTransform();
+
 private:
 	Ogre::SceneNode* m_pSceneNode;
 	Ogre::Entity* m_pEntity;
+	btRigidBody* m_pRigidBody;
 	
 }; //tolua_exports
 
