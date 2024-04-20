@@ -1,5 +1,6 @@
 #include "ClientManager.h"
 #include "SandboxDef.h"
+#include "GameManager.h"
 
 #include "ObfuscatedZip.h"
 
@@ -13,6 +14,9 @@ ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr)
 {
+    m_Timer.reset();
+
+    m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
 }
 
 ClientManager::~ClientManager()
@@ -43,6 +47,11 @@ SceneNode* ClientManager::getRootSceneNode()
 void ClientManager::SetAppTitle(const String& appTitle)
 {
     m_applicationTitle = appTitle;
+}
+
+void ClientManager::CreateFrameListener(Ogre::FrameListener* newListener)
+{
+    m_pRoot->addFrameListener(newListener);
 }
 
 void ClientManager::SetupResources()
@@ -152,6 +161,11 @@ bool ClientManager::Setup(void)
     return true;
 }
 
+void ClientManager::Cleanup()
+{
+
+}
+
 void ClientManager::Initialize()
 {
     const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
@@ -167,20 +181,35 @@ void ClientManager::Initialize()
     m_pCamera->setAutoAspectRatio(true);
 
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
+
+    g_GameManager = new GameManager(m_pSceneManager);
+
+    m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
 }
 
-void ClientManager::Draw()
+void ClientManager::Run()
 {
     m_pRoot->startRendering();
 }
 
+void ClientManager::Draw()
+{
+    
+}
+
 void ClientManager::Update()
 {
+    static long long updatePerSecondInMicros = 1000000 / 30;
+    static int deltaMilliseconds = updatePerSecondInMicros / 1000;
 
-}
-void ClientManager::Cleanup()
-{
+    long long currTimeInMicros = m_Timer.getMicroseconds();
+    long long timeDeltaInMicros = currTimeInMicros - m_lastUpdateTimeInMicro;
 
+    if (g_GameManager && timeDeltaInMicros >= updatePerSecondInMicros)
+    {
+        g_GameManager->Update(deltaMilliseconds);
+        m_lastUpdateTimeInMicro = currTimeInMicros;
+    }
 }
 
 static ClientManager* s_ClientMgr = nullptr;

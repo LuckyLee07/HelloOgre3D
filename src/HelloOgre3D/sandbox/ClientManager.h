@@ -4,6 +4,7 @@
 #include "Singleton.h"
 #include <unordered_map>
 #include "OgreString.h"
+#include "OgreTimer.h"
 
 namespace Ogre
 {
@@ -11,6 +12,7 @@ namespace Ogre
 	class RenderWindow;
 	class Root;
 	class SceneManager;
+	class FrameListener;
 }
 class ObfuscatedZipFactory;
 
@@ -21,12 +23,16 @@ public:
 	~ClientManager();
 	
 	bool Setup();
+	void Cleanup();
 	void Initialize();
 
+	void Run();
 	void Draw();
 	void Update();
-	void Cleanup();
+	
 	void SetAppTitle(const Ogre::String& appTitle);
+
+	void CreateFrameListener(Ogre::FrameListener* newListener);
 
 public:
 	Ogre::Camera* getCamera();
@@ -51,6 +57,9 @@ private:
 
 	Ogre::String m_applicationTitle;
 	Ogre::String m_resourceConfig;
+
+	Ogre::Timer m_Timer;
+	long long m_lastUpdateTimeInMicro;
 };
 
 ClientManager* GetClientMgr();

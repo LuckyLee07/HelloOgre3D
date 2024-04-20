@@ -17,19 +17,23 @@ class SandboxObject : public BaseObject //tolua_exports
 public:
 	//tolua_begin
 	SandboxObject(unsigned int objectId, const Ogre::String& meshFile);
+	SandboxObject(unsigned int objectId, Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
+
 	virtual ~SandboxObject();
 
 	void Initialize();
 
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
+	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
 
 	void setMass(const Ogre::Real mass);
-
 	void setPosition(const Ogre::Vector3& position);
+	void setRotation(const Ogre::Vector3& position);
+	void setOrientation(const Ogre::Quaternion& quaternion);
 
-	void setOrientation(const Ogre::Vector3& rotation);
 	//tolua_end
 
+	void Update(int deltaMsec);
 	void updateWorldTransform();
 
 private:

@@ -13,14 +13,22 @@ SandboxObject::SandboxObject(unsigned int objectId, const Ogre::String& meshFile
 	: BaseObject(objectId, BaseObject::OBJ_SANDBOX_OBJ)
 {
 	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+
 	m_pSceneNode = pRootScene->createChildSceneNode();
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
 	m_pSceneNode->attachObject(m_pEntity);
 
 	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
-	m_pRigidBody = SandboxMgr::CreateRigidBody(meshPtr);
+	m_pRigidBody = SandboxMgr::CreateRigidBody(meshPtr, 1.0f);
 
 	m_pRigidBody->setUserPointer(this);
+}
+
+SandboxObject::SandboxObject(unsigned int objectId, Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
+	: BaseObject(objectId, BaseObject::OBJ_SANDBOX_OBJ), m_pSceneNode(pSceneNode), m_pRigidBody(pRigidBody), m_pEntity(nullptr)
+{
+	if (m_pRigidBody)
+		m_pRigidBody->setUserPointer(this);
 }
 
 SandboxObject::~SandboxObject()
@@ -51,13 +59,17 @@ void SandboxObject::setPosition(const Ogre::Vector3& position)
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
 
-	//m_pSceneNode->setPosition(position);
 	this->updateWorldTransform();
 }
 
-void SandboxObject::setOrientation(const Ogre::Vector3& rotation)
+void SandboxObject::setRotation(const Ogre::Vector3& rotation)
 {
-	Ogre::Quaternion quaternion = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
+	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
+	this->setOrientation(qRotation);
+}
+
+void SandboxObject::setOrientation(const Ogre::Quaternion& quaternion)
+{
 	btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
 	btTransform transform = m_pRigidBody->getWorldTransform();
 	transform.setRotation(btRotation);
@@ -65,7 +77,11 @@ void SandboxObject::setOrientation(const Ogre::Vector3& rotation)
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
 
-	//m_pSceneNode->setOrientation(quaternion);
+	this->updateWorldTransform();
+}
+
+void SandboxObject::Update(int deltaMsec)
+{
 	this->updateWorldTransform();
 }
 

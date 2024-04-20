@@ -54,6 +54,16 @@ void PhysicsWorld::cleanup()
 		delete m_pBroadPhase;
 }
 
+void PhysicsWorld::stepWorld()
+{
+	float timeStep = 1.0f / 30.0f; // 通常情况下，时间步长设置为1/30秒，即每秒30帧
+	int maxSubSteps = 1;         // 最大子步数，用于处理在长时间步长中的物理精度问题
+	float fixedTimeStep = 1.0f / 30.0f; // 每个子步的固定时间长度，通常与timeStep相同
+
+	//m_pDynamicsWorld->stepSimulation(1.0f / 30.0f, 1, 1.0f / 30.0f);
+	m_pDynamicsWorld->stepSimulation(timeStep, maxSubSteps, fixedTimeStep);
+}
+
 void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody)
 {
 	m_pDynamicsWorld->addRigidBody(pRigidBody);

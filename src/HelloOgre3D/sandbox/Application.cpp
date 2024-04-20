@@ -19,7 +19,7 @@ bool Application::Setup()
     bool setupSucc = m_pClientManager->Setup();
     if (!setupSucc) return false;
 
-    g_GameManager = new GameManager(m_pClientManager->getSceneManager());
+    CreateFrameListener();
 
     return true;
 }
@@ -27,6 +27,11 @@ bool Application::Setup()
 void Application::Cleanup()
 {
     m_pClientManager->Cleanup();
+}
+
+void Application::Run()
+{
+    m_pClientManager->Run();
 }
 
 void Application::Draw()
@@ -37,4 +42,26 @@ void Application::Draw()
 void Application::Update()
 {
     m_pClientManager->Update();
+}
+
+void Application::CreateFrameListener()
+{
+    m_pClientManager->CreateFrameListener(this);
+}
+
+bool Application::frameEnded(const Ogre::FrameEvent& event)
+{
+    return true;
+}
+
+bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
+{
+    this->Update();
+    return true;
+}
+
+bool Application::frameStarted(const Ogre::FrameEvent& event)
+{
+    this->Draw();
+    return true;
 }

@@ -53,7 +53,7 @@ function CreateSandboxObject(objectName, position, rotation)
     
     if position ~= nil then object:setPosition(position); end
     
-    if rotation ~= nil then object:SetRotation(rotation); end
+    if rotation ~= nil then object:setRotation(rotation); end
     
     return object;
 end

@@ -17,6 +17,8 @@ public:
 	void initilize();
 	void cleanup();
 
+	void stepWorld();
+
 	void addRigidBody(btRigidBody* pRigidBody);
 
 private:

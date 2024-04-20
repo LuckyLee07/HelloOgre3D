@@ -17,8 +17,8 @@ namespace Fancy
 #define	CCLUA_INFO		Fancy::LogSetParam(nullptr, nullptr, __LINE__, Ogre::LML_NORMAL),	Fancy::LogMessage
 #define CCLUA_ERROR		Fancy::LogSetParam(nullptr, nullptr, __LINE__, Ogre::LML_CRITICAL),	Fancy::LogMessage
 
-#define	CCLOG_INFO		Fancy::LogSetParam((__FILENAME__), __FUNCTION__, __LINE__, Ogre::LML_NORMAL),	Fancy::LogMessage
-#define CCLOG_ERROR		Fancy::LogSetParam((__FILENAME__), __FUNCTION__, __LINE__, Ogre::LML_CRITICAL),	Fancy::LogMessage
+#define	CCLOG_INFO		Fancy::LogSetParam((__FILENAME__), nullptr, __LINE__, Ogre::LML_NORMAL),	Fancy::LogMessage
+#define CCLOG_ERROR		Fancy::LogSetParam((__FILENAME__), nullptr, __LINE__, Ogre::LML_CRITICAL),	Fancy::LogMessage
 //#define	CCLOG_DEBUG		Fancy::LogSetParam((__FILENAME__), __FUNCTION__, __LINE__, Ogre::LML_NORMAL),	Fancy::LogMessage
 
 #endif //__LOG_SYSTEM_H__

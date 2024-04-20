@@ -16,6 +16,8 @@ public:
 	
 	static GameManager* GetInstance();
 
+	void Update(int deltaMilliseconds);
+
 public:
 	//tolua_begin
 	Ogre::Camera* GetCamera();
@@ -26,18 +28,18 @@ public:
 
 	void SetAmbientLight(const Ogre::Vector3& colourValue);
 
-	Ogre::SceneNode* CreatePlane(float length, float width);
-
 	Ogre::Light* CreateDirectionalLight(const Ogre::Vector3& rotation);
 
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
+	void setMaterial(SandboxObject* pObject, const Ogre::String& materialName);
 
+	SandboxObject* CreatePlane(float length, float width);
 	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
 
 	//tolua_end
 
 private:
-	unsigned int getNextObjectId() { return m_objectIndex++; }
+	unsigned int getNextObjectId() { return ++m_objectIndex; }
 
 private:
 	Ogre::SceneManager* m_pSceneManager;

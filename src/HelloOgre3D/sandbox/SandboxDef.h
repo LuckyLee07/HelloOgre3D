@@ -3,6 +3,7 @@
 
 #include "OgreMatrix3.h"
 #include "OgreQuaternion.h"
+#include "LogSystem.h"
 
 #define DEFAULT_MATERIAL "White"
 

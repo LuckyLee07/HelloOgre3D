@@ -1,9 +1,9 @@
 #include "GameManager.h"
 #include "Ogre.h"
-#include "Procedural.h"
 #include "SandboxDef.h"
 #include <algorithm>
 #include "ClientManager.h"
+#include "SandboxMgr.h"
 
 using namespace Ogre;
 
@@ -29,6 +29,17 @@ GameManager* GameManager::GetInstance()
 	return g_GameManager;
 }
 
+void GameManager::Update(int deltaMilliseconds)
+{
+	std::map<unsigned int, SandboxObject*>::iterator objectIter;
+	for (objectIter = m_pObjects.begin(); objectIter != m_pObjects.end(); objectIter++)
+	{
+		objectIter->second->Update(deltaMilliseconds);
+	}
+
+	m_pPhysicsWorld->stepWorld();
+}
+
 Camera* GameManager::GetCamera()
 {
 	return GetClientMgr()->getCamera();
@@ -39,30 +50,21 @@ SceneManager* GameManager::GetSceneManager()
 	return m_pRootSceneNode->getCreator();
 }
 
-SceneNode* GameManager::CreatePlane(float length, float width)
+SandboxObject* GameManager::CreatePlane(float length, float width)
 {
-	const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
-	const Ogre::Real clampedWidth = Ogre::Real(std::max(0.0f, width));
+	Ogre::SceneNode* planeNode = SandboxMgr::CreatePlane(length, width);
 
-	Procedural::PlaneGenerator planeGenerator;
-	planeGenerator.setSizeX(clampedLength);
-	planeGenerator.setSizeY(clampedWidth);
-	
-	// TODO : Accept specifiers for UV tiling.
-	planeGenerator.setUTile(clampedLength / 2);
-	planeGenerator.setVTile(clampedWidth / 2);
+	btRigidBody* planeRigidBody = SandboxMgr::CreatePlane(btVector3(0, 1.0f, 0), 0);
 
-	const Ogre::MeshPtr mesh = planeGenerator.realizeMesh();
+	SandboxObject* pObject = new SandboxObject(getNextObjectId(), planeNode, planeRigidBody);
 
-	Ogre::SceneNode* const plane = m_pRootSceneNode->createChildSceneNode();
+	m_pObjects[pObject->getObjId()] = pObject;
 
-	Ogre::Entity* const planeEntity = plane->getCreator()->createEntity(mesh);
+	pObject->Initialize();
 
-	planeEntity->setMaterialName(DEFAULT_MATERIAL);
+	m_pPhysicsWorld->addRigidBody(pObject->getRigidBody());
 
-	plane->attachObject(planeEntity);
-
-	return plane;
+	return pObject;
 }
 
 void GameManager::SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
@@ -93,6 +95,12 @@ Ogre::Light* GameManager::CreateDirectionalLight(const Ogre::Vector3& direction)
 	lightNode->attachObject(lightEntity);
 
 	return lightEntity;
+}
+
+void GameManager::setMaterial(SandboxObject* pObject, const Ogre::String& materialName)
+{
+	assert(pObject != nullptr);
+	setMaterial(pObject->getSceneNode(), materialName);
 }
 
 void GameManager::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName)

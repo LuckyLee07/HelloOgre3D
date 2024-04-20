@@ -1,13 +1,57 @@
 #include "SandboxMgr.h"
 #include "Ogre.h"
+#include "Procedural.h"
+#include "SandboxDef.h"
+#include "ClientManager.h"
+
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
 #include "BulletCollision/CollisionShapes/btShapeHull.h"
 
-btRigidBody* SandboxMgr::CreateRigidBody(Ogre::Mesh* meshPtr)
+Ogre::SceneNode* SandboxMgr::CreatePlane(Ogre::Real length, Ogre::Real width)
+{
+    const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
+    const Ogre::Real clampedWidth = Ogre::Real(std::max(0.0f, width));
+
+    Procedural::PlaneGenerator planeGenerator;
+    planeGenerator.setSizeX(clampedLength);
+    planeGenerator.setSizeY(clampedWidth);
+
+    // TODO : Accept specifiers for UV tiling.
+    planeGenerator.setUTile(clampedLength / 2);
+    planeGenerator.setVTile(clampedWidth / 2);
+
+    const Ogre::MeshPtr mesh = planeGenerator.realizeMesh();
+
+    Ogre::SceneNode* const plane = GetClientMgr()->getRootSceneNode()->createChildSceneNode();
+
+    Ogre::Entity* const planeEntity = plane->getCreator()->createEntity(mesh);
+
+    planeEntity->setMaterialName(DEFAULT_MATERIAL);
+
+    plane->attachObject(planeEntity);
+
+    return plane;
+}
+
+btRigidBody* SandboxMgr::CreatePlane(const btVector3& normal, const btScalar originOffset)
+{
+    btCollisionShape* const groundShape = new btStaticPlaneShape(normal, originOffset);
+
+    btDefaultMotionState* const groundMotionState = new btDefaultMotionState();
+
+    btRigidBody::btRigidBodyConstructionInfo
+        groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
+
+    groundRigidBodyCI.m_rollingFriction = 0.1f;
+
+    return new btRigidBody(groundRigidBodyCI);
+}
+
+btRigidBody* SandboxMgr::CreateRigidBody(Ogre::Mesh* meshPtr, const btScalar btmass)
 {
     const btVector3 position(0, 0, 0);
-    const btScalar mass = 1.0f;
+    const btScalar mass = btmass;
 
     // 从网格数据创建一个简化的凸包形状。
     btConvexHullShape * hullShape = CreateSimplifiedConvexHull(meshPtr);
@@ -69,17 +113,25 @@ btRigidBody* SandboxMgr::CreateRigidBody(Ogre::Mesh* meshPtr)
 btConvexHullShape* SandboxMgr::CreateSimplifiedConvexHull(Ogre::Mesh* meshPtr)
 {
     // 获取 Ogre::Mesh 的顶点数据
-    const Ogre::Vector3* vertices = nullptr;// meshPtr->getVertices();
-    size_t numVertices = 0;// meshPtr->getNumVertices();
+    Ogre::Vector3* vertices = nullptr;
+    unsigned long* indices = nullptr;
+    size_t vertex_count = 0, index_count = 0;
+
+    GetMeshInfo(meshPtr, vertex_count, vertices, index_count, indices);
 
     // 使用 Bullet3 提供的凸包计算工具
     btConvexHullShape* hullShape = new btConvexHullShape();
+    hullShape->setMargin(0.01f);
+    hullShape->setSafeMargin(0.01f);
 
     // 将 Ogre 的顶点数据转换成 Bullet3 的顶点数据
-    for (size_t i = 0; i < numVertices; ++i) {
+    for (size_t i = 0; i < vertex_count; ++i) {
         const Ogre::Vector3& vertex = vertices[i];
         hullShape->addPoint(btVector3(vertex.x, vertex.y, vertex.z));
     }
+
+    delete[] vertices;
+    delete[] indices;
 
     // 使用 btShapeHull 进行精细化处理
     btShapeHull* hull = new btShapeHull(hullShape);
@@ -88,9 +140,11 @@ btConvexHullShape* SandboxMgr::CreateSimplifiedConvexHull(Ogre::Mesh* meshPtr)
 
     // 创建一个新的 btConvexHullShape，以保存精细化后的凸包数据
     btConvexHullShape* simplifiedHullShape = new btConvexHullShape();
+    const btVector3* const btVertices = hull->getVertexPointer();
     for (int i = 0; i < hull->numVertices(); ++i) {
-        simplifiedHullShape->addPoint(hull->getVertexPointer()[i]);
+        simplifiedHullShape->addPoint(btVertices[i]);
     }
+    simplifiedHullShape->setMargin(0.01f);
 
     // 释放资源
     delete hull;
