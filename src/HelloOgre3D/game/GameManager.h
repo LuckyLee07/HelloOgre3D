@@ -13,10 +13,13 @@ class GameManager //tolua_exports
 public:
 	GameManager(Ogre::SceneManager* sceneManager);
 	~GameManager();
-	
+
 	static GameManager* GetInstance();
 
+	void Initialize();
 	void Update(int deltaMilliseconds);
+	
+	void InitLuaEnv();
 
 public:
 	//tolua_begin

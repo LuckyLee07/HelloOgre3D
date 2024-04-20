@@ -1,7 +1,6 @@
 #include "ClientManager.h"
 #include "SandboxDef.h"
 #include "GameManager.h"
-
 #include "ObfuscatedZip.h"
 
 #include "Ogre.h"
@@ -183,6 +182,7 @@ void ClientManager::Initialize()
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
 
     g_GameManager = new GameManager(m_pSceneManager);
+    g_GameManager->Initialize();
 
     m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
 }
@@ -200,7 +200,7 @@ void ClientManager::Draw()
 void ClientManager::Update()
 {
     static long long updatePerSecondInMicros = 1000000 / 30;
-    static int deltaMilliseconds = updatePerSecondInMicros / 1000;
+    static int deltaMilliseconds = int(updatePerSecondInMicros / 1000);
 
     long long currTimeInMicros = m_Timer.getMicroseconds();
     long long timeDeltaInMicros = currTimeInMicros - m_lastUpdateTimeInMicro;

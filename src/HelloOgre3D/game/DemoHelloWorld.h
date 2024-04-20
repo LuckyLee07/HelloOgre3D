@@ -15,7 +15,6 @@ public:
     virtual void Run();
 
 private:
-    void InitLuaEnv();
     void InitGameScene();
 };
 

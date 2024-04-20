@@ -1,21 +1,23 @@
 #include "GameManager.h"
 #include "Ogre.h"
 #include "SandboxDef.h"
-#include <algorithm>
+//#include <algorithm>
 #include "ClientManager.h"
 #include "SandboxMgr.h"
+#include "ScriptLuaVM.h"
+#include "tolua++.h"
+#include "LuaInterface.h"
 
 using namespace Ogre;
+
+extern int tolua_ClientToLua_open(lua_State* tolua_S);
 
 GameManager* g_GameManager = nullptr;
 
 GameManager::GameManager(SceneManager* sceneManager)
-	: m_pSceneManager(sceneManager), m_objectIndex(0)
+	: m_pSceneManager(sceneManager), m_pPhysicsWorld(nullptr), m_objectIndex(0)
 {
 	m_pRootSceneNode = m_pSceneManager->getRootSceneNode();
-
-	m_pPhysicsWorld = new PhysicsWorld();
-	m_pPhysicsWorld->initilize();
 }
 
 GameManager::~GameManager()
@@ -27,6 +29,27 @@ GameManager::~GameManager()
 GameManager* GameManager::GetInstance()
 {
 	return g_GameManager;
+}
+
+void GameManager::Initialize()
+{
+	m_pPhysicsWorld = new PhysicsWorld();
+	m_pPhysicsWorld->initilize();
+
+	this->InitLuaEnv();
+}
+
+void GameManager::InitLuaEnv()
+{
+	// 设置ToLua对象 
+	ScriptLuaVM* pScriptVM = GetScriptLuaVM();
+	tolua_ClientToLua_open(pScriptVM->getLuaState());
+
+	// 设置lua可用的c++对象 
+	pScriptVM->setUserTypePointer("Sandbox", "GameManager", GameManager::GetInstance());
+	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
+
+	pScriptVM->callFile("res/scripts/script_init.lua");
 }
 
 void GameManager::Update(int deltaMilliseconds)
