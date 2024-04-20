@@ -64,6 +64,7 @@ function CreateGameProject( projectName )
     configuration( "*" )
     includedirs( {
       "../src/%{prj.name}/",
+      "../src/%{prj.name}/base",
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
       "../src/external/lua/lua",
@@ -82,6 +83,8 @@ function CreateGameProject( projectName )
     files( {
       "../src/" .. projectName .. "/**.h",
       "../src/" .. projectName .. "/**.cpp",
+      "../src/" .. projectName .. "/base/**.h",
+      "../src/" .. projectName .. "/base/**.cpp",
       "../src/" .. projectName .. "/game/**.h",
       "../src/" .. projectName .. "/game/**.cpp",
       "../src/" .. projectName .. "/sandbox/**.h",
