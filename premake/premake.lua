@@ -476,3 +476,18 @@ solution( "HelloOgre3D" )
 			"../src/external/bullet_linearmath/src/**.cpp"
 		} )
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
+
+-- ogre3d gorilla ui "master" static library
+	project( "ogre3d_gorilla" )
+		kind( "StaticLib" )
+		location( "../build/external/ogre3d_gorilla" )
+		includedirs( { "../src/external" } )
+		buildoptions( {
+			"/Zm198"
+		} )
+		configuration( "*" )
+		files( {
+			"../src/external/ogre3d_gorilla/include/**.h",
+			"../src/external/ogre3d_gorilla/src/**.cpp"
+		} )
+		defines( { "WIN32" } )

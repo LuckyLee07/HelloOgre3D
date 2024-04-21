@@ -10,5 +10,10 @@
 3、新增lua/tolua库，编写基础C++类并进行tolua
 
 4、以tolua的形式实现原书chapter_1_introduction的内容
+(0)搭建新框架
+(1)tolua场景创建相关的对象及接口
+(2)加入bullet物理世界
+(3)加入UI显示系统
+(4)加入输入响应系统
 
 5、加入luasocket库及LuaPanda插件实现vscode中的lua断点调试功能

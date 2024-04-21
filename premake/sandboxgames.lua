@@ -26,6 +26,7 @@ function CreateGameProject( projectName )
       "bullet_collision",
       "bullet_dynamics",
       "bullet_linearmath",
+      "ogre3d_gorilla",
     } )
     configuration( { "windows" } )
       -- add the directx include directory
@@ -67,6 +68,7 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/base",
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
+      "../src/external",
       "../src/external/lua/lua",
       "../src/external/lua/tolua",
       "../src/external/zzip/include/",

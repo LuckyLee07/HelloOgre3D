@@ -7,6 +7,7 @@
 #include "ScriptLuaVM.h"
 #include "tolua++.h"
 #include "LuaInterface.h"
+#include "UIComponent.h"
 
 using namespace Ogre;
 
