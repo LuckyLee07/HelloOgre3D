@@ -1,5 +1,7 @@
 
-$#include "OgreVector3.h"
+$#include "Ogre.h"
+//$#include "OgreVector3.h"
+
 namespace Ogre
 {
 	typedef float Real;
@@ -59,5 +61,6 @@ $cfile "base/LuaInterface.h"
 $cfile "base/BaseObject.h"
 $cfile "sandbox/SandboxDef.h"
 $cfile "sandbox/SandboxObject.h"
+$cfile "sandbox/SandboxMgr.h"
 $cfile "game/GameManager.h"
 

@@ -1,7 +1,6 @@
 #include "Application.h"
 #include "SandboxDef.h"
 #include "ClientManager.h"
-#include "GameManager.h"
 
 Application::Application(const std::string& appTitle)
 {

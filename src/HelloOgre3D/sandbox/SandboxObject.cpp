@@ -9,8 +9,8 @@
 
 using namespace Ogre;
 
-SandboxObject::SandboxObject(unsigned int objectId, const Ogre::String& meshFile)
-	: BaseObject(objectId, BaseObject::OBJ_SANDBOX_OBJ)
+SandboxObject::SandboxObject(const Ogre::String& meshFile)
+	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ)
 {
 	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
 
@@ -24,8 +24,9 @@ SandboxObject::SandboxObject(unsigned int objectId, const Ogre::String& meshFile
 	m_pRigidBody->setUserPointer(this);
 }
 
-SandboxObject::SandboxObject(unsigned int objectId, Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: BaseObject(objectId, BaseObject::OBJ_SANDBOX_OBJ), m_pSceneNode(pSceneNode), m_pRigidBody(pRigidBody), m_pEntity(nullptr)
+SandboxObject::SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
+	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ), 
+	m_pSceneNode(pSceneNode), m_pRigidBody(pRigidBody), m_pEntity(nullptr)
 {
 	if (m_pRigidBody)
 		m_pRigidBody->setUserPointer(this);
@@ -39,7 +40,6 @@ void SandboxObject::Initialize()
 {
 
 }
-
 
 void SandboxObject::setMass(const Ogre::Real mass)
 {

@@ -16,8 +16,8 @@ class SandboxObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
 	//tolua_begin
-	SandboxObject(unsigned int objectId, const Ogre::String& meshFile);
-	SandboxObject(unsigned int objectId, Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
+	SandboxObject(const Ogre::String& meshFile);
+	SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
 
 	virtual ~SandboxObject();
 

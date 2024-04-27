@@ -1,59 +1,47 @@
 #ifndef __GAME_MANAGER_H__  
 #define __GAME_MANAGER_H__
 
-#include "OgreString.h"
-#include "OgreSceneManager.h"
-#include "OgreSceneNode.h"
-#include "SandboxObject.h"
 #include <map>
+#include "SandboxObject.h"
 #include "PhysicsWorld.h"
+#include "SandboxMgr.h"
+
+namespace Ogre
+{
+	class SceneManager;
+}
 
 class GameManager //tolua_exports
 { //tolua_exports
 public:
-	GameManager(Ogre::SceneManager* sceneManager);
+	GameManager();
 	~GameManager();
 
 	static GameManager* GetInstance();
 
-	void Initialize();
+	void Initialize(Ogre::SceneManager* sceneManager);
 	void Update(int deltaMilliseconds);
 	
 	void InitLuaEnv();
 
-public:
-	//tolua_begin
-	Ogre::Camera* GetCamera();
-
-	Ogre::SceneManager* GetSceneManager();
-	
-	void SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
-
-	void SetAmbientLight(const Ogre::Vector3& colourValue);
-
-	Ogre::Light* CreateDirectionalLight(const Ogre::Vector3& rotation);
-
-	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
-	void setMaterial(SandboxObject* pObject, const Ogre::String& materialName);
-
-	SandboxObject* CreatePlane(float length, float width);
-	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
-
-	//tolua_end
+	void AddSandboxObject(SandboxObject* pSandboxObject);
 
 private:
 	unsigned int getNextObjectId() { return ++m_objectIndex; }
 
 private:
-	Ogre::SceneManager* m_pSceneManager;
-	Ogre::SceneNode* m_pRootSceneNode;
+	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
-
+	
 	unsigned int m_objectIndex;
 	std::map<unsigned int, SandboxObject*> m_pObjects;
+
+	
+	//Gorilla::Screen* p;
 
 }; //tolua_exports
 
 extern GameManager* g_GameManager;
+GameManager* GetGameManager();
 
 #endif; // __GAME_MANAGER_H__

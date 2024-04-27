@@ -14,15 +14,18 @@ public:
 	//tolua_end
 public:
 	//tolua_begin
-	BaseObject(unsigned int objectId, OBJTYPE objType);
+	BaseObject(unsigned int objId, OBJTYPE objType);
 	virtual ~BaseObject();
 
+	void setObjId(unsigned int objId);
 	unsigned int getObjId();
+	
+	void setObjType(OBJTYPE objType);
 	OBJTYPE getObjType();
 	//tolua_end
 private:
 	OBJTYPE m_objType;
-	unsigned int m_objectId;
+	unsigned int m_objId;
 }; //tolua_exports
 
 

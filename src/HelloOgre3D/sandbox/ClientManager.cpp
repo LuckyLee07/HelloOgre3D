@@ -181,8 +181,8 @@ void ClientManager::Initialize()
 
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
 
-    g_GameManager = new GameManager(m_pSceneManager);
-    g_GameManager->Initialize();
+    g_GameManager = new GameManager();
+    g_GameManager->Initialize(m_pSceneManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
 }
