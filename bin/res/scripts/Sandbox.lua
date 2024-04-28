@@ -1,5 +1,22 @@
 
+function CreateSandboxText()
+    local ui_width, ui_height = 300, 180;
+    local screenWidth = Sandbox:GetScreenWidth()
+    local screenHeight = Sandbox:GetScreenHeight()
+
+    local uiComponent = Sandbox:CreateUIComponent()
+    local ui_posx = screenWidth - ui_width - 20;
+    local ui_posy = screenHeight - ui_height - 35;
+    uiComponent:setPosition(Vector2(ui_posx, ui_posy))
+    uiComponent:setDimension(Vector2(ui_width, ui_height))
+    uiComponent:setTextMargin(10, 10);
+
+    uiComponent:setMarkupText("Hello World")
+end
+
+
 function Sandbox_Initialize(ctype)
+    CreateSandboxText()
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();

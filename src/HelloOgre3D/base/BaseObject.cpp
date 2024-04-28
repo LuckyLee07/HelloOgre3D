@@ -28,3 +28,8 @@ void BaseObject::setObjType(OBJTYPE objType)
 {
 	m_objType = objType;
 }
+
+void BaseObject::update(int deltaMsec)
+{
+	(void)deltaMsec;
+}

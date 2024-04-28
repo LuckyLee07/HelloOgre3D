@@ -5,6 +5,7 @@
 #include "OgreVector3.h"
 #include "OgreString.h"
 #include "SandboxObject.h"
+#include "UIComponent.h"
 
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btScalar.h"
@@ -26,9 +27,13 @@ public:
 	//tolua_begin
 	Ogre::Camera* GetCamera();
 	Ogre::SceneManager* GetSceneManager();
+
+	Ogre::Real GetScreenWidth();
+	Ogre::Real GetScreenHeight();
+
 	//tolua_end
 
-public:
+public: //static methods
 	static Ogre::SceneNode* CreatePlaneNode(Ogre::Real length, Ogre::Real width);
 	static btRigidBody* CreatePlane(const btVector3& normal, const btScalar originOffset);
 
@@ -50,6 +55,8 @@ public:
 	
 	SandboxObject* CreatePlane(float length, float width);
 	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
+
+	UIComponent* CreateUIComponent(unsigned int index = 0);
 
 	//tolua_end
 

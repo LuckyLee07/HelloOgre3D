@@ -6,6 +6,7 @@
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
 #include "OgreParticleFXPlugin.h"
+#include "ogre3d_gorilla/include/Gorilla.h"
 
 using namespace Ogre;
 
@@ -20,6 +21,11 @@ ClientManager::ClientManager()
 
 ClientManager::~ClientManager()
 {
+    delete g_GameManager;
+
+    Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
+    if (pSilverback != nullptr) delete pSilverback;
+
     delete m_pRoot;
 }
 
@@ -180,6 +186,9 @@ void ClientManager::Initialize()
     m_pCamera->setAutoAspectRatio(true);
 
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
+    
+    Gorilla::Silverback* pSilverback = new Gorilla::Silverback();
+    pSilverback->loadAtlas(DEFAULT_ATLAS);
 
     g_GameManager = new GameManager();
     g_GameManager->Initialize(m_pSceneManager);

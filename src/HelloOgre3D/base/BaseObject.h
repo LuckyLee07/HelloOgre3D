@@ -9,6 +9,7 @@ public:
 	{
 		OBJ_AGENT = 0,
 		OBJ_SANDBOX,
+		OBJ_SANDBOX_UI,
 		OBJ_SANDBOX_OBJ,
 	};
 	//tolua_end
@@ -23,6 +24,9 @@ public:
 	void setObjType(OBJTYPE objType);
 	OBJTYPE getObjType();
 	//tolua_end
+
+	virtual void update(int deltaMsec);
+
 private:
 	OBJTYPE m_objType;
 	unsigned int m_objId;

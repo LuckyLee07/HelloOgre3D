@@ -2,15 +2,20 @@
 #define __GAME_MANAGER_H__
 
 #include <map>
+#include "SandboxDef.h"
 #include "SandboxObject.h"
 #include "PhysicsWorld.h"
 #include "SandboxMgr.h"
+#include "UIComponent.h"
+#include "OgrePrerequisites.h"
 
-namespace Ogre
+#define UI_LAYER_COUNT	16
+
+namespace Gorilla
 {
-	class SceneManager;
+	class Layer;
+	class Screen;
 }
-
 class GameManager //tolua_exports
 { //tolua_exports
 public:
@@ -21,12 +26,21 @@ public:
 
 	void Initialize(Ogre::SceneManager* sceneManager);
 	void Update(int deltaMilliseconds);
-	
-	void InitLuaEnv();
 
-	void AddSandboxObject(SandboxObject* pSandboxObject);
+	void InitLuaEnv();
+	void InitUIConfig();
+
+	
+public:
+	Ogre::Real getScreenWidth();
+	Ogre::Real getScreenHeight();
+
+	UIComponent* createUIComponent(unsigned int index);
+	void addSandboxObject(SandboxObject* pSandboxObject);
 
 private:
+	Gorilla::Layer* getUILayer(unsigned int index = 0);
+
 	unsigned int getNextObjectId() { return ++m_objectIndex; }
 
 private:
@@ -34,10 +48,10 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 	
 	unsigned int m_objectIndex;
-	std::map<unsigned int, SandboxObject*> m_pObjects;
-
+	std::map<unsigned int, BaseObject*> m_pObjects;
 	
-	//Gorilla::Screen* p;
+	Gorilla::Screen* m_pUIScene;
+	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
 
 }; //tolua_exports
 

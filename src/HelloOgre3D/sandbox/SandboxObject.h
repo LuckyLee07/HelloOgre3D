@@ -33,7 +33,7 @@ public:
 
 	//tolua_end
 
-	void Update(int deltaMsec);
+	void update(int deltaMsec) override;
 	void updateWorldTransform();
 
 private:

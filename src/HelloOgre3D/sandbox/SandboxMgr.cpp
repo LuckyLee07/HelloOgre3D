@@ -33,6 +33,17 @@ SceneManager* SandboxMgr::GetSceneManager()
     return m_pRootSceneNode->getCreator();
 }
 
+Ogre::Real SandboxMgr::GetScreenWidth()
+{
+    return g_GameManager->getScreenWidth();
+}
+
+Ogre::Real SandboxMgr::GetScreenHeight()
+{
+    return g_GameManager->getScreenHeight();
+}
+
+//---------------------------util static functions---------------------------
 Ogre::SceneNode* SandboxMgr::CreatePlaneNode(Ogre::Real length, Ogre::Real width)
 {
     const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
@@ -295,6 +306,7 @@ void SandboxMgr::GetMeshInfo(const Ogre::Mesh* mesh,
     }
 }
 
+//---------------------------sandbox tolua functions---------------------------
 void SandboxMgr::SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
 {
     const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
@@ -371,7 +383,7 @@ SandboxObject* SandboxMgr::CreatePlane(float length, float width)
 
     SandboxObject* pObject = new SandboxObject(planeNode, planeRigidBody);
 
-    g_GameManager->AddSandboxObject(pObject);
+    g_GameManager->addSandboxObject(pObject);
 
     return pObject;
 }
@@ -380,7 +392,12 @@ SandboxObject* SandboxMgr::CreateSandboxObject(const Ogre::String& meshFilePath)
 {
     SandboxObject* pObject = new SandboxObject(meshFilePath);
 
-    g_GameManager->AddSandboxObject(pObject);
+    g_GameManager->addSandboxObject(pObject);
 
     return pObject;
+}
+
+UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
+{
+    return g_GameManager->createUIComponent(index);
 }

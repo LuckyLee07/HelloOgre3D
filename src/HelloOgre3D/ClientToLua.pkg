@@ -7,6 +7,14 @@ namespace Ogre
 	typedef float Real;
 	typedef std::string String;
 
+	class Vector2
+	{
+	public:
+		Vector2(){}
+		Vector2(float fx, float fy);
+		Vector2(float scaler);
+	};
+
 	class Vector3
 	{
 	public:
@@ -60,6 +68,7 @@ namespace Ogre
 $cfile "base/LuaInterface.h"
 $cfile "base/BaseObject.h"
 $cfile "sandbox/SandboxDef.h"
+$cfile "sandbox/UIComponent.h"
 $cfile "sandbox/SandboxObject.h"
 $cfile "sandbox/SandboxMgr.h"
 $cfile "game/GameManager.h"

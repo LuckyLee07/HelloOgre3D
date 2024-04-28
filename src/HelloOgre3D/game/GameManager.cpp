@@ -1,26 +1,45 @@
 #include "GameManager.h"
 #include "Ogre.h"
 #include "SandboxDef.h"
-//#include <algorithm>
 #include "SandboxMgr.h"
 #include "ScriptLuaVM.h"
 #include "tolua++.h"
 #include "LuaInterface.h"
 #include "UIComponent.h"
+#include "ClientManager.h"
+#include <algorithm>
 
 using namespace Ogre;
 
 extern int tolua_ClientToLua_open(lua_State* tolua_S);
 
 GameManager* g_GameManager = nullptr;
+GameManager* GetGameManager()
+{
+	return g_GameManager;
+}
 
 GameManager::GameManager()
 	: m_pPhysicsWorld(nullptr), m_objectIndex(0)
 {
+	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
 
 GameManager::~GameManager()
 {
+	delete m_pSandboxMgr;
+	delete m_pPhysicsWorld;
+
+	for (size_t index = 0; index < UI_LAYER_COUNT; index++)
+	{
+		if (m_pUILayers[index] != nullptr)
+			m_pUIScene->destroy(m_pUILayers[index]);
+		m_pUILayers[index] = nullptr;
+	}
+	
+	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
+	pSilverback->destroyScreen(m_pUIScene);
+	m_pUIScene = nullptr;
 }
 
 GameManager* GameManager::GetInstance()
@@ -30,12 +49,41 @@ GameManager* GameManager::GetInstance()
 
 void GameManager::Initialize(SceneManager* sceneManager)
 {
-	m_pSandboxMgr = new SandboxMgr(sceneManager);
+	this->InitUIConfig();
 
 	m_pPhysicsWorld = new PhysicsWorld();
 	m_pPhysicsWorld->initilize();
 
+	m_pSandboxMgr = new SandboxMgr(sceneManager);
+
 	this->InitLuaEnv();
+}
+
+Gorilla::Layer* GameManager::getUILayer(unsigned int index)
+{
+	if (index >= UI_LAYER_COUNT) return nullptr;
+	
+	if (m_pUILayers[index] == nullptr)
+	{
+		m_pUILayers[index] = m_pUIScene->createLayer(index);
+	}
+	return m_pUILayers[index];
+}
+
+void GameManager::InitUIConfig()
+{
+	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
+	Ogre::Camera* pCamera = GetClientMgr()->getCamera();
+	m_pUIScene = pSilverback->createScreen(pCamera->getViewport(), DEFAULT_ATLAS);
+	
+	Gorilla::MarkupText* pUIText = getUILayer()->createMarkupText(
+		91, m_pUIScene->getWidth(), m_pUIScene->getHeight(),
+		"Learning Game AI Programming. " __TIMESTAMP__);
+
+	Ogre::Real leftPos = m_pUIScene->getWidth() - pUIText->maxTextWidth() - 4;
+	Ogre::Real topPos = m_pUIScene->getHeight() - m_pUIScene->getAtlas()->getGlyphData(9)->mLineHeight - 4;
+	pUIText->left(leftPos);
+	pUIText->top(topPos);
 }
 
 void GameManager::InitLuaEnv()
@@ -53,16 +101,27 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
-	std::map<unsigned int, SandboxObject*>::iterator objectIter;
+	std::map<unsigned int, BaseObject*>::iterator objectIter;
 	for (objectIter = m_pObjects.begin(); objectIter != m_pObjects.end(); objectIter++)
 	{
-		objectIter->second->Update(deltaMilliseconds);
+		BaseObject* pObject = objectIter->second;
+		if (pObject != nullptr) pObject->update(deltaMilliseconds);
 	}
 
 	m_pPhysicsWorld->stepWorld();
 }
 
-void GameManager::AddSandboxObject(SandboxObject* pSandboxObject)
+Ogre::Real GameManager::getScreenWidth()
+{
+	return m_pUIScene->getWidth();
+}
+
+Ogre::Real GameManager::getScreenHeight()
+{
+	return m_pUIScene->getHeight();
+}
+
+void GameManager::addSandboxObject(SandboxObject* pSandboxObject)
 {
 	unsigned int objectId = getNextObjectId();
 
@@ -74,7 +133,14 @@ void GameManager::AddSandboxObject(SandboxObject* pSandboxObject)
 	m_pPhysicsWorld->addRigidBody(pSandboxObject->getRigidBody());
 }
 
-GameManager* GetGameManager()
+UIComponent* GameManager::createUIComponent(unsigned int index)
 {
-	return g_GameManager;
+	if (index < UI_LAYER_COUNT)
+	{
+		UIComponent* pComponent = new UIComponent(getUILayer(index));
+		pComponent->setObjId(getNextObjectId());
+		m_pObjects[pComponent->getObjId()] = pComponent;
+		return pComponent;
+	}
+	return nullptr;
 }

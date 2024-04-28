@@ -7,6 +7,8 @@
 
 #define DEFAULT_MATERIAL "White"
 
+#define DEFAULT_ATLAS "fonts/dejavu/dejavu"
+
 #ifdef _DEBUG
 #define APPLICATION_LOG         "Sandbox_d.log"
 #define APPLICATION_CONFIG      "Sandbox_d.cfg"

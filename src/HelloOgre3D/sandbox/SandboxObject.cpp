@@ -80,7 +80,7 @@ void SandboxObject::setOrientation(const Ogre::Quaternion& quaternion)
 	this->updateWorldTransform();
 }
 
-void SandboxObject::Update(int deltaMsec)
+void SandboxObject::update(int deltaMsec)
 {
 	this->updateWorldTransform();
 }
