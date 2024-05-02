@@ -491,3 +491,15 @@ solution( "HelloOgre3D" )
 			"../src/external/ogre3d_gorilla/src/**.cpp"
 		} )
 		defines( { "WIN32" } )
+
+-- ois v1.3 static library
+	project( "ois" )
+		kind( "StaticLib" )
+		location( "../build/external/ois" )
+		buildoptions( {
+			"/wd\"4512\"", "/wd\"4100\"", "/wd\"4189\""
+		} )
+		configuration( "windows" )
+			buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
+		configuration( "*" )
+		files( { "../src/external/ois/include/**.h", "../src/external/ois/src/**.cpp" } )

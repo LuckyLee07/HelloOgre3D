@@ -27,6 +27,7 @@ function CreateGameProject( projectName )
       "bullet_dynamics",
       "bullet_linearmath",
       "ogre3d_gorilla",
+      "ois",
     } )
     configuration( { "windows" } )
       -- add the directx include directory
@@ -79,6 +80,7 @@ function CreateGameProject( projectName )
       "../src/external/bullet_collision/include/",
       "../src/external/bullet_dynamics/include/",
       "../src/external/bullet_linearmath/include/",
+      "../src/external/ois/include/",
     } )
     -- TODO(David Young 6-8-13): the current premake-dev doesn't support
     -- %{prj.name} within "files"
