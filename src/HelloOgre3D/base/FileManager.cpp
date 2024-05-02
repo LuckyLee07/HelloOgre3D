@@ -103,10 +103,11 @@ bool FileAutoClose::read(void *buf, int nbytes)
 bool FileAutoClose::write(const void *buf, int nbytes)
 {
 	int n;
-	if((n=::write(m_FP, buf, nbytes)) == nbytes) return true;
+	if((n=::write(m_FP, buf, nbytes)) == nbytes) 
+		return true;
 	else
 	{
-		int err = errno;
+		//int err = errno;
 		return false;
 	}
 }
@@ -125,10 +126,11 @@ int FileAutoClose::tell()
 
 bool FileAutoClose::seek(int offset, int pos)
 {
-	if(lseek(m_FP, offset, pos) >= 0) return true;
+	if(lseek(m_FP, offset, pos) >= 0) 
+		return true;
 	else
 	{
-		int err = errno;
+		//int err = errno;
 		return false;
 	}
 }

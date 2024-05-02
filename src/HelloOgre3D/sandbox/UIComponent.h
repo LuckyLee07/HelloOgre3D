@@ -42,6 +42,8 @@ public:
 
 	void setBackgroundColor(const Ogre::ColourValue& colorValue);
 
+	void setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor);
+
 	//tolua_end
 private:
 	std::vector<UIComponent*> m_children;

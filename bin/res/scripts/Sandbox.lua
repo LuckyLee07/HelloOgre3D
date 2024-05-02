@@ -11,7 +11,23 @@ function CreateSandboxText()
     uiComponent:setDimension(Vector2(ui_width, ui_height))
     uiComponent:setTextMargin(10, 10);
 
-    uiComponent:setMarkupText("Hello World")
+    local startColor = GUI.Palette.DarkBlueGradient
+    local endenColor = GUI.Palette.DarkBlackGradient
+    uiComponent:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
+
+    local markupText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
+        "W/A/S/D: to move" .. GUI.MarkupNewline ..
+        "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
+        "Hold RMB: to look" .. GUI.MarkupNewline ..
+        GUI.MarkupNewline ..
+        "Space: shoot block" .. GUI.MarkupNewline ..
+        GUI.MarkupNewline ..
+        "F1: to reset the camera" .. GUI.MarkupNewline ..
+        "F2: toggle the menu" .. GUI.MarkupNewline ..
+        "F5: toggle performance information" .. GUI.MarkupNewline ..
+        "F6: toggle camera information" .. GUI.MarkupNewline ..
+        "F7: toggle physics debug"
+    uiComponent:setMarkupText(markupText)
 end
 
 

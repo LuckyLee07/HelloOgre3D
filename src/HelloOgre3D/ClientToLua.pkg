@@ -64,6 +64,16 @@ namespace Ogre
     };
 }
 
+$#include "ogre3d_gorilla/include/Gorilla.h"
+namespace Gorilla
+{
+	enum Gradient
+	{
+		Gradient_NorthSouth,
+		Gradient_WestEast,
+		Gradient_Diagonal
+	};
+}
 
 $cfile "base/LuaInterface.h"
 $cfile "base/BaseObject.h"

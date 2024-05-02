@@ -110,3 +110,8 @@ void UIComponent::setBackgroundColor(const Ogre::ColourValue& colorValue)
 {
 	m_pRectangle->background_colour(colorValue);
 }
+
+void UIComponent::setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor)
+{
+	m_pRectangle->background_gradient(direction, startColor, endColor);
+}

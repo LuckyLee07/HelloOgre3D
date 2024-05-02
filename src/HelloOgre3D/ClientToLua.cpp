@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat Apr 27 21:01:26 2024.
+** Generated automatically by tolua++-1.0.92 on Thu May  2 10:08:18 2024.
 */
 
 #ifndef __cplusplus
@@ -14,6 +14,7 @@
 TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 
 #include "Ogre.h"
+#include "ogre3d_gorilla/include/Gorilla.h"
 #include "base/LuaInterface.h"
 #include "base/BaseObject.h"
 #include "sandbox/SandboxDef.h"
@@ -1431,6 +1432,43 @@ static int tolua_ClientToLua_UIComponent_setBackgroundColor00(lua_State* tolua_S
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setGradientColor of class  UIComponent */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_UIComponent_setGradientColor00
+static int tolua_ClientToLua_UIComponent_setGradientColor00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  Gorilla::Gradient direction = ((Gorilla::Gradient) (int)  tolua_tonumber(tolua_S,2,0));
+  const Ogre::ColourValue* startColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,3,0));
+  const Ogre::ColourValue* endColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setGradientColor'", NULL);
+#endif
+  {
+   self->setGradientColor(direction,*startColor,*endColor);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setGradientColor'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: new of class  SandboxObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_new00
 static int tolua_ClientToLua_SandboxObject_new00(lua_State* tolua_S)
@@ -2292,6 +2330,12 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_beginmodule(tolua_S,"SceneNode");
    tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
+  tolua_module(tolua_S,"Gorilla",0);
+  tolua_beginmodule(tolua_S,"Gorilla");
+   tolua_constant(tolua_S,"Gradient_NorthSouth",Gorilla::Gradient_NorthSouth);
+   tolua_constant(tolua_S,"Gradient_WestEast",Gorilla::Gradient_WestEast);
+   tolua_constant(tolua_S,"Gradient_Diagonal",Gorilla::Gradient_Diagonal);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"LuaInterface","LuaInterface","",NULL);
   tolua_beginmodule(tolua_S,"LuaInterface");
    tolua_function(tolua_S,"log",tolua_ClientToLua_LuaInterface_log00);
@@ -2333,6 +2377,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setDimension",tolua_ClientToLua_UIComponent_setDimension00);
    tolua_function(tolua_S,"setTextMargin",tolua_ClientToLua_UIComponent_setTextMargin00);
    tolua_function(tolua_S,"setBackgroundColor",tolua_ClientToLua_UIComponent_setBackgroundColor00);
+   tolua_function(tolua_S,"setGradientColor",tolua_ClientToLua_UIComponent_setGradientColor00);
   tolua_endmodule(tolua_S);
   #ifdef __cplusplus
   tolua_cclass(tolua_S,"SandboxObject","SandboxObject","BaseObject",tolua_collect_SandboxObject);

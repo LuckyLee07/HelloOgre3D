@@ -62,8 +62,9 @@ namespace Fancy
 			snprintf(buffer, sizeof(buffer), "[%s] %s", time_buffer, pstr);
 		}
 		return buffer;
-#endif
+#else
 		return "--";
+#endif
 	}
 
 	void LogMessage(const char *format, ...)
