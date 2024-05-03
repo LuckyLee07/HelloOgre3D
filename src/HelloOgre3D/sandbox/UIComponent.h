@@ -41,11 +41,15 @@ public:
 	void setTextMargin(Ogre::Real top, Ogre::Real left);
 
 	void setBackgroundColor(const Ogre::ColourValue& colorValue);
-
+	
 	void setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor);
 
+	void setVisible(bool visible);
+	bool isVisible() { return m_IsVisible; }
+	
 	//tolua_end
 private:
+	bool m_IsVisible;
 	std::vector<UIComponent*> m_children;
 
 	Ogre::SceneNode* m_pSceneNode;

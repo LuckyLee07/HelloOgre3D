@@ -10,8 +10,6 @@ public:
 
     virtual ~DemoHelloWorld(void);
 
-    virtual void Update();
-
     virtual void Run();
 
 private:

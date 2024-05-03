@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Fri May  3 19:14:51 2024.
+** Generated automatically by tolua++-1.0.92 on Fri May  3 20:45:33 2024.
 */
 
 #ifndef __cplusplus
@@ -1872,6 +1872,71 @@ static int tolua_ClientToLua_UIComponent_setGradientColor00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setVisible of class  UIComponent */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_UIComponent_setVisible00
+static int tolua_ClientToLua_UIComponent_setVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setVisible'", NULL);
+#endif
+  {
+   self->setVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isVisible of class  UIComponent */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_UIComponent_isVisible00
+static int tolua_ClientToLua_UIComponent_isVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isVisible'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isVisible();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: new of class  SandboxObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_new00
 static int tolua_ClientToLua_SandboxObject_new00(lua_State* tolua_S)
@@ -3175,6 +3240,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setTextMargin",tolua_ClientToLua_UIComponent_setTextMargin00);
    tolua_function(tolua_S,"setBackgroundColor",tolua_ClientToLua_UIComponent_setBackgroundColor00);
    tolua_function(tolua_S,"setGradientColor",tolua_ClientToLua_UIComponent_setGradientColor00);
+   tolua_function(tolua_S,"setVisible",tolua_ClientToLua_UIComponent_setVisible00);
+   tolua_function(tolua_S,"isVisible",tolua_ClientToLua_UIComponent_isVisible00);
   tolua_endmodule(tolua_S);
   #ifdef __cplusplus
   tolua_cclass(tolua_S,"SandboxObject","SandboxObject","BaseObject",tolua_collect_SandboxObject);

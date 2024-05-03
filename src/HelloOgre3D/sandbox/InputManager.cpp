@@ -3,6 +3,7 @@
 #include "ClientManager.h"
 #include "GameManager.h"
 #include "OgreRenderWindow.h"
+#include "Samples/SdkCameraMan.h"
 
 InputManager::InputManager(GameManager* pGameMgr) : m_pGameManager(pGameMgr), 
 	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr), m_windowHnd(0)
@@ -70,6 +71,7 @@ void InputManager::resizeMouseState(int width, int height)
 
 bool InputManager::keyPressed(const OIS::KeyEvent& event)
 {
+	GetClientMgr()->getCameraMan()->injectKeyDown(event);
 	m_pGameManager->HandleKeyPress(event.key, event.text);
 
 	return true;
@@ -77,6 +79,7 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 
 bool InputManager::keyReleased(const OIS::KeyEvent& event)
 {
+	GetClientMgr()->getCameraMan()->injectKeyUp(event);
 	m_pGameManager->HandleKeyRelease(event.key, event.text);
 
 	return true;
@@ -86,7 +89,7 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 {
 	if (event.state.buttonDown(OIS::MB_Right))
 	{
-		
+		GetClientMgr()->getCameraMan()->injectMouseMove(event);
 	}
 
 	GetClientMgr()->SetWindowActive(true);
@@ -98,13 +101,14 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 
 bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
-
+	GetClientMgr()->getCameraMan()->injectMouseDown(event, btnId);
 	m_pGameManager->HandleMousePress(event.state.width, event.state.height, btnId);
 	return true;
 }
 
 bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
+	GetClientMgr()->getCameraMan()->injectMouseUp(event, btnId);
 	m_pGameManager->HandleMouseRelease(event.state.width, event.state.height, btnId);
 	return true;
 }

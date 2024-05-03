@@ -12,11 +12,6 @@ DemoHelloWorld::~DemoHelloWorld()
 {
 }
 
-void DemoHelloWorld::Update()
-{
-    Application::Update();
-}
-
 void DemoHelloWorld::Run()
 {
 	if (!Application::Setup()) 

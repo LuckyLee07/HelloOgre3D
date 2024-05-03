@@ -3,6 +3,7 @@
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
 #include "InputManager.h"
+#include "Samples/SdkCameraMan.h"
 
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
@@ -23,7 +24,7 @@ ClientManager* GetClientMgr()
 
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr)
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), m_pCameraMan(nullptr)
 {
     m_Timer.reset();
 
@@ -44,6 +45,11 @@ ClientManager::~ClientManager()
 Ogre::Camera* ClientManager::getCamera()
 {
 	return m_pCamera;
+}
+
+OgreBites::SdkCameraMan* ClientManager::getCameraMan()
+{
+    return m_pCameraMan;
 }
 
 RenderWindow* ClientManager::getRenderWindow()
@@ -137,6 +143,9 @@ void ClientManager::CreateCamera()
     m_pCamera->setNearClipDistance(0.001f);
 
     m_pCamera->setAutoAspectRatio(true);
+
+    m_pCameraMan = new OgreBites::SdkCameraMan(m_pCamera);
+    m_pCameraMan->setTopSpeed(5.0f);
 }
 
 void ClientManager::CreateViewports()
@@ -242,9 +251,14 @@ void ClientManager::Update()
     }
 }
 
-void ClientManager::DoCapture()
+void ClientManager::InputCapture()
 {
     m_pInputManager->capture();
+}
+
+void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
+{
+    m_pCameraMan->frameRenderingQueued(event);
 }
 
 void ClientManager::WindowClosed()

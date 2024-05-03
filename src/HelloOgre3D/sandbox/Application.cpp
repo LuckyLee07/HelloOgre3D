@@ -34,16 +34,6 @@ void Application::Run()
     m_pClientManager->Run();
 }
 
-void Application::Draw()
-{
-    m_pClientManager->Draw();
-}
-
-void Application::Update()
-{
-    m_pClientManager->Update();
-}
-
 void Application::CreateFrameListener()
 {
     m_pClientManager->CreateFrameListener(this);
@@ -57,16 +47,19 @@ bool Application::frameEnded(const Ogre::FrameEvent& event)
 bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
 {
     //Need to capture/update each device
-    m_pClientManager->DoCapture();
+    m_pClientManager->InputCapture();
 
-    this->Update();
+    m_pClientManager->Update();
+
+    m_pClientManager->FrameRendering(event);
 
     return true;
 }
 
 bool Application::frameStarted(const Ogre::FrameEvent& event)
 {
-    this->Draw();
+    m_pClientManager->Draw();
+
     return true;
 }
 

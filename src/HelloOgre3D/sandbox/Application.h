@@ -12,13 +12,10 @@ public:
 	Application(const std::string& appTitle = "");
     virtual ~Application();
 
+    virtual void Run();
     virtual bool Setup();
     virtual void Cleanup();
     
-    virtual void Run();
-    virtual void Draw();
-    virtual void Update();
-
 public:
     // Ogre::FrameListener
     virtual bool frameEnded(const Ogre::FrameEvent& event);

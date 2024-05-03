@@ -6,7 +6,7 @@ static const int markupTextLeftOffset = 1;
 
 UIComponent::UIComponent(Gorilla::Layer* pUILayer) 
 	: BaseObject(0, BaseObject::OBJ_SANDBOX_UI),
-	m_pSceneNode(nullptr), m_pUILayer(pUILayer), 
+	m_pSceneNode(nullptr), m_pUILayer(pUILayer), m_IsVisible(true),
 	m_pScreen(nullptr), m_pRectangle(nullptr), m_pText(nullptr), m_pMarkupText(nullptr),
 	m_dimension(0, 0), m_textMargin(0, 0), m_topLeftPos(0, 0), m_topLeftOffset(0, 0)
 {
@@ -20,12 +20,12 @@ UIComponent::~UIComponent()
 
 void UIComponent::Initialize()
 {
-	m_pRectangle = m_pUILayer->createRectangle(m_topLeftPos + m_topLeftOffset, m_dimension);
-
 	Ogre::Real textPosx = m_textMargin.x + m_topLeftOffset.x;
 	Ogre::Real textPosy = m_textMargin.y + m_topLeftOffset.y;
 
 	m_pText = m_pUILayer->createCaption(m_fontType, textPosx, textPosy, "");
+
+	m_pRectangle = m_pUILayer->createRectangle(m_topLeftPos + m_topLeftOffset, m_dimension);
 
 	m_pMarkupText = m_pUILayer->createMarkupText(
 		UIComponent::FONT_SMALL,
@@ -114,4 +114,13 @@ void UIComponent::setBackgroundColor(const Ogre::ColourValue& colorValue)
 void UIComponent::setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor)
 {
 	m_pRectangle->background_gradient(direction, startColor, endColor);
+}
+
+void UIComponent::setVisible(bool visible)
+{
+	m_IsVisible = visible;
+
+	//m_pText->visible(visible);
+	m_pRectangle->visible(visible);
+	m_pMarkupText->visible(visible);
 }

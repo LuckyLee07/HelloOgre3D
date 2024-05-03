@@ -1,3 +1,4 @@
+local textComponent = nil
 
 function CreateSandboxText()
     local ui_width, ui_height = 300, 180;
@@ -28,6 +29,7 @@ function CreateSandboxText()
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug"
     uiComponent:setMarkupText(markupText)
+    textComponent = uiComponent;
 end
 
 function Sandbox_Initialize(ctype)
@@ -103,7 +105,12 @@ function EventHandle_Keyboard(keycode, pressed)
     if not pressed then return end
 
     if (keycode == OIS.KC_F1) then
+        local camera = Sandbox:GetCamera();
+        camera:setPosition(Vector3(7, 5, -18));
+        camera:setOrientation(Quaternion(-160, 0, -180));
     elseif (keycode == OIS.KC_F2) then
+        local isShow = textComponent:isVisible()
+        textComponent:setVisible(not isShow)
     elseif (keycode == OIS.KC_SPACE) then
         Sandbox_ShootBox()
     end
