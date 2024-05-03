@@ -3,9 +3,10 @@
 
 #include <string>
 #include "OgreFrameListener.h"
+#include "OgreWindowEventUtilities.h"
 
 class ClientManager;
-class Application : public Ogre::FrameListener
+class Application : public Ogre::FrameListener, public Ogre::WindowEventListener
 {
 public:
 	Application(const std::string& appTitle = "");
@@ -23,6 +24,10 @@ public:
     virtual bool frameEnded(const Ogre::FrameEvent& event);
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& event);
     virtual bool frameStarted(const Ogre::FrameEvent& event);
+
+    // Ogre::WindwoEventListener
+    virtual void windowResized(Ogre::RenderWindow* renderWindow);
+    virtual void windowClosed(Ogre::RenderWindow* renderWindow);
 
 private:
     void CreateFrameListener();

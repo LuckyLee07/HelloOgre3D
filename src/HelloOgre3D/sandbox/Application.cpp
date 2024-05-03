@@ -1,6 +1,8 @@
 #include "Application.h"
 #include "SandboxDef.h"
 #include "ClientManager.h"
+#include "OgreRenderWindow.h"
+#include <iostream>
 
 Application::Application(const std::string& appTitle)
 {
@@ -19,7 +21,6 @@ bool Application::Setup()
     if (!setupSucc) return false;
 
     CreateFrameListener();
-
     return true;
 }
 
@@ -55,7 +56,11 @@ bool Application::frameEnded(const Ogre::FrameEvent& event)
 
 bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
 {
+    //Need to capture/update each device
+    m_pClientManager->DoCapture();
+
     this->Update();
+
     return true;
 }
 
@@ -63,4 +68,22 @@ bool Application::frameStarted(const Ogre::FrameEvent& event)
 {
     this->Draw();
     return true;
+}
+
+void Application::windowResized(Ogre::RenderWindow* renderWindow)
+{
+    unsigned int width, height, depth;
+    int left, top;
+    renderWindow->getMetrics(width, height, depth, left, top);
+
+    m_pClientManager->WindowResized(width, height);
+}
+
+void Application::windowClosed(Ogre::RenderWindow* renderWindow)
+{
+    Ogre::RenderWindow* pRenderWindow = m_pClientManager->getRenderWindow();
+    if (renderWindow == pRenderWindow)
+    {
+        m_pClientManager->WindowClosed();
+    }
 }

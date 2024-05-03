@@ -14,6 +14,7 @@ namespace Ogre
 	class SceneManager;
 	class FrameListener;
 }
+class InputManager;
 class ObfuscatedZipFactory;
 
 class ClientManager : public Fancy::Singleton<ClientManager>
@@ -29,10 +30,16 @@ public:
 	void Run();
 	void Draw();
 	void Update();
-	
+	void DoCapture();
+
 	void SetAppTitle(const Ogre::String& appTitle);
 
 	void CreateFrameListener(Ogre::FrameListener* newListener);
+
+	void SetWindowActive(bool state);
+
+	void WindowClosed();
+	void WindowResized(unsigned int width, unsigned int height);
 
 public:
 	Ogre::Camera* getCamera();
@@ -60,6 +67,8 @@ private:
 
 	Ogre::Timer m_Timer;
 	long long m_lastUpdateTimeInMicro;
+
+	InputManager* m_pInputManager;
 };
 
 ClientManager* GetClientMgr();

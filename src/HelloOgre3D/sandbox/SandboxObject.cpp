@@ -80,6 +80,20 @@ void SandboxObject::setOrientation(const Ogre::Quaternion& quaternion)
 	this->updateWorldTransform();
 }
 
+void SandboxObject::applyImpulse(const Ogre::Vector3& impulse)
+{
+	btVector3 torque(impulse.x, impulse.y, impulse.z);
+	m_pRigidBody->applyCentralForce(torque);
+	m_pRigidBody->activate(true);
+}
+
+void SandboxObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
+{
+	btVector3 torqueImpulse(aImpulse.x, aImpulse.y, aImpulse.z);
+	m_pRigidBody->applyTorque(torqueImpulse);
+	m_pRigidBody->activate(true);
+}
+
 void SandboxObject::update(int deltaMsec)
 {
 	this->updateWorldTransform();

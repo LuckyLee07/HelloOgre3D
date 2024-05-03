@@ -30,7 +30,6 @@ function CreateSandboxText()
     uiComponent:setMarkupText(markupText)
 end
 
-
 function Sandbox_Initialize(ctype)
     CreateSandboxText()
 
@@ -97,4 +96,37 @@ function Sandbox_Initialize(ctype)
     -- metal meshes
     CreateSandboxObject("modular_hangar_door", Vector3(1, 0, 6));
     --]]
+end
+
+
+function EventHandle_Keyboard(keycode, pressed)
+    if not pressed then return end
+
+    if (keycode == OIS.KC_F1) then
+    elseif (keycode == OIS.KC_F2) then
+    elseif (keycode == OIS.KC_SPACE) then
+        Sandbox_ShootBox()
+    end
+end
+
+function EventHandle_Mouse(ctype)
+
+end
+
+function Sandbox_ShootBox()
+    local object = CreateSandboxObject("modular_block")
+
+    local cameraPosition = Sandbox:GetCameraPosition()
+    local cameraForward = Sandbox:GetCameraForward()
+
+    local position = cameraPosition + cameraForward * 2;
+    local rotation = Sandbox:GetCameraOrientation();
+    object:setPosition(position)
+    object:setOrientation(rotation)
+
+
+    local impulse = cameraForward * 15000
+    local angularImpulse = Sandbox:GetCameraLeft() * 10
+    object:applyImpulse(impulse)
+    object:applyAngularImpulse(angularImpulse)
 end

@@ -3,6 +3,7 @@
 
 #include "OgreMesh.h"
 #include "OgreVector3.h"
+#include "OgreQuaternion.h"
 #include "OgreString.h"
 #include "SandboxObject.h"
 #include "UIComponent.h"
@@ -30,6 +31,11 @@ public:
 
 	Ogre::Real GetScreenWidth();
 	Ogre::Real GetScreenHeight();
+
+	Ogre::Vector3 GetCameraLeft();
+	Ogre::Vector3 GetCameraForward();
+	Ogre::Vector3 GetCameraPosition();
+	Ogre::Quaternion GetCameraOrientation();
 
 	//tolua_end
 

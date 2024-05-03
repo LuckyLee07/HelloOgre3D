@@ -31,6 +31,9 @@ public:
 	void setRotation(const Ogre::Vector3& position);
 	void setOrientation(const Ogre::Quaternion& quaternion);
 
+	void applyImpulse(const Ogre::Vector3& impulse);
+	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
+
 	//tolua_end
 
 	void update(int deltaMsec) override;

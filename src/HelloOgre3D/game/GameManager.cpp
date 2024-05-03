@@ -19,8 +19,8 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager()
-	: m_pPhysicsWorld(nullptr), m_objectIndex(0)
+GameManager::GameManager() : m_objectIndex(0),
+	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
@@ -28,6 +28,7 @@ GameManager::GameManager()
 GameManager::~GameManager()
 {
 	delete m_pSandboxMgr;
+
 	delete m_pPhysicsWorld;
 
 	for (size_t index = 0; index < UI_LAYER_COUNT; index++)
@@ -50,6 +51,8 @@ GameManager* GameManager::GetInstance()
 void GameManager::Initialize(SceneManager* sceneManager)
 {
 	this->InitUIConfig();
+
+	m_pScriptVM = GetScriptLuaVM();
 
 	m_pPhysicsWorld = new PhysicsWorld();
 	m_pPhysicsWorld->initilize();
@@ -89,14 +92,13 @@ void GameManager::InitUIConfig()
 void GameManager::InitLuaEnv()
 {
 	// 设置ToLua对象 
-	ScriptLuaVM* pScriptVM = GetScriptLuaVM();
-	tolua_ClientToLua_open(pScriptVM->getLuaState());
+	tolua_ClientToLua_open(m_pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
-	pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
-	pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
+	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
+	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 
-	pScriptVM->callFile("res/scripts/script_init.lua");
+	m_pScriptVM->callFile("res/scripts/script_init.lua");
 }
 
 void GameManager::Update(int deltaMilliseconds)
@@ -119,6 +121,31 @@ Ogre::Real GameManager::getScreenWidth()
 Ogre::Real GameManager::getScreenHeight()
 {
 	return m_pUIScene->getHeight();
+}
+
+void GameManager::HandleKeyPress(OIS::KeyCode keycode, unsigned int key)
+{
+	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
+}
+
+void GameManager::HandleKeyRelease(OIS::KeyCode keycode, unsigned int key)
+{
+	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
+}
+
+void GameManager::HandleMouseMove(int width, int height)
+{
+
+}
+
+void GameManager::HandleMousePress(int width, int height, OIS::MouseButtonID buttonId)
+{
+
+}
+
+void GameManager::HandleMouseRelease(int width, int height, OIS::MouseButtonID buttonId)
+{
+
 }
 
 void GameManager::addSandboxObject(SandboxObject* pSandboxObject)

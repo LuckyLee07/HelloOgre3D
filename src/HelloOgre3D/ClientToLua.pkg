@@ -1,79 +1,4 @@
-
-$#include "Ogre.h"
-//$#include "OgreVector3.h"
-
-namespace Ogre
-{
-	typedef float Real;
-	typedef std::string String;
-
-	class Vector2
-	{
-	public:
-		Vector2(){}
-		Vector2(float fx, float fy);
-		Vector2(float scaler);
-	};
-
-	class Vector3
-	{
-	public:
-		Vector3(){}
-		Vector3(const Vector3 &rhs);
-		Vector3(float x1, float y1, float z1);
-		Vector3(float v);
-	};
-
-	class Quaternion
-	{
-	public:
-		Quaternion();
-	};
-
-	class Camera
-	{
-	public:
-		void setPosition(const Vector3& vec);
-		void setOrientation(const Quaternion& q);
-	};
-
-	class Node
-    {
-    public:
-    	void setPosition(const Vector3& pos);
-    	void setOrientation(const Quaternion& rotation);
-    };
-
-    class ColourValue
-	{
-	public:
-    	ColourValue(float red=1.0f, float green=1.0f, float blue=1.0f, float alpha=1.0f);
-	};
-
-    class Light
-    {
-    public:
-    	void setDiffuseColour(const ColourValue& colour);
-    	void setSpecularColour(const ColourValue& colour);
-    	void setDiffuseColour(Real red, Real green, Real blue);
-    	void setSpecularColour(Real red, Real green, Real blue);
-    };
-    
-    class SceneNode : public Node
-    {
-    };
-}
-
-$#include "ogre3d_gorilla/include/Gorilla.h"
-namespace Gorilla
-{
-	enum Gradient
-	{
-		Gradient_NorthSouth,
-		Gradient_WestEast,
-		Gradient_Diagonal
-	};
-}
+$pfile "externalToLua.pkg"
 
 $cfile "base/LuaInterface.h"
 $cfile "base/BaseObject.h"
@@ -82,4 +7,3 @@ $cfile "sandbox/UIComponent.h"
 $cfile "sandbox/SandboxObject.h"
 $cfile "sandbox/SandboxMgr.h"
 $cfile "game/GameManager.h"
-

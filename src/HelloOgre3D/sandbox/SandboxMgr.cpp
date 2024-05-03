@@ -23,7 +23,7 @@ SandboxMgr::~SandboxMgr()
     m_pRootSceneNode = nullptr;
 }
 
-Camera* SandboxMgr::GetCamera()
+Ogre::Camera* SandboxMgr::GetCamera()
 {
     return GetClientMgr()->getCamera();
 }
@@ -41,6 +41,30 @@ Ogre::Real SandboxMgr::GetScreenWidth()
 Ogre::Real SandboxMgr::GetScreenHeight()
 {
     return g_GameManager->getScreenHeight();
+}
+
+Ogre::Vector3 SandboxMgr::GetCameraLeft()
+{
+    Ogre::Camera* pCamera = GetCamera();
+    return -1.0f * pCamera->getDerivedRight();
+}
+
+Ogre::Vector3 SandboxMgr::GetCameraForward()
+{
+    Ogre::Camera* pCamera = GetCamera();
+    return pCamera->getDerivedDirection();
+}
+
+Ogre::Vector3 SandboxMgr::GetCameraPosition()
+{
+    Ogre::Camera* pCamera = GetCamera();
+    return pCamera->getDerivedPosition();
+}
+
+Ogre::Quaternion SandboxMgr::GetCameraOrientation()
+{
+    Ogre::Camera* pCamera = GetCamera();
+    return pCamera->getDerivedOrientation();
 }
 
 //---------------------------util static functions---------------------------

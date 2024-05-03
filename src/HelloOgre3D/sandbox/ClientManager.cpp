@@ -2,6 +2,7 @@
 #include "SandboxDef.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
+#include "InputManager.h"
 
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
@@ -10,9 +11,19 @@
 
 using namespace Ogre;
 
+static ClientManager* s_ClientMgr = nullptr;
+ClientManager* GetClientMgr()
+{
+    if (s_ClientMgr == nullptr)
+    {
+        s_ClientMgr = new ClientManager();
+    }
+    return s_ClientMgr;
+}
+
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr)
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr)
 {
     m_Timer.reset();
 
@@ -22,6 +33,7 @@ ClientManager::ClientManager()
 ClientManager::~ClientManager()
 {
     delete g_GameManager;
+    delete m_pInputManager;
 
     Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
     if (pSilverback != nullptr) delete pSilverback;
@@ -57,6 +69,11 @@ void ClientManager::SetAppTitle(const String& appTitle)
 void ClientManager::CreateFrameListener(Ogre::FrameListener* newListener)
 {
     m_pRoot->addFrameListener(newListener);
+}
+
+void ClientManager::SetWindowActive(bool state)
+{
+    m_pRenderWindow->setActive(state);
 }
 
 void ClientManager::SetupResources()
@@ -193,6 +210,10 @@ void ClientManager::Initialize()
     g_GameManager = new GameManager();
     g_GameManager->Initialize(m_pSceneManager);
 
+    // Initialize InputManager
+    m_pInputManager = new InputManager(g_GameManager);
+    m_pInputManager->Initialize();
+
     m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
 }
 
@@ -221,12 +242,17 @@ void ClientManager::Update()
     }
 }
 
-static ClientManager* s_ClientMgr = nullptr;
-ClientManager* GetClientMgr()
+void ClientManager::DoCapture()
 {
-	if (s_ClientMgr == nullptr)
-	{
-        s_ClientMgr = new ClientManager();
-	}
-	return s_ClientMgr;
+    m_pInputManager->capture();
+}
+
+void ClientManager::WindowClosed()
+{
+    m_pInputManager->closeWindow();
+}
+
+void ClientManager::WindowResized(unsigned int width, unsigned int height)
+{
+    m_pInputManager->resizeMouseState(width, height);
 }
