@@ -28,7 +28,9 @@ ClientManager::ClientManager()
 {
     m_Timer.reset();
 
-    m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
+    m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();//Î¢Ãë¼¶
+    //m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();//ºÁÃë¼¶
+    m_lastDrawTimeInMicro = m_Timer.getMicroseconds();   //Î¢Ãë¼¶
 }
 
 ClientManager::~ClientManager()
@@ -223,7 +225,7 @@ void ClientManager::Initialize()
     m_pInputManager = new InputManager(g_GameManager);
     m_pInputManager->Initialize();
 
-    m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();
+    m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }
 
 void ClientManager::Run()
@@ -233,7 +235,27 @@ void ClientManager::Run()
 
 void ClientManager::Draw()
 {
-    
+    long long currTimeInMicro = m_Timer.getMicroseconds();
+    SetProfileTime(P_RENDER_TIME, currTimeInMicro - m_lastDrawTimeInMicro);
+
+    m_lastDrawTimeInMicro = currTimeInMicro;
+}
+
+long long ClientManager::GetProfileTime(ProfileTimeType profile)
+{
+    if (profile < PROFILE_TIME_COUNT)
+    {
+        return m_profileTimes[profile];
+    }
+    return 0;
+}
+
+void ClientManager::SetProfileTime(ProfileTimeType profile, long long time)
+{
+    if (profile < PROFILE_TIME_COUNT)
+    {
+        m_profileTimes[profile] = time;
+    }
 }
 
 void ClientManager::Update()
@@ -246,8 +268,13 @@ void ClientManager::Update()
 
     if (g_GameManager && timeDeltaInMicros >= updatePerSecondInMicros)
     {
+        SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
+
         g_GameManager->Update(deltaMilliseconds);
         m_lastUpdateTimeInMicro = currTimeInMicros;
+
+        long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
+        SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
     }
 }
 

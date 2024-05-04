@@ -24,6 +24,15 @@ class ObfuscatedZipFactory;
 class ClientManager : public Fancy::Singleton<ClientManager>
 {
 public:
+	enum ProfileTimeType
+	{
+		P_RENDER_TIME,
+		P_SIMULATE_TIME,
+		P_TOTAL_SIMULATE_TIME,
+
+		PROFILE_TIME_COUNT
+	};
+public:
 	ClientManager(void);
 	~ClientManager();
 	
@@ -46,6 +55,10 @@ public:
 
 	void WindowClosed();
 	void WindowResized(unsigned int width, unsigned int height);
+
+	long long GetProfileTime(ProfileTimeType profile);
+	void SetProfileTime(ProfileTimeType profile, long long time);
+	
 
 public:
 	Ogre::Camera* getCamera();
@@ -74,7 +87,9 @@ private:
 
 	Ogre::Timer m_Timer;
 	long long m_lastUpdateTimeInMicro;
-
+	long long m_lastDrawTimeInMicro;
+	long long m_profileTimes[PROFILE_TIME_COUNT];
+	
 	InputManager* m_pInputManager;
 	OgreBites::SdkCameraMan* m_pCameraMan;
 };

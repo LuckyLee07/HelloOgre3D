@@ -1,6 +1,7 @@
 #ifndef __SANDBOX_DEF__
 #define __SANDBOX_DEF__
 
+#include "OgreVector3.h"
 #include "OgreMatrix3.h"
 #include "OgreQuaternion.h"
 #include "LogSystem.h"
@@ -28,5 +29,25 @@ inline Ogre::Quaternion QuaternionFromRotationDegrees(Ogre::Real xRotation, Ogre
 
 	return Ogre::Quaternion(matrix);
 }
+
+inline Ogre::Vector3 QuaternionToRotationDegrees(const Ogre::Quaternion& quaternion)
+{
+	Ogre::Vector3 angles;
+
+	Ogre::Radian xAngle;
+	Ogre::Radian yAngle;
+	Ogre::Radian zAngle;
+
+	Ogre::Matrix3 rotation;
+	quaternion.ToRotationMatrix(rotation);
+	rotation.ToEulerAnglesXYZ(xAngle, yAngle, zAngle);
+
+	angles.x = xAngle.valueDegrees();
+	angles.y = yAngle.valueDegrees();
+	angles.z = zAngle.valueDegrees();
+
+	return angles;
+}
+
 //tolua_end
 #endif  // __SANDBOX_MANAGER__

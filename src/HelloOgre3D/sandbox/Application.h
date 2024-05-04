@@ -15,7 +15,7 @@ public:
     virtual void Run();
     virtual bool Setup();
     virtual void Cleanup();
-    
+
 public:
     // Ogre::FrameListener
     virtual bool frameEnded(const Ogre::FrameEvent& event);

@@ -35,11 +35,16 @@ public:
 	void InitUIConfig();
 	
 public:
+	//tolua_begin
 	Ogre::Real getScreenWidth();
 	Ogre::Real getScreenHeight();
+	unsigned int getObjectCount();
 
 	UIComponent* createUIComponent(unsigned int index);
 	void addSandboxObject(SandboxObject* pSandboxObject);
+	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
+
+	//tolua_end
 
 	void HandleKeyPress(OIS::KeyCode keycode, unsigned int key);
 	void HandleKeyRelease(OIS::KeyCode keycode, unsigned int key);

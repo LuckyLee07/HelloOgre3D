@@ -111,6 +111,8 @@ void GameManager::Update(int deltaMilliseconds)
 	}
 
 	m_pPhysicsWorld->stepWorld();
+
+	m_pScriptVM->callFunction("Sandbox_Update", ">");
 }
 
 Ogre::Real GameManager::getScreenWidth()
@@ -123,8 +125,18 @@ Ogre::Real GameManager::getScreenHeight()
 	return m_pUIScene->getHeight();
 }
 
+unsigned int GameManager::getObjectCount()
+{
+	return m_pObjects.size();
+}
+
 void GameManager::HandleKeyPress(OIS::KeyCode keycode, unsigned int key)
 {
+	if (keycode == OIS::KC_F10) // reload script
+	{
+		m_pScriptVM->callFile("res/scripts/script_init.lua");
+	}
+
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
 }
 
@@ -170,4 +182,12 @@ UIComponent* GameManager::createUIComponent(unsigned int index)
 		return pComponent;
 	}
 	return nullptr;
+}
+
+void GameManager::setMarkupColor(unsigned int index, const Ogre::ColourValue& color)
+{
+	for (size_t layerIndex = 0; layerIndex < UI_LAYER_COUNT; layerIndex++)
+	{
+		getUILayer(layerIndex)->_getAtlas()->setMarkupColour(index, color);
+	}
 }

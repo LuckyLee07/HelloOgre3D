@@ -33,8 +33,8 @@ void UIComponent::Initialize()
 		textPosy + markupTextTopOffset,
 		"");
 
-	setDimension(Ogre::Vector2(100, 100));
 	setBackgroundColor(Ogre::ColourValue(0, 0, 0, 0));
+	setDimension(Ogre::Vector2(100, 100));
 }
 
 void UIComponent::addChild(UIComponent* pChild)
@@ -120,7 +120,7 @@ void UIComponent::setVisible(bool visible)
 {
 	m_IsVisible = visible;
 
-	//m_pText->visible(visible);
 	m_pRectangle->visible(visible);
+	//m_pText->visible(visible);
 	m_pMarkupText->visible(visible);
 }

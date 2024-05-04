@@ -10,7 +10,7 @@ public:
 
     virtual ~DemoHelloWorld(void);
 
-    virtual void Run();
+    virtual void Run() override;
 
 private:
     void InitGameScene();

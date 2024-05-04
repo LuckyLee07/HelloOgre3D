@@ -57,55 +57,6 @@ NewSandboxUtilities = {
 }
 
 
-GUI = {
-	Fonts = {
-		Small =           "small",
-		SmallMono =       "small_mono",
-		Medium =          "medium",
-		MediumMono =      "medium_mono",
-		Large =           "large",
-		LargeMono =       "large_mono",
-	},
-	Markup = {
-		Small =          "%@9%",
-		SmallMono =      "%@91%",
-		Medium =         "%@14%",
-		MediumMono =     "%@141%",
-		Large =          "%@24%",
-		LargeMono =      "%@241%",
-	},
-	MarkupNewline = "\n",
-	MarkupColor = {
-		White =     "%0",
-		Red =       "%1",
-		Green =     "%2",
-		Blue =      "%3",
-		Yellow =    "%4",
-		Purple =    "%5",
-		Teal =      "%6",
-		Orange =    "%7",
-		Gray =      "%8",
-		Black =     "%9",
-	},
-	MarkupColorTable = {
-		[0] =    ColourValue(1.0, 1.0, 1.0, 1.0),
-		[1] =    ColourValue(1.0,  0.0,  0.0,  1.0),
-		[2] =    ColourValue(0.0,  1.0,  0.0,  1.0),
-		[3] =    ColourValue(0.0,  0.0,  1.0,  1.0),
-		[4] =    ColourValue(1.0,  1.0,  0.0,  1.0),
-		[5] =    ColourValue(1.0,  0.0,  1.0,  1.0),
-		[6] =    ColourValue(0.0,  1.0,  1.0,  1.0),
-		[7] =    ColourValue(1.0,  0.65, 0.0,  1.0),
-		[8] =    ColourValue(0.75, 0.75, 0.75, 1.0),
-		[9] =    ColourValue(0.0,  0.0,  0.0,  1.0),
-	},
-	Palette = {
-		DarkBlueGradient  = ColourValue(0.0, 0.2, 0.4, 0.5),
-		DarkBlackGradient = ColourValue(0.1, 0.1, 0.1, 0.6),
-	},
-};
-
-
 function CreateSandboxObject(objectName, position, rotation)
     if NewSandboxUtilities.Objects[objectName] == nil then
         return;

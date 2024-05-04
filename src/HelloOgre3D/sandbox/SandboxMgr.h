@@ -32,11 +32,18 @@ public:
 	Ogre::Real GetScreenWidth();
 	Ogre::Real GetScreenHeight();
 
+	Ogre::Vector3 GetCameraUp();
 	Ogre::Vector3 GetCameraLeft();
 	Ogre::Vector3 GetCameraForward();
 	Ogre::Vector3 GetCameraPosition();
+	Ogre::Vector3 GetCameraRotation();
 	Ogre::Quaternion GetCameraOrientation();
 
+	long long GetRenderTime();
+	long long GetSimulateTime();
+	long long GetTotalSimulateTime();
+
+	unsigned int GetObjectCount();
 	//tolua_end
 
 public: //static methods
@@ -62,7 +69,9 @@ public:
 	SandboxObject* CreatePlane(float length, float width);
 	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
 
-	UIComponent* CreateUIComponent(unsigned int index = 0);
+	UIComponent* CreateUIComponent(unsigned int index = 1);
+
+	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 
 	//tolua_end
 

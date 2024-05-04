@@ -1,4 +1,4 @@
-local textComponent = nil
+local TextComponent = nil
 
 function CreateSandboxText()
     local ui_width, ui_height = 300, 180;
@@ -29,11 +29,15 @@ function CreateSandboxText()
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug"
     uiComponent:setMarkupText(markupText)
-    textComponent = uiComponent;
+
+    return uiComponent
 end
 
+
 function Sandbox_Initialize(ctype)
-    CreateSandboxText()
+    GUI_CreateCommonsUI()
+
+    TextComponent = CreateSandboxText()
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
@@ -101,16 +105,23 @@ function Sandbox_Initialize(ctype)
 end
 
 
-function EventHandle_Keyboard(keycode, pressed)
-    if not pressed then return end
+function Sandbox_Update()
+    GUI_UpdateCameraInfo()
+    GUI_UpdateProfileInfo()
+end
 
+
+function EventHandle_Keyboard(keycode, pressed)
+    GUI_HandleKeyEvent(keycode, pressed)
+
+    if not pressed then return end
     if (keycode == OIS.KC_F1) then
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(7, 5, -18));
         camera:setOrientation(Quaternion(-160, 0, -180));
     elseif (keycode == OIS.KC_F2) then
-        local isShow = textComponent:isVisible()
-        textComponent:setVisible(not isShow)
+        local isShow = TextComponent:isVisible()
+        TextComponent:setVisible(not isShow)
     elseif (keycode == OIS.KC_SPACE) then
         Sandbox_ShootBox()
     end
@@ -120,7 +131,9 @@ function EventHandle_Mouse(ctype)
 
 end
 
+_G.Shoot_BoxCount = 0
 function Sandbox_ShootBox()
+    Shoot_BoxCount = Shoot_BoxCount + 1
     local object = CreateSandboxObject("modular_block")
 
     local cameraPosition = Sandbox:GetCameraPosition()

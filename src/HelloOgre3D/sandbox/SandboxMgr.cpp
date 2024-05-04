@@ -43,6 +43,12 @@ Ogre::Real SandboxMgr::GetScreenHeight()
     return g_GameManager->getScreenHeight();
 }
 
+Ogre::Vector3 SandboxMgr::GetCameraUp()
+{
+    Ogre::Camera* pCamera = GetCamera();
+    return -1.0f * pCamera->getDerivedUp();
+}
+
 Ogre::Vector3 SandboxMgr::GetCameraLeft()
 {
     Ogre::Camera* pCamera = GetCamera();
@@ -61,10 +67,38 @@ Ogre::Vector3 SandboxMgr::GetCameraPosition()
     return pCamera->getDerivedPosition();
 }
 
+Ogre::Vector3 SandboxMgr::GetCameraRotation()
+{
+    return QuaternionToRotationDegrees(GetCameraOrientation());
+}
+
 Ogre::Quaternion SandboxMgr::GetCameraOrientation()
 {
     Ogre::Camera* pCamera = GetCamera();
     return pCamera->getDerivedOrientation();
+}
+
+long long SandboxMgr::GetRenderTime()
+{
+    ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_RENDER_TIME;
+    return GetClientMgr()->GetProfileTime(profileType);
+}
+
+long long SandboxMgr::GetSimulateTime()
+{
+    ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_SIMULATE_TIME;
+    return GetClientMgr()->GetProfileTime(profileType);
+}
+
+long long SandboxMgr::GetTotalSimulateTime()
+{
+    ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_TOTAL_SIMULATE_TIME;
+    return GetClientMgr()->GetProfileTime(profileType);
+}
+
+unsigned int SandboxMgr::GetObjectCount()
+{
+    return g_GameManager->getObjectCount();
 }
 
 //---------------------------util static functions---------------------------
@@ -424,4 +458,9 @@ SandboxObject* SandboxMgr::CreateSandboxObject(const Ogre::String& meshFilePath)
 UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
 {
     return g_GameManager->createUIComponent(index);
+}
+
+void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
+{
+    return g_GameManager->setMarkupColor(index, color);
 }
