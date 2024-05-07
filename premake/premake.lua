@@ -503,3 +503,15 @@ solution( "HelloOgre3D" )
 			buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
 		configuration( "*" )
 		files( { "../src/external/ois/include/**.h", "../src/external/ois/src/**.cpp" } )
+
+-- opensteer revision 190 static library
+	project( "opensteer" )
+		kind( "StaticLib" )
+		location( "../build/external/opensteer" )
+		buildoptions( { "/wd\"4701\"", "/wd\"4244\"", "/wd\"4100\"" } )
+		files( {
+			"../src/external/opensteer/include/**.h",
+			"../src/external/opensteer/src/**.c",
+			"../src/external/opensteer/src/**.cpp"
+		} )
+		defines( { "WIN32", "HAVE_NO_GLUT" } )

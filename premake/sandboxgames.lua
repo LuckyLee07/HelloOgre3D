@@ -28,6 +28,7 @@ function CreateGameProject( projectName )
       "bullet_linearmath",
       "ogre3d_gorilla",
       "ois",
+      "opensteer",
     } )
     configuration( { "windows" } )
       -- add the directx include directory
