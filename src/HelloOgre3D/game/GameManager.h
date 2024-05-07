@@ -2,6 +2,7 @@
 #define __GAME_MANAGER_H__
 
 #include <map>
+#include <vector>
 #include "SandboxDef.h"
 #include "SandboxObject.h"
 #include "PhysicsWorld.h"
@@ -10,6 +11,7 @@
 #include "OgrePrerequisites.h"
 #include "OISMouse.h"
 #include "OISKeyboard.h"
+#include "AgentObject.h"
 
 #define UI_LAYER_COUNT	16
 
@@ -42,6 +44,8 @@ public:
 
 	UIComponent* createUIComponent(unsigned int index);
 	void addSandboxObject(SandboxObject* pSandboxObject);
+	void addAgentObject(AgentObject* pAgentObject);
+
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 
 	//tolua_end
@@ -64,6 +68,7 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 	
 	unsigned int m_objectIndex;
+	std::vector<AgentObject*> m_pAgents;
 	std::map<unsigned int, BaseObject*> m_pObjects;
 	
 	Gorilla::Screen* m_pUIScene;

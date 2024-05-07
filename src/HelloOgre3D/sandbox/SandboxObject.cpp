@@ -19,7 +19,7 @@ SandboxObject::SandboxObject(const Ogre::String& meshFile)
 	m_pSceneNode->attachObject(m_pEntity);
 
 	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
-	m_pRigidBody = SandboxMgr::CreateRigidBody(meshPtr, 1.0f);
+	m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr, 1.0f);
 
 	m_pRigidBody->setUserPointer(this);
 }
@@ -102,11 +102,10 @@ void SandboxObject::update(int deltaMsec)
 void SandboxObject::updateWorldTransform()
 {
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
-	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
+	Ogre::Vector3 position = SandboxMgr::BtVector3ToVector3(rigidBodyPos);
 	m_pSceneNode->setPosition(position);
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
-	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
-								rigidBodyRotation.y(), rigidBodyRotation.z());
+	Ogre::Quaternion rotation = SandboxMgr::BtQuaternionToQuaternion(rigidBodyRotation);
 	m_pSceneNode->setOrientation(rotation);
 }

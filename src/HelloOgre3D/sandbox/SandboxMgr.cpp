@@ -102,10 +102,28 @@ unsigned int SandboxMgr::GetObjectCount()
 }
 
 //---------------------------util static functions---------------------------
-Ogre::SceneNode* SandboxMgr::CreatePlaneNode(Ogre::Real length, Ogre::Real width)
+
+Ogre::Vector3 SandboxMgr::BtVector3ToVector3(const btVector3& vector)
 {
-    const Ogre::Real clampedLength = Ogre::Real(std::max(0.0f, length));
-    const Ogre::Real clampedWidth = Ogre::Real(std::max(0.0f, width));
+    return Ogre::Vector3(vector.m_floats[0], vector.m_floats[1], vector.m_floats[2]);
+}
+
+Ogre::Quaternion SandboxMgr::BtQuaternionToQuaternion(const btQuaternion& orientation)
+{
+    return Ogre::Quaternion(orientation.w(), orientation.x(), 
+        orientation.y(), orientation.z());
+}
+
+Ogre::SceneNode* SandboxMgr::CreateChildSceneNode()
+{
+    Ogre::SceneNode* pRootSceneNode = GetClientMgr()->getRootSceneNode();
+    return pRootSceneNode->createChildSceneNode();
+}
+
+Ogre::SceneNode* SandboxMgr::CreateNodePlane(Ogre::Real length, Ogre::Real width)
+{
+    const Ogre::Real clampedLength = std::max(Ogre::Real(0.0f), length);
+    const Ogre::Real clampedWidth = std::max(Ogre::Real(0.0f), width);
 
     Procedural::PlaneGenerator planeGenerator;
     planeGenerator.setSizeX(clampedLength);
@@ -117,7 +135,7 @@ Ogre::SceneNode* SandboxMgr::CreatePlaneNode(Ogre::Real length, Ogre::Real width
 
     const Ogre::MeshPtr mesh = planeGenerator.realizeMesh();
 
-    Ogre::SceneNode* const plane = GetClientMgr()->getRootSceneNode()->createChildSceneNode();
+    Ogre::SceneNode* const plane = SandboxMgr::CreateChildSceneNode();
 
     Ogre::Entity* const planeEntity = plane->getCreator()->createEntity(mesh);
 
@@ -128,7 +146,7 @@ Ogre::SceneNode* SandboxMgr::CreatePlaneNode(Ogre::Real length, Ogre::Real width
     return plane;
 }
 
-btRigidBody* SandboxMgr::CreatePlane(const btVector3& normal, const btScalar originOffset)
+btRigidBody* SandboxMgr::CreateRigidBodyPlane(const btVector3& normal, const btScalar originOffset)
 {
     btCollisionShape* const groundShape = new btStaticPlaneShape(normal, originOffset);
 
@@ -142,7 +160,7 @@ btRigidBody* SandboxMgr::CreatePlane(const btVector3& normal, const btScalar ori
     return new btRigidBody(groundRigidBodyCI);
 }
 
-btRigidBody* SandboxMgr::CreateRigidBody(Ogre::Mesh* meshPtr, const btScalar btmass)
+btRigidBody* SandboxMgr::CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btScalar btmass)
 {
     const btVector3 position(0, 0, 0);
     const btScalar mass = btmass;
@@ -201,6 +219,60 @@ btRigidBody* SandboxMgr::CreateRigidBody(Ogre::Mesh* meshPtr, const btScalar btm
     rigidBody->setCcdSweptSphereRadius(aabbMax.length() / 2.0f);
 
     // 返回创建的刚体。
+    return rigidBody;
+}
+
+Ogre::SceneNode* SandboxMgr::CreateNodeCapsule(Ogre::Real height, Ogre::Real radius)
+{
+    const Ogre::Real clampedHeight = std::max(Ogre::Real(0.0f), height);
+    const Ogre::Real clampedRadius = std::max(Ogre::Real(0.0f), radius);;
+
+    Procedural::CapsuleGenerator capsuleGenerator;
+    capsuleGenerator.setHeight(clampedHeight - clampedRadius * 2);
+    capsuleGenerator.setRadius(clampedRadius);
+    capsuleGenerator.setNumRings(4);
+    capsuleGenerator.setNumSegments(16);
+
+    const Ogre::MeshPtr mesh = capsuleGenerator.realizeMesh();
+
+    Ogre::SceneNode* const capsule = SandboxMgr::CreateChildSceneNode();
+
+    Ogre::Entity* const capsuleEntity = capsule->getCreator()->createEntity(mesh);
+
+    capsuleEntity->setMaterialName(DEFAULT_MATERIAL);
+
+    capsule->attachObject(capsuleEntity);
+
+    return capsule;
+}
+
+btRigidBody* SandboxMgr::CreateRigidBodyCapsule(Ogre::Real height, Ogre::Real radius)
+{
+    // 创建一个胶囊形状，其中半径是胶囊的圆柱部分的半径，高度减去两倍半径是圆柱部分的高度。
+    btCapsuleShape* capsuleShape = new btCapsuleShape(radius, height - radius * 2);
+
+    // 创建一个默认的运动状态对象，初始时没有旋转和位移。
+    btDefaultMotionState* capsuleMotionState = new btDefaultMotionState();
+
+    // 初始化局部惯性向量，开始时设置为0。局部惯性将基于质量计算，决定物体的旋转惯性。
+    btVector3 localInertia(0, 0, 0);
+    // 计算胶囊形状的局部惯性，假设胶囊的质量为1.0f。
+    capsuleShape->calculateLocalInertia(1.0f, localInertia);
+
+    // 创建刚体的构造信息，包括质量（1.0f表示不是静态的）、运动状态、形状和局部惯性。
+    btRigidBody::btRigidBodyConstructionInfo capsuleRigidBodyCI(1.0f, capsuleMotionState, capsuleShape, localInertia);
+
+    // 设置滚动摩擦，这有助于防止刚体在平面上无限滚动。
+    capsuleRigidBodyCI.m_rollingFriction = 0.2f;
+
+    // 使用上述构造信息创建刚体对象。
+    btRigidBody* const rigidBody = new btRigidBody(capsuleRigidBodyCI);
+
+    // 设置连续碰撞检测（CCD）的阈值和半径，用于处理高速移动的物体可能产生的穿透问题。
+    // CCD阈值设为0.5f，CCD扫掠球半径设置为胶囊的半径。
+    rigidBody->setCcdMotionThreshold(0.5f);
+    rigidBody->setCcdSweptSphereRadius(radius);
+
     return rigidBody;
 }
 
@@ -433,11 +505,16 @@ void SandboxMgr::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materia
     }
 }
 
+void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
+{
+    return g_GameManager->setMarkupColor(index, color);
+}
+
 SandboxObject* SandboxMgr::CreatePlane(float length, float width)
 {
-    Ogre::SceneNode* planeNode = SandboxMgr::CreatePlaneNode(length, width);
+    Ogre::SceneNode* planeNode = SandboxMgr::CreateNodePlane(length, width);
 
-    btRigidBody* planeRigidBody = SandboxMgr::CreatePlane(btVector3(0, 1.0f, 0), 0);
+    btRigidBody* planeRigidBody = SandboxMgr::CreateRigidBodyPlane(btVector3(0, 1.0f, 0), 0);
 
     SandboxObject* pObject = new SandboxObject(planeNode, planeRigidBody);
 
@@ -460,7 +537,22 @@ UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
     return g_GameManager->createUIComponent(index);
 }
 
-void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
+
+
+AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
 {
-    return g_GameManager->setMarkupColor(index, color);
+    Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
+    Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
+
+    Ogre::SceneNode* capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
+    this->setMaterial(capsuleNode, "Ground2");
+
+    btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
+    capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+
+    AgentObject* pObject = new AgentObject(capsuleNode, capsuleRigidBody);
+
+    g_GameManager->addAgentObject(pObject);
+
+    return pObject;
 }

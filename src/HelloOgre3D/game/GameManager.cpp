@@ -110,6 +110,13 @@ void GameManager::Update(int deltaMilliseconds)
 		if (pObject != nullptr) pObject->update(deltaMilliseconds);
 	}
 
+	std::vector<AgentObject*>::iterator agentIter;
+	for (agentIter = m_pAgents.begin(); agentIter != m_pAgents.end(); agentIter++)
+	{
+		AgentObject* pAgent = *agentIter;
+		pAgent->update(deltaMilliseconds);
+	}
+
 	m_pPhysicsWorld->stepWorld();
 
 	m_pScriptVM->callFunction("Sandbox_Update", ">");
@@ -158,6 +165,18 @@ void GameManager::HandleMousePress(int width, int height, OIS::MouseButtonID but
 void GameManager::HandleMouseRelease(int width, int height, OIS::MouseButtonID buttonId)
 {
 
+}
+
+void GameManager::addAgentObject(AgentObject* pAgentObject)
+{
+	unsigned int objectId = getNextObjectId();
+
+	pAgentObject->setObjId(objectId);
+	pAgentObject->Initialize();
+
+	m_pAgents.push_back(pAgentObject);
+
+	m_pPhysicsWorld->addRigidBody(pAgentObject->getRigidBody());
 }
 
 void GameManager::addSandboxObject(SandboxObject* pSandboxObject)

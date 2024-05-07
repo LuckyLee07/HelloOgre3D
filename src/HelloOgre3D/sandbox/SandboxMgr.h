@@ -7,9 +7,11 @@
 #include "OgreString.h"
 #include "SandboxObject.h"
 #include "UIComponent.h"
+#include "AgentObject.h"
 
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btScalar.h"
+#include "LinearMath/btQuaternion.h"
 
 namespace Ogre {
 	class Camera;
@@ -47,11 +49,19 @@ public:
 	//tolua_end
 
 public: //static methods
-	static Ogre::SceneNode* CreatePlaneNode(Ogre::Real length, Ogre::Real width);
-	static btRigidBody* CreatePlane(const btVector3& normal, const btScalar originOffset);
+	static Ogre::SceneNode* CreateChildSceneNode();
 
-	static btRigidBody* CreateRigidBody(Ogre::Mesh* meshPtr, const btScalar mass = 0.0f);
+	static Ogre::Vector3 BtVector3ToVector3(const btVector3& vector);
+	static Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation);
+
+	static Ogre::SceneNode* CreateNodePlane(Ogre::Real length, Ogre::Real width);
+	static btRigidBody* CreateRigidBodyPlane(const btVector3& normal, const btScalar originOffset);
+
+	static btRigidBody* CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btScalar mass = 0.0f);
 	static btConvexHullShape* CreateSimplifiedConvexHull(Ogre::Mesh* meshPtr);
+
+	static Ogre::SceneNode* CreateNodeCapsule(Ogre::Real height, Ogre::Real radius);
+	static btRigidBody* CreateRigidBodyCapsule(Ogre::Real height, Ogre::Real radius);
 
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);
 	
@@ -66,13 +76,15 @@ public:
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
 	void setMaterial(SandboxObject* pObject, const Ogre::String& materialName);
 	
+	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
+	
 	SandboxObject* CreatePlane(float length, float width);
 	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 
-	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
-
+	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType);
+	
 	//tolua_end
 
 private:
