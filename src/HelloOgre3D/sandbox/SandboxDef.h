@@ -6,6 +6,10 @@
 #include "OgreQuaternion.h"
 #include "LogSystem.h"
 
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btQuaternion.h"
+#include "opensteer/include/Vec3.h"
+
 #define DEFAULT_MATERIAL "White"
 
 #define DEFAULT_ATLAS "fonts/dejavu/dejavu"
@@ -47,6 +51,28 @@ inline Ogre::Vector3 QuaternionToRotationDegrees(const Ogre::Quaternion& quatern
 	angles.z = zAngle.valueDegrees();
 
 	return angles;
+}
+
+
+inline Ogre::Vector3 BtVector3ToVector3(const btVector3& vector)
+{
+	return Ogre::Vector3(vector.m_floats[0], vector.m_floats[1], vector.m_floats[2]);
+}
+
+inline Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation)
+{
+	return Ogre::Quaternion(orientation.w(), orientation.x(),
+		orientation.y(), orientation.z());
+}
+
+inline OpenSteer::Vec3 Vector3ToVec3(const Ogre::Vector3& vector)
+{
+	return OpenSteer::Vec3((float)vector.x, (float)vector.y, (float)vector.z);
+}
+
+inline Ogre::Vector3 Vec3ToVector3(const OpenSteer::Vec3& vector)
+{
+	return Ogre::Vector3(Ogre::Real(vector.x), Ogre::Real(vector.y), Ogre::Real(vector.z));
 }
 
 //tolua_end

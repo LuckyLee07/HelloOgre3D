@@ -11,7 +11,6 @@
 
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btScalar.h"
-#include "LinearMath/btQuaternion.h"
 
 namespace Ogre {
 	class Camera;
@@ -50,9 +49,6 @@ public:
 
 public: //static methods
 	static Ogre::SceneNode* CreateChildSceneNode();
-
-	static Ogre::Vector3 BtVector3ToVector3(const btVector3& vector);
-	static Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation);
 
 	static Ogre::SceneNode* CreateNodePlane(Ogre::Real length, Ogre::Real width);
 	static btRigidBody* CreateRigidBodyPlane(const btVector3& normal, const btScalar originOffset);

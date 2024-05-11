@@ -20,6 +20,7 @@ public:
 	void stepWorld();
 
 	void addRigidBody(btRigidBody* pRigidBody);
+	void removeRigidBody(btRigidBody* pRigidBody);
 
 private:
 	btBroadphaseInterface* m_pBroadPhase;

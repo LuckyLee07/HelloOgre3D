@@ -68,3 +68,8 @@ void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody)
 {
 	m_pDynamicsWorld->addRigidBody(pRigidBody);
 }
+
+void PhysicsWorld::removeRigidBody(btRigidBody* pRigidBody)
+{
+	m_pDynamicsWorld->removeRigidBody(pRigidBody);
+}

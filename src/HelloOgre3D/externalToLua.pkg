@@ -26,9 +26,18 @@ namespace Ogre
 		Vector3(float x1, float y1, float z1);
 		Vector3(float v);
 		
-		Vector3 operator + ( const Vector3& rkVector ) const;
-        Vector3 operator - ( const Vector3& rkVector ) const;
-        Vector3 operator * ( const Real fScalar ) const;
+		inline Vector3 operator + ( const Vector3& rkVector ) const;
+        inline Vector3 operator - ( const Vector3& rkVector ) const;
+        inline Vector3 operator * ( const Real fScalar ) const;
+        inline Vector3 operator / ( const Real fScalar ) const;
+
+        inline Real length() const;
+        inline Real squaredLength() const;
+
+        inline Real distance(const Vector3& rhs) const;
+        inline Real squaredDistance(const Vector3& rhs) const;
+
+        inline Vector3 normalisedCopy(void) const;
 	};
 
 	class Quaternion

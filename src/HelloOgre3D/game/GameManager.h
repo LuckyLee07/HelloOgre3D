@@ -42,6 +42,8 @@ public:
 	Ogre::Real getScreenHeight();
 	unsigned int getObjectCount();
 
+	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
+
 	UIComponent* createUIComponent(unsigned int index);
 	void addSandboxObject(SandboxObject* pSandboxObject);
 	void addAgentObject(AgentObject* pAgentObject);

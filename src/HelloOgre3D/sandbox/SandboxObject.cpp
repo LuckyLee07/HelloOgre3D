@@ -34,6 +34,13 @@ SandboxObject::SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBod
 
 SandboxObject::~SandboxObject()
 {
+	m_pEntity = nullptr;
+	m_pSceneNode = nullptr;
+
+	delete m_pRigidBody->getMotionState();
+	delete m_pRigidBody->getCollisionShape();
+	delete m_pRigidBody;
+	m_pRigidBody = nullptr;
 }
 
 void SandboxObject::Initialize()
@@ -102,10 +109,8 @@ void SandboxObject::update(int deltaMsec)
 void SandboxObject::updateWorldTransform()
 {
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
-	Ogre::Vector3 position = SandboxMgr::BtVector3ToVector3(rigidBodyPos);
-	m_pSceneNode->setPosition(position);
+	m_pSceneNode->setPosition(BtVector3ToVector3(rigidBodyPos));
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
-	Ogre::Quaternion rotation = SandboxMgr::BtQuaternionToQuaternion(rigidBodyRotation);
-	m_pSceneNode->setOrientation(rotation);
+	m_pSceneNode->setOrientation(BtQuaternionToQuaternion(rigidBodyRotation));
 }

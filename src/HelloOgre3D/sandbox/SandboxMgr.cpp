@@ -103,17 +103,6 @@ unsigned int SandboxMgr::GetObjectCount()
 
 //---------------------------util static functions---------------------------
 
-Ogre::Vector3 SandboxMgr::BtVector3ToVector3(const btVector3& vector)
-{
-    return Ogre::Vector3(vector.m_floats[0], vector.m_floats[1], vector.m_floats[2]);
-}
-
-Ogre::Quaternion SandboxMgr::BtQuaternionToQuaternion(const btQuaternion& orientation)
-{
-    return Ogre::Quaternion(orientation.w(), orientation.x(), 
-        orientation.y(), orientation.z());
-}
-
 Ogre::SceneNode* SandboxMgr::CreateChildSceneNode()
 {
     Ogre::SceneNode* pRootSceneNode = GetClientMgr()->getRootSceneNode();

@@ -75,3 +75,21 @@ function CreateSandboxObject(objectName, position, rotation)
     return object;
 end
 
+
+function DistanceSquared(pos1, pos2)
+	return pos1:squaredDistance(pos2)
+end
+
+Vector = Ogre.Vector3
+function Vector.Normalize(vec3)
+	return vec3:normalisedCopy()
+end
+
+function Vector.Length(vec3)
+	return vec3:length()
+end
+
+function Vector.LengthSquared(vec3)
+	return vec3:squaredLength()
+end
+
