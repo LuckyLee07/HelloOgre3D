@@ -4,6 +4,7 @@
 #include "ObfuscatedZip.h"
 #include "InputManager.h"
 #include "Samples/SdkCameraMan.h"
+#include "DebugDrawer.h"
 
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
@@ -24,7 +25,8 @@ ClientManager* GetClientMgr()
 
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), m_pCameraMan(nullptr)
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), 
+    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr)
 {
     m_Timer.reset();
 
@@ -218,12 +220,16 @@ void ClientManager::Initialize()
     Gorilla::Silverback* pSilverback = new Gorilla::Silverback();
     pSilverback->loadAtlas(DEFAULT_ATLAS);
 
-    g_GameManager = new GameManager();
-    g_GameManager->Initialize(m_pSceneManager);
+    m_pDebugDrawer = new DebugDrawer();
+    m_pDebugDrawer->Initialize();
 
     // Initialize InputManager
-    m_pInputManager = new InputManager(g_GameManager);
+    m_pInputManager = new InputManager();
     m_pInputManager->Initialize();
+
+    g_GameManager = new GameManager();
+    g_GameManager->Initialize(m_pSceneManager);
+    m_pInputManager->setGameManager(g_GameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }
@@ -270,8 +276,12 @@ void ClientManager::Update()
     {
         SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
 
+        m_pDebugDrawer->clear();
+
         g_GameManager->Update(deltaMilliseconds);
         m_lastUpdateTimeInMicro = currTimeInMicros;
+
+        m_pDebugDrawer->build();
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);

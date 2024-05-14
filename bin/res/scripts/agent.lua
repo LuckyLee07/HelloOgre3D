@@ -38,19 +38,15 @@ function Agent_Update(agent, deltaTimeInMillis)
         agent:SetTarget(target);
     end
 
-    --[[
     -- Draw debug information for target and target radius.
-    Core.DrawCircle(
-        destination, targetRadius, Vector.new(1, 0, 0));
-    Core.DrawLine(position, destination, Vector.new(0, 1, 0));
+    DebugDrawer:drawCircle(destination, targetRadius, 10, ColourValue(1, 0, 0));
+    DebugDrawer:drawLine(position, destination, ColourValue(0, 1, 0));
 
-    -- Debug outline representing the space the Agent can move
-    -- within.
-    Core.DrawSquare(Vector.new(), 100, Vector.new(1, 0, 0));
-    --]]
+    -- Debug outline representing the space the Agent can move within.
+    DebugDrawer:drawSquare(Vector3(0, 0, 0), 100, ColourValue(1, 0, 0));
 end
 
-
+-- 将计算得到的转向力转化为只能体的运动变化
 function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTimeInSeconds)
 
     -- Ignore very weak steering forces.
@@ -89,6 +85,7 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
     agent:SetForward(newVelocity);
 end
 
+-- 限制智能体的速度 防止超过定义的最大值
 function AgentUtilities_ClampHorizontalSpeed(agent)
     local velocity = agent:GetVelocity();
     -- Store downward velocity to apply after clamping.

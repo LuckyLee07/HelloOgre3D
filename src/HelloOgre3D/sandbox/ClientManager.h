@@ -18,7 +18,7 @@ namespace OgreBites
 {
 	class SdkCameraMan;
 }
-
+class DebugDrawer;
 class InputManager;
 class ObfuscatedZipFactory;
 class ClientManager : public Fancy::Singleton<ClientManager>
@@ -90,8 +90,10 @@ private:
 	long long m_lastDrawTimeInMicro;
 	long long m_profileTimes[PROFILE_TIME_COUNT];
 	
+	DebugDrawer* m_pDebugDrawer;
 	InputManager* m_pInputManager;
 	OgreBites::SdkCameraMan* m_pCameraMan;
+
 };
 
 ClientManager* GetClientMgr();

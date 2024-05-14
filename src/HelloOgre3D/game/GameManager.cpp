@@ -8,6 +8,7 @@
 #include "UIComponent.h"
 #include "ClientManager.h"
 #include <algorithm>
+#include "DebugDrawer.h"
 
 using namespace Ogre;
 
@@ -96,8 +97,9 @@ void GameManager::InitLuaEnv()
 
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
+	m_pScriptVM->setUserTypePointer("DebugDrawer", "DebugDrawer", DebugDrawer::GetInstance());
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
-
+	
 	m_pScriptVM->callFile("res/scripts/script_init.lua");
 }
 

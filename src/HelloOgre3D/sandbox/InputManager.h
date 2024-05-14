@@ -13,14 +13,15 @@ class GameManager;
 class InputManager : public OIS::KeyListener, public OIS::MouseListener
 {
 public:
-	InputManager(GameManager* pGameMgr);
+	InputManager();
 	~InputManager();
-
+	
 	void Initialize();
 
 	void capture();
 	void closeWindow();
 	void resizeMouseState(int width, int height);
+	void setGameManager(GameManager* pGameManager);
 
 private:
 	// OIS::KeyListener

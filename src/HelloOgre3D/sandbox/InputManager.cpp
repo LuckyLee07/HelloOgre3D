@@ -5,7 +5,7 @@
 #include "OgreRenderWindow.h"
 #include "Samples/SdkCameraMan.h"
 
-InputManager::InputManager(GameManager* pGameMgr) : m_pGameManager(pGameMgr), 
+InputManager::InputManager() : m_pGameManager(nullptr), 
 	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr), m_windowHnd(0)
 {
 	Ogre::RenderWindow* pRenderWindow = GetClientMgr()->getRenderWindow();
@@ -69,10 +69,17 @@ void InputManager::resizeMouseState(int width, int height)
 	mouseState.height = height;
 }
 
+void InputManager::setGameManager(GameManager* pGameManager)
+{
+	m_pGameManager = pGameManager;
+}
+
 bool InputManager::keyPressed(const OIS::KeyEvent& event)
 {
 	GetClientMgr()->getCameraMan()->injectKeyDown(event);
-	m_pGameManager->HandleKeyPress(event.key, event.text);
+
+	if (m_pGameManager != nullptr)
+		m_pGameManager->HandleKeyPress(event.key, event.text);
 
 	return true;
 }
@@ -80,7 +87,9 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 bool InputManager::keyReleased(const OIS::KeyEvent& event)
 {
 	GetClientMgr()->getCameraMan()->injectKeyUp(event);
-	m_pGameManager->HandleKeyRelease(event.key, event.text);
+
+	if (m_pGameManager != nullptr)
+		m_pGameManager->HandleKeyRelease(event.key, event.text);
 
 	return true;
 }
@@ -94,7 +103,8 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 
 	GetClientMgr()->SetWindowActive(true);
 
-	m_pGameManager->HandleMouseMove(event.state.width, event.state.height);
+	if (m_pGameManager != nullptr)
+		m_pGameManager->HandleMouseMove(event.state.width, event.state.height);
 
 	return true;
 }
@@ -102,13 +112,19 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
 	GetClientMgr()->getCameraMan()->injectMouseDown(event, btnId);
-	m_pGameManager->HandleMousePress(event.state.width, event.state.height, btnId);
+	
+	if (m_pGameManager != nullptr)
+		m_pGameManager->HandleMousePress(event.state.width, event.state.height, btnId);
+	
 	return true;
 }
 
 bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
 	GetClientMgr()->getCameraMan()->injectMouseUp(event, btnId);
-	m_pGameManager->HandleMouseRelease(event.state.width, event.state.height, btnId);
+
+	if (m_pGameManager != nullptr)
+		m_pGameManager->HandleMouseRelease(event.state.width, event.state.height, btnId);
+	
 	return true;
 }
