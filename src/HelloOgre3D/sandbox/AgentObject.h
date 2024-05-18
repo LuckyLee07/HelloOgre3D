@@ -6,6 +6,7 @@
 #include "OgreVector3.h"
 #include "opensteer/include/Vec3.h"
 #include "opensteer/include/SteerLibrary.h"
+#include "AgentPath.h"
 
 namespace Ogre {
 	class SceneNode;
@@ -79,12 +80,25 @@ public:
 	Ogre::Real GetTargetRadius() const { return m_targetRadius; }
 	
 	Ogre::Vector3 PredictFuturePosition(Ogre::Real predictionTime) const;
-
+	
 	Ogre::Vector3 ForceToPosition(const Ogre::Vector3& position);
+	Ogre::Vector3 ForceToFollowPath(Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToStayOnPath(Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToWander(Ogre::Real deltaMilliSeconds);
+	Ogre::Vector3 ForceToTarget(Ogre::Real targetSpeed);
+
+	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime);
 	
 	void ApplyForce(const Ogre::Vector3& force);
 
+	bool HasPath() const { return m_hasPath; }
+	void SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic);
+	
 	//tolua_end
+
+	const AgentPath& GetPath() { return m_path; }
+	void SetPath(const AgentPath& agentPath);
 
 	void update(int deltaMilisec) override;
 
@@ -101,6 +115,8 @@ public:
 	static const float DEFAULT_AGENT_TARGET_RADIUS;
 	
 private:
+	AGENT_OBJ_TYPE m_agentType;
+
 	btRigidBody* m_pRigidBody;
 	Ogre::SceneNode* m_pSceneNode;
 
@@ -116,7 +132,8 @@ private:
 	Ogre::Vector3 m_targetPos;
 	AgentObject* m_pTargetAgent;
 
-	AGENT_OBJ_TYPE m_agentType;
+	bool m_hasPath;
+	AgentPath m_path;
 
 private:
 	/**

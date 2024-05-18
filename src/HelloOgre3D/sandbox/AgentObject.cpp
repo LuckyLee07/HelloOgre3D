@@ -30,7 +30,7 @@ AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	m_maxForce(DEFAULT_AGENT_MAX_FORCE),
 	m_maxSpeed(DEFAULT_AGENT_MAX_SPEED),
 	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS),
-	m_pTargetAgent(nullptr)
+	m_pTargetAgent(nullptr), m_hasPath(false)
 {
 	if (m_pRigidBody)
 	{
@@ -331,6 +331,51 @@ Ogre::Vector3 AgentObject::ForceToPosition(const Ogre::Vector3& position)
 	return Vec3ToVector3(steerForSeek(Vector3ToVec3(position)));
 }
 
+Ogre::Vector3 AgentObject::ForceToFollowPath(Ogre::Real predictionTime)
+{
+	return ForceToFollowPath(m_path, predictionTime);
+}
+
+Ogre::Vector3 AgentObject::ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime)
+{
+	const static int FORWARD_DIRECTION = 1;
+	const static float MIN_PREDICTION_TIME = 0.1f;
+
+	if (path.GetNumberOfPathPoints() > 0)
+	{
+		float predictionTime1 = std::max(MIN_PREDICTION_TIME, predictionTime);
+		return Vec3ToVector3(steerToFollowPath(FORWARD_DIRECTION, predictionTime1, path));
+	}
+	return Ogre::Vector3(0.0f);
+}
+
+Ogre::Vector3 AgentObject::ForceToStayOnPath(Ogre::Real predictionTime)
+{
+	return ForceToStayOnPath(m_path, predictionTime);
+}
+
+Ogre::Vector3 AgentObject::ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime)
+{
+	const static float MIN_PREDICTION_TIME = 0.1f;
+
+	if (path.GetNumberOfPathPoints() > 0)
+	{
+		float predictionTime1 = std::max(MIN_PREDICTION_TIME, predictionTime);
+		return Vec3ToVector3(steerToStayOnPath(predictionTime1, m_path));
+	}
+	return Ogre::Vector3(0.0f);
+}
+
+Ogre::Vector3 AgentObject::ForceToWander(Ogre::Real deltaMilliSeconds)
+{
+	return Vec3ToVector3(steerForWander(deltaMilliSeconds));
+}
+
+Ogre::Vector3 AgentObject::ForceToTarget(Ogre::Real targetSpeed)
+{
+	return Vec3ToVector3(steerForTargetSpeed(targetSpeed));
+}
+
 void AgentObject::ApplyForce(const Ogre::Vector3& force)
 {
 	if (m_pRigidBody != nullptr)
@@ -341,14 +386,25 @@ void AgentObject::ApplyForce(const Ogre::Vector3& force)
 	}
 }
 
-void AgentObject::update(int deltaMsec)
+void AgentObject::SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic)
 {
-	static int totalMsec = 0;
-	totalMsec += deltaMsec;
-	if (true || totalMsec > 1000)
+	SetPath(AgentPath(points, m_radius, cyclic));
+}
+
+void AgentObject::SetPath(const AgentPath& agentPath)
+{
+	m_hasPath = true;
+	m_path = agentPath;
+}
+
+void AgentObject::update(int deltaMilisec)
+{
+	static int totalMilisec = 0;
+	totalMilisec += deltaMilisec;
+	if (true || totalMilisec > 1000)
 	{
-		totalMsec = 0;
-		GetScriptLuaVM()->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMsec);
+		totalMilisec = 0;
+		GetScriptLuaVM()->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
 	this->updateWorldTransform();

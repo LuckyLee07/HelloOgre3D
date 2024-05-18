@@ -1,3 +1,31 @@
+$#include <vector>
+
+namespace std
+{
+	class vector 
+	{
+		TOLUA_TEMPLATE_BIND(T, int, AgentObject*, Ogre::Vector3)
+		class iterator
+		{
+			iterator operator+(int index) const;
+		}
+
+		vector();
+		~vector();
+		void clear();
+		int size() const;
+
+		const T& operator[](int index) const;
+		T& operator[](int index);
+		void push_back(T val);
+
+		vector<T>::iterator begin();
+		vector<T>::iterator end();
+
+		vector<T>::iterator erase(vector<T>::iterator iter);
+		vector<T>::iterator insert(vector<T>::iterator iter, T val);
+	};
+}
 
 $#include "ogre3d/include/Ogre.h"
 

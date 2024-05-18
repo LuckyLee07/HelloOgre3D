@@ -16,4 +16,6 @@
 (3)加入UI显示系统
 (4)加入输入响应系统
 
-5、加入luasocket库及LuaPanda插件实现vscode中的lua断点调试功能
+5、完成原书chapter_2_introduction的内容
+
+6、加入luasocket库及LuaPanda插件实现vscode中的lua断点调试功能
