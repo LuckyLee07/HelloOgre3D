@@ -13,6 +13,7 @@ namespace Ogre
 	class Root;
 	class SceneManager;
 	class FrameListener;
+	class WindowEventListener;
 }
 namespace OgreBites
 {
@@ -50,6 +51,7 @@ public:
 	void SetAppTitle(const Ogre::String& appTitle);
 
 	void CreateFrameListener(Ogre::FrameListener* newListener);
+	void CreateWindowEventListener(Ogre::WindowEventListener* newListener);
 
 	void SetWindowActive(bool state);
 

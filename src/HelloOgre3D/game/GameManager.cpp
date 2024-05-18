@@ -21,7 +21,7 @@ GameManager* GetGameManager()
 }
 
 GameManager::GameManager() : m_objectIndex(0),
-	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr)
+	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pMarkupText(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
@@ -80,14 +80,14 @@ void GameManager::InitUIConfig()
 	Ogre::Camera* pCamera = GetClientMgr()->getCamera();
 	m_pUIScene = pSilverback->createScreen(pCamera->getViewport(), DEFAULT_ATLAS);
 	
-	Gorilla::MarkupText* pUIText = getUILayer()->createMarkupText(
+	m_pMarkupText = getUILayer()->createMarkupText(
 		91, m_pUIScene->getWidth(), m_pUIScene->getHeight(),
 		"Learning Game AI Programming. " __TIMESTAMP__);
 
-	Ogre::Real leftPos = m_pUIScene->getWidth() - pUIText->maxTextWidth() - 4;
+	Ogre::Real leftPos = m_pUIScene->getWidth() - m_pMarkupText->maxTextWidth() - 4;
 	Ogre::Real topPos = m_pUIScene->getHeight() - m_pUIScene->getAtlas()->getGlyphData(9)->mLineHeight - 4;
-	pUIText->left(leftPos);
-	pUIText->top(topPos);
+	m_pMarkupText->left(leftPos);
+	m_pMarkupText->top(topPos);
 }
 
 void GameManager::InitLuaEnv()
@@ -139,13 +139,23 @@ unsigned int GameManager::getObjectCount()
 	return m_pObjects.size();
 }
 
+void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
+{
+	Ogre::Real leftPos = width - m_pMarkupText->maxTextWidth() - 4;
+	Ogre::Real topPos = height - m_pUIScene->getAtlas()->getGlyphData(9)->mLineHeight - 4;
+	m_pMarkupText->left(leftPos);
+	m_pMarkupText->top(topPos);
+
+	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
+}
+
+void GameManager::HandleWindowClosed()
+{
+	//m_pScriptVM->callFunction("EventHandle_WindowClosed", "");
+}
+
 void GameManager::HandleKeyPress(OIS::KeyCode keycode, unsigned int key)
 {
-	if (keycode == OIS::KC_F10) // reload script
-	{
-		m_pScriptVM->callFile("res/scripts/script_init.lua");
-	}
-
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
 }
 

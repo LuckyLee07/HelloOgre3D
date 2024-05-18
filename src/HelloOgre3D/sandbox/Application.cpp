@@ -20,7 +20,7 @@ bool Application::Setup()
     bool setupSucc = m_pClientManager->Setup();
     if (!setupSucc) return false;
 
-    CreateFrameListener();
+    CreateEventListener();
     return true;
 }
 
@@ -34,9 +34,10 @@ void Application::Run()
     m_pClientManager->Run();
 }
 
-void Application::CreateFrameListener()
+void Application::CreateEventListener()
 {
     m_pClientManager->CreateFrameListener(this);
+    m_pClientManager->CreateWindowEventListener(this);
 }
 
 bool Application::frameEnded(const Ogre::FrameEvent& event)

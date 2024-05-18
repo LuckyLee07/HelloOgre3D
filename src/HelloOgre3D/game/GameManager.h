@@ -19,6 +19,7 @@ namespace Gorilla
 {
 	class Layer;
 	class Screen;
+	class MarkupText;
 }
 
 class ScriptLuaVM;
@@ -49,8 +50,11 @@ public:
 	void addAgentObject(AgentObject* pAgentObject);
 
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
-
+	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
 	//tolua_end
+
+	void HandleWindowResized(unsigned int width, unsigned int height);
+	void HandleWindowClosed();
 
 	void HandleKeyPress(OIS::KeyCode keycode, unsigned int key);
 	void HandleKeyRelease(OIS::KeyCode keycode, unsigned int key);
@@ -74,6 +78,7 @@ private:
 	std::map<unsigned int, BaseObject*> m_pObjects;
 	
 	Gorilla::Screen* m_pUIScene;
+	Gorilla::MarkupText* m_pMarkupText;
 	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
 
 }; //tolua_exports

@@ -108,11 +108,12 @@ void DebugDrawer::drawSquare(const Ogre::Vector3& position, Ogre::Real length, c
 void DebugDrawer::buildLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& color, float alpha)
 {
 	Ogre::ColourValue colorWithAlpha = color;
-	colorWithAlpha.r = alpha;
+	colorWithAlpha.a = alpha;
 
 	int index1 = addLineVertex(start, colorWithAlpha);
-	int index2 = addLineVertex(end, colorWithAlpha);
-	this->addLineIndices(index1, index2);
+	addLineVertex(end, colorWithAlpha);
+
+	this->addLineIndices(index1, index1+1);
 }
 
 void DebugDrawer::buildCircle(const Ogre::Vector3& centre, float radius, int segmentsCount, const Ogre::ColourValue& color, float alpha)

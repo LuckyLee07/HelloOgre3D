@@ -4,6 +4,8 @@
 #include "OgreLog.h"
 #include <string.h>
 
+#define LOG_WITH_TIME	0
+
 namespace Fancy 
 {
 	extern void LogMessage(const char* format, ...);

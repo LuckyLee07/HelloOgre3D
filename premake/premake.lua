@@ -84,7 +84,7 @@ solution( "HelloOgre3D" )
 		buildoptions( {
 			"/wd\"4100\"", "/wd\"4127\"", "/wd\"4189\"", "/wd\"4244\"",
 			"/wd\"4611\"", "/wd\"4389\"", "/wd\"4324\"", "/wd\"4702\"",
-			"/wd\"4701\"", "/wd\"4789\""
+			"/wd\"4701\"", "/wd\"4789\"", "/wd\"4456\""
 		} )
 		includedirs( {
 			"../src/external/libjpeg/include/",
@@ -217,7 +217,7 @@ solution( "HelloOgre3D" )
 			"/wd\"4100\"", "/wd\"4018\"", "/wd\"4305\"", "/wd\"4309\"",
 			"/wd\"4127\"", "/wd\"4389\"", "/wd\"4804\"", "/wd\"4146\"",
 			"/wd\"4245\"", "/wd\"4996\"", "/wd\"4702\"", "/wd\"4267\"",
-			"/wd\"4701\""
+			"/wd\"4701\"", "/wd\"4456\""
 		} )
 		files( {
 			"../src/external/libraw/include/**.h",
@@ -234,7 +234,8 @@ solution( "HelloOgre3D" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4244\"", "/wd\"4706\"", "/wd\"4702\"",
 			"/wd\"4701\"", "/wd\"4018\"", "/wd\"4306\"", "/wd\"4305\"",
-			"/wd\"4267\"", "/wd\"4324\"", "/wd\"4703\"", "/wd\"4100\""
+			"/wd\"4267\"", "/wd\"4324\"", "/wd\"4703\"", "/wd\"4100\"",
+			"/wd\"4456\""
 		} )
 		includedirs( {
 			"../src/external/libjpeg/include/",
@@ -422,7 +423,7 @@ solution( "HelloOgre3D" )
 		location( "../build/external/bullet_collision" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4100\"", "/wd\"4244\"", "/wd\"4702\"",
-			"/wd\"4512\"", "/wd\"4267\""
+			"/wd\"4512\"", "/wd\"4267\"", "/wd\"4456\""
 		} )
 		includedirs( {
 			"../src/external/bullet_collision/include/BulletCollision/BroadphaseCollision",
@@ -444,7 +445,7 @@ solution( "HelloOgre3D" )
 		location( "../build/external/bullet_dynamics" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4100\"", "/wd\"4244\"", "/wd\"4702\"",
-			"/wd\"4512\"", "/wd\"4267\"", "/wd\"4305\""
+			"/wd\"4512\"", "/wd\"4267\"", "/wd\"4305\"", "/wd\"4456\""
 		} )
 		includedirs( {
 			"../src/external/bullet_collision/include/",
@@ -466,7 +467,7 @@ solution( "HelloOgre3D" )
 		location( "../build/external/bullet_linearmath" )
 		buildoptions( {
 			"/wd\"4127\"", "/wd\"4245\"", "/wd\"4244\"", "/wd\"4267\"",
-			"/wd\"4701\""
+			"/wd\"4701\"", "/wd\"4456\""
 		} )
 		includedirs( {
 			"../src/external/bullet_linearmath/include/LinearMath"
@@ -508,7 +509,7 @@ solution( "HelloOgre3D" )
 	project( "opensteer" )
 		kind( "StaticLib" )
 		location( "../build/external/opensteer" )
-		buildoptions( { "/wd\"4701\"", "/wd\"4244\"", "/wd\"4100\"" } )
+		buildoptions( { "/wd\"4701\"", "/wd\"4244\"", "/wd\"4100\"", "/wd\"4458\"" } )
 		files( {
 			"../src/external/opensteer/include/**.h",
 			"../src/external/opensteer/src/**.c",

@@ -48,14 +48,16 @@ void InputManager::Initialize()
 
 void InputManager::capture()
 {
-	m_pMouse->capture();
-	m_pKeyboard->capture();
+	if (m_pMouse != nullptr) m_pMouse->capture();
+	if (m_pKeyboard != nullptr) m_pKeyboard->capture();
 }
 
 void InputManager::closeWindow()
 {
 	m_pOISInputMgr->destroyInputObject(m_pMouse);
 	m_pOISInputMgr->destroyInputObject(m_pKeyboard);
+	m_pMouse = nullptr;
+	m_pKeyboard = nullptr;
 
 	OIS::InputManager::destroyInputSystem(m_pOISInputMgr);
 

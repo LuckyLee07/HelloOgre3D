@@ -45,6 +45,9 @@ public:
 	long long GetTotalSimulateTime();
 
 	unsigned int GetObjectCount();
+	AgentObject* GetSeekingAgent();
+
+	void CallFile(const Ogre::String& filepath);
 	//tolua_end
 
 public: //static methods

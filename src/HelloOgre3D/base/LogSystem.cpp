@@ -67,6 +67,33 @@ namespace Fancy
 #endif
 	}
 
+	std::string getLogMessageWithoutTime(const char* pfilename, const char* pfunction, int line, const char* pstr)
+	{
+#ifdef _WIN32
+		char buffer[1024 * 10];
+
+		if (pfilename != NULL && pfunction != NULL)
+		{
+			snprintf(buffer, sizeof(buffer), "[%s(%d)]%s(): %s", pfilename, line, pfunction, pstr);
+		}
+		else if (pfilename != NULL)
+		{
+			snprintf(buffer, sizeof(buffer), "[%s(%d)]: %s", pfilename, line, pstr);
+		}
+		else if (pfunction != NULL)
+		{
+			snprintf(buffer, sizeof(buffer), "%s(): %s", pfunction, pstr);
+		}
+		else
+		{
+			snprintf(buffer, sizeof(buffer), "%s", pstr);
+		}
+		return buffer;
+#else
+		return "--";
+#endif
+	}
+
 	void LogMessage(const char *format, ...)
 	{
 		if (format == NULL) format = "";
@@ -78,7 +105,14 @@ namespace Fancy
 		vsnprintf(message, sizeof(message), format, argptr);
 		va_end(argptr);
 		
+#if LOG_WITH_TIME
 		const std::string& buffer = getLogMessage(s_pFileName, s_pFuncName, s_iLine, message);
 		Ogre::LogManager::getSingletonPtr()->logMessage(s_LogLevel, buffer.c_str());
+#else
+		const std::string& buffer = getLogMessageWithoutTime(s_pFileName, s_pFuncName, s_iLine, message);
+		Ogre::LogManager::getSingletonPtr()->logMessage(s_LogLevel, buffer.c_str());
+#endif // LOG_WITH_TIME
+
+		
 	}
 }

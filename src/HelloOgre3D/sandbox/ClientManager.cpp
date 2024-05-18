@@ -81,6 +81,11 @@ void ClientManager::CreateFrameListener(Ogre::FrameListener* newListener)
     m_pRoot->addFrameListener(newListener);
 }
 
+void ClientManager::CreateWindowEventListener(Ogre::WindowEventListener* newListener)
+{
+    Ogre::WindowEventUtilities::addWindowEventListener(m_pRenderWindow, newListener);
+}
+
 void ClientManager::SetWindowActive(bool state)
 {
     m_pRenderWindow->setActive(state);
@@ -301,9 +306,11 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 void ClientManager::WindowClosed()
 {
     m_pInputManager->closeWindow();
+    g_GameManager->HandleWindowClosed();
 }
 
 void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
     m_pInputManager->resizeMouseState(width, height);
+    g_GameManager->HandleWindowResized(width, height);
 }

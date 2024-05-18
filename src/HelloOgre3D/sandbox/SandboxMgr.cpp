@@ -4,6 +4,7 @@
 #include "SandboxDef.h"
 #include "GameManager.h"
 #include "ClientManager.h"
+#include "ScriptLuaVM.h"
 
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
@@ -21,6 +22,11 @@ SandboxMgr::~SandboxMgr()
 {
     m_pSceneManager = nullptr;
     m_pRootSceneNode = nullptr;
+}
+
+void SandboxMgr::CallFile(const Ogre::String& filepath)
+{
+    GetScriptLuaVM()->callFile(filepath.c_str());
 }
 
 Ogre::Camera* SandboxMgr::GetCamera()
@@ -99,6 +105,21 @@ long long SandboxMgr::GetTotalSimulateTime()
 unsigned int SandboxMgr::GetObjectCount()
 {
     return g_GameManager->getObjectCount();
+}
+
+AgentObject* SandboxMgr::GetSeekingAgent()
+{
+    std::vector<AgentObject*> pAllAgents = g_GameManager->getAllAgents();
+    for (size_t index = 0; index < pAllAgents.size(); index++)
+    {
+        AgentObject* pAgentObject = pAllAgents[index];
+        if (pAgentObject->getAgentType() == AGENT_OBJ_SEEKING)
+        {
+            return pAgentObject;
+        }
+    }
+    assert(false);
+    return nullptr;
 }
 
 //---------------------------util static functions---------------------------
@@ -540,6 +561,7 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
     capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
     AgentObject* pObject = new AgentObject(capsuleNode, capsuleRigidBody);
+    pObject->setAgentType(agentType);
 
     g_GameManager->addAgentObject(pObject);
 

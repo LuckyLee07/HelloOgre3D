@@ -83,7 +83,7 @@ public:
 	Ogre::Vector3 ForceToPosition(const Ogre::Vector3& position);
 	
 	void ApplyForce(const Ogre::Vector3& force);
-	
+
 	//tolua_end
 
 	void update(int deltaMilisec) override;
@@ -114,6 +114,7 @@ private:
 
 	Ogre::Real m_targetRadius;
 	Ogre::Vector3 m_targetPos;
+	AgentObject* m_pTargetAgent;
 
 	AGENT_OBJ_TYPE m_agentType;
 

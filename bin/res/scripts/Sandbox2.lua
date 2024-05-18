@@ -61,6 +61,7 @@ function Sandbox_Initialize(ctype)
     Sandbox:setMaterial(plane, "Ground2");
 
     Sandbox:CreateAgent(AGENT_OBJ_SEEKING)
+    Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
 end
 
 
@@ -81,6 +82,9 @@ function EventHandle_Keyboard(keycode, pressed)
     elseif (keycode == OIS.KC_F2) then
         local isShow = TextComponent:isVisible()
         TextComponent:setVisible(not isShow)
+    elseif (keycode == OIS.KC_F12) then
+        Sandbox:CallFile("res/scripts/gui.lua")
+        Sandbox:CallFile("res/scripts/agent.lua")
     elseif (keycode == OIS.KC_SPACE) then
         Sandbox_ShootBox()
     end
@@ -88,6 +92,15 @@ end
 
 function EventHandle_Mouse(ctype)
 
+end
+
+function EventHandle_WindowResized(width, height)
+    GUI_WindowResized(width, height)
+    
+    local dimension = TextComponent:GetDimension()
+    local ui_posx = width - dimension.x - 20;
+    local ui_posy = height - dimension.y - 35;
+    TextComponent:setPosition(Vector2(ui_posx, ui_posy))
 end
 
 _G.Shoot_BoxCount = 0

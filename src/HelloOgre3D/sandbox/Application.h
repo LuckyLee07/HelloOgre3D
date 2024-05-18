@@ -18,16 +18,16 @@ public:
 
 public:
     // Ogre::FrameListener
-    virtual bool frameEnded(const Ogre::FrameEvent& event);
-    virtual bool frameRenderingQueued(const Ogre::FrameEvent& event);
-    virtual bool frameStarted(const Ogre::FrameEvent& event);
+    virtual bool frameEnded(const Ogre::FrameEvent& event) override;
+    virtual bool frameRenderingQueued(const Ogre::FrameEvent& event) override;
+    virtual bool frameStarted(const Ogre::FrameEvent& event) override;
 
     // Ogre::WindwoEventListener
-    virtual void windowResized(Ogre::RenderWindow* renderWindow);
-    virtual void windowClosed(Ogre::RenderWindow* renderWindow);
+    virtual void windowResized(Ogre::RenderWindow* renderWindow) override;
+    virtual void windowClosed(Ogre::RenderWindow* renderWindow) override;
 
 private:
-    void CreateFrameListener();
+    void CreateEventListener();
 
 private:
     ClientManager* m_pClientManager;

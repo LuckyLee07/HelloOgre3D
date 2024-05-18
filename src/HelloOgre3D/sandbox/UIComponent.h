@@ -46,6 +46,8 @@ public:
 
 	void setVisible(bool visible);
 	bool isVisible() { return m_IsVisible; }
+
+	Ogre::Vector2 GetDimension() { return m_dimension; }
 	
 	//tolua_end
 private:

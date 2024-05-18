@@ -17,6 +17,6 @@ void LuaInterface::log(const char* msg)
 {
 	if (msg == NULL) return;
 	
-	CCLUA_INFO("@lua:%s", msg);
+	CCLUA_INFO("Lua:%s", msg);
 }
 

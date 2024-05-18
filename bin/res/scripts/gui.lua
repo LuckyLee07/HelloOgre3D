@@ -59,7 +59,6 @@ local __ComputerNewTime__ = function(times, newTime)
 	table.insert(times, newTime)
 
 	if #times > 15 then table.remove(times, 1) end
-	--print("Fxkk===========>>>", times)
 
 	local averageTime = 0;
 	for index = 1, #times do
@@ -213,3 +212,14 @@ function GUI_HandleKeyEvent(keycode, pressed)
 end
 
 
+function GUI_WindowResized(width, height)
+	local dimension1 = cameraInfoPanel:GetDimension()
+    local ui_posx1 = width - dimension1.x - 20;
+    local ui_posy1 = 35 + dimension1.y;
+    cameraInfoPanel:setPosition(Vector2(ui_posx1, ui_posy1))
+
+    local dimension2 = profileInfoPanel:GetDimension()
+    local ui_posx2 = width - dimension2.x - 20;
+    local ui_posy2 = 20;
+    profileInfoPanel:setPosition(Vector2(ui_posx2, ui_posy2))
+end

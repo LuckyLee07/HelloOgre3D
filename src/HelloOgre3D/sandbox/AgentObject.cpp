@@ -29,7 +29,8 @@ AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	m_health(DEFAULT_AGENT_HEALTH),
 	m_maxForce(DEFAULT_AGENT_MAX_FORCE),
 	m_maxSpeed(DEFAULT_AGENT_MAX_SPEED),
-	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS)
+	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS),
+	m_pTargetAgent(nullptr)
 {
 	if (m_pRigidBody)
 	{
@@ -41,11 +42,13 @@ AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 
 AgentObject::~AgentObject()
 {
+	m_pTargetAgent = nullptr;
 	m_pSceneNode = nullptr;
 
 	delete m_pRigidBody->getMotionState();
 	delete m_pRigidBody->getCollisionShape();
 	delete m_pRigidBody;
+	
 	m_pRigidBody = nullptr;
 }
 
@@ -53,8 +56,7 @@ void AgentObject::Initialize()
 {
 	SetPosition(Ogre::Vector3::ZERO);
 
-	SetTarget(Ogre::Vector3(50.0f, 0.0f, 0.0f));
-	SetTargetRadius(1.5f);
+	GetScriptLuaVM()->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
 void AgentObject::ResetRigidBody(btRigidBody* pRigidBody)
@@ -339,7 +341,6 @@ void AgentObject::ApplyForce(const Ogre::Vector3& force)
 	}
 }
 
-
 void AgentObject::update(int deltaMsec)
 {
 	static int totalMsec = 0;
@@ -364,7 +365,6 @@ void AgentObject::updateWorldTransform()
 								rigidBodyRotation.y(), rigidBodyRotation.z());
 	m_pSceneNode->setOrientation(rotation);
 }
-
 
 
 /**

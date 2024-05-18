@@ -93,3 +93,6 @@ function Vector.LengthSquared(vec3)
 	return vec3:squaredLength()
 end
 
+function Vector.tostring(vec3)
+	return string.format('(%.2f, %.2f, %.2f)', vec3.x, vec3.y, vec3.z)
+end
