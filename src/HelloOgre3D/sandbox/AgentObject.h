@@ -85,7 +85,7 @@ public:
 	Ogre::Vector3 ForceToFollowPath(Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToStayOnPath(Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToWander(Ogre::Real deltaMilliSeconds);
-	Ogre::Vector3 ForceToTarget(Ogre::Real targetSpeed);
+	Ogre::Vector3 ForceToTargetSpeed(Ogre::Real targetSpeed);
 
 	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime);
@@ -94,10 +94,9 @@ public:
 
 	bool HasPath() const { return m_hasPath; }
 	void SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic);
+	const std::vector<Ogre::Vector3>& GetPath() { return m_points; }
 	
 	//tolua_end
-
-	const AgentPath& GetPath() { return m_path; }
 	void SetPath(const AgentPath& agentPath);
 
 	void update(int deltaMilisec) override;
@@ -134,6 +133,7 @@ private:
 
 	bool m_hasPath;
 	AgentPath m_path;
+	std::vector<Ogre::Vector3> m_points;
 
 private:
 	/**

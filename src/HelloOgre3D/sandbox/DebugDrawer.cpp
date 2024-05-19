@@ -105,6 +105,19 @@ void DebugDrawer::drawSquare(const Ogre::Vector3& position, Ogre::Real length, c
 	this->buildQuad(square, color);
 }
 
+void DebugDrawer::drawPath(const std::vector<Ogre::Vector3> points, const Ogre::ColourValue& color, bool cyclic, const Ogre::Vector3& offset)
+{
+	size_t pointsize = points.size();
+	for (size_t index = 0; index < pointsize; index++)
+	{
+		if ((index + 1) == pointsize && !cyclic) break;
+		
+		const Ogre::Vector3& startPoint = points[index];
+		const Ogre::Vector3& endPoint = (index+1) == pointsize ? points[0] : points[index+1];
+		drawLine(startPoint + offset, endPoint + offset, color);
+	}
+}
+
 void DebugDrawer::buildLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& color, float alpha)
 {
 	Ogre::ColourValue colorWithAlpha = color;

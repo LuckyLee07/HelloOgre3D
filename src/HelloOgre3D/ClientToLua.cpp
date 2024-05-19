@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 18 22:13:39 2024.
+** Generated automatically by tolua++-1.0.92 on Sun May 19 11:43:06 2024.
 */
 
 #ifndef __cplusplus
@@ -5702,9 +5702,9 @@ static int tolua_ClientToLua_AgentObject_ForceToWander00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: ForceToTarget of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToTarget00
-static int tolua_ClientToLua_AgentObject_ForceToTarget00(lua_State* tolua_S)
+/* method: ForceToTargetSpeed of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToTargetSpeed00
+static int tolua_ClientToLua_AgentObject_ForceToTargetSpeed00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -5720,10 +5720,10 @@ static int tolua_ClientToLua_AgentObject_ForceToTarget00(lua_State* tolua_S)
   AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
    float targetSpeed = ((  float)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToTarget'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToTargetSpeed'", NULL);
 #endif
   {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToTarget(targetSpeed);
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToTargetSpeed(targetSpeed);
    {
 #ifdef __cplusplus
     void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
@@ -5740,7 +5740,7 @@ static int tolua_ClientToLua_AgentObject_ForceToTarget00(lua_State* tolua_S)
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToTarget'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'ForceToTargetSpeed'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5923,6 +5923,38 @@ static int tolua_ClientToLua_AgentObject_SetPath00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'SetPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetPath of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetPath00
+static int tolua_ClientToLua_AgentObject_GetPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPath'", NULL);
+#endif
+  {
+   const std::vector<Ogre::Vector3>& tolua_ret = (const std::vector<Ogre::Vector3>&)  self->GetPath();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<Ogre::Vector3>");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPath'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7027,6 +7059,45 @@ static int tolua_ClientToLua_DebugDrawer_drawSquare00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: drawPath of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_drawPath00
+static int tolua_ClientToLua_DebugDrawer_drawPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<Ogre::Vector3>",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isboolean(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<Ogre::Vector3> points = *((const std::vector<Ogre::Vector3>*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::ColourValue* color = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,3,0));
+  bool cyclic = ((bool)  tolua_toboolean(tolua_S,4,0));
+  const Ogre::Vector3* offset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawPath'", NULL);
+#endif
+  {
+   self->drawPath(points,*color,cyclic,*offset);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getScreenWidth of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getScreenWidth00
 static int tolua_ClientToLua_GameManager_getScreenWidth00(lua_State* tolua_S)
@@ -7786,12 +7857,13 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"ForceToFollowPath",tolua_ClientToLua_AgentObject_ForceToFollowPath00);
    tolua_function(tolua_S,"ForceToStayOnPath",tolua_ClientToLua_AgentObject_ForceToStayOnPath00);
    tolua_function(tolua_S,"ForceToWander",tolua_ClientToLua_AgentObject_ForceToWander00);
-   tolua_function(tolua_S,"ForceToTarget",tolua_ClientToLua_AgentObject_ForceToTarget00);
+   tolua_function(tolua_S,"ForceToTargetSpeed",tolua_ClientToLua_AgentObject_ForceToTargetSpeed00);
    tolua_function(tolua_S,"ForceToStayOnPath",tolua_ClientToLua_AgentObject_ForceToStayOnPath01);
    tolua_function(tolua_S,"ForceToFollowPath",tolua_ClientToLua_AgentObject_ForceToFollowPath01);
    tolua_function(tolua_S,"ApplyForce",tolua_ClientToLua_AgentObject_ApplyForce00);
    tolua_function(tolua_S,"HasPath",tolua_ClientToLua_AgentObject_HasPath00);
    tolua_function(tolua_S,"SetPath",tolua_ClientToLua_AgentObject_SetPath00);
+   tolua_function(tolua_S,"GetPath",tolua_ClientToLua_AgentObject_GetPath00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");
@@ -7829,6 +7901,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"drawLine",tolua_ClientToLua_DebugDrawer_drawLine00);
    tolua_function(tolua_S,"drawCircle",tolua_ClientToLua_DebugDrawer_drawCircle00);
    tolua_function(tolua_S,"drawSquare",tolua_ClientToLua_DebugDrawer_drawSquare00);
+   tolua_function(tolua_S,"drawPath",tolua_ClientToLua_DebugDrawer_drawPath00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"GameManager","GameManager","",NULL);
   tolua_beginmodule(tolua_S,"GameManager");

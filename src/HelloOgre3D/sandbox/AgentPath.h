@@ -13,13 +13,15 @@ public:
 
 	AgentPath();
 	AgentPath(const AgentPath& cpath);
-	AgentPath(const std::vector<Ogre::Vector3>& points, Ogre::Real radius, bool cyclic);
+	AgentPath(const std::vector<Ogre::Vector3>& cpoints, Ogre::Real radius, bool cyclic);
 	
 	~AgentPath();
 
 	AgentPath& operator=(const AgentPath& cpath);
 
 	size_t GetNumberOfPathPoints() const;
+
+	void GetPathPoints(std::vector<Ogre::Vector3>& cpoints);
 
 	Ogre::Real GetPathLength() const;
 

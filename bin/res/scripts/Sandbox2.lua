@@ -35,6 +35,8 @@ end
 
 
 function Sandbox_Initialize(ctype)
+    math.randomseed(os.time())
+    
     GUI_CreateCommonsUI()
     TextComponent = CreateSandboxText()
 
@@ -61,7 +63,27 @@ function Sandbox_Initialize(ctype)
     Sandbox:setMaterial(plane, "Ground2");
 
     Sandbox:CreateAgent(AGENT_OBJ_SEEKING)
-    Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
+    --Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
+
+    local points = std.vector_Ogre__Vector3_();
+    points:push_back(Vector3(0, 0, 0))
+    points:push_back(Vector3(30, 0, 0))
+    points:push_back(Vector3(30, 0, 50))
+    points:push_back(Vector3(-30, 0, 0))
+    points:push_back(Vector3(-30, 0, 20))
+
+    for index = 1, 20 do
+        local agent = Sandbox:CreateAgent(AGENT_OBJ_PATHING);
+        
+        agent:SetPath(points, true);
+
+        -- Randomly vary speeds to allow agents to pass one another.
+        local randomSpeed = math.random(
+            agent:GetMaxSpeed() * 0.85,
+            agent:GetMaxSpeed() * 1.15);
+
+        agent:SetMaxSpeed(randomSpeed);
+    end
 end
 
 

@@ -371,7 +371,7 @@ Ogre::Vector3 AgentObject::ForceToWander(Ogre::Real deltaMilliSeconds)
 	return Vec3ToVector3(steerForWander(deltaMilliSeconds));
 }
 
-Ogre::Vector3 AgentObject::ForceToTarget(Ogre::Real targetSpeed)
+Ogre::Vector3 AgentObject::ForceToTargetSpeed(Ogre::Real targetSpeed)
 {
 	return Vec3ToVector3(steerForTargetSpeed(targetSpeed));
 }
@@ -395,6 +395,8 @@ void AgentObject::SetPath(const AgentPath& agentPath)
 {
 	m_hasPath = true;
 	m_path = agentPath;
+
+	m_path.GetPathPoints(m_points);
 }
 
 void AgentObject::update(int deltaMilisec)

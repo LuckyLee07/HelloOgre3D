@@ -34,6 +34,7 @@ public:
 	void drawLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& color);
 	void drawCircle(const Ogre::Vector3& centre, float radius, int segmentsCount, const Ogre::ColourValue& color, bool isFilled = false);
 	void drawSquare(const Ogre::Vector3& position, Ogre::Real length, const Ogre::ColourValue& color, bool isFilled = false);
+	void drawPath(const std::vector<Ogre::Vector3> points, const Ogre::ColourValue& color, bool cyclic, const Ogre::Vector3& offset);
 	//tolua_end
 
 private:

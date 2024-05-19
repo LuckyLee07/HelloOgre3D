@@ -63,12 +63,14 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
 end
 
 function Agent_Initialize(agent)
-    print("-------Initialize-------")
+    --print("-------Initialize-------")
     local agentType = agent:getAgentType()
     if agentType == AGENT_OBJ_SEEKING then
         Agent_Seeking_Initialize(agent)
     elseif agentType == AGENT_OBJ_PURSUING then
         Agent_Pursuing_Initialize(agent)
+    elseif agentType == AGENT_OBJ_PATHING then
+        Agent_Pathing_Initialize(agent)
     end
 end
 
@@ -81,13 +83,20 @@ local enemy;
 function Agent_Pursuing_Initialize(agent)
     agent:SetTargetRadius(1.0);
 
-    local position = Vector3(math.random(-50, 50), 0, math.random(-50, 50))
-    agent:SetPosition(position)
+    local randPosx = math.random(-50, 50)
+    local randPosz = math.random(-50, 50)
+    agent:SetPosition(Vector3(randPosx, 0, randPosz))
 
     enemy = Sandbox:GetSeekingAgent()
     agent:SetTarget(enemy:GetPosition());
 
     agent:SetMaxSpeed(enemy:GetMaxSpeed() * 0.8)
+end
+
+function Agent_Pathing_Initialize(agent)
+    local randPosx = math.random(-50, 50)
+    local randPosz = math.random(-50, 50)
+    agent:SetPosition(Vector3(randPosx, 0, randPosz))
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
@@ -96,13 +105,15 @@ function Agent_Update(agent, deltaTimeInMillis)
         Agent_Seeking_Update(agent, deltaTimeInMillis)
     elseif agentType == AGENT_OBJ_PURSUING then
         Agent_Pursuing_Update(agent, deltaTimeInMillis)
+    elseif agentType == AGENT_OBJ_PATHING then
+        Agent_Pathing_Update(agent, deltaTimeInMillis)
     end
 end
 
 
 function Agent_Seeking_Update(agent, deltaTimeInMillis)
     local destination = agent:GetTarget();
-    local deltaTimeInSeconds = deltaTimeInMillis;-- / 1000;
+    local deltaTimeInSeconds = deltaTimeInMillis / 1000;
     --local avoidAgentForce = agent:ForceToAvoidAgents(1.5);
     --local avoidObjectForce = agent:ForceToAvoidObjects(1.5);
     local seekForce = agent:ForceToPosition(destination);
@@ -145,5 +156,42 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
 end
 
 function Agent_Pursuing_Update(agent, deltaTimeInMillis)
-    
+    agent:SetTarget(enemy:PredictFuturePosition(1))
+
+    local destination = agent:GetTarget()
+    local deltaTimeInSeconds = deltaTimeInMillis / 1000;
+    local seekForce = agent:ForceToPosition(destination);
+    local targetRadius = agent:GetTargetRadius();
+    local position = agent:GetPosition();
+
+    AgentUtilities_ApplyPhysicsSteeringForce(
+        agent, seekForce, deltaTimeInSeconds);
+    AgentUtilities_ClampHorizontalSpeed(agent);
+
+    DebugDrawer:drawCircle(destination, targetRadius, 10, ColourValue(1, 1, 0));
+    DebugDrawer:drawLine(position, destination, ColourValue(0, 1, 0));
+end
+
+function Agent_Pathing_Update(agent, deltaTimeInMillis)
+    local deltaTimeInSeconds = deltaTimeInMillis / 1000;
+
+    local followForce = agent:ForceToFollowPath(1.25);
+    local stayForce = agent:ForceToStayOnPath(1);
+    local wanderForce = agent:ForceToWander(deltaTimeInMillis);
+
+    local totalForces = Vector.Normalize(followForce) + Vector.Normalize(stayForce) * 0.25
+                         + Vector.Normalize(wanderForce) * 0.25;
+
+    local targetSpeed = 3
+    -- Accelerate pathing agents to a minimun speed
+    if (agent:GetSpeed() < targetSpeed) then
+        local speedForce = agent:ForceToTargetSpeed(targetSpeed)
+        totalForces = totalForces + Vector.Normalize(speedForce);
+    end
+
+    AgentUtilities_ApplyPhysicsSteeringForce(
+        agent, totalForces, deltaTimeInSeconds);
+    AgentUtilities_ClampHorizontalSpeed(agent);
+
+    DebugDrawer:drawPath(agent:GetPath(), ColourValue(1, 1, 0), true, Vector3(0.0))
 end
