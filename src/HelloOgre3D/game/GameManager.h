@@ -50,8 +50,11 @@ public:
 	void addAgentObject(AgentObject* pAgentObject);
 
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
-	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
+	
 	//tolua_end
+
+	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
+	const std::vector<SandboxObject*>& getAllObjects() { return m_pObjects; }
 
 	void HandleWindowResized(unsigned int width, unsigned int height);
 	void HandleWindowClosed();
@@ -75,7 +78,8 @@ private:
 	
 	unsigned int m_objectIndex;
 	std::vector<AgentObject*> m_pAgents;
-	std::map<unsigned int, BaseObject*> m_pObjects;
+	std::vector<SandboxObject*> m_pObjects;
+	std::vector<UIComponent*> m_pComponents;
 	
 	Gorilla::Screen* m_pUIScene;
 	Gorilla::MarkupText* m_pMarkupText;

@@ -105,18 +105,27 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
-	std::map<unsigned int, BaseObject*>::iterator objectIter;
-	for (objectIter = m_pObjects.begin(); objectIter != m_pObjects.end(); objectIter++)
+	std::vector<SandboxObject*>::iterator iter1;
+	for (iter1 = m_pObjects.begin(); iter1 != m_pObjects.end(); iter1++)
 	{
-		BaseObject* pObject = objectIter->second;
-		if (pObject != nullptr) pObject->update(deltaMilliseconds);
+		BaseObject* pObject = *iter1;
+		if (pObject != nullptr) 
+			pObject->update(deltaMilliseconds);
 	}
 
-	std::vector<AgentObject*>::iterator agentIter;
-	for (agentIter = m_pAgents.begin(); agentIter != m_pAgents.end(); agentIter++)
+	std::vector<AgentObject*>::iterator iter2;
+	for (iter2 = m_pAgents.begin(); iter2 != m_pAgents.end(); iter2++)
 	{
-		AgentObject* pAgent = *agentIter;
-		pAgent->update(deltaMilliseconds);
+		AgentObject* pAgent = *iter2;
+		if (pAgent != nullptr)
+			pAgent->update(deltaMilliseconds);
+	}
+	std::vector<UIComponent*>::iterator iter3;
+	for (iter3 = m_pComponents.begin(); iter3 != m_pComponents.end(); iter3++)
+	{
+		UIComponent* pComponent = *iter3;
+		if (pComponent != nullptr)
+			pComponent->update(deltaMilliseconds);
 	}
 
 	m_pPhysicsWorld->stepWorld();
@@ -196,9 +205,9 @@ void GameManager::addSandboxObject(SandboxObject* pSandboxObject)
 	unsigned int objectId = getNextObjectId();
 
 	pSandboxObject->setObjId(objectId);
-	m_pObjects[objectId] = pSandboxObject;
-
 	pSandboxObject->Initialize();
+
+	m_pObjects.push_back(pSandboxObject);
 
 	m_pPhysicsWorld->addRigidBody(pSandboxObject->getRigidBody());
 }
@@ -209,7 +218,8 @@ UIComponent* GameManager::createUIComponent(unsigned int index)
 	{
 		UIComponent* pComponent = new UIComponent(getUILayer(index));
 		pComponent->setObjId(getNextObjectId());
-		m_pObjects[pComponent->getObjId()] = pComponent;
+		m_pComponents.push_back(pComponent);
+
 		return pComponent;
 	}
 	return nullptr;

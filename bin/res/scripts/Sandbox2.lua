@@ -71,10 +71,9 @@ function Sandbox_Initialize(ctype)
     points:push_back(Vector3(30, 0, 50))
     points:push_back(Vector3(-30, 0, 0))
     points:push_back(Vector3(-30, 0, 20))
-
+    --[[
     for index = 1, 20 do
         local agent = Sandbox:CreateAgent(AGENT_OBJ_PATHING);
-        
         agent:SetPath(points, true);
 
         -- Randomly vary speeds to allow agents to pass one another.
@@ -84,12 +83,20 @@ function Sandbox_Initialize(ctype)
 
         agent:SetMaxSpeed(randomSpeed);
     end
+    --]]
 end
 
 
 function Sandbox_Update()
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
+
+    -- std::vector not lua table
+    local allObjects = Sandbox:getAllObjects();
+    for index = 1, allObjects:size()-1 do
+        local pObject = allObjects[index];
+        --DebugDrawer:drawSquare(pObject:GetPosition(), pObject:GetRadius(), ColourValue(1, 0, 0))
+    end
 end
 
 
@@ -138,8 +145,8 @@ function Sandbox_ShootBox()
     object:setPosition(position)
     object:setOrientation(rotation)
 
-
-    local impulse = cameraForward * 15000
+    object:setMass(15);
+    local impulse = cameraForward * 15000 * 0.65
     local angularImpulse = Sandbox:GetCameraLeft() * 10
     object:applyImpulse(impulse)
     object:applyAngularImpulse(angularImpulse)

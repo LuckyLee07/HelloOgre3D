@@ -114,8 +114,8 @@ end
 function Agent_Seeking_Update(agent, deltaTimeInMillis)
     local destination = agent:GetTarget();
     local deltaTimeInSeconds = deltaTimeInMillis / 1000;
-    --local avoidAgentForce = agent:ForceToAvoidAgents(1.5);
-    --local avoidObjectForce = agent:ForceToAvoidObjects(1.5);
+    local avoidAgentForce = agent:ForceToAvoidAgents(1.5);
+    local avoidObjectForce = agent:ForceToAvoidObjects(1.5);
     local seekForce = agent:ForceToPosition(destination);
     local targetRadius = agent:GetTargetRadius();
     local radius = agent:GetRadius();
@@ -123,7 +123,9 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
     local avoidanceMultiplier = 3;
     
     -- Sum all forces and apply higher priorty to avoidance forces.
-    local steeringForces = seekForce;
+    local steeringForces = seekForce +
+        avoidAgentForce * avoidanceMultiplier +
+        avoidObjectForce * avoidanceMultiplier;
 
     -- Apply all steering forces.
     AgentUtilities_ApplyPhysicsSteeringForce(
@@ -141,8 +143,8 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
 
         -- New target is within the 100 meter squared movement space.
         local targetPos = agent:GetTarget();
-        targetPos.x = math.random(-50, 50);
-        targetPos.z = math.random(-50, 50);
+        targetPos.x = math.random(-20, 20);
+        targetPos.z = math.random(-20, 20);
         
         agent:SetTarget(targetPos);
     end
@@ -152,7 +154,7 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
     DebugDrawer:drawLine(position, destination, ColourValue(0, 1, 0));
 
     -- Debug outline representing the space the Agent can move within.
-    DebugDrawer:drawSquare(Vector3(0, 0, 0), 100, ColourValue(1, 0, 0));
+    DebugDrawer:drawSquare(Vector3(0, 0, 0), 40, ColourValue(1, 0, 0));
 end
 
 function Agent_Pursuing_Update(agent, deltaTimeInMillis)

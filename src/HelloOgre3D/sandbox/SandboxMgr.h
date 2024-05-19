@@ -48,6 +48,8 @@ public:
 	AgentObject* GetSeekingAgent();
 
 	void CallFile(const Ogre::String& filepath);
+
+	const std::vector<SandboxObject*>& getAllObjects();
 	//tolua_end
 
 public: //static methods

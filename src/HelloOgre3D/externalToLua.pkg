@@ -4,7 +4,7 @@ namespace std
 {
 	class vector 
 	{
-		TOLUA_TEMPLATE_BIND(T, int, AgentObject*, Ogre::Vector3)
+		TOLUA_TEMPLATE_BIND(T, int, Ogre::Vector3, AgentObject*, SandboxObject*)
 		class iterator
 		{
 			iterator operator+(int index) const;

@@ -6,7 +6,9 @@
 #include "SandboxDef.h"
 #include "GameManager.h"
 #include "ScriptLuaVM.h"
+#include "SandboxObject.h"
 #include "opensteer/include/SteerLibrary.h"
+#include "GameManager.h"
 
 using namespace Ogre;
 
@@ -374,6 +376,61 @@ Ogre::Vector3 AgentObject::ForceToWander(Ogre::Real deltaMilliSeconds)
 Ogre::Vector3 AgentObject::ForceToTargetSpeed(Ogre::Real targetSpeed)
 {
 	return Vec3ToVector3(steerForTargetSpeed(targetSpeed));
+}
+
+Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
+{
+	std::vector<AgentObject*> newAgents;
+	const std::vector<AgentObject*>& agents = GetGameManager()->getAllAgents();
+	
+	std::vector<AgentObject*>::const_iterator iter;
+	for (iter = agents.begin(); iter < agents.end(); iter++)
+	{
+		AgentObject* pAgent = *iter;
+		if (pAgent->GetHealth() > 0)
+		{
+			newAgents.push_back(pAgent);
+		}
+	}
+	return ForceToAvoidAgents(newAgents, predictionTime);
+}
+
+Ogre::Vector3 AgentObject::ForceToAvoidObjects(Ogre::Real predictionTime)
+{
+	const std::vector<SandboxObject*>& allObjects = GetGameManager()->getAllObjects();
+	return ForceToAvoidObjects(allObjects, predictionTime);
+}
+
+Ogre::Vector3 AgentObject::ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime)
+{
+	const static float MIN_PREDICTION_TIME = 0.1f;
+
+	OpenSteer::AVGroup group;
+	std::vector<AgentObject*>::const_iterator iter;
+	for (iter = agents.begin(); iter != agents.end(); iter++)
+	{
+		group.push_back(*iter);
+	}
+	float predictionTime1 = std::max(MIN_PREDICTION_TIME, predictionTime);
+	return Vec3ToVector3(steerToAvoidNeighbors(predictionTime1, group));
+}
+
+Ogre::Vector3 AgentObject::ForceToAvoidObjects(const std::vector<SandboxObject*>& objects, Ogre::Real predictionTime)
+{
+	const static float MIN_PREDICTION_TIME = 0.1f;
+	float timeToCollision = std::max(MIN_PREDICTION_TIME, predictionTime);
+
+	OpenSteer::Vec3 avoidForce = OpenSteer::Vec3::zero;
+	std::vector<SandboxObject*>::const_iterator iter;
+	for (iter = objects.begin(); iter != objects.end(); iter++)
+	{
+		const SandboxObject* pObject = *iter;
+		if (pObject->getMass() > 0)
+		{
+			avoidForce += pObject->steerToAvoid(*this, timeToCollision);
+		}
+	}
+	return Vec3ToVector3(avoidForce);
 }
 
 void AgentObject::ApplyForce(const Ogre::Vector3& force)

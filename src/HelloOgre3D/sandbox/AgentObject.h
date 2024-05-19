@@ -24,6 +24,7 @@ enum AGENT_OBJ_TYPE
 //tolua_end
 
 class btRigidBody;
+class SandboxObject;
 class AgentObject : public BaseObject //tolua_exports
 	, private OpenSteer::SteerLibraryMixin<OpenSteer::AbstractVehicle>
 { //tolua_exports
@@ -87,9 +88,10 @@ public:
 	Ogre::Vector3 ForceToWander(Ogre::Real deltaMilliSeconds);
 	Ogre::Vector3 ForceToTargetSpeed(Ogre::Real targetSpeed);
 
-	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
-	Ogre::Vector3 ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime);
-	
+	// 规避之力 智能体或其他障碍物
+	Ogre::Vector3 ForceToAvoidAgents(Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToAvoidObjects(Ogre::Real predictionTime);
+
 	void ApplyForce(const Ogre::Vector3& force);
 
 	bool HasPath() const { return m_hasPath; }
@@ -98,7 +100,13 @@ public:
 	
 	//tolua_end
 	void SetPath(const AgentPath& agentPath);
-
+	
+	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime);
+	
+	Ogre::Vector3 ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToAvoidObjects(const std::vector<SandboxObject*>& objects, Ogre::Real predictionTime);
+	
 	void update(int deltaMilisec) override;
 
 	void updateWorldTransform();
