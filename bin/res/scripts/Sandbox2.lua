@@ -2,8 +2,8 @@ local TextComponent = nil
 
 function CreateSandboxText()
     local ui_width, ui_height = 300, 180;
-    local screenWidth = Sandbox:GetScreenWidth()
-    local screenHeight = Sandbox:GetScreenHeight()
+    local screenWidth = GameManager:getScreenWidth()
+    local screenHeight = GameManager:getScreenHeight()
 
     local uiComponent = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;
@@ -101,7 +101,7 @@ function Sandbox_Update()
     GUI_UpdateProfileInfo()
 
     -- std::vector not lua table
-    local allObjects = Sandbox:getAllObjects();
+    local allObjects = GameManager:getAllObjects();
     for index = 1, allObjects:size()-1 do
         local pObject = allObjects[index];
         --DebugDrawer:drawSquare(pObject:GetPosition(), pObject:GetRadius(), ColourValue(1, 0, 0))

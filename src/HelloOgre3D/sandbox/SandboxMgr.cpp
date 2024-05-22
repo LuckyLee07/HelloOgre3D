@@ -29,16 +29,6 @@ void SandboxMgr::CallFile(const Ogre::String& filepath)
     GetScriptLuaVM()->callFile(filepath.c_str());
 }
 
-const std::vector<AgentObject*>& SandboxMgr::getAllAgents()
-{
-    return g_GameManager->getAllAgents();
-}
-
-const std::vector<SandboxObject*>& SandboxMgr::getAllObjects()
-{
-    return g_GameManager->getAllObjects();
-}
-
 Ogre::Camera* SandboxMgr::GetCamera()
 {
     return GetClientMgr()->getCamera();
@@ -47,16 +37,6 @@ Ogre::Camera* SandboxMgr::GetCamera()
 SceneManager* SandboxMgr::GetSceneManager()
 {
     return m_pRootSceneNode->getCreator();
-}
-
-Ogre::Real SandboxMgr::GetScreenWidth()
-{
-    return g_GameManager->getScreenWidth();
-}
-
-Ogre::Real SandboxMgr::GetScreenHeight()
-{
-    return g_GameManager->getScreenHeight();
 }
 
 Ogre::Vector3 SandboxMgr::GetCameraUp()
@@ -112,28 +92,8 @@ long long SandboxMgr::GetTotalSimulateTime()
     return GetClientMgr()->GetProfileTime(profileType);
 }
 
-unsigned int SandboxMgr::GetObjectCount()
-{
-    return g_GameManager->getObjectCount();
-}
-
-AgentObject* SandboxMgr::GetSeekingAgent()
-{
-    std::vector<AgentObject*> pAllAgents = g_GameManager->getAllAgents();
-    for (size_t index = 0; index < pAllAgents.size(); index++)
-    {
-        AgentObject* pAgentObject = pAllAgents[index];
-        if (pAgentObject->getAgentType() == AGENT_OBJ_SEEKING)
-        {
-            return pAgentObject;
-        }
-    }
-    assert(false);
-    return nullptr;
-}
 
 //---------------------------util static functions---------------------------
-
 Ogre::SceneNode* SandboxMgr::CreateChildSceneNode()
 {
     Ogre::SceneNode* pRootSceneNode = GetClientMgr()->getRootSceneNode();
@@ -455,6 +415,7 @@ void SandboxMgr::GetMeshInfo(const Ogre::Mesh* mesh,
         current_offset = next_offset;
     }
 }
+//---------------------------util static functions---------------------------
 
 //---------------------------sandbox tolua functions---------------------------
 void SandboxMgr::SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
@@ -556,7 +517,6 @@ UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
 {
     return g_GameManager->createUIComponent(index);
 }
-
 
 
 AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)

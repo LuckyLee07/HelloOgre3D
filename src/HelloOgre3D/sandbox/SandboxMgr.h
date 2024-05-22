@@ -30,9 +30,6 @@ public:
 	Ogre::Camera* GetCamera();
 	Ogre::SceneManager* GetSceneManager();
 
-	Ogre::Real GetScreenWidth();
-	Ogre::Real GetScreenHeight();
-
 	Ogre::Vector3 GetCameraUp();
 	Ogre::Vector3 GetCameraLeft();
 	Ogre::Vector3 GetCameraForward();
@@ -44,13 +41,7 @@ public:
 	long long GetSimulateTime();
 	long long GetTotalSimulateTime();
 
-	unsigned int GetObjectCount();
-	AgentObject* GetSeekingAgent();
-
 	void CallFile(const Ogre::String& filepath);
-
-	const std::vector<AgentObject*>& getAllAgents();
-	const std::vector<SandboxObject*>& getAllObjects();
 	//tolua_end
 
 public: //static methods

@@ -97,6 +97,7 @@ void GameManager::InitLuaEnv()
 
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
+	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
 	m_pScriptVM->setUserTypePointer("DebugDrawer", "DebugDrawer", DebugDrawer::GetInstance());
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 	
@@ -231,4 +232,26 @@ void GameManager::setMarkupColor(unsigned int index, const Ogre::ColourValue& co
 	{
 		getUILayer(layerIndex)->_getAtlas()->setMarkupColour(index, color);
 	}
+}
+
+std::vector<AgentObject*> GameManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType)
+{
+	if (agentType == AGENT_OBJ_NONE)
+	{
+		return m_pAgents;
+	}
+
+	std::vector<AgentObject*> specifyAgents;
+	
+	std::vector<AgentObject*>::iterator iter;
+	for (iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	{
+		AgentObject* pAgentObject = *iter;
+		if (pAgentObject->getAgentType() == agentType)
+		{
+			specifyAgents.push_back(pAgentObject);
+		}
+	}
+
+	return specifyAgents;
 }

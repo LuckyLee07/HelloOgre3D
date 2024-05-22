@@ -89,7 +89,8 @@ function Agent_Pursuing_Initialize(agent)
     local randPosz = math.random(-50, 50)
     agent:SetPosition(Vector3(randPosx, 0, randPosz))
 
-    enemy = Sandbox:GetSeekingAgent()
+    seekings = GameManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
+    if seekings:size() > 0 then enemy = seekings[0] end
     agent:SetTarget(enemy:GetPosition());
 
     agent:SetMaxSpeed(enemy:GetMaxSpeed() * 0.8)
@@ -107,7 +108,7 @@ function Agent_Follower_Initialize(agent)
     local randPosz = math.random(-50, 50)
     agent:SetPosition(Vector3(randPosx, 0, randPosz))
 
-    leader = Sandbox:GetSeekingAgent()
+    leaders = GameManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
@@ -214,14 +215,11 @@ end
 function Agent_Follower_Update(agent, deltaTimeInMillis)
     local deltaTimeInSeconds = deltaTimeInMillis / 1000;
 
-    local leaders = std.vector_AgentObject__();
-    if leader then leaders:push_back(leader) end
     local forceToCombine = agent:ForceToCombine(leaders, 100, 180);
 
-    local agents = Sandbox:getAllAgents()
+    local agents = GameManager:getAllAgents()
     local forceToSeparate = agent:ForceToSeparate(agents, 2, 180);
-
-    local agents = Sandbox:getAllAgents()
+    
     local forceToAlign = agent:ForceToSeparate(leaders, 5, 45);
 
     local totalForces = forceToCombine + forceToSeparate * 1.15 + forceToAlign;
@@ -232,7 +230,7 @@ function Agent_Follower_Update(agent, deltaTimeInMillis)
 
 
     local position = agent:GetPosition();
-    local destination = leader:GetPosition();
+    local destination = leaders[0]:GetPosition();
     local targetRadius = agent:GetTargetRadius();
 
     DebugDrawer:drawCircle(position, 1, 10, UtilColors.Yellow);

@@ -80,8 +80,8 @@ end
 
 function GUI_CreateCameraInfo()
 	local ui_width, ui_height = 300, 150;
-    local screenWidth = Sandbox:GetScreenWidth()
-    local screenHeight = Sandbox:GetScreenHeight()
+    local screenWidth = GameManager:getScreenWidth()
+    local screenHeight = GameManager:getScreenHeight()
 
     local uiComponent = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;
@@ -101,8 +101,8 @@ end
 
 function GUI_CreateProfileInfo()
 	local ui_width, ui_height = 300, 125;
-    local screenWidth = Sandbox:GetScreenWidth()
-    local screenHeight = Sandbox:GetScreenHeight()
+    local screenWidth = GameManager:getScreenWidth()
+    local screenHeight = GameManager:getScreenHeight()
 
     local uiComponent = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;

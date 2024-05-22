@@ -43,6 +43,12 @@ public:
 	Ogre::Real getScreenHeight();
 	unsigned int getObjectCount();
 
+	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
+	const std::vector<SandboxObject*>& getAllObjects() { return m_pObjects; }
+
+	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
+	//tolua_end
+
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 	UIComponent* createUIComponent(unsigned int index);
@@ -51,11 +57,7 @@ public:
 
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	
-	//tolua_end
-
-	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
-	const std::vector<SandboxObject*>& getAllObjects() { return m_pObjects; }
-
+public:
 	void HandleWindowResized(unsigned int width, unsigned int height);
 	void HandleWindowClosed();
 
