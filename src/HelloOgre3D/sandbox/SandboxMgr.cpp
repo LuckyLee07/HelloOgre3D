@@ -29,6 +29,11 @@ void SandboxMgr::CallFile(const Ogre::String& filepath)
     GetScriptLuaVM()->callFile(filepath.c_str());
 }
 
+const std::vector<AgentObject*>& SandboxMgr::getAllAgents()
+{
+    return g_GameManager->getAllAgents();
+}
+
 const std::vector<SandboxObject*>& SandboxMgr::getAllObjects()
 {
     return g_GameManager->getAllObjects();

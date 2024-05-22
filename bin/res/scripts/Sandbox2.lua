@@ -63,8 +63,8 @@ function Sandbox_Initialize(ctype)
     Sandbox:setMaterial(plane, "Ground2");
 
     Sandbox:CreateAgent(AGENT_OBJ_SEEKING)
-    --Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
-
+    Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
+    
     local points = std.vector_Ogre__Vector3_();
     points:push_back(Vector3(0, 0, 0))
     points:push_back(Vector3(30, 0, 0))
@@ -72,6 +72,12 @@ function Sandbox_Initialize(ctype)
     points:push_back(Vector3(-30, 0, 0))
     points:push_back(Vector3(-30, 0, 20))
     --[[
+    points:push_back(Vector3(0, 0, 0))
+    points:push_back(Vector3(10, 0, -20))
+    points:push_back(Vector3(10, 0, 20))
+    points:push_back(Vector3(-10, 0, 0))
+    points:push_back(Vector3(-10, 0, 20))
+    --]]
     for index = 1, 20 do
         local agent = Sandbox:CreateAgent(AGENT_OBJ_PATHING);
         agent:SetPath(points, true);
@@ -83,7 +89,10 @@ function Sandbox_Initialize(ctype)
 
         agent:SetMaxSpeed(randomSpeed);
     end
-    --]]
+
+    for index = 1, 5 do
+        Sandbox:CreateAgent(AGENT_OBJ_FOLLOWER);
+    end
 end
 
 

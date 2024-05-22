@@ -49,6 +49,7 @@ public:
 
 	void CallFile(const Ogre::String& filepath);
 
+	const std::vector<AgentObject*>& getAllAgents();
 	const std::vector<SandboxObject*>& getAllObjects();
 	//tolua_end
 

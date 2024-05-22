@@ -92,6 +92,9 @@ public:
 	Ogre::Vector3 ForceToAvoidAgents(Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToAvoidObjects(Ogre::Real predictionTime);
 
+	Ogre::Vector3 ForceToCombine(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle);
+	Ogre::Vector3 ForceToSeparate(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle);
+
 	void ApplyForce(const Ogre::Vector3& force);
 
 	bool HasPath() const { return m_hasPath; }
@@ -99,6 +102,7 @@ public:
 	const std::vector<Ogre::Vector3>& GetPath() { return m_points; }
 	
 	//tolua_end
+
 	void SetPath(const AgentPath& agentPath);
 	
 	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
@@ -106,7 +110,7 @@ public:
 	
 	Ogre::Vector3 ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToAvoidObjects(const std::vector<SandboxObject*>& objects, Ogre::Real predictionTime);
-	
+
 	void update(int deltaMilisec) override;
 
 	void updateWorldTransform();

@@ -71,6 +71,8 @@ function Agent_Initialize(agent)
         Agent_Pursuing_Initialize(agent)
     elseif agentType == AGENT_OBJ_PATHING then
         Agent_Pathing_Initialize(agent)
+    elseif agentType == AGENT_OBJ_FOLLOWER then
+        Agent_Follower_Initialize(agent)
     end
 end
 
@@ -99,6 +101,15 @@ function Agent_Pathing_Initialize(agent)
     agent:SetPosition(Vector3(randPosx, 0, randPosz))
 end
 
+local leaders;
+function Agent_Follower_Initialize(agent)
+    local randPosx = math.random(-50, 50)
+    local randPosz = math.random(-50, 50)
+    agent:SetPosition(Vector3(randPosx, 0, randPosz))
+
+    leader = Sandbox:GetSeekingAgent()
+end
+
 function Agent_Update(agent, deltaTimeInMillis)
     local agentType = agent:getAgentType()
     if agentType == AGENT_OBJ_SEEKING then
@@ -107,6 +118,8 @@ function Agent_Update(agent, deltaTimeInMillis)
         Agent_Pursuing_Update(agent, deltaTimeInMillis)
     elseif agentType == AGENT_OBJ_PATHING then
         Agent_Pathing_Update(agent, deltaTimeInMillis)
+    elseif agentType == AGENT_OBJ_FOLLOWER then
+        Agent_Follower_Update(agent, deltaTimeInMillis)
     end
 end
 
@@ -143,18 +156,18 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
 
         -- New target is within the 100 meter squared movement space.
         local targetPos = agent:GetTarget();
-        targetPos.x = math.random(-20, 20);
-        targetPos.z = math.random(-20, 20);
+        targetPos.x = math.random(-50, 50);
+        targetPos.z = math.random(-50, 50);
         
         agent:SetTarget(targetPos);
     end
 
     -- Draw debug information for target and target radius.
-    DebugDrawer:drawCircle(destination, targetRadius, 10, ColourValue(1, 0, 0));
-    DebugDrawer:drawLine(position, destination, ColourValue(0, 1, 0));
+    DebugDrawer:drawCircle(destination, targetRadius, 10, UtilColors.Red);
+    DebugDrawer:drawLine(position, destination, UtilColors.Green);
 
     -- Debug outline representing the space the Agent can move within.
-    DebugDrawer:drawSquare(Vector3(0, 0, 0), 40, ColourValue(1, 0, 0));
+    DebugDrawer:drawSquare(Vector3(0, 0, 0), 100, UtilColors.Red);
 end
 
 function Agent_Pursuing_Update(agent, deltaTimeInMillis)
@@ -170,8 +183,8 @@ function Agent_Pursuing_Update(agent, deltaTimeInMillis)
         agent, seekForce, deltaTimeInSeconds);
     AgentUtilities_ClampHorizontalSpeed(agent);
 
-    DebugDrawer:drawCircle(destination, targetRadius, 10, ColourValue(1, 1, 0));
-    DebugDrawer:drawLine(position, destination, ColourValue(0, 1, 0));
+    DebugDrawer:drawCircle(destination, targetRadius, 10, UtilColors.Orange);
+    DebugDrawer:drawLine(position, destination, UtilColors.Yellow);
 end
 
 function Agent_Pathing_Update(agent, deltaTimeInMillis)
@@ -195,5 +208,34 @@ function Agent_Pathing_Update(agent, deltaTimeInMillis)
         agent, totalForces, deltaTimeInSeconds);
     AgentUtilities_ClampHorizontalSpeed(agent);
 
-    DebugDrawer:drawPath(agent:GetPath(), ColourValue(1, 1, 0), true, Vector3(0.0))
+    DebugDrawer:drawPath(agent:GetPath(), UtilColors.Blue, true, Vector3(0.0))
+end
+
+function Agent_Follower_Update(agent, deltaTimeInMillis)
+    local deltaTimeInSeconds = deltaTimeInMillis / 1000;
+
+    local leaders = std.vector_AgentObject__();
+    if leader then leaders:push_back(leader) end
+    local forceToCombine = agent:ForceToCombine(leaders, 100, 180);
+
+    local agents = Sandbox:getAllAgents()
+    local forceToSeparate = agent:ForceToSeparate(agents, 2, 180);
+
+    local agents = Sandbox:getAllAgents()
+    local forceToAlign = agent:ForceToSeparate(leaders, 5, 45);
+
+    local totalForces = forceToCombine + forceToSeparate * 1.15 + forceToAlign;
+
+    AgentUtilities_ApplyPhysicsSteeringForce(
+        agent, totalForces, deltaTimeInSeconds);
+    AgentUtilities_ClampHorizontalSpeed(agent);
+
+
+    local position = agent:GetPosition();
+    local destination = leader:GetPosition();
+    local targetRadius = agent:GetTargetRadius();
+
+    DebugDrawer:drawCircle(position, 1, 10, UtilColors.Yellow);
+    DebugDrawer:drawCircle(destination, targetRadius, 10, UtilColors.White);
+    DebugDrawer:drawLine(position, destination, UtilColors.Green);
 end

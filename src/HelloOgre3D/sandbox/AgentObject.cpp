@@ -378,6 +378,30 @@ Ogre::Vector3 AgentObject::ForceToTargetSpeed(Ogre::Real targetSpeed)
 	return Vec3ToVector3(steerForTargetSpeed(targetSpeed));
 }
 
+Ogre::Vector3 AgentObject::ForceToCombine(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle)
+{
+	OpenSteer::AVGroup group;
+	std::vector<AgentObject*>::const_iterator iter;
+	for (iter = agents.begin(); iter != agents.end(); iter++)
+	{
+		group.push_back(*iter);
+	}
+	const float maxCosAngle = cosf(Ogre::Degree(angle).valueRadians());
+	return Vec3ToVector3(steerForCohesion(distance, maxCosAngle, group));
+}
+
+Ogre::Vector3 AgentObject::ForceToSeparate(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle)
+{
+	OpenSteer::AVGroup group;
+	std::vector<AgentObject*>::const_iterator iter;
+	for (iter = agents.begin(); iter != agents.end(); iter++)
+	{
+		group.push_back(*iter);
+	}
+	const float maxCosAngle = cosf(Ogre::Degree(angle).valueRadians());
+	return Vec3ToVector3(steerForSeparation(distance, maxCosAngle, group));
+}
+
 Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
 {
 	std::vector<AgentObject*> newAgents;

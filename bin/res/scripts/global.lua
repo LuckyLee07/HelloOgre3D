@@ -96,3 +96,12 @@ end
 function Vector.tostring(vec3)
 	return string.format('(%.2f, %.2f, %.2f)', vec3.x, vec3.y, vec3.z)
 end
+
+UtilColors = {};
+UtilColors.Black = ColourValue(0, 0, 0);
+UtilColors.Blue = ColourValue(0, 0, 1);
+UtilColors.Green = ColourValue(0, 1, 0);
+UtilColors.Orange = ColourValue(1, 0.5, 0);
+UtilColors.Red = ColourValue(1, 0, 0);
+UtilColors.Yellow = ColourValue(1, 1, 0);
+UtilColors.White = ColourValue(1, 1, 1);

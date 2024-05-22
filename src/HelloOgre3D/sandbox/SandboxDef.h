@@ -65,6 +65,8 @@ inline Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation
 		orientation.y(), orientation.z());
 }
 
+//tolua_end
+
 inline OpenSteer::Vec3 Vector3ToVec3(const Ogre::Vector3& vector)
 {
 	return OpenSteer::Vec3((float)vector.x, (float)vector.y, (float)vector.z);
@@ -75,5 +77,4 @@ inline Ogre::Vector3 Vec3ToVector3(const OpenSteer::Vec3& vector)
 	return Ogre::Vector3(Ogre::Real(vector.x), Ogre::Real(vector.y), Ogre::Real(vector.z));
 }
 
-//tolua_end
 #endif  // __SANDBOX_MANAGER__
