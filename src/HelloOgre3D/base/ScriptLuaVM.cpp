@@ -1,14 +1,15 @@
 #include "ScriptLuaVM.h"
+#include "FileManager.h"
 
 extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <luasocket.h>
 }
 #include <assert.h>
 #include <iostream>
 #include "tolua++.h"
-#include "FileManager.h"
 #include "LogSystem.h"
 
 // LuaStack自动清理
@@ -47,12 +48,32 @@ static const char* lua_readfile(lua_State* L, void* data, size_t* size)
 	return NULL;
 }
 
+// 加入LuaSocket
+//extern int luaopen_socket_core(lua_State* L);
+static const luaL_Reg lualibext[] = {
+	{"socket.core", luaopen_socket_core},
+	{NULL, NULL}
+};
+
+LUALIB_API void luaL_openextlibs(lua_State* L) {
+	const luaL_Reg* lib = lualibext;
+	lua_getglobal(L, "package");
+	lua_getfield(L, -1, "preload");
+	for (; lib->func; lib++)
+	{
+		lua_pushcfunction(L, lib->func);
+		lua_setfield(L, -2, lib->name);
+	}
+	lua_pop(L, 2);
+}
+
 ScriptLuaVM::ScriptLuaVM()
 	:m_pState(nullptr)
 {
 	m_pState = luaL_newstate();
 
 	luaL_openlibs(m_pState);
+	luaL_openextlibs(m_pState);
 
 	// 添加require loader
 	addLuaLoader(m_pState, myLuaLoader);

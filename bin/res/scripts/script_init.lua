@@ -1,20 +1,25 @@
+require("socket.core")
 require("res.scripts.class")
 require("res.scripts.utils")
 require("res.scripts.global")
 require("res.scripts.threadpool")
 require("res.scripts.gui")
 require("res.scripts.agent")
+require("res.scripts.LuaPanda")
+
 --require("res.scripts.Sandbox")
 require("res.scripts.Sandbox2")
-
 
 _G.__init__ = function(sec, msec)
 	math.randomseed(os.time())
 	threadpool:init(sec * 1000 + msec, 10)
 
+	-- 初始化LuaPanda
+	LuaPanda.start("127.0.0.1", 8818)
+	
+	-- 设置LuaGC垃圾回收
 	local gc_worker = function()
 		local count = collectgarbage('count')
-		print('Fxll========>>>111', getFormatTime(os.time()))
 		local step = 500
 		if count >= 3 * 1024 then
 			collectgarbage('setstepmul', step * 2)

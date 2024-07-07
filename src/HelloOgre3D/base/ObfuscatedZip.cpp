@@ -6,6 +6,7 @@
 #include "ObfuscatedZip.h"
 #include "OgreLogManager.h"
 
+#include <corecrt_io.h>
 #include <zzip/zzip.h>
 #include <zzip/plugin.h>
 

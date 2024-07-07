@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include <corecrt_io.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>

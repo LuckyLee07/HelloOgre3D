@@ -417,6 +417,37 @@ solution( "HelloOgre3D" )
 		includedirs( { "../src/external/lua/lua", "../src/external/lua/tolua"} )
 		files( { "../src/external/lua/tolua/**.h", "../src/external/lua/tolua/**.c" } )
 
+-- luasocket v3.0-rc1 static library
+	project( "luasocket" )
+		kind( "StaticLib" )
+		location( "../build/external/lua/luasocket" )
+		buildoptions( {
+			"/wd\"4131\"", "/wd\"4996\"", "/wd\"4244\"", "/wd\"4127\""
+		} )
+		includedirs( { "../src/external/lua/lua", "../src/external/lua/luasocket"} )
+		files( { "../src/external/lua/luasocket/**.h", 
+			"../src/external/lua/luasocket/buffer.c",
+			"../src/external/lua/luasocket/io.c",
+			"../src/external/lua/luasocket/timeout.c",
+			"../src/external/lua/luasocket/select.c",
+			"../src/external/lua/luasocket/udp.c",
+			"../src/external/lua/luasocket/mime.c",
+			"../src/external/lua/luasocket/tcp.c",
+			"../src/external/lua/luasocket/auxiliar.c",
+			"../src/external/lua/luasocket/inet.c",
+			"../src/external/lua/luasocket/luasocket.c",
+			"../src/external/lua/luasocket/luasocket_scripts.c",
+			"../src/external/lua/luasocket/except.c",
+			"../src/external/lua/luasocket/options.c",
+		} )
+
+		filter "system:windows" --window平台
+			files { "../src/external/lua/luasocket/wsocket.c" }
+		filter "system:linux"   --linux平台
+			files { "../src/external/lua/luasocket/usocket.c",
+					"../src/external/lua/luasocket/serial.c"
+			}
+
 -- bullet collision v2.81 revision 2613
 	project( "bullet_collision" )
 		kind( "StaticLib" )
