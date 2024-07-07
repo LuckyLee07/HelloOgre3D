@@ -9,6 +9,8 @@
 #include "ClientManager.h"
 #include <algorithm>
 #include "DebugDrawer.h"
+#include "GlobalFuncs.h"
+#include <winsock.h>
 
 using namespace Ogre;
 
@@ -102,10 +104,18 @@ void GameManager::InitLuaEnv()
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 	
 	m_pScriptVM->callFile("res/scripts/script_init.lua");
+
+	struct timeval stNow;
+	gettimeofday(&stNow, NULL);
+	m_pScriptVM->callFunction("__init__", "ii", stNow.tv_sec, stNow.tv_usec / 1000);
 }
 
 void GameManager::Update(int deltaMilliseconds)
 {
+	struct timeval stNow;
+	gettimeofday(&stNow, NULL);
+	m_pScriptVM->callFunction("__tick__", "ii", stNow.tv_sec, stNow.tv_usec / 1000);
+
 	std::vector<SandboxObject*>::iterator iter1;
 	for (iter1 = m_pObjects.begin(); iter1 != m_pObjects.end(); iter1++)
 	{

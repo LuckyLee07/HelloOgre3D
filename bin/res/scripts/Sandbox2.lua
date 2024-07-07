@@ -35,8 +35,6 @@ end
 
 
 function Sandbox_Initialize(ctype)
-    math.randomseed(os.time())
-    
     GUI_CreateCommonsUI()
     TextComponent = CreateSandboxText()
 

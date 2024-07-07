@@ -127,3 +127,6 @@ _G.print = function( ... )
     LuaInterface:log( msg )
 end
 
+function getFormatTime(timestamp)
+	return  os.date("%Y-%m-%d %H:%M:%S", timestamp)
+end
