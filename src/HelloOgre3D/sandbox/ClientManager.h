@@ -61,6 +61,8 @@ public:
 	long long GetProfileTime(ProfileTimeType profile);
 	void SetProfileTime(ProfileTimeType profile, long long time);
 	
+	bool GetShutdown() { return m_shutdown; }
+	void SetShutdown(bool shutdown) { m_shutdown = shutdown; }
 
 public:
 	Ogre::Camera* getCamera();
@@ -96,6 +98,7 @@ private:
 	InputManager* m_pInputManager;
 	OgreBites::SdkCameraMan* m_pCameraMan;
 
+	bool m_shutdown; //game exit  
 };
 
 ClientManager* GetClientMgr();

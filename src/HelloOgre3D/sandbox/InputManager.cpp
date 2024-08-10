@@ -78,6 +78,11 @@ void InputManager::setGameManager(GameManager* pGameManager)
 
 bool InputManager::keyPressed(const OIS::KeyEvent& event)
 {
+	if (event.key == OIS::KC_ESCAPE)
+	{
+		GetClientMgr()->SetShutdown(true);
+	}
+
 	GetClientMgr()->getCameraMan()->injectKeyDown(event);
 
 	if (m_pGameManager != nullptr)

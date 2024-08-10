@@ -26,7 +26,7 @@ ClientManager* GetClientMgr()
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), 
-    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr)
+    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr), m_shutdown(false)
 {
     m_Timer.reset();
 

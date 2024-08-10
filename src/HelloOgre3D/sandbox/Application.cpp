@@ -47,6 +47,9 @@ bool Application::frameEnded(const Ogre::FrameEvent& event)
 
 bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
 {
+    if (m_pClientManager->GetShutdown()) 
+        return false;
+    
     //Need to capture/update each device
     m_pClientManager->InputCapture();
 
