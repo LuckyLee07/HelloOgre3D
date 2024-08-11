@@ -1,14 +1,15 @@
 require("socket.core")
+require("res.scripts.LuaPanda")
 require("res.scripts.class")
 require("res.scripts.utils")
-require("res.scripts.global")
 require("res.scripts.threadpool")
-require("res.scripts.gui")
+require("res.scripts.global")
 require("res.scripts.agent")
-require("res.scripts.LuaPanda")
+require("res.scripts.gui")
 
---require("res.scripts.Sandbox")
-require("res.scripts.Sandbox2")
+--require("res.scripts.Sandbox1")
+--require("res.scripts.Sandbox2")
+require("res.scripts.Sandbox3")
 
 _G.__init__ = function(sec, msec)
 	math.randomseed(os.time())
@@ -16,7 +17,7 @@ _G.__init__ = function(sec, msec)
 
 	-- 初始化LuaPanda
 	LuaPanda.start("127.0.0.1", 8818)
-	
+
 	-- 设置LuaGC垃圾回收
 	local gc_worker = function()
 		local count = collectgarbage('count')

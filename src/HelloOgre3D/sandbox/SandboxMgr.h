@@ -72,6 +72,7 @@ public:
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	
 	SandboxObject* CreatePlane(float length, float width);
+	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
 	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);

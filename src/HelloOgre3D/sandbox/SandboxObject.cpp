@@ -10,13 +10,12 @@
 using namespace Ogre;
 
 SandboxObject::SandboxObject(const Ogre::String& meshFile)
-	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ)
+	: EntityObject(meshFile), m_pRigidBody(nullptr)
 {
-	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
-
-	m_pSceneNode = pRootScene->createChildSceneNode();
-	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
-	m_pSceneNode->attachObject(m_pEntity);
+	if (m_pEntity == nullptr)
+	{
+		assert(false); return;
+	}
 
 	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
 	m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr, 1.0f);
@@ -25,9 +24,11 @@ SandboxObject::SandboxObject(const Ogre::String& meshFile)
 }
 
 SandboxObject::SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ), 
-	m_pSceneNode(pSceneNode), m_pRigidBody(pRigidBody), m_pEntity(nullptr)
+	: EntityObject(), m_pRigidBody(pRigidBody)
 {
+	m_pEntity = nullptr;
+	m_pSceneNode = pSceneNode;
+
 	if (m_pRigidBody)
 		m_pRigidBody->setUserPointer(this);
 }

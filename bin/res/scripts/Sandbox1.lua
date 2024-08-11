@@ -1,43 +1,9 @@
 local TextComponent = nil
 
-function CreateSandboxText()
-    local ui_width, ui_height = 300, 180;
-    local screenWidth = GameManager:getScreenWidth()
-    local screenHeight = GameManager:getScreenHeight()
-
-    local uiComponent = Sandbox:CreateUIComponent()
-    local ui_posx = screenWidth - ui_width - 20;
-    local ui_posy = screenHeight - ui_height - 35;
-    uiComponent:setPosition(Vector2(ui_posx, ui_posy))
-    uiComponent:setDimension(Vector2(ui_width, ui_height))
-    uiComponent:setTextMargin(10, 10);
-
-    local startColor = GUI.Palette.DarkBlueGradient
-    local endenColor = GUI.Palette.DarkBlackGradient
-    uiComponent:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
-
-    local markupText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "W/A/S/D: to move" .. GUI.MarkupNewline ..
-        "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
-        "Hold RMB: to look" .. GUI.MarkupNewline ..
-        GUI.MarkupNewline ..
-        "Space: shoot block" .. GUI.MarkupNewline ..
-        GUI.MarkupNewline ..
-        "F1: to reset the camera" .. GUI.MarkupNewline ..
-        "F2: toggle the menu" .. GUI.MarkupNewline ..
-        "F5: toggle performance information" .. GUI.MarkupNewline ..
-        "F6: toggle camera information" .. GUI.MarkupNewline ..
-        "F7: toggle physics debug"
-    uiComponent:setMarkupText(markupText)
-
-    return uiComponent
-end
-
-
 function Sandbox_Initialize(ctype)
     GUI_CreateCommonsUI()
 
-    TextComponent = CreateSandboxText()
+    TextComponent = GUI_CreateSandboxText()
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
@@ -131,7 +97,6 @@ function EventHandle_Mouse(ctype)
 
 end
 
-_G.Shoot_BoxCount = 0
 function Sandbox_ShootBox()
     Shoot_BoxCount = Shoot_BoxCount + 1
     local object = CreateSandboxObject("modular_block")

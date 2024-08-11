@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "SandboxDef.h"
+#include "EntityObject.h"
 #include "SandboxObject.h"
 #include "PhysicsWorld.h"
 #include "SandboxMgr.h"
@@ -43,8 +44,9 @@ public:
 	Ogre::Real getScreenHeight();
 	unsigned int getObjectCount();
 
-	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
+	const std::vector<EntityObject*>& getAllEntitys() { return m_pEntitys; }
 	const std::vector<SandboxObject*>& getAllObjects() { return m_pObjects; }
+	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	//tolua_end
@@ -52,6 +54,7 @@ public:
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 	UIComponent* createUIComponent(unsigned int index);
+	void addEntityObject(EntityObject* pEntityObject);
 	void addSandboxObject(SandboxObject* pSandboxObject);
 	void addAgentObject(AgentObject* pAgentObject);
 
@@ -80,8 +83,9 @@ private:
 	
 	unsigned int m_objectIndex;
 	std::vector<AgentObject*> m_pAgents;
+	std::vector<EntityObject*> m_pEntitys;
 	std::vector<SandboxObject*> m_pObjects;
-	std::vector<UIComponent*> m_pComponents;
+	std::vector<UIComponent*> m_pUIComps;
 	
 	Gorilla::Screen* m_pUIScene;
 	Gorilla::MarkupText* m_pMarkupText;

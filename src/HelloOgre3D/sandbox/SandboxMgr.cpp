@@ -513,6 +513,15 @@ SandboxObject* SandboxMgr::CreateSandboxObject(const Ogre::String& meshFilePath)
     return pObject;
 }
 
+EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)
+{
+    EntityObject* pObject = new EntityObject(meshFilePath);
+
+	g_GameManager->addEntityObject(pObject);
+
+	return pObject;
+}
+
 UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
 {
     return g_GameManager->createUIComponent(index);

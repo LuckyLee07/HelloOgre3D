@@ -1,7 +1,7 @@
 #ifndef __SANDBOX_OBJECT__
 #define __SANDBOX_OBJECT__
 
-#include "BaseObject.h"
+#include "EntityObject.h"
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "opensteer/include/Obstacle.h"
@@ -13,7 +13,7 @@ namespace Ogre {
 
 class btRigidBody;
 
-class SandboxObject : public BaseObject //tolua_exports
+class SandboxObject : public EntityObject //tolua_exports
 	, private OpenSteer::SphericalObstacle
 { //tolua_exports
 	friend class AgentObject;
@@ -23,18 +23,17 @@ public:
 
 	virtual ~SandboxObject();
 
+	void Initialize() override;
+
+	btRigidBody* getRigidBody() override { return m_pRigidBody; }
+
 	//tolua_begin
-	void Initialize();
-
-	btRigidBody* getRigidBody() { return m_pRigidBody; }
-	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
-
 	void setPosition(const Ogre::Vector3& position);
 	void setRotation(const Ogre::Vector3& position);
 	void setOrientation(const Ogre::Quaternion& quaternion);
 
-	Ogre::Vector3 GetPosition() const;
 	Ogre::Real GetRadius() const;
+	Ogre::Vector3 GetPosition() const;
 
 	void applyImpulse(const Ogre::Vector3& impulse);
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
@@ -56,8 +55,6 @@ private:
 		const float minTimeToCollision) const;
 
 private:
-	Ogre::SceneNode* m_pSceneNode;
-	Ogre::Entity* m_pEntity;
 	btRigidBody* m_pRigidBody;
 
 }; //tolua_exports

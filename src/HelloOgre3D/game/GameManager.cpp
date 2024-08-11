@@ -116,26 +116,24 @@ void GameManager::Update(int deltaMilliseconds)
 	gettimeofday(&stNow, NULL);
 	m_pScriptVM->callFunction("__tick__", "ii", stNow.tv_sec, stNow.tv_usec / 1000);
 
-	std::vector<SandboxObject*>::iterator iter1;
-	for (iter1 = m_pObjects.begin(); iter1 != m_pObjects.end(); iter1++)
+	for (auto iter = m_pEntitys.begin(); iter != m_pEntitys.end(); iter++)
 	{
-		BaseObject* pObject = *iter1;
-		if (pObject != nullptr) 
+		if (EntityObject* pObject = *iter)
 			pObject->update(deltaMilliseconds);
 	}
-
-	std::vector<AgentObject*>::iterator iter2;
-	for (iter2 = m_pAgents.begin(); iter2 != m_pAgents.end(); iter2++)
+	for (auto iter = m_pObjects.begin(); iter != m_pObjects.end(); iter++)
 	{
-		AgentObject* pAgent = *iter2;
-		if (pAgent != nullptr)
+		if (SandboxObject* pObject = *iter) 
+			pObject->update(deltaMilliseconds);
+	}
+	for (auto iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	{
+		if (AgentObject* pAgent = *iter) 
 			pAgent->update(deltaMilliseconds);
 	}
-	std::vector<UIComponent*>::iterator iter3;
-	for (iter3 = m_pComponents.begin(); iter3 != m_pComponents.end(); iter3++)
+	for (auto iter = m_pUIComps.begin(); iter != m_pUIComps.end(); iter++)
 	{
-		UIComponent* pComponent = *iter3;
-		if (pComponent != nullptr)
+		if (UIComponent* pComponent = *iter) 
 			pComponent->update(deltaMilliseconds);
 	}
 
@@ -208,7 +206,11 @@ void GameManager::addAgentObject(AgentObject* pAgentObject)
 
 	m_pAgents.push_back(pAgentObject);
 
-	m_pPhysicsWorld->addRigidBody(pAgentObject->getRigidBody());
+	auto rigidBody = pAgentObject->getRigidBody();
+	if (rigidBody != nullptr)
+	{
+		m_pPhysicsWorld->addRigidBody(rigidBody);
+	}
 }
 
 void GameManager::addSandboxObject(SandboxObject* pSandboxObject)
@@ -223,13 +225,23 @@ void GameManager::addSandboxObject(SandboxObject* pSandboxObject)
 	m_pPhysicsWorld->addRigidBody(pSandboxObject->getRigidBody());
 }
 
+void GameManager::addEntityObject(EntityObject* pEntityObject)
+{
+	unsigned int objectId = getNextObjectId();
+
+	pEntityObject->setObjId(objectId);
+	pEntityObject->Initialize();
+
+	m_pEntitys.push_back(pEntityObject);
+}
+
 UIComponent* GameManager::createUIComponent(unsigned int index)
 {
 	if (index < UI_LAYER_COUNT)
 	{
 		UIComponent* pComponent = new UIComponent(getUILayer(index));
 		pComponent->setObjId(getNextObjectId());
-		m_pComponents.push_back(pComponent);
+		m_pUIComps.push_back(pComponent);
 
 		return pComponent;
 	}

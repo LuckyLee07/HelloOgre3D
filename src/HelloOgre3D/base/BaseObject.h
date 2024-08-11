@@ -15,7 +15,7 @@ public:
 	//tolua_end
 public:
 	//tolua_begin
-	BaseObject(unsigned int objId, OBJTYPE objType);
+	BaseObject(unsigned int objId=0, OBJTYPE objType=OBJ_SANDBOX_OBJ);
 	virtual ~BaseObject();
 
 	void setObjId(unsigned int objId);

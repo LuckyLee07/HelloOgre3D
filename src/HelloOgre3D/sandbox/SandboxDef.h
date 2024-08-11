@@ -65,6 +65,11 @@ inline Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation
 		orientation.y(), orientation.z());
 }
 
+inline Ogre::Quaternion GetForward(const Ogre::Vector3& forward)
+{
+	return Ogre::Vector3::UNIT_Z.getRotationTo(forward);
+}
+
 //tolua_end
 
 inline OpenSteer::Vec3 Vector3ToVec3(const Ogre::Vector3& vector)
