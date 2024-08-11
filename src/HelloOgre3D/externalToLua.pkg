@@ -97,6 +97,13 @@ namespace Ogre
     class SceneNode : public Node
     {
     };
+
+    class AnimationState
+    {
+    public:
+    	void setEnabled(bool enabled);
+    	void addTime(Real offset);
+    };
 }
 
 $#include "ois/include/OISKeyboard.h"

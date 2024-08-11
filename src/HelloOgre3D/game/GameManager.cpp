@@ -139,7 +139,7 @@ void GameManager::Update(int deltaMilliseconds)
 
 	m_pPhysicsWorld->stepWorld();
 
-	m_pScriptVM->callFunction("Sandbox_Update", ">");
+	m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
 }
 
 Ogre::Real GameManager::getScreenWidth()

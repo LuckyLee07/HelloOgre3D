@@ -8,9 +8,9 @@
 namespace Ogre {
 	class SceneNode;
 	class Entity;
+	class AnimationState;
 }
 
-class btRigidBody;
 class EntityObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
@@ -19,21 +19,25 @@ public:
 
 	virtual ~EntityObject();
 
+	void update(int deltaMsec) override;
+
 	//tolua_begin
 	virtual void Initialize();
 	
-	virtual btRigidBody* getRigidBody() { return nullptr; }
-	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
-
 	virtual void setPosition(const Ogre::Vector3& position);
 	virtual void setRotation(const Ogre::Vector3& position);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
 
 	Ogre::Vector3 GetPosition() const;
+	
+	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
+	Ogre::AnimationState* getAnimation(const Ogre::String& animationName);
 	//tolua_end
 
-	void update(int deltaMsec) override;
+	Ogre::Entity* getEntity() { return m_pEntity; }
+	Ogre::Entity* getDetachEntity();
+	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
 
 protected:
 	Ogre::SceneNode* m_pSceneNode;

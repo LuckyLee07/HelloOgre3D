@@ -4,6 +4,7 @@ local function IsNumKey(key, numKey)
     return true
 end
 
+local runforwardAnim = nil
 function Sandbox_Initialize(ctype)
     GUI_CreateCommonsUI()
     TextComponent = GUI_CreateSandbox3Text()
@@ -29,16 +30,26 @@ function Sandbox_Initialize(ctype)
     camera:setPosition(Vector3(0, 1, -3));
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
 
-    local filePath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldier = Sandbox:CreateEntityObject(filePath);
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
+    local soldier = Sandbox:CreateEntityObject(soldierPath);
     soldier:setPosition(Vector3(0, 0, 0))
     soldier:setRotation(Vector3(0, -90, 0))
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    local weapon = Sandbox:CreateEntityObject(weaponPath);
+
+    soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
+
+    runforwardAnim = soldier:getAnimation("stand_run_forward_weapon")
+    if runforwardAnim ~= nil then runforwardAnim:setEnabled(true) end
 end
 
 
-function Sandbox_Update()
+function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
+
+    runforwardAnim:addTime(deltaTimeInMillis/1000.0)
 end
 
 

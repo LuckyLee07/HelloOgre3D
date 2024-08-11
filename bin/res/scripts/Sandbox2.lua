@@ -60,7 +60,7 @@ function Sandbox_Initialize(ctype)
 end
 
 
-function Sandbox_Update()
+function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 

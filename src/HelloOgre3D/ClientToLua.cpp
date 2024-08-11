@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Aug 11 16:07:18 2024.
+** Generated automatically by tolua++-1.0.92 on Sun Aug 11 21:06:37 2024.
 */
 
 #ifndef __cplusplus
@@ -102,6 +102,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::Vector2");
  tolua_usertype(tolua_S,"std::vector<int>");
  tolua_usertype(tolua_S,"AgentObject");
+ tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
  tolua_usertype(tolua_S,"btQuaternion");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
@@ -110,13 +111,12 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::Quaternion");
  tolua_usertype(tolua_S,"Ogre::SceneManager");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
- tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
+ tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"SandboxObject");
- tolua_usertype(tolua_S,"btRigidBody");
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
@@ -2652,6 +2652,72 @@ tolua_lerror:
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setEnabled of class  Ogre::AnimationState */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_AnimationState_setEnabled00
+static int tolua_ClientToLua_Ogre_AnimationState_setEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::AnimationState",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::AnimationState* self = (Ogre::AnimationState*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setEnabled'", NULL);
+#endif
+  {
+   self->setEnabled(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: addTime of class  Ogre::AnimationState */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_AnimationState_addTime00
+static int tolua_ClientToLua_Ogre_AnimationState_addTime00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Ogre::AnimationState",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Ogre::AnimationState* self = (Ogre::AnimationState*)  tolua_tousertype(tolua_S,1,0);
+   float offset = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'addTime'", NULL);
+#endif
+  {
+   self->addTime(offset);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'addTime'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: log of class  LuaInterface */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_LuaInterface_log00
 static int tolua_ClientToLua_LuaInterface_log00(lua_State* tolua_S)
@@ -3551,70 +3617,6 @@ static int tolua_ClientToLua_EntityObject_Initialize00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: getRigidBody of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_getRigidBody00
-static int tolua_ClientToLua_EntityObject_getRigidBody00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getRigidBody'", NULL);
-#endif
-  {
-   btRigidBody* tolua_ret = (btRigidBody*)  self->getRigidBody();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"btRigidBody");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getRigidBody'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getSceneNode of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_getSceneNode00
-static int tolua_ClientToLua_EntityObject_getSceneNode00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getSceneNode'", NULL);
-#endif
-  {
-   Ogre::SceneNode* tolua_ret = (Ogre::SceneNode*)  self->getSceneNode();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::SceneNode");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getSceneNode'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: setPosition of class  EntityObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setPosition00
 static int tolua_ClientToLua_EntityObject_setPosition00(lua_State* tolua_S)
@@ -3751,6 +3753,81 @@ static int tolua_ClientToLua_EntityObject_GetPosition00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AttachToBone of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_AttachToBone00
+static int tolua_ClientToLua_EntityObject_AttachToBone00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,3,"EntityObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string boneName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  EntityObject* entityObj = ((EntityObject*)  tolua_tousertype(tolua_S,3,0));
+  const Ogre::Vector3* positionOffset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,4,0));
+  const Ogre::Vector3* rotationOffset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AttachToBone'", NULL);
+#endif
+  {
+   self->AttachToBone(boneName,entityObj,*positionOffset,*rotationOffset);
+   tolua_pushcppstring(tolua_S,(const char*)boneName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AttachToBone'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getAnimation of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_getAnimation00
+static int tolua_ClientToLua_EntityObject_getAnimation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string animationName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAnimation'", NULL);
+#endif
+  {
+   Ogre::AnimationState* tolua_ret = (Ogre::AnimationState*)  self->getAnimation(animationName);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Ogre::AnimationState");
+   tolua_pushcppstring(tolua_S,(const char*)animationName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getAnimation'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7171,6 +7248,11 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_cclass(tolua_S,"SceneNode","Ogre::SceneNode","Ogre::Node",NULL);
    tolua_beginmodule(tolua_S,"SceneNode");
    tolua_endmodule(tolua_S);
+   tolua_cclass(tolua_S,"AnimationState","Ogre::AnimationState","",NULL);
+   tolua_beginmodule(tolua_S,"AnimationState");
+    tolua_function(tolua_S,"setEnabled",tolua_ClientToLua_Ogre_AnimationState_setEnabled00);
+    tolua_function(tolua_S,"addTime",tolua_ClientToLua_Ogre_AnimationState_addTime00);
+   tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
   tolua_module(tolua_S,"OIS",0);
   tolua_beginmodule(tolua_S,"OIS");
@@ -7379,12 +7461,12 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"EntityObject","EntityObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"EntityObject");
    tolua_function(tolua_S,"Initialize",tolua_ClientToLua_EntityObject_Initialize00);
-   tolua_function(tolua_S,"getRigidBody",tolua_ClientToLua_EntityObject_getRigidBody00);
-   tolua_function(tolua_S,"getSceneNode",tolua_ClientToLua_EntityObject_getSceneNode00);
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_EntityObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_EntityObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_EntityObject_setOrientation00);
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_EntityObject_GetPosition00);
+   tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
+   tolua_function(tolua_S,"getAnimation",tolua_ClientToLua_EntityObject_getAnimation00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxObject","SandboxObject","EntityObject",NULL);
   tolua_beginmodule(tolua_S,"SandboxObject");

@@ -29,6 +29,11 @@ void EntityObject::Initialize()
 
 }
 
+void EntityObject::update(int deltaMsec)
+{
+
+}
+
 void EntityObject::setPosition(const Ogre::Vector3& position)
 {
 	m_pSceneNode->setPosition(position);
@@ -50,8 +55,20 @@ Ogre::Vector3 EntityObject::GetPosition() const
 	return Ogre::Vector3::ZERO;
 }
 
-void EntityObject::update(int deltaMsec)
+void EntityObject::AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
 {
-
+	Ogre::Quaternion& orientationOffset = QuaternionFromRotationDegrees(rotationOffset.x, rotationOffset.y, rotationOffset.z);
+	m_pEntity->attachObjectToBone(boneName, entityObj->getDetachEntity(), orientationOffset, positionOffset);
 }
 
+Ogre::Entity* EntityObject::getDetachEntity()
+{
+	m_pSceneNode->detachObject(m_pEntity);
+	m_pSceneNode->getCreator()->destroySceneNode(m_pSceneNode);
+	return m_pEntity;
+}
+
+Ogre::AnimationState* EntityObject::getAnimation(const Ogre::String& animationName)
+{
+	return m_pEntity->getAnimationState(animationName);
+}

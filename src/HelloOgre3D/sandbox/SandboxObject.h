@@ -25,7 +25,7 @@ public:
 
 	void Initialize() override;
 
-	btRigidBody* getRigidBody() override { return m_pRigidBody; }
+	void update(int deltaMsec) override;
 
 	//tolua_begin
 	void setPosition(const Ogre::Vector3& position);
@@ -42,8 +42,9 @@ public:
 	void setMass(const Ogre::Real mass);
 	//tolua_end
 
-	void update(int deltaMsec) override;
 	void updateWorldTransform();
+
+	btRigidBody* getRigidBody() { return m_pRigidBody; }
 	
 private:
 	OpenSteer::Vec3 getPosition() const;
