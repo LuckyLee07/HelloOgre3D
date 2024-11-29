@@ -5,6 +5,9 @@ $cfile "../sandbox/SandboxDef.h"
 
 $cfile "../sandbox/object/BaseObject.h"
 $cfile "../sandbox/object/UIComponent.h"
+
+$cfile "../sandbox/animation/Animation.h"
+$cfile "../sandbox/animation/AnimationStateMachine.h"
 $cfile "../sandbox/object/EntityObject.h"
 $cfile "../sandbox/object/SandboxObject.h"
 $cfile "../sandbox/object/AgentObject.h"

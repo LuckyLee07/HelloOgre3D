@@ -4,17 +4,20 @@
 #include "BaseObject.h"
 #include "OgreString.h"
 #include "OgreMath.h"
+#include <unordered_map>
 
 namespace Ogre {
-	class SceneNode;
 	class Entity;
-	class AnimationState;
+	class SceneNode;
 }
-
+namespace Fancy{
+	class Animation;
+	class AnimationStateMachine;
+};
 class EntityObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
-	EntityObject() : BaseObject() {}
+	EntityObject();
 	EntityObject(const Ogre::String& meshFile);
 
 	virtual ~EntityObject();
@@ -32,7 +35,8 @@ public:
 	
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
-	Ogre::AnimationState* getAnimation(const Ogre::String& animationName);
+	Fancy::Animation* GetAnimation(const Ogre::String& animationName);
+	Fancy::AnimationStateMachine* GetAnimStateMachine();
 	//tolua_end
 
 	Ogre::Entity* getEntity() { return m_pEntity; }
@@ -43,6 +47,8 @@ protected:
 	Ogre::SceneNode* m_pSceneNode;
 	Ogre::Entity* m_pEntity;
 
+	Fancy::AnimationStateMachine* m_asm;
+	std::unordered_map<std::string, Fancy::Animation*> m_animations;
 }; //tolua_exports
 
 #endif  // __Entity_OBJECT__

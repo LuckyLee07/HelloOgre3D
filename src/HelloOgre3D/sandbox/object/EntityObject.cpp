@@ -5,8 +5,16 @@
 #include "SandboxDef.h"
 #include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
+#include "animation/Animation.h"
+#include "animation/AnimationStateMachine.h"
 
 using namespace Ogre;
+
+
+EntityObject::EntityObject() : m_pSceneNode(nullptr), m_pEntity(nullptr)
+{
+	m_asm = new Fancy::AnimationStateMachine();
+}
 
 EntityObject::EntityObject(const Ogre::String& meshFile)
 	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ)
@@ -16,12 +24,23 @@ EntityObject::EntityObject(const Ogre::String& meshFile)
 	m_pSceneNode = pRootScene->createChildSceneNode();
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
 	m_pSceneNode->attachObject(m_pEntity);
+
+	m_asm = new Fancy::AnimationStateMachine();
 }
 
 EntityObject::~EntityObject()
 {
 	m_pEntity = nullptr;
 	m_pSceneNode = nullptr;
+
+	delete m_asm; //先清掉asm再清anim
+
+	auto iter = m_animations.begin();
+	for (; iter != m_animations.end(); iter++)
+	{
+		delete iter->second;
+	}
+	m_animations.clear();
 }
 
 void EntityObject::Initialize()
@@ -31,7 +50,7 @@ void EntityObject::Initialize()
 
 void EntityObject::update(int deltaMsec)
 {
-
+	m_asm->Update(deltaMsec);
 }
 
 void EntityObject::setPosition(const Ogre::Vector3& position)
@@ -68,7 +87,23 @@ Ogre::Entity* EntityObject::getDetachEntity()
 	return m_pEntity;
 }
 
-Ogre::AnimationState* EntityObject::getAnimation(const Ogre::String& animationName)
+Fancy::Animation* EntityObject::GetAnimation(const Ogre::String& animationName)
 {
-	return m_pEntity->getAnimationState(animationName);
+	auto iter = m_animations.find(animationName);
+	if (iter != m_animations.end())
+	{
+		return iter->second;
+	}
+
+	auto pAnimState = m_pEntity->getAnimationState(animationName);
+	if (pAnimState != nullptr)
+	{
+		m_animations[animationName] = new Fancy::Animation(pAnimState);
+	}
+	return m_animations[animationName];
+}
+
+Fancy::AnimationStateMachine* EntityObject::GetAnimStateMachine()
+{
+	return m_asm;
 }

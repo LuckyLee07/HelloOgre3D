@@ -22,7 +22,7 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager() : m_objectIndex(0),
+GameManager::GameManager() : m_objectIndex(0), m_pUIScene(nullptr),
 	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pMarkupText(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
