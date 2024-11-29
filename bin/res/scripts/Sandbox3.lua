@@ -40,8 +40,8 @@ function Sandbox_Initialize(ctype)
 
     soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
 
-    runforwardAnim = soldier:getAnimation("stand_run_forward_weapon")
-    if runforwardAnim ~= nil then runforwardAnim:setEnabled(true) end
+    runforwardAnim = soldier:GetAnimation("stand_run_forward_weapon")
+    if runforwardAnim ~= nil then runforwardAnim:SetEnabled(true) end
 end
 
 
@@ -49,7 +49,7 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
-    runforwardAnim:addTime(deltaTimeInMillis/1000.0)
+    runforwardAnim:AddTime(deltaTimeInMillis/1000.0)
 end
 
 
