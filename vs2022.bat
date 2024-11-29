@@ -25,7 +25,7 @@ set ARGUMENTS=%*
 
 cd /d %SCRIPT_DIRECTORY%
 rem rmdir /S/Q build
-rem rmdir /S/Q lib
+rem rmdir /S/Q libs
 
 cd bin
 del /S/Q *.log *.pdb *.exe *.idb

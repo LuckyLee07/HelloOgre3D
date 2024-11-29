@@ -1,0 +1,14 @@
+$pfile "externalToLua.pkg"
+
+$cfile "../base/LuaInterface.h"
+$cfile "../sandbox/SandboxDef.h"
+
+$cfile "../sandbox/object/BaseObject.h"
+$cfile "../sandbox/object/UIComponent.h"
+$cfile "../sandbox/object/EntityObject.h"
+$cfile "../sandbox/object/SandboxObject.h"
+$cfile "../sandbox/object/AgentObject.h"
+$cfile "../sandbox/manager/SandboxMgr.h"
+$cfile "../sandbox/debug/DebugDrawer.h"
+
+$cfile "GameManager.h"

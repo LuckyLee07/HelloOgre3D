@@ -2,9 +2,9 @@
 #include "OgreSceneNode.h"
 #include "OgreEntity.h"
 #include "OgreSceneManager.h"
-#include "ClientManager.h"
-#include "SandboxMgr.h"
 #include "SandboxDef.h"
+#include "manager/ClientManager.h"
+#include "manager/SandboxMgr.h"
 
 using namespace Ogre;
 

@@ -6,7 +6,7 @@
 #include "OgreVector3.h"
 #include "opensteer/include/Vec3.h"
 #include "opensteer/include/SteerLibrary.h"
-#include "AgentPath.h"
+#include "play/AgentPath.h"
 
 namespace Ogre {
 	class SceneNode;

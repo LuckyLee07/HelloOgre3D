@@ -1,16 +1,16 @@
 #include "GameManager.h"
 #include "Ogre.h"
 #include "SandboxDef.h"
-#include "SandboxMgr.h"
 #include "ScriptLuaVM.h"
 #include "tolua++.h"
 #include "LuaInterface.h"
-#include "UIComponent.h"
-#include "ClientManager.h"
 #include <algorithm>
-#include "DebugDrawer.h"
 #include "GlobalFuncs.h"
 #include <winsock.h>
+#include "object/UIComponent.h"
+#include "manager/ClientManager.h"
+#include "manager/SandboxMgr.h"
+#include "debug/DebugDrawer.h"
 
 using namespace Ogre;
 

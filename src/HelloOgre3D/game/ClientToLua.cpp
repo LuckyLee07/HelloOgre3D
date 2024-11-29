@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Aug 11 21:06:37 2024.
+** Generated automatically by tolua++-1.0.92 on Fri Nov 29 20:13:18 2024.
 */
 
 #ifndef __cplusplus
@@ -17,16 +17,16 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "ogre3d/include/Ogre.h"
 #include "ois/include/OISKeyboard.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
-#include "base/LuaInterface.h"
-#include "base/BaseObject.h"
-#include "sandbox/SandboxDef.h"
-#include "sandbox/UIComponent.h"
-#include "sandbox/EntityObject.h"
-#include "sandbox/SandboxObject.h"
-#include "sandbox/AgentObject.h"
-#include "sandbox/SandboxMgr.h"
-#include "sandbox/DebugDrawer.h"
-#include "game/GameManager.h"
+#include "../base/LuaInterface.h"
+#include "../sandbox/SandboxDef.h"
+#include "../sandbox/object/BaseObject.h"
+#include "../sandbox/object/UIComponent.h"
+#include "../sandbox/object/EntityObject.h"
+#include "../sandbox/object/SandboxObject.h"
+#include "../sandbox/object/AgentObject.h"
+#include "../sandbox/manager/SandboxMgr.h"
+#include "../sandbox/debug/DebugDrawer.h"
+#include "GameManager.h"
 
 /* function to release collected object via destructor */
 #ifdef __cplusplus
@@ -2751,6 +2751,205 @@ static int tolua_ClientToLua_LuaInterface_log00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* function: QuaternionFromRotationDegrees */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_QuaternionFromRotationDegrees00
+static int tolua_ClientToLua_QuaternionFromRotationDegrees00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isnumber(tolua_S,1,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+   float xRotation = ((  float)  tolua_tonumber(tolua_S,1,0));
+   float yRotation = ((  float)  tolua_tonumber(tolua_S,2,0));
+   float zRotation = ((  float)  tolua_tonumber(tolua_S,3,0));
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  QuaternionFromRotationDegrees(xRotation,yRotation,zRotation);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'QuaternionFromRotationDegrees'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* function: QuaternionToRotationDegrees */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_QuaternionToRotationDegrees00
+static int tolua_ClientToLua_QuaternionToRotationDegrees00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const Ogre::Quaternion",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,1,0));
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  QuaternionToRotationDegrees(*quaternion);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'QuaternionToRotationDegrees'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* function: BtVector3ToVector3 */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BtVector3ToVector300
+static int tolua_ClientToLua_BtVector3ToVector300(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const btVector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const btVector3* vector = ((const btVector3*)  tolua_tousertype(tolua_S,1,0));
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  BtVector3ToVector3(*vector);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'BtVector3ToVector3'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* function: BtQuaternionToQuaternion */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BtQuaternionToQuaternion00
+static int tolua_ClientToLua_BtQuaternionToQuaternion00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const btQuaternion",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const btQuaternion* orientation = ((const btQuaternion*)  tolua_tousertype(tolua_S,1,0));
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  BtQuaternionToQuaternion(*orientation);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'BtQuaternionToQuaternion'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* function: GetForward */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GetForward00
+static int tolua_ClientToLua_GetForward00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Ogre::Vector3* forward = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,1,0));
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  GetForward(*forward);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: new of class  BaseObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_BaseObject_new00
 static int tolua_ClientToLua_BaseObject_new00(lua_State* tolua_S)
@@ -2970,205 +3169,6 @@ static int tolua_ClientToLua_BaseObject_getObjType00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getObjType'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* function: QuaternionFromRotationDegrees */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_QuaternionFromRotationDegrees00
-static int tolua_ClientToLua_QuaternionFromRotationDegrees00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isnumber(tolua_S,1,0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,4,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-   float xRotation = ((  float)  tolua_tonumber(tolua_S,1,0));
-   float yRotation = ((  float)  tolua_tonumber(tolua_S,2,0));
-   float zRotation = ((  float)  tolua_tonumber(tolua_S,3,0));
-  {
-   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  QuaternionFromRotationDegrees(xRotation,yRotation,zRotation);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'QuaternionFromRotationDegrees'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* function: QuaternionToRotationDegrees */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_QuaternionToRotationDegrees00
-static int tolua_ClientToLua_QuaternionToRotationDegrees00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const Ogre::Quaternion",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,1,0));
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  QuaternionToRotationDegrees(*quaternion);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'QuaternionToRotationDegrees'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* function: BtVector3ToVector3 */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_BtVector3ToVector300
-static int tolua_ClientToLua_BtVector3ToVector300(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const btVector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const btVector3* vector = ((const btVector3*)  tolua_tousertype(tolua_S,1,0));
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  BtVector3ToVector3(*vector);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'BtVector3ToVector3'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* function: BtQuaternionToQuaternion */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_BtQuaternionToQuaternion00
-static int tolua_ClientToLua_BtQuaternionToQuaternion00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const btQuaternion",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const btQuaternion* orientation = ((const btQuaternion*)  tolua_tousertype(tolua_S,1,0));
-  {
-   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  BtQuaternionToQuaternion(*orientation);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'BtQuaternionToQuaternion'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* function: GetForward */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GetForward00
-static int tolua_ClientToLua_GetForward00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     (tolua_isvaluenil(tolua_S,1,&tolua_err) || !tolua_isusertype(tolua_S,1,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const Ogre::Vector3* forward = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,1,0));
-  {
-   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  GetForward(*forward);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7412,6 +7412,11 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"LuaInterface");
    tolua_function(tolua_S,"log",tolua_ClientToLua_LuaInterface_log00);
   tolua_endmodule(tolua_S);
+  tolua_function(tolua_S,"QuaternionFromRotationDegrees",tolua_ClientToLua_QuaternionFromRotationDegrees00);
+  tolua_function(tolua_S,"QuaternionToRotationDegrees",tolua_ClientToLua_QuaternionToRotationDegrees00);
+  tolua_function(tolua_S,"BtVector3ToVector3",tolua_ClientToLua_BtVector3ToVector300);
+  tolua_function(tolua_S,"BtQuaternionToQuaternion",tolua_ClientToLua_BtQuaternionToQuaternion00);
+  tolua_function(tolua_S,"GetForward",tolua_ClientToLua_GetForward00);
   #ifdef __cplusplus
   tolua_cclass(tolua_S,"BaseObject","BaseObject","",tolua_collect_BaseObject);
   #else
@@ -7431,11 +7436,6 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setObjType",tolua_ClientToLua_BaseObject_setObjType00);
    tolua_function(tolua_S,"getObjType",tolua_ClientToLua_BaseObject_getObjType00);
   tolua_endmodule(tolua_S);
-  tolua_function(tolua_S,"QuaternionFromRotationDegrees",tolua_ClientToLua_QuaternionFromRotationDegrees00);
-  tolua_function(tolua_S,"QuaternionToRotationDegrees",tolua_ClientToLua_QuaternionToRotationDegrees00);
-  tolua_function(tolua_S,"BtVector3ToVector3",tolua_ClientToLua_BtVector3ToVector300);
-  tolua_function(tolua_S,"BtQuaternionToQuaternion",tolua_ClientToLua_BtQuaternionToQuaternion00);
-  tolua_function(tolua_S,"GetForward",tolua_ClientToLua_GetForward00);
   tolua_cclass(tolua_S,"UIComponent","UIComponent","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"UIComponent");
    tolua_constant(tolua_S,"FONT_SMALL",UIComponent::FONT_SMALL);

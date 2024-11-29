@@ -5,9 +5,9 @@
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
 #include "OgreString.h"
-#include "SandboxObject.h"
-#include "UIComponent.h"
-#include "AgentObject.h"
+#include "object/SandboxObject.h"
+#include "object/UIComponent.h"
+#include "object/AgentObject.h"
 
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btScalar.h"

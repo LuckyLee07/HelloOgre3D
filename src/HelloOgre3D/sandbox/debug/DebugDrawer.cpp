@@ -1,6 +1,6 @@
 #include "DebugDrawer.h"
 #include "Ogre.h"
-#include "ClientManager.h"
+#include "manager/ClientManager.h"
 
 DebugDrawer::DebugDrawer() : m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_isEnable(true), m_linesIndex(0)

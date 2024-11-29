@@ -1,8 +1,8 @@
 #include "Application.h"
 #include "SandboxDef.h"
-#include "ClientManager.h"
 #include "OgreRenderWindow.h"
 #include <iostream>
+#include "manager/ClientManager.h"
 
 Application::Application(const std::string& appTitle)
 {

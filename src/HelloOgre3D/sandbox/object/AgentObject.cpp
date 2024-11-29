@@ -2,13 +2,12 @@
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
 #include "btBulletDynamicsCommon.h"
-#include "SandboxMgr.h"
+#include "manager/SandboxMgr.h"
 #include "SandboxDef.h"
 #include "GameManager.h"
 #include "ScriptLuaVM.h"
 #include "SandboxObject.h"
 #include "opensteer/include/SteerLibrary.h"
-#include "GameManager.h"
 
 using namespace Ogre;
 

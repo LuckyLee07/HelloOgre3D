@@ -3,16 +3,17 @@
 
 #include <map>
 #include <vector>
-#include "SandboxDef.h"
-#include "EntityObject.h"
-#include "SandboxObject.h"
-#include "PhysicsWorld.h"
-#include "SandboxMgr.h"
-#include "UIComponent.h"
 #include "OgrePrerequisites.h"
 #include "OISMouse.h"
 #include "OISKeyboard.h"
-#include "AgentObject.h"
+#include "SandboxDef.h"
+#include "object/AgentObject.h"
+#include "object/UIComponent.h"
+#include "object/EntityObject.h"
+#include "object/SandboxObject.h"
+#include "play/PhysicsWorld.h"
+#include "manager/SandboxMgr.h"
+
 
 #define UI_LAYER_COUNT	16
 

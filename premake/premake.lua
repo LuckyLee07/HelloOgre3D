@@ -1,5 +1,5 @@
 
-dofile("sandboxgames.lua");
+dofile("samples.lua");
 
 solution( "HelloOgre3D" )
 	location( "../build/" )
@@ -70,13 +70,13 @@ solution( "HelloOgre3D" )
 --------------------------------------------------------------------------------
 -- Game application definitions
 --------------------------------------------------------------------------------
-	group( "GameDemos" )
+	--group( "GameDemos" )
 	CreateGameProject( "HelloOgre3D" )
 
 --------------------------------------------------------------------------------
 -- Open source library definitions
 --------------------------------------------------------------------------------
-	group( "Libraries" )
+	group( "external" )
 -- freeimage v3.15.4 static library
 	project( "freeimage" )
 		kind( "StaticLib" )
