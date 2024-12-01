@@ -3,6 +3,7 @@
 #include "AnimationState.h"
 #include "AnimationTransition.h"
 #include "LogSystem.h"
+#include "GlobalFuncs.h"
 
 namespace Fancy
 {
@@ -35,7 +36,7 @@ namespace Fancy
 	}
 
 
-	void AnimationStateMachine::RequestState(const std::string& stateName)
+	bool AnimationStateMachine::RequestState(const std::string& stateName)
 	{
 		if (m_pNextState == nullptr && ContainsState(stateName))
 		{
@@ -47,7 +48,14 @@ namespace Fancy
 			{
 				m_pNextState = m_animStates[stateName];
 			}
+			return true;
 		}
+		return false;
+	}
+
+	std::string AnimationStateMachine::GetCurrStateName()
+	{
+		return m_pCurrentState->GetName();
 	}
 
 	void AnimationStateMachine::AddState(AnimationState* animState)
@@ -90,7 +98,16 @@ namespace Fancy
 	{
 		if (m_animStates.find(stateName) != m_animStates.end())
 		{
+			if (m_pCurrentState != nullptr)
+				m_pCurrentState->ClearAnimation();
+			if (m_pNextState != nullptr)
+				m_pNextState->ClearAnimation();
+
+			m_pNextState = nullptr;
+			m_pCurrentTransition = nullptr;
+			m_TransitionStartTime = 0.0f;
 			m_pCurrentState = m_animStates[stateName];
+			m_pCurrentState->InitAnimation();
 		}
 	}
 
@@ -118,28 +135,28 @@ namespace Fancy
 		{
 			float currAnimTime = m_pCurrentState->m_pAnimation->GetTime();
 			float currAnimLength = m_pCurrentState->m_pAnimation->GetLength();
-			float deltaTime = deltaTimeInSeconds * m_pCurrentState->getRate();
+			float deltaTime = deltaTimeInSeconds * m_pCurrentState->GetRate();
 
 			if (ContainsTransition(m_pCurrentState->GetName(), m_pNextState->GetName()))
 			{
 				AnimationTransition* transition = m_animTransitions[m_pCurrentState->GetName()][m_pNextState->GetName()];
 				if ((currAnimTime + deltaTime) >= (currAnimLength - transition->getBlendOutWindow()))
 				{
-					//StartTransition(transition, currTimeInSeconds);
+					StartTransition(transition, currTimeInSeconds);
 				}
-				else
+			}
+			else
+			{
+				if ((currAnimTime + deltaTime) >= currAnimLength)
 				{
-					if ((currAnimTime + deltaTime) >= currAnimLength)
-					{
-						//CompleteTransition();
-					}
+					CompleteTransition();
 				}
 			}
 		}
 
 		if (m_pCurrentTransition != nullptr)
 		{
-			//UpdateTransition(deltaTimeInMillis, currTimeInSeconds);
+			UpdateTransition(deltaTimeInMillis, currTimeInSeconds);
 		}
 		else if (m_pCurrentState)
 		{
@@ -149,17 +166,36 @@ namespace Fancy
 
 	void AnimationStateMachine::StartTransition(AnimationTransition* transition, float currTimeInSeconds)
 	{
-
+		m_pCurrentTransition = transition;
+		m_TransitionStartTime = currTimeInSeconds;
+		m_pNextState->InitAnimation(transition->getBlendInWindow());
 	}
 
 	void AnimationStateMachine::UpdateTransition(float deltaTimeInMillis, float currTimeInSeconds)
 	{
+		Animation_LinearBlendTo(m_pCurrentState->GetAnimation(), m_pNextState->GetAnimation(), 
+			m_pCurrentTransition->getDuration(), m_TransitionStartTime, currTimeInSeconds);
 
+		m_pCurrentState->StepAnimation(deltaTimeInMillis);
+		m_pNextState->StepAnimation(deltaTimeInMillis);
+
+		const float epsilon = 0.0001f;  // 设定个较小的容差值
+		if (m_pCurrentState->GetAnimationWeight() < epsilon)
+		{
+			m_pCurrentState->ClearAnimation();
+			m_pCurrentState = m_pNextState;
+			m_pNextState = nullptr;
+			m_pCurrentTransition = nullptr;
+			m_TransitionStartTime = 0.0f;
+		}
 	}
 
 	void AnimationStateMachine::CompleteTransition()
 	{
-
+		m_pCurrentState->ClearAnimation();
+		m_pNextState->InitAnimation();
+		m_pCurrentState = m_pNextState;
+		m_pNextState = nullptr;
 	}
 
 	void AnimationStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
@@ -168,7 +204,7 @@ namespace Fancy
 
 		float currAnimTime = pAnimation->GetTime();
 		float currAnimLength = pAnimation->GetLength();
-		float stepRate = m_pCurrentState->getRate();
+		float stepRate = m_pCurrentState->GetRate();
 
 		float deltaTime = (deltaTimeInMillis / 1000.0f) * stepRate;
 
@@ -178,5 +214,29 @@ namespace Fancy
 			timeStepped -= currAnimLength; // Looping
 		}
 		pAnimation->AddTime(deltaTime);
+	}
+
+	void AnimationStateMachine::Animation_LinearBlendIn(Animation* animation, float blendTime, float startTime, float currTime)
+	{
+		float realBlendTime = clamp(0.1f, blendTime, blendTime);
+		float percent = (currTime - startTime) / realBlendTime;
+
+		float realPercent = clamp(0.0f, 1.0f, percent);
+		animation->SetWeight(realPercent);
+	}
+
+	void AnimationStateMachine::Animation_LinearBlendOut(Animation* animation, float blendTime, float startTime, float currTime)
+	{
+		float realBlendTime = clamp(0.1f, blendTime, blendTime);
+		float percent = (currTime - startTime) / realBlendTime;
+
+		float realPercent = clamp(0.0f, 1.0f, percent);
+		animation->SetWeight(1.0f - realPercent);
+	}
+
+	void AnimationStateMachine::Animation_LinearBlendTo(Animation* startAnim, Animation* endAnim, float blendTime, float startTime, float currTime)
+	{
+		Animation_LinearBlendIn(endAnim, blendTime, startTime, currTime);
+		Animation_LinearBlendOut(startAnim, blendTime, startTime, currTime);
 	}
 }

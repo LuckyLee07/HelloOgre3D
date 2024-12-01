@@ -15,7 +15,7 @@ namespace Fancy //tolua_exports
         ~Animation();
 
         //tolua_begin
-        void Init();
+        void Init(float startTime = 0.0f);
         void Clear();
 
         void SetEnabled(bool enable);
@@ -25,6 +25,8 @@ namespace Fancy //tolua_exports
         float GetTime();
         float GetLength();
         float GetWeight();
+        void SetWeight(float weight);
+
         //tolua_end
     private:
         Ogre::AnimationState* m_pAnimState;

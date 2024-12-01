@@ -13,11 +13,12 @@ namespace Fancy
 		m_pAnimState = nullptr;
 	}
 
-	void Animation::Init()
+	void Animation::Init(float startTime)
 	{
+		m_pAnimState->setTimePosition(0.0f);
 		SetEnabled(true);
 		m_pAnimState->setWeight(1.0f);
-		m_pAnimState->setTimePosition(0.0f);
+		m_pAnimState->setTimePosition(startTime);
 	}
 
 	void Animation::Clear()
@@ -53,5 +54,10 @@ namespace Fancy
 	float Animation::GetWeight()
 	{
 		return m_pAnimState->getWeight();
+	}
+
+	void Animation::SetWeight(float weight)
+	{
+		m_pAnimState->setWeight(weight);
 	}
 }

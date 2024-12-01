@@ -9,14 +9,21 @@ namespace Fancy
     class AnimationState
     {
     public:
-        AnimationState(const std::string& name, Animation* animation, bool looping = false, float rate = 1.0f);
+        AnimationState(const std::string& name, Animation* animation, bool looping = false, float rate = 0.0f);
         ~AnimationState();
         
+        void InitAnimation(float startTime = 0.0f);
+        void ClearAnimation();
+        float GetAnimationWeight();
+
+        void StepAnimation(float deltaTimeInMillis, float rate = 0.0f);
+
         const std::string& GetName() const;
-        float AnimationState::getRate() const;
+        float AnimationState::GetRate() const;
 
     public:
         Animation* m_pAnimation;
+        Animation* GetAnimation() { return m_pAnimation; }
 
     private:
         std::string m_stateName;

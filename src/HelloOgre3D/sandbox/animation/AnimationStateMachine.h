@@ -18,7 +18,8 @@ namespace Fancy //tolua_exports
         void Update(float deltaTimeInMillis, long long currentTimeInMillis);
 
         //tolua_begin
-        void RequestState(const std::string& stateName);
+        bool RequestState(const std::string& stateName);
+        std::string GetCurrStateName();
 
         void AddState(const std::string& name, Animation* animation, bool looping = false, float rate = 1.0f);
         void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
@@ -37,6 +38,12 @@ namespace Fancy //tolua_exports
         void UpdateTransition(float deltaTimeInMillis, float currTimeInSeconds);
         void CompleteTransition();
         void StepCurrentAnimation(float deltaTimeInMillis);
+
+    public:
+
+        static void Animation_LinearBlendIn(Animation* startAnim, float blendTime, float startTime, float currTime);
+        static void Animation_LinearBlendOut(Animation* startAnim, float blendTime, float startTime, float currTime);
+        static void Animation_LinearBlendTo(Animation* startAnim, Animation* endAnim, float blendTime, float startTime, float currTime);
 
     private:
         std::unordered_map<std::string, AnimationState*> m_animStates;

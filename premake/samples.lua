@@ -31,6 +31,7 @@ function CreateGameProject( projectName )
       "ois",
       "opensteer",
     } )
+    libdirs{ "../libs/" }
     configuration( { "windows" } )
       -- add the directx include directory
       buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
@@ -46,21 +47,25 @@ function CreateGameProject( projectName )
       -- static linking against ogre requires linking against ogre's resource file
       linkoptions( "OgreWin32Resources.res" )
     configuration( { "windows", "x32", "Debug" } )
+      defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
         "\"../build/external/ogre3d/obj/x32/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x32", "Release" } )
+      defines { "_ITERATOR_DEBUG_LEVEL=0" }
       libdirs( {
         "\"../build/external/ogre3d/obj/x32/Release\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x64", "Debug" } )
+      defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
         "\"../build/external/ogre3d/obj/x64/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( { "windows", "x64", "Release" } )
+      defines { "_ITERATOR_DEBUG_LEVEL=0" } 
       libdirs( {
         "\"../build/external/ogre3d/obj/x64/Release\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
