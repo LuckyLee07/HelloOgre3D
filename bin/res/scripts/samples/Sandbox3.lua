@@ -1,6 +1,28 @@
 
+local textSize = {w = 300, h = 300}
+local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
+        "W/A/S/D: to move" .. GUI.MarkupNewline ..
+        "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
+        "Hold RMB: to look" .. GUI.MarkupNewline ..
+        GUI.MarkupNewline ..
+        "F1: to reset the camera" .. GUI.MarkupNewline ..
+        "F2: toggle the menu" .. GUI.MarkupNewline ..
+        "F3: toggle skeleton" .. GUI.MarkupNewline ..
+        "F5: toggle performance information" .. GUI.MarkupNewline ..
+        "F6: toggle camera information" .. GUI.MarkupNewline ..
+        "F7: toggle physics debug" .. GUI.MarkupNewline ..
+        GUI.MarkupNewline ..
+        "Num1: melee animation" .. GUI.MarkupNewline ..
+        "Num2: sniper reload animation" .. GUI.MarkupNewline ..
+        "Num3: sniper transform to smg animation" .. GUI.MarkupNewline ..
+        "Num4: smg transform to sniper animation" .. GUI.MarkupNewline ..
+        "Num5: fire animation" .. GUI.MarkupNewline ..
+        "Num6: run forward animation" .. GUI.MarkupNewline ..
+        "Num7: run backward animation" .. GUI.MarkupNewline ..
+        "Num8: death animation" .. GUI.MarkupNewline ..
+        "Num9: headshot animation" .. GUI.MarkupNewline ;
+
 local weaponState = "sniper"
-local TextComponent = nil
 
 function EventHandle_Keyboard(keycode, pressed)
     GUI_HandleKeyEvent(keycode, pressed)
@@ -64,10 +86,11 @@ function EventHandle_WindowResized(width, height)
     TextComponent:setPosition(Vector2(ui_posx, ui_posy))
 end
 
-
+local TextComponent = nil
 function Sandbox_Initialize(ctype)
-    GUI_CreateCommonsUI()
-    TextComponent = GUI_CreateSandbox3Text()
+    GUI_CreateCameraAndProfileInfo()
+
+    TextComponent = GUI_CreateSandboxText(infoText, textSize)
 
     -- Create The Sky.
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));

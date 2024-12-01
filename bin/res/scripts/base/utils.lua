@@ -4,6 +4,15 @@ function string.trim(strx)
    return (string.gsub(strx, "^%s*(.-)%s*$", "%1"))
 end
 
+function getFormatTime(timestamp)
+	return  os.date("%Y-%m-%d %H:%M:%S", timestamp)
+end
+
+function reloadLua(moduleName)
+    package.loaded[moduleName] = nil
+    return require(moduleName)
+end
+
 -- 分割字符串
 function string.split(str, mark)
 
@@ -125,8 +134,4 @@ _G.print = function( ... )
     if #args <= 0 then m = 'nil' end
     --_print(msg)
     LuaInterface:log( msg )
-end
-
-function getFormatTime(timestamp)
-	return  os.date("%Y-%m-%d %H:%M:%S", timestamp)
 end

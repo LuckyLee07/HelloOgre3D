@@ -1,9 +1,22 @@
+local textSize = {w = 300, h = 180}
+local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
+            "W/A/S/D: to move" .. GUI.MarkupNewline ..
+            "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
+            "Hold RMB: to look" .. GUI.MarkupNewline ..
+            GUI.MarkupNewline ..
+            "Space: shoot block" .. GUI.MarkupNewline ..
+            GUI.MarkupNewline ..
+            "F1: to reset the camera" .. GUI.MarkupNewline ..
+            "F2: toggle the menu" .. GUI.MarkupNewline ..
+            "F5: toggle performance information" .. GUI.MarkupNewline ..
+            "F6: toggle camera information" .. GUI.MarkupNewline ..
+            "F7: toggle physics debug";
 
+Shoot_BoxCount = 0
 local TextComponent = nil
-
 function Sandbox_Initialize(ctype)
-    GUI_CreateCommonsUI()
-    TextComponent = GUI_CreateSandboxText()
+    GUI_CreateCameraAndProfileInfo()
+    TextComponent = GUI_CreateSandboxText(infoText, textSize)
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();

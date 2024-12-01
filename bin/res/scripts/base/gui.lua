@@ -146,7 +146,6 @@ function GUI_UpdateCameraInfo()
     cameraInfoPanel:setMarkupText(GUI.MarkupColor.White .. cameraInfo)
 end
 
-_G.Shoot_BoxCount = 0
 function GUI_UpdateProfileInfo()
 	if not profileInfoPanel or not profileInfoPanel:isVisible() then
 	 	return 
@@ -164,8 +163,9 @@ function GUI_UpdateProfileInfo()
 	local fps = 1000 / avgRenderTime
 	local simSteps = 1000 / avgTotalSimTime
 
+    local box_count = Shoot_BoxCount and Shoot_BoxCount or 0
 	local profileInfo = GUI.Markup.SmallMono ..
-    "Performance Information: -> " .. Shoot_BoxCount .. GUI.MarkupNewline ..
+    "Performance Information: -> " .. box_count .. GUI.MarkupNewline ..
     GUI.MarkupNewline ..    
     string.format(
         "  Frames per Second:        %s%7.0f%s",
@@ -188,7 +188,7 @@ function GUI_UpdateProfileInfo()
 end
 
 
-function GUI_CreateCommonsUI()
+function GUI_CreateCameraAndProfileInfo()
     for index, color in pairs(GUI.MarkupColorTable) do
         Sandbox:SetMarkupColor(index, color)
     end
@@ -226,21 +226,22 @@ function GUI_WindowResized(width, height)
 end
 
 
-function GUI_CreateSandboxText()
-    local ui_width, ui_height = 300, 180;
+function GUI_CreateSandboxText(infoText, boxSize)
     local screenWidth = GameManager:getScreenWidth()
     local screenHeight = GameManager:getScreenHeight()
-
-    local uiComponent = Sandbox:CreateUIComponent()
+    
+    --local ui_width, ui_height = 300, 180;
+    local ui_width, ui_height = boxSize.w, boxSize.h;
+    local sandboxMenuInfo = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;
     local ui_posy = screenHeight - ui_height - 35;
-    uiComponent:setPosition(Vector2(ui_posx, ui_posy))
-    uiComponent:setDimension(Vector2(ui_width, ui_height))
-    uiComponent:setTextMargin(10, 10);
+    sandboxMenuInfo:setPosition(Vector2(ui_posx, ui_posy))
+    sandboxMenuInfo:setDimension(Vector2(ui_width, ui_height))
+    sandboxMenuInfo:setTextMargin(10, 10);
 
     local startColor = GUI.Palette.DarkBlueGradient
     local endenColor = GUI.Palette.DarkBlackGradient
-    uiComponent:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
+    sandboxMenuInfo:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
 
     local markupText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
@@ -254,9 +255,9 @@ function GUI_CreateSandboxText()
         "F5: toggle performance information" .. GUI.MarkupNewline ..
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug"
-    uiComponent:setMarkupText(markupText)
+    sandboxMenuInfo:setMarkupText((infoText and infoText or markupText))
 
-    return uiComponent
+    return sandboxMenuInfo
 end
 
 function GUI_CreateSandbox3Text()
@@ -275,27 +276,7 @@ function GUI_CreateSandbox3Text()
     local endenColor = GUI.Palette.DarkBlackGradient
     uiComponent:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
 
-    local markupText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "W/A/S/D: to move" .. GUI.MarkupNewline ..
-        "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
-        "Hold RMB: to look" .. GUI.MarkupNewline ..
-        GUI.MarkupNewline ..
-        "F1: to reset the camera" .. GUI.MarkupNewline ..
-        "F2: toggle the menu" .. GUI.MarkupNewline ..
-        "F3: toggle skeleton" .. GUI.MarkupNewline ..
-        "F5: toggle performance information" .. GUI.MarkupNewline ..
-        "F6: toggle camera information" .. GUI.MarkupNewline ..
-        "F7: toggle physics debug" .. GUI.MarkupNewline ..
-        GUI.MarkupNewline ..
-        "Num1: melee animation" .. GUI.MarkupNewline ..
-        "Num2: sniper reload animation" .. GUI.MarkupNewline ..
-        "Num3: sniper transform to smg animation" .. GUI.MarkupNewline ..
-        "Num4: smg transform to sniper animation" .. GUI.MarkupNewline ..
-        "Num5: fire animation" .. GUI.MarkupNewline ..
-        "Num6: run forward animation" .. GUI.MarkupNewline ..
-        "Num7: run backward animation" .. GUI.MarkupNewline ..
-        "Num8: death animation" .. GUI.MarkupNewline ..
-        "Num9: headshot animation" .. GUI.MarkupNewline ;
+    
     uiComponent:setMarkupText(markupText)
 
     return uiComponent

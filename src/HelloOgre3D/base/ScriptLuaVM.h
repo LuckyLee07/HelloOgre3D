@@ -18,6 +18,8 @@ public:
 
 	bool callFile(const char *fpath);
 
+	bool loadFile(const char* fpath);
+
 	bool callString(const char *szLua_code);
 
 	bool callFunction(const char* funcname, const char* format, ...);

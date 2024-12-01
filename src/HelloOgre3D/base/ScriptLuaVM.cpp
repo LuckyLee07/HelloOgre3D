@@ -107,9 +107,30 @@ bool ScriptLuaVM::callFile(const char *fpath)
 	if (lua_pcall(m_pState, 0, 0, 0) != LUA_OK)
 	{
 		const char *perr = lua_tostring(m_pState, -1);
-		CCLUA_ERROR("lua_pcall error: %s | error: %s", fpath, perr);
+		CCLUA_ERROR("lua_pcall path: %s | error: %s", fpath, perr);
 		lua_pop(m_pState, 1);
 		//showLuaError(m_pState, perr);
+		return false;
+	}
+
+	return true;
+}
+
+bool ScriptLuaVM::loadFile(const char* module)
+{
+	// 1. 清除缓存
+	lua_getglobal(m_pState, "package");
+	lua_getfield(m_pState, -1, "loaded"); // package.loaded
+	lua_pushnil(m_pState); // 清除缓存
+	lua_setfield(m_pState, -2, module);
+	lua_pop(m_pState, 2); // 弹出 package 和 loaded
+
+	// 2. 重新加载模块
+	std::string filepath = "res/scripts/samples/game_init.lua";
+	if (luaL_dofile(m_pState, filepath.c_str()) != LUA_OK)
+	{
+		const char* perr = lua_tostring(m_pState, -1);
+		CCLUA_ERROR("lua_dofile path : %s | error: %s", filepath.c_str(), perr);
 		return false;
 	}
 
