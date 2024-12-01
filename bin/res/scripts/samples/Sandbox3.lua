@@ -1,3 +1,4 @@
+
 local weaponState = "sniper"
 local TextComponent = nil
 

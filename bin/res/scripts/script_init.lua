@@ -1,50 +1,9 @@
 require("socket.core")
-require("res.scripts.LuaPanda")
-require("res.scripts.class")
-require("res.scripts.utils")
-require("res.scripts.threadpool")
-require("res.scripts.global")
-require("res.scripts.agent")
-require("res.scripts.gui")
+require("res.scripts.base.LuaPanda")
 
---require("res.scripts.Sandbox1")
---require("res.scripts.Sandbox2")
-require("res.scripts.Sandbox3")
+require("res.scripts.base.class")
+require("res.scripts.base.utils")
+require("res.scripts.base.threadpool")
+require("res.scripts.base.global")
 
-_G.__init__ = function(sec, msec)
-	math.randomseed(os.time())
-	threadpool:init(sec * 1000 + msec, 10)
-
-	-- 初始化LuaPanda
-	LuaPanda.start("127.0.0.1", 8818)
-
-	-- 设置LuaGC垃圾回收
-	local gc_worker = function()
-		local count = collectgarbage('count')
-		local step = 500
-		if count >= 3 * 1024 then
-			collectgarbage('setstepmul', step * 2)
-		elseif count >= 2 * 1024 then
-			collectgarbage('setstepmul', step * 1)
-		elseif count >= 1 * 1024 then
-			collectgarbage('setstepmul', step * 0.5)
-		else
-			collectgarbage('setstepmul', step * 0.1)
-		end
-		local stepsize = 256
-		local ok = collectgarbage('step', stepsize)
-	end
-	threadpool:timer(99999999, 3, gc_worker)
-
-	threadpool:delay(3.0, function()
-		print('Fxll========>>>222', getFormatTime(os.time()))
-	end)
-	threadpool:work(function()
-		threadpool:wait(3)
-		print('Fxll========>>>333', getFormatTime(os.time()))
-	end)
-end
-
-_G.__tick__ = function(sec, msec)
-	threadpool:update(sec * 1000 + msec)
-end
+require("res.scripts.samples.game_init")

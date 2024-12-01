@@ -1,3 +1,4 @@
+
 local TextComponent = nil
 
 function Sandbox_Initialize(ctype)
