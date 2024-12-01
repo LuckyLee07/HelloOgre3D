@@ -55,7 +55,13 @@ namespace Fancy
 
 	std::string AnimationStateMachine::GetCurrStateName()
 	{
-		return m_pCurrentState->GetName();
+		static std::string empty_str = "";
+
+		if (m_pCurrentState != nullptr)
+		{
+			return m_pCurrentState->GetName();
+		}
+		return empty_str;
 	}
 
 	void AnimationStateMachine::AddState(AnimationState* animState)
