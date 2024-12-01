@@ -11,6 +11,12 @@ namespace Fancy
         AnimationTransition(float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
         ~AnimationTransition();
 
+        std::string getBlendCurve();
+
+        float getDuration();
+        float getBlendInWindow();
+        float getBlendOutWindow();
+
     private:
         float m_duration;
 

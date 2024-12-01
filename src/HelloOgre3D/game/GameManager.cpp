@@ -22,7 +22,7 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager() : m_objectIndex(0), m_pUIScene(nullptr),
+GameManager::GameManager() : m_objectIndex(0), m_pUIScene(nullptr), m_SimulationTime(0),
 	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pMarkupText(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
@@ -115,6 +115,8 @@ void GameManager::Update(int deltaMilliseconds)
 	struct timeval stNow;
 	gettimeofday(&stNow, NULL);
 	m_pScriptVM->callFunction("__tick__", "ii", stNow.tv_sec, stNow.tv_usec / 1000);
+
+	m_SimulationTime += deltaMilliseconds;
 
 	for (auto iter = m_pEntitys.begin(); iter != m_pEntitys.end(); iter++)
 	{
@@ -276,4 +278,14 @@ std::vector<AgentObject*> GameManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType
 	}
 
 	return specifyAgents;
+}
+
+long long GameManager::getTimeInMillis()
+{
+	return m_SimulationTime;
+}
+
+Ogre::Real GameManager::getTimeInSeconds()
+{
+	return getTimeInMillis() / 1000;
 }

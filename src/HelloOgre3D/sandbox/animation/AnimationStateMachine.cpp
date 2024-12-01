@@ -109,8 +109,74 @@ namespace Fancy
 		return false;
 	}
 
-	void AnimationStateMachine::Update(float deltaMilliseconds)
+	void AnimationStateMachine::Update(float deltaTimeInMillis, long long currTimeInMillis)
+	{
+		float deltaTimeInSeconds = deltaTimeInMillis / 1000.0f;
+		float currTimeInSeconds = currTimeInMillis / 1000.0f;
+
+		if (m_pCurrentTransition == nullptr && m_pNextState != nullptr)
+		{
+			float currAnimTime = m_pCurrentState->m_pAnimation->GetTime();
+			float currAnimLength = m_pCurrentState->m_pAnimation->GetLength();
+			float deltaTime = deltaTimeInSeconds * m_pCurrentState->getRate();
+
+			if (ContainsTransition(m_pCurrentState->GetName(), m_pNextState->GetName()))
+			{
+				AnimationTransition* transition = m_animTransitions[m_pCurrentState->GetName()][m_pNextState->GetName()];
+				if ((currAnimTime + deltaTime) >= (currAnimLength - transition->getBlendOutWindow()))
+				{
+					//StartTransition(transition, currTimeInSeconds);
+				}
+				else
+				{
+					if ((currAnimTime + deltaTime) >= currAnimLength)
+					{
+						//CompleteTransition();
+					}
+				}
+			}
+		}
+
+		if (m_pCurrentTransition != nullptr)
+		{
+			//UpdateTransition(deltaTimeInMillis, currTimeInSeconds);
+		}
+		else if (m_pCurrentState)
+		{
+			StepCurrentAnimation(deltaTimeInMillis);
+		}
+	}
+
+	void AnimationStateMachine::StartTransition(AnimationTransition* transition, float currTimeInSeconds)
 	{
 
+	}
+
+	void AnimationStateMachine::UpdateTransition(float deltaTimeInMillis, float currTimeInSeconds)
+	{
+
+	}
+
+	void AnimationStateMachine::CompleteTransition()
+	{
+
+	}
+
+	void AnimationStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
+	{
+		Animation* pAnimation = m_pCurrentState->m_pAnimation;
+
+		float currAnimTime = pAnimation->GetTime();
+		float currAnimLength = pAnimation->GetLength();
+		float stepRate = m_pCurrentState->getRate();
+
+		float deltaTime = (deltaTimeInMillis / 1000.0f) * stepRate;
+
+		float timeStepped = currAnimTime + deltaTime;
+		while (timeStepped >= currAnimLength)
+		{
+			timeStepped -= currAnimLength; // Looping
+		}
+		pAnimation->AddTime(deltaTime);
 	}
 }

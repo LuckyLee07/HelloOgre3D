@@ -19,6 +19,7 @@ namespace Fancy //tolua_exports
         void Clear();
 
         void SetEnabled(bool enable);
+        void SetLooping(bool looping);
         void AddTime(float deltaTime);
 
         float GetTime();

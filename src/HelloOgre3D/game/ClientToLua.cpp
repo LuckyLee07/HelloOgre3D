@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat Nov 30 01:16:13 2024.
+** Generated automatically by tolua++-1.0.92 on Sun Dec  1 09:59:33 2024.
 */
 
 #ifndef __cplusplus
@@ -3685,6 +3685,39 @@ static int tolua_ClientToLua_Fancy_Animation_SetEnabled00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetLooping of class  Fancy::Animation */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_SetLooping00
+static int tolua_ClientToLua_Fancy_Animation_SetLooping00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  bool looping = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetLooping'", NULL);
+#endif
+  {
+   self->SetLooping(looping);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetLooping'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: AddTime of class  Fancy::Animation */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_AddTime00
 static int tolua_ClientToLua_Fancy_Animation_AddTime00(lua_State* tolua_S)
@@ -4151,7 +4184,7 @@ static int tolua_ClientToLua_EntityObject_GetAnimation00(lua_State* tolua_S)
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
@@ -4159,17 +4192,16 @@ static int tolua_ClientToLua_EntityObject_GetAnimation00(lua_State* tolua_S)
 #endif
  {
   EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::string animationName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const char* animationName = ((const char*)  tolua_tostring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAnimation'", NULL);
 #endif
   {
    Fancy::Animation* tolua_ret = (Fancy::Animation*)  self->GetAnimation(animationName);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::Animation");
-   tolua_pushcppstring(tolua_S,(const char*)animationName);
   }
  }
- return 2;
+ return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetAnimation'.",&tolua_err);
@@ -4178,9 +4210,9 @@ static int tolua_ClientToLua_EntityObject_GetAnimation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetAnimStateMachine of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetAnimStateMachine00
-static int tolua_ClientToLua_EntityObject_GetAnimStateMachine00(lua_State* tolua_S)
+/* method: GetMoveASM of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetMoveASM00
+static int tolua_ClientToLua_EntityObject_GetMoveASM00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -4194,17 +4226,49 @@ static int tolua_ClientToLua_EntityObject_GetAnimStateMachine00(lua_State* tolua
  {
   EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAnimStateMachine'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMoveASM'", NULL);
 #endif
   {
-   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetAnimStateMachine();
+   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetMoveASM();
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::AnimationStateMachine");
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetAnimStateMachine'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'GetMoveASM'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetWeaponASM of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetWeaponASM00
+static int tolua_ClientToLua_EntityObject_GetWeaponASM00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetWeaponASM'", NULL);
+#endif
+  {
+   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetWeaponASM();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::AnimationStateMachine");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetWeaponASM'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7452,6 +7516,70 @@ static int tolua_ClientToLua_GameManager_getSpecifyAgents00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getTimeInMillis of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getTimeInMillis00
+static int tolua_ClientToLua_GameManager_getTimeInMillis00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTimeInMillis'", NULL);
+#endif
+  {
+   long long tolua_ret = (long long)  self->getTimeInMillis();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTimeInMillis'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTimeInSeconds of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getTimeInSeconds00
+static int tolua_ClientToLua_GameManager_getTimeInSeconds00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTimeInSeconds'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->getTimeInSeconds();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTimeInSeconds'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* Open function */
 TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
 {
@@ -7842,6 +7970,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"Init",tolua_ClientToLua_Fancy_Animation_Init00);
     tolua_function(tolua_S,"Clear",tolua_ClientToLua_Fancy_Animation_Clear00);
     tolua_function(tolua_S,"SetEnabled",tolua_ClientToLua_Fancy_Animation_SetEnabled00);
+    tolua_function(tolua_S,"SetLooping",tolua_ClientToLua_Fancy_Animation_SetLooping00);
     tolua_function(tolua_S,"AddTime",tolua_ClientToLua_Fancy_Animation_AddTime00);
     tolua_function(tolua_S,"GetTime",tolua_ClientToLua_Fancy_Animation_GetTime00);
     tolua_function(tolua_S,"GetLength",tolua_ClientToLua_Fancy_Animation_GetLength00);
@@ -7866,7 +7995,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_EntityObject_GetPosition00);
    tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
    tolua_function(tolua_S,"GetAnimation",tolua_ClientToLua_EntityObject_GetAnimation00);
-   tolua_function(tolua_S,"GetAnimStateMachine",tolua_ClientToLua_EntityObject_GetAnimStateMachine00);
+   tolua_function(tolua_S,"GetMoveASM",tolua_ClientToLua_EntityObject_GetMoveASM00);
+   tolua_function(tolua_S,"GetWeaponASM",tolua_ClientToLua_EntityObject_GetWeaponASM00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxObject","SandboxObject","EntityObject",NULL);
   tolua_beginmodule(tolua_S,"SandboxObject");
@@ -7977,6 +8107,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAllObjects",tolua_ClientToLua_GameManager_getAllObjects00);
    tolua_function(tolua_S,"getAllAgents",tolua_ClientToLua_GameManager_getAllAgents00);
    tolua_function(tolua_S,"getSpecifyAgents",tolua_ClientToLua_GameManager_getSpecifyAgents00);
+   tolua_function(tolua_S,"getTimeInMillis",tolua_ClientToLua_GameManager_getTimeInMillis00);
+   tolua_function(tolua_S,"getTimeInSeconds",tolua_ClientToLua_GameManager_getTimeInSeconds00);
   tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

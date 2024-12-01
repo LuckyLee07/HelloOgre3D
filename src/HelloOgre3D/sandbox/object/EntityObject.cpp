@@ -7,13 +7,14 @@
 #include "manager/SandboxMgr.h"
 #include "animation/Animation.h"
 #include "animation/AnimationStateMachine.h"
+#include "game/GameManager.h"
 
 using namespace Ogre;
 
 
 EntityObject::EntityObject() : m_pSceneNode(nullptr), m_pEntity(nullptr)
 {
-	m_asm = new Fancy::AnimationStateMachine();
+
 }
 
 EntityObject::EntityObject(const Ogre::String& meshFile)
@@ -24,8 +25,6 @@ EntityObject::EntityObject(const Ogre::String& meshFile)
 	m_pSceneNode = pRootScene->createChildSceneNode();
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
 	m_pSceneNode->attachObject(m_pEntity);
-
-	m_asm = new Fancy::AnimationStateMachine();
 }
 
 EntityObject::~EntityObject()
@@ -33,12 +32,17 @@ EntityObject::~EntityObject()
 	m_pEntity = nullptr;
 	m_pSceneNode = nullptr;
 
-	delete m_asm; //先清掉asm再清anim
-
-	auto iter = m_animations.begin();
-	for (; iter != m_animations.end(); iter++)
+	auto asmsIter = m_asms.begin();
+	for (; asmsIter != m_asms.end(); asmsIter++)
 	{
-		delete iter->second;
+		delete asmsIter->second;
+	}
+	m_asms.clear();
+	
+	auto animIter = m_animations.begin();
+	for (; animIter != m_animations.end(); animIter++)
+	{
+		delete animIter->second;
 	}
 	m_animations.clear();
 }
@@ -48,9 +52,13 @@ void EntityObject::Initialize()
 
 }
 
-void EntityObject::update(int deltaMsec)
+void EntityObject::update(int deltaInMillis)
 {
-	m_asm->Update(deltaMsec);
+	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
+	for (auto iter = m_asms.begin(); iter != m_asms.end(); iter++)
+	{
+		iter->second->Update(deltaInMillis, currTimeInMillis);
+	}
 }
 
 void EntityObject::setPosition(const Ogre::Vector3& position)
@@ -87,7 +95,7 @@ Ogre::Entity* EntityObject::getDetachEntity()
 	return m_pEntity;
 }
 
-Fancy::Animation* EntityObject::GetAnimation(const Ogre::String& animationName)
+Fancy::Animation* EntityObject::GetAnimation(const char* animationName)
 {
 	auto iter = m_animations.find(animationName);
 	if (iter != m_animations.end())
@@ -103,7 +111,20 @@ Fancy::Animation* EntityObject::GetAnimation(const Ogre::String& animationName)
 	return m_animations[animationName];
 }
 
-Fancy::AnimationStateMachine* EntityObject::GetAnimStateMachine()
+Fancy::AnimationStateMachine* EntityObject::GetMoveASM()
 {
-	return m_asm;
+	if (m_asms.find("move") == m_asms.end())
+	{
+		m_asms["move"] = new Fancy::AnimationStateMachine();
+	}
+	return m_asms["move"];
+}
+
+Fancy::AnimationStateMachine* EntityObject::GetWeaponASM()
+{
+	if (m_asms.find("weapon") == m_asms.end())
+	{
+		m_asms["weapon"] = new Fancy::AnimationStateMachine();
+	}
+	return m_asms["weapon"];
 }

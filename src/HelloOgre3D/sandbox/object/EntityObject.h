@@ -35,8 +35,9 @@ public:
 	
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
-	Fancy::Animation* GetAnimation(const Ogre::String& animationName);
-	Fancy::AnimationStateMachine* GetAnimStateMachine();
+	Fancy::Animation* GetAnimation(const char* animationName);
+	Fancy::AnimationStateMachine* GetMoveASM();
+	Fancy::AnimationStateMachine* GetWeaponASM();
 	//tolua_end
 
 	Ogre::Entity* getEntity() { return m_pEntity; }
@@ -47,8 +48,8 @@ protected:
 	Ogre::SceneNode* m_pSceneNode;
 	Ogre::Entity* m_pEntity;
 
-	Fancy::AnimationStateMachine* m_asm;
 	std::unordered_map<std::string, Fancy::Animation*> m_animations;
+	std::unordered_map<std::string, Fancy::AnimationStateMachine*> m_asms;
 }; //tolua_exports
 
 #endif  // __Entity_OBJECT__

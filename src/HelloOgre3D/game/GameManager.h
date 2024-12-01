@@ -50,6 +50,9 @@ public:
 	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
+
+	long long getTimeInMillis();
+	Ogre::Real getTimeInSeconds();
 	//tolua_end
 
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
@@ -91,6 +94,8 @@ private:
 	Gorilla::Screen* m_pUIScene;
 	Gorilla::MarkupText* m_pMarkupText;
 	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
+
+	long long m_SimulationTime; // 运行时间
 
 }; //tolua_exports
 

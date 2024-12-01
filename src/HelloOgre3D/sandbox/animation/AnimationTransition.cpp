@@ -12,4 +12,24 @@ namespace Fancy
 	{
 
 	}
+
+	std::string AnimationTransition::getBlendCurve()
+	{
+		return m_blendCurve;
+	}
+
+	float AnimationTransition::getDuration()
+	{
+		return m_duration;
+	}
+
+	float AnimationTransition::getBlendInWindow()
+	{
+		return m_blendInWindow;
+	}
+
+	float AnimationTransition::getBlendOutWindow()
+	{
+		return m_blendOutWindow;
+	}
 }

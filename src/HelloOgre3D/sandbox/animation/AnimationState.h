@@ -11,11 +11,14 @@ namespace Fancy
     public:
         AnimationState(const std::string& name, Animation* animation, bool looping = false, float rate = 1.0f);
         ~AnimationState();
+        
+        const std::string& GetName() const;
+        float AnimationState::getRate() const;
 
-        const std::string& GetName();
+    public:
+        Animation* m_pAnimation;
 
     private:
-        Animation* m_pAnimation;
         std::string m_stateName;
         bool m_looping;
         float m_rate;

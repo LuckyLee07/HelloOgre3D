@@ -30,6 +30,11 @@ namespace Fancy
 		m_pAnimState->setEnabled(enable);
 	}
 
+	void Animation::SetLooping(bool looping)
+	{
+		m_pAnimState->setLoop(looping);
+	}
+
 	void Animation::AddTime(float deltaTime)
 	{
 		m_pAnimState->addTime(deltaTime);
