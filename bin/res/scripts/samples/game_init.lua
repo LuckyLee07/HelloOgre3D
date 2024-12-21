@@ -1,9 +1,8 @@
 
 require("res.scripts.base.gui")
-require("res.scripts.base.agent")
 
-require("res.scripts.samples.Sandbox1")
---require("res.scripts.samples.Sandbox2")
+--require("res.scripts.samples.Sandbox1")
+require("res.scripts.samples.Sandbox2")
 --require("res.scripts.samples.Sandbox3")
 --require("res.scripts.samples.Sandbox4")
 
@@ -15,29 +14,25 @@ _G.__init__ = function(sec, msec)
 	LuaPanda.start("127.0.0.1", 8818)
 
 	-- 设置LuaGC垃圾回收
-	local gc_worker = function()
-		local count = collectgarbage('count')
-		local step = 500
-		if count >= 3 * 1024 then
-			collectgarbage('setstepmul', step * 2)
-		elseif count >= 2 * 1024 then
-			collectgarbage('setstepmul', step * 1)
-		elseif count >= 1 * 1024 then
-			collectgarbage('setstepmul', step * 0.5)
-		else
-			collectgarbage('setstepmul', step * 0.1)
-		end
-		local stepsize = 256
-		local ok = collectgarbage('step', stepsize)
-	end
-	threadpool:timer(99999999, 3, gc_worker)
-
-	threadpool:delay(3.0, function()
-		print('Fxll========>>>222', getFormatTime(os.time()))
-	end)
 	threadpool:work(function()
-		threadpool:wait(3)
-		print('Fxll========>>>333', getFormatTime(os.time()))
+		while true do 
+			local count = collectgarbage('count')
+			local step = 500
+			if count >= 3 * 1024 then
+				collectgarbage('setstepmul', step * 2)
+			elseif count >= 2 * 1024 then
+				collectgarbage('setstepmul', step * 1)
+			elseif count >= 1 * 1024 then
+				collectgarbage('setstepmul', step * 0.5)
+			else
+				collectgarbage('setstepmul', step * 0.1)
+			end
+			local stepsize = 256
+			local ok = collectgarbage('step', stepsize)
+			--print('gc step mem:', math.floor(count/1024), '->', math.floor(collectgarbage('count')/1024), ' step finish?', ok)
+			print('Fxll========>>>333', getFormatTime(os.time()))
+			threadpool:wait(100)
+		end
 	end)
 end
 

@@ -1,4 +1,6 @@
 
+require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
+
 local textSize = {w = 300, h = 300}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
@@ -12,15 +14,12 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug" .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
-        "Num1: melee animation" .. GUI.MarkupNewline ..
-        "Num2: sniper reload animation" .. GUI.MarkupNewline ..
-        "Num3: sniper transform to smg animation" .. GUI.MarkupNewline ..
-        "Num4: smg transform to sniper animation" .. GUI.MarkupNewline ..
-        "Num5: fire animation" .. GUI.MarkupNewline ..
-        "Num6: run forward animation" .. GUI.MarkupNewline ..
-        "Num7: run backward animation" .. GUI.MarkupNewline ..
-        "Num8: death animation" .. GUI.MarkupNewline ..
-        "Num9: headshot animation" .. GUI.MarkupNewline ;
+        "Switch Agents to:" .. GUI.MarkupNewline ..
+        "  Num 1: idle state" .. GUI.MarkupNewline ..
+        "  Num 2: shooting state" .. GUI.MarkupNewline ..
+        "  Num 3: moving state" .. GUI.MarkupNewline ..
+        "  Num 4: death state" .. GUI.MarkupNewline ..
+        "  Num 5: stand/crouch stance" .. GUI.MarkupNewline;
 
 local weaponState = "sniper"
 
@@ -30,51 +29,19 @@ function EventHandle_Keyboard(keycode, pressed)
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
         local camera = Sandbox:GetCamera();
-        camera:setPosition(Vector3(0, 1, -3));
-        camera:setOrientation(GetForward(Vector3(0, 0, -1)));
+        camera:setPosition(Vector3(-17, 10, 0));
+        camera:setOrientation(GetForward(Vector3(-145, -50, -150)));
     elseif (keycode == OIS.KC_F2) then
         local isShow = TextComponent:isVisible()
         TextComponent:setVisible(not isShow)
-    elseif (keycode == OIS.KC_F12) then
-        Sandbox:CallFile("res/scripts/gui.lua")
-        Sandbox:CallFile("res/scripts/agent.lua")
-
-    elseif (keycode == OIS.KC_1) then
-        soldierAsm:RequestState("melee")
-    elseif (keycode == OIS.KC_2) then
-        if weaponState == "sniper" and soldierAsm:RequestState("reload") then 
-            weaponAsm:RequestState("sniper_reload")
-        end
-    elseif (keycode == OIS.KC_3) then
-        if weaponState == "sniper" then 
-            if soldierAsm:RequestState("smg_transform") then 
-                weaponAsm:RequestState("smg_transform")
-                weaponState = "smg"
-            end
-        end
-    elseif (keycode == OIS.KC_4) then
-        if weaponState == "smg" then 
-            if soldierAsm:RequestState("sniper_transform") then 
-                weaponAsm:RequestState("sniper_transform")
-                weaponState = "sniper"
-            end
-        end
-    elseif (keycode == OIS.KC_5) then
-        soldierAsm:RequestState("fire")
-    elseif (keycode == OIS.KC_6) then
-        soldierAsm:RequestState("run_forward")
-    elseif (keycode == OIS.KC_7) then
-        soldierAsm:RequestState("run_backward")
-    elseif (keycode == OIS.KC_8) then
-        soldierAsm:RequestState("dead")
-    elseif (keycode == OIS.KC_9) then
-        soldierAsm:RequestState("dead_headshot")
-    elseif (keycode == OIS.KC_SPACE) then
+    elseif (keycode == OIS.KC_F3) then
+        
+    elseif (keycode == OIS.KC_F4) then
+        
     end
 end
 
 function EventHandle_Mouse(ctype)
-
 end
 
 function EventHandle_WindowResized(width, height)
