@@ -13,6 +13,17 @@ _G.__init__ = function(sec, msec)
 	-- 初始化LuaPanda
 	LuaPanda.start("127.0.0.1", 8818)
 
+	-- 启动GC释放tolua的内存
+	threadpool:delay(5, function()
+		_G.__gc__()
+	end)
+end
+
+_G.__tick__ = function(detalMsec)
+	threadpool:update(detalMsec)
+end
+
+_G.__gc__ = function()
 	-- 设置LuaGC垃圾回收
 	threadpool:work(function()
 		while true do 
@@ -29,13 +40,9 @@ _G.__init__ = function(sec, msec)
 			end
 			local stepsize = 256
 			local ok = collectgarbage('step', stepsize)
-			--print('gc step mem:', math.floor(count/1024), '->', math.floor(collectgarbage('count')/1024), ' step finish?', ok)
-			print('Fxll========>>>333', getFormatTime(os.time()))
-			threadpool:wait(100)
+			--print('__gc__+++++++++++++++++++>>>', getFormatTime(os.time()))
+			--print('gc step mem:', math.floor(count/1024), ' step finish?', ok)
+			threadpool:wait(3)
 		end
 	end)
-end
-
-_G.__tick__ = function(sec, msec)
-	threadpool:update(sec * 1000 + msec)
 end
