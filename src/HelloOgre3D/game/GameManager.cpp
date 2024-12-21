@@ -112,9 +112,9 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
-	struct timeval stNow;
-	gettimeofday(&stNow, NULL);
-	m_pScriptVM->callFunction("__tick__", "ii", stNow.tv_sec, stNow.tv_usec / 1000);
+	//struct timeval stNow;
+	//gettimeofday(&stNow, NULL);
+	m_pScriptVM->callFunction("__tick__", "i", deltaMilliseconds);
 
 	m_SimulationTime += deltaMilliseconds;
 

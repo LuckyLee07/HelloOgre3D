@@ -7,10 +7,6 @@ function Vector3(...)
 	return Ogre.Vector3(unpack{...})
 end
 
-function ColourValue(...)
-	return Ogre.ColourValue(unpack{...})
-end
-
 function Quaternion(xr, yr, zr)
 	return QuaternionFromRotationDegrees(xr, yr, zr)
 end
@@ -97,11 +93,17 @@ function Vector.tostring(vec3)
 	return string.format('(%.2f, %.2f, %.2f)', vec3.x, vec3.y, vec3.z)
 end
 
-UtilColors = {};
-UtilColors.Black = ColourValue(0, 0, 0);
-UtilColors.Blue = ColourValue(0, 0, 1);
-UtilColors.Green = ColourValue(0, 1, 0);
-UtilColors.Orange = ColourValue(1, 0.5, 0);
-UtilColors.Red = ColourValue(1, 0, 0);
-UtilColors.Yellow = ColourValue(1, 1, 0);
-UtilColors.White = ColourValue(1, 1, 1);
+function ColourValue(...)
+	return Ogre.ColourValue(unpack{...})
+end
+
+UtilColors = {
+	Black 	= 	ColourValue(0, 0, 0);
+	Blue 	= 	ColourValue(0, 0, 1);
+	Green 	= 	ColourValue(0, 1, 0);
+	Orange 	= 	ColourValue(1, 0.5, 0);
+	Red 	= 	ColourValue(1, 0, 0);
+	Yellow 	= 	ColourValue(1, 1, 0);
+	White 	= 	ColourValue(1, 1, 1);
+};
+	

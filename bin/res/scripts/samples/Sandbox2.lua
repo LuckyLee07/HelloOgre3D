@@ -1,3 +1,5 @@
+require("res.scripts.samples.chapter2.BaseAgent.lua")
+
 local textSize = {w = 300, h = 180}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
             "W/A/S/D: to move" .. GUI.MarkupNewline ..
