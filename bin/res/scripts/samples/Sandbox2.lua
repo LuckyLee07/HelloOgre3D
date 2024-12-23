@@ -15,10 +15,9 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
             "F7: toggle physics debug";
 
 Shoot_BoxCount = 0
-local TextComponent = nil
 function Sandbox_Initialize(ctype)
     GUI_CreateCameraAndProfileInfo()
-    TextComponent = GUI_CreateSandboxText(infoText, textSize)
+    GUI_CreateSandboxText(infoText, textSize)
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
@@ -97,9 +96,6 @@ function EventHandle_Keyboard(keycode, pressed)
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(7, 5, -18));
         camera:setOrientation(Quaternion(-160, 0, -180));
-    elseif (keycode == OIS.KC_F2) then
-        local isShow = TextComponent:isVisible()
-        TextComponent:setVisible(not isShow)
     elseif (keycode == OIS.KC_F12) then
         Sandbox:CallFile("res/scripts/gui.lua")
         Sandbox:CallFile("res/scripts/agent.lua")
@@ -114,11 +110,6 @@ end
 
 function EventHandle_WindowResized(width, height)
     GUI_WindowResized(width, height)
-    
-    local dimension = TextComponent:GetDimension()
-    local ui_posx = width - dimension.x - 20;
-    local ui_posy = height - dimension.y - 35;
-    TextComponent:setPosition(Vector2(ui_posx, ui_posy))
 end
 
 function Sandbox_ShootBox()

@@ -32,9 +32,6 @@ function EventHandle_Keyboard(keycode, pressed)
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(0, 1, -3));
         camera:setOrientation(GetForward(Vector3(0, 0, -1)));
-    elseif (keycode == OIS.KC_F2) then
-        local isShow = TextComponent:isVisible()
-        TextComponent:setVisible(not isShow)
     elseif (keycode == OIS.KC_F12) then
         Sandbox:CallFile("res/scripts/gui.lua")
         Sandbox:CallFile("res/scripts/agent.lua")
@@ -79,18 +76,11 @@ end
 
 function EventHandle_WindowResized(width, height)
     GUI_WindowResized(width, height)
-    
-    local dimension = TextComponent:GetDimension()
-    local ui_posx = width - dimension.x - 20;
-    local ui_posy = height - dimension.y - 35;
-    TextComponent:setPosition(Vector2(ui_posx, ui_posy))
 end
 
-local TextComponent = nil
 function Sandbox_Initialize(ctype)
     GUI_CreateCameraAndProfileInfo()
-
-    TextComponent = GUI_CreateSandboxText(infoText, textSize)
+    GUI_CreateSandboxText(infoText, textSize)
 
     -- Create The Sky.
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));

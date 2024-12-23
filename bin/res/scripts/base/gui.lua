@@ -49,7 +49,7 @@ GUI = {
 
 local cameraInfoPanel = nil
 local profileInfoPanel = nil
-
+local chapterInfoPanel = nil
 
 local __averageRenderTimes__ = {}
 local __averageSimTimes__ = {}
@@ -81,7 +81,7 @@ end
 function GUI_CreateCameraInfo()
 	local ui_width, ui_height = 300, 150;
     local screenWidth = GameManager:getScreenWidth()
-    local screenHeight = GameManager:getScreenHeight()
+    --local screenHeight = GameManager:getScreenHeight()
 
     local uiComponent = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;
@@ -102,7 +102,7 @@ end
 function GUI_CreateProfileInfo()
 	local ui_width, ui_height = 300, 125;
     local screenWidth = GameManager:getScreenWidth()
-    local screenHeight = GameManager:getScreenHeight()
+    --local screenHeight = GameManager:getScreenHeight()
 
     local uiComponent = Sandbox:CreateUIComponent()
     local ui_posx = screenWidth - ui_width - 20;
@@ -121,7 +121,7 @@ end
 
 function GUI_UpdateCameraInfo()
 	if not cameraInfoPanel or not cameraInfoPanel:isVisible() then
-	 	return 
+        return
 	end
 	
 	local forward = Sandbox:GetCameraForward()
@@ -201,7 +201,10 @@ end
 function GUI_HandleKeyEvent(keycode, pressed)
 	if not pressed then return end
 
-	if (keycode == OIS.KC_F5) then
+    if (keycode == OIS.KC_F2) then
+        local isShow = chapterInfoPanel:isVisible()
+        chapterInfoPanel:setVisible(not isShow)
+    elseif (keycode == OIS.KC_F5) then
         local isShow = profileInfoPanel:isVisible()
         profileInfoPanel:setVisible(not isShow)
     elseif (keycode == OIS.KC_F6) then
@@ -223,6 +226,11 @@ function GUI_WindowResized(width, height)
     local ui_posx2 = width - dimension2.x - 20;
     local ui_posy2 = 20;
     profileInfoPanel:setPosition(Vector2(ui_posx2, ui_posy2))
+
+    local dimension = chapterInfoPanel:GetDimension()
+    local ui_posx = width - dimension.x - 20;
+    local ui_posy = height - dimension.y - 35;
+    chapterInfoPanel:setPosition(Vector2(ui_posx, ui_posy))
 end
 
 
@@ -257,27 +265,6 @@ function GUI_CreateSandboxText(infoText, boxSize)
         "F7: toggle physics debug"
     sandboxMenuInfo:setMarkupText((infoText and infoText or markupText))
 
+    chapterInfoPanel = sandboxMenuInfo
     return sandboxMenuInfo
-end
-
-function GUI_CreateSandbox3Text()
-    local ui_width, ui_height = 300, 180;
-    local screenWidth = GameManager:getScreenWidth()
-    local screenHeight = GameManager:getScreenHeight()
-
-    local uiComponent = Sandbox:CreateUIComponent()
-    local ui_posx = screenWidth - ui_width - 20;
-    local ui_posy = screenHeight - ui_height - 35;
-    uiComponent:setPosition(Vector2(ui_posx, ui_posy))
-    uiComponent:setDimension(Vector2(ui_width, ui_height))
-    uiComponent:setTextMargin(10, 10);
-
-    local startColor = GUI.Palette.DarkBlueGradient
-    local endenColor = GUI.Palette.DarkBlackGradient
-    uiComponent:setGradientColor(Gorilla.Gradient_NorthSouth, startColor, endenColor)
-
-    
-    uiComponent:setMarkupText(markupText)
-
-    return uiComponent
 end

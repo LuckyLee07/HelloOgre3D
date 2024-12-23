@@ -182,6 +182,12 @@ void GameManager::HandleKeyPress(OIS::KeyCode keycode, unsigned int key)
 void GameManager::HandleKeyRelease(OIS::KeyCode keycode, unsigned int key)
 {
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
+
+	for (auto iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	{
+		if (AgentObject* pAgent = *iter)
+			m_pScriptVM->callFunction("Agent_EventHandle", "iu[AgentObject]", keycode, pAgent);
+	}
 }
 
 void GameManager::HandleMouseMove(int width, int height)
@@ -287,5 +293,5 @@ long long GameManager::getTimeInMillis()
 
 Ogre::Real GameManager::getTimeInSeconds()
 {
-	return getTimeInMillis() / 1000;
+	return (Ogre::Real)(getTimeInMillis() / 1000);
 }
