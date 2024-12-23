@@ -10,7 +10,7 @@
 #include "object/AgentObject.h"
 #include "object/UIComponent.h"
 #include "object/EntityObject.h"
-#include "object/SandboxObject.h"
+#include "object/BlockObject.h"
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 
@@ -43,11 +43,11 @@ public:
 	//tolua_begin
 	Ogre::Real getScreenWidth();
 	Ogre::Real getScreenHeight();
-	unsigned int getObjectCount();
+	unsigned int getBlockCount();
 
-	const std::vector<EntityObject*>& getAllEntitys() { return m_pEntitys; }
-	const std::vector<SandboxObject*>& getAllObjects() { return m_pObjects; }
-	const std::vector<AgentObject*>& getAllAgents() { return m_pAgents; }
+	const std::vector<EntityObject*>& getAllEntitys() { return m_entitys; }
+	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
+	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 
@@ -59,7 +59,7 @@ public:
 
 	UIComponent* createUIComponent(unsigned int index);
 	void addEntityObject(EntityObject* pEntityObject);
-	void addSandboxObject(SandboxObject* pSandboxObject);
+	void addBlockObject(BlockObject* pBlockObject);
 	void addAgentObject(AgentObject* pAgentObject);
 
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
@@ -86,10 +86,10 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 	
 	unsigned int m_objectIndex;
-	std::vector<AgentObject*> m_pAgents;
-	std::vector<EntityObject*> m_pEntitys;
-	std::vector<SandboxObject*> m_pObjects;
-	std::vector<UIComponent*> m_pUIComps;
+	std::vector<AgentObject*> m_agents;
+	std::vector<EntityObject*> m_entitys;
+	std::vector<BlockObject*> m_blocks;
+	std::vector<UIComponent*> m_uicomps;
 	
 	Gorilla::Screen* m_pUIScene;
 	Gorilla::MarkupText* m_pMarkupText;

@@ -52,8 +52,7 @@ NewSandboxUtilities = {
 	}
 }
 
-
-function CreateSandboxObject(objectName, position, rotation)
+function CreateBlockObject(objectName, position, rotation)
     if NewSandboxUtilities.Objects[objectName] == nil then
         return;
     end
@@ -61,7 +60,7 @@ function CreateSandboxObject(objectName, position, rotation)
     local filePath = NewSandboxUtilities.Objects[objectName].file;
     local fileMass = NewSandboxUtilities.Objects[objectName].mass;
 
-    local object = Sandbox:CreateSandboxObject(filePath);
+    local object = Sandbox:CreateBlockObject(filePath);
     if fileMass >= 0 then object:setMass(fileMass); end
     
     if position ~= nil then object:setPosition(position); end
@@ -106,4 +105,3 @@ UtilColors = {
 	Yellow 	= 	ColourValue(1, 1, 0);
 	White 	= 	ColourValue(1, 1, 1);
 };
-	

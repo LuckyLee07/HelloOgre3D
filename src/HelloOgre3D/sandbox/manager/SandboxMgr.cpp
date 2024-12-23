@@ -448,7 +448,7 @@ Ogre::Light* SandboxMgr::CreateDirectionalLight(const Ogre::Vector3& direction)
     return lightEntity;
 }
 
-void SandboxMgr::setMaterial(SandboxObject* pObject, const Ogre::String& materialName)
+void SandboxMgr::setMaterial(BlockObject* pObject, const Ogre::String& materialName)
 {
     assert(pObject != nullptr);
     setMaterial(pObject->getSceneNode(), materialName);
@@ -491,24 +491,24 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
     return g_GameManager->setMarkupColor(index, color);
 }
 
-SandboxObject* SandboxMgr::CreatePlane(float length, float width)
+BlockObject* SandboxMgr::CreatePlane(float length, float width)
 {
     Ogre::SceneNode* planeNode = SandboxMgr::CreateNodePlane(length, width);
 
     btRigidBody* planeRigidBody = SandboxMgr::CreateRigidBodyPlane(btVector3(0, 1.0f, 0), 0);
 
-    SandboxObject* pObject = new SandboxObject(planeNode, planeRigidBody);
+    BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
 
-    g_GameManager->addSandboxObject(pObject);
+    g_GameManager->addBlockObject(pObject);
 
     return pObject;
 }
 
-SandboxObject* SandboxMgr::CreateSandboxObject(const Ogre::String& meshFilePath)
+BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshFilePath)
 {
-    SandboxObject* pObject = new SandboxObject(meshFilePath);
+    BlockObject* pObject = new BlockObject(meshFilePath);
 
-    g_GameManager->addSandboxObject(pObject);
+    g_GameManager->addBlockObject(pObject);
 
     return pObject;
 }
@@ -533,8 +533,12 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
     Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
     Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
-    Ogre::SceneNode* capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
-    this->setMaterial(capsuleNode, "Ground2");
+    Ogre::SceneNode* capsuleNode = nullptr;
+    if (agentType != AGENT_OBJ_NONE)
+    {
+		capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
+		this->setMaterial(capsuleNode, "Ground2");
+    }
 
     btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
     capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));

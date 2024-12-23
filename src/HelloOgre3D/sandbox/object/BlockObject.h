@@ -1,5 +1,5 @@
-#ifndef __SANDBOX_OBJECT__
-#define __SANDBOX_OBJECT__
+#ifndef __BLOCK_OBJECT__
+#define __BLOCK_OBJECT__
 
 #include "EntityObject.h"
 #include "OgreString.h"
@@ -13,15 +13,15 @@ namespace Ogre {
 
 class btRigidBody;
 
-class SandboxObject : public EntityObject //tolua_exports
+class BlockObject : public EntityObject //tolua_exports
 	, private OpenSteer::SphericalObstacle
 { //tolua_exports
 	friend class AgentObject;
 public:
-	SandboxObject(const Ogre::String& meshFile);
-	SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
+	BlockObject(const Ogre::String& meshFile);
+	BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
 
-	virtual ~SandboxObject();
+	virtual ~BlockObject();
 
 	void Initialize() override;
 
@@ -60,4 +60,4 @@ private:
 
 }; //tolua_exports
 
-#endif  // __SANDBOX_OBJECT__
+#endif  // __BLOCK_OBJECT__

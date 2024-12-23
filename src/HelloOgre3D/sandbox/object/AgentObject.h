@@ -24,7 +24,7 @@ enum AGENT_OBJ_TYPE
 //tolua_end
 
 class btRigidBody;
-class SandboxObject;
+class BlockObject;
 class AgentObject : public BaseObject //tolua_exports
 	, private OpenSteer::SteerLibraryMixin<OpenSteer::AbstractVehicle>
 { //tolua_exports
@@ -109,7 +109,7 @@ public:
 	Ogre::Vector3 ForceToFollowPath(AgentPath& path, Ogre::Real predictionTime);
 	
 	Ogre::Vector3 ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime);
-	Ogre::Vector3 ForceToAvoidObjects(const std::vector<SandboxObject*>& objects, Ogre::Real predictionTime);
+	Ogre::Vector3 ForceToAvoidObjects(const std::vector<BlockObject*>& objects, Ogre::Real predictionTime);
 
 	void update(int deltaMilisec) override;
 

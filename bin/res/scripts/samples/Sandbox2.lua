@@ -80,9 +80,9 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateProfileInfo()
 
     -- std::vector not lua table
-    local allObjects = GameManager:getAllObjects();
-    for index = 1, allObjects:size()-1 do
-        local pObject = allObjects[index];
+    local allBlocks = GameManager:getAllBlocks();
+    for index = 1, allBlocks:size()-1 do
+        local pObject = allBlocks[index];
         --DebugDrawer:drawSquare(pObject:GetPosition(), pObject:GetRadius(), ColourValue(1, 0, 0))
     end
 end
@@ -114,7 +114,7 @@ end
 
 function Sandbox_ShootBox()
     Shoot_BoxCount = Shoot_BoxCount + 1
-    local object = CreateSandboxObject("modular_block")
+    local object = CreateBlockObject("modular_block")
 
     local cameraPosition = Sandbox:GetCameraPosition()
     local cameraForward = Sandbox:GetCameraForward()

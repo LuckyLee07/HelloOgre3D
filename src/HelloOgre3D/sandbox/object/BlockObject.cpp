@@ -1,4 +1,4 @@
-#include "SandboxObject.h"
+#include "BlockObject.h"
 #include "OgreSceneNode.h"
 #include "OgreEntity.h"
 #include "OgreSceneManager.h"
@@ -9,7 +9,7 @@
 
 using namespace Ogre;
 
-SandboxObject::SandboxObject(const Ogre::String& meshFile)
+BlockObject::BlockObject(const Ogre::String& meshFile)
 	: EntityObject(meshFile), m_pRigidBody(nullptr)
 {
 	if (m_pEntity == nullptr)
@@ -23,7 +23,7 @@ SandboxObject::SandboxObject(const Ogre::String& meshFile)
 	m_pRigidBody->setUserPointer(this);
 }
 
-SandboxObject::SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
+BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	: EntityObject(), m_pRigidBody(pRigidBody)
 {
 	m_pEntity = nullptr;
@@ -33,7 +33,7 @@ SandboxObject::SandboxObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBod
 		m_pRigidBody->setUserPointer(this);
 }
 
-SandboxObject::~SandboxObject()
+BlockObject::~BlockObject()
 {
 	m_pEntity = nullptr;
 	m_pSceneNode = nullptr;
@@ -44,12 +44,12 @@ SandboxObject::~SandboxObject()
 	m_pRigidBody = nullptr;
 }
 
-void SandboxObject::Initialize()
+void BlockObject::Initialize()
 {
 
 }
 
-void SandboxObject::setMass(const Ogre::Real mass)
+void BlockObject::setMass(const Ogre::Real mass)
 {
 	btVector3 localInertia(0, 0, 0);
 	m_pRigidBody->getCollisionShape()->calculateLocalInertia(mass, localInertia);
@@ -58,7 +58,7 @@ void SandboxObject::setMass(const Ogre::Real mass)
 	m_pRigidBody->activate(true);
 }
 
-Ogre::Real SandboxObject::getMass() const
+Ogre::Real BlockObject::getMass() const
 {
 	btScalar inverseMass = m_pRigidBody->getInvMass();
 
@@ -68,7 +68,7 @@ Ogre::Real SandboxObject::getMass() const
 	return 1.0f / inverseMass;
 }
 
-void SandboxObject::setPosition(const Ogre::Vector3& position)
+void BlockObject::setPosition(const Ogre::Vector3& position)
 {
 	btVector3 btPosition(position.x, position.y, position.z);
 	btTransform transform = m_pRigidBody->getWorldTransform();
@@ -80,13 +80,13 @@ void SandboxObject::setPosition(const Ogre::Vector3& position)
 	this->updateWorldTransform();
 }
 
-Ogre::Vector3 SandboxObject::GetPosition() const
+Ogre::Vector3 BlockObject::GetPosition() const
 {
 	const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
 	return BtVector3ToVector3(position);
 }
 
-Ogre::Real SandboxObject::GetRadius() const
+Ogre::Real BlockObject::GetRadius() const
 {
 	btVector3 aabbMin;
 	btVector3 aabbMax;
@@ -95,13 +95,13 @@ Ogre::Real SandboxObject::GetRadius() const
 	return aabbMax.distance(aabbMin) / 2.0f;
 }
 
-void SandboxObject::setRotation(const Ogre::Vector3& rotation)
+void BlockObject::setRotation(const Ogre::Vector3& rotation)
 {
 	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
 	this->setOrientation(qRotation);
 }
 
-void SandboxObject::setOrientation(const Ogre::Quaternion& quaternion)
+void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
 	btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
 	btTransform transform = m_pRigidBody->getWorldTransform();
@@ -113,26 +113,26 @@ void SandboxObject::setOrientation(const Ogre::Quaternion& quaternion)
 	this->updateWorldTransform();
 }
 
-void SandboxObject::applyImpulse(const Ogre::Vector3& impulse)
+void BlockObject::applyImpulse(const Ogre::Vector3& impulse)
 {
 	btVector3 torque(impulse.x, impulse.y, impulse.z);
 	m_pRigidBody->applyCentralForce(torque);
 	m_pRigidBody->activate(true);
 }
 
-void SandboxObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
+void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 {
 	btVector3 torqueImpulse(aImpulse.x, aImpulse.y, aImpulse.z);
 	m_pRigidBody->applyTorque(torqueImpulse);
 	m_pRigidBody->activate(true);
 }
 
-void SandboxObject::update(int deltaMsec)
+void BlockObject::update(int deltaMsec)
 {
 	this->updateWorldTransform();
 }
 
-void SandboxObject::updateWorldTransform()
+void BlockObject::updateWorldTransform()
 {
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
 	m_pSceneNode->setPosition(BtVector3ToVector3(rigidBodyPos));
@@ -141,17 +141,17 @@ void SandboxObject::updateWorldTransform()
 	m_pSceneNode->setOrientation(BtQuaternionToQuaternion(rigidBodyRotation));
 }
 
-OpenSteer::Vec3 SandboxObject::getPosition() const
+OpenSteer::Vec3 BlockObject::getPosition() const
 {
 	return Vector3ToVec3(GetPosition());
 }
 
-float SandboxObject::getRadius() const
+float BlockObject::getRadius() const
 {
 	return GetRadius();
 }
 
-OpenSteer::Vec3 SandboxObject::steerToAvoid(const OpenSteer::AbstractVehicle& vehicle,
+OpenSteer::Vec3 BlockObject::steerToAvoid(const OpenSteer::AbstractVehicle& vehicle,
 	const float minTimeToCollision) const
 {
 	// minimum distance to obstacle before avoidance is required

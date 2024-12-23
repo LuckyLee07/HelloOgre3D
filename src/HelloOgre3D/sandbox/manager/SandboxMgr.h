@@ -5,7 +5,7 @@
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
 #include "OgreString.h"
-#include "object/SandboxObject.h"
+#include "object/BlockObject.h"
 #include "object/UIComponent.h"
 #include "object/AgentObject.h"
 
@@ -67,13 +67,13 @@ public:
 	Ogre::Light* CreateDirectionalLight(const Ogre::Vector3& rotation);
 
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
-	void setMaterial(SandboxObject* pObject, const Ogre::String& materialName);
+	void setMaterial(BlockObject* pObject, const Ogre::String& materialName);
 	
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	
-	SandboxObject* CreatePlane(float length, float width);
+	BlockObject* CreatePlane(float length, float width);
 	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
-	SandboxObject* CreateSandboxObject(const Ogre::String& meshfilePath);
+	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 

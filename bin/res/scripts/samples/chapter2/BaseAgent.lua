@@ -237,3 +237,7 @@ function Agent_Follower_Update(agent, deltaTimeInMillis)
     DebugDrawer:drawCircle(destination, targetRadius, 10, UtilColors.White);
     DebugDrawer:drawLine(position, destination, UtilColors.Green);
 end
+
+function Agent_EventHandle(agent, keycode)
+    
+end

@@ -118,22 +118,22 @@ void GameManager::Update(int deltaMilliseconds)
 
 	m_SimulationTime += deltaMilliseconds;
 
-	for (auto iter = m_pEntitys.begin(); iter != m_pEntitys.end(); iter++)
+	for (auto iter = m_entitys.begin(); iter != m_entitys.end(); iter++)
 	{
 		if (EntityObject* pObject = *iter)
 			pObject->update(deltaMilliseconds);
 	}
-	for (auto iter = m_pObjects.begin(); iter != m_pObjects.end(); iter++)
+	for (auto iter = m_blocks.begin(); iter != m_blocks.end(); iter++)
 	{
-		if (SandboxObject* pObject = *iter) 
+		if (BlockObject* pObject = *iter)
 			pObject->update(deltaMilliseconds);
 	}
-	for (auto iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
 	{
 		if (AgentObject* pAgent = *iter) 
 			pAgent->update(deltaMilliseconds);
 	}
-	for (auto iter = m_pUIComps.begin(); iter != m_pUIComps.end(); iter++)
+	for (auto iter = m_uicomps.begin(); iter != m_uicomps.end(); iter++)
 	{
 		if (UIComponent* pComponent = *iter) 
 			pComponent->update(deltaMilliseconds);
@@ -154,9 +154,9 @@ Ogre::Real GameManager::getScreenHeight()
 	return m_pUIScene->getHeight();
 }
 
-unsigned int GameManager::getObjectCount()
+unsigned int GameManager::getBlockCount()
 {
-	return m_pObjects.size();
+	return m_blocks.size();
 }
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
@@ -183,10 +183,10 @@ void GameManager::HandleKeyRelease(OIS::KeyCode keycode, unsigned int key)
 {
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
 
-	for (auto iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
 	{
 		if (AgentObject* pAgent = *iter)
-			m_pScriptVM->callFunction("Agent_EventHandle", "iu[AgentObject]", keycode, pAgent);
+			m_pScriptVM->callFunction("Agent_EventHandle", "u[AgentObject]i", pAgent, keycode);
 	}
 }
 
@@ -212,7 +212,7 @@ void GameManager::addAgentObject(AgentObject* pAgentObject)
 	pAgentObject->setObjId(objectId);
 	pAgentObject->Initialize();
 
-	m_pAgents.push_back(pAgentObject);
+	m_agents.push_back(pAgentObject);
 
 	auto rigidBody = pAgentObject->getRigidBody();
 	if (rigidBody != nullptr)
@@ -221,16 +221,16 @@ void GameManager::addAgentObject(AgentObject* pAgentObject)
 	}
 }
 
-void GameManager::addSandboxObject(SandboxObject* pSandboxObject)
+void GameManager::addBlockObject(BlockObject* pBlockObject)
 {
 	unsigned int objectId = getNextObjectId();
 
-	pSandboxObject->setObjId(objectId);
-	pSandboxObject->Initialize();
+	pBlockObject->setObjId(objectId);
+	pBlockObject->Initialize();
 
-	m_pObjects.push_back(pSandboxObject);
+	m_blocks.push_back(pBlockObject);
 
-	m_pPhysicsWorld->addRigidBody(pSandboxObject->getRigidBody());
+	m_pPhysicsWorld->addRigidBody(pBlockObject->getRigidBody());
 }
 
 void GameManager::addEntityObject(EntityObject* pEntityObject)
@@ -240,7 +240,7 @@ void GameManager::addEntityObject(EntityObject* pEntityObject)
 	pEntityObject->setObjId(objectId);
 	pEntityObject->Initialize();
 
-	m_pEntitys.push_back(pEntityObject);
+	m_entitys.push_back(pEntityObject);
 }
 
 UIComponent* GameManager::createUIComponent(unsigned int index)
@@ -249,7 +249,7 @@ UIComponent* GameManager::createUIComponent(unsigned int index)
 	{
 		UIComponent* pComponent = new UIComponent(getUILayer(index));
 		pComponent->setObjId(getNextObjectId());
-		m_pUIComps.push_back(pComponent);
+		m_uicomps.push_back(pComponent);
 
 		return pComponent;
 	}
@@ -268,13 +268,13 @@ std::vector<AgentObject*> GameManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType
 {
 	if (agentType == AGENT_OBJ_NONE)
 	{
-		return m_pAgents;
+		return m_agents;
 	}
 
 	std::vector<AgentObject*> specifyAgents;
 	
 	std::vector<AgentObject*>::iterator iter;
-	for (iter = m_pAgents.begin(); iter != m_pAgents.end(); iter++)
+	for (iter = m_agents.begin(); iter != m_agents.end(); iter++)
 	{
 		AgentObject* pAgentObject = *iter;
 		if (pAgentObject->getAgentType() == agentType)

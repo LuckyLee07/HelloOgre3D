@@ -6,7 +6,7 @@
 #include "SandboxDef.h"
 #include "GameManager.h"
 #include "ScriptLuaVM.h"
-#include "SandboxObject.h"
+#include "BlockObject.h"
 #include "opensteer/include/SteerLibrary.h"
 
 using namespace Ogre;
@@ -122,7 +122,8 @@ void AgentObject::SetForward(const Ogre::Vector3& forward)
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
 
-	m_pSceneNode->setOrientation(orientation);
+	if (m_pSceneNode != nullptr)
+		m_pSceneNode->setOrientation(orientation);
 }
 
 void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
@@ -420,8 +421,8 @@ Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
 
 Ogre::Vector3 AgentObject::ForceToAvoidObjects(Ogre::Real predictionTime)
 {
-	const std::vector<SandboxObject*>& allObjects = GetGameManager()->getAllObjects();
-	return ForceToAvoidObjects(allObjects, predictionTime);
+	const std::vector<BlockObject*>& allBlocks = GetGameManager()->getAllBlocks();
+	return ForceToAvoidObjects(allBlocks, predictionTime);
 }
 
 Ogre::Vector3 AgentObject::ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime)
@@ -438,16 +439,16 @@ Ogre::Vector3 AgentObject::ForceToAvoidAgents(const std::vector<AgentObject*>& a
 	return Vec3ToVector3(steerToAvoidNeighbors(predictionTime1, group));
 }
 
-Ogre::Vector3 AgentObject::ForceToAvoidObjects(const std::vector<SandboxObject*>& objects, Ogre::Real predictionTime)
+Ogre::Vector3 AgentObject::ForceToAvoidObjects(const std::vector<BlockObject*>& objects, Ogre::Real predictionTime)
 {
 	const static float MIN_PREDICTION_TIME = 0.1f;
 	float timeToCollision = std::max(MIN_PREDICTION_TIME, predictionTime);
 
 	OpenSteer::Vec3 avoidForce = OpenSteer::Vec3::zero;
-	std::vector<SandboxObject*>::const_iterator iter;
+	std::vector<BlockObject*>::const_iterator iter;
 	for (iter = objects.begin(); iter != objects.end(); iter++)
 	{
-		const SandboxObject* pObject = *iter;
+		const BlockObject* pObject = *iter;
 		if (pObject->getMass() > 0)
 		{
 			avoidForce += pObject->steerToAvoid(*this, timeToCollision);
@@ -494,6 +495,8 @@ void AgentObject::update(int deltaMilisec)
 
 void AgentObject::updateWorldTransform()
 {
+	if (m_pSceneNode == nullptr) return;
+	
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
 	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
 	m_pSceneNode->setPosition(position);

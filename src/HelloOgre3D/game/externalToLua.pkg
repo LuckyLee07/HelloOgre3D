@@ -4,7 +4,7 @@ namespace std
 {
 	class vector 
 	{
-		TOLUA_TEMPLATE_BIND(T, int, Ogre::Vector3, AgentObject*, SandboxObject*)
+		TOLUA_TEMPLATE_BIND(T, int, Ogre::Vector3, AgentObject*, BlockObject*)
 
 		vector();
 		~vector();

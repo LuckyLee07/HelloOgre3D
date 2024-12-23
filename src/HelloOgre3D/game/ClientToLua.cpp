@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Dec  1 13:10:14 2024.
+** Generated automatically by tolua++-1.0.92 on Tue Dec 24 01:08:48 2024.
 */
 
 #ifndef __cplusplus
@@ -24,7 +24,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/animation/Animation.h"
 #include "../sandbox/animation/AnimationStateMachine.h"
 #include "../sandbox/object/EntityObject.h"
-#include "../sandbox/object/SandboxObject.h"
+#include "../sandbox/object/BlockObject.h"
 #include "../sandbox/object/AgentObject.h"
 #include "../sandbox/manager/SandboxMgr.h"
 #include "../sandbox/debug/DebugDrawer.h"
@@ -75,9 +75,9 @@ static int tolua_collect_BaseObject (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_std__vector_SandboxObject__ (lua_State* tolua_S)
+static int tolua_collect_std__vector_BlockObject__ (lua_State* tolua_S)
 {
- std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*) tolua_tousertype(tolua_S,1,0);
+ std::vector<BlockObject*>* self = (std::vector<BlockObject*>*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -110,24 +110,24 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"BaseObject");
- tolua_usertype(tolua_S,"Ogre::Quaternion");
+ tolua_usertype(tolua_S,"std::vector<BlockObject*>");
  tolua_usertype(tolua_S,"Ogre::SceneManager");
+ tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"Fancy::Animation");
- tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
+ tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"AgentObject");
- tolua_usertype(tolua_S,"SandboxObject");
  tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
  tolua_usertype(tolua_S,"UIComponent");
- tolua_usertype(tolua_S,"std::vector<SandboxObject*>");
- tolua_usertype(tolua_S,"Ogre::Node");
  tolua_usertype(tolua_S,"btVector3");
+ tolua_usertype(tolua_S,"Ogre::Node");
+ tolua_usertype(tolua_S,"Ogre::Quaternion");
  tolua_usertype(tolua_S,"Ogre::Camera");
 }
 
@@ -985,14 +985,14 @@ static int tolua_ClientToLua_std_vector_AgentObject___push_back00(lua_State* tol
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: new of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___new00
-static int tolua_ClientToLua_std_vector_SandboxObject___new00(lua_State* tolua_S)
+/* method: new of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___new00
+static int tolua_ClientToLua_std_vector_BlockObject___new00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertable(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertable(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
@@ -1000,8 +1000,8 @@ static int tolua_ClientToLua_std_vector_SandboxObject___new00(lua_State* tolua_S
 #endif
  {
   {
-   std::vector<SandboxObject*>* tolua_ret = (std::vector<SandboxObject*>*)  Mtolua_new((std::vector<SandboxObject*>)());
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"std::vector<SandboxObject*>");
+   std::vector<BlockObject*>* tolua_ret = (std::vector<BlockObject*>*)  Mtolua_new((std::vector<BlockObject*>)());
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"std::vector<BlockObject*>");
   }
  }
  return 1;
@@ -1013,14 +1013,14 @@ static int tolua_ClientToLua_std_vector_SandboxObject___new00(lua_State* tolua_S
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: new_local of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___new00_local
-static int tolua_ClientToLua_std_vector_SandboxObject___new00_local(lua_State* tolua_S)
+/* method: new_local of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___new00_local
+static int tolua_ClientToLua_std_vector_BlockObject___new00_local(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertable(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertable(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
@@ -1028,8 +1028,8 @@ static int tolua_ClientToLua_std_vector_SandboxObject___new00_local(lua_State* t
 #endif
  {
   {
-   std::vector<SandboxObject*>* tolua_ret = (std::vector<SandboxObject*>*)  Mtolua_new((std::vector<SandboxObject*>)());
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"std::vector<SandboxObject*>");
+   std::vector<BlockObject*>* tolua_ret = (std::vector<BlockObject*>*)  Mtolua_new((std::vector<BlockObject*>)());
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"std::vector<BlockObject*>");
     tolua_register_gc(tolua_S,lua_gettop(tolua_S));
   }
  }
@@ -1042,21 +1042,21 @@ static int tolua_ClientToLua_std_vector_SandboxObject___new00_local(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: delete of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___delete00
-static int tolua_ClientToLua_std_vector_SandboxObject___delete00(lua_State* tolua_S)
+/* method: delete of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___delete00
+static int tolua_ClientToLua_std_vector_BlockObject___delete00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  std::vector<BlockObject*>* self = (std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'delete'", NULL);
 #endif
@@ -1071,21 +1071,21 @@ static int tolua_ClientToLua_std_vector_SandboxObject___delete00(lua_State* tolu
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: clear of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___clear00
-static int tolua_ClientToLua_std_vector_SandboxObject___clear00(lua_State* tolua_S)
+/* method: clear of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___clear00
+static int tolua_ClientToLua_std_vector_BlockObject___clear00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  std::vector<BlockObject*>* self = (std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clear'", NULL);
 #endif
@@ -1102,21 +1102,21 @@ static int tolua_ClientToLua_std_vector_SandboxObject___clear00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: size of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___size00
-static int tolua_ClientToLua_std_vector_SandboxObject___size00(lua_State* tolua_S)
+/* method: size of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___size00
+static int tolua_ClientToLua_std_vector_BlockObject___size00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"const std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  const std::vector<SandboxObject*>* self = (const std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<BlockObject*>* self = (const std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'size'", NULL);
 #endif
@@ -1134,14 +1134,14 @@ static int tolua_ClientToLua_std_vector_SandboxObject___size00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: operator[] of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject____geti00
-static int tolua_ClientToLua_std_vector_SandboxObject____geti00(lua_State* tolua_S)
+/* method: operator[] of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject____geti00
+static int tolua_ClientToLua_std_vector_BlockObject____geti00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"const std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -1149,14 +1149,14 @@ static int tolua_ClientToLua_std_vector_SandboxObject____geti00(lua_State* tolua
  else
 #endif
  {
-  const std::vector<SandboxObject*>* self = (const std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<BlockObject*>* self = (const std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
   int index = ((int)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'operator[]'", NULL);
 #endif
   {
-   const SandboxObject* tolua_ret = (const SandboxObject*)  self->operator[](index);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"const SandboxObject");
+   const BlockObject* tolua_ret = (const BlockObject*)  self->operator[](index);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"const BlockObject");
   }
  }
  return 1;
@@ -1168,25 +1168,25 @@ static int tolua_ClientToLua_std_vector_SandboxObject____geti00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: operator&[] of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject____seti00
-static int tolua_ClientToLua_std_vector_SandboxObject____seti00(lua_State* tolua_S)
+/* method: operator&[] of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject____seti00
+static int tolua_ClientToLua_std_vector_BlockObject____seti00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isusertype(tolua_S,3,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,3,"BlockObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  std::vector<BlockObject*>* self = (std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
   int index = ((int)  tolua_tonumber(tolua_S,2,0));
-  SandboxObject* tolua_value = ((SandboxObject*)  tolua_tousertype(tolua_S,3,0));
+  BlockObject* tolua_value = ((BlockObject*)  tolua_tousertype(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'operator&[]'", NULL);
 #endif
@@ -1201,52 +1201,52 @@ static int tolua_ClientToLua_std_vector_SandboxObject____seti00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: operator[] of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject____geti01
-static int tolua_ClientToLua_std_vector_SandboxObject____geti01(lua_State* tolua_S)
+/* method: operator[] of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject____geti01
+static int tolua_ClientToLua_std_vector_BlockObject____geti01(lua_State* tolua_S)
 {
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
  {
-  std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
+  std::vector<BlockObject*>* self = (std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
   int index = ((int)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'operator[]'", NULL);
 #endif
   {
-   SandboxObject* tolua_ret = (SandboxObject*)  self->operator[](index);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SandboxObject");
+   BlockObject* tolua_ret = (BlockObject*)  self->operator[](index);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BlockObject");
   }
  }
  return 1;
 tolua_lerror:
- return tolua_ClientToLua_std_vector_SandboxObject____geti00(tolua_S);
+ return tolua_ClientToLua_std_vector_BlockObject____geti00(tolua_S);
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: push_back of class  std::vector<SandboxObject*> */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_SandboxObject___push_back00
-static int tolua_ClientToLua_std_vector_SandboxObject___push_back00(lua_State* tolua_S)
+/* method: push_back of class  std::vector<BlockObject*> */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_std_vector_BlockObject___push_back00
+static int tolua_ClientToLua_std_vector_BlockObject___push_back00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"std::vector<SandboxObject*>",0,&tolua_err) ||
-     !tolua_isusertype(tolua_S,2,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"std::vector<BlockObject*>",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BlockObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  std::vector<SandboxObject*>* self = (std::vector<SandboxObject*>*)  tolua_tousertype(tolua_S,1,0);
-  SandboxObject* val = ((SandboxObject*)  tolua_tousertype(tolua_S,2,0));
+  std::vector<BlockObject*>* self = (std::vector<BlockObject*>*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* val = ((BlockObject*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'push_back'", NULL);
 #endif
@@ -4278,9 +4278,9 @@ static int tolua_ClientToLua_EntityObject_GetAnimation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetMoveASM of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetMoveASM00
-static int tolua_ClientToLua_EntityObject_GetMoveASM00(lua_State* tolua_S)
+/* method: GetObjectASM of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetObjectASM00
+static int tolua_ClientToLua_EntityObject_GetObjectASM00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -4294,62 +4294,30 @@ static int tolua_ClientToLua_EntityObject_GetMoveASM00(lua_State* tolua_S)
  {
   EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMoveASM'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectASM'", NULL);
 #endif
   {
-   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetMoveASM();
+   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetObjectASM();
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::AnimationStateMachine");
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetMoveASM'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'GetObjectASM'.",&tolua_err);
  return 0;
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetWeaponASM of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetWeaponASM00
-static int tolua_ClientToLua_EntityObject_GetWeaponASM00(lua_State* tolua_S)
+/* method: setPosition of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_setPosition00
+static int tolua_ClientToLua_BlockObject_setPosition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetWeaponASM'", NULL);
-#endif
-  {
-   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetWeaponASM();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::AnimationStateMachine");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetWeaponASM'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: setPosition of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_setPosition00
-static int tolua_ClientToLua_SandboxObject_setPosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4357,7 +4325,7 @@ static int tolua_ClientToLua_SandboxObject_setPosition00(lua_State* tolua_S)
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
@@ -4375,14 +4343,14 @@ static int tolua_ClientToLua_SandboxObject_setPosition00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setRotation of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_setRotation00
-static int tolua_ClientToLua_SandboxObject_setRotation00(lua_State* tolua_S)
+/* method: setRotation of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_setRotation00
+static int tolua_ClientToLua_BlockObject_setRotation00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4390,7 +4358,7 @@ static int tolua_ClientToLua_SandboxObject_setRotation00(lua_State* tolua_S)
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setRotation'", NULL);
@@ -4408,14 +4376,14 @@ static int tolua_ClientToLua_SandboxObject_setRotation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setOrientation of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_setOrientation00
-static int tolua_ClientToLua_SandboxObject_setOrientation00(lua_State* tolua_S)
+/* method: setOrientation of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_setOrientation00
+static int tolua_ClientToLua_BlockObject_setOrientation00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4423,7 +4391,7 @@ static int tolua_ClientToLua_SandboxObject_setOrientation00(lua_State* tolua_S)
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOrientation'", NULL);
@@ -4441,21 +4409,21 @@ static int tolua_ClientToLua_SandboxObject_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetRadius of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_GetRadius00
-static int tolua_ClientToLua_SandboxObject_GetRadius00(lua_State* tolua_S)
+/* method: GetRadius of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_GetRadius00
+static int tolua_ClientToLua_BlockObject_GetRadius00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"const SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const BlockObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  const SandboxObject* self = (const SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  const BlockObject* self = (const BlockObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRadius'", NULL);
 #endif
@@ -4473,21 +4441,21 @@ static int tolua_ClientToLua_SandboxObject_GetRadius00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetPosition of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_GetPosition00
-static int tolua_ClientToLua_SandboxObject_GetPosition00(lua_State* tolua_S)
+/* method: GetPosition of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_GetPosition00
+static int tolua_ClientToLua_BlockObject_GetPosition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"const SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const BlockObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  const SandboxObject* self = (const SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  const BlockObject* self = (const BlockObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
 #endif
@@ -4515,14 +4483,14 @@ static int tolua_ClientToLua_SandboxObject_GetPosition00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: applyImpulse of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_applyImpulse00
-static int tolua_ClientToLua_SandboxObject_applyImpulse00(lua_State* tolua_S)
+/* method: applyImpulse of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_applyImpulse00
+static int tolua_ClientToLua_BlockObject_applyImpulse00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4530,7 +4498,7 @@ static int tolua_ClientToLua_SandboxObject_applyImpulse00(lua_State* tolua_S)
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* impulse = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'applyImpulse'", NULL);
@@ -4548,14 +4516,14 @@ static int tolua_ClientToLua_SandboxObject_applyImpulse00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: applyAngularImpulse of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_applyAngularImpulse00
-static int tolua_ClientToLua_SandboxObject_applyAngularImpulse00(lua_State* tolua_S)
+/* method: applyAngularImpulse of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_applyAngularImpulse00
+static int tolua_ClientToLua_BlockObject_applyAngularImpulse00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4563,7 +4531,7 @@ static int tolua_ClientToLua_SandboxObject_applyAngularImpulse00(lua_State* tolu
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* aImpulse = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'applyAngularImpulse'", NULL);
@@ -4581,21 +4549,21 @@ static int tolua_ClientToLua_SandboxObject_applyAngularImpulse00(lua_State* tolu
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: getMass of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_getMass00
-static int tolua_ClientToLua_SandboxObject_getMass00(lua_State* tolua_S)
+/* method: getMass of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_getMass00
+static int tolua_ClientToLua_BlockObject_getMass00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"const SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const BlockObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  const SandboxObject* self = (const SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  const BlockObject* self = (const BlockObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getMass'", NULL);
 #endif
@@ -4613,14 +4581,14 @@ static int tolua_ClientToLua_SandboxObject_getMass00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setMass of class  SandboxObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxObject_setMass00
-static int tolua_ClientToLua_SandboxObject_setMass00(lua_State* tolua_S)
+/* method: setMass of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_setMass00
+static int tolua_ClientToLua_BlockObject_setMass00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -4628,7 +4596,7 @@ static int tolua_ClientToLua_SandboxObject_setMass00(lua_State* tolua_S)
  else
 #endif
  {
-  SandboxObject* self = (SandboxObject*)  tolua_tousertype(tolua_S,1,0);
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
   const float mass = ((const float)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMass'", NULL);
@@ -6894,7 +6862,7 @@ static int tolua_ClientToLua_SandboxMgr_setMaterial01(lua_State* tolua_S)
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
-     !tolua_isusertype(tolua_S,2,"SandboxObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BlockObject",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
@@ -6902,7 +6870,7 @@ static int tolua_ClientToLua_SandboxMgr_setMaterial01(lua_State* tolua_S)
  else
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
-  SandboxObject* pObject = ((SandboxObject*)  tolua_tousertype(tolua_S,2,0));
+  BlockObject* pObject = ((BlockObject*)  tolua_tousertype(tolua_S,2,0));
   const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
@@ -6976,8 +6944,8 @@ static int tolua_ClientToLua_SandboxMgr_CreatePlane00(lua_State* tolua_S)
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreatePlane'", NULL);
 #endif
   {
-   SandboxObject* tolua_ret = (SandboxObject*)  self->CreatePlane(length,width);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SandboxObject");
+   BlockObject* tolua_ret = (BlockObject*)  self->CreatePlane(length,width);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BlockObject");
   }
  }
  return 1;
@@ -7024,9 +6992,9 @@ static int tolua_ClientToLua_SandboxMgr_CreateEntityObject00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: CreateSandboxObject of class  SandboxMgr */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxMgr_CreateSandboxObject00
-static int tolua_ClientToLua_SandboxMgr_CreateSandboxObject00(lua_State* tolua_S)
+/* method: CreateBlockObject of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxMgr_CreateBlockObject00
+static int tolua_ClientToLua_SandboxMgr_CreateBlockObject00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -7042,18 +7010,18 @@ static int tolua_ClientToLua_SandboxMgr_CreateSandboxObject00(lua_State* tolua_S
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
   const std::string meshfilePath = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSandboxObject'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateBlockObject'", NULL);
 #endif
   {
-   SandboxObject* tolua_ret = (SandboxObject*)  self->CreateSandboxObject(meshfilePath);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SandboxObject");
+   BlockObject* tolua_ret = (BlockObject*)  self->CreateBlockObject(meshfilePath);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BlockObject");
    tolua_pushcppstring(tolua_S,(const char*)meshfilePath);
   }
  }
  return 2;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'CreateSandboxObject'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'CreateBlockObject'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7412,9 +7380,9 @@ static int tolua_ClientToLua_GameManager_getScreenHeight00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: getObjectCount of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getObjectCount00
-static int tolua_ClientToLua_GameManager_getObjectCount00(lua_State* tolua_S)
+/* method: getBlockCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getBlockCount00
+static int tolua_ClientToLua_GameManager_getBlockCount00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -7428,17 +7396,17 @@ static int tolua_ClientToLua_GameManager_getObjectCount00(lua_State* tolua_S)
  {
   GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjectCount'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getBlockCount'", NULL);
 #endif
   {
-   unsigned int tolua_ret = (unsigned int)  self->getObjectCount();
+   unsigned int tolua_ret = (unsigned int)  self->getBlockCount();
    tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getObjectCount'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'getBlockCount'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7476,9 +7444,9 @@ static int tolua_ClientToLua_GameManager_getAllEntitys00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: getAllObjects of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getAllObjects00
-static int tolua_ClientToLua_GameManager_getAllObjects00(lua_State* tolua_S)
+/* method: getAllBlocks of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getAllBlocks00
+static int tolua_ClientToLua_GameManager_getAllBlocks00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -7492,17 +7460,17 @@ static int tolua_ClientToLua_GameManager_getAllObjects00(lua_State* tolua_S)
  {
   GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllObjects'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllBlocks'", NULL);
 #endif
   {
-   const std::vector<SandboxObject*>& tolua_ret = (const std::vector<SandboxObject*>&)  self->getAllObjects();
-    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<SandboxObject*>");
+   const std::vector<BlockObject*>& tolua_ret = (const std::vector<BlockObject*>&)  self->getAllBlocks();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<BlockObject*>");
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAllObjects'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'getAllBlocks'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7709,21 +7677,21 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"push_back",tolua_ClientToLua_std_vector_AgentObject___push_back00);
    tolua_endmodule(tolua_S);
    #ifdef __cplusplus
-   tolua_cclass(tolua_S,"vector_SandboxObject__","std::vector<SandboxObject*>","",tolua_collect_std__vector_SandboxObject__);
+   tolua_cclass(tolua_S,"vector_BlockObject__","std::vector<BlockObject*>","",tolua_collect_std__vector_BlockObject__);
    #else
-   tolua_cclass(tolua_S,"vector_SandboxObject__","std::vector<SandboxObject*>","",NULL);
+   tolua_cclass(tolua_S,"vector_BlockObject__","std::vector<BlockObject*>","",NULL);
    #endif
-   tolua_beginmodule(tolua_S,"vector_SandboxObject__");
-    tolua_function(tolua_S,"new",tolua_ClientToLua_std_vector_SandboxObject___new00);
-    tolua_function(tolua_S,"new_local",tolua_ClientToLua_std_vector_SandboxObject___new00_local);
-    tolua_function(tolua_S,".call",tolua_ClientToLua_std_vector_SandboxObject___new00_local);
-    tolua_function(tolua_S,"delete",tolua_ClientToLua_std_vector_SandboxObject___delete00);
-    tolua_function(tolua_S,"clear",tolua_ClientToLua_std_vector_SandboxObject___clear00);
-    tolua_function(tolua_S,"size",tolua_ClientToLua_std_vector_SandboxObject___size00);
-    tolua_function(tolua_S,".geti",tolua_ClientToLua_std_vector_SandboxObject____geti00);
-    tolua_function(tolua_S,".seti",tolua_ClientToLua_std_vector_SandboxObject____seti00);
-    tolua_function(tolua_S,".geti",tolua_ClientToLua_std_vector_SandboxObject____geti01);
-    tolua_function(tolua_S,"push_back",tolua_ClientToLua_std_vector_SandboxObject___push_back00);
+   tolua_beginmodule(tolua_S,"vector_BlockObject__");
+    tolua_function(tolua_S,"new",tolua_ClientToLua_std_vector_BlockObject___new00);
+    tolua_function(tolua_S,"new_local",tolua_ClientToLua_std_vector_BlockObject___new00_local);
+    tolua_function(tolua_S,".call",tolua_ClientToLua_std_vector_BlockObject___new00_local);
+    tolua_function(tolua_S,"delete",tolua_ClientToLua_std_vector_BlockObject___delete00);
+    tolua_function(tolua_S,"clear",tolua_ClientToLua_std_vector_BlockObject___clear00);
+    tolua_function(tolua_S,"size",tolua_ClientToLua_std_vector_BlockObject___size00);
+    tolua_function(tolua_S,".geti",tolua_ClientToLua_std_vector_BlockObject____geti00);
+    tolua_function(tolua_S,".seti",tolua_ClientToLua_std_vector_BlockObject____seti00);
+    tolua_function(tolua_S,".geti",tolua_ClientToLua_std_vector_BlockObject____geti01);
+    tolua_function(tolua_S,"push_back",tolua_ClientToLua_std_vector_BlockObject___push_back00);
    tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
   tolua_module(tolua_S,"Ogre",0);
@@ -8065,20 +8033,19 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_EntityObject_GetPosition00);
    tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
    tolua_function(tolua_S,"GetAnimation",tolua_ClientToLua_EntityObject_GetAnimation00);
-   tolua_function(tolua_S,"GetMoveASM",tolua_ClientToLua_EntityObject_GetMoveASM00);
-   tolua_function(tolua_S,"GetWeaponASM",tolua_ClientToLua_EntityObject_GetWeaponASM00);
+   tolua_function(tolua_S,"GetObjectASM",tolua_ClientToLua_EntityObject_GetObjectASM00);
   tolua_endmodule(tolua_S);
-  tolua_cclass(tolua_S,"SandboxObject","SandboxObject","EntityObject",NULL);
-  tolua_beginmodule(tolua_S,"SandboxObject");
-   tolua_function(tolua_S,"setPosition",tolua_ClientToLua_SandboxObject_setPosition00);
-   tolua_function(tolua_S,"setRotation",tolua_ClientToLua_SandboxObject_setRotation00);
-   tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_SandboxObject_setOrientation00);
-   tolua_function(tolua_S,"GetRadius",tolua_ClientToLua_SandboxObject_GetRadius00);
-   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_SandboxObject_GetPosition00);
-   tolua_function(tolua_S,"applyImpulse",tolua_ClientToLua_SandboxObject_applyImpulse00);
-   tolua_function(tolua_S,"applyAngularImpulse",tolua_ClientToLua_SandboxObject_applyAngularImpulse00);
-   tolua_function(tolua_S,"getMass",tolua_ClientToLua_SandboxObject_getMass00);
-   tolua_function(tolua_S,"setMass",tolua_ClientToLua_SandboxObject_setMass00);
+  tolua_cclass(tolua_S,"BlockObject","BlockObject","EntityObject",NULL);
+  tolua_beginmodule(tolua_S,"BlockObject");
+   tolua_function(tolua_S,"setPosition",tolua_ClientToLua_BlockObject_setPosition00);
+   tolua_function(tolua_S,"setRotation",tolua_ClientToLua_BlockObject_setRotation00);
+   tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_BlockObject_setOrientation00);
+   tolua_function(tolua_S,"GetRadius",tolua_ClientToLua_BlockObject_GetRadius00);
+   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_BlockObject_GetPosition00);
+   tolua_function(tolua_S,"applyImpulse",tolua_ClientToLua_BlockObject_applyImpulse00);
+   tolua_function(tolua_S,"applyAngularImpulse",tolua_ClientToLua_BlockObject_applyAngularImpulse00);
+   tolua_function(tolua_S,"getMass",tolua_ClientToLua_BlockObject_getMass00);
+   tolua_function(tolua_S,"setMass",tolua_ClientToLua_BlockObject_setMass00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"AGENT_OBJ_NONE",AGENT_OBJ_NONE);
   tolua_constant(tolua_S,"AGENT_OBJ_SEEKING",AGENT_OBJ_SEEKING);
@@ -8155,7 +8122,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetMarkupColor",tolua_ClientToLua_SandboxMgr_SetMarkupColor00);
    tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_SandboxMgr_CreatePlane00);
    tolua_function(tolua_S,"CreateEntityObject",tolua_ClientToLua_SandboxMgr_CreateEntityObject00);
-   tolua_function(tolua_S,"CreateSandboxObject",tolua_ClientToLua_SandboxMgr_CreateSandboxObject00);
+   tolua_function(tolua_S,"CreateBlockObject",tolua_ClientToLua_SandboxMgr_CreateBlockObject00);
    tolua_function(tolua_S,"CreateUIComponent",tolua_ClientToLua_SandboxMgr_CreateUIComponent00);
    tolua_function(tolua_S,"CreateAgent",tolua_ClientToLua_SandboxMgr_CreateAgent00);
   tolua_endmodule(tolua_S);
@@ -8172,9 +8139,9 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"GameManager");
    tolua_function(tolua_S,"getScreenWidth",tolua_ClientToLua_GameManager_getScreenWidth00);
    tolua_function(tolua_S,"getScreenHeight",tolua_ClientToLua_GameManager_getScreenHeight00);
-   tolua_function(tolua_S,"getObjectCount",tolua_ClientToLua_GameManager_getObjectCount00);
+   tolua_function(tolua_S,"getBlockCount",tolua_ClientToLua_GameManager_getBlockCount00);
    tolua_function(tolua_S,"getAllEntitys",tolua_ClientToLua_GameManager_getAllEntitys00);
-   tolua_function(tolua_S,"getAllObjects",tolua_ClientToLua_GameManager_getAllObjects00);
+   tolua_function(tolua_S,"getAllBlocks",tolua_ClientToLua_GameManager_getAllBlocks00);
    tolua_function(tolua_S,"getAllAgents",tolua_ClientToLua_GameManager_getAllAgents00);
    tolua_function(tolua_S,"getSpecifyAgents",tolua_ClientToLua_GameManager_getSpecifyAgents00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_ClientToLua_GameManager_getTimeInMillis00);
