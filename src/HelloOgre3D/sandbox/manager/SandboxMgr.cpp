@@ -525,6 +525,7 @@ BlockObject* SandboxMgr::CreatePlane(float length, float width)
     btRigidBody* planeRigidBody = SandboxMgr::CreateRigidBodyPlane(btVector3(0, 1.0f, 0), 0);
 
     BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
+    pObject->setObjType(BaseObject::OBJ_TYPE_PLANE);
 
     g_GameManager->addBlockObject(pObject);
 
@@ -534,6 +535,7 @@ BlockObject* SandboxMgr::CreatePlane(float length, float width)
 BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshFilePath)
 {
     BlockObject* pObject = new BlockObject(meshFilePath);
+    pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
 
     g_GameManager->addBlockObject(pObject);
 
@@ -554,6 +556,7 @@ BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length,
     btRigidBody* planeRigidBody = SandboxMgr::CreateRigidBodyBox(width, height, length);
 
 	BlockObject* pObject = new BlockObject(meshPtr, planeRigidBody);
+    pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
     pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
 
 	g_GameManager->addBlockObject(pObject);
@@ -564,6 +567,7 @@ BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length,
 EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)
 {
     EntityObject* pObject = new EntityObject(meshFilePath);
+    pObject->setObjType(BaseObject::OBJ_TYPE_ENTITY);
 
 	g_GameManager->addEntityObject(pObject);
 
@@ -575,26 +579,40 @@ UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
     return g_GameManager->createUIComponent(index);
 }
 
-
 AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
 {
     Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
     Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
-    Ogre::SceneNode* capsuleNode = nullptr;
-    if (agentType != AGENT_OBJ_NONE)
-    {
-		capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
-		this->setMaterial(capsuleNode, "Ground2");
-    }
+	Ogre::SceneNode* capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
+    EntityObject* pEntityObj = new EntityObject(capsuleNode);
+	pEntityObj->setMaterial("Ground2");
 
     btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
     capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
-    AgentObject* pObject = new AgentObject(capsuleNode, capsuleRigidBody);
+    AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
+    pObject->setObjType(BaseObject::OBJ_TYPE_AGENT);
     pObject->setAgentType(agentType);
 
     g_GameManager->addAgentObject(pObject);
 
     return pObject;
+}
+
+AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
+{
+	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
+	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
+
+	EntityObject* pEntityObj = new EntityObject(meshFilePath);
+
+	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
+	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+
+	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
+    pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
+	g_GameManager->addAgentObject(pObject);
+
+	return pObject;
 }

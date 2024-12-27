@@ -1,12 +1,12 @@
 #ifndef __AGENT_OBJECT__
 #define __AGENT_OBJECT__
 
-#include "BaseObject.h"
 #include "OgreMath.h"
 #include "OgreVector3.h"
 #include "opensteer/include/Vec3.h"
 #include "opensteer/include/SteerLibrary.h"
 #include "play/AgentPath.h"
+#include "EntityObject.h"
 
 namespace Ogre {
 	class SceneNode;
@@ -29,16 +29,22 @@ class AgentObject : public BaseObject //tolua_exports
 	, private OpenSteer::SteerLibraryMixin<OpenSteer::AbstractVehicle>
 { //tolua_exports
 public:
-	AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
+	AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~AgentObject();
 
 	void Initialize();
+	void DeleteRighdBody();
 	void ResetRigidBody(btRigidBody* pRigidBody);
 
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
-	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
 
 	//tolua_begin
+	void initAgentBody(const Ogre::String& meshFile);
+	void initAgentWeapon(const Ogre::String& meshFile);
+
+	EntityObject* getAgentBody() { return m_pAgentBody; }
+	EntityObject* getAgentWeapon() { return m_pAgentWeapon; }
+
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }
 
@@ -111,7 +117,7 @@ public:
 	Ogre::Vector3 ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToAvoidObjects(const std::vector<BlockObject*>& objects, Ogre::Real predictionTime);
 
-	void update(int deltaMilisec) override;
+	virtual void update(int deltaMilisec) override;
 
 	void updateWorldTransform();
 
@@ -129,7 +135,8 @@ private:
 	AGENT_OBJ_TYPE m_agentType;
 
 	btRigidBody* m_pRigidBody;
-	Ogre::SceneNode* m_pSceneNode;
+	EntityObject* m_pAgentBody;
+	EntityObject* m_pAgentWeapon;
 
 	Ogre::Real m_mass;
 	Ogre::Real m_height;

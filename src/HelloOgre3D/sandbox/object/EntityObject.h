@@ -17,9 +17,9 @@ namespace Fancy{
 class EntityObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
-	EntityObject();
 	EntityObject(const Ogre::String& meshFile);
-
+	EntityObject(const Ogre::MeshPtr& meshPtr);
+	EntityObject(Ogre::SceneNode* pSceneNode);
 	virtual ~EntityObject();
 
 	void update(int deltaMsec) override;
@@ -31,8 +31,6 @@ public:
 	virtual void setRotation(const Ogre::Vector3& position);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
 
-	Ogre::Vector3 GetPosition() const;
-	
 	void setMaterial(const Ogre::String& materialName);
 
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
@@ -40,6 +38,12 @@ public:
 	Fancy::Animation* GetAnimation(const char* animationName);
 	Fancy::AnimationStateMachine* GetObjectASM();
 	//tolua_end
+
+	Ogre::Vector3 getPosition() const;
+	Ogre::Quaternion getOrientation() const;
+
+	Ogre::Vector3 GetDerivedPosition() const;
+	Ogre::Quaternion GetDerivedOrientation() const;
 
 	Ogre::Entity* getEntity() { return m_pEntity; }
 	Ogre::Entity* getDetachEntity();

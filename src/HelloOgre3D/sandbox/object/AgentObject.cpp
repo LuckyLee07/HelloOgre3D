@@ -20,9 +20,8 @@ const float AgentObject::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^
 const float AgentObject::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
 const float AgentObject::DEFAULT_AGENT_TARGET_RADIUS = 0.5f;	// meters (1.64 feet)
 
-AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: BaseObject(0, BaseObject::OBJ_AGENT), 
-	m_pSceneNode(pSceneNode), m_pRigidBody(pRigidBody),
+AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
+	: m_pAgentBody(pAgentBody), m_pRigidBody(pRigidBody), 
 	m_mass(DEFAULT_AGENT_MASS), 
 	m_height(DEFAULT_AGENT_HEIGHT), 
 	m_radius(DEFAULT_AGENT_RADIUS),
@@ -33,6 +32,9 @@ AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS),
 	m_pTargetAgent(nullptr), m_hasPath(false)
 {
+	m_pAgentWeapon = nullptr;
+	m_agentType = AGENT_OBJ_NONE;
+	
 	if (m_pRigidBody)
 	{
 		this->SetMass(DEFAULT_AGENT_MASS);
@@ -44,39 +46,69 @@ AgentObject::AgentObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 AgentObject::~AgentObject()
 {
 	m_pTargetAgent = nullptr;
-	m_pSceneNode = nullptr;
 
-	delete m_pRigidBody->getMotionState();
-	delete m_pRigidBody->getCollisionShape();
-	delete m_pRigidBody;
-	
-	m_pRigidBody = nullptr;
+	SAFE_DELETE(m_pAgentBody);
+	SAFE_DELETE(m_pAgentWeapon);
+
+	this->DeleteRighdBody();
+}
+
+void AgentObject::DeleteRighdBody()
+{
+	if (m_pRigidBody != nullptr)
+	{
+		PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
+		pPhysicsWorld->removeRigidBody(m_pRigidBody);
+
+		delete m_pRigidBody->getMotionState();
+		delete m_pRigidBody->getCollisionShape();
+		SAFE_DELETE(m_pRigidBody);
+	}
 }
 
 void AgentObject::Initialize()
 {
-	SetPosition(Ogre::Vector3::ZERO);
-
+	m_pAgentBody->Initialize();
+	//SetPosition(Ogre::Vector3::ZERO);
+	
 	GetScriptLuaVM()->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
 void AgentObject::ResetRigidBody(btRigidBody* pRigidBody)
 {
-	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-	if (m_pRigidBody != nullptr)
-	{
-		pPhysicsWorld->removeRigidBody(m_pRigidBody);
-
-		delete m_pRigidBody->getMotionState();
-		delete m_pRigidBody->getCollisionShape();
-		delete m_pRigidBody;
-		m_pRigidBody = nullptr;
-	}
+	this->DeleteRighdBody();
 
 	m_pRigidBody = pRigidBody;
 	m_pRigidBody->setUserPointer(this);
+
+	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
 	pPhysicsWorld->addRigidBody(m_pRigidBody);
 }
+
+void AgentObject::initAgentBody(const Ogre::String& meshFile)
+{
+	if (m_pAgentBody != nullptr)
+	{
+		delete m_pAgentBody;
+	}
+	m_pAgentBody = new EntityObject(meshFile);
+	m_pAgentBody->Initialize();
+}
+
+void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
+{
+	if (m_pAgentWeapon != nullptr)
+	{
+		delete m_pAgentWeapon;
+	}
+	m_pAgentWeapon = new EntityObject(meshFile);
+	m_pAgentWeapon->Initialize();
+
+	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
+	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);
+	m_pAgentBody->AttachToBone("b_RightHand", m_pAgentWeapon, positionOffset, rotationOffset);
+}
+
 
 void AgentObject::SetPosition(const Ogre::Vector3& position)
 {
@@ -86,6 +118,8 @@ void AgentObject::SetPosition(const Ogre::Vector3& position)
 
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
+
+	m_pAgentBody->setPosition(position);
 }
 
 void AgentObject::SetRotation(const Ogre::Vector3& rotation)
@@ -102,6 +136,8 @@ void AgentObject::SetOrientation(const Ogre::Quaternion& quaternion)
 
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
+
+	//m_pAgentBody->setOrientation(quaternion);
 
 	this->updateWorldTransform();
 }
@@ -122,8 +158,8 @@ void AgentObject::SetForward(const Ogre::Vector3& forward)
 	m_pRigidBody->setWorldTransform(transform);
 	m_pRigidBody->activate(true);
 
-	if (m_pSceneNode != nullptr)
-		m_pSceneNode->setOrientation(orientation);
+	if (m_pAgentBody != nullptr)
+		m_pAgentBody->setOrientation(orientation);
 }
 
 void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
@@ -154,9 +190,9 @@ Ogre::Vector3 AgentObject::GetPosition() const
 		const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
 		return BtVector3ToVector3(position);
 	}
-	else if (m_pSceneNode != nullptr)
+	else if (m_pAgentBody != nullptr)
 	{
-		return m_pSceneNode->_getDerivedPosition();
+		return m_pAgentBody->GetDerivedPosition();
 	}
 
 	return Ogre::Vector3::ZERO;
@@ -169,9 +205,9 @@ Ogre::Quaternion AgentObject::GetOrientation() const
 		const btQuaternion& orietation = m_pRigidBody->getOrientation();
 		return BtQuaternionToQuaternion(orietation);
 	}
-	else if (m_pSceneNode != nullptr)
+	else if (m_pAgentBody != nullptr)
 	{
-		return m_pSceneNode->_getDerivedOrientation();
+		return m_pAgentBody->GetDerivedOrientation();
 	}
 
 	return Ogre::Quaternion::ZERO;
@@ -184,9 +220,9 @@ Ogre::Vector3 AgentObject::GetUp() const
 		const btQuaternion& orietation = m_pRigidBody->getOrientation();
 		return BtQuaternionToQuaternion(orietation).yAxis();
 	}
-	else if (m_pSceneNode != nullptr)
+	else if (m_pAgentBody != nullptr)
 	{
-		return m_pSceneNode->getOrientation().yAxis();
+		return m_pAgentBody->getOrientation().yAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Y;
@@ -199,9 +235,9 @@ Ogre::Vector3 AgentObject::GetLeft() const
 		const btQuaternion& orietation = m_pRigidBody->getOrientation();
 		return BtQuaternionToQuaternion(orietation).xAxis();
 	}
-	else if (m_pSceneNode != nullptr)
+	else if (m_pAgentBody != nullptr)
 	{
-		return m_pSceneNode->getOrientation().xAxis();
+		return m_pAgentBody->getOrientation().xAxis();
 	}
 
 	return Ogre::Vector3::UNIT_X;
@@ -219,9 +255,9 @@ Ogre::Vector3 AgentObject::GetForward() const
 		const btQuaternion& orietation = m_pRigidBody->getOrientation();
 		return BtQuaternionToQuaternion(orietation).zAxis();
 	}
-	else if (m_pSceneNode != nullptr)
+	else if (m_pAgentBody != nullptr)
 	{
-		return m_pSceneNode->getOrientation().zAxis();
+		return m_pAgentBody->getOrientation().zAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Z;
@@ -490,21 +526,25 @@ void AgentObject::update(int deltaMilisec)
 		GetScriptLuaVM()->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
+	m_pAgentBody->update(deltaMilisec);
+	if (m_pAgentWeapon)
+		m_pAgentWeapon->update(deltaMilisec);
+
 	this->updateWorldTransform();
 }
 
 void AgentObject::updateWorldTransform()
 {
-	if (m_pSceneNode == nullptr) return;
+	if (m_pAgentBody == nullptr) return;
 	
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
 	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
-	m_pSceneNode->setPosition(position);
+	m_pAgentBody->setPosition(position);
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
 	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
 								rigidBodyRotation.y(), rigidBodyRotation.z());
-	m_pSceneNode->setOrientation(rotation);
+	m_pAgentBody->setOrientation(rotation);
 }
 
 

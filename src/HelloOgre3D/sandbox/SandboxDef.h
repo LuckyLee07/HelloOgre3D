@@ -24,6 +24,9 @@
 #define APPLICATION_RESOURCES	"SandboxResources.cfg"
 #endif
 
+#define SAFE_DELETE(p)       { if(p) { delete (p);		(p)=NULL; } }
+#define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);	(p)=NULL; } }
+
 //tolua_begin
 // 给定的三个角度（分别沿X、Y、Z轴的旋转），创建表示这个旋转的Ogre::Quaternion四元数
 inline Ogre::Quaternion QuaternionFromRotationDegrees(Ogre::Real xRotation, Ogre::Real yRotation, Ogre::Real zRotation)

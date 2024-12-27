@@ -81,6 +81,7 @@ public:
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType);
+	AgentObject* CreateSoldier(const Ogre::String& meshFilePath);
 	
 	//tolua_end
 

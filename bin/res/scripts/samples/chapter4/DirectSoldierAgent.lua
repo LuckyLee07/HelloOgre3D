@@ -1,10 +1,10 @@
 require("res.scripts.samples.chapter4.SoldierAgent.lua")
 
-function Agent_Initialize(agent)
-    local _soldier = Soldier_CreateSoldier(agent)
-    local _weapon = Soldier_CreateWeapon(agent)
+function Agent_DeathState(agent)
+end
 
-    Soldier_AttachWeapon(_soldier, _weapon)
+
+function Agent_Initialize(agent)
 end
 
 function Agent_EventHandle(agent)

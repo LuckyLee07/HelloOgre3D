@@ -70,7 +70,19 @@ function Sandbox_Initialize(ctype)
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
     
     SandboxUtilities_CreateLevel()
-    _G.agent = Sandbox:CreateAgent(AGENT_OBJ_NONE);
+
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+
+    local height = soldierAgent:GetHeight()
+    soldierAgent:SetRotation(Vector3(0, -90, 0))
+    soldierAgent:SetPosition(Vector3(0, -height*0.5, 0))
+
+    Soldier_InitSoldierAsm(soldierAgent)
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    soldierAgent:initAgentWeapon(weaponPath)
+    Soldier_InitSoldierAsm(soldierAgent)
 end
 
 

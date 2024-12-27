@@ -29,14 +29,8 @@ Soldier.weaponStates = {
     SNIPER_TRANSFORM =          "sniper_transform"
 }
 
-function Soldier_CreateSoldier(agent)
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldier = Sandbox:CreateEntityObject(soldierPath);
-
-    soldier:setPosition(Vector3(0, 0, 0))
-    soldier:setRotation(Vector3(0, -90, 0))
-    --local height = agent:GetHeight()
-    --soldier:setPosition(Vector3(0, -height*0.5, 0))
+function Soldier_InitSoldierAsm(agent)
+    local soldier = agent:getAgentBody()
 
     -- Create an animation state machine to handle soldier animations.
     local soldierAsm = soldier:GetObjectASM();
@@ -132,13 +126,10 @@ function Soldier_CreateSoldier(agent)
     soldierAsm:AddTransition("sniper_transform", "idle_aim", 0.2, 0.2);
     
     soldierAsm:RequestState("idle_aim");
-
-    return soldier
 end
 
-function Soldier_CreateWeapon()
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    local weapon = Sandbox:CreateEntityObject(weaponPath);
+function Soldier_InitWeaponAsm(agent)
+    local weapon = agent:getAgentWeapon();
 
     -- Create an animation state machine to handle weapon animations.
     local weaponAsm = weapon:GetObjectASM();
@@ -160,10 +151,4 @@ function Soldier_CreateWeapon()
     weaponAsm:AddTransition("smg_transform", "smg_idle", 0.2, 0.2);
 
     weaponAsm:RequestState("sniper_idle");
-
-    return weapon
-end
-
-function Soldier_AttachWeapon(soldier, weapon)
-    soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
 end

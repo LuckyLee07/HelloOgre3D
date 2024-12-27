@@ -1,7 +1,7 @@
 #include "BaseObject.h"
 
-BaseObject::BaseObject(unsigned int objId, OBJTYPE objType) :
-	m_objId(objId), m_objType(objType)
+BaseObject::BaseObject() 
+	: m_objId(0), m_objType(OBJ_TYPE_NONE)
 {
 }
 

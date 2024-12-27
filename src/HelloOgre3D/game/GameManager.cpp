@@ -30,8 +30,11 @@ GameManager::GameManager() : m_objectIndex(0), m_pUIScene(nullptr), m_Simulation
 
 GameManager::~GameManager()
 {
-	delete m_pSandboxMgr;
+	this->clearAllAgents();
+	this->clearAllBlocks();
+	this->clearAllEntitys();
 
+	delete m_pSandboxMgr;
 	delete m_pPhysicsWorld;
 
 	for (size_t index = 0; index < UI_LAYER_COUNT; index++)
@@ -40,7 +43,6 @@ GameManager::~GameManager()
 			m_pUIScene->destroy(m_pUILayers[index]);
 		m_pUILayers[index] = nullptr;
 	}
-	
 	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
 	pSilverback->destroyScreen(m_pUIScene);
 	m_pUIScene = nullptr;
@@ -298,4 +300,40 @@ long long GameManager::getTimeInMillis()
 Ogre::Real GameManager::getTimeInSeconds()
 {
 	return (Ogre::Real)(getTimeInMillis() / 1000);
+}
+
+void GameManager::clearAllEntitys()
+{
+	auto iter = m_entitys.begin();
+	for (; iter != m_entitys.end(); iter++)
+	{
+		auto pEntity = *iter;
+		SAFE_DELETE(pEntity);
+	}
+	m_entitys.clear();
+}
+
+void GameManager::clearAllBlocks()
+{
+	auto iter = m_blocks.begin();
+	for (; iter != m_blocks.end(); iter++)
+	{
+		auto pBlock = *iter;
+		if (pBlock->getObjType() != BaseObject::OBJ_TYPE_BLOCK)
+		 continue; //·ÀÖ¹É¾³ýPlane
+
+		SAFE_DELETE(pBlock);
+	}
+	m_blocks.clear();
+}
+
+void GameManager::clearAllAgents()
+{
+	auto iter = m_agents.begin();
+	for (; iter != m_agents.end(); iter++)
+	{
+		auto pAgent = *iter;
+		SAFE_DELETE(pAgent);
+	}
+	m_agents.clear();
 }

@@ -6,17 +6,15 @@
 #include "SandboxDef.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ClientManager.h"
+#include "play/PhysicsWorld.h"
+#include "game/GameManager.h"
 
 using namespace Ogre;
 
 BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 	: EntityObject(meshFile), m_pRigidBody(pRigidBody)
 {
-	if (m_pEntity == nullptr)
-	{
-		assert(false); return;
-	}
-
+	setObjType(BaseObject::OBJ_TYPE_BLOCK);
 	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
 	if (pRigidBody == nullptr)
 	{
@@ -26,14 +24,8 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 }
 
 BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
-	: EntityObject(), m_pRigidBody(pRigidBody)
+	: EntityObject(meshPtr), m_pRigidBody(pRigidBody)
 {
-	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
-	m_pSceneNode = pRootScene->createChildSceneNode();
-
-	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshPtr);
-	m_pSceneNode->attachObject(m_pEntity);
-
 	if (pRigidBody == nullptr)
 	{
 		m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr.get(), 1.0f);
@@ -42,28 +34,35 @@ BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 }
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: EntityObject(), m_pRigidBody(pRigidBody)
+	: EntityObject(pSceneNode), m_pRigidBody(pRigidBody)
 {
 	m_pEntity = nullptr;
 	m_pSceneNode = pSceneNode;
-
+	
 	m_pRigidBody->setUserPointer(this);
 }
 
 BlockObject::~BlockObject()
 {
-	m_pEntity = nullptr;
-	m_pSceneNode = nullptr;
-
-	delete m_pRigidBody->getMotionState();
-	delete m_pRigidBody->getCollisionShape();
-	delete m_pRigidBody;
-	m_pRigidBody = nullptr;
+	this->DeleteRighdBody();
 }
 
 void BlockObject::Initialize()
 {
 
+}
+
+void BlockObject::DeleteRighdBody()
+{
+	if (m_pRigidBody != nullptr)
+	{
+		PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
+		pPhysicsWorld->removeRigidBody(m_pRigidBody);
+
+		delete m_pRigidBody->getMotionState();
+		delete m_pRigidBody->getCollisionShape();
+		SAFE_DELETE(m_pRigidBody);
+	}
 }
 
 void BlockObject::setMass(const Ogre::Real mass)

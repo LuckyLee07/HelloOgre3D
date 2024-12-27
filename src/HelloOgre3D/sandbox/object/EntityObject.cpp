@@ -12,33 +12,54 @@
 
 using namespace Ogre;
 
-
-EntityObject::EntityObject() : m_pSceneNode(nullptr), m_pEntity(nullptr)
-{
-
-}
-
 EntityObject::EntityObject(const Ogre::String& meshFile)
-	: BaseObject(0, BaseObject::OBJ_SANDBOX_OBJ)
 {
+	m_pAnimateStateMachine = nullptr;
+	
 	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
-
 	m_pSceneNode = pRootScene->createChildSceneNode();
+
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
 	m_pSceneNode->attachObject(m_pEntity);
 }
 
+EntityObject::EntityObject(const Ogre::MeshPtr& meshPtr)
+{
+	m_pAnimateStateMachine = nullptr;
+
+	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	m_pSceneNode = pRootScene->createChildSceneNode();
+
+	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshPtr);
+	m_pSceneNode->attachObject(m_pEntity);
+}
+
+EntityObject::EntityObject(Ogre::SceneNode* pSceneNode)
+{
+	m_pAnimateStateMachine = nullptr;
+
+	m_pSceneNode = pSceneNode;
+	MovableObject* pObject = m_pSceneNode->getAttachedObject(0);
+	m_pEntity = dynamic_cast<Ogre::Entity*>(pObject);
+}
+
 EntityObject::~EntityObject()
 {
-	m_pEntity = nullptr;
-	m_pSceneNode = nullptr;
-	
+	SAFE_DELETE(m_pAnimateStateMachine);
+
 	auto iter = m_animations.begin();
 	for (; iter != m_animations.end(); iter++)
 	{
 		delete iter->second;
 	}
 	m_animations.clear();
+
+	m_pSceneNode->getCreator()->destroyEntity(m_pEntity);
+	m_pEntity = nullptr;
+
+	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	pRootScene->removeChild(m_pSceneNode);
+	m_pSceneNode = nullptr;
 }
 
 void EntityObject::Initialize()
@@ -49,7 +70,8 @@ void EntityObject::Initialize()
 void EntityObject::update(int deltaInMillis)
 {
 	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
-	m_pAnimateStateMachine->Update(deltaInMillis, currTimeInMillis);
+	if (m_pAnimateStateMachine != nullptr)
+		m_pAnimateStateMachine->Update(deltaInMillis, currTimeInMillis);
 }
 
 void EntityObject::setPosition(const Ogre::Vector3& position)
@@ -68,9 +90,24 @@ void EntityObject::setOrientation(const Ogre::Quaternion& quaternion)
 	m_pSceneNode->setOrientation(quaternion);
 }
 
-Ogre::Vector3 EntityObject::GetPosition() const
+Ogre::Vector3 EntityObject::getPosition() const
 {
-	return Ogre::Vector3::ZERO;
+	return m_pSceneNode->getPosition();
+}
+
+Ogre::Quaternion EntityObject::getOrientation() const
+{
+	return m_pSceneNode->getOrientation();
+}
+
+Ogre::Vector3 EntityObject::GetDerivedPosition() const
+{
+	return m_pSceneNode->_getDerivedPosition();
+}
+
+Ogre::Quaternion EntityObject::GetDerivedOrientation() const
+{
+	return m_pSceneNode->_getDerivedOrientation();
 }
 
 void EntityObject::setMaterial(const Ogre::String& materialName)
@@ -109,7 +146,7 @@ void EntityObject::setMaterial(const Ogre::String& materialName)
 
 void EntityObject::AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
 {
-	Ogre::Quaternion& orientationOffset = QuaternionFromRotationDegrees(rotationOffset.x, rotationOffset.y, rotationOffset.z);
+	Ogre::Quaternion orientationOffset = QuaternionFromRotationDegrees(rotationOffset.x, rotationOffset.y, rotationOffset.z);
 	m_pEntity->attachObjectToBone(boneName, entityObj->getDetachEntity(), orientationOffset, positionOffset);
 }
 

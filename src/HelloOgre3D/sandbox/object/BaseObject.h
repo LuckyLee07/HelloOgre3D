@@ -7,15 +7,20 @@ public:
 	//tolua_begin
 	enum OBJTYPE
 	{
-		OBJ_AGENT = 0,
-		OBJ_SANDBOX,
-		OBJ_SANDBOX_UI,
-		OBJ_SANDBOX_OBJ,
+		OBJ_TYPE_NONE = 0,
+		OBJ_TYPE_ENTITY,
+		OBJ_TYPE_BLOCK,
+		OBJ_TYPE_PLANE,
+		OBJ_TYPE_AGENT,
+		OBJ_TYPE_SOLDIER,
+		OBJ_TYPE_UIOBJ,
+
+		OBJ_TYPE_MAX,
 	};
 	//tolua_end
 public:
 	//tolua_begin
-	BaseObject(unsigned int objId=0, OBJTYPE objType=OBJ_SANDBOX_OBJ);
+	BaseObject();
 	virtual ~BaseObject();
 
 	void setObjId(unsigned int objId);

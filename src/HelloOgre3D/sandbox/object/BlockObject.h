@@ -25,6 +25,7 @@ public:
 	virtual ~BlockObject();
 
 	void Initialize() override;
+	void DeleteRighdBody();
 
 	void update(int deltaMsec) override;
 

@@ -45,6 +45,10 @@ public:
 	Ogre::Real getScreenHeight();
 	unsigned int getBlockCount();
 
+	void clearAllEntitys();
+	void clearAllBlocks();
+	void clearAllAgents();
+
 	const std::vector<EntityObject*>& getAllEntitys() { return m_entitys; }
 	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
 	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }

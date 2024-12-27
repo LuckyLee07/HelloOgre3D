@@ -4,12 +4,13 @@
 static const int markupTextTopOffset = 1;
 static const int markupTextLeftOffset = 1;
 
-UIComponent::UIComponent(Gorilla::Layer* pUILayer) 
-	: BaseObject(0, BaseObject::OBJ_SANDBOX_UI),
-	m_pSceneNode(nullptr), m_pUILayer(pUILayer), m_IsVisible(true),
+UIComponent::UIComponent(Gorilla::Layer* pUILayer)
+	: m_pSceneNode(nullptr), m_pUILayer(pUILayer), m_IsVisible(true),
 	m_pScreen(nullptr), m_pRectangle(nullptr), m_pText(nullptr), m_pMarkupText(nullptr),
 	m_dimension(0, 0), m_textMargin(0, 0), m_topLeftPos(0, 0), m_topLeftOffset(0, 0)
 {
+	setObjType(OBJ_TYPE_UIOBJ);
+
 	this->Initialize();
 }
 

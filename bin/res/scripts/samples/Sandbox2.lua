@@ -96,6 +96,8 @@ function EventHandle_Keyboard(keycode, pressed)
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(7, 5, -18));
         camera:setOrientation(Quaternion(-160, 0, -180));
+    elseif (keycode == OIS.KC_F9) then
+        GameManager:clearAllBlocks()
     elseif (keycode == OIS.KC_F12) then
         Sandbox:CallFile("res/scripts/gui.lua")
         Sandbox:CallFile("res/scripts/agent.lua")
