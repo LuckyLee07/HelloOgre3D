@@ -56,6 +56,8 @@ public: //static methods
 	static Ogre::SceneNode* CreateNodeCapsule(Ogre::Real height, Ogre::Real radius);
 	static btRigidBody* CreateRigidBodyCapsule(Ogre::Real height, Ogre::Real radius);
 
+	static btRigidBody* CreateRigidBodyBox(Ogre::Real width, Ogre::Real height, Ogre::Real length);
+
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);
 	
 public:
@@ -74,6 +76,7 @@ public:
 	BlockObject* CreatePlane(float length, float width);
 	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
 	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
+	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 

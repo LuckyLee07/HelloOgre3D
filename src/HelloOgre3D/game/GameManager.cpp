@@ -230,7 +230,11 @@ void GameManager::addBlockObject(BlockObject* pBlockObject)
 
 	m_blocks.push_back(pBlockObject);
 
-	m_pPhysicsWorld->addRigidBody(pBlockObject->getRigidBody());
+	auto rigidBody = pBlockObject->getRigidBody();
+	if (rigidBody != nullptr)
+	{
+		m_pPhysicsWorld->addRigidBody(rigidBody);
+	}
 }
 
 void GameManager::addEntityObject(EntityObject* pEntityObject)

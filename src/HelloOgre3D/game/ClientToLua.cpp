@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Tue Dec 24 01:08:48 2024.
+** Generated automatically by tolua++-1.0.92 on Wed Dec 25 07:19:00 2024.
 */
 
 #ifndef __cplusplus
@@ -4204,6 +4204,40 @@ static int tolua_ClientToLua_EntityObject_GetPosition00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setMaterial of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setMaterial00
+static int tolua_ClientToLua_EntityObject_setMaterial00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
+#endif
+  {
+   self->setMaterial(materialName);
+   tolua_pushcppstring(tolua_S,(const char*)materialName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setMaterial'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: AttachToBone of class  EntityObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_AttachToBone00
 static int tolua_ClientToLua_EntityObject_AttachToBone00(lua_State* tolua_S)
@@ -7027,6 +7061,48 @@ static int tolua_ClientToLua_SandboxMgr_CreateBlockObject00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: CreateBlockBox of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxMgr_CreateBlockBox00
+static int tolua_ClientToLua_SandboxMgr_CreateBlockBox00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,7,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
+  float width = ((float)  tolua_tonumber(tolua_S,2,0));
+  float height = ((float)  tolua_tonumber(tolua_S,3,0));
+  float length = ((float)  tolua_tonumber(tolua_S,4,0));
+  float uTile = ((float)  tolua_tonumber(tolua_S,5,0));
+  float vTile = ((float)  tolua_tonumber(tolua_S,6,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateBlockBox'", NULL);
+#endif
+  {
+   BlockObject* tolua_ret = (BlockObject*)  self->CreateBlockBox(width,height,length,uTile,vTile);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BlockObject");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'CreateBlockBox'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: CreateUIComponent of class  SandboxMgr */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxMgr_CreateUIComponent00
 static int tolua_ClientToLua_SandboxMgr_CreateUIComponent00(lua_State* tolua_S)
@@ -8031,6 +8107,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_EntityObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_EntityObject_setOrientation00);
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_EntityObject_GetPosition00);
+   tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_EntityObject_setMaterial00);
    tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
    tolua_function(tolua_S,"GetAnimation",tolua_ClientToLua_EntityObject_GetAnimation00);
    tolua_function(tolua_S,"GetObjectASM",tolua_ClientToLua_EntityObject_GetObjectASM00);
@@ -8123,6 +8200,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreatePlane",tolua_ClientToLua_SandboxMgr_CreatePlane00);
    tolua_function(tolua_S,"CreateEntityObject",tolua_ClientToLua_SandboxMgr_CreateEntityObject00);
    tolua_function(tolua_S,"CreateBlockObject",tolua_ClientToLua_SandboxMgr_CreateBlockObject00);
+   tolua_function(tolua_S,"CreateBlockBox",tolua_ClientToLua_SandboxMgr_CreateBlockBox00);
    tolua_function(tolua_S,"CreateUIComponent",tolua_ClientToLua_SandboxMgr_CreateUIComponent00);
    tolua_function(tolua_S,"CreateAgent",tolua_ClientToLua_SandboxMgr_CreateAgent00);
   tolua_endmodule(tolua_S);

@@ -299,6 +299,33 @@ btConvexHullShape* SandboxMgr::CreateSimplifiedConvexHull(Ogre::Mesh* meshPtr)
     return simplifiedHullShape;
 }
 
+btRigidBody* SandboxMgr::CreateRigidBodyBox(Ogre::Real width, Ogre::Real height, Ogre::Real length)
+{
+    // 创建一个盒子形状
+    btBoxShape* const boxShape = new btBoxShape(btVector3(width / 2, height / 2, length / 2));
+
+	// 创建一个默认的运动状态对象，初始时没有旋转和位移。
+	btDefaultMotionState* capsuleMotionState = new btDefaultMotionState();
+
+	// 初始化局部惯性向量，开始时设置为0。局部惯性将基于质量计算，决定物体的旋转惯性。
+	btVector3 localInertia(0, 0, 0);
+	// 计算胶囊形状的局部惯性，假设胶囊的质量为1.0f。
+    boxShape->calculateLocalInertia(1.0f, localInertia);
+
+	// 创建刚体的构造信息，包括质量（1.0f表示不是静态的）、运动状态、形状和局部惯性。
+	btRigidBody::btRigidBodyConstructionInfo capsuleRigidBodyCI(1.0f, capsuleMotionState, boxShape, localInertia);
+
+	// 使用上述构造信息创建刚体对象。
+	btRigidBody* const rigidBody = new btRigidBody(capsuleRigidBodyCI);
+
+	// 设置连续碰撞检测（CCD）的阈值和半径，用于处理高速移动的物体可能产生的穿透问题。
+	// CCD阈值设为0.5f，CCD扫掠球半径设置为胶囊的半径。
+	rigidBody->setCcdMotionThreshold(0.5f);
+	rigidBody->setCcdSweptSphereRadius(width/2.0f);
+
+	return rigidBody;
+}
+
 void SandboxMgr::GetMeshInfo(const Ogre::Mesh* mesh, 
     size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices)
 {
@@ -511,6 +538,27 @@ BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshFilePath)
     g_GameManager->addBlockObject(pObject);
 
     return pObject;
+}
+
+BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length, float uTile, float vTile)
+{
+    Procedural::BoxGenerator boxGenerator;
+    boxGenerator.setSizeX(width);
+    boxGenerator.setSizeY(height);
+    boxGenerator.setSizeZ(length);
+    boxGenerator.setUTile(uTile);
+    boxGenerator.setVTile(vTile);
+
+    const Ogre::MeshPtr meshPtr = boxGenerator.realizeMesh();
+
+    btRigidBody* planeRigidBody = SandboxMgr::CreateRigidBodyBox(width, height, length);
+
+	BlockObject* pObject = new BlockObject(meshPtr, planeRigidBody);
+    pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
+
+	g_GameManager->addBlockObject(pObject);
+
+	return pObject;
 }
 
 EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)

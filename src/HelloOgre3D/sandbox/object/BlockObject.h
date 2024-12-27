@@ -18,7 +18,8 @@ class BlockObject : public EntityObject //tolua_exports
 { //tolua_exports
 	friend class AgentObject;
 public:
-	BlockObject(const Ogre::String& meshFile);
+	BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody = nullptr);
+	BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody = nullptr);
 	BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody);
 
 	virtual ~BlockObject();

@@ -112,7 +112,7 @@ function Sandbox_Initialize(ctype)
     local weapon = Sandbox:CreateEntityObject(weaponPath);
     
     -- Create an animation state machine to handle weapon animations.
-    _G.weaponAsm = weapon:GetWeaponASM();
+    _G.weaponAsm = weapon:GetObjectASM();
 
     -- Retrieve and store the weapon animations before attaching the weapon to
     -- the soldier.
@@ -139,7 +139,7 @@ function Sandbox_Initialize(ctype)
     local idleAnimLength = idle_anim:GetLength();
 
     -- Create an animation state machine to handle soldier animations.
-    _G.soldierAsm = soldier:GetMoveASM();
+    _G.soldierAsm = soldier:GetObjectASM();
 
     soldierAsm:AddState("idle_aim", idle_anim, true);
     soldierAsm:AddState("dead", soldier:GetAnimation("stand_dead_2"));

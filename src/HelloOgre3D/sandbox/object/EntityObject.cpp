@@ -8,6 +8,7 @@
 #include "animation/Animation.h"
 #include "animation/AnimationStateMachine.h"
 #include "game/GameManager.h"
+#include "OgreManualObject.h"
 
 using namespace Ogre;
 
@@ -31,34 +32,24 @@ EntityObject::~EntityObject()
 {
 	m_pEntity = nullptr;
 	m_pSceneNode = nullptr;
-
-	auto asmsIter = m_asms.begin();
-	for (; asmsIter != m_asms.end(); asmsIter++)
-	{
-		delete asmsIter->second;
-	}
-	m_asms.clear();
 	
-	auto animIter = m_animations.begin();
-	for (; animIter != m_animations.end(); animIter++)
+	auto iter = m_animations.begin();
+	for (; iter != m_animations.end(); iter++)
 	{
-		delete animIter->second;
+		delete iter->second;
 	}
 	m_animations.clear();
 }
 
 void EntityObject::Initialize()
 {
-
+	m_pAnimateStateMachine = new Fancy::AnimationStateMachine();
 }
 
 void EntityObject::update(int deltaInMillis)
 {
 	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
-	for (auto iter = m_asms.begin(); iter != m_asms.end(); iter++)
-	{
-		iter->second->Update(deltaInMillis, currTimeInMillis);
-	}
+	m_pAnimateStateMachine->Update(deltaInMillis, currTimeInMillis);
 }
 
 void EntityObject::setPosition(const Ogre::Vector3& position)
@@ -80,6 +71,40 @@ void EntityObject::setOrientation(const Ogre::Quaternion& quaternion)
 Ogre::Vector3 EntityObject::GetPosition() const
 {
 	return Ogre::Vector3::ZERO;
+}
+
+void EntityObject::setMaterial(const Ogre::String& materialName)
+{
+	if (m_pSceneNode == nullptr) return;
+	
+	Ogre::SceneNode::ObjectIterator it = m_pSceneNode->getAttachedObjectIterator();
+
+	while (it.hasMoreElements())
+	{
+		const Ogre::String movableType =
+			it.current()->second->getMovableType();
+
+		if (movableType == Ogre::EntityFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::Entity* const entity =
+				static_cast<Ogre::Entity*>(it.current()->second);
+			entity->setMaterialName(materialName);
+		}
+		else if (movableType ==
+			Ogre::ManualObjectFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::ManualObject* const entity =
+				static_cast<Ogre::ManualObject*>(it.current()->second);
+			unsigned int sections = entity->getNumSections();
+
+			for (unsigned int id = 0; id < sections; ++id)
+			{
+				entity->setMaterialName(id, materialName);
+			}
+		}
+
+		it.getNext();
+	}
 }
 
 void EntityObject::AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
@@ -111,20 +136,7 @@ Fancy::Animation* EntityObject::GetAnimation(const char* animationName)
 	return m_animations[animationName];
 }
 
-Fancy::AnimationStateMachine* EntityObject::GetMoveASM()
+Fancy::AnimationStateMachine* EntityObject::GetObjectASM()
 {
-	if (m_asms.find("move") == m_asms.end())
-	{
-		m_asms["move"] = new Fancy::AnimationStateMachine();
-	}
-	return m_asms["move"];
-}
-
-Fancy::AnimationStateMachine* EntityObject::GetWeaponASM()
-{
-	if (m_asms.find("weapon") == m_asms.end())
-	{
-		m_asms["weapon"] = new Fancy::AnimationStateMachine();
-	}
-	return m_asms["weapon"];
+	return m_pAnimateStateMachine;
 }

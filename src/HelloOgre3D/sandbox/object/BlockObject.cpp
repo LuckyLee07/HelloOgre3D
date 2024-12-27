@@ -9,8 +9,8 @@
 
 using namespace Ogre;
 
-BlockObject::BlockObject(const Ogre::String& meshFile)
-	: EntityObject(meshFile), m_pRigidBody(nullptr)
+BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
+	: EntityObject(meshFile), m_pRigidBody(pRigidBody)
 {
 	if (m_pEntity == nullptr)
 	{
@@ -18,9 +18,27 @@ BlockObject::BlockObject(const Ogre::String& meshFile)
 	}
 
 	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
-	m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr, 1.0f);
+	if (pRigidBody == nullptr)
+	{
+		m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr, 1.0f);
+		m_pRigidBody->setUserPointer(this);
+	}
+}
 
-	m_pRigidBody->setUserPointer(this);
+BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
+	: EntityObject(), m_pRigidBody(pRigidBody)
+{
+	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	m_pSceneNode = pRootScene->createChildSceneNode();
+
+	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshPtr);
+	m_pSceneNode->attachObject(m_pEntity);
+
+	if (pRigidBody == nullptr)
+	{
+		m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr.get(), 1.0f);
+		m_pRigidBody->setUserPointer(this);
+	}
 }
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
@@ -29,8 +47,7 @@ BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	m_pEntity = nullptr;
 	m_pSceneNode = pSceneNode;
 
-	if (m_pRigidBody)
-		m_pRigidBody->setUserPointer(this);
+	m_pRigidBody->setUserPointer(this);
 }
 
 BlockObject::~BlockObject()
