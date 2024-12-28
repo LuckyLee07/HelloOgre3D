@@ -1,3 +1,4 @@
+require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
 
 local textSize = {w = 300, h = 300}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -102,7 +103,25 @@ function Sandbox_Initialize(ctype)
     local camera = Sandbox:GetCamera();
     camera:setPosition(Vector3(0, 1, -3));
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
+    
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    Soldier_InitSoldierAsm(soldierAgent)
 
+    soldierAgent:SetPosition(Vector3(0, 0, 0))
+    soldierAgent:SetRotation(Vector3(0, -90, 0))
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    soldierAgent:initAgentWeapon(weaponPath)
+    Soldier_InitWeaponAsm(soldierAgent)
+
+    local weapon = soldierAgent:getAgentWeapon()
+    _G.weaponAsm = weapon:GetObjectASM();
+
+    local soldier = soldierAgent:getAgentBody()
+    _G.soldierAsm = soldier:GetObjectASM();
+    
+    --[[
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
     local soldier = Sandbox:CreateEntityObject(soldierPath);
     soldier:setPosition(Vector3(0, 0, 0))
@@ -182,6 +201,7 @@ function Sandbox_Initialize(ctype)
     soldierAsm:RequestState("idle_aim")
 
     soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
+    --]]
 end
 
 

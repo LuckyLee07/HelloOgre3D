@@ -606,6 +606,7 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
 	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
 	EntityObject* pEntityObj = new EntityObject(meshFilePath);
+    pEntityObj->setOriginPos(Vector3(0.0f, -height * 0.5f, 0.0f));
 
 	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));

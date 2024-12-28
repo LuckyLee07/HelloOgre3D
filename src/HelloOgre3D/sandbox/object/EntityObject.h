@@ -4,6 +4,7 @@
 #include "BaseObject.h"
 #include "OgreString.h"
 #include "OgreMath.h"
+#include "OgreVector3.h"
 #include <unordered_map>
 
 namespace Ogre {
@@ -31,6 +32,7 @@ public:
 	virtual void setRotation(const Ogre::Vector3& position);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
 
+	void setOriginPos(const Ogre::Vector3& position);
 	void setMaterial(const Ogre::String& materialName);
 
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
@@ -41,6 +43,11 @@ public:
 
 	Ogre::Vector3 getPosition() const;
 	Ogre::Quaternion getOrientation() const;
+	const Ogre::Vector3& getOriginPos() const;
+
+	void SetDerivedPosition(const Ogre::Vector3& position);
+	void SetDerivedRotation(const Ogre::Vector3& position);
+	void SetDerivedOrientation(const Ogre::Quaternion& quaternion);
 
 	Ogre::Vector3 GetDerivedPosition() const;
 	Ogre::Quaternion GetDerivedOrientation() const;
@@ -52,6 +59,7 @@ public:
 protected:
 	Ogre::SceneNode* m_pSceneNode;
 	Ogre::Entity* m_pEntity;
+	Ogre::Vector3 m_originPos;
 
 	Fancy::AnimationStateMachine* m_pAnimateStateMachine;
 	std::unordered_map<std::string, Fancy::Animation*> m_animations;

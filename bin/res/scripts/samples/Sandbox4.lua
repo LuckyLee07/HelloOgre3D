@@ -23,6 +23,26 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 
 local weaponState = "sniper"
 
+function Create_LightSoldier()
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    Soldier_InitSoldierAsm(soldierAgent)
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    soldierAgent:initAgentWeapon(weaponPath)
+    Soldier1_InitWeaponAsm(soldierAgent)
+end
+
+function Create_DarkSoldier()
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    Soldier_InitSoldierAsm(soldierAgent)
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    soldierAgent:initAgentWeapon(weaponPath)
+    Soldier1_InitWeaponAsm(soldierAgent)
+end
+
 function EventHandle_Keyboard(keycode, pressed)
     GUI_HandleKeyEvent(keycode, pressed)
 
@@ -30,11 +50,11 @@ function EventHandle_Keyboard(keycode, pressed)
     if (keycode == OIS.KC_F1) then
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(-17, 10, 0));
-        camera:setOrientation(GetForward(Vector3(-145, -50, -150)));
+        camera:setOrientation(Quaternion(-145, -50, -150));
     elseif (keycode == OIS.KC_F3) then
-        
+        Create_LightSoldier()
     elseif (keycode == OIS.KC_F4) then
-        
+        Create_DarkSoldier()
     end
 end
 
@@ -49,13 +69,13 @@ function Sandbox_Initialize(ctype)
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
 
-    -- Create The Sky.
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
-
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
     camera:setPosition(Vector3(-17, 10, 0));
     camera:setOrientation(Quaternion(-145, -50, -150));
+
+    -- Create The Sky.
+    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create a plane in the physics world
     local plane = Sandbox:CreatePlane(200, 200);
@@ -68,21 +88,9 @@ function Sandbox_Initialize(ctype)
     local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
-    
+
+	-- Create the sandbox level
     SandboxUtilities_CreateLevel()
-
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
-
-    local height = soldierAgent:GetHeight()
-    soldierAgent:SetRotation(Vector3(0, -90, 0))
-    soldierAgent:SetPosition(Vector3(0, -height*0.5, 0))
-
-    Soldier_InitSoldierAsm(soldierAgent)
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initAgentWeapon(weaponPath)
-    Soldier_InitSoldierAsm(soldierAgent)
 end
 
 

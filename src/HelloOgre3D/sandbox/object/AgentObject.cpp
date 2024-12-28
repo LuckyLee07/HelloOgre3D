@@ -109,17 +109,20 @@ void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
 	m_pAgentBody->AttachToBone("b_RightHand", m_pAgentWeapon, positionOffset, rotationOffset);
 }
 
-
 void AgentObject::SetPosition(const Ogre::Vector3& position)
 {
-	btVector3 btPosition(position.x, position.y, position.z);
-	btTransform transform = m_pRigidBody->getWorldTransform();
-	transform.setOrigin(btPosition);
+	if (m_pRigidBody != nullptr)
+	{
+		btVector3 btPosition(position.x, position.y, position.z);
+		btTransform transform = m_pRigidBody->getWorldTransform();
+		transform.setOrigin(btPosition);
 
-	m_pRigidBody->setWorldTransform(transform);
-	m_pRigidBody->activate(true);
+		m_pRigidBody->setWorldTransform(transform);
+		m_pRigidBody->activate(true);
+	}
 
-	m_pAgentBody->setPosition(position);
+	this->updateWorldTransform();
+	//m_pAgentBody->setPosition(position);
 }
 
 void AgentObject::SetRotation(const Ogre::Vector3& rotation)
@@ -130,16 +133,18 @@ void AgentObject::SetRotation(const Ogre::Vector3& rotation)
 
 void AgentObject::SetOrientation(const Ogre::Quaternion& quaternion)
 {
-	btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-	btTransform transform = m_pRigidBody->getWorldTransform();
-	transform.setRotation(btRotation);
+	if (m_pRigidBody != nullptr)
+	{
+		btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+		btTransform transform = m_pRigidBody->getWorldTransform();
+		transform.setRotation(btRotation);
 
-	m_pRigidBody->setWorldTransform(transform);
-	m_pRigidBody->activate(true);
-
-	//m_pAgentBody->setOrientation(quaternion);
+		m_pRigidBody->setWorldTransform(transform);
+		m_pRigidBody->activate(true);
+	}
 
 	this->updateWorldTransform();
+	//m_pAgentBody->setOrientation(quaternion);
 }
 
 void AgentObject::SetForward(const Ogre::Vector3& forward)
@@ -152,14 +157,17 @@ void AgentObject::SetForward(const Ogre::Vector3& forward)
 
 	Ogre::Quaternion orientation(xAxis, yAxis, zAxis);
 
-	btTransform transform = m_pRigidBody->getWorldTransform();
-	btQuaternion btRotation(orientation.x, orientation.y, orientation.z, orientation.w);
-	transform.setRotation(btRotation);
-	m_pRigidBody->setWorldTransform(transform);
-	m_pRigidBody->activate(true);
+	if (m_pRigidBody != nullptr)
+	{
+		btTransform transform = m_pRigidBody->getWorldTransform();
+		btQuaternion btRotation(orientation.x, orientation.y, orientation.z, orientation.w);
+		transform.setRotation(btRotation);
+		m_pRigidBody->setWorldTransform(transform);
+		m_pRigidBody->activate(true);
+	}
 
-	if (m_pAgentBody != nullptr)
-		m_pAgentBody->setOrientation(orientation);
+	this->updateWorldTransform();
+	//m_pAgentBody->setOrientation(orientation);
 }
 
 void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
@@ -535,16 +543,16 @@ void AgentObject::update(int deltaMilisec)
 
 void AgentObject::updateWorldTransform()
 {
-	if (m_pAgentBody == nullptr) return;
+	if (m_pRigidBody == nullptr) return;
 	
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
 	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
-	m_pAgentBody->setPosition(position);
+	m_pAgentBody->SetDerivedPosition(position + m_pAgentBody->getOriginPos());
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
 	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
 								rigidBodyRotation.y(), rigidBodyRotation.z());
-	m_pAgentBody->setOrientation(rotation);
+	m_pAgentBody->SetDerivedOrientation(rotation);
 }
 
 
