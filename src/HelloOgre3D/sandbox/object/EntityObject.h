@@ -56,10 +56,15 @@ public:
 	Ogre::Entity* getDetachEntity();
 	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
 
+	BaseObject* getOwner() { return m_owner; }
+	void setOwner(BaseObject* owner) { m_owner = owner; }
+
 protected:
 	Ogre::SceneNode* m_pSceneNode;
 	Ogre::Entity* m_pEntity;
 	Ogre::Vector3 m_originPos;
+
+	BaseObject* m_owner; //≥÷”–’ﬂ
 
 	Fancy::AnimationStateMachine* m_pAnimateStateMachine;
 	std::unordered_map<std::string, Fancy::Animation*> m_animations;

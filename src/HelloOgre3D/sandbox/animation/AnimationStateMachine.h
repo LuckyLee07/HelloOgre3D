@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 
+class BaseObject;
 namespace Fancy //tolua_exports
 { //tolua_exports
     class Animation;
@@ -12,7 +13,7 @@ namespace Fancy //tolua_exports
     class AnimationStateMachine //tolua_exports
     { //tolua_exports
     public:
-        AnimationStateMachine();
+        AnimationStateMachine(BaseObject* owner);
         ~AnimationStateMachine();
 
         void Update(float deltaTimeInMillis, long long currentTimeInMillis);
@@ -40,12 +41,13 @@ namespace Fancy //tolua_exports
         void StepCurrentAnimation(float deltaTimeInMillis);
 
     public:
-
         static void Animation_LinearBlendIn(Animation* startAnim, float blendTime, float startTime, float currTime);
         static void Animation_LinearBlendOut(Animation* startAnim, float blendTime, float startTime, float currTime);
         static void Animation_LinearBlendTo(Animation* startAnim, Animation* endAnim, float blendTime, float startTime, float currTime);
 
     private:
+        BaseObject* m_owner; //≥÷”–’ﬂ
+
         std::unordered_map<std::string, AnimationState*> m_animStates;
         typedef std::unordered_map<std::string, AnimationTransition*> TransitionMap;
         std::unordered_map<std::string, TransitionMap> m_animTransitions;

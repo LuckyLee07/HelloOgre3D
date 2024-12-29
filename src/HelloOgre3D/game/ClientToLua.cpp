@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Dec 29 17:09:49 2024.
+** Generated automatically by tolua++-1.0.92 on Sun Dec 29 22:52:33 2024.
 */
 
 #ifndef __cplusplus
@@ -25,6 +25,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/animation/AnimationStateMachine.h"
 #include "../sandbox/object/EntityObject.h"
 #include "../sandbox/object/BlockObject.h"
+#include "../sandbox/object/VehicleObject.h"
 #include "../sandbox/object/AgentObject.h"
 #include "../sandbox/manager/SandboxMgr.h"
 #include "../sandbox/manager/ObjectManager.h"
@@ -108,6 +109,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
  tolua_usertype(tolua_S,"btQuaternion");
+ tolua_usertype(tolua_S,"Fancy::Animation");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"BaseObject");
@@ -115,14 +117,14 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::SceneManager");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
- tolua_usertype(tolua_S,"Fancy::Animation");
- tolua_usertype(tolua_S,"AgentObject");
+ tolua_usertype(tolua_S,"SandboxMgr");
+ tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
- tolua_usertype(tolua_S,"SandboxMgr");
+ tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"ObjectManager");
- tolua_usertype(tolua_S,"EntityObject");
+ tolua_usertype(tolua_S,"VehicleObject");
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
@@ -4633,6 +4635,1598 @@ static int tolua_ClientToLua_BlockObject_setMass00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetPosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetPosition00
+static int tolua_ClientToLua_VehicleObject_SetPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetPosition'", NULL);
+#endif
+  {
+   self->SetPosition(*position);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRotation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetRotation00
+static int tolua_ClientToLua_VehicleObject_SetRotation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRotation'", NULL);
+#endif
+  {
+   self->SetRotation(*rotation);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRotation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetOrientation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetOrientation00
+static int tolua_ClientToLua_VehicleObject_SetOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetOrientation'", NULL);
+#endif
+  {
+   self->SetOrientation(*quaternion);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetForward of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetForward00
+static int tolua_ClientToLua_VehicleObject_SetForward00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* forward = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetForward'", NULL);
+#endif
+  {
+   self->SetForward(*forward);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetForward'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetVelocity of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetVelocity00
+static int tolua_ClientToLua_VehicleObject_SetVelocity00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* velocity = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetVelocity'", NULL);
+#endif
+  {
+   self->SetVelocity(*velocity);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetVelocity'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetTarget of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetTarget00
+static int tolua_ClientToLua_VehicleObject_SetTarget00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* targetPos = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTarget'", NULL);
+#endif
+  {
+   self->SetTarget(*targetPos);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetTarget'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetTargetRadius of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetTargetRadius00
+static int tolua_ClientToLua_VehicleObject_SetTargetRadius00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float radius = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTargetRadius'", NULL);
+#endif
+  {
+   self->SetTargetRadius(radius);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetTargetRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetTarget of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetTarget00
+static int tolua_ClientToLua_VehicleObject_GetTarget00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTarget'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetTarget();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetTarget'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetVelocity of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetVelocity00
+static int tolua_ClientToLua_VehicleObject_GetVelocity00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetVelocity'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetVelocity();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetVelocity'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetUp of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetUp00
+static int tolua_ClientToLua_VehicleObject_GetUp00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetUp'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetUp();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetUp'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetLeft of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetLeft00
+static int tolua_ClientToLua_VehicleObject_GetLeft00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetLeft'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetLeft();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetLeft'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetForward of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetForward00
+static int tolua_ClientToLua_VehicleObject_GetForward00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetForward'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetForward();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetPosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetPosition00
+static int tolua_ClientToLua_VehicleObject_GetPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetOrientation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetOrientation00
+static int tolua_ClientToLua_VehicleObject_GetOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
+#endif
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMass of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetMass00
+static int tolua_ClientToLua_VehicleObject_SetMass00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float mass = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMass'", NULL);
+#endif
+  {
+   self->SetMass(mass);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMass'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetHeight of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetHeight00
+static int tolua_ClientToLua_VehicleObject_SetHeight00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float height = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetHeight'", NULL);
+#endif
+  {
+   self->SetHeight(height);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetHeight'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRadius of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetRadius00
+static int tolua_ClientToLua_VehicleObject_SetRadius00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float radius = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRadius'", NULL);
+#endif
+  {
+   self->SetRadius(radius);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetSpeed of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetSpeed00
+static int tolua_ClientToLua_VehicleObject_SetSpeed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float speed = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetSpeed'", NULL);
+#endif
+  {
+   self->SetSpeed(speed);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetSpeed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetHealth of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetHealth00
+static int tolua_ClientToLua_VehicleObject_SetHealth00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float health = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetHealth'", NULL);
+#endif
+  {
+   self->SetHealth(health);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetHealth'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMaxForce of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetMaxForce00
+static int tolua_ClientToLua_VehicleObject_SetMaxForce00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float maxForce = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxForce'", NULL);
+#endif
+  {
+   self->SetMaxForce(maxForce);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMaxForce'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMaxSpeed of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetMaxSpeed00
+static int tolua_ClientToLua_VehicleObject_SetMaxSpeed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float maxSpeed = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxSpeed'", NULL);
+#endif
+  {
+   self->SetMaxSpeed(maxSpeed);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMaxSpeed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMass of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetMass00
+static int tolua_ClientToLua_VehicleObject_GetMass00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMass'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetMass();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMass'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetSpeed of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetSpeed00
+static int tolua_ClientToLua_VehicleObject_GetSpeed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetSpeed'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetSpeed();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetSpeed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetHeight of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetHeight00
+static int tolua_ClientToLua_VehicleObject_GetHeight00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetHeight'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetHeight();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetHeight'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetRadius of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetRadius00
+static int tolua_ClientToLua_VehicleObject_GetRadius00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRadius'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetRadius();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetHealth of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetHealth00
+static int tolua_ClientToLua_VehicleObject_GetHealth00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetHealth'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetHealth();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetHealth'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMaxForce of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetMaxForce00
+static int tolua_ClientToLua_VehicleObject_GetMaxForce00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxForce'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetMaxForce();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMaxForce'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMaxSpeed of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetMaxSpeed00
+static int tolua_ClientToLua_VehicleObject_GetMaxSpeed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxSpeed'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetMaxSpeed();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMaxSpeed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetTargetRadius of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetTargetRadius00
+static int tolua_ClientToLua_VehicleObject_GetTargetRadius00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTargetRadius'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetTargetRadius();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetTargetRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: PredictFuturePosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_PredictFuturePosition00
+static int tolua_ClientToLua_VehicleObject_PredictFuturePosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'PredictFuturePosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->PredictFuturePosition(predictionTime);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'PredictFuturePosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToPosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToPosition00
+static int tolua_ClientToLua_VehicleObject_ForceToPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToPosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToPosition(*position);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToFollowPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToFollowPath00
+static int tolua_ClientToLua_VehicleObject_ForceToFollowPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToFollowPath'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToFollowPath(predictionTime);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToFollowPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToStayOnPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToStayOnPath00
+static int tolua_ClientToLua_VehicleObject_ForceToStayOnPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToStayOnPath'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToStayOnPath(predictionTime);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToStayOnPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToWander of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToWander00
+static int tolua_ClientToLua_VehicleObject_ForceToWander00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float deltaMilliSeconds = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToWander'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToWander(deltaMilliSeconds);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToWander'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToTargetSpeed of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToTargetSpeed00
+static int tolua_ClientToLua_VehicleObject_ForceToTargetSpeed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float targetSpeed = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToTargetSpeed'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToTargetSpeed(targetSpeed);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToTargetSpeed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToAvoidAgents of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToAvoidAgents00
+static int tolua_ClientToLua_VehicleObject_ForceToAvoidAgents00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToAvoidAgents'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToAvoidAgents(predictionTime);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToAvoidAgents'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToAvoidObjects of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToAvoidObjects00
+static int tolua_ClientToLua_VehicleObject_ForceToAvoidObjects00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToAvoidObjects'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToAvoidObjects(predictionTime);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToAvoidObjects'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToCombine of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToCombine00
+static int tolua_ClientToLua_VehicleObject_ForceToCombine00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<AgentObject*>",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<AgentObject*>* agents = ((const std::vector<AgentObject*>*)  tolua_tousertype(tolua_S,2,0));
+   float distance = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float angle = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToCombine'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToCombine(*agents,distance,angle);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToCombine'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ForceToSeparate of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ForceToSeparate00
+static int tolua_ClientToLua_VehicleObject_ForceToSeparate00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<AgentObject*>",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<AgentObject*>* agents = ((const std::vector<AgentObject*>*)  tolua_tousertype(tolua_S,2,0));
+   float distance = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float angle = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToSeparate'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToSeparate(*agents,distance,angle);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ForceToSeparate'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ApplyForce of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_ApplyForce00
+static int tolua_ClientToLua_VehicleObject_ApplyForce00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* force = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ApplyForce'", NULL);
+#endif
+  {
+   self->ApplyForce(*force);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ApplyForce'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_HasPath00
+static int tolua_ClientToLua_VehicleObject_HasPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasPath'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasPath();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetPath00
+static int tolua_ClientToLua_VehicleObject_SetPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<Ogre::Vector3>",0,&tolua_err)) ||
+     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<Ogre::Vector3>* points = ((const std::vector<Ogre::Vector3>*)  tolua_tousertype(tolua_S,2,0));
+  bool cyclic = ((bool)  tolua_toboolean(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetPath'", NULL);
+#endif
+  {
+   self->SetPath(*points,cyclic);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetPath00
+static int tolua_ClientToLua_VehicleObject_GetPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPath'", NULL);
+#endif
+  {
+   const std::vector<Ogre::Vector3>& tolua_ret = (const std::vector<Ogre::Vector3>&)  self->GetPath();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<Ogre::Vector3>");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: initAgentBody of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_initAgentBody00
 static int tolua_ClientToLua_AgentObject_initAgentBody00(lua_State* tolua_S)
@@ -4830,237 +6424,6 @@ static int tolua_ClientToLua_AgentObject_setAgentType00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetPosition of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetPosition00
-static int tolua_ClientToLua_AgentObject_SetPosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetPosition'", NULL);
-#endif
-  {
-   self->SetPosition(*position);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetPosition'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetRotation of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetRotation00
-static int tolua_ClientToLua_AgentObject_SetRotation00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRotation'", NULL);
-#endif
-  {
-   self->SetRotation(*rotation);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetRotation'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetOrientation of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetOrientation00
-static int tolua_ClientToLua_AgentObject_SetOrientation00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetOrientation'", NULL);
-#endif
-  {
-   self->SetOrientation(*quaternion);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetOrientation'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetForward of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetForward00
-static int tolua_ClientToLua_AgentObject_SetForward00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* forward = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetForward'", NULL);
-#endif
-  {
-   self->SetForward(*forward);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetForward'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetVelocity of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetVelocity00
-static int tolua_ClientToLua_AgentObject_SetVelocity00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* velocity = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetVelocity'", NULL);
-#endif
-  {
-   self->SetVelocity(*velocity);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetVelocity'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetTarget of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetTarget00
-static int tolua_ClientToLua_AgentObject_SetTarget00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* targetPos = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTarget'", NULL);
-#endif
-  {
-   self->SetTarget(*targetPos);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetTarget'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetTargetRadius of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetTargetRadius00
-static int tolua_ClientToLua_AgentObject_SetTargetRadius00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float radius = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTargetRadius'", NULL);
-#endif
-  {
-   self->SetTargetRadius(radius);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetTargetRadius'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: GetUp of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetUp00
 static int tolua_ClientToLua_AgentObject_GetUp00(lua_State* tolua_S)
@@ -5145,48 +6508,6 @@ static int tolua_ClientToLua_AgentObject_GetLeft00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetTarget of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetTarget00
-static int tolua_ClientToLua_AgentObject_GetTarget00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTarget'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetTarget();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetTarget'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: GetForward of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetForward00
 static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
@@ -5224,48 +6545,6 @@ static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetVelocity of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetVelocity00
-static int tolua_ClientToLua_AgentObject_GetVelocity00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetVelocity'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetVelocity();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetVelocity'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5350,1073 +6629,6 @@ static int tolua_ClientToLua_AgentObject_GetOrientation00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetMass of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetMass00
-static int tolua_ClientToLua_AgentObject_SetMass00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMass'", NULL);
-#endif
-  {
-   self->SetMass(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetMass'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetHeight of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetHeight00
-static int tolua_ClientToLua_AgentObject_SetHeight00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetHeight'", NULL);
-#endif
-  {
-   self->SetHeight(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetHeight'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetRadius of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetRadius00
-static int tolua_ClientToLua_AgentObject_SetRadius00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRadius'", NULL);
-#endif
-  {
-   self->SetRadius(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetRadius'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetSpeed of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetSpeed00
-static int tolua_ClientToLua_AgentObject_SetSpeed00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetSpeed'", NULL);
-#endif
-  {
-   self->SetSpeed(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetSpeed'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetHealth of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetHealth00
-static int tolua_ClientToLua_AgentObject_SetHealth00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetHealth'", NULL);
-#endif
-  {
-   self->SetHealth(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetHealth'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetMaxForce of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetMaxForce00
-static int tolua_ClientToLua_AgentObject_SetMaxForce00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxForce'", NULL);
-#endif
-  {
-   self->SetMaxForce(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetMaxForce'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetMaxSpeed of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetMaxSpeed00
-static int tolua_ClientToLua_AgentObject_SetMaxSpeed00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float objMass = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxSpeed'", NULL);
-#endif
-  {
-   self->SetMaxSpeed(objMass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetMaxSpeed'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetMass of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetMass00
-static int tolua_ClientToLua_AgentObject_GetMass00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMass'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetMass();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetMass'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetSpeed of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetSpeed00
-static int tolua_ClientToLua_AgentObject_GetSpeed00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetSpeed'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetSpeed();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetSpeed'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetHeight of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetHeight00
-static int tolua_ClientToLua_AgentObject_GetHeight00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetHeight'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetHeight();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetHeight'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetRadius of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetRadius00
-static int tolua_ClientToLua_AgentObject_GetRadius00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRadius'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetRadius();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetRadius'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetHealth of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetHealth00
-static int tolua_ClientToLua_AgentObject_GetHealth00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetHealth'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetHealth();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetHealth'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetMaxForce of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetMaxForce00
-static int tolua_ClientToLua_AgentObject_GetMaxForce00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxForce'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetMaxForce();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetMaxForce'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetMaxSpeed of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetMaxSpeed00
-static int tolua_ClientToLua_AgentObject_GetMaxSpeed00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxSpeed'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetMaxSpeed();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetMaxSpeed'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetTargetRadius of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetTargetRadius00
-static int tolua_ClientToLua_AgentObject_GetTargetRadius00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTargetRadius'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->GetTargetRadius();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetTargetRadius'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: PredictFuturePosition of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_PredictFuturePosition00
-static int tolua_ClientToLua_AgentObject_PredictFuturePosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'PredictFuturePosition'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->PredictFuturePosition(predictionTime);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'PredictFuturePosition'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToPosition of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToPosition00
-static int tolua_ClientToLua_AgentObject_ForceToPosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToPosition'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToPosition(*position);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToPosition'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToFollowPath of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToFollowPath00
-static int tolua_ClientToLua_AgentObject_ForceToFollowPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToFollowPath'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToFollowPath(predictionTime);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToFollowPath'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToStayOnPath of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToStayOnPath00
-static int tolua_ClientToLua_AgentObject_ForceToStayOnPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToStayOnPath'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToStayOnPath(predictionTime);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToStayOnPath'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToWander of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToWander00
-static int tolua_ClientToLua_AgentObject_ForceToWander00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float deltaMilliSeconds = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToWander'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToWander(deltaMilliSeconds);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToWander'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToTargetSpeed of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToTargetSpeed00
-static int tolua_ClientToLua_AgentObject_ForceToTargetSpeed00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float targetSpeed = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToTargetSpeed'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToTargetSpeed(targetSpeed);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToTargetSpeed'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToAvoidAgents of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToAvoidAgents00
-static int tolua_ClientToLua_AgentObject_ForceToAvoidAgents00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToAvoidAgents'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToAvoidAgents(predictionTime);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToAvoidAgents'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToAvoidObjects of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToAvoidObjects00
-static int tolua_ClientToLua_AgentObject_ForceToAvoidObjects00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-   float predictionTime = ((  float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToAvoidObjects'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToAvoidObjects(predictionTime);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToAvoidObjects'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToCombine of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToCombine00
-static int tolua_ClientToLua_AgentObject_ForceToCombine00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<AgentObject*>",0,&tolua_err)) ||
-     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,5,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::vector<AgentObject*>* agents = ((const std::vector<AgentObject*>*)  tolua_tousertype(tolua_S,2,0));
-   float distance = ((  float)  tolua_tonumber(tolua_S,3,0));
-   float angle = ((  float)  tolua_tonumber(tolua_S,4,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToCombine'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToCombine(*agents,distance,angle);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToCombine'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ForceToSeparate of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ForceToSeparate00
-static int tolua_ClientToLua_AgentObject_ForceToSeparate00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<AgentObject*>",0,&tolua_err)) ||
-     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,5,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::vector<AgentObject*>* agents = ((const std::vector<AgentObject*>*)  tolua_tousertype(tolua_S,2,0));
-   float distance = ((  float)  tolua_tonumber(tolua_S,3,0));
-   float angle = ((  float)  tolua_tonumber(tolua_S,4,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ForceToSeparate'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ForceToSeparate(*agents,distance,angle);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ForceToSeparate'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: ApplyForce of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ApplyForce00
-static int tolua_ClientToLua_AgentObject_ApplyForce00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* force = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ApplyForce'", NULL);
-#endif
-  {
-   self->ApplyForce(*force);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'ApplyForce'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: HasPath of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_HasPath00
-static int tolua_ClientToLua_AgentObject_HasPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasPath'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->HasPath();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'HasPath'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetPath of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_SetPath00
-static int tolua_ClientToLua_AgentObject_SetPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<Ogre::Vector3>",0,&tolua_err)) ||
-     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,4,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::vector<Ogre::Vector3>* points = ((const std::vector<Ogre::Vector3>*)  tolua_tousertype(tolua_S,2,0));
-  bool cyclic = ((bool)  tolua_toboolean(tolua_S,3,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetPath'", NULL);
-#endif
-  {
-   self->SetPath(*points,cyclic);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetPath'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetPath of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetPath00
-static int tolua_ClientToLua_AgentObject_GetPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPath'", NULL);
-#endif
-  {
-   const std::vector<Ogre::Vector3>& tolua_ret = (const std::vector<Ogre::Vector3>&)  self->GetPath();
-    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<Ogre::Vector3>");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetPath'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8244,6 +8456,11 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"LuaInterface");
    tolua_function(tolua_S,"log",tolua_ClientToLua_LuaInterface_log00);
   tolua_endmodule(tolua_S);
+  tolua_constant(tolua_S,"AGENT_OBJ_NONE",AGENT_OBJ_NONE);
+  tolua_constant(tolua_S,"AGENT_OBJ_SEEKING",AGENT_OBJ_SEEKING);
+  tolua_constant(tolua_S,"AGENT_OBJ_FOLLOWER",AGENT_OBJ_FOLLOWER);
+  tolua_constant(tolua_S,"AGENT_OBJ_PATHING",AGENT_OBJ_PATHING);
+  tolua_constant(tolua_S,"AGENT_OBJ_PURSUING",AGENT_OBJ_PURSUING);
   tolua_function(tolua_S,"QuaternionFromRotationDegrees",tolua_ClientToLua_QuaternionFromRotationDegrees00);
   tolua_function(tolua_S,"QuaternionToRotationDegrees",tolua_ClientToLua_QuaternionToRotationDegrees00);
   tolua_function(tolua_S,"BtVector3ToVector3",tolua_ClientToLua_BtVector3ToVector300);
@@ -8343,12 +8560,53 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getMass",tolua_ClientToLua_BlockObject_getMass00);
    tolua_function(tolua_S,"setMass",tolua_ClientToLua_BlockObject_setMass00);
   tolua_endmodule(tolua_S);
-  tolua_constant(tolua_S,"AGENT_OBJ_NONE",AGENT_OBJ_NONE);
-  tolua_constant(tolua_S,"AGENT_OBJ_SEEKING",AGENT_OBJ_SEEKING);
-  tolua_constant(tolua_S,"AGENT_OBJ_FOLLOWER",AGENT_OBJ_FOLLOWER);
-  tolua_constant(tolua_S,"AGENT_OBJ_PATHING",AGENT_OBJ_PATHING);
-  tolua_constant(tolua_S,"AGENT_OBJ_PURSUING",AGENT_OBJ_PURSUING);
-  tolua_cclass(tolua_S,"AgentObject","AgentObject","BaseObject",NULL);
+  tolua_cclass(tolua_S,"VehicleObject","VehicleObject","BaseObject",NULL);
+  tolua_beginmodule(tolua_S,"VehicleObject");
+   tolua_function(tolua_S,"SetPosition",tolua_ClientToLua_VehicleObject_SetPosition00);
+   tolua_function(tolua_S,"SetRotation",tolua_ClientToLua_VehicleObject_SetRotation00);
+   tolua_function(tolua_S,"SetOrientation",tolua_ClientToLua_VehicleObject_SetOrientation00);
+   tolua_function(tolua_S,"SetForward",tolua_ClientToLua_VehicleObject_SetForward00);
+   tolua_function(tolua_S,"SetVelocity",tolua_ClientToLua_VehicleObject_SetVelocity00);
+   tolua_function(tolua_S,"SetTarget",tolua_ClientToLua_VehicleObject_SetTarget00);
+   tolua_function(tolua_S,"SetTargetRadius",tolua_ClientToLua_VehicleObject_SetTargetRadius00);
+   tolua_function(tolua_S,"GetTarget",tolua_ClientToLua_VehicleObject_GetTarget00);
+   tolua_function(tolua_S,"GetVelocity",tolua_ClientToLua_VehicleObject_GetVelocity00);
+   tolua_function(tolua_S,"GetUp",tolua_ClientToLua_VehicleObject_GetUp00);
+   tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_VehicleObject_GetLeft00);
+   tolua_function(tolua_S,"GetForward",tolua_ClientToLua_VehicleObject_GetForward00);
+   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_VehicleObject_GetPosition00);
+   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_VehicleObject_GetOrientation00);
+   tolua_function(tolua_S,"SetMass",tolua_ClientToLua_VehicleObject_SetMass00);
+   tolua_function(tolua_S,"SetHeight",tolua_ClientToLua_VehicleObject_SetHeight00);
+   tolua_function(tolua_S,"SetRadius",tolua_ClientToLua_VehicleObject_SetRadius00);
+   tolua_function(tolua_S,"SetSpeed",tolua_ClientToLua_VehicleObject_SetSpeed00);
+   tolua_function(tolua_S,"SetHealth",tolua_ClientToLua_VehicleObject_SetHealth00);
+   tolua_function(tolua_S,"SetMaxForce",tolua_ClientToLua_VehicleObject_SetMaxForce00);
+   tolua_function(tolua_S,"SetMaxSpeed",tolua_ClientToLua_VehicleObject_SetMaxSpeed00);
+   tolua_function(tolua_S,"GetMass",tolua_ClientToLua_VehicleObject_GetMass00);
+   tolua_function(tolua_S,"GetSpeed",tolua_ClientToLua_VehicleObject_GetSpeed00);
+   tolua_function(tolua_S,"GetHeight",tolua_ClientToLua_VehicleObject_GetHeight00);
+   tolua_function(tolua_S,"GetRadius",tolua_ClientToLua_VehicleObject_GetRadius00);
+   tolua_function(tolua_S,"GetHealth",tolua_ClientToLua_VehicleObject_GetHealth00);
+   tolua_function(tolua_S,"GetMaxForce",tolua_ClientToLua_VehicleObject_GetMaxForce00);
+   tolua_function(tolua_S,"GetMaxSpeed",tolua_ClientToLua_VehicleObject_GetMaxSpeed00);
+   tolua_function(tolua_S,"GetTargetRadius",tolua_ClientToLua_VehicleObject_GetTargetRadius00);
+   tolua_function(tolua_S,"PredictFuturePosition",tolua_ClientToLua_VehicleObject_PredictFuturePosition00);
+   tolua_function(tolua_S,"ForceToPosition",tolua_ClientToLua_VehicleObject_ForceToPosition00);
+   tolua_function(tolua_S,"ForceToFollowPath",tolua_ClientToLua_VehicleObject_ForceToFollowPath00);
+   tolua_function(tolua_S,"ForceToStayOnPath",tolua_ClientToLua_VehicleObject_ForceToStayOnPath00);
+   tolua_function(tolua_S,"ForceToWander",tolua_ClientToLua_VehicleObject_ForceToWander00);
+   tolua_function(tolua_S,"ForceToTargetSpeed",tolua_ClientToLua_VehicleObject_ForceToTargetSpeed00);
+   tolua_function(tolua_S,"ForceToAvoidAgents",tolua_ClientToLua_VehicleObject_ForceToAvoidAgents00);
+   tolua_function(tolua_S,"ForceToAvoidObjects",tolua_ClientToLua_VehicleObject_ForceToAvoidObjects00);
+   tolua_function(tolua_S,"ForceToCombine",tolua_ClientToLua_VehicleObject_ForceToCombine00);
+   tolua_function(tolua_S,"ForceToSeparate",tolua_ClientToLua_VehicleObject_ForceToSeparate00);
+   tolua_function(tolua_S,"ApplyForce",tolua_ClientToLua_VehicleObject_ApplyForce00);
+   tolua_function(tolua_S,"HasPath",tolua_ClientToLua_VehicleObject_HasPath00);
+   tolua_function(tolua_S,"SetPath",tolua_ClientToLua_VehicleObject_SetPath00);
+   tolua_function(tolua_S,"GetPath",tolua_ClientToLua_VehicleObject_GetPath00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"AgentObject","AgentObject","VehicleObject",NULL);
   tolua_beginmodule(tolua_S,"AgentObject");
    tolua_function(tolua_S,"initAgentBody",tolua_ClientToLua_AgentObject_initAgentBody00);
    tolua_function(tolua_S,"initAgentWeapon",tolua_ClientToLua_AgentObject_initAgentWeapon00);
@@ -8356,49 +8614,11 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAgentWeapon",tolua_ClientToLua_AgentObject_getAgentWeapon00);
    tolua_function(tolua_S,"getAgentType",tolua_ClientToLua_AgentObject_getAgentType00);
    tolua_function(tolua_S,"setAgentType",tolua_ClientToLua_AgentObject_setAgentType00);
-   tolua_function(tolua_S,"SetPosition",tolua_ClientToLua_AgentObject_SetPosition00);
-   tolua_function(tolua_S,"SetRotation",tolua_ClientToLua_AgentObject_SetRotation00);
-   tolua_function(tolua_S,"SetOrientation",tolua_ClientToLua_AgentObject_SetOrientation00);
-   tolua_function(tolua_S,"SetForward",tolua_ClientToLua_AgentObject_SetForward00);
-   tolua_function(tolua_S,"SetVelocity",tolua_ClientToLua_AgentObject_SetVelocity00);
-   tolua_function(tolua_S,"SetTarget",tolua_ClientToLua_AgentObject_SetTarget00);
-   tolua_function(tolua_S,"SetTargetRadius",tolua_ClientToLua_AgentObject_SetTargetRadius00);
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_AgentObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
-   tolua_function(tolua_S,"GetTarget",tolua_ClientToLua_AgentObject_GetTarget00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
-   tolua_function(tolua_S,"GetVelocity",tolua_ClientToLua_AgentObject_GetVelocity00);
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_AgentObject_GetPosition00);
    tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_AgentObject_GetOrientation00);
-   tolua_function(tolua_S,"SetMass",tolua_ClientToLua_AgentObject_SetMass00);
-   tolua_function(tolua_S,"SetHeight",tolua_ClientToLua_AgentObject_SetHeight00);
-   tolua_function(tolua_S,"SetRadius",tolua_ClientToLua_AgentObject_SetRadius00);
-   tolua_function(tolua_S,"SetSpeed",tolua_ClientToLua_AgentObject_SetSpeed00);
-   tolua_function(tolua_S,"SetHealth",tolua_ClientToLua_AgentObject_SetHealth00);
-   tolua_function(tolua_S,"SetMaxForce",tolua_ClientToLua_AgentObject_SetMaxForce00);
-   tolua_function(tolua_S,"SetMaxSpeed",tolua_ClientToLua_AgentObject_SetMaxSpeed00);
-   tolua_function(tolua_S,"GetMass",tolua_ClientToLua_AgentObject_GetMass00);
-   tolua_function(tolua_S,"GetSpeed",tolua_ClientToLua_AgentObject_GetSpeed00);
-   tolua_function(tolua_S,"GetHeight",tolua_ClientToLua_AgentObject_GetHeight00);
-   tolua_function(tolua_S,"GetRadius",tolua_ClientToLua_AgentObject_GetRadius00);
-   tolua_function(tolua_S,"GetHealth",tolua_ClientToLua_AgentObject_GetHealth00);
-   tolua_function(tolua_S,"GetMaxForce",tolua_ClientToLua_AgentObject_GetMaxForce00);
-   tolua_function(tolua_S,"GetMaxSpeed",tolua_ClientToLua_AgentObject_GetMaxSpeed00);
-   tolua_function(tolua_S,"GetTargetRadius",tolua_ClientToLua_AgentObject_GetTargetRadius00);
-   tolua_function(tolua_S,"PredictFuturePosition",tolua_ClientToLua_AgentObject_PredictFuturePosition00);
-   tolua_function(tolua_S,"ForceToPosition",tolua_ClientToLua_AgentObject_ForceToPosition00);
-   tolua_function(tolua_S,"ForceToFollowPath",tolua_ClientToLua_AgentObject_ForceToFollowPath00);
-   tolua_function(tolua_S,"ForceToStayOnPath",tolua_ClientToLua_AgentObject_ForceToStayOnPath00);
-   tolua_function(tolua_S,"ForceToWander",tolua_ClientToLua_AgentObject_ForceToWander00);
-   tolua_function(tolua_S,"ForceToTargetSpeed",tolua_ClientToLua_AgentObject_ForceToTargetSpeed00);
-   tolua_function(tolua_S,"ForceToAvoidAgents",tolua_ClientToLua_AgentObject_ForceToAvoidAgents00);
-   tolua_function(tolua_S,"ForceToAvoidObjects",tolua_ClientToLua_AgentObject_ForceToAvoidObjects00);
-   tolua_function(tolua_S,"ForceToCombine",tolua_ClientToLua_AgentObject_ForceToCombine00);
-   tolua_function(tolua_S,"ForceToSeparate",tolua_ClientToLua_AgentObject_ForceToSeparate00);
-   tolua_function(tolua_S,"ApplyForce",tolua_ClientToLua_AgentObject_ApplyForce00);
-   tolua_function(tolua_S,"HasPath",tolua_ClientToLua_AgentObject_HasPath00);
-   tolua_function(tolua_S,"SetPath",tolua_ClientToLua_AgentObject_SetPath00);
-   tolua_function(tolua_S,"GetPath",tolua_ClientToLua_AgentObject_GetPath00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

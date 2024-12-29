@@ -9,6 +9,7 @@ class AgentObject;
 class UIComponent;
 class BlockObject;
 class EntityObject;
+class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
 
@@ -37,6 +38,8 @@ public:
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	//tolua_end
+
+	std::vector<VehicleObject*> getAllVehicles();
 
 	void addUIObject(UIComponent* pUIObject);
 	void addAgentObject(AgentObject* pAgentObject);

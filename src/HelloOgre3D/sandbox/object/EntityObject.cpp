@@ -12,7 +12,8 @@
 
 using namespace Ogre;
 
-EntityObject::EntityObject(const Ogre::String& meshFile) : m_originPos(Ogre::Vector3::ZERO)
+EntityObject::EntityObject(const Ogre::String& meshFile)
+	: m_owner(nullptr), m_originPos(Ogre::Vector3::ZERO)
 {
 	m_pAnimateStateMachine = nullptr;
 	
@@ -23,7 +24,8 @@ EntityObject::EntityObject(const Ogre::String& meshFile) : m_originPos(Ogre::Vec
 	m_pSceneNode->attachObject(m_pEntity);
 }
 
-EntityObject::EntityObject(const Ogre::MeshPtr& meshPtr) : m_originPos(Ogre::Vector3::ZERO)
+EntityObject::EntityObject(const Ogre::MeshPtr& meshPtr)
+	: m_owner(nullptr), m_originPos(Ogre::Vector3::ZERO)
 {
 	m_pAnimateStateMachine = nullptr;
 
@@ -34,7 +36,8 @@ EntityObject::EntityObject(const Ogre::MeshPtr& meshPtr) : m_originPos(Ogre::Vec
 	m_pSceneNode->attachObject(m_pEntity);
 }
 
-EntityObject::EntityObject(Ogre::SceneNode* pSceneNode) : m_originPos(Ogre::Vector3::ZERO)
+EntityObject::EntityObject(Ogre::SceneNode* pSceneNode)
+	: m_owner(nullptr), m_originPos(Ogre::Vector3::ZERO)
 {
 	m_pAnimateStateMachine = nullptr;
 
@@ -45,6 +48,7 @@ EntityObject::EntityObject(Ogre::SceneNode* pSceneNode) : m_originPos(Ogre::Vect
 
 EntityObject::~EntityObject()
 {
+	m_owner = nullptr;
 	SAFE_DELETE(m_pAnimateStateMachine);
 
 	auto iter = m_animations.begin();
@@ -70,7 +74,8 @@ EntityObject::~EntityObject()
 
 void EntityObject::Initialize()
 {
-	m_pAnimateStateMachine = new Fancy::AnimationStateMachine();
+	auto owner = m_owner != nullptr ? m_owner : this;
+	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(owner);
 }
 
 void EntityObject::update(int deltaInMillis)

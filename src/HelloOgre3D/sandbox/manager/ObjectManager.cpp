@@ -184,3 +184,9 @@ void ObjectManager::clearAllUIObjects()
 	}
 	m_uicomps.clear();
 }
+
+std::vector<VehicleObject*> ObjectManager::getAllVehicles()
+{
+	std::vector<VehicleObject*> vehicleVec(m_agents.begin(), m_agents.end());
+	return vehicleVec;
+}

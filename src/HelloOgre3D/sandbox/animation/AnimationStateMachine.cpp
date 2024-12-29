@@ -4,10 +4,13 @@
 #include "AnimationTransition.h"
 #include "LogSystem.h"
 #include "GlobalFuncs.h"
+#include "object/BaseObject.h"
+#include "driver/SandboxEventDispatcherManager.h"
 
 namespace Fancy
 {
-	AnimationStateMachine::AnimationStateMachine() : m_pCurrentState(nullptr), m_pNextState(nullptr), 
+	AnimationStateMachine::AnimationStateMachine(BaseObject* owner) : m_owner(owner),
+		m_pCurrentState(nullptr), m_pNextState(nullptr),
 		m_pCurrentTransition(nullptr), m_TransitionStartTime(0.0f)
 	{
 
@@ -15,6 +18,7 @@ namespace Fancy
 
 	AnimationStateMachine::~AnimationStateMachine()
 	{
+		m_owner = nullptr;
 		auto stateIt = m_animStates.begin();
 		for (; stateIt != m_animStates.end(); stateIt++)
 		{
@@ -124,7 +128,7 @@ namespace Fancy
 
 	bool AnimationStateMachine::ContainsTransition(const std::string& fromState, const std::string& toState)
 	{
-		auto& fromStateIt = m_animTransitions.find(fromState);
+		auto fromStateIt = m_animTransitions.find(fromState);
 		if (fromStateIt != m_animTransitions.end())
 		{
 			return fromStateIt->second.find(toState) != fromStateIt->second.end();
