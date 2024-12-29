@@ -30,7 +30,7 @@ function Create_LightSoldier()
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
     soldierAgent:initAgentWeapon(weaponPath)
-    Soldier1_InitWeaponAsm(soldierAgent)
+    Soldier_InitWeaponAsm(soldierAgent)
 end
 
 function Create_DarkSoldier()
@@ -40,7 +40,7 @@ function Create_DarkSoldier()
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
     soldierAgent:initAgentWeapon(weaponPath)
-    Soldier1_InitWeaponAsm(soldierAgent)
+    Soldier_InitWeaponAsm(soldierAgent)
 end
 
 function EventHandle_Keyboard(keycode, pressed)
