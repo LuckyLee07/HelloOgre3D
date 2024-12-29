@@ -80,7 +80,7 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateProfileInfo()
 
     -- std::vector not lua table
-    local allBlocks = GameManager:getAllBlocks();
+    local allBlocks = ObjectManager:getAllBlocks();
     for index = 1, allBlocks:size()-1 do
         local pObject = allBlocks[index];
         --DebugDrawer:drawSquare(pObject:GetPosition(), pObject:GetRadius(), ColourValue(1, 0, 0))
@@ -97,7 +97,7 @@ function EventHandle_Keyboard(keycode, pressed)
         camera:setPosition(Vector3(7, 5, -18));
         camera:setOrientation(Quaternion(-160, 0, -180));
     elseif (keycode == OIS.KC_F9) then
-        GameManager:clearAllBlocks()
+        ObjectManager:clearAllBlocks(false)
     elseif (keycode == OIS.KC_F12) then
         Sandbox:CallFile("res/scripts/gui.lua")
         Sandbox:CallFile("res/scripts/agent.lua")

@@ -5,26 +5,17 @@
 #include "OgreVector3.h"
 #include "opensteer/include/Vec3.h"
 #include "opensteer/include/SteerLibrary.h"
+#include "SandboxDef.h"
 #include "play/AgentPath.h"
-#include "EntityObject.h"
+#include "object/BaseObject.h"
 
 namespace Ogre {
 	class SceneNode;
 }
 
-//tolua_begin
-enum AGENT_OBJ_TYPE
-{
-	AGENT_OBJ_NONE = 0,
-	AGENT_OBJ_SEEKING = 1,
-	AGENT_OBJ_FOLLOWER = 2,
-	AGENT_OBJ_PATHING = 3,
-	AGENT_OBJ_PURSUING = 4,
-};
-//tolua_end
-
 class btRigidBody;
 class BlockObject;
+class EntityObject;
 class AgentObject : public BaseObject //tolua_exports
 	, private OpenSteer::SteerLibraryMixin<OpenSteer::AbstractVehicle>
 { //tolua_exports

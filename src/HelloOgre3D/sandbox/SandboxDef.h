@@ -28,6 +28,17 @@
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);	(p)=NULL; } }
 
 //tolua_begin
+enum AGENT_OBJ_TYPE
+{
+	AGENT_OBJ_NONE = 0,
+	AGENT_OBJ_SEEKING = 1,
+	AGENT_OBJ_FOLLOWER = 2,
+	AGENT_OBJ_PATHING = 3,
+	AGENT_OBJ_PURSUING = 4,
+};
+//tolua_end
+
+//tolua_begin
 // 给定的三个角度（分别沿X、Y、Z轴的旋转），创建表示这个旋转的Ogre::Quaternion四元数
 inline Ogre::Quaternion QuaternionFromRotationDegrees(Ogre::Real xRotation, Ogre::Real yRotation, Ogre::Real zRotation)
 {
@@ -55,7 +66,6 @@ inline Ogre::Vector3 QuaternionToRotationDegrees(const Ogre::Quaternion& quatern
 
 	return angles;
 }
-
 
 inline Ogre::Vector3 BtVector3ToVector3(const btVector3& vector)
 {

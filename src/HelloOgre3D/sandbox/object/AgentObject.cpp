@@ -2,12 +2,13 @@
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
 #include "btBulletDynamicsCommon.h"
-#include "manager/SandboxMgr.h"
-#include "SandboxDef.h"
 #include "GameManager.h"
 #include "ScriptLuaVM.h"
 #include "BlockObject.h"
-#include "opensteer/include/SteerLibrary.h"
+#include "EntityObject.h"
+#include "play/PhysicsWorld.h"
+#include "manager/SandboxMgr.h"
+#include "manager/ObjectManager.h"
 
 using namespace Ogre;
 
@@ -449,7 +450,7 @@ Ogre::Vector3 AgentObject::ForceToSeparate(const std::vector<AgentObject*>& agen
 Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
 {
 	std::vector<AgentObject*> newAgents;
-	const std::vector<AgentObject*>& agents = GetGameManager()->getAllAgents();
+	const std::vector<AgentObject*>& agents = g_ObjectManager->getAllAgents();
 	
 	std::vector<AgentObject*>::const_iterator iter;
 	for (iter = agents.begin(); iter < agents.end(); iter++)
@@ -465,7 +466,7 @@ Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
 
 Ogre::Vector3 AgentObject::ForceToAvoidObjects(Ogre::Real predictionTime)
 {
-	const std::vector<BlockObject*>& allBlocks = GetGameManager()->getAllBlocks();
+	const std::vector<BlockObject*>& allBlocks = g_ObjectManager->getAllBlocks();
 	return ForceToAvoidObjects(allBlocks, predictionTime);
 }
 

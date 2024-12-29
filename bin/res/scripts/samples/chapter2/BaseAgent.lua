@@ -89,7 +89,7 @@ function Agent_Pursuing_Initialize(agent)
     local randPosz = math.random(-50, 50)
     agent:SetPosition(Vector3(randPosx, 0, randPosz))
 
-    seekings = GameManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
+    seekings = ObjectManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
     if seekings:size() > 0 then enemy = seekings[0] end
     agent:SetTarget(enemy:GetPosition());
 
@@ -108,7 +108,7 @@ function Agent_Follower_Initialize(agent)
     local randPosz = math.random(-50, 50)
     agent:SetPosition(Vector3(randPosx, 0, randPosz))
 
-    leaders = GameManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
+    leaders = ObjectManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
@@ -217,7 +217,7 @@ function Agent_Follower_Update(agent, deltaTimeInMillis)
 
     local forceToCombine = agent:ForceToCombine(leaders, 100, 180);
 
-    local agents = GameManager:getAllAgents()
+    local agents = ObjectManager:getAllAgents()
     local forceToSeparate = agent:ForceToSeparate(agents, 2, 180);
     
     local forceToAlign = agent:ForceToSeparate(leaders, 5, 45);

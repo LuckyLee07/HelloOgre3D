@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Fri Dec 27 22:01:21 2024.
+** Generated automatically by tolua++-1.0.92 on Sun Dec 29 17:09:49 2024.
 */
 
 #ifndef __cplusplus
@@ -27,6 +27,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/object/BlockObject.h"
 #include "../sandbox/object/AgentObject.h"
 #include "../sandbox/manager/SandboxMgr.h"
+#include "../sandbox/manager/ObjectManager.h"
 #include "../sandbox/debug/DebugDrawer.h"
 #include "GameManager.h"
 
@@ -115,11 +116,12 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"Fancy::Animation");
+ tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
  tolua_usertype(tolua_S,"SandboxMgr");
- tolua_usertype(tolua_S,"AgentObject");
+ tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
@@ -4154,6 +4156,39 @@ static int tolua_ClientToLua_EntityObject_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setOriginPos of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setOriginPos00
+static int tolua_ClientToLua_EntityObject_setOriginPos00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOriginPos'", NULL);
+#endif
+  {
+   self->setOriginPos(*position);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setOriginPos'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setMaterial of class  EntityObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setMaterial00
 static int tolua_ClientToLua_EntityObject_setMaterial00(lua_State* tolua_S)
@@ -7288,6 +7323,241 @@ static int tolua_ClientToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: clearAllAgents of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllAgents00
+static int tolua_ClientToLua_ObjectManager_clearAllAgents00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllAgents'", NULL);
+#endif
+  {
+   self->clearAllAgents();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearAllAgents'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearAllEntitys of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllEntitys00
+static int tolua_ClientToLua_ObjectManager_clearAllEntitys00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllEntitys'", NULL);
+#endif
+  {
+   self->clearAllEntitys();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearAllEntitys'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearAllBlocks of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllBlocks00
+static int tolua_ClientToLua_ObjectManager_clearAllBlocks00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  bool forceAll = ((bool)  tolua_toboolean(tolua_S,2,true));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllBlocks'", NULL);
+#endif
+  {
+   self->clearAllBlocks(forceAll);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearAllBlocks'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getAllAgents of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_getAllAgents00
+static int tolua_ClientToLua_ObjectManager_getAllAgents00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllAgents'", NULL);
+#endif
+  {
+   const std::vector<AgentObject*>& tolua_ret = (const std::vector<AgentObject*>&)  self->getAllAgents();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<AgentObject*>");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getAllAgents'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getAllBlocks of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_getAllBlocks00
+static int tolua_ClientToLua_ObjectManager_getAllBlocks00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllBlocks'", NULL);
+#endif
+  {
+   const std::vector<BlockObject*>& tolua_ret = (const std::vector<BlockObject*>&)  self->getAllBlocks();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<BlockObject*>");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getAllBlocks'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getAllEntitys of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_getAllEntitys00
+static int tolua_ClientToLua_ObjectManager_getAllEntitys00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllEntitys'", NULL);
+#endif
+  {
+   const std::vector<EntityObject*>& tolua_ret = (const std::vector<EntityObject*>&)  self->getAllEntitys();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<EntityObject*>");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getAllEntitys'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getSpecifyAgents of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_getSpecifyAgents00
+static int tolua_ClientToLua_ObjectManager_getSpecifyAgents00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getSpecifyAgents'", NULL);
+#endif
+  {
+   std::vector<AgentObject*> tolua_ret = (std::vector<AgentObject*>)  self->getSpecifyAgents(agentType);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((std::vector<AgentObject*>)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"std::vector<AgentObject*>");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(std::vector<AgentObject*>));
+     tolua_pushusertype(tolua_S,tolua_obj,"std::vector<AgentObject*>");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getSpecifyAgents'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getIsEnable of class  DebugDrawer */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_getIsEnable00
 static int tolua_ClientToLua_DebugDrawer_getIsEnable00(lua_State* tolua_S)
@@ -7568,271 +7838,6 @@ static int tolua_ClientToLua_GameManager_getScreenHeight00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getScreenHeight'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getBlockCount of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getBlockCount00
-static int tolua_ClientToLua_GameManager_getBlockCount00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getBlockCount'", NULL);
-#endif
-  {
-   unsigned int tolua_ret = (unsigned int)  self->getBlockCount();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getBlockCount'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: clearAllEntitys of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_clearAllEntitys00
-static int tolua_ClientToLua_GameManager_clearAllEntitys00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllEntitys'", NULL);
-#endif
-  {
-   self->clearAllEntitys();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllEntitys'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: clearAllBlocks of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_clearAllBlocks00
-static int tolua_ClientToLua_GameManager_clearAllBlocks00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllBlocks'", NULL);
-#endif
-  {
-   self->clearAllBlocks();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllBlocks'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: clearAllAgents of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_clearAllAgents00
-static int tolua_ClientToLua_GameManager_clearAllAgents00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllAgents'", NULL);
-#endif
-  {
-   self->clearAllAgents();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllAgents'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getAllEntitys of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getAllEntitys00
-static int tolua_ClientToLua_GameManager_getAllEntitys00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllEntitys'", NULL);
-#endif
-  {
-   const std::vector<EntityObject*>& tolua_ret = (const std::vector<EntityObject*>&)  self->getAllEntitys();
-    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<EntityObject*>");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAllEntitys'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getAllBlocks of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getAllBlocks00
-static int tolua_ClientToLua_GameManager_getAllBlocks00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllBlocks'", NULL);
-#endif
-  {
-   const std::vector<BlockObject*>& tolua_ret = (const std::vector<BlockObject*>&)  self->getAllBlocks();
-    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<BlockObject*>");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAllBlocks'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getAllAgents of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getAllAgents00
-static int tolua_ClientToLua_GameManager_getAllAgents00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAllAgents'", NULL);
-#endif
-  {
-   const std::vector<AgentObject*>& tolua_ret = (const std::vector<AgentObject*>&)  self->getAllAgents();
-    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const std::vector<AgentObject*>");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAllAgents'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getSpecifyAgents of class  GameManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_GameManager_getSpecifyAgents00
-static int tolua_ClientToLua_GameManager_getSpecifyAgents00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
-  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getSpecifyAgents'", NULL);
-#endif
-  {
-   std::vector<AgentObject*> tolua_ret = (std::vector<AgentObject*>)  self->getSpecifyAgents(agentType);
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((std::vector<AgentObject*>)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"std::vector<AgentObject*>");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(std::vector<AgentObject*>));
-     tolua_pushusertype(tolua_S,tolua_obj,"std::vector<AgentObject*>");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getSpecifyAgents'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8255,6 +8260,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_constant(tolua_S,"OBJ_TYPE_BLOCK",BaseObject::OBJ_TYPE_BLOCK);
    tolua_constant(tolua_S,"OBJ_TYPE_PLANE",BaseObject::OBJ_TYPE_PLANE);
    tolua_constant(tolua_S,"OBJ_TYPE_AGENT",BaseObject::OBJ_TYPE_AGENT);
+   tolua_constant(tolua_S,"OBJ_TYPE_SOLDIER",BaseObject::OBJ_TYPE_SOLDIER);
    tolua_constant(tolua_S,"OBJ_TYPE_UIOBJ",BaseObject::OBJ_TYPE_UIOBJ);
    tolua_constant(tolua_S,"OBJ_TYPE_MAX",BaseObject::OBJ_TYPE_MAX);
    tolua_function(tolua_S,"new",tolua_ClientToLua_BaseObject_new00);
@@ -8319,6 +8325,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_EntityObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_EntityObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_EntityObject_setOrientation00);
+   tolua_function(tolua_S,"setOriginPos",tolua_ClientToLua_EntityObject_setOriginPos00);
    tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_EntityObject_setMaterial00);
    tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
    tolua_function(tolua_S,"GetAnimation",tolua_ClientToLua_EntityObject_GetAnimation00);
@@ -8421,6 +8428,16 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateAgent",tolua_ClientToLua_SandboxMgr_CreateAgent00);
    tolua_function(tolua_S,"CreateSoldier",tolua_ClientToLua_SandboxMgr_CreateSoldier00);
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"ObjectManager","ObjectManager","",NULL);
+  tolua_beginmodule(tolua_S,"ObjectManager");
+   tolua_function(tolua_S,"clearAllAgents",tolua_ClientToLua_ObjectManager_clearAllAgents00);
+   tolua_function(tolua_S,"clearAllEntitys",tolua_ClientToLua_ObjectManager_clearAllEntitys00);
+   tolua_function(tolua_S,"clearAllBlocks",tolua_ClientToLua_ObjectManager_clearAllBlocks00);
+   tolua_function(tolua_S,"getAllAgents",tolua_ClientToLua_ObjectManager_getAllAgents00);
+   tolua_function(tolua_S,"getAllBlocks",tolua_ClientToLua_ObjectManager_getAllBlocks00);
+   tolua_function(tolua_S,"getAllEntitys",tolua_ClientToLua_ObjectManager_getAllEntitys00);
+   tolua_function(tolua_S,"getSpecifyAgents",tolua_ClientToLua_ObjectManager_getSpecifyAgents00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"DebugDrawer","DebugDrawer","",NULL);
   tolua_beginmodule(tolua_S,"DebugDrawer");
    tolua_function(tolua_S,"getIsEnable",tolua_ClientToLua_DebugDrawer_getIsEnable00);
@@ -8434,14 +8451,6 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"GameManager");
    tolua_function(tolua_S,"getScreenWidth",tolua_ClientToLua_GameManager_getScreenWidth00);
    tolua_function(tolua_S,"getScreenHeight",tolua_ClientToLua_GameManager_getScreenHeight00);
-   tolua_function(tolua_S,"getBlockCount",tolua_ClientToLua_GameManager_getBlockCount00);
-   tolua_function(tolua_S,"clearAllEntitys",tolua_ClientToLua_GameManager_clearAllEntitys00);
-   tolua_function(tolua_S,"clearAllBlocks",tolua_ClientToLua_GameManager_clearAllBlocks00);
-   tolua_function(tolua_S,"clearAllAgents",tolua_ClientToLua_GameManager_clearAllAgents00);
-   tolua_function(tolua_S,"getAllEntitys",tolua_ClientToLua_GameManager_getAllEntitys00);
-   tolua_function(tolua_S,"getAllBlocks",tolua_ClientToLua_GameManager_getAllBlocks00);
-   tolua_function(tolua_S,"getAllAgents",tolua_ClientToLua_GameManager_getAllAgents00);
-   tolua_function(tolua_S,"getSpecifyAgents",tolua_ClientToLua_GameManager_getSpecifyAgents00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_ClientToLua_GameManager_getTimeInMillis00);
    tolua_function(tolua_S,"getTimeInSeconds",tolua_ClientToLua_GameManager_getTimeInSeconds00);
   tolua_endmodule(tolua_S);

@@ -7,13 +7,6 @@
 #include "OISMouse.h"
 #include "OISKeyboard.h"
 #include "SandboxDef.h"
-#include "object/AgentObject.h"
-#include "object/UIComponent.h"
-#include "object/EntityObject.h"
-#include "object/BlockObject.h"
-#include "play/PhysicsWorld.h"
-#include "manager/SandboxMgr.h"
-
 
 #define UI_LAYER_COUNT	16
 
@@ -24,7 +17,12 @@ namespace Gorilla
 	class MarkupText;
 }
 
+class UIComponent;
+class SandboxMgr;
 class ScriptLuaVM;
+class PhysicsWorld;
+class ObjectManager;
+
 class GameManager //tolua_exports
 { //tolua_exports
 public:
@@ -43,17 +41,6 @@ public:
 	//tolua_begin
 	Ogre::Real getScreenWidth();
 	Ogre::Real getScreenHeight();
-	unsigned int getBlockCount();
-
-	void clearAllEntitys();
-	void clearAllBlocks();
-	void clearAllAgents();
-
-	const std::vector<EntityObject*>& getAllEntitys() { return m_entitys; }
-	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
-	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }
-
-	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 
 	long long getTimeInMillis();
 	Ogre::Real getTimeInSeconds();
@@ -62,10 +49,6 @@ public:
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 	UIComponent* createUIComponent(unsigned int index);
-	void addEntityObject(EntityObject* pEntityObject);
-	void addBlockObject(BlockObject* pBlockObject);
-	void addAgentObject(AgentObject* pAgentObject);
-
 	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	
 public:
@@ -82,19 +65,12 @@ public:
 private:
 	Gorilla::Layer* getUILayer(unsigned int index = 0);
 
-	unsigned int getNextObjectId() { return ++m_objectIndex; }
-
 private:
 	ScriptLuaVM* m_pScriptVM;
 	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
-	
-	unsigned int m_objectIndex;
-	std::vector<AgentObject*> m_agents;
-	std::vector<EntityObject*> m_entitys;
-	std::vector<BlockObject*> m_blocks;
-	std::vector<UIComponent*> m_uicomps;
-	
+	ObjectManager* m_pObjectManager;
+
 	Gorilla::Screen* m_pUIScene;
 	Gorilla::MarkupText* m_pMarkupText;
 	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];

@@ -10,7 +10,9 @@
 #include "object/UIComponent.h"
 #include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
+#include "manager/ObjectManager.h"
 #include "debug/DebugDrawer.h"
+#include "play/PhysicsWorld.h"
 
 using namespace Ogre;
 
@@ -22,18 +24,15 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager() : m_objectIndex(0), m_pUIScene(nullptr), m_SimulationTime(0),
-	m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pMarkupText(nullptr)
+GameManager::GameManager() : m_pUIScene(nullptr), m_SimulationTime(0), m_pScriptVM(nullptr), 
+	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pMarkupText(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
 
 GameManager::~GameManager()
 {
-	this->clearAllAgents();
-	this->clearAllBlocks();
-	this->clearAllEntitys();
-
+	delete m_pObjectManager;
 	delete m_pSandboxMgr;
 	delete m_pPhysicsWorld;
 
@@ -63,6 +62,9 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	m_pPhysicsWorld->initilize();
 
 	m_pSandboxMgr = new SandboxMgr(sceneManager);
+
+	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
+	g_ObjectManager = m_pObjectManager;
 
 	this->InitLuaEnv();
 }
@@ -102,6 +104,7 @@ void GameManager::InitLuaEnv()
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
+	m_pScriptVM->setUserTypePointer("ObjectManager", "ObjectManager", m_pObjectManager);
 	m_pScriptVM->setUserTypePointer("DebugDrawer", "DebugDrawer", DebugDrawer::GetInstance());
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
 	
@@ -120,26 +123,7 @@ void GameManager::Update(int deltaMilliseconds)
 
 	m_SimulationTime += deltaMilliseconds;
 
-	for (auto iter = m_entitys.begin(); iter != m_entitys.end(); iter++)
-	{
-		if (EntityObject* pObject = *iter)
-			pObject->update(deltaMilliseconds);
-	}
-	for (auto iter = m_blocks.begin(); iter != m_blocks.end(); iter++)
-	{
-		if (BlockObject* pObject = *iter)
-			pObject->update(deltaMilliseconds);
-	}
-	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
-	{
-		if (AgentObject* pAgent = *iter) 
-			pAgent->update(deltaMilliseconds);
-	}
-	for (auto iter = m_uicomps.begin(); iter != m_uicomps.end(); iter++)
-	{
-		if (UIComponent* pComponent = *iter) 
-			pComponent->update(deltaMilliseconds);
-	}
+	m_pObjectManager->Update(deltaMilliseconds);
 
 	m_pPhysicsWorld->stepWorld();
 
@@ -154,11 +138,6 @@ Ogre::Real GameManager::getScreenWidth()
 Ogre::Real GameManager::getScreenHeight()
 {
 	return m_pUIScene->getHeight();
-}
-
-unsigned int GameManager::getBlockCount()
-{
-	return m_blocks.size();
 }
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
@@ -185,11 +164,7 @@ void GameManager::HandleKeyRelease(OIS::KeyCode keycode, unsigned int key)
 {
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
 
-	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
-	{
-		if (AgentObject* pAgent = *iter)
-			m_pScriptVM->callFunction("Agent_EventHandle", "u[AgentObject]i", pAgent, keycode);
-	}
+	m_pObjectManager->HandleKeyEvent(keycode, key);
 }
 
 void GameManager::HandleMouseMove(int width, int height)
@@ -207,56 +182,12 @@ void GameManager::HandleMouseRelease(int width, int height, OIS::MouseButtonID b
 
 }
 
-void GameManager::addAgentObject(AgentObject* pAgentObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pAgentObject->setObjId(objectId);
-	pAgentObject->Initialize();
-
-	m_agents.push_back(pAgentObject);
-
-	auto rigidBody = pAgentObject->getRigidBody();
-	if (rigidBody != nullptr)
-	{
-		m_pPhysicsWorld->addRigidBody(rigidBody);
-	}
-}
-
-void GameManager::addBlockObject(BlockObject* pBlockObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pBlockObject->setObjId(objectId);
-	pBlockObject->Initialize();
-
-	m_blocks.push_back(pBlockObject);
-
-	auto rigidBody = pBlockObject->getRigidBody();
-	if (rigidBody != nullptr)
-	{
-		m_pPhysicsWorld->addRigidBody(rigidBody);
-	}
-}
-
-void GameManager::addEntityObject(EntityObject* pEntityObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pEntityObject->setObjId(objectId);
-	pEntityObject->Initialize();
-
-	m_entitys.push_back(pEntityObject);
-}
-
 UIComponent* GameManager::createUIComponent(unsigned int index)
 {
 	if (index < UI_LAYER_COUNT)
 	{
 		UIComponent* pComponent = new UIComponent(getUILayer(index));
-		pComponent->setObjId(getNextObjectId());
-		m_uicomps.push_back(pComponent);
-
+		m_pObjectManager->addUIObject(pComponent);
 		return pComponent;
 	}
 	return nullptr;
@@ -270,28 +201,6 @@ void GameManager::setMarkupColor(unsigned int index, const Ogre::ColourValue& co
 	}
 }
 
-std::vector<AgentObject*> GameManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType)
-{
-	if (agentType == AGENT_OBJ_NONE)
-	{
-		return m_agents;
-	}
-
-	std::vector<AgentObject*> specifyAgents;
-	
-	std::vector<AgentObject*>::iterator iter;
-	for (iter = m_agents.begin(); iter != m_agents.end(); iter++)
-	{
-		AgentObject* pAgentObject = *iter;
-		if (pAgentObject->getAgentType() == agentType)
-		{
-			specifyAgents.push_back(pAgentObject);
-		}
-	}
-
-	return specifyAgents;
-}
-
 long long GameManager::getTimeInMillis()
 {
 	return m_SimulationTime;
@@ -300,40 +209,4 @@ long long GameManager::getTimeInMillis()
 Ogre::Real GameManager::getTimeInSeconds()
 {
 	return (Ogre::Real)(getTimeInMillis() / 1000);
-}
-
-void GameManager::clearAllEntitys()
-{
-	auto iter = m_entitys.begin();
-	for (; iter != m_entitys.end(); iter++)
-	{
-		auto pEntity = *iter;
-		SAFE_DELETE(pEntity);
-	}
-	m_entitys.clear();
-}
-
-void GameManager::clearAllBlocks()
-{
-	auto iter = m_blocks.begin();
-	for (; iter != m_blocks.end(); iter++)
-	{
-		auto pBlock = *iter;
-		if (pBlock->getObjType() != BaseObject::OBJ_TYPE_BLOCK)
-		 continue; //防止删除Plane
-
-		SAFE_DELETE(pBlock);
-	}
-	m_blocks.clear();
-}
-
-void GameManager::clearAllAgents()
-{
-	auto iter = m_agents.begin();
-	for (; iter != m_agents.end(); iter++)
-	{
-		auto pAgent = *iter;
-		SAFE_DELETE(pAgent);
-	}
-	m_agents.clear();
 }

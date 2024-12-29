@@ -11,12 +11,12 @@ UIComponent::UIComponent(Gorilla::Layer* pUILayer)
 {
 	setObjType(OBJ_TYPE_UIOBJ);
 
-	this->Initialize();
+	//this->Initialize();
 }
 
 UIComponent::~UIComponent()
 {
-
+	m_pUILayer = nullptr;
 }
 
 void UIComponent::Initialize()

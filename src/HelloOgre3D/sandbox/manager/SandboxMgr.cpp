@@ -5,6 +5,7 @@
 #include "GameManager.h"
 #include "ClientManager.h"
 #include "ScriptLuaVM.h"
+#include "ObjectManager.h"
 
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
@@ -527,7 +528,7 @@ BlockObject* SandboxMgr::CreatePlane(float length, float width)
     BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
     pObject->setObjType(BaseObject::OBJ_TYPE_PLANE);
 
-    g_GameManager->addBlockObject(pObject);
+    g_ObjectManager->addBlockObject(pObject);
 
     return pObject;
 }
@@ -537,7 +538,7 @@ BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshFilePath)
     BlockObject* pObject = new BlockObject(meshFilePath);
     pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-    g_GameManager->addBlockObject(pObject);
+    g_ObjectManager->addBlockObject(pObject);
 
     return pObject;
 }
@@ -559,7 +560,7 @@ BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length,
     pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
     pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
 
-	g_GameManager->addBlockObject(pObject);
+    g_ObjectManager->addBlockObject(pObject);
 
 	return pObject;
 }
@@ -569,7 +570,7 @@ EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)
     EntityObject* pObject = new EntityObject(meshFilePath);
     pObject->setObjType(BaseObject::OBJ_TYPE_ENTITY);
 
-	g_GameManager->addEntityObject(pObject);
+    g_ObjectManager->addEntityObject(pObject);
 
 	return pObject;
 }
@@ -595,7 +596,7 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
     pObject->setObjType(BaseObject::OBJ_TYPE_AGENT);
     pObject->setAgentType(agentType);
 
-    g_GameManager->addAgentObject(pObject);
+    g_ObjectManager->addAgentObject(pObject);
 
     return pObject;
 }
@@ -613,7 +614,7 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
 
 	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
     pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
-	g_GameManager->addAgentObject(pObject);
+    g_ObjectManager->addAgentObject(pObject);
 
 	return pObject;
 }
