@@ -263,14 +263,12 @@ function Package (name,fn)
   readfrom()
  end
 
---[[
  --write to new file
  newfile = string.gsub(flags.f, '%.', '_.');
  st, msg = writeto(newfile);
  if not st then
 	error('#'..msg)
  end
---]]
 
  -- deal with include directive
  local nsubst

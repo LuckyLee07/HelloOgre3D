@@ -141,6 +141,7 @@ function classVariable:supcode ()
  if class and static==nil then
 	 output('#ifndef TOLUA_RELEASE\n')
   output('  if (!self) tolua_error(tolua_S,"'..output_error_hook("invalid \'self\' in accessing variable \'%s\'", self.name)..'",NULL);');
+ 	 output('#else \n  if (!self) return 0;\n')
 		output('#endif\n')
  end
 

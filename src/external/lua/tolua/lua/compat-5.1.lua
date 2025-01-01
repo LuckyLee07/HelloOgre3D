@@ -33,8 +33,8 @@ local function pp_dofile(path)
 	return f()
 end
 
---old_dofile = dofile
---dofile = pp_dofile
+old_dofile = dofile
+dofile = pp_dofile
 
 
 -- string.gsub

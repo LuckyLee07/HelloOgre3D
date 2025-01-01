@@ -72,6 +72,7 @@ solution( "HelloOgre3D" )
 --------------------------------------------------------------------------------
 	--group( "GameDemos" )
 	CreateGameProject( "HelloOgre3D" )
+	CreateToluaProject( "tolua++" )
 
 --------------------------------------------------------------------------------
 -- Open source library definitions

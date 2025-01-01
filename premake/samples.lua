@@ -104,6 +104,27 @@ function CreateGameProject( projectName )
     } )
 end
 
-SandboxGames = {
-  "HelloOgre3D",
-};
+function CreateToluaProject( projectName )
+  project( projectName )
+    kind( "ConsoleApp" )
+    location( "../build/%{prj.name}" )
+    debugdir( "$(OutDir)" )
+    -- increase precompiled header allocation limit
+    buildoptions( { "/Zm256" } )
+    -- link against all other libraries
+    links( {
+      "lua",
+      "luasocket",
+      --"ws2_32", -- 添加 Winsock 依赖
+      --"wsock32", -- 兼容旧版本 Winsock
+    } )
+    libdirs{ "../libs/" }
+    includedirs( {
+      "../src/external/lua/lua",
+      "../src/external/lua/luasocket",
+    } )
+    files( {
+      "../src/external/lua/tolua/**.h",
+      "../src/external/lua/tolua/**.c",
+    } )
+end
