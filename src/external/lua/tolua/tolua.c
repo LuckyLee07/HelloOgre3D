@@ -80,7 +80,7 @@ static void error (char* o)
  help();
  exit(1);
 }
-/*
+
 extern int luaopen_socket_core(lua_State * L);
 
 static const luaL_Reg lualibext[] = {
@@ -98,7 +98,7 @@ LUALIB_API void luaL_openextlibs(lua_State *L) {
 	}
 	lua_pop(L, 2);
 }
-*/
+
 int main (int argc, char* argv[])
 {
  #ifdef LUA_VERSION_NUM /* lua 5.1 */
@@ -114,7 +114,7 @@ int main (int argc, char* argv[])
  luaopen_debug(L);
  #endif
 
- //luaL_openextlibs(L);
+ luaL_openextlibs(L);
 
  lua_pushstring(L,TOLUA_VERSION); lua_setglobal(L,"TOLUA_VERSION");
  lua_pushstring(L,LUA_VERSION); lua_setglobal(L,"TOLUA_LUA_VERSION");

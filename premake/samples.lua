@@ -115,8 +115,8 @@ function CreateToluaProject( projectName )
     links( {
       "lua",
       "luasocket",
-      --"ws2_32", -- 添加 Winsock 依赖
-      --"wsock32", -- 兼容旧版本 Winsock
+      "ws2_32", -- 添加 Winsock 依赖
+      "wsock32", -- 兼容旧版本 Winsock
     } )
     libdirs{ "../libs/" }
     includedirs( {

@@ -511,6 +511,15 @@ function classContainer:doparse (s)
  	end
  end
 
+ -- try 'override' keyworkd
+ do
+	local b,e = string.find(s, "%s+override%s*")
+ 	if b then
+ 		--return strsub(s, e+1)
+		return strsub(s, 1, b-1) .. strsub(s, e+1)
+ 	end
+ end
+
  -- try labels (public, private, etc)
  do
  	local b,e = string.find(s, "^%s*%w*%s*:[^:]")

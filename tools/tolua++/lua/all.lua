@@ -1,3 +1,6 @@
+dofile(path.."LuaPanda.lua")
+LuaPanda.start("127.0.0.1", 8818)
+
 dofile(path.."compat-5.1.lua")
 dofile(path.."compat.lua")
 dofile(path.."basic.lua")
