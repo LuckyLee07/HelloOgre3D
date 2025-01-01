@@ -61,7 +61,7 @@ function CreateBlockObject(objectName, position, rotation)
     local fileMass = NewSandboxUtilities.Objects[objectName].mass;
 
     local object = Sandbox:CreateBlockObject(filePath);
-    if fileMass >= 0 then object:setMass(fileMass); end
+    if fileMass >= 0 then object:SetMass(fileMass); end
     
     if position ~= nil then object:setPosition(position); end
     
@@ -114,7 +114,7 @@ function CreateLevelBox(size, position, rotation)
 	object:setPosition(position);
 	object:setRotation(rotation);
     object:setMaterial("Ground2");
-    object:setMass(0)
+    object:SetMass(0)
 end
 
 function SandboxUtilities_CreateLevel()

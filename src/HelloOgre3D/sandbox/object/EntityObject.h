@@ -27,23 +27,23 @@ public:
 
 	//tolua_begin
 	virtual void Initialize();
+
+	const Ogre::Vector3& getOriginPos() const;
+	void setOriginPos(const Ogre::Vector3& position);
+	void setMaterial(const Ogre::String& materialName);
 	
 	virtual void setPosition(const Ogre::Vector3& position);
 	virtual void setRotation(const Ogre::Vector3& position);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
 
-	void setOriginPos(const Ogre::Vector3& position);
-	void setMaterial(const Ogre::String& materialName);
+	virtual Ogre::Vector3 GetPosition() const;
+	virtual Ogre::Quaternion GetOrientation() const;
 
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 	Fancy::Animation* GetAnimation(const char* animationName);
 	Fancy::AnimationStateMachine* GetObjectASM();
 	//tolua_end
-
-	Ogre::Vector3 getPosition() const;
-	Ogre::Quaternion getOrientation() const;
-	const Ogre::Vector3& getOriginPos() const;
 
 	void SetDerivedPosition(const Ogre::Vector3& position);
 	void SetDerivedRotation(const Ogre::Vector3& position);

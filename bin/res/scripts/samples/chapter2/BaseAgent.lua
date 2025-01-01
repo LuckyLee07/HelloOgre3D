@@ -87,7 +87,7 @@ function Agent_Pursuing_Initialize(agent)
 
     local randPosx = math.random(-50, 50)
     local randPosz = math.random(-50, 50)
-    agent:SetPosition(Vector3(randPosx, 0, randPosz))
+    agent:setPosition(Vector3(randPosx, 0, randPosz))
 
     seekings = ObjectManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
     if seekings:size() > 0 then enemy = seekings[0] end
@@ -99,14 +99,14 @@ end
 function Agent_Pathing_Initialize(agent)
     local randPosx = math.random(-50, 50)
     local randPosz = math.random(-50, 50)
-    agent:SetPosition(Vector3(randPosx, 0, randPosz))
+    agent:setPosition(Vector3(randPosx, 0, randPosz))
 end
 
 local leaders;
 function Agent_Follower_Initialize(agent)
     local randPosx = math.random(-50, 50)
     local randPosz = math.random(-50, 50)
-    agent:SetPosition(Vector3(randPosx, 0, randPosz))
+    agent:setPosition(Vector3(randPosx, 0, randPosz))
 
     leaders = ObjectManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
 end

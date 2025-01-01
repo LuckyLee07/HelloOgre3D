@@ -26,27 +26,25 @@ public:
 
 	void Initialize() override;
 	void DeleteRighdBody();
+	btRigidBody* getRigidBody() { return m_pRigidBody; }
 
-	void update(int deltaMsec) override;
+	virtual void update(int deltaMsec) override;
+	virtual void updateWorldTransform();
 
 	//tolua_begin
-	void setPosition(const Ogre::Vector3& position);
-	void setRotation(const Ogre::Vector3& position);
-	void setOrientation(const Ogre::Quaternion& quaternion);
+	void setPosition(const Ogre::Vector3& position) override;
+	void setRotation(const Ogre::Vector3& position) override;
+	void setOrientation(const Ogre::Quaternion& quaternion) override;
+
+	Ogre::Real GetMass() const;
+	void SetMass(const Ogre::Real mass);
 
 	Ogre::Real GetRadius() const;
 	Ogre::Vector3 GetPosition() const;
 
 	void applyImpulse(const Ogre::Vector3& impulse);
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
-
-	Ogre::Real getMass() const;
-	void setMass(const Ogre::Real mass);
 	//tolua_end
-
-	void updateWorldTransform();
-
-	btRigidBody* getRigidBody() { return m_pRigidBody; }
 	
 private:
 	OpenSteer::Vec3 getPosition() const;

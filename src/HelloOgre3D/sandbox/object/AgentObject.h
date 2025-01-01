@@ -20,6 +20,9 @@ public:
 
 	void Initialize();
 
+	virtual void update(int deltaMilisec) override;
+	virtual void updateWorldTransform() override;
+
 	//tolua_begin
 	void initAgentBody(const Ogre::String& meshFile);
 	void initAgentWeapon(const Ogre::String& meshFile);
@@ -30,16 +33,13 @@ public:
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }
 	
+	Ogre::Vector3 GetPosition() const override;
+	Ogre::Quaternion GetOrientation() const override;
+
 	virtual Ogre::Vector3 GetUp() const;
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
-
-	virtual Ogre::Vector3 GetPosition() const ;
-	virtual Ogre::Quaternion GetOrientation() const;
 	//tolua_end
-
-	virtual void update(int deltaMilisec) override;
-	virtual void updateWorldTransform() override;
 	
 private:
 	AGENT_OBJ_TYPE m_agentType;

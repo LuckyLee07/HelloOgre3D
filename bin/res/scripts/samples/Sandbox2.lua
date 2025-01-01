@@ -126,7 +126,7 @@ function Sandbox_ShootBox()
     object:setPosition(position)
     object:setOrientation(rotation)
 
-    object:setMass(15);
+    object:SetMass(15);
     local impulse = cameraForward * 15000 * 0.65
     local angularImpulse = Sandbox:GetCameraLeft() * 10
     object:applyImpulse(impulse)

@@ -101,19 +101,14 @@ void EntityObject::setOrientation(const Ogre::Quaternion& quaternion)
 	m_pSceneNode->setOrientation(quaternion);
 }
 
-Ogre::Vector3 EntityObject::getPosition() const
+Ogre::Vector3 EntityObject::GetPosition() const
 {
 	return m_pSceneNode->getPosition();
 }
 
-Ogre::Quaternion EntityObject::getOrientation() const
+Ogre::Quaternion EntityObject::GetOrientation() const
 {
 	return m_pSceneNode->getOrientation();
-}
-
-const Ogre::Vector3& EntityObject::getOriginPos() const
-{
-	return m_originPos;
 }
 
 void EntityObject::SetDerivedPosition(const Ogre::Vector3& position)
@@ -140,6 +135,11 @@ Ogre::Vector3 EntityObject::GetDerivedPosition() const
 Ogre::Quaternion EntityObject::GetDerivedOrientation() const
 {
 	return m_pSceneNode->_getDerivedOrientation();
+}
+
+const Ogre::Vector3& EntityObject::getOriginPos() const
+{
+	return m_originPos;
 }
 
 void EntityObject::setOriginPos(const Ogre::Vector3& position)

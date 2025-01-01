@@ -26,10 +26,16 @@ public:
 
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
 
+	virtual void update(int deltaMilisec);
+	virtual void updateWorldTransform();
+
 	//tolua_begin
-	void SetPosition(const Ogre::Vector3& position);
-	void SetRotation(const Ogre::Vector3& rotation);
-	void SetOrientation(const Ogre::Quaternion& quaternion);
+	virtual void setPosition(const Ogre::Vector3& position);
+	virtual void setRotation(const Ogre::Vector3& rotation);
+	virtual void setOrientation(const Ogre::Quaternion& quaternion);
+
+	virtual Ogre::Vector3 GetPosition() const;
+	virtual Ogre::Quaternion GetOrientation() const;
 
 	void SetForward(const Ogre::Vector3& forward);
 	void SetVelocity(const Ogre::Vector3& velocity);
@@ -43,9 +49,6 @@ public:
 	virtual Ogre::Vector3 GetUp() const;
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
-	
-	virtual Ogre::Vector3 GetPosition() const ;
-	virtual Ogre::Quaternion GetOrientation() const;
 	
 	void SetMass(Ogre::Real mass);
 	void SetHeight(Ogre::Real height);
@@ -85,7 +88,6 @@ public:
 	void SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic);
 	const std::vector<Ogre::Vector3>& GetPath() { return m_points; }
 	//tolua_end
-
 	void SetPath(const AgentPath& agentPath);
 	
 	Ogre::Vector3 ForceToStayOnPath(AgentPath& path, Ogre::Real predictionTime);
@@ -93,9 +95,6 @@ public:
 	
 	Ogre::Vector3 ForceToAvoidAgents(const std::vector<AgentObject*>& agents, Ogre::Real predictionTime);
 	Ogre::Vector3 ForceToAvoidObjects(const std::vector<BlockObject*>& objects, Ogre::Real predictionTime);
-
-	virtual void update(int deltaMilisec);
-	virtual void updateWorldTransform();
 
 public:
 	static const float DEFAULT_AGENT_MASS;

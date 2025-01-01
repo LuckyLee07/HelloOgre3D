@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Dec 29 22:52:33 2024.
+** Generated automatically by tolua++-1.0.92 on Wed Jan  1 17:19:17 2025.
 */
 
 #ifndef __cplusplus
@@ -4059,6 +4059,105 @@ static int tolua_ClientToLua_EntityObject_Initialize00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getOriginPos of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_getOriginPos00
+static int tolua_ClientToLua_EntityObject_getOriginPos00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const EntityObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const EntityObject* self = (const EntityObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getOriginPos'", NULL);
+#endif
+  {
+   const Ogre::Vector3& tolua_ret = (const Ogre::Vector3&)  self->getOriginPos();
+    tolua_pushusertype(tolua_S,(void*)&tolua_ret,"const Ogre::Vector3");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getOriginPos'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setOriginPos of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setOriginPos00
+static int tolua_ClientToLua_EntityObject_setOriginPos00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOriginPos'", NULL);
+#endif
+  {
+   self->setOriginPos(*position);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setOriginPos'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setMaterial of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setMaterial00
+static int tolua_ClientToLua_EntityObject_setMaterial00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
+#endif
+  {
+   self->setMaterial(materialName);
+   tolua_pushcppstring(tolua_S,(const char*)materialName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setMaterial'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setPosition of class  EntityObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setPosition00
 static int tolua_ClientToLua_EntityObject_setPosition00(lua_State* tolua_S)
@@ -4158,68 +4257,85 @@ static int tolua_ClientToLua_EntityObject_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setOriginPos of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setOriginPos00
-static int tolua_ClientToLua_EntityObject_setOriginPos00(lua_State* tolua_S)
+/* method: GetPosition of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetPosition00
+static int tolua_ClientToLua_EntityObject_GetPosition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
+     !tolua_isusertype(tolua_S,1,"const EntityObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  const EntityObject* self = (const EntityObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOriginPos'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
 #endif
   {
-   self->setOriginPos(*position);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setOriginPos'.",&tolua_err);
- return 0;
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
 #endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: setMaterial of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_setMaterial00
-static int tolua_ClientToLua_EntityObject_setMaterial00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
-#endif
-  {
-   self->setMaterial(materialName);
-   tolua_pushcppstring(tolua_S,(const char*)materialName);
+   }
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setMaterial'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetOrientation of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_GetOrientation00
+static int tolua_ClientToLua_EntityObject_GetOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const EntityObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const EntityObject* self = (const EntityObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
+#endif
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
  return 0;
 #endif
 }
@@ -4430,6 +4546,71 @@ static int tolua_ClientToLua_BlockObject_setOrientation00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetMass of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_GetMass00
+static int tolua_ClientToLua_BlockObject_GetMass00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BlockObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BlockObject* self = (const BlockObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMass'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetMass();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMass'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMass of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_SetMass00
+static int tolua_ClientToLua_BlockObject_SetMass00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
+  const float mass = ((const float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMass'", NULL);
+#endif
+  {
+   self->SetMass(mass);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMass'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetRadius of class  BlockObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_GetRadius00
 static int tolua_ClientToLua_BlockObject_GetRadius00(lua_State* tolua_S)
@@ -4570,74 +4751,9 @@ static int tolua_ClientToLua_BlockObject_applyAngularImpulse00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: getMass of class  BlockObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_getMass00
-static int tolua_ClientToLua_BlockObject_getMass00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const BlockObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const BlockObject* self = (const BlockObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getMass'", NULL);
-#endif
-  {
-    float tolua_ret = (  float)  self->getMass();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getMass'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: setMass of class  BlockObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_BlockObject_setMass00
-static int tolua_ClientToLua_BlockObject_setMass00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
-  const float mass = ((const float)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMass'", NULL);
-#endif
-  {
-   self->setMass(mass);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setMass'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: SetPosition of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetPosition00
-static int tolua_ClientToLua_VehicleObject_SetPosition00(lua_State* tolua_S)
+/* method: setPosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_setPosition00
+static int tolua_ClientToLua_VehicleObject_setPosition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -4653,24 +4769,24 @@ static int tolua_ClientToLua_VehicleObject_SetPosition00(lua_State* tolua_S)
   VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetPosition'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
 #endif
   {
-   self->SetPosition(*position);
+   self->setPosition(*position);
   }
  }
  return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetPosition'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'setPosition'.",&tolua_err);
  return 0;
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetRotation of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetRotation00
-static int tolua_ClientToLua_VehicleObject_SetRotation00(lua_State* tolua_S)
+/* method: setRotation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_setRotation00
+static int tolua_ClientToLua_VehicleObject_setRotation00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -4686,24 +4802,24 @@ static int tolua_ClientToLua_VehicleObject_SetRotation00(lua_State* tolua_S)
   VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector3* rotation = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRotation'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setRotation'", NULL);
 #endif
   {
-   self->SetRotation(*rotation);
+   self->setRotation(*rotation);
   }
  }
  return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetRotation'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'setRotation'.",&tolua_err);
  return 0;
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetOrientation of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_SetOrientation00
-static int tolua_ClientToLua_VehicleObject_SetOrientation00(lua_State* tolua_S)
+/* method: setOrientation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_setOrientation00
+static int tolua_ClientToLua_VehicleObject_setOrientation00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -4719,16 +4835,100 @@ static int tolua_ClientToLua_VehicleObject_SetOrientation00(lua_State* tolua_S)
   VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetOrientation'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOrientation'", NULL);
 #endif
   {
-   self->SetOrientation(*quaternion);
+   self->setOrientation(*quaternion);
   }
  }
  return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'SetOrientation'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'setOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetPosition of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetPosition00
+static int tolua_ClientToLua_VehicleObject_GetPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetOrientation of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetOrientation00
+static int tolua_ClientToLua_VehicleObject_GetOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
+#endif
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5071,90 +5271,6 @@ static int tolua_ClientToLua_VehicleObject_GetForward00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetPosition of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetPosition00
-static int tolua_ClientToLua_VehicleObject_GetPosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetOrientation of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetOrientation00
-static int tolua_ClientToLua_VehicleObject_GetOrientation00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
-#endif
-  {
-   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6424,6 +6540,90 @@ static int tolua_ClientToLua_AgentObject_setAgentType00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetPosition of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetPosition00
+static int tolua_ClientToLua_AgentObject_GetPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetOrientation of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetOrientation00
+static int tolua_ClientToLua_AgentObject_GetOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
+#endif
+  {
+   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetUp of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetUp00
 static int tolua_ClientToLua_AgentObject_GetUp00(lua_State* tolua_S)
@@ -6545,90 +6745,6 @@ static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetPosition of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetPosition00
-static int tolua_ClientToLua_AgentObject_GetPosition00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPosition'", NULL);
-#endif
-  {
-   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPosition();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetOrientation of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetOrientation00
-static int tolua_ClientToLua_AgentObject_GetOrientation00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const AgentObject* self = (const AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetOrientation'", NULL);
-#endif
-  {
-   Ogre::Quaternion tolua_ret = (Ogre::Quaternion)  self->GetOrientation();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((Ogre::Quaternion)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Quaternion));
-     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Quaternion");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetOrientation'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8539,11 +8655,14 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"EntityObject","EntityObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"EntityObject");
    tolua_function(tolua_S,"Initialize",tolua_ClientToLua_EntityObject_Initialize00);
+   tolua_function(tolua_S,"getOriginPos",tolua_ClientToLua_EntityObject_getOriginPos00);
+   tolua_function(tolua_S,"setOriginPos",tolua_ClientToLua_EntityObject_setOriginPos00);
+   tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_EntityObject_setMaterial00);
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_EntityObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_EntityObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_EntityObject_setOrientation00);
-   tolua_function(tolua_S,"setOriginPos",tolua_ClientToLua_EntityObject_setOriginPos00);
-   tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_EntityObject_setMaterial00);
+   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_EntityObject_GetPosition00);
+   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_EntityObject_GetOrientation00);
    tolua_function(tolua_S,"AttachToBone",tolua_ClientToLua_EntityObject_AttachToBone00);
    tolua_function(tolua_S,"GetAnimation",tolua_ClientToLua_EntityObject_GetAnimation00);
    tolua_function(tolua_S,"GetObjectASM",tolua_ClientToLua_EntityObject_GetObjectASM00);
@@ -8553,18 +8672,20 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_BlockObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_BlockObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_BlockObject_setOrientation00);
+   tolua_function(tolua_S,"GetMass",tolua_ClientToLua_BlockObject_GetMass00);
+   tolua_function(tolua_S,"SetMass",tolua_ClientToLua_BlockObject_SetMass00);
    tolua_function(tolua_S,"GetRadius",tolua_ClientToLua_BlockObject_GetRadius00);
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_BlockObject_GetPosition00);
    tolua_function(tolua_S,"applyImpulse",tolua_ClientToLua_BlockObject_applyImpulse00);
    tolua_function(tolua_S,"applyAngularImpulse",tolua_ClientToLua_BlockObject_applyAngularImpulse00);
-   tolua_function(tolua_S,"getMass",tolua_ClientToLua_BlockObject_getMass00);
-   tolua_function(tolua_S,"setMass",tolua_ClientToLua_BlockObject_setMass00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"VehicleObject","VehicleObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"VehicleObject");
-   tolua_function(tolua_S,"SetPosition",tolua_ClientToLua_VehicleObject_SetPosition00);
-   tolua_function(tolua_S,"SetRotation",tolua_ClientToLua_VehicleObject_SetRotation00);
-   tolua_function(tolua_S,"SetOrientation",tolua_ClientToLua_VehicleObject_SetOrientation00);
+   tolua_function(tolua_S,"setPosition",tolua_ClientToLua_VehicleObject_setPosition00);
+   tolua_function(tolua_S,"setRotation",tolua_ClientToLua_VehicleObject_setRotation00);
+   tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_VehicleObject_setOrientation00);
+   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_VehicleObject_GetPosition00);
+   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_VehicleObject_GetOrientation00);
    tolua_function(tolua_S,"SetForward",tolua_ClientToLua_VehicleObject_SetForward00);
    tolua_function(tolua_S,"SetVelocity",tolua_ClientToLua_VehicleObject_SetVelocity00);
    tolua_function(tolua_S,"SetTarget",tolua_ClientToLua_VehicleObject_SetTarget00);
@@ -8574,8 +8695,6 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_VehicleObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_VehicleObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_VehicleObject_GetForward00);
-   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_VehicleObject_GetPosition00);
-   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_VehicleObject_GetOrientation00);
    tolua_function(tolua_S,"SetMass",tolua_ClientToLua_VehicleObject_SetMass00);
    tolua_function(tolua_S,"SetHeight",tolua_ClientToLua_VehicleObject_SetHeight00);
    tolua_function(tolua_S,"SetRadius",tolua_ClientToLua_VehicleObject_SetRadius00);
@@ -8614,11 +8733,11 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAgentWeapon",tolua_ClientToLua_AgentObject_getAgentWeapon00);
    tolua_function(tolua_S,"getAgentType",tolua_ClientToLua_AgentObject_getAgentType00);
    tolua_function(tolua_S,"setAgentType",tolua_ClientToLua_AgentObject_setAgentType00);
+   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_AgentObject_GetPosition00);
+   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_AgentObject_GetOrientation00);
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_AgentObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
-   tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_AgentObject_GetPosition00);
-   tolua_function(tolua_S,"GetOrientation",tolua_ClientToLua_AgentObject_GetOrientation00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

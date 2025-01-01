@@ -65,7 +65,21 @@ void BlockObject::DeleteRighdBody()
 	}
 }
 
-void BlockObject::setMass(const Ogre::Real mass)
+void BlockObject::update(int deltaMsec)
+{
+	this->updateWorldTransform();
+}
+
+void BlockObject::updateWorldTransform()
+{
+	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
+	m_pSceneNode->setPosition(BtVector3ToVector3(rigidBodyPos));
+
+	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
+	m_pSceneNode->setOrientation(BtQuaternionToQuaternion(rigidBodyRotation));
+}
+
+void BlockObject::SetMass(const Ogre::Real mass)
 {
 	btVector3 localInertia(0, 0, 0);
 	m_pRigidBody->getCollisionShape()->calculateLocalInertia(mass, localInertia);
@@ -74,7 +88,7 @@ void BlockObject::setMass(const Ogre::Real mass)
 	m_pRigidBody->activate(true);
 }
 
-Ogre::Real BlockObject::getMass() const
+Ogre::Real BlockObject::GetMass() const
 {
 	btScalar inverseMass = m_pRigidBody->getInvMass();
 
@@ -141,20 +155,6 @@ void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 	btVector3 torqueImpulse(aImpulse.x, aImpulse.y, aImpulse.z);
 	m_pRigidBody->applyTorque(torqueImpulse);
 	m_pRigidBody->activate(true);
-}
-
-void BlockObject::update(int deltaMsec)
-{
-	this->updateWorldTransform();
-}
-
-void BlockObject::updateWorldTransform()
-{
-	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
-	m_pSceneNode->setPosition(BtVector3ToVector3(rigidBodyPos));
-
-	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
-	m_pSceneNode->setOrientation(BtQuaternionToQuaternion(rigidBodyRotation));
 }
 
 OpenSteer::Vec3 BlockObject::getPosition() const

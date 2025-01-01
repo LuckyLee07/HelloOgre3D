@@ -36,7 +36,6 @@ VehicleObject::VehicleObject(btRigidBody* pRigidBody)
 		this->SetMass(DEFAULT_AGENT_MASS);
 		m_pRigidBody->setUserPointer(this);
 	}
-	SetForward(Ogre::Vector3::UNIT_Z);
 }
 
 VehicleObject::~VehicleObject()
@@ -74,7 +73,7 @@ void VehicleObject::ResetRigidBody(btRigidBody* pRigidBody)
 	pPhysicsWorld->addRigidBody(m_pRigidBody);
 }
 
-void VehicleObject::SetPosition(const Ogre::Vector3& position)
+void VehicleObject::setPosition(const Ogre::Vector3& position)
 {
 	if (m_pRigidBody != nullptr)
 	{
@@ -89,13 +88,13 @@ void VehicleObject::SetPosition(const Ogre::Vector3& position)
 	this->updateWorldTransform();
 }
 
-void VehicleObject::SetRotation(const Ogre::Vector3& rotation)
+void VehicleObject::setRotation(const Ogre::Vector3& rotation)
 {
 	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	this->SetOrientation(qRotation);
+	this->setOrientation(qRotation);
 }
 
-void VehicleObject::SetOrientation(const Ogre::Quaternion& quaternion)
+void VehicleObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
 	if (m_pRigidBody != nullptr)
 	{
@@ -108,6 +107,28 @@ void VehicleObject::SetOrientation(const Ogre::Quaternion& quaternion)
 	}
 
 	this->updateWorldTransform();
+}
+
+Ogre::Vector3 VehicleObject::GetPosition() const
+{
+	if (m_pRigidBody != nullptr)
+	{
+		const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
+		return BtVector3ToVector3(position);
+	}
+
+	return Ogre::Vector3::ZERO;
+}
+
+Ogre::Quaternion VehicleObject::GetOrientation() const
+{
+	if (m_pRigidBody != nullptr)
+	{
+		const btQuaternion& orietation = m_pRigidBody->getOrientation();
+		return BtQuaternionToQuaternion(orietation);
+	}
+
+	return Ogre::Quaternion::ZERO;
 }
 
 void VehicleObject::SetForward(const Ogre::Vector3& forward)
@@ -151,28 +172,6 @@ void VehicleObject::SetTarget(const Ogre::Vector3& targetPos)
 void VehicleObject::SetTargetRadius(Ogre::Real radius)
 {
 	m_targetRadius = std::max(Ogre::Real(0.0f), radius);
-}
-
-Ogre::Vector3 VehicleObject::GetPosition() const
-{
-	if (m_pRigidBody != nullptr)
-	{
-		const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
-		return BtVector3ToVector3(position);
-	}
-
-	return Ogre::Vector3::ZERO;
-}
-
-Ogre::Quaternion VehicleObject::GetOrientation() const
-{
-	if (m_pRigidBody != nullptr)
-	{
-		const btQuaternion& orietation = m_pRigidBody->getOrientation();
-		return BtQuaternionToQuaternion(orietation);
-	}
-	
-	return Ogre::Quaternion::ZERO;
 }
 
 Ogre::Vector3 VehicleObject::GetUp() const
@@ -433,7 +432,7 @@ Ogre::Vector3 VehicleObject::ForceToAvoidObjects(const std::vector<BlockObject*>
 	for (iter = objects.begin(); iter != objects.end(); iter++)
 	{
 		const BlockObject* pObject = *iter;
-		if (pObject->getMass() > 0)
+		if (pObject->GetMass() > 0)
 		{
 			avoidForce += pObject->steerToAvoid(*this, timeToCollision);
 		}
@@ -589,7 +588,7 @@ OpenSteer::Vec3 VehicleObject::position(void) const
 
 OpenSteer::Vec3 VehicleObject::setPosition(OpenSteer::Vec3 pos)
 {
-	SetPosition(Vec3ToVector3(pos));
+	setPosition(Vec3ToVector3(pos));
 	return this->position();
 }
 

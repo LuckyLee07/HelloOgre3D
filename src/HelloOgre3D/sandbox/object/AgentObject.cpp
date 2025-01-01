@@ -17,6 +17,8 @@ AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = n
 {
 	m_pAgentWeapon = nullptr;
 	m_agentType = AGENT_OBJ_NONE;
+
+	SetForward(Ogre::Vector3::UNIT_Z);
 }
 
 AgentObject::~AgentObject()
@@ -95,7 +97,7 @@ Ogre::Vector3 AgentObject::GetUp() const
 	}
 	else if (m_pAgentBody != nullptr)
 	{
-		return m_pAgentBody->getOrientation().yAxis();
+		return m_pAgentBody->GetOrientation().yAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Y;
@@ -109,7 +111,7 @@ Ogre::Vector3 AgentObject::GetLeft() const
 	}
 	else if (m_pAgentBody != nullptr)
 	{
-		return m_pAgentBody->getOrientation().xAxis();
+		return m_pAgentBody->GetOrientation().xAxis();
 	}
 
 	return Ogre::Vector3::UNIT_X;
@@ -123,7 +125,7 @@ Ogre::Vector3 AgentObject::GetForward() const
 	}
 	else if (m_pAgentBody != nullptr)
 	{
-		return m_pAgentBody->getOrientation().zAxis();
+		return m_pAgentBody->GetOrientation().zAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Z;
