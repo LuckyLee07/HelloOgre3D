@@ -19,19 +19,41 @@ AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = n
 	m_agentType = AGENT_OBJ_NONE;
 
 	SetForward(Ogre::Vector3::UNIT_Z);
+
+	this->CreateEventDispatcher();
 }
 
 AgentObject::~AgentObject()
 {
+	this->RemoveEventDispatcher();
+
 	SAFE_DELETE(m_pAgentBody);
 	SAFE_DELETE(m_pAgentWeapon);
 }
 
+void AgentObject::CreateEventDispatcher()
+{
+	Event()->CreateDispatcher("FSM_STATE_CHANGE");
+	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
+		std::string stateId = context.Get_String("StateId");
+		if (stateId.empty()) return;
+	
+		if (stateId == "fire" || stateId == "crouch_fire")
+		{
+			this->ShootBullet(); // Éä»÷
+		}
+	});
+}
+
+void AgentObject::RemoveEventDispatcher()
+{
+	Event()->RemoveDispatcher("FSM_STATE_CHANGE");
+}
+
 void AgentObject::Initialize()
 {
-	m_pAgentBody->Initialize();
-	m_pAgentBody->setOwner(this);
-	
+	m_pAgentBody->Initialize(this);
+
 	GetScriptLuaVM()->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
@@ -42,8 +64,7 @@ void AgentObject::initAgentBody(const Ogre::String& meshFile)
 		delete m_pAgentBody;
 	}
 	m_pAgentBody = new EntityObject(meshFile);
-	m_pAgentBody->Initialize();
-	m_pAgentBody->setOwner(this);
+	m_pAgentBody->Initialize(this);
 }
 
 void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
@@ -53,8 +74,7 @@ void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
 		delete m_pAgentWeapon;
 	}
 	m_pAgentWeapon = new EntityObject(meshFile);
-	m_pAgentWeapon->Initialize();
-	m_pAgentWeapon->setOwner(this);
+	m_pAgentWeapon->Initialize(this);
 
 	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
 	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);
@@ -160,4 +180,36 @@ void AgentObject::updateWorldTransform()
 	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
 								rigidBodyRotation.y(), rigidBodyRotation.z());
 	m_pAgentBody->SetDerivedOrientation(rotation);
+}
+
+void AgentObject::ShootBullet()
+{
+	Ogre::SceneNode* pSoldier = m_pAgentBody->getSceneNode();
+
+	Ogre::Vector3 position;
+	SandboxMgr::GetBonePosition(*pSoldier, "b_muzzle", position);
+	Ogre::Quaternion orientation;
+	SandboxMgr::GetBoneOrientation(*pSoldier, "b_muzzle", orientation);
+
+	Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
+	this->DoShootBullet(position, rotation);
+}
+
+void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)
+{
+	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
+	Vector3 forward = qRotation * Vector3(1, 0, 0);
+	Vector3 up = qRotation * Vector3(0, 1, 0);
+	Vector3 left = qRotation * Vector3(0, 0, -1);
+
+	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
+	bullet->SetMass(0.1f);
+	bullet->setPosition(position + forward * 0.2f);
+	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
+	bullet->setOrientation(axisRot);
+
+	Ogre::SceneNode* bulletParticle = SandboxMgr::CreateParticle(bullet->getSceneNode(), "Bullet");
+	bulletParticle->setPosition(Vector3(-90, 0, 0));
+
+	bullet->applyImpulse(forward * 750);
 }

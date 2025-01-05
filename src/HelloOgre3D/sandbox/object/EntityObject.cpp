@@ -37,13 +37,17 @@ EntityObject::EntityObject(const Ogre::MeshPtr& meshPtr)
 }
 
 EntityObject::EntityObject(Ogre::SceneNode* pSceneNode)
-	: m_owner(nullptr), m_originPos(Ogre::Vector3::ZERO)
+	: m_owner(nullptr), m_pEntity(nullptr), m_originPos(Ogre::Vector3::ZERO)
 {
 	m_pAnimateStateMachine = nullptr;
 
 	m_pSceneNode = pSceneNode;
-	MovableObject* pObject = m_pSceneNode->getAttachedObject(0);
-	m_pEntity = dynamic_cast<Ogre::Entity*>(pObject);
+	unsigned short attachNum = m_pSceneNode->numAttachedObjects();
+	if (attachNum > 0)
+	{
+		auto pObject = m_pSceneNode->getAttachedObject(0);
+		m_pEntity = dynamic_cast<Ogre::Entity*>(pObject);
+	}
 }
 
 EntityObject::~EntityObject()
@@ -72,10 +76,10 @@ EntityObject::~EntityObject()
 	}
 }
 
-void EntityObject::Initialize()
+void EntityObject::Initialize(BaseObject *owner)
 {
-	auto owner = m_owner != nullptr ? m_owner : this;
-	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(owner);
+	m_owner = owner != nullptr ? owner : this;
+	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(m_owner);
 }
 
 void EntityObject::update(int deltaInMillis)

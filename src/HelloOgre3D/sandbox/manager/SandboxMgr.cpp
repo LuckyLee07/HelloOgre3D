@@ -13,6 +13,9 @@
 
 using namespace Ogre;
 
+SandboxMgr* g_SandboxMgr = nullptr;
+Ogre::NameGenerator SandboxMgr::s_nameGenerator("UnnamedParticle_");
+
 SandboxMgr::SandboxMgr(Ogre::SceneManager* sceneManager)
     : m_pSceneManager(sceneManager), m_pRootSceneNode(nullptr)
 {
@@ -23,6 +26,11 @@ SandboxMgr::~SandboxMgr()
 {
     m_pSceneManager = nullptr;
     m_pRootSceneNode = nullptr;
+}
+
+SandboxMgr* SandboxMgr::GetInstance()
+{
+	return g_SandboxMgr;
 }
 
 void SandboxMgr::CallFile(const Ogre::String& filepath)
@@ -327,6 +335,16 @@ btRigidBody* SandboxMgr::CreateRigidBodyBox(Ogre::Real width, Ogre::Real height,
 	return rigidBody;
 }
 
+Ogre::SceneNode* SandboxMgr::CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName)
+{
+	Ogre::SceneNode* particle = parentNode->createChildSceneNode();
+
+    const Ogre::String& uniqueName = s_nameGenerator.generate();
+	Ogre::ParticleSystem* particleSystem = parentNode->getCreator()->createParticleSystem(uniqueName, particleName);
+    particle->attachObject(particleSystem);
+    return particle;
+}
+
 void SandboxMgr::GetMeshInfo(const Ogre::Mesh* mesh, 
     size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices)
 {
@@ -443,6 +461,109 @@ void SandboxMgr::GetMeshInfo(const Ogre::Mesh* mesh,
         current_offset = next_offset;
     }
 }
+
+bool SandboxMgr::GetBonePosition(Ogre::SceneNode& node, const Ogre::String& boneName, Ogre::Vector3& outPosition)
+{
+    unsigned short numAttacheds = node.numAttachedObjects();
+    for (unsigned short index = 0; index < numAttacheds; index++)
+    {
+        Ogre::MovableObject* movable = node.getAttachedObject(index);
+        if (GetBonePosition(*movable, boneName, outPosition))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool SandboxMgr::GetBonePosition(Ogre::MovableObject& object, const Ogre::String& boneName, Ogre::Vector3& outPosition)
+{
+    //Ogre::String entityName = Ogre::EntityFactory::FACTORY_TYPE_NAME;
+    if (object.getMovableType() != "Entity") return false;
+    
+    Ogre::Entity* entity = static_cast<Ogre::Entity*>(&object);
+    if (entity->hasSkeleton())
+    {
+        Ogre::Skeleton* skeleton = entity->getSkeleton();
+        if (skeleton->hasBone(boneName))
+        {
+            Ogre::SceneNode* node = dynamic_cast<Ogre::SceneNode*>(entity->getParentNode());
+            outPosition = skeleton->getBone(boneName)->_getDerivedPosition();
+            if (node != nullptr)
+            {
+                //outPosition = 父节点平移 + (父节点旋转×骨骼局部位置)
+                outPosition = node->_getDerivedPosition() + (node->_getDerivedOrientation() * outPosition);
+            }
+            return true;
+        }
+    }
+
+    Ogre::Entity::ChildObjectListIterator iter = entity->getAttachedObjectIterator();
+    while (iter.hasMoreElements())
+    {
+        Ogre::MovableObject* attachedObject = iter.getNext();
+        if (GetBonePosition(*attachedObject, boneName, outPosition))
+        {
+            Ogre::Node* parentNode = attachedObject->getParentNode();
+            outPosition = parentNode->_getDerivedPosition() + (parentNode->_getDerivedOrientation() * outPosition);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool SandboxMgr::GetBoneOrientation(Ogre::SceneNode& node, const Ogre::String& boneName, Ogre::Quaternion& outOrientation)
+{
+	unsigned short numAttacheds = node.numAttachedObjects();
+	for (unsigned short index = 0; index < numAttacheds; index++)
+	{
+		Ogre::MovableObject* movable = node.getAttachedObject(index);
+		if (GetBoneOrientation(*movable, boneName, outOrientation))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool SandboxMgr::GetBoneOrientation(Ogre::MovableObject& object, const Ogre::String& boneName, Ogre::Quaternion& outOrientation)
+{
+	//Ogre::String entityName = Ogre::EntityFactory::FACTORY_TYPE_NAME;
+	if (object.getMovableType() != "Entity") return false;
+
+	Ogre::Entity* entity = static_cast<Ogre::Entity*>(&object);
+	if (entity->hasSkeleton())
+	{
+		Ogre::Skeleton* skeleton = entity->getSkeleton();
+		if (skeleton->hasBone(boneName))
+		{
+			Ogre::SceneNode* node = dynamic_cast<Ogre::SceneNode*>(entity->getParentNode());
+            outOrientation = skeleton->getBone(boneName)->_getDerivedOrientation();
+			if (node != nullptr)
+			{
+                outOrientation = node->convertLocalToWorldOrientation(outOrientation);
+			}
+			return true;
+		}
+	}
+
+	Ogre::Entity::ChildObjectListIterator iter = entity->getAttachedObjectIterator();
+	while (iter.hasMoreElements())
+	{
+		Ogre::MovableObject* attachedObject = iter.getNext();
+		if (GetBoneOrientation(*attachedObject, boneName, outOrientation))
+		{
+			Ogre::Node* parentNode = attachedObject->getParentNode();
+            outOrientation = parentNode->convertLocalToWorldOrientation(outOrientation);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 //---------------------------util static functions---------------------------
 
 //---------------------------sandbox tolua functions---------------------------
@@ -617,4 +738,18 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
     g_ObjectManager->addAgentObject(pObject);
 
 	return pObject;
+}
+
+BlockObject* SandboxMgr::CreateBullet(Ogre::Real height, Ogre::Real radius)
+{
+    Ogre::SceneNode* pSceneNode = SandboxMgr::CreateChildSceneNode();
+
+	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
+
+	BlockObject* pBullet = new BlockObject(pSceneNode, capsuleRigidBody);
+    pBullet->setObjType(BaseObject::OBJ_TYPE_BLOCK);
+
+	g_ObjectManager->addBlockObject(pBullet);
+
+	return pBullet;
 }

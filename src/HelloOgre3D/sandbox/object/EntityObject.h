@@ -25,8 +25,9 @@ public:
 
 	void update(int deltaMsec) override;
 
+	BaseObject* getOwner() { return m_owner; }
 	//tolua_begin
-	virtual void Initialize();
+	virtual void Initialize(BaseObject* owner=nullptr);
 
 	const Ogre::Vector3& getOriginPos() const;
 	void setOriginPos(const Ogre::Vector3& position);
@@ -55,9 +56,6 @@ public:
 	Ogre::Entity* getEntity() { return m_pEntity; }
 	Ogre::Entity* getDetachEntity();
 	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
-
-	BaseObject* getOwner() { return m_owner; }
-	void setOwner(BaseObject* owner) { m_owner = owner; }
 
 protected:
 	Ogre::SceneNode* m_pSceneNode;

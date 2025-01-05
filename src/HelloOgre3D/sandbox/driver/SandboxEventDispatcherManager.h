@@ -9,22 +9,31 @@
 class SandboxEventDispatcherManager
 {
 public:
+	SandboxEventDispatcherManager() = default;
+	~SandboxEventDispatcherManager() = default;
+
 	// 获取单例实例
-	static SandboxEventDispatcherManager& GetInstance()
+	static SandboxEventDispatcherManager& GetGlobalInst()
 	{
 		static SandboxEventDispatcherManager instance; // C++11线程安全
 		return instance;
 	}
 
-	// 禁用拷贝和赋值操作
-	SandboxEventDispatcherManager(const SandboxEventDispatcherManager&) = delete;
-	SandboxEventDispatcherManager& operator=(const SandboxEventDispatcherManager&) = delete;
-
 	// 创建事件
-	void CreateEvent(const std::string& eventName)
+	void CreateDispatcher(const std::string& eventName)
 	{
 		auto dispatcher = std::make_shared<SandboxEventDispatcher>();
 		m_dispatchers[eventName] = dispatcher;
+	}
+
+	// 删除事件
+	void RemoveDispatcher(const std::string& eventName)
+	{
+		auto iter = m_dispatchers.find(eventName);
+		if (iter != m_dispatchers.end())
+		{
+			m_dispatchers.erase(iter);
+		}
 	}
 
 	// 订阅事件
@@ -48,9 +57,6 @@ public:
 	}
 
 private:
-	SandboxEventDispatcherManager() = default; // 私有化构造函数
-	~SandboxEventDispatcherManager() = default;
-
 	using DispatcherBase = std::shared_ptr<SandboxEventDispatcher>;
 	std::unordered_map<std::string, DispatcherBase> m_dispatchers;
 

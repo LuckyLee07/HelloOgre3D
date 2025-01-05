@@ -26,6 +26,8 @@ public:
 	SandboxMgr(Ogre::SceneManager* sceneManager);
 	~SandboxMgr();
 
+	static SandboxMgr* GetInstance();
+
 	//tolua_begin
 	Ogre::Camera* GetCamera();
 	Ogre::SceneManager* GetSceneManager();
@@ -57,9 +59,17 @@ public: //static methods
 	static btRigidBody* CreateRigidBodyCapsule(Ogre::Real height, Ogre::Real radius);
 
 	static btRigidBody* CreateRigidBodyBox(Ogre::Real width, Ogre::Real height, Ogre::Real length);
+	
+	static Ogre::SceneNode* CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName);
 
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);
 	
+	static bool GetBonePosition(Ogre::SceneNode& node, const Ogre::String& boneName, Ogre::Vector3& outPosition);
+	static bool GetBonePosition(Ogre::MovableObject& object, const Ogre::String& boneName, Ogre::Vector3& outPosition);
+
+	static bool GetBoneOrientation(Ogre::SceneNode& node, const Ogre::String& boneName, Ogre::Quaternion& outOrientation);
+	static bool GetBoneOrientation(Ogre::MovableObject& object, const Ogre::String& boneName, Ogre::Quaternion& outOrientation);
+
 public:
 	//tolua_begin
 	void SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
@@ -74,21 +84,26 @@ public:
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	
 	BlockObject* CreatePlane(float length, float width);
-	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
 	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
+	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
 	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType);
 	AgentObject* CreateSoldier(const Ogre::String& meshFilePath);
-	
+
+	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 	//tolua_end
 
 private:
 	Ogre::SceneNode* m_pRootSceneNode;
 	Ogre::SceneManager* m_pSceneManager;
 
+	static Ogre::NameGenerator s_nameGenerator;
+
 }; //tolua_exports
+
+extern SandboxMgr* g_SandboxMgr;
 
 #endif; // __SANDBOX_MGR_H__

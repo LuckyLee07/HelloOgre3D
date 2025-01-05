@@ -35,10 +35,7 @@ BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	: EntityObject(pSceneNode), m_pRigidBody(pRigidBody)
-{
-	m_pEntity = nullptr;
-	m_pSceneNode = pSceneNode;
-	
+{	
 	m_pRigidBody->setUserPointer(this);
 }
 
@@ -47,7 +44,7 @@ BlockObject::~BlockObject()
 	this->DeleteRighdBody();
 }
 
-void BlockObject::Initialize()
+void BlockObject::Initialize(BaseObject* owner)
 {
 
 }

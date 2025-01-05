@@ -39,7 +39,15 @@ public:
 	virtual Ogre::Vector3 GetUp() const;
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
+
+	void ShootBullet();
 	//tolua_end
+
+	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
+
+private:
+	void CreateEventDispatcher();
+	void RemoveEventDispatcher();
 	
 private:
 	AGENT_OBJ_TYPE m_agentType;

@@ -24,7 +24,7 @@ public:
 
 	virtual ~BlockObject();
 
-	void Initialize() override;
+	void Initialize(BaseObject *owner = nullptr);
 	void DeleteRighdBody();
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
 

@@ -104,6 +104,16 @@ namespace Fancy
 		}
 	}
 
+	void AnimationStateMachine::FireStateChageEvent(AnimationState* pNextState)
+	{
+		if (m_owner == nullptr || pNextState == nullptr) 
+			return;
+		
+		SandboxContext context;
+		context.Set_String("StateId", pNextState->GetName());
+		m_owner->Event()->Emit("FSM_STATE_CHANGE", context);
+	}
+
 	void AnimationStateMachine::SetCurrentState(const std::string& stateName)
 	{
 		if (m_animStates.find(stateName) != m_animStates.end())
@@ -179,6 +189,8 @@ namespace Fancy
 		m_pCurrentTransition = transition;
 		m_TransitionStartTime = currTimeInSeconds;
 		m_pNextState->InitAnimation(transition->getBlendInWindow());
+
+		this->FireStateChageEvent(m_pNextState);
 	}
 
 	void AnimationStateMachine::UpdateTransition(float deltaTimeInMillis, float currTimeInSeconds)
@@ -206,6 +218,8 @@ namespace Fancy
 		m_pNextState->InitAnimation();
 		m_pCurrentState = m_pNextState;
 		m_pNextState = nullptr;
+
+		this->FireStateChageEvent(m_pNextState);
 	}
 
 	void AnimationStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
@@ -222,6 +236,7 @@ namespace Fancy
 		while (timeStepped >= currAnimLength)
 		{
 			timeStepped -= currAnimLength; // Looping
+			this->FireStateChageEvent(m_pCurrentState);
 		}
 		pAnimation->AddTime(deltaTime);
 	}

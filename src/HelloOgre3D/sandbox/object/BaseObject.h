@@ -1,6 +1,8 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
+#include "driver/SandboxEventDispatcherManager.h"
+
 class BaseObject //tolua_exports
 { //tolua_exports
 public:
@@ -19,10 +21,14 @@ public:
 	};
 	//tolua_end
 public:
-	//tolua_begin
 	BaseObject();
 	virtual ~BaseObject();
 
+	virtual void update(int deltaMsec);
+	
+	SandboxEventDispatcherManager* Event();
+
+	//tolua_begin
 	void setObjId(unsigned int objId);
 	unsigned int getObjId();
 	
@@ -30,11 +36,11 @@ public:
 	OBJTYPE getObjType();
 	//tolua_end
 
-	virtual void update(int deltaMsec);
-
 private:
 	OBJTYPE m_objType;
 	unsigned int m_objId;
+
+	SandboxEventDispatcherManager* m_eventManager;
 }; //tolua_exports
 
 

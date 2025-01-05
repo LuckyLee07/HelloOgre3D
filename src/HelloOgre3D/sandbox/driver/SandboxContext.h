@@ -12,7 +12,7 @@ public:
 	{
 		Set(key, value);
 	}
-	std::string Get_String(const std::string& key)
+	std::string Get_String(const std::string& key) const
 	{
 		return Get<std::string>(key);
 	}
@@ -22,7 +22,7 @@ public:
 	{
 		Set(key, value);
 	}
-	double Get_Number(const std::string& key)
+	double Get_Number(const std::string& key) const
 	{
 		return Get<double>(key);
 	}

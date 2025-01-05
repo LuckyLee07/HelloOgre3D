@@ -32,9 +32,11 @@ GameManager::GameManager() : m_pUIScene(nullptr), m_SimulationTime(0), m_pScript
 
 GameManager::~GameManager()
 {
-	delete m_pObjectManager;
-	delete m_pSandboxMgr;
-	delete m_pPhysicsWorld;
+	SAFE_DELETE(m_pObjectManager);
+	SAFE_DELETE(m_pSandboxMgr);
+	SAFE_DELETE(m_pPhysicsWorld);
+	g_SandboxMgr = nullptr;
+	g_ObjectManager = nullptr;
 
 	for (size_t index = 0; index < UI_LAYER_COUNT; index++)
 	{
@@ -62,6 +64,7 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	m_pPhysicsWorld->initilize();
 
 	m_pSandboxMgr = new SandboxMgr(sceneManager);
+	g_SandboxMgr = m_pSandboxMgr;
 
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
 	g_ObjectManager = m_pObjectManager;
