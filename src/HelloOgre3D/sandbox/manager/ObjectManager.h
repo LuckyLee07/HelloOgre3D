@@ -19,10 +19,10 @@ class PhysicsWorld;
 enum MGR_OBJ_TYPE
 {
 	MGR_OBJ_NONE = 0,
-	MGR_OBJ_UIOBJ = 1 >> 0,
-	MGR_OBJ_ENTITY = 1 >> 1,
-	MGR_OBJ_BLOCK = 1 >> 2,
-	MGR_OBJ_AGENT = 1 >> 3,
+	MGR_OBJ_UIOBJ = 1 << 0,
+	MGR_OBJ_ENTITY = 1 << 1,
+	MGR_OBJ_BLOCK = 1 << 2,
+	MGR_OBJ_AGENT = 1 << 3,
 	MGR_OBJ_ALLS = 15, // 0x1111
 };
 //tolua_end

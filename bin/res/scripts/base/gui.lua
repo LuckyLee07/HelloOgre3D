@@ -148,7 +148,7 @@ end
 
 function GUI_UpdateProfileInfo()
 	if not profileInfoPanel or not profileInfoPanel:isVisible() then
-	 	return 
+        return
 	end
 
 	local renderTime = Sandbox:GetRenderTime() / 1000
@@ -166,7 +166,7 @@ function GUI_UpdateProfileInfo()
     local box_count = Shoot_BoxCount and Shoot_BoxCount or 0
 	local profileInfo = GUI.Markup.SmallMono ..
     "Performance Information: -> " .. box_count .. GUI.MarkupNewline ..
-    GUI.MarkupNewline ..    
+    GUI.MarkupNewline ..
     string.format(
         "  Frames per Second:        %s%7.0f%s",
         __ColorValue__(fps, 45, 25),

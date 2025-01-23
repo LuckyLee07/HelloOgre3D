@@ -40,19 +40,19 @@ function EventHandle_Keyboard(keycode, pressed)
     elseif (keycode == OIS.KC_1) then
         soldierAsm:RequestState("melee")
     elseif (keycode == OIS.KC_2) then
-        if weaponState == "sniper" and soldierAsm:RequestState("reload") then 
+        if weaponState == "sniper" and soldierAsm:RequestState("reload") then
             weaponAsm:RequestState("sniper_reload")
         end
     elseif (keycode == OIS.KC_3) then
-        if weaponState == "sniper" then 
-            if soldierAsm:RequestState("smg_transform") then 
+        if weaponState == "sniper" then
+            if soldierAsm:RequestState("smg_transform") then
                 weaponAsm:RequestState("smg_transform")
                 weaponState = "smg"
             end
         end
     elseif (keycode == OIS.KC_4) then
-        if weaponState == "smg" then 
-            if soldierAsm:RequestState("sniper_transform") then 
+        if weaponState == "smg" then
+            if soldierAsm:RequestState("sniper_transform") then
                 weaponAsm:RequestState("sniper_transform")
                 weaponState = "sniper"
             end

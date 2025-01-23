@@ -13,7 +13,7 @@ end
 
 NewSandboxUtilities = {
 	Objects = {
-		modular_block = 	{file = "models/nobiax_modular/modular_block.mesh", mass = 15},
+        modular_block = 	{file = "models/nobiax_modular/modular_block.mesh", mass = 15},
 		modular_cooling = 	{file = "models/nobiax_modular/modular_cooling.mesh", mass = 15},
 		modular_roof = 		{file = "models/nobiax_modular/modular_roof.mesh", mass = 50},
 		modular_pillar_brick_1 = {file = "models/nobiax_modular/modular_pillar_brick_1.mesh", mass = 40},
@@ -26,8 +26,6 @@ NewSandboxUtilities = {
 		modular_brick_small_window_2 = 	{file = "models/nobiax_modular/modular_brick_small_window_2.mesh", mass = 40},
 		modular_brick_window_1 = 	{file = "models/nobiax_modular/modular_brick_window_1.mesh", mass = 40},
 		modular_brick_window_2 = 	{file = "models/nobiax_modular/modular_brick_window_2.mesh", mass = 40},
-		modular_block = 	{file = "models/nobiax_modular/modular_block.mesh", mass = 15},
-		modular_block = 	{file = "models/nobiax_modular/modular_block.mesh", mass = 15},
 		modular_wall_brick_1 = {file = "models/nobiax_modular/modular_wall_brick_1.mesh", mass = 80},
 		modular_wall_brick_2 = {file = "models/nobiax_modular/modular_wall_brick_2.mesh", mass = 40},
 		modular_wall_brick_3 = {file = "models/nobiax_modular/modular_wall_brick_3.mesh", mass = 30},

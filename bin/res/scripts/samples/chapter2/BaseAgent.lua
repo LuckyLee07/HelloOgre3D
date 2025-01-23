@@ -50,7 +50,7 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
     local maxSpeed = agent:GetMaxSpeed();
     local squaredSpeed = maxSpeed * maxSpeed;
 
-    -- Using squared values avoids the cost of using the square 
+    -- Using squared values avoids the cost of using the square
     -- root when calculating the magnitude of the velocity vector.
     if (Vector.LengthSquared(velocity) > squaredSpeed) then
         local newVelocity = Vector.Normalize(velocity) * maxSpeed;
@@ -151,7 +151,7 @@ function Agent_Seeking_Update(agent, deltaTimeInMillis)
     -- Calculate the position where the Agent touches the ground.
     local adjustedPosition = agent:GetPosition() - Vector3(0, agent:GetHeight()/2, 0);
 
-    -- If the agent is within the target radius pick a new 
+    -- If the agent is within the target radius pick a new
     -- random position to move to.
     if (DistanceSquared(adjustedPosition, destination) < targetRadiusSquared) then
 

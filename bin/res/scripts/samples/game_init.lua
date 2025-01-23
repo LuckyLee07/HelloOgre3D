@@ -2,9 +2,9 @@
 require("res.scripts.base.gui")
 
 --require("res.scripts.samples.Sandbox1")
---require("res.scripts.samples.Sandbox2")
+require("res.scripts.samples.Sandbox2")
 --require("res.scripts.samples.Sandbox3")
-require("res.scripts.samples.Sandbox4")
+--require("res.scripts.samples.Sandbox4")
 
 _G.__init__ = function(sec, msec)
 	math.randomseed(os.time())
@@ -26,7 +26,7 @@ end
 _G.__gc__ = function()
 	-- 设置LuaGC垃圾回收
 	threadpool:work(function()
-		while true do 
+		while true do
 			local count = collectgarbage('count')
 			local step = 500
 			if count >= 3 * 1024 then

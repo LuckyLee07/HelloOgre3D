@@ -16,18 +16,18 @@ end
 -- 分割字符串
 function string.split(str, mark)
 
- 	if string.len(str)==0 then return nil end
- 
+	if string.len(str)==0 then return nil end
+
 	local sIdx = 1
 	local tsub = {}
 	while true do
 		local pos = string.find(str, mark, sIdx, true)
-	   	if not pos then break end
+		if not pos then break end
 
 	    table.insert(tsub, string.sub(str, sIdx, pos-1))
 	    sIdx = pos + string.len(mark)
 	end
-  	table.insert (tsub, string.sub(str, sIdx))
+	table.insert (tsub, string.sub(str, sIdx))
 
 	return tsub
 end
@@ -78,7 +78,7 @@ local function __tbl_tostring(tbl)
 
 	local ref_cache = {} -- 记录已存在的
     local function get_table(ptbl, level)
-    	local str_tbl = sub_tostr(ptbl)
+		local str_tbl = sub_tostr(ptbl)
         local str_format = ('{ --%s\n'):format(str_tbl)
 
 		local index = 0
@@ -111,24 +111,24 @@ local __print__ = _G.print
 _G.print = function( ... )
 	local msg = ''
 	local info = debug.getinfo(2)
-    if info ~= nil then 
-    	local file = info.source or ''
-    	local line = info.currentline or 0
-    	msg = string.format('[%s:%d]', file, line)
-    	--__print__("Fxkk=========>>>", file)
+    if info ~= nil then
+		local file = info.source or ''
+		local line = info.currentline or 0
+		msg = string.format('[%s:%d]', file, line)
+		--__print__("Fxkk=========>>>", file)
     end
 
     local args = {...}
     for i, v in ipairs(args) do
-    	if type(v) == 'table' then
-    		local ss = table.tostring(v)
-    		if #ss > 5000 then ss = string.sub(ss, 1, 5000) end
-    		msg = msg .. ss .. ' '
-    	else
-    		local ss = tostring(v)
-    		if #ss > 5000 then ss = string.sub(ss, 1, 5000) end
-    		msg = msg .. ss .. ' '
-    	end
+		if type(v) == 'table' then
+			local ss = table.tostring(v)
+			if #ss > 5000 then ss = string.sub(ss, 1, 5000) end
+			msg = msg .. ss .. ' '
+		else
+			local ss = tostring(v)
+			if #ss > 5000 then ss = string.sub(ss, 1, 5000) end
+			msg = msg .. ss .. ' '
+		end
     end
     if #msg >= 8*1024 then ss = string.sub(ss, 1, 8*1024) end
     if #args <= 0 then m = 'nil' end

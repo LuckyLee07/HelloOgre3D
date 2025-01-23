@@ -16,14 +16,14 @@ function Class(className,super)
         setmetatable(instance,{__index = curClass})
 
         local function create(tempClass,param)
-            if tempClass.super then 
+            if tempClass.super then
                 setmetatable(tempClass,{__index = tempClass.super})
                 create(tempClass.super,param)
-            end 
-            if tempClass.Init then 
+            end
+            if tempClass.Init then
                 tempClass.Init(instance,param)
-            end 
-        end 
+            end
+        end
 
         create(curClass,param)
 
@@ -34,7 +34,7 @@ function Class(className,super)
         if curClass.GetInst then
             print("单例类不能通过NEW的方式创建")
             return nil
-        end 
+        end
         return getInstance(param)
     end
 
