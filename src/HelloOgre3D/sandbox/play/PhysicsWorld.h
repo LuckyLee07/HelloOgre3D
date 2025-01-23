@@ -1,6 +1,8 @@
 #ifndef __PHYSICS_WORLD_H__  
 #define __PHYSICS_WORLD_H__
 
+#include <map>
+
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -18,8 +20,9 @@ public:
 	void cleanup();
 
 	void stepWorld();
+	void checkCollision();
 
-	void addRigidBody(btRigidBody* pRigidBody);
+	void addRigidBody(btRigidBody* pRigidBody, int ownerId = 0);
 	void removeRigidBody(btRigidBody* pRigidBody);
 
 private:
@@ -28,6 +31,8 @@ private:
 	btCollisionDispatcher* m_pDispatcher;
 	btSequentialImpulseConstraintSolver* m_pSolver;
 	btDiscreteDynamicsWorld* m_pDynamicsWorld;
+
+	std::map<btRigidBody*, int> m_rigidBodys;
 };
 
 #endif; // __PHYSICS_WORLD_H__

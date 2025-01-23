@@ -10,7 +10,7 @@
 ObjectManager* g_ObjectManager = nullptr;
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
-	: m_objectIndex(0), m_pPhysicsWorld(pPhysicsWorld)
+	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld)
 {
 	m_pScriptVM = GetScriptLuaVM();
 }
@@ -20,10 +20,7 @@ ObjectManager::~ObjectManager()
 	m_pScriptVM = nullptr;
 	m_pPhysicsWorld = nullptr;
 
-	this->clearAllAgents();
-	this->clearAllBlocks();
-	this->clearAllEntitys();
-	this->clearAllUIObjects();
+	this->clearAllObjects(MGR_OBJ_ALLS);
 }
 
 ObjectManager* ObjectManager::GetInstance()
@@ -33,25 +30,11 @@ ObjectManager* ObjectManager::GetInstance()
 
 void ObjectManager::Update(int deltaMilliseconds)
 {
-	for (auto iter = m_entitys.begin(); iter != m_entitys.end(); iter++)
+	for (auto iter = m_objects.begin(); iter != m_objects.end(); iter++)
 	{
-		if (EntityObject* pObject = *iter)
+		BaseObject* pObject = iter->second;
+		if (pObject != nullptr)
 			pObject->update(deltaMilliseconds);
-	}
-	for (auto iter = m_blocks.begin(); iter != m_blocks.end(); iter++)
-	{
-		if (BlockObject* pObject = *iter)
-			pObject->update(deltaMilliseconds);
-	}
-	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
-	{
-		if (AgentObject* pAgent = *iter) 
-			pAgent->update(deltaMilliseconds);
-	}
-	for (auto iter = m_uicomps.begin(); iter != m_uicomps.end(); iter++)
-	{
-		if (UIComponent* pComponent = *iter) 
-			pComponent->update(deltaMilliseconds);
 	}
 }
 
@@ -62,58 +45,6 @@ void ObjectManager::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 		if (AgentObject* pAgent = *iter)
 			m_pScriptVM->callFunction("Agent_EventHandle", "u[AgentObject]i", pAgent, keycode);
 	}
-}
-
-void ObjectManager::addUIObject(UIComponent* pUIObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pUIObject->setObjId(objectId);
-	pUIObject->Initialize();
-
-	m_uicomps.push_back(pUIObject);
-}
-
-void ObjectManager::addAgentObject(AgentObject* pAgentObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pAgentObject->setObjId(objectId);
-	pAgentObject->Initialize();
-
-	m_agents.push_back(pAgentObject);
-
-	auto rigidBody = pAgentObject->getRigidBody();
-	if (rigidBody != nullptr)
-	{
-		m_pPhysicsWorld->addRigidBody(rigidBody);
-	}
-}
-
-void ObjectManager::addBlockObject(BlockObject* pBlockObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pBlockObject->setObjId(objectId);
-	pBlockObject->Initialize();
-
-	m_blocks.push_back(pBlockObject);
-
-	auto rigidBody = pBlockObject->getRigidBody();
-	if (rigidBody != nullptr)
-	{
-		m_pPhysicsWorld->addRigidBody(rigidBody);
-	}
-}
-
-void ObjectManager::addEntityObject(EntityObject* pEntityObject)
-{
-	unsigned int objectId = getNextObjectId();
-
-	pEntityObject->setObjId(objectId);
-	pEntityObject->Initialize();
-
-	m_entitys.push_back(pEntityObject);
 }
 
 std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType)
@@ -138,51 +69,61 @@ std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentTy
 	return specifyAgents;
 }
 
-void ObjectManager::clearAllAgents()
+void ObjectManager::clearAllObjects(int objType, bool forceAll)
 {
-	auto iter = m_agents.begin();
-	for (; iter != m_agents.end(); iter++)
+	if ((objType & MGR_OBJ_UIOBJ) != 0)
 	{
-		auto pAgent = *iter;
-		SAFE_DELETE(pAgent);
-	}
-	m_agents.clear();
-}
+		auto iter = m_uicomps.begin();
+		for (; iter != m_uicomps.end(); iter++)
+		{
+			auto pUIObj = *iter;
+			m_objects.erase(pUIObj->getObjId());
 
-void ObjectManager::clearAllEntitys()
-{
-	auto iter = m_entitys.begin();
-	for (; iter != m_entitys.end(); iter++)
+			SAFE_DELETE(pUIObj);
+		}
+		m_uicomps.clear();
+	}
+
+	if ((objType & MGR_OBJ_ENTITY) != 0)
 	{
-		auto pEntity = *iter;
-		SAFE_DELETE(pEntity);
-	}
-	m_entitys.clear();
-}
+		auto iter = m_entitys.begin();
+		for (; iter != m_entitys.end(); iter++)
+		{
+			auto pEntity = *iter;
+			m_objects.erase(pEntity->getObjId());
 
-void ObjectManager::clearAllBlocks(bool forceAll)
-{
-	auto iter = m_blocks.begin();
-	for (; iter != m_blocks.end(); iter++)
+			SAFE_DELETE(pEntity);
+		}
+		m_entitys.clear();
+	}
+
+	if ((objType & MGR_OBJ_BLOCK) != 0)
 	{
-		auto pBlock = *iter;
-		if (!forceAll && pBlock->getObjType() != BaseObject::OBJ_TYPE_BLOCK)
-			continue; //·ÀÖ¹É¾³ýPlane
+		auto iter = m_blocks.begin();
+		for (; iter != m_blocks.end(); iter++)
+		{
+			auto pBlock = *iter;
+			if (!forceAll && pBlock->getObjType() != BaseObject::OBJ_TYPE_BLOCK)
+				continue; //·ÀÖ¹É¾³ýPlane
 
-		SAFE_DELETE(pBlock);
+			m_objects.erase(pBlock->getObjId());
+			SAFE_DELETE(pBlock);
+		}
+		m_blocks.clear();
 	}
-	m_blocks.clear();
-}
 
-void ObjectManager::clearAllUIObjects()
-{
-	auto iter = m_uicomps.begin();
-	for (; iter != m_uicomps.end(); iter++)
+	if ((objType & MGR_OBJ_AGENT) != 0)
 	{
-		auto pUIObj = *iter;
-		SAFE_DELETE(pUIObj);
+		auto iter = m_agents.begin();
+		for (; iter != m_agents.end(); iter++)
+		{
+			auto pAgent = *iter;
+			m_objects.erase(pAgent->getObjId());
+
+			SAFE_DELETE(pAgent);
+		}
+		m_agents.clear();
 	}
-	m_uicomps.clear();
 }
 
 std::vector<VehicleObject*> ObjectManager::getAllVehicles()
@@ -190,3 +131,126 @@ std::vector<VehicleObject*> ObjectManager::getAllVehicles()
 	std::vector<VehicleObject*> vehicleVec(m_agents.begin(), m_agents.end());
 	return vehicleVec;
 }
+
+void ObjectManager::addNewObject(BaseObject* pObject)
+{
+	unsigned int objectId = getNextObjId();
+	pObject->setObjId(objectId);
+	pObject->Initialize();
+	m_objects[objectId] = pObject;
+
+	auto rigidBody = pObject->getRigidBody();
+	if (rigidBody != nullptr)
+	{
+		m_pPhysicsWorld->addRigidBody(rigidBody);
+	}
+
+	this->realAddObject(pObject);
+}
+
+void ObjectManager::realAddObject(BaseObject* pObject)
+{
+	int objtype = pObject->getObjType();
+	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
+	{
+		auto newObject = dynamic_cast<AgentObject*>(pObject);
+		assert(newObject != nullptr);
+		m_agents.push_back(newObject);
+	}
+	else if (objtype >= BaseObject::OBJ_TYPE_BLOCK)
+	{
+		auto newObject = dynamic_cast<BlockObject*>(pObject);
+		assert(newObject != nullptr);
+		m_blocks.push_back(newObject);
+	}
+	else if (objtype >= BaseObject::OBJ_TYPE_ENTITY)
+	{
+		auto newObject = dynamic_cast<EntityObject*>(pObject);
+		assert(newObject != nullptr);
+		m_entitys.push_back(newObject);
+	}
+	else if (objtype >= BaseObject::OBJ_TYPE_UIOBJ)
+	{
+		auto newObject = dynamic_cast<UIComponent*>(pObject);
+		assert(newObject != nullptr);
+		m_uicomps.push_back(newObject);
+	}
+}
+
+bool ObjectManager::realRemoveObject(BaseObject* pObject)
+{
+	int objid = pObject->getObjId();
+	int objtype = pObject->getObjType();
+	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
+	{
+		for (auto it = m_agents.begin(); it != m_agents.end(); it++)
+		{
+			if ((*it)->getObjId() == objid)
+			{
+				m_agents.erase(it);
+				return true;
+			}
+		}
+	}
+	
+	if (objtype >= BaseObject::OBJ_TYPE_BLOCK)
+	{
+		for (auto it = m_blocks.begin(); it != m_blocks.end(); it++)
+		{
+			if ((*it)->getObjId() == objid)
+			{
+				m_blocks.erase(it);
+				return true;
+			}
+		}
+	}
+	
+	if (objtype >= BaseObject::OBJ_TYPE_ENTITY)
+	{
+		for (auto it = m_entitys.begin(); it != m_entitys.end(); it++)
+		{
+			if ((*it)->getObjId() == objid)
+			{
+				m_entitys.erase(it);
+				return true;
+			}
+		}
+	}
+	else if (objtype >= BaseObject::OBJ_TYPE_UIOBJ)
+	{
+		for (auto it = m_uicomps.begin(); it != m_uicomps.end(); it++)
+		{
+			if ((*it)->getObjId() == objid)
+			{
+				m_uicomps.erase(it);
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}
+
+bool ObjectManager::removeObjectById(int objid)
+{
+	auto iter = m_objects.find(objid);
+	if (iter != m_objects.end())
+	{
+		BaseObject *pObject = iter->second;
+		m_objects.erase(iter);
+		bool result = realRemoveObject(pObject);
+		return result;
+	}
+	return false;
+}
+
+BaseObject* ObjectManager::getObjectById(int objid)
+{
+	auto iter = m_objects.find(objid);
+	if (iter != m_objects.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+

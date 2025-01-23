@@ -76,7 +76,7 @@ EntityObject::~EntityObject()
 	}
 }
 
-void EntityObject::Initialize(BaseObject *owner)
+void EntityObject::InitWithOwner(BaseObject *owner)
 {
 	m_owner = owner != nullptr ? owner : this;
 	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(m_owner);

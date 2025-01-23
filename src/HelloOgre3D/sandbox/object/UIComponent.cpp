@@ -10,8 +10,6 @@ UIComponent::UIComponent(Gorilla::Layer* pUILayer)
 	m_dimension(0, 0), m_textMargin(0, 0), m_topLeftPos(0, 0), m_topLeftOffset(0, 0)
 {
 	setObjType(OBJ_TYPE_UIOBJ);
-
-	//this->Initialize();
 }
 
 UIComponent::~UIComponent()

@@ -190,7 +190,7 @@ UIComponent* GameManager::createUIComponent(unsigned int index)
 	if (index < UI_LAYER_COUNT)
 	{
 		UIComponent* pComponent = new UIComponent(getUILayer(index));
-		m_pObjectManager->addUIObject(pComponent);
+		m_pObjectManager->addNewObject(pComponent);
 		return pComponent;
 	}
 	return nullptr;

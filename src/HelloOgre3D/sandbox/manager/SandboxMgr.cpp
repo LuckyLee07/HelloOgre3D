@@ -146,7 +146,9 @@ btRigidBody* SandboxMgr::CreateRigidBodyPlane(const btVector3& normal, const btS
 
     groundRigidBodyCI.m_rollingFriction = 0.1f;
 
-    return new btRigidBody(groundRigidBodyCI);
+	// 创建刚体对象
+	btRigidBody* pRigidBody = new btRigidBody(groundRigidBodyCI);
+    return pRigidBody;
 }
 
 btRigidBody* SandboxMgr::CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btScalar btmass)
@@ -649,7 +651,7 @@ BlockObject* SandboxMgr::CreatePlane(float length, float width)
     BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
     pObject->setObjType(BaseObject::OBJ_TYPE_PLANE);
 
-    g_ObjectManager->addBlockObject(pObject);
+	g_ObjectManager->addNewObject(pObject);
 
     return pObject;
 }
@@ -659,7 +661,7 @@ BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshFilePath)
     BlockObject* pObject = new BlockObject(meshFilePath);
     pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-    g_ObjectManager->addBlockObject(pObject);
+	g_ObjectManager->addNewObject(pObject);
 
     return pObject;
 }
@@ -681,7 +683,7 @@ BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length,
     pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
     pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
 
-    g_ObjectManager->addBlockObject(pObject);
+	g_ObjectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -691,7 +693,7 @@ EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)
     EntityObject* pObject = new EntityObject(meshFilePath);
     pObject->setObjType(BaseObject::OBJ_TYPE_ENTITY);
 
-    g_ObjectManager->addEntityObject(pObject);
+	g_ObjectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -717,7 +719,7 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
     pObject->setObjType(BaseObject::OBJ_TYPE_AGENT);
     pObject->setAgentType(agentType);
 
-    g_ObjectManager->addAgentObject(pObject);
+	g_ObjectManager->addNewObject(pObject);
 
     return pObject;
 }
@@ -735,7 +737,7 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
 
 	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
     pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
-    g_ObjectManager->addAgentObject(pObject);
+    g_ObjectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -747,9 +749,9 @@ BlockObject* SandboxMgr::CreateBullet(Ogre::Real height, Ogre::Real radius)
 	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
 
 	BlockObject* pBullet = new BlockObject(pSceneNode, capsuleRigidBody);
-    pBullet->setObjType(BaseObject::OBJ_TYPE_BLOCK);
+    pBullet->setObjType(BaseObject::OBJ_TYPE_BULLET);
 
-	g_ObjectManager->addBlockObject(pBullet);
+	g_ObjectManager->addNewObject(pBullet);
 
 	return pBullet;
 }

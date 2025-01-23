@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Jan  5 21:40:14 2025.
+** Generated automatically by tolua++-1.0.92 on Thu Jan 23 21:23:46 2025.
 */
 
 #ifndef __cplusplus
@@ -3935,9 +3935,9 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00(lua_Sta
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: Initialize of class  EntityObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_Initialize00
-static int tolua_ClientToLua_EntityObject_Initialize00(lua_State* tolua_S)
+/* method: InitWithOwner of class  EntityObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_EntityObject_InitWithOwner00
+static int tolua_ClientToLua_EntityObject_InitWithOwner00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -3953,16 +3953,16 @@ static int tolua_ClientToLua_EntityObject_Initialize00(lua_State* tolua_S)
   EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
   BaseObject* owner = ((BaseObject*)  tolua_tousertype(tolua_S,2,nullptr));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'Initialize'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'InitWithOwner'", NULL);
 #endif
   {
-   self->Initialize(owner);
+   self->InitWithOwner(owner);
   }
  }
  return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'Initialize'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'InitWithOwner'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7627,96 +7627,36 @@ static int tolua_ClientToLua_SandboxMgr_CreateBullet00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: clearAllAgents of class  ObjectManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllAgents00
-static int tolua_ClientToLua_ObjectManager_clearAllAgents00(lua_State* tolua_S)
+/* method: clearAllObjects of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllObjects00
+static int tolua_ClientToLua_ObjectManager_clearAllObjects00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int objType = ((int)  tolua_tonumber(tolua_S,2,0));
+  bool forceAll = ((bool)  tolua_toboolean(tolua_S,3,true));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllAgents'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllObjects'", NULL);
 #endif
   {
-   self->clearAllAgents();
+   self->clearAllObjects(objType,forceAll);
   }
  }
  return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllAgents'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: clearAllEntitys of class  ObjectManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllEntitys00
-static int tolua_ClientToLua_ObjectManager_clearAllEntitys00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllEntitys'", NULL);
-#endif
-  {
-   self->clearAllEntitys();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllEntitys'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: clearAllBlocks of class  ObjectManager */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_ObjectManager_clearAllBlocks00
-static int tolua_ClientToLua_ObjectManager_clearAllBlocks00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
-     !tolua_isboolean(tolua_S,2,1,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
-  bool forceAll = ((bool)  tolua_toboolean(tolua_S,2,true));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearAllBlocks'", NULL);
-#endif
-  {
-   self->clearAllBlocks(forceAll);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'clearAllBlocks'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'clearAllObjects'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8561,13 +8501,13 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"BaseObject","BaseObject","",NULL);
   tolua_beginmodule(tolua_S,"BaseObject");
    tolua_constant(tolua_S,"OBJ_TYPE_NONE",BaseObject::OBJ_TYPE_NONE);
+   tolua_constant(tolua_S,"OBJ_TYPE_UIOBJ",BaseObject::OBJ_TYPE_UIOBJ);
    tolua_constant(tolua_S,"OBJ_TYPE_ENTITY",BaseObject::OBJ_TYPE_ENTITY);
    tolua_constant(tolua_S,"OBJ_TYPE_BLOCK",BaseObject::OBJ_TYPE_BLOCK);
    tolua_constant(tolua_S,"OBJ_TYPE_PLANE",BaseObject::OBJ_TYPE_PLANE);
+   tolua_constant(tolua_S,"OBJ_TYPE_BULLET",BaseObject::OBJ_TYPE_BULLET);
    tolua_constant(tolua_S,"OBJ_TYPE_AGENT",BaseObject::OBJ_TYPE_AGENT);
    tolua_constant(tolua_S,"OBJ_TYPE_SOLDIER",BaseObject::OBJ_TYPE_SOLDIER);
-   tolua_constant(tolua_S,"OBJ_TYPE_UIOBJ",BaseObject::OBJ_TYPE_UIOBJ);
-   tolua_constant(tolua_S,"OBJ_TYPE_MAX",BaseObject::OBJ_TYPE_MAX);
    tolua_function(tolua_S,"setObjId",tolua_ClientToLua_BaseObject_setObjId00);
    tolua_function(tolua_S,"getObjId",tolua_ClientToLua_BaseObject_getObjId00);
    tolua_function(tolua_S,"setObjType",tolua_ClientToLua_BaseObject_setObjType00);
@@ -8622,7 +8562,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"EntityObject","EntityObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"EntityObject");
-   tolua_function(tolua_S,"Initialize",tolua_ClientToLua_EntityObject_Initialize00);
+   tolua_function(tolua_S,"InitWithOwner",tolua_ClientToLua_EntityObject_InitWithOwner00);
    tolua_function(tolua_S,"getOriginPos",tolua_ClientToLua_EntityObject_getOriginPos00);
    tolua_function(tolua_S,"setOriginPos",tolua_ClientToLua_EntityObject_setOriginPos00);
    tolua_function(tolua_S,"setMaterial",tolua_ClientToLua_EntityObject_setMaterial00);
@@ -8737,11 +8677,15 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateSoldier",tolua_ClientToLua_SandboxMgr_CreateSoldier00);
    tolua_function(tolua_S,"CreateBullet",tolua_ClientToLua_SandboxMgr_CreateBullet00);
   tolua_endmodule(tolua_S);
+  tolua_constant(tolua_S,"MGR_OBJ_NONE",MGR_OBJ_NONE);
+  tolua_constant(tolua_S,"MGR_OBJ_UIOBJ",MGR_OBJ_UIOBJ);
+  tolua_constant(tolua_S,"MGR_OBJ_ENTITY",MGR_OBJ_ENTITY);
+  tolua_constant(tolua_S,"MGR_OBJ_BLOCK",MGR_OBJ_BLOCK);
+  tolua_constant(tolua_S,"MGR_OBJ_AGENT",MGR_OBJ_AGENT);
+  tolua_constant(tolua_S,"MGR_OBJ_ALLS",MGR_OBJ_ALLS);
   tolua_cclass(tolua_S,"ObjectManager","ObjectManager","",NULL);
   tolua_beginmodule(tolua_S,"ObjectManager");
-   tolua_function(tolua_S,"clearAllAgents",tolua_ClientToLua_ObjectManager_clearAllAgents00);
-   tolua_function(tolua_S,"clearAllEntitys",tolua_ClientToLua_ObjectManager_clearAllEntitys00);
-   tolua_function(tolua_S,"clearAllBlocks",tolua_ClientToLua_ObjectManager_clearAllBlocks00);
+   tolua_function(tolua_S,"clearAllObjects",tolua_ClientToLua_ObjectManager_clearAllObjects00);
    tolua_function(tolua_S,"getAllAgents",tolua_ClientToLua_ObjectManager_getAllAgents00);
    tolua_function(tolua_S,"getAllBlocks",tolua_ClientToLua_ObjectManager_getAllBlocks00);
    tolua_function(tolua_S,"getAllEntitys",tolua_ClientToLua_ObjectManager_getAllEntitys00);

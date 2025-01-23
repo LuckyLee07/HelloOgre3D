@@ -44,3 +44,8 @@ void BaseObject::update(int deltaMsec)
 {
 	(void)deltaMsec;
 }
+
+btRigidBody* BaseObject::getRigidBody()
+{
+	return nullptr;
+}

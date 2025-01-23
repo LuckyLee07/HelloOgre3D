@@ -1,10 +1,12 @@
 #ifndef __OBJECT_MANAGER_H__  
 #define __OBJECT_MANAGER_H__
 
+#include <map>
 #include <vector>
 #include "OISKeyboard.h"
 #include "SandboxDef.h"
 
+class BaseObject;
 class AgentObject;
 class UIComponent;
 class BlockObject;
@@ -12,6 +14,18 @@ class EntityObject;
 class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
+
+//tolua_begin
+enum MGR_OBJ_TYPE
+{
+	MGR_OBJ_NONE = 0,
+	MGR_OBJ_UIOBJ = 1 >> 0,
+	MGR_OBJ_ENTITY = 1 >> 1,
+	MGR_OBJ_BLOCK = 1 >> 2,
+	MGR_OBJ_AGENT = 1 >> 3,
+	MGR_OBJ_ALLS = 15, // 0x1111
+};
+//tolua_end
 
 class ObjectManager //tolua_exports
 { //tolua_exports
@@ -26,11 +40,8 @@ public:
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
 public:
-	void clearAllUIObjects();
 	//tolua_begin
-	void clearAllAgents();
-	void clearAllEntitys();
-	void clearAllBlocks(bool forceAll = true);
+	void clearAllObjects(int objType, bool forceAll = true);
 
 	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }
 	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
@@ -41,19 +52,25 @@ public:
 
 	std::vector<VehicleObject*> getAllVehicles();
 
-	void addUIObject(UIComponent* pUIObject);
-	void addAgentObject(AgentObject* pAgentObject);
-	void addBlockObject(BlockObject* pBlockObject);
-	void addEntityObject(EntityObject* pEntityObject);
+	void addNewObject(BaseObject* pObject);
+
+	bool removeObjectById(int objid);
+	BaseObject* getObjectById(int objid);
 
 private:
-	unsigned int m_objectIndex;
-	unsigned int getNextObjectId() { return ++m_objectIndex; }
+	void realAddObject(BaseObject* pObject);
+	bool realRemoveObject(BaseObject* pObject);
+
+private:
+	unsigned int m_objIndex;
+	unsigned int getNextObjId() { return ++m_objIndex; }
 
 	std::vector<AgentObject*> m_agents;
 	std::vector<EntityObject*> m_entitys;
 	std::vector<BlockObject*> m_blocks;
 	std::vector<UIComponent*> m_uicomps;
+
+	std::map<int, BaseObject*> m_objects;
 
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;

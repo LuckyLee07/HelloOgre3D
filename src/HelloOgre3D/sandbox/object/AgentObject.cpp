@@ -52,7 +52,7 @@ void AgentObject::RemoveEventDispatcher()
 
 void AgentObject::Initialize()
 {
-	m_pAgentBody->Initialize(this);
+	m_pAgentBody->InitWithOwner(this);
 
 	GetScriptLuaVM()->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
@@ -64,7 +64,7 @@ void AgentObject::initAgentBody(const Ogre::String& meshFile)
 		delete m_pAgentBody;
 	}
 	m_pAgentBody = new EntityObject(meshFile);
-	m_pAgentBody->Initialize(this);
+	m_pAgentBody->InitWithOwner(this);
 }
 
 void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
@@ -74,7 +74,7 @@ void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
 		delete m_pAgentWeapon;
 	}
 	m_pAgentWeapon = new EntityObject(meshFile);
-	m_pAgentWeapon->Initialize(this);
+	m_pAgentWeapon->InitWithOwner(this);
 
 	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
 	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);

@@ -44,11 +44,6 @@ BlockObject::~BlockObject()
 	this->DeleteRighdBody();
 }
 
-void BlockObject::Initialize(BaseObject* owner)
-{
-
-}
-
 void BlockObject::DeleteRighdBody()
 {
 	if (m_pRigidBody != nullptr)

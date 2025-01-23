@@ -38,6 +38,8 @@ void PhysicsWorld::initilize()
 
 void PhysicsWorld::cleanup()
 {
+	m_rigidBodys.clear();
+
 	if (m_pDynamicsWorld != nullptr)
 		delete m_pDynamicsWorld;
 
@@ -62,10 +64,36 @@ void PhysicsWorld::stepWorld()
 
 	//m_pDynamicsWorld->stepSimulation(1.0f / 30.0f, 1, 1.0f / 30.0f);
 	m_pDynamicsWorld->stepSimulation(timeStep, maxSubSteps, fixedTimeStep);
+
+	//Åö×²¼ì²âÏà¹ØÂß¼­´¦Àí
+	this->checkCollision();
 }
 
-void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody)
+void PhysicsWorld::checkCollision()
 {
+	int numManifolds = m_pDispatcher->getNumManifolds();
+	for (int index = 0; index < numManifolds; index++)
+	{
+		btPersistentManifold* pManifold = m_pDispatcher->getManifoldByIndexInternal(index);
+		const btRigidBody* pRigidBodyA = static_cast<const btRigidBody*>(pManifold->getBody0());
+		const btRigidBody* pRigidBodyB = static_cast<const btRigidBody*>(pManifold->getBody1());
+
+		int numContacts = pManifold->getNumContacts();
+		for (int cIndex = 0; cIndex < numContacts; cIndex++)
+		{
+			btManifoldPoint& pt = pManifold->getContactPoint(cIndex);
+			if (pt.getDistance() < 0.0f) // ½Ó´¥µã¾àÀë ´©Í¸
+			{
+
+				break;
+			}
+		}
+	}
+}
+
+void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody, int ownerId)
+{
+	m_rigidBodys[pRigidBody] = ownerId;
 	m_pDynamicsWorld->addRigidBody(pRigidBody);
 }
 
