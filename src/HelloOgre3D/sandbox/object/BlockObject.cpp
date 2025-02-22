@@ -149,6 +149,17 @@ void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 	m_pRigidBody->activate(true);
 }
 
+void BlockObject::onCollideWith(BaseObject* pCollideObject)
+{
+	if (pCollideObject == nullptr) return;
+
+	int objType = pCollideObject->getObjType();
+	if (objType == OBJ_TYPE_BULLET) // ×Óµ¯ÀàÐÍ
+	{
+		pCollideObject->setNeedClear();
+	}
+}
+
 OpenSteer::Vec3 BlockObject::getPosition() const
 {
 	return Vector3ToVec3(GetPosition());

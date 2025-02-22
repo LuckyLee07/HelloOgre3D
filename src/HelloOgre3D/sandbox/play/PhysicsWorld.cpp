@@ -1,6 +1,9 @@
 #include "PhysicsWorld.h"
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
+#include "manager/ObjectManager.h"
+#include "object/BaseObject.h"
+#include "play/MyRigidBody.h"
 
 PhysicsWorld::PhysicsWorld() : m_pBroadPhase(nullptr), m_pCollisionConfig(nullptr),
 	m_pDispatcher(nullptr), m_pSolver(nullptr), m_pDynamicsWorld(nullptr)
@@ -38,8 +41,6 @@ void PhysicsWorld::initilize()
 
 void PhysicsWorld::cleanup()
 {
-	m_rigidBodys.clear();
-
 	if (m_pDynamicsWorld != nullptr)
 		delete m_pDynamicsWorld;
 
@@ -54,6 +55,13 @@ void PhysicsWorld::cleanup()
 
 	if (m_pBroadPhase != nullptr)
 		delete m_pBroadPhase;
+
+	auto iter = m_rigidBodys.begin();
+	for (; iter != m_rigidBodys.end(); iter++)
+	{
+		SAFE_DELETE(iter->second);
+	}
+	m_rigidBodys.clear();
 }
 
 void PhysicsWorld::stepWorld()
@@ -75,29 +83,49 @@ void PhysicsWorld::checkCollision()
 	for (int index = 0; index < numManifolds; index++)
 	{
 		btPersistentManifold* pManifold = m_pDispatcher->getManifoldByIndexInternal(index);
-		const btRigidBody* pRigidBodyA = static_cast<const btRigidBody*>(pManifold->getBody0());
-		const btRigidBody* pRigidBodyB = static_cast<const btRigidBody*>(pManifold->getBody1());
-
+		
 		int numContacts = pManifold->getNumContacts();
 		for (int cIndex = 0; cIndex < numContacts; cIndex++)
 		{
 			btManifoldPoint& pt = pManifold->getContactPoint(cIndex);
 			if (pt.getDistance() < 0.0f) // ½Ó´¥µã¾àÀë ´©Í¸
 			{
-
+				this->tiggerCollideEvent(pManifold);
 				break;
 			}
 		}
 	}
 }
 
-void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody, int ownerId)
+void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject)
 {
-	m_rigidBodys[pRigidBody] = ownerId;
+	MyRigidBody *pTempRigid = new MyRigidBody(pObject);
+	m_rigidBodys[pRigidBody] = pTempRigid;
+	pRigidBody->setUserPointer(pTempRigid);
+
 	m_pDynamicsWorld->addRigidBody(pRigidBody);
 }
 
 void PhysicsWorld::removeRigidBody(btRigidBody* pRigidBody)
 {
 	m_pDynamicsWorld->removeRigidBody(pRigidBody);
+	auto iter = m_rigidBodys.find(pRigidBody);
+	if (iter != m_rigidBodys.end())
+	{
+		SAFE_DELETE(iter->second);
+		m_rigidBodys.erase(iter);
+	}
+}
+
+bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold)
+{
+	MyRigidBody* pRigidBody0 = static_cast<MyRigidBody*>(pManifold->getBody0()->getUserPointer());
+	MyRigidBody* pRigidBody1 = static_cast<MyRigidBody*>(pManifold->getBody1()->getUserPointer());
+
+	BaseObject* pCollideObj1 = pRigidBody0->getOwner();
+	BaseObject* pCollideObj2 = pRigidBody1->getOwner();
+	pCollideObj1->onCollideWith(pCollideObj2);
+	pCollideObj2->onCollideWith(pCollideObj1);
+
+	return true;
 }

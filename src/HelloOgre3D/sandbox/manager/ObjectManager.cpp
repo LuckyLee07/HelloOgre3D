@@ -30,11 +30,19 @@ ObjectManager* ObjectManager::GetInstance()
 
 void ObjectManager::Update(int deltaMilliseconds)
 {
-	for (auto iter = m_objects.begin(); iter != m_objects.end(); iter++)
+	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;
-		if (pObject != nullptr)
+		if (pObject == nullptr || pObject->checkNeedClear())
+		{
+			iter = m_objects.erase(iter);
+			this->realRemoveObject(pObject);
+		}
+		else
+		{
 			pObject->update(deltaMilliseconds);
+			iter++;
+		}
 	}
 }
 
@@ -142,7 +150,7 @@ void ObjectManager::addNewObject(BaseObject* pObject)
 	auto rigidBody = pObject->getRigidBody();
 	if (rigidBody != nullptr)
 	{
-		m_pPhysicsWorld->addRigidBody(rigidBody);
+		m_pPhysicsWorld->addRigidBody(rigidBody, pObject);
 	}
 
 	this->realAddObject(pObject);
@@ -179,6 +187,9 @@ void ObjectManager::realAddObject(BaseObject* pObject)
 
 bool ObjectManager::realRemoveObject(BaseObject* pObject)
 {
+	if (pObject == nullptr) 
+		return false;
+	
 	int objid = pObject->getObjId();
 	int objtype = pObject->getObjType();
 	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
@@ -188,6 +199,7 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_agents.erase(it);
+				SAFE_DELETE(pObject);
 				return true;
 			}
 		}
@@ -200,6 +212,7 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_blocks.erase(it);
+				SAFE_DELETE(pObject);
 				return true;
 			}
 		}
@@ -212,6 +225,7 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_entitys.erase(it);
+				SAFE_DELETE(pObject);
 				return true;
 			}
 		}
@@ -223,6 +237,7 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_uicomps.erase(it);
+				SAFE_DELETE(pObject);
 				return true;
 			}
 		}

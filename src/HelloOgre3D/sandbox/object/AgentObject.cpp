@@ -209,7 +209,7 @@ void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vecto
 	bullet->setOrientation(axisRot);
 
 	Ogre::SceneNode* bulletParticle = SandboxMgr::CreateParticle(bullet->getSceneNode(), "Bullet");
-	bulletParticle->setPosition(Vector3(-90, 0, 0));
+	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
 
 	bullet->applyImpulse(forward * 750);
 }

@@ -47,6 +47,8 @@ public:
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
 	//tolua_end
 	
+	virtual void onCollideWith(BaseObject* pCollideObj);
+
 private:
 	OpenSteer::Vec3 getPosition() const;
 

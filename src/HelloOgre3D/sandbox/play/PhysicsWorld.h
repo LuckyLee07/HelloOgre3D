@@ -9,6 +9,9 @@ class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btRigidBody;
+class btPersistentManifold;
+class BaseObject;
+class MyRigidBody;
 
 class PhysicsWorld
 {
@@ -22,8 +25,10 @@ public:
 	void stepWorld();
 	void checkCollision();
 
-	void addRigidBody(btRigidBody* pRigidBody, int ownerId = 0);
+	void addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject);
 	void removeRigidBody(btRigidBody* pRigidBody);
+
+	bool tiggerCollideEvent(btPersistentManifold* pManifold);
 
 private:
 	btBroadphaseInterface* m_pBroadPhase;
@@ -32,7 +37,7 @@ private:
 	btSequentialImpulseConstraintSolver* m_pSolver;
 	btDiscreteDynamicsWorld* m_pDynamicsWorld;
 
-	std::map<btRigidBody*, int> m_rigidBodys;
+	std::map<btRigidBody*, MyRigidBody*> m_rigidBodys;
 };
 
 #endif; // __PHYSICS_WORLD_H__

@@ -70,7 +70,7 @@ void VehicleObject::ResetRigidBody(btRigidBody* pRigidBody)
 	m_pRigidBody->setUserPointer(this);
 
 	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-	pPhysicsWorld->addRigidBody(m_pRigidBody);
+	pPhysicsWorld->addRigidBody(m_pRigidBody, this);
 }
 
 void VehicleObject::setPosition(const Ogre::Vector3& position)

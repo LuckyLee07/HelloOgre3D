@@ -41,10 +41,16 @@ public:
 	OBJTYPE getObjType();
 	//tolua_end
 
+	virtual bool checkNeedClear();
+	virtual void setNeedClear(int liveTick = 0);
+
+	virtual void onCollideWith(BaseObject* pCollideObj);
+
 private:
 	OBJTYPE m_objType;
 	unsigned int m_objId;
-
+	
+	int m_liveTick; //д╛хо-1
 	SandboxEventDispatcherManager* m_eventManager;
 }; //tolua_exports
 

@@ -1,7 +1,7 @@
 #include "BaseObject.h"
 #include "SandboxDef.h"
 
-BaseObject::BaseObject() : m_objId(0), 
+BaseObject::BaseObject() : m_objId(0), m_liveTick(-1),
 	m_objType(OBJ_TYPE_NONE), m_eventManager(nullptr)
 {
 }
@@ -48,4 +48,19 @@ void BaseObject::update(int deltaMsec)
 btRigidBody* BaseObject::getRigidBody()
 {
 	return nullptr;
+}
+
+bool BaseObject::checkNeedClear()
+{
+	return m_liveTick == 0;
+}
+
+void BaseObject::setNeedClear(int liveTick)
+{
+	m_liveTick = liveTick;
+}
+
+void BaseObject::onCollideWith(BaseObject* pCollideObj)
+{
+
 }
