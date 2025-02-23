@@ -4,6 +4,7 @@
 #include "driver/SandboxEventDispatcherManager.h"
 
 class btRigidBody;
+class Collision;
 class BaseObject //tolua_exports
 { //tolua_exports
 public:
@@ -44,7 +45,7 @@ public:
 	virtual bool checkNeedClear();
 	virtual void setNeedClear(int liveTick = 0);
 
-	virtual void onCollideWith(BaseObject* pCollideObj);
+	virtual void onCollideWith(BaseObject*, const Collision&);
 
 private:
 	OBJTYPE m_objType;

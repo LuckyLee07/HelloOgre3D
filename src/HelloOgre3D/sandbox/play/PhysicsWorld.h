@@ -9,6 +9,7 @@ class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btRigidBody;
+class btManifoldPoint;
 class btPersistentManifold;
 class BaseObject;
 class MyRigidBody;
@@ -28,7 +29,7 @@ public:
 	void addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject);
 	void removeRigidBody(btRigidBody* pRigidBody);
 
-	bool tiggerCollideEvent(btPersistentManifold* pManifold);
+	bool tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point);
 
 private:
 	btBroadphaseInterface* m_pBroadPhase;

@@ -83,18 +83,42 @@ void PhysicsWorld::checkCollision()
 	for (int index = 0; index < numManifolds; index++)
 	{
 		btPersistentManifold* pManifold = m_pDispatcher->getManifoldByIndexInternal(index);
+
+		if (pManifold->getBody0() == nullptr || pManifold->getBody1() == nullptr)
+			continue;
 		
 		int numContacts = pManifold->getNumContacts();
 		for (int cIndex = 0; cIndex < numContacts; cIndex++)
 		{
-			btManifoldPoint& pt = pManifold->getContactPoint(cIndex);
-			if (pt.getDistance() < 0.0f) // ½Ó´¥µã¾àÀë ´©Í¸
+			btManifoldPoint& point = pManifold->getContactPoint(cIndex);
+			if (point.getDistance() < 0.0f) // ½Ó´¥µã¾àÀë ´©Í¸
 			{
-				this->tiggerCollideEvent(pManifold);
+				this->tiggerCollideEvent(pManifold, point);
 				break;
 			}
 		}
 	}
+}
+
+bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point)
+{
+	const btRigidBody* pRigidBody0 = static_cast<const btRigidBody*>(pManifold->getBody0());
+	const btRigidBody* pRigidBody1 = static_cast<const btRigidBody*>(pManifold->getBody1());
+
+	MyRigidBody* myRigidBodyA = static_cast<MyRigidBody*>(pRigidBody0->getUserPointer());
+	MyRigidBody* myRigidBodyB = static_cast<MyRigidBody*>(pRigidBody1->getUserPointer());
+
+	BaseObject* pCollideObjA = myRigidBodyA->getOwner();
+	BaseObject* pCollideObjB = myRigidBodyB->getOwner();
+
+	Collision myCollision(pRigidBody0, pRigidBody1,
+		point.m_positionWorldOnA,
+		point.m_positionWorldOnB,
+		point.m_normalWorldOnB);
+
+	pCollideObjA->onCollideWith(pCollideObjB, myCollision);
+
+	return true;
 }
 
 void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject)
@@ -115,17 +139,4 @@ void PhysicsWorld::removeRigidBody(btRigidBody* pRigidBody)
 		SAFE_DELETE(iter->second);
 		m_rigidBodys.erase(iter);
 	}
-}
-
-bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold)
-{
-	MyRigidBody* pRigidBody0 = static_cast<MyRigidBody*>(pManifold->getBody0()->getUserPointer());
-	MyRigidBody* pRigidBody1 = static_cast<MyRigidBody*>(pManifold->getBody1()->getUserPointer());
-
-	BaseObject* pCollideObj1 = pRigidBody0->getOwner();
-	BaseObject* pCollideObj2 = pRigidBody1->getOwner();
-	pCollideObj1->onCollideWith(pCollideObj2);
-	pCollideObj2->onCollideWith(pCollideObj1);
-
-	return true;
 }

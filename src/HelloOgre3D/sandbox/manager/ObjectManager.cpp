@@ -41,6 +41,10 @@ void ObjectManager::Update(int deltaMilliseconds)
 		else
 		{
 			pObject->update(deltaMilliseconds);
+			if (pObject->getObjType() == BaseObject::OBJ_TYPE_BLOCK)
+			{
+				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
+			}
 			iter++;
 		}
 	}
@@ -190,8 +194,8 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	if (pObject == nullptr) 
 		return false;
 	
-	int objid = pObject->getObjId();
 	int objtype = pObject->getObjType();
+	unsigned int objid = pObject->getObjId();
 	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
 	{
 		for (auto it = m_agents.begin(); it != m_agents.end(); it++)

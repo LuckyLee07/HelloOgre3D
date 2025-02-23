@@ -60,7 +60,7 @@ void BaseObject::setNeedClear(int liveTick)
 	m_liveTick = liveTick;
 }
 
-void BaseObject::onCollideWith(BaseObject* pCollideObj)
+void BaseObject::onCollideWith(BaseObject*, const Collision& )
 {
 
 }

@@ -8,6 +8,9 @@
 #include "manager/ClientManager.h"
 #include "play/PhysicsWorld.h"
 #include "game/GameManager.h"
+#include "play/MyRigidBody.h"
+#include "OgreParticleSystemManager.h"
+#include "OgreParticleEmitter.h"
 
 using namespace Ogre;
 
@@ -149,14 +152,42 @@ void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 	m_pRigidBody->activate(true);
 }
 
-void BlockObject::onCollideWith(BaseObject* pCollideObject)
+void BlockObject::onCollideWith(BaseObject* pCollideObj, const Collision& collision)
 {
-	if (pCollideObject == nullptr) return;
+	if (pCollideObj == nullptr) return;
 
-	int objType = pCollideObject->getObjType();
+	int objType = pCollideObj->getObjType();
 	if (objType == OBJ_TYPE_BULLET) // 子弹类型
 	{
-		pCollideObject->setNeedClear();
+		pCollideObj->setNeedClear(); // 标记为清理
+		this->setBulletCollideImpact(collision);
+	}
+}
+
+void BlockObject::setBulletCollideImpact(const Collision& collision)
+{
+	// 创建射击碰撞效果
+	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	Ogre::SceneNode* particleImpact = SandboxMgr::CreateParticle(pRootScene, "BulletImpact");
+
+	// 获取父节点的世界位置和旋转
+	particleImpact->setPosition(collision.pointA_);
+
+	const unsigned short numAttachedObjects = particleImpact->numAttachedObjects();
+	for (unsigned short index = 0; index < numAttachedObjects; ++index)
+	{
+		Ogre::MovableObject* pObject = particleImpact->getAttachedObject(index);
+		if (pObject->getMovableType() == Ogre::ParticleSystemFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::ParticleSystem* particle = static_cast<Ogre::ParticleSystem*>(pObject);
+			particle->setEmitting(true);
+
+			for (unsigned short i = 0; i < particle->getNumEmitters(); i++)
+			{
+				Ogre::ParticleEmitter* pEmitter = particle->getEmitter(i);
+				pEmitter->setDirection(-collision.normalOnB_);
+			}
+		}
 	}
 }
 

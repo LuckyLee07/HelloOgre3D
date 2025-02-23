@@ -46,8 +46,9 @@ public:
 	void applyImpulse(const Ogre::Vector3& impulse);
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
 	//tolua_end
-	
-	virtual void onCollideWith(BaseObject* pCollideObj);
+
+	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
+	virtual void onCollideWith(BaseObject* pCollideObj, const Collision& collision);
 
 private:
 	OpenSteer::Vec3 getPosition() const;
