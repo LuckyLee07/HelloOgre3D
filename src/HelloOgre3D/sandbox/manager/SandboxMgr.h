@@ -90,8 +90,8 @@ public:
 
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 
-	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType);
-	AgentObject* CreateSoldier(const Ogre::String& meshFilePath);
+	AgentObject* CreateAgent(const std::string& luafile, AGENT_OBJ_TYPE agentType);
+	AgentObject* CreateSoldier(const Ogre::String& meshFile);
 
 	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 	//tolua_end

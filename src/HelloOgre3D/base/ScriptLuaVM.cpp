@@ -157,6 +157,16 @@ bool ScriptLuaVM::callString(const char *szLua_code)
 
 bool ScriptLuaVM::callFunction(const char* funcname, const char* format, ...)
 {
+	va_list vl;
+	va_start(vl, format);
+	bool result = callFunctionV(funcname, format, vl);
+	va_end(vl);
+
+	return result;
+}
+
+bool ScriptLuaVM::callFunctionV(const char* funcname, const char* format, va_list vl)
+{
 	if (!m_pState || !funcname || !funcname[0])
 	{
 		return false;
@@ -167,11 +177,9 @@ bool ScriptLuaVM::callFunction(const char* funcname, const char* format, ...)
 	if (!lua_isfunction(m_pState, -1))
 	{
 		CCLUA_ERROR("call_func error: %s is not a function", funcname);
+		lua_pop(m_pState, 1);
 		return false;
 	}
-
-	va_list vl;
-	va_start(vl, format);
 
 	const char *sig = format;
 	if (format == NULL) sig = "";
@@ -234,6 +242,7 @@ bool ScriptLuaVM::callFunction(const char* funcname, const char* format, ...)
 			goto endwhile;
 		default:
 			assert(0);
+			lua_pop(m_pState, 1);
 			return false;
 		}
 		sig++;
@@ -246,11 +255,12 @@ endwhile:
 	if (lua_pcall(m_pState, narg, nres, 0) != 0) /* do	the	call */
 	{
 		CCLUA_ERROR("call_func error: %s === %s", funcname, lua_tostring(m_pState, -1));
+		lua_pop(m_pState, 2); // 弹出 function 和错误信息
 		return false;
 	}
 
 	/* retrieve	results	*/
-	nres = -nres; /* stack index of	first result */
+	nres = -nres; /* 第一个返回值在栈中的索引 */
 	while (*sig)
 	{
 		switch (*sig++)
@@ -285,7 +295,7 @@ endwhile:
 		}
 		nres++;
 	}
-	va_end(vl);
+	lua_pop(m_pState, 1); // 弹出 function
 	return true;
 }
 
@@ -318,6 +328,210 @@ void ScriptLuaVM::showLuaError(lua_State* L, const char* msg)
 	
 	//弹出lua报错弹窗
 	//pop_MessageBox(errStr.c_str(), title);
+}
+
+bool ScriptLuaVM::callFunctionV1(const char* funcname, const char* format, bool needSelf, va_list vl)
+{
+	if (funcname == nullptr || funcname[0] == '\0')
+	{
+		return false;
+	}
+
+	// 平栈操作
+	LuaStackBackup stackbackup(m_pState);
+
+	// 1. 从该表中获取函数
+	lua_getfield(m_pState, -1, funcname);
+	if (!lua_isfunction(m_pState, -1))
+	{
+		CCLUA_ERROR("callFunctionV1 error: %s is not a function", funcname);
+		return false;
+	}
+
+	// 2. 将 table 设置为该函数的环境（注意：lua_setfenv 在 Lua5.2+ 中已废弃）
+	lua_pushvalue(m_pState, -2);  // 将 table 复制一份压栈（self）
+	if (!needSelf)
+		lua_setfenv(m_pState, -2);    // 设置函数环境为 table
+
+	// 3. 根据 format 字符串解析并压入参数（遇到 '>' 表示参数结束）
+	const char* sig = format;
+	if (format == NULL) sig = "";
+	int narg = needSelf ? 1 : 0; //self是第一个参数
+	while (*sig)
+	{
+		switch (*sig)
+		{
+		case 'd': /* double	argument */
+			lua_pushnumber(m_pState, va_arg(vl, double));
+			break;
+		case 'f':	//用float有问题,改成double自测没问题
+			lua_pushnumber(m_pState, va_arg(vl, double));
+			break;
+		case 'i': /* int argument */
+			lua_pushnumber(m_pState, va_arg(vl, int));
+			break;
+		case 's':
+		{
+			lua_pushstring(m_pState, va_arg(vl, char*));
+		}
+		break;
+		case 'S':
+		{
+			char* s = va_arg(vl, char*);
+			int len = va_arg(vl, int);
+			lua_pushlstring(m_pState, s, len);
+		}
+		break;
+		case 'w': // long long to number
+			lua_pushnumber(m_pState, (lua_Number)va_arg(vl, long long));
+			break;
+		case 'b': /* boolean argument */
+			//lua_pushboolean(m_pState, va_arg(vl, bool)); 安卓下会崩溃
+			lua_pushboolean(m_pState, va_arg(vl, int));
+			break;
+		case 'u': /* user data */
+		{
+			if (sig[1] == '[')
+			{
+				char classname[256];
+				sig++;
+				const char* pend = strchr(sig, ']');
+				assert(pend != NULL);
+				size_t len = pend - sig - 1;
+				memcpy(classname, sig + 1, len);
+				classname[len] = 0;
+
+				tolua_pushusertype(m_pState, va_arg(vl, void*), classname);
+				sig = pend;
+			}
+			else
+			{
+				tolua_pushuserdata(m_pState, va_arg(vl, void*));
+			}
+		}
+		break;
+		case '>':
+			sig++;
+			goto endwhile;
+		default:
+			assert(0);
+			return false;
+		}
+		sig++;
+		narg++;
+		luaL_checkstack(m_pState, 1, "too many arguments");
+	}
+
+endwhile:
+	// 4.调用函数
+	// 此时栈结构：[table, function, arg1, arg2, ..., argN]
+	// lua_pcall 会把 function 和参数弹出，将返回值压入栈中
+	int nres = (int)strlen(sig);	/* number of expected results */
+	if (lua_pcall(m_pState, narg, nres, 0) != 0) /* do	the	call */
+	{
+		CCLUA_ERROR("callFunctionV1 pcall error: %s === %s", funcname, lua_tostring(m_pState, -1));
+		return false;
+	}
+
+	// 5. 解析返回值，并将结果写入调用者提供的指针中
+	int resIndex = -nres; /* 第一个返回值在栈中的索引 */
+	while (*sig)
+	{
+		switch (*sig++)
+		{
+		case 'd': /* double	result */
+			assert(lua_isnumber(m_pState, resIndex));
+			*va_arg(vl, double*) = lua_tonumber(m_pState, resIndex);
+			break;
+		case 'f':
+			assert(lua_isnumber(m_pState, resIndex));
+			*va_arg(vl, float*) = (float)lua_tonumber(m_pState, resIndex);
+			break;
+		case 'i': /* int result	*/
+			assert(lua_isnumber(m_pState, resIndex));
+			*va_arg(vl, int*) = (int)lua_tonumber(m_pState, resIndex);
+			break;
+		case 's':
+			assert(lua_isstring(m_pState, resIndex));
+			strcpy(va_arg(vl, char*), lua_tostring(m_pState, resIndex));
+			break;
+		case 'b': /* boolean argument */
+			assert(lua_isboolean(m_pState, resIndex));
+			*va_arg(vl, bool*) = (0 != lua_toboolean(m_pState, resIndex));
+			break;
+		case 'u': /* light user data */
+			assert(lua_isuserdata(m_pState, resIndex));
+			*va_arg(vl, void**) = tolua_tousertype(m_pState, resIndex, NULL);
+			break;
+		default:
+			assert(0);
+			break;
+		}
+		resIndex++;
+	}
+
+	return true;
+}
+
+bool ScriptLuaVM::callModuleFunc(int luaRef, const char* funcname, const char* format, ...)
+{
+	if (luaRef <= 0) // 取不到表 直接调用global的
+	{
+		va_list vl;
+		va_start(vl, format);
+		bool result = callFunctionV(funcname, format, vl);
+		va_end(vl);
+		return result;
+	}
+
+	// 根据 tableRef 从注册表中获取 Lua 表
+	lua_rawgeti(m_pState, LUA_REGISTRYINDEX, luaRef);
+	if (!lua_istable(m_pState, -1))
+	{
+		CCLUA_ERROR("callModuleFunc error: ref %d is not a table", luaRef);
+		lua_pop(m_pState, 1);
+		return false;
+	}
+
+	va_list vl;
+	va_start(vl, format);
+	bool result = callFunctionV1(funcname, format, false, vl);
+	// 弹出 table
+	lua_pop(m_pState, 1);
+	va_end(vl);
+
+	return result;
+}
+
+bool ScriptLuaVM::callModuleFunc(const char* tableName, const char* funcname, const char* format, ...)
+{
+	// 取不到表 直接调用global的
+	if (tableName == nullptr || tableName[0] == '\0')
+	{
+		va_list vl;
+		va_start(vl, format);
+		bool result = callFunctionV(funcname, format, vl);
+		va_end(vl);
+		return result;
+	}
+
+	// 从全局环境中获取 Lua 表
+	lua_getglobal(m_pState, tableName);
+	if (!lua_istable(m_pState, -1))
+	{
+		CCLUA_ERROR("callModuleFunc error: %s is not a table", tableName);
+		lua_pop(m_pState, 1);
+		return false;
+	}
+
+	va_list vl;
+	va_start(vl, format);
+	bool result = callFunctionV1(funcname, format, true, vl);
+	// 弹出 table
+	lua_pop(m_pState, 1);
+	va_end(vl);
+
+	return result;
 }
 
 static ScriptLuaVM* s_ScriptLuaVM = nullptr;

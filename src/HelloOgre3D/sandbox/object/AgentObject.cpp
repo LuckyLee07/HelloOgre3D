@@ -10,13 +10,19 @@
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
 
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+}
+
 using namespace Ogre;
 
 AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody)
 {
 	m_pAgentWeapon = nullptr;
-	m_agentType = AGENT_OBJ_NONE;
+	m_objType = OBJ_TYPE_AGENT;
+	m_pScriptVM = GetScriptLuaVM();
 
 	SetForward(Ogre::Vector3::UNIT_Z);
 
@@ -54,7 +60,7 @@ void AgentObject::Initialize()
 {
 	m_pAgentBody->InitWithOwner(this);
 
-	GetScriptLuaVM()->callFunction("Agent_Initialize", "u[AgentObject]", this);
+	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[AgentObject]", this);
 }
 
 void AgentObject::initAgentBody(const Ogre::String& meshFile)
@@ -158,7 +164,7 @@ void AgentObject::update(int deltaMilisec)
 	if (true || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
-		GetScriptLuaVM()->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
+		m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
 	m_pAgentBody->update(deltaMilisec);
@@ -195,6 +201,24 @@ void AgentObject::ShootBullet()
 	this->DoShootBullet(position, rotation);
 }
 
+void AgentObject::setPluginEnv(lua_State* L)
+{
+	if (!lua_istable(L, 2)) {
+		CCLUA_ERROR("BindLuaEnv Error: param is not a table");
+		return;
+	}
+
+	lua_pushvalue(L, 2); //self->为1 此处把table参数压入
+
+	// 为防止被垃圾回收 在 Lua 注册表中创建一个引用
+	m_luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
+}
+
+void AgentObject::BindLuaPluginByFile(const std::string& fileName)
+{
+	m_pScriptVM->callModuleFunc("GLuaPluginMgr", "BindByLuaFile", "u[AgentObject]s>", this, fileName.c_str());
+}
+
 void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)
 {
 	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
@@ -212,4 +236,9 @@ void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vecto
 	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
 
 	bullet->applyImpulse(forward * 750);
+}
+
+void AgentObject::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
+{
+	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[AgentObject]i", this, keycode);
 }

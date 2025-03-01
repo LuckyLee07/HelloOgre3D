@@ -1,5 +1,5 @@
 
-require("res.scripts.base.gui")
+_G.GLuaPluginMgr = SandboxClass.LuaPluginMgr:new()
 
 --require("res.scripts.samples.Sandbox1")
 require("res.scripts.samples.Sandbox2")
@@ -46,3 +46,4 @@ _G.__gc__ = function()
 		end
 	end)
 end
+

@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Thu Jan 23 21:23:46 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Mar  1 16:10:49 2025.
 */
 
 #ifndef __cplusplus
@@ -6690,6 +6690,39 @@ static int tolua_ClientToLua_AgentObject_ShootBullet00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setPluginEnv of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_setPluginEnv00
+static int tolua_ClientToLua_AgentObject_setPluginEnv00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_istable(tolua_S, 2, 0, &tolua_err) ||   // 改为检查索引2是否为 table
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  lua_State* L =  tolua_S;
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPluginEnv'", NULL);
+#endif
+  {
+   self->setPluginEnv(L);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setPluginEnv'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetCamera of class  SandboxMgr */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SandboxMgr_GetCamera00
 static int tolua_ClientToLua_SandboxMgr_GetCamera00(lua_State* tolua_S)
@@ -7530,24 +7563,27 @@ static int tolua_ClientToLua_SandboxMgr_CreateAgent00(lua_State* tolua_S)
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
-  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,2,0));
+  const std::string luafile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateAgent'", NULL);
 #endif
   {
-   AgentObject* tolua_ret = (AgentObject*)  self->CreateAgent(agentType);
+   AgentObject* tolua_ret = (AgentObject*)  self->CreateAgent(luafile,agentType);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
+   tolua_pushcppstring(tolua_S,(const char*)luafile);
   }
  }
- return 1;
+ return 2;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'CreateAgent'.",&tolua_err);
@@ -7572,14 +7608,14 @@ static int tolua_ClientToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
 #endif
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
-  const std::string meshFilePath = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSoldier'", NULL);
 #endif
   {
-   AgentObject* tolua_ret = (AgentObject*)  self->CreateSoldier(meshFilePath);
+   AgentObject* tolua_ret = (AgentObject*)  self->CreateSoldier(meshFile);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
-   tolua_pushcppstring(tolua_S,(const char*)meshFilePath);
+   tolua_pushcppstring(tolua_S,(const char*)meshFile);
   }
  }
  return 2;
@@ -8647,6 +8683,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
    tolua_function(tolua_S,"ShootBullet",tolua_ClientToLua_AgentObject_ShootBullet00);
+   tolua_function(tolua_S,"setPluginEnv",tolua_ClientToLua_AgentObject_setPluginEnv00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

@@ -5,13 +5,17 @@
 #include "OgreVector3.h"
 #include "SandboxDef.h"
 #include "VehicleObject.h"
+#include "OISKeyboard.h"
 
 namespace Ogre {
 	class SceneNode;
 }
 
+struct lua_State;
+class ScriptLuaVM;
 class BlockObject;
 class EntityObject;
+
 class AgentObject : public VehicleObject //tolua_exports
 { //tolua_exports
 public:
@@ -41,19 +45,25 @@ public:
 	virtual Ogre::Vector3 GetForward() const;
 
 	void ShootBullet();
+	void setPluginEnv(lua_State* L);
 	//tolua_end
-
+	
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
+
+	void BindLuaPluginByFile(const std::string& fileName);
+	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
 private:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
 	
 private:
+	int m_luaRef = 0; // °ó¶¨µÄLua±í
+	ScriptLuaVM* m_pScriptVM;
+
 	AGENT_OBJ_TYPE m_agentType;
 	EntityObject* m_pAgentBody;
 	EntityObject* m_pAgentWeapon;
-
 }; //tolua_exports
 
 #endif  // __AGENT_OBJECT__

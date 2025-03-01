@@ -703,21 +703,21 @@ UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
     return g_GameManager->createUIComponent(index);
 }
 
-AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType)
+AgentObject* SandboxMgr::CreateAgent(const std::string& luafile, AGENT_OBJ_TYPE agentType)
 {
     Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
     Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
 	Ogre::SceneNode* capsuleNode = SandboxMgr::CreateNodeCapsule(height, radius);
     EntityObject* pEntityObj = new EntityObject(capsuleNode);
-	pEntityObj->setMaterial("Ground2");
+    pEntityObj->setMaterial("Ground2");
 
     btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
     capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
     AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
-    pObject->setObjType(BaseObject::OBJ_TYPE_AGENT);
     pObject->setAgentType(agentType);
+    pObject->BindLuaPluginByFile(luafile);
 
 	g_ObjectManager->addNewObject(pObject);
 

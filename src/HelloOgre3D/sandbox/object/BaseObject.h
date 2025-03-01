@@ -47,11 +47,12 @@ public:
 
 	virtual void onCollideWith(BaseObject*, const Collision&);
 
-private:
+protected:
 	OBJTYPE m_objType;
+private:
 	unsigned int m_objId;
-	
 	int m_liveTick; //д╛хо-1
+
 	SandboxEventDispatcherManager* m_eventManager;
 }; //tolua_exports
 

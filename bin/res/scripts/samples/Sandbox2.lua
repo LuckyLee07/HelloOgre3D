@@ -1,4 +1,3 @@
-require("res.scripts.samples.chapter2.BaseAgent.lua")
 
 local textSize = {w = 300, h = 180}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -41,8 +40,8 @@ function Sandbox_Initialize(ctype)
     plane:setPosition(Vector3(0, 0, 0));
     Sandbox:setMaterial(plane, "Ground2");
 
-    Sandbox:CreateAgent(AGENT_OBJ_SEEKING)
-    Sandbox:CreateAgent(AGENT_OBJ_PURSUING)
+    Sandbox:CreateAgent("SeekingAgent.lua", AGENT_OBJ_SEEKING)
+    Sandbox:CreateAgent("PursuingAgent.lua", AGENT_OBJ_PURSUING)
     
     local points = std.vector_Ogre__Vector3_();
     points:push_back(Vector3(0, 0, 0))
@@ -58,7 +57,7 @@ function Sandbox_Initialize(ctype)
     points:push_back(Vector3(-10, 0, 20))
     --]]
     for index = 1, 20 do
-        local agent = Sandbox:CreateAgent(AGENT_OBJ_PATHING);
+        local agent = Sandbox:CreateAgent("PathingAgent.lua", AGENT_OBJ_PATHING);
         agent:SetPath(points, true);
 
         -- Randomly vary speeds to allow agents to pass one another.
@@ -70,7 +69,7 @@ function Sandbox_Initialize(ctype)
     end
 
     for index = 1, 5 do
-        Sandbox:CreateAgent(AGENT_OBJ_FOLLOWER);
+        Sandbox:CreateAgent("FollowerAgent.lua", AGENT_OBJ_FOLLOWER);
     end
 end
 

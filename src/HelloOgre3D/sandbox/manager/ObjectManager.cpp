@@ -55,7 +55,9 @@ void ObjectManager::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
 	{
 		if (AgentObject* pAgent = *iter)
-			m_pScriptVM->callFunction("Agent_EventHandle", "u[AgentObject]i", pAgent, keycode);
+		{
+			pAgent->HandleKeyEvent(keycode, key);
+		}
 	}
 }
 

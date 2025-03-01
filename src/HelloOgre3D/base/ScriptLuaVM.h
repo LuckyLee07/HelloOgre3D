@@ -24,6 +24,8 @@ public:
 
 	bool callFunction(const char* funcname, const char* format, ...);
 
+	bool callFunctionV(const char* funcname, const char* format, va_list vl);
+
 	void setUserTypePointer(const char* name, const char* clsname, void* ptr);
 
 	lua_State* getLuaState() { return m_pState; }
@@ -31,6 +33,11 @@ public:
 	bool setLuaLogfunc(const char* funcname, lua_CFunction logfunc);
 
 	static void showLuaError(lua_State* L, const char* msg);
+
+	// 加入TableName
+	bool callFunctionV1(const char* funcname, const char* format, bool needSelf, va_list vl);
+	bool callModuleFunc(int luaRef, const char* funcname, const char* format, ...);
+	bool callModuleFunc(const char* tableName, const char* funcname, const char* format, ...);
 
 private:
 	lua_State *m_pState;
