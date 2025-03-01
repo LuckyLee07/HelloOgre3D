@@ -17,6 +17,7 @@
 using namespace Ogre;
 
 extern int tolua_ClientToLua_open(lua_State* tolua_S);
+extern int tolua_SandboxToLua_Manual(lua_State* tolua_S);
 
 GameManager* g_GameManager = nullptr;
 GameManager* GetGameManager()
@@ -103,6 +104,7 @@ void GameManager::InitLuaEnv()
 {
 	// 设置ToLua对象 
 	tolua_ClientToLua_open(m_pScriptVM->getLuaState());
+	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);

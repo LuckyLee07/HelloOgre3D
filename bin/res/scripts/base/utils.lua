@@ -113,6 +113,9 @@ _G.print = function( ... )
 	local info = debug.getinfo(2)
     if info ~= nil then
 		local file = info.source or ''
+		-- source不一定是path，可能是str
+		if #file >= 99 then file = 'strcode' end
+		
 		local line = info.currentline or 0
 		msg = string.format('[%s:%d]', file, line)
 		--__print__("Fxkk=========>>>", file)

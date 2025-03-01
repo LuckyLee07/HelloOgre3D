@@ -27,6 +27,31 @@ public:
 		return Get<double>(key);
 	}
 
+	// Reference 类型
+	template<typename T>
+	void Set_Ref(const std::string& key, T& value)
+	{
+		Set(key, std::make_shared<T>(value)); // 使用 shared_ptr 存储引用
+	}
+	template<typename T>
+	T& Get_Ref(const std::string& key) const
+	{
+		auto ptr = Get<std::shared_ptr<T>>(key);
+		return *ptr;
+	}
+
+	// Pointer 类型
+	template<typename T>
+	void Set_Ptr(const std::string& key, T* value)
+	{
+		Set(key, value); // 存储指针类型
+	}
+	template<typename T>
+	T* Get_Ptr(const std::string& key) const
+	{
+		return Get<T>(key);
+	}
+
 private:
 	// 设置参数
 	template<typename T>

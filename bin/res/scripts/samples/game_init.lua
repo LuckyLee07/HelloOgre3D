@@ -1,10 +1,9 @@
-
-_G.GLuaPluginMgr = SandboxClass.LuaPluginMgr:new()
-
 --require("res.scripts.samples.Sandbox1")
 require("res.scripts.samples.Sandbox2")
 --require("res.scripts.samples.Sandbox3")
 --require("res.scripts.samples.Sandbox4")
+
+_G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 
 _G.__init__ = function(sec, msec)
 	math.randomseed(os.time())

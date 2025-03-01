@@ -45,11 +45,11 @@ public:
 	virtual Ogre::Vector3 GetForward() const;
 
 	void ShootBullet();
-	void setPluginEnv(lua_State* L);
 	//tolua_end
 	
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
 
+	void setPluginEnv(lua_State* L); //  ÷∂Øtolua
 	void BindLuaPluginByFile(const std::string& fileName);
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 

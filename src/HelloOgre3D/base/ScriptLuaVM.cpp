@@ -344,7 +344,7 @@ bool ScriptLuaVM::callFunctionV1(const char* funcname, const char* format, bool 
 	lua_getfield(m_pState, -1, funcname);
 	if (!lua_isfunction(m_pState, -1))
 	{
-		CCLUA_ERROR("callFunctionV1 error: %s is not a function", funcname);
+		CCLUA_INFO("CallFuncV1 error: %s is not a function", funcname);
 		return false;
 	}
 
@@ -429,7 +429,7 @@ endwhile:
 	int nres = (int)strlen(sig);	/* number of expected results */
 	if (lua_pcall(m_pState, narg, nres, 0) != 0) /* do	the	call */
 	{
-		CCLUA_ERROR("callFunctionV1 pcall error: %s === %s", funcname, lua_tostring(m_pState, -1));
+		CCLUA_ERROR("CallFuncV1 lua_pcall error: %s === %s", funcname, lua_tostring(m_pState, -1));
 		return false;
 	}
 
@@ -488,7 +488,7 @@ bool ScriptLuaVM::callModuleFunc(int luaRef, const char* funcname, const char* f
 	lua_rawgeti(m_pState, LUA_REGISTRYINDEX, luaRef);
 	if (!lua_istable(m_pState, -1))
 	{
-		CCLUA_ERROR("callModuleFunc error: ref %d is not a table", luaRef);
+		CCLUA_INFO("callModuleFunc error: ref %d is not a table", luaRef);
 		lua_pop(m_pState, 1);
 		return false;
 	}
@@ -519,7 +519,7 @@ bool ScriptLuaVM::callModuleFunc(const char* tableName, const char* funcname, co
 	lua_getglobal(m_pState, tableName);
 	if (!lua_istable(m_pState, -1))
 	{
-		CCLUA_ERROR("callModuleFunc error: %s is not a table", tableName);
+		CCLUA_INFO("callModuleFunc error: %s is not a table", tableName);
 		lua_pop(m_pState, 1);
 		return false;
 	}

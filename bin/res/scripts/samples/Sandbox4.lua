@@ -9,7 +9,8 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         GUI.MarkupNewline ..
         "F1: to reset the camera" .. GUI.MarkupNewline ..
         "F2: toggle the menu" .. GUI.MarkupNewline ..
-        "F3: toggle skeleton" .. GUI.MarkupNewline ..
+        "F3: spawn a direct controlled soldier" .. GUI.MarkupNewline ..
+        "F4: spawn a indirect controlled soldier" .. GUI.MarkupNewline ..
         "F5: toggle performance information" .. GUI.MarkupNewline ..
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug" .. GUI.MarkupNewline ..
@@ -21,7 +22,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "  Num 4: death state" .. GUI.MarkupNewline ..
         "  Num 5: stand/crouch stance" .. GUI.MarkupNewline;
 
-local weaponState = "sniper"
+
 
 function Create_LightSoldier()
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"

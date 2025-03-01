@@ -216,7 +216,7 @@ void AgentObject::setPluginEnv(lua_State* L)
 
 void AgentObject::BindLuaPluginByFile(const std::string& fileName)
 {
-	m_pScriptVM->callModuleFunc("GLuaPluginMgr", "BindByLuaFile", "u[AgentObject]s>", this, fileName.c_str());
+	m_pScriptVM->callModuleFunc("LuaPluginMgr", "BindByLuaFile", "u[AgentObject]s>", this, fileName.c_str());
 }
 
 void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)

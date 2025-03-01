@@ -1,7 +1,7 @@
-local LuaPluginMgr = SandboxClass:Class("LuaPluginMgr")
+local LuaPluginMgr = Class("LuaPluginMgr")
 
 --function LuaPluginMgr:constructor()
-LuaPluginMgr.constructor = function(self)
+LuaPluginMgr.Init = function(self)
 	_G.SandboxLua = {
 		localGt = {}, -- 存储每个对象对应的局部环境
         filecache = {}, -- 存储文件对应的代码Code
