@@ -703,7 +703,7 @@ UIComponent* SandboxMgr::CreateUIComponent(unsigned int index)
     return g_GameManager->createUIComponent(index);
 }
 
-AgentObject* SandboxMgr::CreateAgent(const std::string& luafile, AGENT_OBJ_TYPE agentType)
+AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType, const char* luafile)
 {
     Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
     Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
@@ -717,19 +717,22 @@ AgentObject* SandboxMgr::CreateAgent(const std::string& luafile, AGENT_OBJ_TYPE 
 
     AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
     pObject->setAgentType(agentType);
-    pObject->BindLuaPluginByFile(luafile);
-
+    if (luafile != nullptr)
+    {
+        pObject->BindLuaPluginByFile(luafile);
+    }
+    
 	g_ObjectManager->addNewObject(pObject);
 
     return pObject;
 }
 
-AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
+AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char* luafile)
 {
 	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
 	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
-	EntityObject* pEntityObj = new EntityObject(meshFilePath);
+	EntityObject* pEntityObj = new EntityObject(meshFile);
     pEntityObj->setOriginPos(Vector3(0.0f, -height * 0.5f, 0.0f));
 
 	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
@@ -737,6 +740,10 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFilePath)
 
 	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
     pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
+    if (luafile != NULL) // 如果有则绑定
+    {
+        pObject->BindLuaPluginByFile(luafile);
+    }
     g_ObjectManager->addNewObject(pObject);
 
 	return pObject;

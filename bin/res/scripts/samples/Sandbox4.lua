@@ -23,10 +23,13 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "  Num 5: stand/crouch stance" .. GUI.MarkupNewline;
 
 
+function GetFilePath(luafile)
+    return "res/scripts/samples/chapter4/".. luafile;
+end
 
 function Create_LightSoldier()
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath("DirectSoldierAgent.lua"))
     Soldier_InitSoldierAsm(soldierAgent)
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
@@ -36,7 +39,7 @@ end
 
 function Create_DarkSoldier()
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath("DirectSoldierAgent.lua"))
     Soldier_InitSoldierAsm(soldierAgent)
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"

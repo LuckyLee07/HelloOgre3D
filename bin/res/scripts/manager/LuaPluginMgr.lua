@@ -91,7 +91,6 @@ LuaPluginMgr.LoadLuaFile = function(self, filepath)
         return self:LoadScript(script)
     end
 
-    filepath = "res/scripts/samples/chapter2/".. filepath
     local file = io.open(filepath, "r")
     if not file then
         print("Error loading Lua file:", filePath)

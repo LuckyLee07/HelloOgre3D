@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar  1 17:36:18 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Mar  1 22:34:09 2025.
 */
 
 #ifndef __cplusplus
@@ -7530,8 +7530,8 @@ static int tolua_ClientToLua_SandboxMgr_CreateAgent00(lua_State* tolua_S)
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,3,1,&tolua_err) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
@@ -7539,18 +7539,17 @@ static int tolua_ClientToLua_SandboxMgr_CreateAgent00(lua_State* tolua_S)
 #endif
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
-  const std::string luafile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,3,0));
+  AGENT_OBJ_TYPE agentType = ((AGENT_OBJ_TYPE) (int)  tolua_tonumber(tolua_S,2,0));
+  const char* luafile = ((const char*)  tolua_tostring(tolua_S,3,nullptr));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateAgent'", NULL);
 #endif
   {
-   AgentObject* tolua_ret = (AgentObject*)  self->CreateAgent(luafile,agentType);
+   AgentObject* tolua_ret = (AgentObject*)  self->CreateAgent(agentType,luafile);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
-   tolua_pushcppstring(tolua_S,(const char*)luafile);
   }
  }
- return 2;
+ return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'CreateAgent'.",&tolua_err);
@@ -7568,7 +7567,8 @@ static int tolua_ClientToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
  if (
      !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
+     !tolua_isstring(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
@@ -7576,11 +7576,12 @@ static int tolua_ClientToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
   const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const char* luafile = ((const char*)  tolua_tostring(tolua_S,3,nullptr));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSoldier'", NULL);
 #endif
   {
-   AgentObject* tolua_ret = (AgentObject*)  self->CreateSoldier(meshFile);
+   AgentObject* tolua_ret = (AgentObject*)  self->CreateSoldier(meshFile,luafile);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
    tolua_pushcppstring(tolua_S,(const char*)meshFile);
   }

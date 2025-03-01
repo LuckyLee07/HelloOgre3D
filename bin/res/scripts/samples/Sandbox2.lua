@@ -14,6 +14,11 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
             "F7: toggle physics debug";
 
 Shoot_BoxCount = 0
+
+function GetFilePath(luafile)
+    return "res/scripts/samples/chapter2/".. luafile;
+end
+
 function Sandbox_Initialize(ctype)
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
@@ -40,8 +45,8 @@ function Sandbox_Initialize(ctype)
     plane:setPosition(Vector3(0, 0, 0));
     Sandbox:setMaterial(plane, "Ground2");
 
-    Sandbox:CreateAgent("SeekingAgent.lua", AGENT_OBJ_SEEKING)
-    Sandbox:CreateAgent("PursuingAgent.lua", AGENT_OBJ_PURSUING)
+    Sandbox:CreateAgent(AGENT_OBJ_SEEKING, GetFilePath("SeekingAgent.lua"))
+    Sandbox:CreateAgent(AGENT_OBJ_PURSUING, GetFilePath("PursuingAgent.lua"))
     
     local points = std.vector_Ogre__Vector3_();
     points:push_back(Vector3(0, 0, 0))
@@ -57,7 +62,7 @@ function Sandbox_Initialize(ctype)
     points:push_back(Vector3(-10, 0, 20))
     --]]
     for index = 1, 20 do
-        local agent = Sandbox:CreateAgent("PathingAgent.lua", AGENT_OBJ_PATHING);
+        local agent = Sandbox:CreateAgent(AGENT_OBJ_PATHING, GetFilePath("PathingAgent.lua"));
         agent:SetPath(points, true);
 
         -- Randomly vary speeds to allow agents to pass one another.
@@ -69,7 +74,7 @@ function Sandbox_Initialize(ctype)
     end
 
     for index = 1, 5 do
-        Sandbox:CreateAgent("FollowerAgent.lua", AGENT_OBJ_FOLLOWER);
+        Sandbox:CreateAgent(AGENT_OBJ_FOLLOWER, GetFilePath("FollowerAgent.lua"));
     end
 end
 
