@@ -70,8 +70,8 @@ EntityObject::~EntityObject()
 	}
 	if (m_pSceneNode != nullptr)
 	{
-		SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
-		pRootScene->removeChild(m_pSceneNode);
+		m_pSceneNode->removeAndDestroyAllChildren();
+		m_pSceneNode->getCreator()->destroySceneNode(m_pSceneNode);
 		m_pSceneNode = nullptr;
 	}
 }

@@ -204,7 +204,7 @@ void AgentObject::ShootBullet()
 void AgentObject::setPluginEnv(lua_State* L)
 {
 	if (!lua_istable(L, 2)) {
-		CCLUA_ERROR("BindLuaEnv Error: param is not a table");
+		CCLUA_INFO("BindLuaEnv Error: param is not a table");
 		return;
 	}
 
@@ -231,9 +231,10 @@ void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vecto
 	bullet->setPosition(position + forward * 0.2f);
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
 	bullet->setOrientation(axisRot);
-
+	
 	Ogre::SceneNode* bulletParticle = SandboxMgr::CreateParticle(bullet->getSceneNode(), "Bullet");
 	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
+	bullet->addParticleNode(bulletParticle);
 
 	bullet->applyImpulse(forward * 750);
 }

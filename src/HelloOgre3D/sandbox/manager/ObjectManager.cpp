@@ -6,6 +6,8 @@
 #include "base/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
 #include "SandboxDef.h"
+#include "ClientManager.h"
+#include "SandboxMgr.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -45,6 +47,27 @@ void ObjectManager::Update(int deltaMilliseconds)
 			{
 				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
 			}
+			iter++;
+		}
+	}
+
+	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	for (auto iter = m_remSceneNodes.begin(); iter != m_remSceneNodes.end();)
+	{
+		int lastMilliSeconds = iter->second;
+		lastMilliSeconds -= deltaMilliseconds;
+		if (lastMilliSeconds <= 0)
+		{
+			auto pSceneNode = iter->first;
+			SandboxMgr::RemParticleBySceneNode(pSceneNode);
+			pRootScene->removeChild(pSceneNode);
+			pRootScene->getCreator()->destroySceneNode(pSceneNode);
+
+			iter = m_remSceneNodes.erase(iter);
+		}
+		else
+		{
+			iter->second = lastMilliSeconds;
 			iter++;
 		}
 	}
@@ -273,5 +296,12 @@ BaseObject* ObjectManager::getObjectById(int objid)
 		return iter->second;
 	}
 	return nullptr;
+}
+
+void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds)
+{
+	if (pSceneNode == nullptr)
+		return;
+	m_remSceneNodes[pSceneNode] = seconds * 1000;
 }
 

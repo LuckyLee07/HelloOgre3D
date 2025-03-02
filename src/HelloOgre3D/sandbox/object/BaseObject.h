@@ -45,6 +45,7 @@ public:
 	virtual bool checkNeedClear();
 	virtual void setNeedClear(int liveTick = 0);
 
+	virtual bool canCollide() { return false; }
 	virtual void onCollideWith(BaseObject*, const Collision&);
 
 protected:

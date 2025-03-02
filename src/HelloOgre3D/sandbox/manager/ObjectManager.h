@@ -57,6 +57,8 @@ public:
 	bool removeObjectById(int objid);
 	BaseObject* getObjectById(int objid);
 
+	void markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds);
+
 private:
 	void realAddObject(BaseObject* pObject);
 	bool realRemoveObject(BaseObject* pObject);
@@ -71,6 +73,9 @@ private:
 	std::vector<UIComponent*> m_uicomps;
 
 	std::map<int, BaseObject*> m_objects;
+
+	// 存储需要定时删除的RootScene下的Node
+	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;
 
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;

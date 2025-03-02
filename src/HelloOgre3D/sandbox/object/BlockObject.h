@@ -47,7 +47,10 @@ public:
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);
 	//tolua_end
 
+	void addParticleNode(Ogre::SceneNode* particleNode);
 	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
+
+	virtual bool canCollide(); // 是否可以碰撞
 	virtual void onCollideWith(BaseObject* pCollideObj, const Collision& collision);
 
 private:
@@ -61,6 +64,7 @@ private:
 
 private:
 	btRigidBody* m_pRigidBody;
+	std::vector<Ogre::SceneNode*> m_particleNodes;
 
 }; //tolua_exports
 

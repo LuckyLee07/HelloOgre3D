@@ -111,6 +111,11 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 	BaseObject* pCollideObjA = myRigidBodyA->getOwner();
 	BaseObject* pCollideObjB = myRigidBodyB->getOwner();
 
+	if (!pCollideObjA->canCollide() && !pCollideObjB->canCollide())
+	{
+		return false; // 两者都没碰撞属性
+	}
+
 	Collision myCollision(pRigidBody0, pRigidBody1,
 		point.m_positionWorldOnA,
 		point.m_positionWorldOnB,

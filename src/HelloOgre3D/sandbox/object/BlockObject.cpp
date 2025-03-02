@@ -8,6 +8,7 @@
 #include "manager/ClientManager.h"
 #include "play/PhysicsWorld.h"
 #include "game/GameManager.h"
+#include "manager/ObjectManager.h"
 #include "play/MyRigidBody.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
@@ -44,6 +45,15 @@ BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 
 BlockObject::~BlockObject()
 {
+	// 先清理绑定的粒子
+	auto iter = m_particleNodes.begin();
+	for (; iter != m_particleNodes.end(); iter++)
+	{
+		Ogre::SceneNode* particleNode = *iter;
+		SandboxMgr::RemParticleBySceneNode(particleNode);
+	}
+	m_particleNodes.clear();
+
 	this->DeleteRighdBody();
 }
 
@@ -152,6 +162,15 @@ void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 	m_pRigidBody->activate(true);
 }
 
+bool BlockObject::canCollide() 
+{ 
+	if (m_objType == OBJ_TYPE_BULLET)
+	{
+		return true;
+	}
+	return false;
+}
+
 void BlockObject::onCollideWith(BaseObject* pCollideObj, const Collision& collision)
 {
 	if (pCollideObj == nullptr) return;
@@ -164,11 +183,19 @@ void BlockObject::onCollideWith(BaseObject* pCollideObj, const Collision& collis
 	}
 }
 
+void BlockObject::addParticleNode(Ogre::SceneNode* particleNode)
+{
+	m_particleNodes.push_back(particleNode);
+}
+
 void BlockObject::setBulletCollideImpact(const Collision& collision)
 {
 	// 创建射击碰撞效果
 	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
 	Ogre::SceneNode* particleImpact = SandboxMgr::CreateParticle(pRootScene, "BulletImpact");
+
+	// 2秒后清掉该粒子效果
+	g_ObjectManager->markNodeRemInSeconds(particleImpact, 2.0f);
 
 	// 获取父节点的世界位置和旋转
 	particleImpact->setPosition(collision.pointA_);

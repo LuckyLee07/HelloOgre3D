@@ -60,6 +60,7 @@ public: //static methods
 
 	static btRigidBody* CreateRigidBodyBox(Ogre::Real width, Ogre::Real height, Ogre::Real length);
 	
+	static void RemParticleBySceneNode(Ogre::SceneNode* particleNode);
 	static Ogre::SceneNode* CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName);
 
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);

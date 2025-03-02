@@ -337,12 +337,27 @@ btRigidBody* SandboxMgr::CreateRigidBodyBox(Ogre::Real width, Ogre::Real height,
 	return rigidBody;
 }
 
+void SandboxMgr::RemParticleBySceneNode(Ogre::SceneNode* particleNode)
+{
+	const unsigned short numAttachedObjects = particleNode->numAttachedObjects();
+	for (unsigned short index = 0; index < numAttachedObjects; ++index)
+	{
+		Ogre::MovableObject* pObject = particleNode->getAttachedObject(index);
+		if (pObject->getMovableType() == Ogre::ParticleSystemFactory::FACTORY_TYPE_NAME)
+		{
+			Ogre::ParticleSystem* particleSys = static_cast<Ogre::ParticleSystem*>(pObject);
+            particleNode->detachObject(particleSys);
+            particleNode->getCreator()->destroyParticleSystem(particleSys);
+		}
+	}
+}
+
 Ogre::SceneNode* SandboxMgr::CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName)
 {
-	Ogre::SceneNode* particle = parentNode->createChildSceneNode();
+    Ogre::SceneNode* particle = parentNode->createChildSceneNode();
 
-    const Ogre::String& uniqueName = s_nameGenerator.generate();
-	Ogre::ParticleSystem* particleSystem = parentNode->getCreator()->createParticleSystem(uniqueName, particleName);
+    const Ogre::String& particleId = s_nameGenerator.generate();
+	Ogre::ParticleSystem* particleSystem = particle->getCreator()->createParticleSystem(particleId, particleName);
     particle->attachObject(particleSystem);
     return particle;
 }
