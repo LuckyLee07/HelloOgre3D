@@ -6,17 +6,18 @@
 #include "SandboxDef.h"
 #include "VehicleObject.h"
 #include "OISKeyboard.h"
+#include "LuaEnvObject.h"
 
 namespace Ogre {
 	class SceneNode;
 }
 
-struct lua_State;
 class ScriptLuaVM;
 class BlockObject;
 class EntityObject;
 
 class AgentObject : public VehicleObject //tolua_exports
+	, public LuaEnvObject
 { //tolua_exports
 public:
 	AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
@@ -48,9 +49,8 @@ public:
 	//tolua_end
 	
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
+	//void setPluginEnv(lua_State* L) override; // 手动tolua
 
-	void setPluginEnv(lua_State* L); // 手动tolua
-	void BindLuaPluginByFile(const std::string& fileName);
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
 private:
@@ -58,7 +58,6 @@ private:
 	void RemoveEventDispatcher();
 	
 private:
-	int m_luaRef = 0; // 绑定的Lua表
 	ScriptLuaVM* m_pScriptVM;
 
 	AGENT_OBJ_TYPE m_agentType;

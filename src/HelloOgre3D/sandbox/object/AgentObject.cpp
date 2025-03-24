@@ -10,11 +10,6 @@
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 using namespace Ogre;
 
 AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
@@ -199,24 +194,6 @@ void AgentObject::ShootBullet()
 
 	Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
 	this->DoShootBullet(position, rotation);
-}
-
-void AgentObject::setPluginEnv(lua_State* L)
-{
-	if (!lua_istable(L, 2)) {
-		CCLUA_INFO("BindLuaEnv Error: param is not a table");
-		return;
-	}
-
-	lua_pushvalue(L, 2); //self->为1 此处把table参数压入
-
-	// 为防止被垃圾回收 在 Lua 注册表中创建一个引用
-	m_luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
-}
-
-void AgentObject::BindLuaPluginByFile(const std::string& fileName)
-{
-	m_pScriptVM->callModuleFunc("LuaPluginMgr", "BindByLuaFile", "u[AgentObject]s>", this, fileName.c_str());
 }
 
 void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)

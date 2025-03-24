@@ -6,6 +6,7 @@
 #include "ClientManager.h"
 #include "ScriptLuaVM.h"
 #include "ObjectManager.h"
+#include "LuaPluginMgr.h"
 
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
@@ -734,7 +735,8 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType, const char* luafi
     pObject->setAgentType(agentType);
     if (luafile != nullptr)
     {
-        pObject->BindLuaPluginByFile(luafile);
+        bool result = LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, luafile);
+        assert(result && "Failed on bind lua plugin to Agent");
     }
     
 	g_ObjectManager->addNewObject(pObject);
@@ -757,7 +759,8 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char*
     pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
     if (luafile != NULL) // 如果有则绑定
     {
-        pObject->BindLuaPluginByFile(luafile);
+		bool result = LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, luafile);
+		assert(result && "Failed on bind lua plugin to Agent");
     }
     g_ObjectManager->addNewObject(pObject);
 
