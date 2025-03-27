@@ -15,13 +15,10 @@ using namespace Ogre;
 AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody)
 {
-	m_pAgentWeapon = nullptr;
 	m_objType = OBJ_TYPE_AGENT;
 	m_pScriptVM = GetScriptLuaVM();
 
 	SetForward(Ogre::Vector3::UNIT_Z);
-
-	this->CreateEventDispatcher();
 }
 
 AgentObject::~AgentObject()
@@ -29,7 +26,6 @@ AgentObject::~AgentObject()
 	this->RemoveEventDispatcher();
 
 	SAFE_DELETE(m_pAgentBody);
-	SAFE_DELETE(m_pAgentWeapon);
 }
 
 void AgentObject::CreateEventDispatcher()
@@ -38,11 +34,6 @@ void AgentObject::CreateEventDispatcher()
 	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		std::string stateId = context.Get_String("StateId");
 		if (stateId.empty()) return;
-	
-		if (stateId == "fire" || stateId == "crouch_fire")
-		{
-			this->ShootBullet(); // Éä»÷
-		}
 	});
 }
 
@@ -53,12 +44,13 @@ void AgentObject::RemoveEventDispatcher()
 
 void AgentObject::Initialize()
 {
-	m_pAgentBody->InitWithOwner(this);
+	this->CreateEventDispatcher();
 
+	m_pAgentBody->InitWithOwner(this);
 	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[AgentObject]", this);
 }
 
-void AgentObject::initAgentBody(const Ogre::String& meshFile)
+void AgentObject::initBody(const Ogre::String& meshFile)
 {
 	if (m_pAgentBody != nullptr)
 	{
@@ -66,20 +58,6 @@ void AgentObject::initAgentBody(const Ogre::String& meshFile)
 	}
 	m_pAgentBody = new EntityObject(meshFile);
 	m_pAgentBody->InitWithOwner(this);
-}
-
-void AgentObject::initAgentWeapon(const Ogre::String& meshFile)
-{
-	if (m_pAgentWeapon != nullptr)
-	{
-		delete m_pAgentWeapon;
-	}
-	m_pAgentWeapon = new EntityObject(meshFile);
-	m_pAgentWeapon->InitWithOwner(this);
-
-	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
-	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);
-	m_pAgentBody->AttachToBone("b_RightHand", m_pAgentWeapon, positionOffset, rotationOffset);
 }
 
 Ogre::Vector3 AgentObject::GetPosition() const
@@ -163,8 +141,6 @@ void AgentObject::update(int deltaMilisec)
 	}
 
 	m_pAgentBody->update(deltaMilisec);
-	if (m_pAgentWeapon)
-		m_pAgentWeapon->update(deltaMilisec);
 
 	this->updateWorldTransform();
 }
@@ -183,40 +159,12 @@ void AgentObject::updateWorldTransform()
 	m_pAgentBody->SetDerivedOrientation(rotation);
 }
 
-void AgentObject::ShootBullet()
+void AgentObject::handleEventByLua(OIS::KeyCode keycode)
 {
-	Ogre::SceneNode* pSoldier = m_pAgentBody->getSceneNode();
-
-	Ogre::Vector3 position;
-	SandboxMgr::GetBonePosition(*pSoldier, "b_muzzle", position);
-	Ogre::Quaternion orientation;
-	SandboxMgr::GetBoneOrientation(*pSoldier, "b_muzzle", orientation);
-
-	Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
-	this->DoShootBullet(position, rotation);
-}
-
-void AgentObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)
-{
-	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	Vector3 forward = qRotation * Vector3(1, 0, 0);
-	Vector3 up = qRotation * Vector3(0, 1, 0);
-	Vector3 left = qRotation * Vector3(0, 0, -1);
-
-	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
-	bullet->SetMass(0.1f);
-	bullet->setPosition(position + forward * 0.2f);
-	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
-	bullet->setOrientation(axisRot);
-	
-	Ogre::SceneNode* bulletParticle = SandboxMgr::CreateParticle(bullet->getSceneNode(), "Bullet");
-	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
-	bullet->addParticleNode(bulletParticle);
-
-	bullet->applyImpulse(forward * 750);
+	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[AgentObject]i", this, keycode);
 }
 
 void AgentObject::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 {
-	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[AgentObject]i", this, keycode);
+	this->handleEventByLua(keycode);
 }

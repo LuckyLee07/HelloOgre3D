@@ -115,10 +115,10 @@ function Sandbox_Initialize(ctype)
     soldierAgent:initAgentWeapon(weaponPath)
     Soldier_InitWeaponAsm(soldierAgent)
 
-    local weapon = soldierAgent:getAgentWeapon()
+    local weapon = soldierAgent:getWeapon()
     _G.weaponAsm = weapon:GetObjectASM();
 
-    local soldier = soldierAgent:getAgentBody()
+    local soldier = soldierAgent:getBody()
     _G.soldierAsm = soldier:GetObjectASM();
     
     --[[

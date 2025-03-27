@@ -23,17 +23,13 @@ public:
 	AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~AgentObject();
 
-	void Initialize();
-
-	virtual void update(int deltaMilisec) override;
-	virtual void updateWorldTransform() override;
+	virtual void Initialize();
+	virtual void update(int deltaMilisec);
+	virtual void handleEventByLua(OIS::KeyCode keycode);
 
 	//tolua_begin
-	void initAgentBody(const Ogre::String& meshFile);
-	void initAgentWeapon(const Ogre::String& meshFile);
-
-	EntityObject* getAgentBody() { return m_pAgentBody; }
-	EntityObject* getAgentWeapon() { return m_pAgentWeapon; }
+	void initBody(const Ogre::String& meshFile);
+	EntityObject* getBody() { return m_pAgentBody; }
 
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }
@@ -44,25 +40,20 @@ public:
 	virtual Ogre::Vector3 GetUp() const;
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
-
-	void ShootBullet();
 	//tolua_end
-	
-	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
-	//void setPluginEnv(lua_State* L) override; //  ÷∂Øtolua
 
+	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
-private:
-	void CreateEventDispatcher();
-	void RemoveEventDispatcher();
+protected:
+	virtual void CreateEventDispatcher();
+	virtual void RemoveEventDispatcher();
 	
-private:
 	ScriptLuaVM* m_pScriptVM;
-
-	AGENT_OBJ_TYPE m_agentType;
 	EntityObject* m_pAgentBody;
-	EntityObject* m_pAgentWeapon;
+
+private:
+	AGENT_OBJ_TYPE m_agentType;
 }; //tolua_exports
 
 #endif  // __AGENT_OBJECT__

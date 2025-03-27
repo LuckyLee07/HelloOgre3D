@@ -744,7 +744,7 @@ AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType, const char* luafi
     return pObject;
 }
 
-AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char* luafile)
+SoldierObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char* luafile)
 {
 	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
 	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
@@ -755,11 +755,10 @@ AgentObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char*
 	btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
-	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
-    pObject->setObjType(BaseObject::OBJ_TYPE_SOLDIER);
+    SoldierObject* pObject = new SoldierObject(pEntityObj, capsuleRigidBody);
     if (luafile != NULL) // 如果有则绑定
     {
-		bool result = LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, luafile);
+		bool result = LuaPluginMgr::BindLuaPluginByFile<SoldierObject>(pObject, luafile);
 		assert(result && "Failed on bind lua plugin to Agent");
     }
     g_ObjectManager->addNewObject(pObject);

@@ -5,12 +5,13 @@
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
 #include "OgreString.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btScalar.h"
+
 #include "object/BlockObject.h"
 #include "object/UIComponent.h"
 #include "object/AgentObject.h"
-
-#include "LinearMath/btVector3.h"
-#include "LinearMath/btScalar.h"
+#include "object/SoldierObject.h"
 
 namespace Ogre {
 	class Camera;
@@ -92,7 +93,7 @@ public:
 	UIComponent* CreateUIComponent(unsigned int index = 1);
 
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* luafile = nullptr);
-	AgentObject* CreateSoldier(const Ogre::String& meshFile, const char* luafile = nullptr);
+	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* luafile = nullptr);
 
 	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 	//tolua_end

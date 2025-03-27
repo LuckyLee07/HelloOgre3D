@@ -20,12 +20,12 @@ public:
 	VehicleObject(btRigidBody* pRigidBody);
 	virtual ~VehicleObject();
 
-	void Initialize();
 	void DeleteRighdBody();
 	void ResetRigidBody(btRigidBody* pRigidBody);
 
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
 
+	virtual void Initialize();
 	virtual void update(int deltaMilisec);
 	virtual void updateWorldTransform();
 

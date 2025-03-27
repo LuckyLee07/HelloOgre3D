@@ -30,7 +30,7 @@ Soldier.weaponStates = {
 }
 
 function Soldier_InitSoldierAsm(agent)
-    local soldier = agent:getAgentBody()
+    local soldier = agent:getBody()
 
     -- Create an animation state machine to handle soldier animations.
     local soldierAsm = soldier:GetObjectASM();
@@ -129,7 +129,7 @@ function Soldier_InitSoldierAsm(agent)
 end
 
 function Soldier_InitWeaponAsm(agent)
-    local weapon = agent:getAgentWeapon();
+    local weapon = agent:getWeapon();
 
     -- Create an animation state machine to handle weapon animations.
     local weaponAsm = weapon:GetObjectASM();

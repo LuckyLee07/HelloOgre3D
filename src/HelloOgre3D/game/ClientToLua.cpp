@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar  1 22:34:09 2025.
+** Generated automatically by tolua++-1.0.92 on Thu Mar 27 09:25:29 2025.
 */
 
 #ifndef __cplusplus
@@ -27,6 +27,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/object/BlockObject.h"
 #include "../sandbox/object/VehicleObject.h"
 #include "../sandbox/object/AgentObject.h"
+#include "../sandbox/object/SoldierObject.h"
 #include "../sandbox/manager/SandboxMgr.h"
 #include "../sandbox/manager/ObjectManager.h"
 #include "../sandbox/debug/DebugDrawer.h"
@@ -101,8 +102,9 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Fancy::AnimationStateMachine");
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
- tolua_usertype(tolua_S,"btQuaternion");
  tolua_usertype(tolua_S,"Fancy::Animation");
+ tolua_usertype(tolua_S,"btQuaternion");
+ tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"BaseObject");
@@ -110,12 +112,12 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::SceneManager");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
- tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"EntityObject");
+ tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
- tolua_usertype(tolua_S,"AgentObject");
+ tolua_usertype(tolua_S,"SoldierObject");
  tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"VehicleObject");
  tolua_usertype(tolua_S,"GameManager");
@@ -6252,9 +6254,9 @@ static int tolua_ClientToLua_VehicleObject_GetPath00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: initAgentBody of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_initAgentBody00
-static int tolua_ClientToLua_AgentObject_initAgentBody00(lua_State* tolua_S)
+/* method: initBody of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_initBody00
+static int tolua_ClientToLua_AgentObject_initBody00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -6270,59 +6272,25 @@ static int tolua_ClientToLua_AgentObject_initAgentBody00(lua_State* tolua_S)
   AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
   const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'initAgentBody'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'initBody'", NULL);
 #endif
   {
-   self->initAgentBody(meshFile);
+   self->initBody(meshFile);
    tolua_pushcppstring(tolua_S,(const char*)meshFile);
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'initAgentBody'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'initBody'.",&tolua_err);
  return 0;
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: initAgentWeapon of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_initAgentWeapon00
-static int tolua_ClientToLua_AgentObject_initAgentWeapon00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-  const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'initAgentWeapon'", NULL);
-#endif
-  {
-   self->initAgentWeapon(meshFile);
-   tolua_pushcppstring(tolua_S,(const char*)meshFile);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'initAgentWeapon'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getAgentBody of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_getAgentBody00
-static int tolua_ClientToLua_AgentObject_getAgentBody00(lua_State* tolua_S)
+/* method: getBody of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_getBody00
+static int tolua_ClientToLua_AgentObject_getBody00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -6336,49 +6304,17 @@ static int tolua_ClientToLua_AgentObject_getAgentBody00(lua_State* tolua_S)
  {
   AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAgentBody'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getBody'", NULL);
 #endif
   {
-   EntityObject* tolua_ret = (EntityObject*)  self->getAgentBody();
+   EntityObject* tolua_ret = (EntityObject*)  self->getBody();
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"EntityObject");
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAgentBody'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getAgentWeapon of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_getAgentWeapon00
-static int tolua_ClientToLua_AgentObject_getAgentWeapon00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getAgentWeapon'", NULL);
-#endif
-  {
-   EntityObject* tolua_ret = (EntityObject*)  self->getAgentWeapon();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"EntityObject");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getAgentWeapon'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'getBody'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6659,21 +6595,87 @@ static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: ShootBullet of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_ShootBullet00
-static int tolua_ClientToLua_AgentObject_ShootBullet00(lua_State* tolua_S)
+/* method: initWeapon of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_initWeapon00
+static int tolua_ClientToLua_SoldierObject_initWeapon00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'initWeapon'", NULL);
+#endif
+  {
+   self->initWeapon(meshFile);
+   tolua_pushcppstring(tolua_S,(const char*)meshFile);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'initWeapon'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getWeapon of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_getWeapon00
+static int tolua_ClientToLua_SoldierObject_getWeapon00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getWeapon'", NULL);
+#endif
+  {
+   EntityObject* tolua_ret = (EntityObject*)  self->getWeapon();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"EntityObject");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getWeapon'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ShootBullet of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_ShootBullet00
+static int tolua_ClientToLua_SoldierObject_ShootBullet00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ShootBullet'", NULL);
 #endif
@@ -7581,8 +7583,8 @@ static int tolua_ClientToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSoldier'", NULL);
 #endif
   {
-   AgentObject* tolua_ret = (AgentObject*)  self->CreateSoldier(meshFile,luafile);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
+   SoldierObject* tolua_ret = (SoldierObject*)  self->CreateSoldier(meshFile,luafile);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SoldierObject");
    tolua_pushcppstring(tolua_S,(const char*)meshFile);
   }
  }
@@ -8639,10 +8641,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"AgentObject","AgentObject","VehicleObject",NULL);
   tolua_beginmodule(tolua_S,"AgentObject");
-   tolua_function(tolua_S,"initAgentBody",tolua_ClientToLua_AgentObject_initAgentBody00);
-   tolua_function(tolua_S,"initAgentWeapon",tolua_ClientToLua_AgentObject_initAgentWeapon00);
-   tolua_function(tolua_S,"getAgentBody",tolua_ClientToLua_AgentObject_getAgentBody00);
-   tolua_function(tolua_S,"getAgentWeapon",tolua_ClientToLua_AgentObject_getAgentWeapon00);
+   tolua_function(tolua_S,"initBody",tolua_ClientToLua_AgentObject_initBody00);
+   tolua_function(tolua_S,"getBody",tolua_ClientToLua_AgentObject_getBody00);
    tolua_function(tolua_S,"getAgentType",tolua_ClientToLua_AgentObject_getAgentType00);
    tolua_function(tolua_S,"setAgentType",tolua_ClientToLua_AgentObject_setAgentType00);
    tolua_function(tolua_S,"GetPosition",tolua_ClientToLua_AgentObject_GetPosition00);
@@ -8650,7 +8650,12 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_AgentObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
-   tolua_function(tolua_S,"ShootBullet",tolua_ClientToLua_AgentObject_ShootBullet00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"SoldierObject","SoldierObject","AgentObject",NULL);
+  tolua_beginmodule(tolua_S,"SoldierObject");
+   tolua_function(tolua_S,"initWeapon",tolua_ClientToLua_SoldierObject_initWeapon00);
+   tolua_function(tolua_S,"getWeapon",tolua_ClientToLua_SoldierObject_getWeapon00);
+   tolua_function(tolua_S,"ShootBullet",tolua_ClientToLua_SoldierObject_ShootBullet00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

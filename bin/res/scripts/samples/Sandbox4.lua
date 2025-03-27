@@ -27,23 +27,23 @@ function GetFilePath(luafile)
     return "res/scripts/samples/chapter4/".. luafile;
 end
 
-function Create_LightSoldier()
+function Create_LightSoldier(luafile)
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath("DirectSoldierAgent.lua"))
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
     Soldier_InitSoldierAsm(soldierAgent)
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initAgentWeapon(weaponPath)
+    soldierAgent:initWeapon(weaponPath)
     Soldier_InitWeaponAsm(soldierAgent)
 end
 
-function Create_DarkSoldier()
+function Create_DarkSoldier(luafile)
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath("DirectSoldierAgent.lua"))
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
     Soldier_InitSoldierAsm(soldierAgent)
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initAgentWeapon(weaponPath)
+    soldierAgent:initWeapon(weaponPath)
     Soldier_InitWeaponAsm(soldierAgent)
 end
 
@@ -56,9 +56,9 @@ function EventHandle_Keyboard(keycode, pressed)
         camera:setPosition(Vector3(-17, 10, 0));
         camera:setOrientation(Quaternion(-145, -50, -150));
     elseif (keycode == OIS.KC_F3) then
-        Create_LightSoldier()
+        Create_LightSoldier("DirectSoldierAgent.lua")
     elseif (keycode == OIS.KC_F4) then
-        Create_DarkSoldier()
+        Create_DarkSoldier("DirectSoldierAgent.lua")
     end
 end
 
