@@ -17,7 +17,7 @@ public:
 
 		std::smatch matches;
 		std::regex patten("class\\s(\\w+)\\s\\*");
-		bool found = std::regex_match(clsinfo, matches, patten);
+		bool found = std::regex_search(clsinfo, matches, patten);
 		assert(found && "BindLuaPlugin can't find class name!");
 
 		std::string clsname = found ? std::string(matches[1]) : "";
