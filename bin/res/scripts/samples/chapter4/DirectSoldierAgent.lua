@@ -61,7 +61,7 @@ function Agent_EventHandle(agent, keycode)
     end
 end
 
-function Agent_Update(agent, deltaTime)
+function Agent_Update(agent, deltaTimeInMillis)
     
     if soldierState == "Fire" then
         Agent_ShootState(agent)
@@ -76,7 +76,8 @@ function Agent_Update(agent, deltaTime)
 
     -- Apply a steering force to move the agent along the path.
     if (agent:HasPath()) then
-        local steeringForces = Soldier_CalculateSteering(agent, deltaTime);
-        Soldier_ApplySteering(agent, steeringForces, deltaTime);
+        local deltaTimeInSeconds = deltaTimeInMillis / 1000;
+        local steeringForces = Soldier_CalculateSteering(agent, deltaTimeInSeconds);
+        Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds);
     end
 end
