@@ -6,7 +6,7 @@ require("res.scripts.base.utils")
 require("res.scripts.base.threadpool")
 
 require("res.scripts.base.global")
-require("res.scripts.base.globalgui")
+require("res.scripts.base.uicomps")
 require("res.scripts.manager.LuaPluginMgr")
 
 require("res.scripts.samples.game_init")

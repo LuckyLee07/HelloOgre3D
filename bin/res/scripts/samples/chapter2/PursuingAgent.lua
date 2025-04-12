@@ -1,5 +1,5 @@
 --PursuingAgent.lua--
-require("res.scripts.samples.chapter2.BaseAgent")
+require("res.scripts.samples.AgentUtils")
 
 local enemy;
 function Agent_Initialize(agent)

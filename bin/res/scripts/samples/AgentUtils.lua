@@ -1,4 +1,4 @@
--- 将计算得到的转向力转化为只能体的运动变化
+-- 将计算得到的转向力转化为智能体的运动变化
 function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTimeInSeconds)
 
     -- Ignore very weak steering forces.
@@ -35,6 +35,58 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
 
     -- Point the agent in the direction of movement.
     agent:SetForward(newVelocity);
+end
+
+-- 将计算得到的转向力转化为智能体的运动变化
+-- 基于物理运算（牛顿力学）的运动更新，包括加速度、速度和朝向的平滑过渡
+function AgentUtilities_ApplySteeringForce2(
+    agent, steeringForce, accelerationAccumulator, deltaTimeInSeconds)
+
+    -- Ignore very weak steering forces.
+    if (Vector.LengthSquared(steeringForce) < 0.1) then
+        return;
+    end
+    
+    -- Agents with 0 mass are immovable.
+    if (agent:GetMass() <= 0) then
+        return;
+    end
+
+    -- Zero out any steering changes in the y axis.
+    steeringForce.y = 0;
+    
+    -- Maximize the steering force, essentially forces the agent to max
+    -- acceleration.
+    steeringForce = Vector.Normalize(steeringForce) * agent:GetMaxForce();
+    
+    -- Newtons(kg*m/s^2) divided by mass(kg) results in acceleration(m/s^2).
+    local acceleration = steeringForce / agent:GetMass();
+    
+    -- Interpolate to the new acceleration to dampen jitter in velocity and
+    -- forward direction.
+    acceleration = accelerationAccumulator +
+        (acceleration - accelerationAccumulator) * 0.4;
+    
+    -- Reassign the new acceleration back to the accumulator.
+    accelerationAccumulator.x = acceleration.x;
+    accelerationAccumulator.y = acceleration.y;
+    accelerationAccumulator.z = acceleration.z;
+    
+    -- Calculate the new velocity in (m/s)
+    local velocity = agent:GetVelocity() + (acceleration * deltaTimeInSeconds);
+    
+    -- Assign the velocity directly, and orient toward the movement.
+    agent:SetVelocity(velocity);
+    
+    -- Prevent trying to set the forward to a Zero vector.
+    if (Vector.LengthSquared(velocity) > 0.1) then
+        velocity.y = 0;
+        
+        -- Interpolate to the new forward direction to dampen jitter.
+        local forward = agent:GetForward();
+        forward = forward + (Vector.Normalize(velocity) - forward) * 0.2;
+        agent:SetForward(forward);
+    end
 end
 
 -- 限制智能体的速度 防止超过定义的最大值

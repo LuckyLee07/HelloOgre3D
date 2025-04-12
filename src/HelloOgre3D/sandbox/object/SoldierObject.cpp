@@ -40,7 +40,7 @@ void SoldierObject::Initialize()
 	this->CreateEventDispatcher();
 
 	m_pAgentBody->InitWithOwner(this);
-	m_pScriptVM->callModuleFunc(m_luaRef, "Soldier_Initialize", "u[SoldierObject]", this);
+	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[SoldierObject]", this);
 }
 
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
@@ -64,7 +64,7 @@ void SoldierObject::update(int deltaMilisec)
 	if (true || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
-		m_pScriptVM->callModuleFunc(m_luaRef, "Soldier_Update", "u[SoldierObject]i", this, deltaMilisec);
+		m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
 	m_pAgentBody->update(deltaMilisec);
@@ -109,5 +109,5 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 
 void SoldierObject::handleEventByLua(OIS::KeyCode keycode)
 {
-	m_pScriptVM->callModuleFunc(m_luaRef, "Soldier_EventHandle", "u[SoldierObject]i", this, keycode);
+	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[SoldierObject]i", this, keycode);
 }

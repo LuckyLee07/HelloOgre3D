@@ -1,5 +1,5 @@
 --SeekingAgent.lua--
-require("res.scripts.samples.chapter2.BaseAgent")
+require("res.scripts.samples.AgentUtils")
 
 function Agent_Initialize(agent)
     agent:SetTarget(Vector3(50.0, 0.0, 0.0))

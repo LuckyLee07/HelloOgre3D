@@ -237,3 +237,29 @@ function SandboxUtilities_CreateLevel()
         CreateLevelBox(block[1], block[2], block[3]);
     end
 end
+
+function SandboxUtilities_GetLevelPath()
+    local points = std.vector_Ogre__Vector3_();
+    points:push_back(Vector3(-5, 0, 13));
+    points:push_back(Vector3(5, 0, 4));
+    points:push_back(Vector3(18.5, 0, 4));
+    points:push_back(Vector3(18.5, 0, 17));
+    points:push_back(Vector3(15, 0, 17));
+    points:push_back(Vector3(15, 0, 21));
+    points:push_back(Vector3(19, 0, 21));
+    points:push_back(Vector3(19, 0, 25));
+    points:push_back(Vector3(15, 0, 25));
+    points:push_back(Vector3(15, 0, 29));
+    points:push_back(Vector3(20, 0, 52));
+    points:push_back(Vector3(24, 0, 52));
+    points:push_back(Vector3(24, 0, 51));
+    points:push_back(Vector3(24, 4, 36));
+    points:push_back(Vector3(24, 4, 27));
+    points:push_back(Vector3(7, 4, 27));
+    points:push_back(Vector3(-9, 4, 27));
+    points:push_back(Vector3(-9, 4, 25));
+    points:push_back(Vector3(-10, 4, 25));
+    points:push_back(Vector3(-26, 0, 25));
+    points:push_back(Vector3(-26, 0, 19));
+    return points;
+end

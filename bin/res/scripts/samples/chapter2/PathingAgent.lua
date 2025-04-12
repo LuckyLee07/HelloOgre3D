@@ -1,5 +1,5 @@
 --PathingAgent.lua--
-require("res.scripts.samples.chapter2.BaseAgent.lua")
+require("res.scripts.samples.AgentUtils.lua")
 
 function Agent_Initialize(agent)
     local randPosx = math.random(-50, 50)

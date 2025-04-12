@@ -1,5 +1,5 @@
 --FollowerAgent.lua--
-require("res.scripts.samples.chapter2.BaseAgent.lua")
+require("res.scripts.samples.AgentUtils.lua")
 
 local leaders;
 function Agent_Initialize(agent)
