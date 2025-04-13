@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Thu Mar 27 09:25:29 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Apr 13 11:31:15 2025.
 */
 
 #ifndef __cplusplus
@@ -23,6 +23,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/object/UIComponent.h"
 #include "../sandbox/animation/Animation.h"
 #include "../sandbox/animation/AnimationStateMachine.h"
+#include "../sandbox/object/SoldierObjDef.h"
 #include "../sandbox/object/EntityObject.h"
 #include "../sandbox/object/BlockObject.h"
 #include "../sandbox/object/VehicleObject.h"
@@ -6661,6 +6662,104 @@ static int tolua_ClientToLua_SoldierObject_getWeapon00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: changeStanceType of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_changeStanceType00
+static int tolua_ClientToLua_SoldierObject_changeStanceType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  int stanceType = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'changeStanceType'", NULL);
+#endif
+  {
+   self->changeStanceType(stanceType);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'changeStanceType'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getStanceType of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_getStanceType00
+static int tolua_ClientToLua_SoldierObject_getStanceType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getStanceType'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getStanceType();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getStanceType'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: RequestState of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_RequestState00
+static int tolua_ClientToLua_SoldierObject_RequestState00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  int soldierState = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RequestState'", NULL);
+#endif
+  {
+   self->RequestState(soldierState);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RequestState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: ShootBullet of class  SoldierObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_ShootBullet00
 static int tolua_ClientToLua_SoldierObject_ShootBullet00(lua_State* tolua_S)
@@ -8566,6 +8665,29 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"AddTransition",tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00);
    tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
+  tolua_constant(tolua_S,"SOLDIER_STAND_SPEED",SOLDIER_STAND_SPEED);
+  tolua_constant(tolua_S,"SOLDIER_STAND_HEIGHT",SOLDIER_STAND_HEIGHT);
+  tolua_constant(tolua_S,"SOLDIER_CROUCH_SPEED",SOLDIER_CROUCH_SPEED);
+  tolua_constant(tolua_S,"SOLDIER_CROUCH_HEIGHT",SOLDIER_CROUCH_HEIGHT);
+  tolua_constant(tolua_S,"SSTATE_DEAD",SSTATE_DEAD);
+  tolua_constant(tolua_S,"SSTATE_FIRE",SSTATE_FIRE);
+  tolua_constant(tolua_S,"SSTATE_IDLE_AIM",SSTATE_IDLE_AIM);
+  tolua_constant(tolua_S,"SSTATE_RUN_FORWARD",SSTATE_RUN_FORWARD);
+  tolua_constant(tolua_S,"SSTATE_RUN_BACKWARD",SSTATE_RUN_BACKWARD);
+  tolua_constant(tolua_S,"SSTATE_DEAD_HEADSHOT",SSTATE_DEAD_HEADSHOT);
+  tolua_constant(tolua_S,"SSTATE_FALL_DEAD",SSTATE_FALL_DEAD);
+  tolua_constant(tolua_S,"SSTATE_FALL_IDLE",SSTATE_FALL_IDLE);
+  tolua_constant(tolua_S,"SSTATE_JUMP_LAND",SSTATE_JUMP_LAND);
+  tolua_constant(tolua_S,"SSTATE_JUMP_UP",SSTATE_JUMP_UP);
+  tolua_constant(tolua_S,"SSTATE_MELEE",SSTATE_MELEE);
+  tolua_constant(tolua_S,"SSTATE_RELOAD",SSTATE_RELOAD);
+  tolua_constant(tolua_S,"SSTATE_SMG_TRANSFORM",SSTATE_SMG_TRANSFORM);
+  tolua_constant(tolua_S,"SSTATE_SNIPER_TRANSFORM",SSTATE_SNIPER_TRANSFORM);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_DEAD",CROUCH_SSTATE_DEAD);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_FIRE",CROUCH_SSTATE_FIRE);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_IDLE_AIM",CROUCH_SSTATE_IDLE_AIM);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_FORWARD",CROUCH_SSTATE_FORWARD);
+  tolua_constant(tolua_S,"SSTATE_MAXCOUNT",SSTATE_MAXCOUNT);
   tolua_cclass(tolua_S,"EntityObject","EntityObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"EntityObject");
    tolua_function(tolua_S,"InitWithOwner",tolua_ClientToLua_EntityObject_InitWithOwner00);
@@ -8651,10 +8773,15 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
   tolua_endmodule(tolua_S);
+  tolua_constant(tolua_S,"SOLDIER_STAND",SOLDIER_STAND);
+  tolua_constant(tolua_S,"SOLDIER_CROUCH",SOLDIER_CROUCH);
   tolua_cclass(tolua_S,"SoldierObject","SoldierObject","AgentObject",NULL);
   tolua_beginmodule(tolua_S,"SoldierObject");
    tolua_function(tolua_S,"initWeapon",tolua_ClientToLua_SoldierObject_initWeapon00);
    tolua_function(tolua_S,"getWeapon",tolua_ClientToLua_SoldierObject_getWeapon00);
+   tolua_function(tolua_S,"changeStanceType",tolua_ClientToLua_SoldierObject_changeStanceType00);
+   tolua_function(tolua_S,"getStanceType",tolua_ClientToLua_SoldierObject_getStanceType00);
+   tolua_function(tolua_S,"RequestState",tolua_ClientToLua_SoldierObject_RequestState00);
    tolua_function(tolua_S,"ShootBullet",tolua_ClientToLua_SoldierObject_ShootBullet00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);

@@ -2,11 +2,34 @@
 #include "EntityObject.h"
 #include "manager/SandboxMgr.h"
 #include "ScriptLuaVM.h"
+#include "animation/AnimationStateMachine.h"
 
 using namespace Ogre;
 
+char* SoldierStates[] = 
+{	
+	"dead",
+	"fire",
+	"idle_aim",
+	"run_forward",
+	"run_backward",
+	"dead_headshot",
+	"fall_dead",
+	"fall_idle",
+	"jump_land",
+	"jump_up",
+	"melee",
+	"reload",
+	"smg_transform",
+	"sniper_transform",
+	"crouch_dead",
+	"crouch_fire",
+	"crouch_idle_aim",
+	"crouch_forward",
+};
+
 SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_eStance(SOLDIER_STAND)
 {
 	this->setObjType(OBJ_TYPE_SOLDIER);
 }
@@ -110,4 +133,41 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 void SoldierObject::handleEventByLua(OIS::KeyCode keycode)
 {
 	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[SoldierObject]i", this, keycode);
+}
+
+void SoldierObject::changeStanceType(int stanceType)
+{
+	if (stanceType == SOLDIER_STAND)
+	{
+		m_eStance = SOLDIER_STAND;
+		this->SetHeight(SOLDIER_STAND_HEIGHT);
+		this->SetMaxSpeed(SOLDIER_STAND_SPEED);
+	}
+	else if (stanceType == SOLDIER_CROUCH)
+	{
+		m_eStance = SOLDIER_CROUCH;
+		this->SetHeight(SOLDIER_CROUCH_HEIGHT);
+		this->SetMaxSpeed(SOLDIER_CROUCH_SPEED);
+	}
+}
+
+void SoldierObject::RequestState(int soldierState)
+{
+	if (soldierState == SSTATE_DEAD || soldierState == SSTATE_FIRE ||
+		soldierState == SSTATE_IDLE_AIM || soldierState == SSTATE_RUN_FORWARD)
+	{
+		if (getStanceType() == SOLDIER_CROUCH)
+		{
+			soldierState = SSTATE_MAXCOUNT - 5 + soldierState;
+		}
+	}
+	assert(soldierState >= SSTATE_MAXCOUNT);
+
+	Fancy::AnimationStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return;
+
+	std::string stateName = SoldierStates[soldierState];
+	if (pAsm->GetCurrStateName() == stateName) return;
+	
+	pAsm->RequestState(stateName);
 }

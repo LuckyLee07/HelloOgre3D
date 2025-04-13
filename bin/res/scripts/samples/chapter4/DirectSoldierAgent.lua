@@ -36,6 +36,7 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
     AgentUtilities_ClampHorizontalSpeed(agent);
 end
 
+
 function Agent_Initialize(agent)
     local height = agent:GetHeight()
     local posoffset = Vector3(0, height/2, 10)
@@ -44,12 +45,12 @@ function Agent_Initialize(agent)
     agent:setPosition(position + posoffset + randomVec)
 
     soldierState = "Move"
-    local soldierASM = agent:getBody():GetObjectASM()
-    soldierASM:RequestState(Soldier.SoldierStates.STAND_RUN_FORWARD)
+    agent:RequestState(Soldier.States.SSTATE_RUN_FORWARD);
 
     agent:SetPath(SandboxUtilities_GetLevelPath(), true)
     agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
 end
+
 
 function Agent_EventHandle(agent, keycode)
     if keycode == OIS.KC_2 then
@@ -60,6 +61,7 @@ function Agent_EventHandle(agent, keycode)
         soldierState = "Move"
     end
 end
+
 
 function Agent_Update(agent, deltaTimeInMillis)
     
@@ -75,7 +77,7 @@ function Agent_Update(agent, deltaTimeInMillis)
     DebugDrawer:drawPath(agent:GetPath(), UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
 
     -- Apply a steering force to move the agent along the path.
-    if (agent:HasPath()) then
+    if (agent:HasPath() and soldierState == "Move") then
         local deltaTimeInSeconds = deltaTimeInMillis / 1000;
         local steeringForces = Soldier_CalculateSteering(agent, deltaTimeInSeconds);
         Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds);

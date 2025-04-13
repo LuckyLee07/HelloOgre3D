@@ -8,6 +8,7 @@ $cfile "../sandbox/object/UIComponent.h"
 
 $cfile "../sandbox/animation/Animation.h"
 $cfile "../sandbox/animation/AnimationStateMachine.h"
+$cfile "../sandbox/object/SoldierObjDef.h"
 $cfile "../sandbox/object/EntityObject.h"
 $cfile "../sandbox/object/BlockObject.h"
 $cfile "../sandbox/object/VehicleObject.h"
