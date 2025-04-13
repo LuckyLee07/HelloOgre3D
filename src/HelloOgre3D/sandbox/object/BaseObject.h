@@ -41,9 +41,10 @@ public:
 	void setObjType(OBJTYPE objType);
 	OBJTYPE getObjType();
 	//tolua_end
-
+	
+	int getClearTick() { return m_liveTick; }
 	virtual bool checkNeedClear();
-	virtual void setNeedClear(int liveTick = 0);
+	virtual void setNeedClear(int liveTick = 0, bool force = false);
 
 	virtual bool canCollide() { return false; }
 	virtual void onCollideWith(BaseObject*, const Collision&);

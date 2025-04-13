@@ -43,6 +43,7 @@ void BaseObject::setObjType(OBJTYPE objType)
 void BaseObject::update(int deltaMsec)
 {
 	(void)deltaMsec;
+	//if (m_liveTick > 0) m_liveTick--;
 }
 
 btRigidBody* BaseObject::getRigidBody()
@@ -52,11 +53,16 @@ btRigidBody* BaseObject::getRigidBody()
 
 bool BaseObject::checkNeedClear()
 {
+	if (m_liveTick > 0) 
+		m_liveTick--;
+
 	return m_liveTick == 0;
 }
 
-void BaseObject::setNeedClear(int liveTick)
+void BaseObject::setNeedClear(int liveTick, bool force)
 {
+	if (!force && m_liveTick >= 0) return;
+	
 	m_liveTick = liveTick;
 }
 

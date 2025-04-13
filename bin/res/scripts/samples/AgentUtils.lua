@@ -113,3 +113,42 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
         agent:SetVelocity(newVelocity);
     end
 end
+
+function Soldier_CalculateSteering(agent, deltaTimeInSeconds)
+    local avoidForce = agent:ForceToAvoidAgents(0.5);
+    local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
+    local followForce = agent:ForceToFollowPath(0.5);
+    local stayForce = agent:ForceToStayOnPath(0.5);
+    
+    local totalForces = followForce * 1.5 + stayForce * 0.4 + avoidForce * 1 + avoidObjectForce * 2;
+    totalForces.y = 0;
+
+    local targetSpeed = agent:GetMaxSpeed();
+
+    if (agent:GetSpeed() < targetSpeed) then
+        local speedForce = agent:ForceToTargetSpeed(targetSpeed);
+        totalForces = totalForces + speedForce * 7;
+    end
+    
+    return totalForces;
+end
+
+function Soldier_CalculateSlowSteering(agent, deltaTimeInSeconds)
+    local avoidForce = agent:ForceToAvoidAgents(0.5);
+    local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
+    local followForce = agent:ForceToFollowPath(0.5);
+    local stayForce = agent:ForceToStayOnPath(0.5);
+    
+    local totalForces = Vector.Normalize(followForce) +
+        Vector.Normalize(stayForce) * 0.2 +
+        avoidForce * 1 +
+        avoidObjectForce * 1;
+
+    local targetSpeed = agent:GetMaxSpeed();
+    if (agent:GetSpeed() < targetSpeed) then
+        local speedForce = agent:ForceToTargetSpeed(targetSpeed);
+        totalForces = totalForces + speedForce * 5;
+    end
+    
+    return totalForces;
+end

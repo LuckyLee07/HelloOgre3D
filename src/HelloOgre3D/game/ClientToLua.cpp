@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Apr 13 11:31:15 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Apr 13 15:47:44 2025.
 */
 
 #ifndef __cplusplus
@@ -4663,6 +4663,37 @@ static int tolua_ClientToLua_BlockObject_applyAngularImpulse00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: DeleteRighdBody of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_DeleteRighdBody00
+static int tolua_ClientToLua_VehicleObject_DeleteRighdBody00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'DeleteRighdBody'", NULL);
+#endif
+  {
+   self->DeleteRighdBody();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'DeleteRighdBody'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setPosition of class  VehicleObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_setPosition00
 static int tolua_ClientToLua_VehicleObject_setPosition00(lua_State* tolua_S)
@@ -6591,6 +6622,134 @@ static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetForward'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsMoving of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_IsMoving00
+static int tolua_ClientToLua_AgentObject_IsMoving00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsMoving'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsMoving();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsMoving'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsFalling of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_IsFalling00
+static int tolua_ClientToLua_AgentObject_IsFalling00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsFalling'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsFalling();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsFalling'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: OnGround of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_OnGround00
+static int tolua_ClientToLua_AgentObject_OnGround00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'OnGround'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->OnGround();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'OnGround'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetCurStateName of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetCurStateName00
+static int tolua_ClientToLua_AgentObject_GetCurStateName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurStateName'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->GetCurStateName();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCurStateName'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8717,6 +8876,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"VehicleObject","VehicleObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"VehicleObject");
+   tolua_function(tolua_S,"DeleteRighdBody",tolua_ClientToLua_VehicleObject_DeleteRighdBody00);
    tolua_function(tolua_S,"setPosition",tolua_ClientToLua_VehicleObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_ClientToLua_VehicleObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_VehicleObject_setOrientation00);
@@ -8772,6 +8932,10 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_AgentObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
+   tolua_function(tolua_S,"IsMoving",tolua_ClientToLua_AgentObject_IsMoving00);
+   tolua_function(tolua_S,"IsFalling",tolua_ClientToLua_AgentObject_IsFalling00);
+   tolua_function(tolua_S,"OnGround",tolua_ClientToLua_AgentObject_OnGround00);
+   tolua_function(tolua_S,"GetCurStateName",tolua_ClientToLua_AgentObject_GetCurStateName00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"SOLDIER_STAND",SOLDIER_STAND);
   tolua_constant(tolua_S,"SOLDIER_CROUCH",SOLDIER_CROUCH);

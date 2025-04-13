@@ -22,6 +22,11 @@ public:
 	// 创建事件
 	void CreateDispatcher(const std::string& eventName)
 	{
+		// 已存在，避免覆盖
+		if (m_dispatchers.find(eventName) != m_dispatchers.end())
+		{
+			return;
+		}
 		auto dispatcher = std::make_shared<SandboxEventDispatcher>();
 		m_dispatchers[eventName] = dispatcher;
 	}

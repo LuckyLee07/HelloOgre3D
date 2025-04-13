@@ -101,4 +101,8 @@ end
 function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
+
+    -- Draw the agent's cyclic path, offset slightly above the level geometry.
+    local agentPath = SandboxUtilities_GetLevelPath()
+    DebugDrawer:drawPath(agentPath, UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
 end

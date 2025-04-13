@@ -30,15 +30,14 @@ public:
 	int getStanceType() { return m_eStance; }
 
 	void RequestState(int soldierState);
-
 	void ShootBullet();
 	//tolua_end
 	
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
 
 protected:
-	virtual void CreateEventDispatcher();
-	virtual void RemoveEventDispatcher();
+	void CreateEventDispatcher();
+	void RemoveEventDispatcher();
 	
 private:
 	EntityObject* m_pWeapon;

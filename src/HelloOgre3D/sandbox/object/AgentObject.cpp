@@ -9,16 +9,21 @@
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
+#include "animation/AnimationStateMachine.h"
 
 using namespace Ogre;
 
+static std::string g_EmptyStr = "";
+
 AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody)
+	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
 {
 	m_objType = OBJ_TYPE_AGENT;
 	m_pScriptVM = GetScriptLuaVM();
 
 	SetForward(Ogre::Vector3::UNIT_Z);
+
+	this->CreateEventDispatcher();
 }
 
 AgentObject::~AgentObject()
@@ -34,6 +39,11 @@ void AgentObject::CreateEventDispatcher()
 	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		std::string stateId = context.Get_String("StateId");
 		if (stateId.empty()) return;
+
+		if (stateId == "dead" || stateId == "crouch_dead")
+		{
+			this->OnDeath(3.0f);
+		}
 	});
 }
 
@@ -44,8 +54,6 @@ void AgentObject::RemoveEventDispatcher()
 
 void AgentObject::Initialize()
 {
-	this->CreateEventDispatcher();
-
 	m_pAgentBody->InitWithOwner(this);
 	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[AgentObject]", this);
 }
@@ -167,4 +175,37 @@ void AgentObject::handleEventByLua(OIS::KeyCode keycode)
 void AgentObject::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 {
 	this->handleEventByLua(keycode);
+}
+
+bool AgentObject::IsMoving()
+{
+	Ogre::Real velocity = GetVelocity().squaredLength();
+	return velocity > 2.0f;
+}
+
+bool AgentObject::IsFalling()
+{
+	return GetVelocity().y < (-9.8f * 0.5f);
+}
+
+bool AgentObject::OnGround()
+{
+	return GetVelocity().y > (-9.8f * 0.1f);
+}
+
+std::string AgentObject::GetCurStateName()
+{
+	auto pAsm = m_pAgentBody->GetObjectASM();
+	if (pAsm) return pAsm->GetCurrStateName();
+	
+	return g_EmptyStr;
+}
+
+void AgentObject::OnDeath(float lastSec)
+{
+	if (m_onPlayDeathAnim) return;
+
+	this->setNeedClear(lastSec * 20);
+
+	m_onPlayDeathAnim = true;
 }

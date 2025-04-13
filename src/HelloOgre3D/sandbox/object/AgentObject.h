@@ -40,17 +40,26 @@ public:
 	virtual Ogre::Vector3 GetUp() const;
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
-	//tolua_end
 
+	virtual bool IsMoving();
+	virtual bool IsFalling();
+	virtual bool OnGround();
+
+	std::string GetCurStateName();
+	//tolua_end
+	
+	virtual void OnDeath(float lastSec);
+	
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
 protected:
-	virtual void CreateEventDispatcher();
-	virtual void RemoveEventDispatcher();
+	void CreateEventDispatcher();
+	void RemoveEventDispatcher();
 	
 	ScriptLuaVM* m_pScriptVM;
 	EntityObject* m_pAgentBody;
+	bool m_onPlayDeathAnim = false;
 
 private:
 	AGENT_OBJ_TYPE m_agentType;

@@ -2,6 +2,7 @@
 #include "EntityObject.h"
 #include "manager/SandboxMgr.h"
 #include "ScriptLuaVM.h"
+#include "OgreMath.h"
 #include "animation/AnimationStateMachine.h"
 
 using namespace Ogre;
@@ -32,6 +33,8 @@ SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/*
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_eStance(SOLDIER_STAND)
 {
 	this->setObjType(OBJ_TYPE_SOLDIER);
+
+	this->CreateEventDispatcher();
 }
 
 SoldierObject::~SoldierObject()
@@ -153,6 +156,8 @@ void SoldierObject::changeStanceType(int stanceType)
 
 void SoldierObject::RequestState(int soldierState)
 {
+	if (m_onPlayDeathAnim) return; //播放死亡动画时不再接受新的状态
+	
 	if (soldierState == SSTATE_DEAD || soldierState == SSTATE_FIRE ||
 		soldierState == SSTATE_IDLE_AIM || soldierState == SSTATE_RUN_FORWARD)
 	{
@@ -161,12 +166,13 @@ void SoldierObject::RequestState(int soldierState)
 			soldierState = SSTATE_MAXCOUNT - 5 + soldierState;
 		}
 	}
-	assert(soldierState >= SSTATE_MAXCOUNT);
+	assert(soldierState < SSTATE_MAXCOUNT);
 
 	Fancy::AnimationStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
-	std::string stateName = SoldierStates[soldierState];
+	SOLDIER_STATE requestState = (SOLDIER_STATE)soldierState;
+	std::string stateName = SoldierStates[requestState];
 	if (pAsm->GetCurrStateName() == stateName) return;
 	
 	pAsm->RequestState(stateName);

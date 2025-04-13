@@ -4,25 +4,6 @@ require("res.scripts.samples.AgentUtils.lua")
 
 local soldierState = nil
 
-function Soldier_CalculateSteering(agent, deltaTimeInSeconds)
-    local avoidForce = agent:ForceToAvoidAgents(0.5);
-    local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
-    local followForce = agent:ForceToFollowPath(0.5);
-    local stayForce = agent:ForceToStayOnPath(0.5);
-    
-    local totalForces = followForce * 1.5 + stayForce * 0.4 + avoidForce * 1 + avoidObjectForce * 2;
-    totalForces.y = 0;
-
-    local targetSpeed = agent:GetMaxSpeed();
-
-    if (agent:GetSpeed() < targetSpeed) then
-        local speedForce = agent:ForceToTargetSpeed(targetSpeed);
-        totalForces = totalForces + speedForce * 7;
-    end
-    
-    return totalForces;
-end
-
 -- Accumulates acceleration to smooth out jerks in movement.
 local _agentAccumulators = {};
 function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
@@ -59,6 +40,8 @@ function Agent_EventHandle(agent, keycode)
         soldierState = "Idle"
     elseif keycode == OIS.KC_4 then
         soldierState = "Move"
+    elseif keycode == OIS.KC_5 then
+        soldierState = "Dead"
     end
 end
 
@@ -71,10 +54,12 @@ function Agent_Update(agent, deltaTimeInMillis)
         Agent_IdleState(agent)
     elseif soldierState == "Move" then
         Agent_MovingState(agent)
+    elseif soldierState == "Dead" then
+        Agent_DeathState(agent)
     end
     
     -- Draw the agent's cyclic path, offset slightly above the level geometry.
-    DebugDrawer:drawPath(agent:GetPath(), UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
+    --DebugDrawer:drawPath(agent:GetPath(), UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
 
     -- Apply a steering force to move the agent along the path.
     if (agent:HasPath() and soldierState == "Move") then

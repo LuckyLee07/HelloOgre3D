@@ -20,9 +20,7 @@ public:
 	VehicleObject(btRigidBody* pRigidBody);
 	virtual ~VehicleObject();
 
-	void DeleteRighdBody();
 	void ResetRigidBody(btRigidBody* pRigidBody);
-
 	btRigidBody* getRigidBody() { return m_pRigidBody; }
 
 	virtual void Initialize();
@@ -30,6 +28,8 @@ public:
 	virtual void updateWorldTransform();
 
 	//tolua_begin
+	void DeleteRighdBody(); //ÒÆ³ý¸ÕÌå
+
 	virtual void setPosition(const Ogre::Vector3& position);
 	virtual void setRotation(const Ogre::Vector3& rotation);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
