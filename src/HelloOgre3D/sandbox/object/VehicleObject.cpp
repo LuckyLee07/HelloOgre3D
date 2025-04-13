@@ -270,7 +270,10 @@ void VehicleObject::SetSpeed(Ogre::Real speed)
 
 void VehicleObject::SetHealth(Ogre::Real health)
 {
+	if (m_health == health) return;
 	m_health = health;
+
+	Event()->Emit("HEALTH_CHANGE", SandboxContext().Set_Number("health", health));
 }
 
 void VehicleObject::SetMaxForce(Ogre::Real maxForce)

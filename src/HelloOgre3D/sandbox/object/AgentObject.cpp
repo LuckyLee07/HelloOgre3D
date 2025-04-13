@@ -42,13 +42,20 @@ void AgentObject::CreateEventDispatcher()
 
 		if (stateId == "dead" || stateId == "crouch_dead")
 		{
-			this->OnDeath(3.0f);
+			this->OnDeath(3.5f);
 		}
+	});
+
+	Event()->CreateDispatcher("HEALTH_CHANGE");
+	Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
+		double health = context.Get_Number("health");
+		if (health <= 0.0) this->OnDeath(2.5f);
 	});
 }
 
 void AgentObject::RemoveEventDispatcher()
 {
+	Event()->RemoveDispatcher("HEALTH_CHANGE");
 	Event()->RemoveDispatcher("FSM_STATE_CHANGE");
 }
 

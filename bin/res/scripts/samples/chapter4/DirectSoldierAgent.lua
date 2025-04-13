@@ -2,7 +2,15 @@ require("res.scripts.samples.chapter4.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierState.lua")
 require("res.scripts.samples.AgentUtils.lua")
 
-local soldierState = nil
+local _soldierStates = {
+    DEATH = "DEATH",
+    FALLING = "FALLING",
+    IDLE = "IDLE",
+    MOVING = "MOVING",
+    SHOOTING = "SHOOTING",
+}
+
+local _soldierState = nil
 
 -- Accumulates acceleration to smooth out jerks in movement.
 local _agentAccumulators = {};
@@ -25,46 +33,45 @@ function Agent_Initialize(agent)
     local randomVec = Vector3(math.random(-5, 5), 0, math.random(-5, 5))
     agent:setPosition(position + posoffset + randomVec)
 
-    soldierState = "Move"
-    agent:RequestState(Soldier.States.SSTATE_RUN_FORWARD);
-
     agent:SetPath(SandboxUtilities_GetLevelPath(), true)
     agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
+
+    _soldierState = _soldierStates.IDLE
 end
 
 
 function Agent_EventHandle(agent, keycode)
-    if keycode == OIS.KC_2 then
-        soldierState = "Fire"
+    if keycode == OIS.KC_1 then
+        _soldierState = _soldierStates.DEATH
+    elseif keycode == OIS.KC_2 then
+        _soldierState = _soldierStates.FALLING
     elseif keycode == OIS.KC_3 then
-        soldierState = "Idle"
+        _soldierState = _soldierStates.IDLE
     elseif keycode == OIS.KC_4 then
-        soldierState = "Move"
+        _soldierState = _soldierStates.MOVING
     elseif keycode == OIS.KC_5 then
-        soldierState = "Dead"
+        _soldierState = _soldierStates.SHOOTING
     end
 end
 
 
 function Agent_Update(agent, deltaTimeInMillis)
-    
-    if soldierState == "Fire" then
-        Agent_ShootState(agent)
-    elseif soldierState == "Idle" then
-        Agent_IdleState(agent)
-    elseif soldierState == "Move" then
-        Agent_MovingState(agent)
-    elseif soldierState == "Dead" then
-        Agent_DeathState(agent)
+    if agent:GetHealth() <= 0 then
+        return --已经处于DEAD状态
     end
-    
-    -- Draw the agent's cyclic path, offset slightly above the level geometry.
-    --DebugDrawer:drawPath(agent:GetPath(), UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
+    if agent:IsFalling() then
+        _soldierState = _soldierStates.FALLING
+    end
 
-    -- Apply a steering force to move the agent along the path.
-    if (agent:HasPath() and soldierState == "Move") then
-        local deltaTimeInSeconds = deltaTimeInMillis / 1000;
-        local steeringForces = Soldier_CalculateSteering(agent, deltaTimeInSeconds);
-        Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds);
+    if _soldierState == _soldierStates.DEATH then
+        Agent_DeathState(agent, deltaTimeInMillis)
+    elseif _soldierState == _soldierStates.FALLING then
+        Agent_FallingState(agent, deltaTimeInMillis)
+    elseif _soldierState == _soldierStates.IDLE then
+        Agent_IdleState(agent, deltaTimeInMillis)
+    elseif _soldierState == _soldierStates.MOVING then
+        Agent_MovingState(agent, deltaTimeInMillis)
+    elseif _soldierState == _soldierStates.SHOOTING then
+        Agent_ShootState(agent, deltaTimeInMillis)
     end
 end

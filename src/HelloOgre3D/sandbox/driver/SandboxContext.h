@@ -8,9 +8,9 @@ class SandboxContext
 {
 public:
 	// std::string类型
-	void Set_String(const std::string& key, const std::string& value)
+	SandboxContext& Set_String(const std::string& key, const std::string& value)
 	{
-		Set(key, value);
+		return Set(key, value);
 	}
 	std::string Get_String(const std::string& key) const
 	{
@@ -18,9 +18,9 @@ public:
 	}
 
 	// number 类型
-	void Set_Number(const std::string& key, double value)
+	SandboxContext& Set_Number(const std::string& key, double value)
 	{
-		Set(key, value);
+		return Set(key, value);
 	}
 	double Get_Number(const std::string& key) const
 	{
@@ -29,9 +29,9 @@ public:
 
 	// Reference 类型
 	template<typename T>
-	void Set_Ref(const std::string& key, T& value)
+	SandboxContext& Set_Ref(const std::string& key, T& value)
 	{
-		Set(key, std::make_shared<T>(value)); // 使用 shared_ptr 存储引用
+		return Set(key, std::make_shared<T>(value)); // 使用 shared_ptr 存储引用
 	}
 	template<typename T>
 	T& Get_Ref(const std::string& key) const
@@ -42,9 +42,9 @@ public:
 
 	// Pointer 类型
 	template<typename T>
-	void Set_Ptr(const std::string& key, T* value)
+	SandboxContext& Set_Ptr(const std::string& key, T* value)
 	{
-		Set(key, value); // 存储指针类型
+		return Set(key, value); // 存储指针类型
 	}
 	template<typename T>
 	T* Get_Ptr(const std::string& key) const
@@ -55,9 +55,10 @@ public:
 private:
 	// 设置参数
 	template<typename T>
-	void Set(const std::string& key, const T& value)
+	SandboxContext& Set(const std::string& key, const T& value)
 	{
 		m_params.Set(key, value);
+		return *this;
 	}
 
 	// 获取参数（带默认值）
