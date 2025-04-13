@@ -41,6 +41,9 @@ public:
 	virtual Ogre::Vector3 GetLeft() const;
 	virtual Ogre::Vector3 GetForward() const;
 
+	virtual void setPosition(const Ogre::Vector3& position);
+	virtual void setOrientation(const Ogre::Quaternion& quaternion);
+
 	virtual bool IsMoving();
 	virtual bool IsFalling();
 	virtual bool OnGround();

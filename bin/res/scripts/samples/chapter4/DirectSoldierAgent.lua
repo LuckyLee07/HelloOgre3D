@@ -51,6 +51,13 @@ function Agent_EventHandle(agent, keycode)
         _soldierState = _soldierStates.MOVING
     elseif keycode == OIS.KC_5 then
         _soldierState = _soldierStates.SHOOTING
+    elseif keycode == OIS.KC_6 then
+        local stanceType = agent:getStanceType()
+        if stanceType == SOLDIER_STAND then
+            agent:changeStanceType(SOLDIER_CROUCH)
+        else
+            agent:changeStanceType(SOLDIER_STAND)
+        end
     end
 end
 
@@ -59,6 +66,7 @@ function Agent_Update(agent, deltaTimeInMillis)
     if agent:GetHealth() <= 0 then
         return --已经处于DEAD状态
     end
+
     if agent:IsFalling() then
         _soldierState = _soldierStates.FALLING
     end

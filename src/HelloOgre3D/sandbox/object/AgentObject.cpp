@@ -216,3 +216,17 @@ void AgentObject::OnDeath(float lastSec)
 
 	m_onPlayDeathAnim = true;
 }
+
+void AgentObject::setPosition(const Ogre::Vector3& position)
+{
+	VehicleObject::setPosition(position);
+	if (m_pAgentBody) 
+		m_pAgentBody->setPosition(position);
+}
+
+void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
+{
+	VehicleObject::setOrientation(quaternion);
+	if (m_pAgentBody)
+		m_pAgentBody->setOrientation(quaternion);
+}

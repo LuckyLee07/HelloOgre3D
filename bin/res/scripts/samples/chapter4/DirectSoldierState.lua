@@ -21,7 +21,7 @@ function Agent_DeathState(agent, deltaTime)
         Soldier_SlowMovement(agent, deltaTime, 2)
     end
     agent:RequestState(Soldier.States.SSTATE_DEAD);
-    
+
     if currStateName == Soldier.SoldierStates.CROUCH_DEAD or
         currStateName == Soldier.SoldierStates.STAND_DEAD then
         --agent:DeleteRighdBody();
@@ -34,7 +34,7 @@ function Agent_FallingState(agent, deltaTime)
 
     if currStateName ~= Soldier.SoldierStates.STAND_IDLE_AIM and
         currStateName ~= Soldier.SoldierStates.STAND_FALL_DEAD then
-        agent:RequestState(Soldier.States.STAND_IDLE_AIM);
+        agent:RequestState(Soldier.States.SSTATE_IDLE_AIM);
     end
 
     if not agent:IsFalling() then

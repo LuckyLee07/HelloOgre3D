@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Apr 13 15:47:44 2025.
+** Generated automatically by tolua++-1.0.92 on Mon Apr 14 01:25:16 2025.
 */
 
 #ifndef __cplusplus
@@ -3947,7 +3947,8 @@ static int tolua_ClientToLua_EntityObject_InitWithOwner00(lua_State* tolua_S)
  if (
      !tolua_isusertype(tolua_S,1,"EntityObject",0,&tolua_err) ||
      !tolua_isusertype(tolua_S,2,"BaseObject",1,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
+     !tolua_isboolean(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
  )
   goto tolua_lerror;
  else
@@ -3955,11 +3956,12 @@ static int tolua_ClientToLua_EntityObject_InitWithOwner00(lua_State* tolua_S)
  {
   EntityObject* self = (EntityObject*)  tolua_tousertype(tolua_S,1,0);
   BaseObject* owner = ((BaseObject*)  tolua_tousertype(tolua_S,2,nullptr));
+  bool canFireEvent = ((bool)  tolua_toboolean(tolua_S,3,true));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'InitWithOwner'", NULL);
 #endif
   {
-   self->InitWithOwner(owner);
+   self->InitWithOwner(owner,canFireEvent);
   }
  }
  return 0;
@@ -6627,6 +6629,72 @@ static int tolua_ClientToLua_AgentObject_GetForward00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setPosition of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_setPosition00
+static int tolua_ClientToLua_AgentObject_setPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
+#endif
+  {
+   self->setPosition(*position);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setOrientation of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_setOrientation00
+static int tolua_ClientToLua_AgentObject_setOrientation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Quaternion",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Quaternion* quaternion = ((const Ogre::Quaternion*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setOrientation'", NULL);
+#endif
+  {
+   self->setOrientation(*quaternion);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setOrientation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: IsMoving of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_IsMoving00
 static int tolua_ClientToLua_AgentObject_IsMoving00(lua_State* tolua_S)
@@ -8932,6 +9000,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetUp",tolua_ClientToLua_AgentObject_GetUp00);
    tolua_function(tolua_S,"GetLeft",tolua_ClientToLua_AgentObject_GetLeft00);
    tolua_function(tolua_S,"GetForward",tolua_ClientToLua_AgentObject_GetForward00);
+   tolua_function(tolua_S,"setPosition",tolua_ClientToLua_AgentObject_setPosition00);
+   tolua_function(tolua_S,"setOrientation",tolua_ClientToLua_AgentObject_setOrientation00);
    tolua_function(tolua_S,"IsMoving",tolua_ClientToLua_AgentObject_IsMoving00);
    tolua_function(tolua_S,"IsFalling",tolua_ClientToLua_AgentObject_IsFalling00);
    tolua_function(tolua_S,"OnGround",tolua_ClientToLua_AgentObject_OnGround00);

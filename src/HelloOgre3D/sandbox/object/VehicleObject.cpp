@@ -64,10 +64,17 @@ void VehicleObject::Initialize()
 
 void VehicleObject::ResetRigidBody(btRigidBody* pRigidBody)
 {
+	const Ogre::Vector3 position = GetPosition();
+	const Ogre::Quaternion rot = GetOrientation();
+
 	this->DeleteRighdBody();
 
 	m_pRigidBody = pRigidBody;
 	m_pRigidBody->setUserPointer(this);
+
+	this->SetMass(this->GetMass());
+	this->setPosition(position);
+	this->setOrientation(rot);
 
 	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
 	pPhysicsWorld->addRigidBody(m_pRigidBody, this);

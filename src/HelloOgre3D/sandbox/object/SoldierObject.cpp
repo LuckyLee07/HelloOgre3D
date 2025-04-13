@@ -138,18 +138,32 @@ void SoldierObject::handleEventByLua(OIS::KeyCode keycode)
 
 void SoldierObject::changeStanceType(int stanceType)
 {
+	float soldier_height = 0.0f;
+	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
 	{
 		m_eStance = SOLDIER_STAND;
-		this->SetHeight(SOLDIER_STAND_HEIGHT);
-		this->SetMaxSpeed(SOLDIER_STAND_SPEED);
+		soldier_height = SOLDIER_STAND_HEIGHT;
+		soldier_speed = SOLDIER_STAND_SPEED;
+		
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
 		m_eStance = SOLDIER_CROUCH;
-		this->SetHeight(SOLDIER_CROUCH_HEIGHT);
-		this->SetMaxSpeed(SOLDIER_CROUCH_SPEED);
+
+		soldier_height = SOLDIER_CROUCH_HEIGHT;
+		soldier_speed = SOLDIER_CROUCH_SPEED;
 	}
+
+	if (soldier_height <= 0.0f || soldier_speed <= 0.0f) return;
+
+	m_pAgentBody->setOriginPos(Ogre::Vector3(0, -soldier_height / 2, 0));
+
+	Ogre::Real newPosY = (this->GetHeight() - soldier_height) / 2;
+	this->setPosition((GetPosition() - Ogre::Vector3(0, newPosY, 0)));
+
+	this->SetHeight(soldier_height);
+	this->SetMaxSpeed(soldier_speed);
 }
 
 void SoldierObject::RequestState(int soldierState)
@@ -161,7 +175,7 @@ void SoldierObject::RequestState(int soldierState)
 	{
 		if (getStanceType() == SOLDIER_CROUCH)
 		{
-			soldierState = SSTATE_MAXCOUNT - 5 + soldierState;
+			soldierState = SSTATE_MAXCOUNT - 4 + soldierState;
 		}
 	}
 	assert(soldierState < SSTATE_MAXCOUNT);
