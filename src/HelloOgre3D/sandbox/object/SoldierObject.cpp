@@ -63,8 +63,6 @@ void SoldierObject::RemoveEventDispatcher()
 
 void SoldierObject::Initialize()
 {
-	this->CreateEventDispatcher();
-
 	m_pAgentBody->InitWithOwner(this);
 	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[SoldierObject]", this);
 }
@@ -76,7 +74,7 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 		SAFE_DELETE(m_pWeapon);
 	}
 	m_pWeapon = new EntityObject(meshFile);
-	m_pWeapon->InitWithOwner(this);
+	m_pWeapon->InitWithOwner(this, false);
 
 	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
 	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);

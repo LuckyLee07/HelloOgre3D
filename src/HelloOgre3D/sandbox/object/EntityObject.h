@@ -27,7 +27,7 @@ public:
 
 	BaseObject* getOwner() { return m_owner; }
 	//tolua_begin
-	void InitWithOwner(BaseObject* owner=nullptr);
+	void InitWithOwner(BaseObject* owner=nullptr, bool canFireEvent=true);
 
 	const Ogre::Vector3& getOriginPos() const;
 	void setOriginPos(const Ogre::Vector3& position);

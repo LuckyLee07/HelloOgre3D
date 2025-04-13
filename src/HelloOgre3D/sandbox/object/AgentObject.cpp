@@ -49,7 +49,7 @@ void AgentObject::CreateEventDispatcher()
 	Event()->CreateDispatcher("HEALTH_CHANGE");
 	Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
 		double health = context.Get_Number("health");
-		if (health <= 0.0) this->OnDeath(2.5f);
+		if (health <= 0.0) this->OnDeath(3.5f);
 	});
 }
 

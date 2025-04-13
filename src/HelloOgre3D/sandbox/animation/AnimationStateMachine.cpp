@@ -11,7 +11,7 @@ namespace Fancy
 {
 	AnimationStateMachine::AnimationStateMachine(BaseObject* owner) : m_owner(owner),
 		m_pCurrentState(nullptr), m_pNextState(nullptr),
-		m_pCurrentTransition(nullptr), m_TransitionStartTime(0.0f)
+		m_pCurrentTransition(nullptr), m_TransitionStartTime(0.0f), m_canFireEvent(true)
 	{
 
 	}
@@ -104,8 +104,15 @@ namespace Fancy
 		}
 	}
 
+	void AnimationStateMachine::SetCanFireEvent(bool canFireEvent) 
+	{
+		m_canFireEvent = canFireEvent;
+	}
+
 	void AnimationStateMachine::FireStateChageEvent(AnimationState* pNextState)
 	{
+		if (!m_canFireEvent) return;
+
 		if (m_owner == nullptr || pNextState == nullptr) 
 			return;
 		

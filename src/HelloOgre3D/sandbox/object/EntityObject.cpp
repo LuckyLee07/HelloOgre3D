@@ -76,10 +76,11 @@ EntityObject::~EntityObject()
 	}
 }
 
-void EntityObject::InitWithOwner(BaseObject *owner)
+void EntityObject::InitWithOwner(BaseObject *owner, bool canFireEvent)
 {
 	m_owner = owner != nullptr ? owner : this;
 	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(m_owner);
+	m_pAnimateStateMachine->SetCanFireEvent(canFireEvent);
 }
 
 void EntityObject::update(int deltaInMillis)

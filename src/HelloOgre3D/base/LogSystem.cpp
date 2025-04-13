@@ -1,5 +1,8 @@
 #include "LogSystem.h"
 #include "OgreLogManager.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 namespace Fancy
 {
@@ -35,31 +38,43 @@ namespace Fancy
 	{
 #ifdef _WIN32
 		char buffer[1024 * 10];
+		// 获取当前时间点
+		auto now = std::chrono::system_clock::now();
 
-		time_t nowtime;
-		nowtime = time(NULL);
-
-		struct tm* timeinfo;
-		timeinfo = localtime(&nowtime);
-
-		char time_buffer[80];
-		strftime(time_buffer, 80, "%Y-%m-%d %H:%M:%S", timeinfo);
-
+		// 转换为 time_t 用于格式化年月日时分秒
+		auto now_time_t = std::chrono::system_clock::to_time_t(now);
+		
+		// 使用 localtime 格式化时间（注意线程安全问题）
+		std::tm local_tm;
+#if defined(_WIN32) || defined(_WIN64)
+		localtime_s(&local_tm, &now_time_t);  // Windows 安全版本
+#else
+		localtime_r(&now_time_t, &local_tm);  // Linux/macOS 安全版本
+#endif
+		// 取出毫秒部分
+		auto time_epoch = now.time_since_epoch();
+		auto now_ms = duration_cast<milliseconds>(time_epoch) % 1000;
+		
+		// 拼接时间字符串
+		std::ostringstream oss;
+		oss << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << '.'
+			<< std::setfill('0') << std::setw(3) << now_ms.count();
+		
 		if (pfilename != NULL && pfunction != NULL)
 		{
-			snprintf(buffer, sizeof(buffer), "[%s][%s(%d)]%s(): %s", time_buffer, pfilename, line, pfunction, pstr);
+			snprintf(buffer, sizeof(buffer), "[%s][%s(%d)]%s(): %s", oss.str().c_str(), pfilename, line, pfunction, pstr);
 		}
 		else if (pfilename != NULL)
 		{
-			snprintf(buffer, sizeof(buffer), "[%s][%s(%d)]: %s", time_buffer, pfilename, line, pstr);
+			snprintf(buffer, sizeof(buffer), "[%s][%s(%d)]: %s", oss.str().c_str(), pfilename, line, pstr);
 		}
 		else if (pfunction != NULL)
 		{
-			snprintf(buffer, sizeof(buffer), "[%s]%s(): %s", time_buffer, pfunction, pstr);
+			snprintf(buffer, sizeof(buffer), "[%s]%s(): %s", oss.str().c_str(), pfunction, pstr);
 		}
 		else
 		{
-			snprintf(buffer, sizeof(buffer), "[%s] %s", time_buffer, pstr);
+			snprintf(buffer, sizeof(buffer), "[%s] %s", oss.str().c_str(), pstr);
 		}
 		return buffer;
 #else

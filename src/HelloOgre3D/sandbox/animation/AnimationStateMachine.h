@@ -26,6 +26,7 @@ namespace Fancy //tolua_exports
         void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
         //tolua_end
 
+        void SetCanFireEvent(bool canFireEvent);
         void FireStateChageEvent(AnimationState* pNextState);
 
     private:
@@ -49,6 +50,7 @@ namespace Fancy //tolua_exports
 
     private:
         BaseObject* m_owner; //持有者
+        bool m_canFireEvent; //可发送事件
 
         std::unordered_map<std::string, AnimationState*> m_animStates;
         typedef std::unordered_map<std::string, AnimationTransition*> TransitionMap;
