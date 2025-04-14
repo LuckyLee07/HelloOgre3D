@@ -114,7 +114,12 @@ _G.print = function( ... )
     if info ~= nil then
 		local file = info.source or ''
 		-- source不一定是path，可能是str
-		if #file >= 99 then file = 'strcode' end
+		if #file >= 99 then
+			file = 'loadstring'
+		else
+			local newfile = file:match("^.+/(.+)$")
+			file = newfile or file
+		end
 		
 		local line = info.currentline or 0
 		msg = string.format('[%s:%d]', file, line)

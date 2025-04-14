@@ -70,9 +70,10 @@ void VehicleObject::ResetRigidBody(btRigidBody* pRigidBody)
 	this->DeleteRighdBody();
 
 	m_pRigidBody = pRigidBody;
+	this->SetMass(DEFAULT_AGENT_MASS);
 	m_pRigidBody->setUserPointer(this);
 
-	this->SetMass(this->GetMass());
+	//this->SetMass(this->GetMass());
 	this->setPosition(position);
 	this->setOrientation(rot);
 
@@ -247,7 +248,6 @@ void VehicleObject::SetMass(const Ogre::Real mass)
 void VehicleObject::SetHeight(Ogre::Real height)
 {
 	m_height = std::max(Ogre::Real(0), height);
-
 	if (m_pRigidBody != nullptr)
 	{
 		Ogre::Real radius = this->GetRadius();
