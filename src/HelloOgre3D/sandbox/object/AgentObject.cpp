@@ -9,7 +9,7 @@
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
-#include "animation/AnimationStateMachine.h"
+#include "animation/AgentAnimStateMachine.h"
 
 using namespace Ogre;
 

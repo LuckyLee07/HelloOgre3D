@@ -4,11 +4,11 @@
 #include <string>
 
 class AgentFSM;
-class SoldierObject;
+class AgentObject;
 class AgentStateController //tolua_exports
 { //tolua_exports
 public:
-	AgentStateController(SoldierObject* soldier);
+	AgentStateController(AgentObject* soldier);
 	~AgentStateController();
 
 	void Init();				// ×¢²áËùÓÐ×´Ì¬ + Ìø×ª
@@ -24,7 +24,7 @@ public:
 
 private:
 	AgentFSM* m_fsm;
-	SoldierObject* m_agent;
+	AgentObject* m_agent;
 
 }; //tolua_exports
 

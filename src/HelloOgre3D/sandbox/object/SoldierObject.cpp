@@ -3,7 +3,7 @@
 #include "manager/SandboxMgr.h"
 #include "ScriptLuaVM.h"
 #include "OgreMath.h"
-#include "animation/AnimationStateMachine.h"
+#include "animation/AgentAnimStateMachine.h"
 #include "state/AgentStateController.h"
 
 using namespace Ogre;
@@ -183,7 +183,7 @@ void SoldierObject::RequestState(int soldierState)
 	}
 	assert(soldierState < SSTATE_MAXCOUNT);
 
-	Fancy::AnimationStateMachine* pAsm = getBody()->GetObjectASM();
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
 	SOLDIER_STATE requestState = (SOLDIER_STATE)soldierState;

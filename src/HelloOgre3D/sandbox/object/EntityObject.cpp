@@ -5,8 +5,8 @@
 #include "SandboxDef.h"
 #include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
-#include "animation/Animation.h"
-#include "animation/AnimationStateMachine.h"
+#include "animation/AgentAnim.h"
+#include "animation/AgentAnimStateMachine.h"
 #include "game/GameManager.h"
 #include "OgreManualObject.h"
 
@@ -79,7 +79,7 @@ EntityObject::~EntityObject()
 void EntityObject::InitWithOwner(BaseObject *owner, bool canFireEvent)
 {
 	m_owner = owner != nullptr ? owner : this;
-	m_pAnimateStateMachine = new Fancy::AnimationStateMachine(m_owner);
+	m_pAnimateStateMachine = new AgentAnimStateMachine(m_owner);
 	m_pAnimateStateMachine->SetCanFireEvent(canFireEvent);
 }
 
@@ -200,7 +200,7 @@ Ogre::Entity* EntityObject::getDetachEntity()
 	return m_pEntity;
 }
 
-Fancy::Animation* EntityObject::GetAnimation(const char* animationName)
+AgentAnim* EntityObject::GetAnimation(const char* animationName)
 {
 	auto iter = m_animations.find(animationName);
 	if (iter != m_animations.end())
@@ -211,12 +211,12 @@ Fancy::Animation* EntityObject::GetAnimation(const char* animationName)
 	auto pAnimState = m_pEntity->getAnimationState(animationName);
 	if (pAnimState != nullptr)
 	{
-		m_animations[animationName] = new Fancy::Animation(pAnimState);
+		m_animations[animationName] = new AgentAnim(pAnimState);
 	}
 	return m_animations[animationName];
 }
 
-Fancy::AnimationStateMachine* EntityObject::GetObjectASM()
+AgentAnimStateMachine* EntityObject::GetObjectASM()
 {
 	return m_pAnimateStateMachine;
 }

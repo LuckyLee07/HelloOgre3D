@@ -1,5 +1,5 @@
-#ifndef __SOLDIER_OBJ_DEF__
-#define __SOLDIER_OBJ_DEF__
+#ifndef __AGENT_TYPE_DEF__
+#define __AGENT_TYPE_DEF__
 
 //tolua_begin
 #define SOLDIER_STAND_SPEED		3.0f
@@ -9,7 +9,7 @@
 
 enum SOLDIER_STATE 
 {
-    SSTATE_DEAD,
+    SSTATE_DEAD = 0,
     SSTATE_FIRE,
     SSTATE_IDLE_AIM,
     SSTATE_RUN_FORWARD,
@@ -34,4 +34,4 @@ enum SOLDIER_STATE
 };
 //tolua_end
 
-#endif  // __SOLDIER_OBJ_DEF__
+#endif  // __AGENT_TYPE_DEF__

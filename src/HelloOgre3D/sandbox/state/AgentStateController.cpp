@@ -1,10 +1,10 @@
 #include "AgentStateController.h"
-#include "object/SoldierObject.h"
+#include "object/AgentObject.h"
 #include "AgentStateFactory.h"
 #include "ScriptLuaVM.h"
 #include "AgentFSM.h"
 
-AgentStateController::AgentStateController(SoldierObject* soldier) : m_agent(soldier)
+AgentStateController::AgentStateController(AgentObject* soldier) : m_agent(soldier)
 {
 	m_fsm = new AgentFSM();
 	//Init(); // 放到Lua初始化

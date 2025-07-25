@@ -48,6 +48,8 @@ public:
 	virtual bool IsFalling();
 	virtual bool OnGround();
 
+	virtual void RequestState(int soldierState) {}
+
 	std::string GetCurStateName();
 	//tolua_end
 	

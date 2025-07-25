@@ -2,7 +2,7 @@
 #define __SOLDIER_OBJECT__
 
 #include "AgentObject.h"
-#include "SoldierObjDef.h"
+#include "AgentTypeDef.h"
 #include "state/AgentStateController.h"
 
 //tolua_begin
@@ -30,7 +30,7 @@ public:
 	void changeStanceType(int stanceType);
 	int getStanceType() { return m_stanceType; }
 
-	void RequestState(int soldierState);
+	virtual void RequestState(int soldierState);
 	void ShootBullet();
 	//tolua_end
 	

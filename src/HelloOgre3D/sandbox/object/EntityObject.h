@@ -11,10 +11,9 @@ namespace Ogre {
 	class Entity;
 	class SceneNode;
 }
-namespace Fancy{
-	class Animation;
-	class AnimationStateMachine;
-};
+class AgentAnim;
+class AgentAnimStateMachine;
+
 class EntityObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
@@ -42,8 +41,8 @@ public:
 
 	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
-	Fancy::Animation* GetAnimation(const char* animationName);
-	Fancy::AnimationStateMachine* GetObjectASM();
+	AgentAnim* GetAnimation(const char* animationName);
+	AgentAnimStateMachine* GetObjectASM();
 	//tolua_end
 
 	void SetDerivedPosition(const Ogre::Vector3& position);
@@ -64,8 +63,8 @@ protected:
 
 	BaseObject* m_owner; //≥÷”–’ﬂ
 
-	Fancy::AnimationStateMachine* m_pAnimateStateMachine;
-	std::unordered_map<std::string, Fancy::Animation*> m_animations;
+	AgentAnimStateMachine* m_pAnimateStateMachine;
+	std::unordered_map<std::string, AgentAnim*> m_animations;
 }; //tolua_exports
 
 #endif  // __Entity_OBJECT__

@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Mon Apr 14 01:25:16 2025.
+** Generated automatically by tolua++-1.0.92 on Fri Jul 25 13:40:49 2025.
 */
 
 #ifndef __cplusplus
@@ -19,11 +19,11 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "../base/LuaInterface.h"
 #include "../sandbox/SandboxDef.h"
+#include "../sandbox/AgentTypeDef.h"
 #include "../sandbox/object/BaseObject.h"
 #include "../sandbox/object/UIComponent.h"
-#include "../sandbox/animation/Animation.h"
-#include "../sandbox/animation/AnimationStateMachine.h"
-#include "../sandbox/object/SoldierObjDef.h"
+#include "../sandbox/animation/AgentAnim.h"
+#include "../sandbox/animation/AgentAnimStateMachine.h"
 #include "../sandbox/object/EntityObject.h"
 #include "../sandbox/object/BlockObject.h"
 #include "../sandbox/object/VehicleObject.h"
@@ -100,25 +100,25 @@ static void tolua_reg_types (lua_State* tolua_S)
 {
  tolua_usertype(tolua_S,"Ogre::Vector2");
  tolua_usertype(tolua_S,"std::vector<int>");
- tolua_usertype(tolua_S,"Fancy::AnimationStateMachine");
+ tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
- tolua_usertype(tolua_S,"Fancy::Animation");
+ tolua_usertype(tolua_S,"EntityObject");
  tolua_usertype(tolua_S,"btQuaternion");
- tolua_usertype(tolua_S,"AgentObject");
- tolua_usertype(tolua_S,"std::vector<EntityObject*>");
+ tolua_usertype(tolua_S,"SandboxMgr");
+ tolua_usertype(tolua_S,"AgentAnimStateMachine");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"BaseObject");
  tolua_usertype(tolua_S,"std::vector<BlockObject*>");
  tolua_usertype(tolua_S,"Ogre::SceneManager");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
- tolua_usertype(tolua_S,"EntityObject");
- tolua_usertype(tolua_S,"SandboxMgr");
+ tolua_usertype(tolua_S,"std::vector<EntityObject*>");
+ tolua_usertype(tolua_S,"SoldierObject");
  tolua_usertype(tolua_S,"std::vector<AgentObject*>");
  tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
- tolua_usertype(tolua_S,"SoldierObject");
+ tolua_usertype(tolua_S,"AgentAnim");
  tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"VehicleObject");
  tolua_usertype(tolua_S,"GameManager");
@@ -3496,14 +3496,14 @@ static int tolua_ClientToLua_UIComponent_GetDimension00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: Init of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_Init00
-static int tolua_ClientToLua_Fancy_Animation_Init00(lua_State* tolua_S)
+/* method: Init of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_Init00
+static int tolua_ClientToLua_AgentAnim_Init00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3511,7 +3511,7 @@ static int tolua_ClientToLua_Fancy_Animation_Init00(lua_State* tolua_S)
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
   float startTime = ((float)  tolua_tonumber(tolua_S,2,0.0f));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'Init'", NULL);
@@ -3529,21 +3529,21 @@ static int tolua_ClientToLua_Fancy_Animation_Init00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: Clear of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_Clear00
-static int tolua_ClientToLua_Fancy_Animation_Clear00(lua_State* tolua_S)
+/* method: Clear of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_Clear00
+static int tolua_ClientToLua_AgentAnim_Clear00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'Clear'", NULL);
 #endif
@@ -3560,14 +3560,14 @@ static int tolua_ClientToLua_Fancy_Animation_Clear00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetEnabled of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_SetEnabled00
-static int tolua_ClientToLua_Fancy_Animation_SetEnabled00(lua_State* tolua_S)
+/* method: SetEnabled of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_SetEnabled00
+static int tolua_ClientToLua_AgentAnim_SetEnabled00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3575,7 +3575,7 @@ static int tolua_ClientToLua_Fancy_Animation_SetEnabled00(lua_State* tolua_S)
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
   bool enable = ((bool)  tolua_toboolean(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetEnabled'", NULL);
@@ -3593,14 +3593,14 @@ static int tolua_ClientToLua_Fancy_Animation_SetEnabled00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetLooping of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_SetLooping00
-static int tolua_ClientToLua_Fancy_Animation_SetLooping00(lua_State* tolua_S)
+/* method: SetLooping of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_SetLooping00
+static int tolua_ClientToLua_AgentAnim_SetLooping00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3608,7 +3608,7 @@ static int tolua_ClientToLua_Fancy_Animation_SetLooping00(lua_State* tolua_S)
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
   bool looping = ((bool)  tolua_toboolean(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetLooping'", NULL);
@@ -3626,14 +3626,14 @@ static int tolua_ClientToLua_Fancy_Animation_SetLooping00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: AddTime of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_AddTime00
-static int tolua_ClientToLua_Fancy_Animation_AddTime00(lua_State* tolua_S)
+/* method: AddTime of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_AddTime00
+static int tolua_ClientToLua_AgentAnim_AddTime00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3641,7 +3641,7 @@ static int tolua_ClientToLua_Fancy_Animation_AddTime00(lua_State* tolua_S)
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
   float deltaTime = ((float)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddTime'", NULL);
@@ -3659,21 +3659,21 @@ static int tolua_ClientToLua_Fancy_Animation_AddTime00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetTime of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_GetTime00
-static int tolua_ClientToLua_Fancy_Animation_GetTime00(lua_State* tolua_S)
+/* method: GetTime of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_GetTime00
+static int tolua_ClientToLua_AgentAnim_GetTime00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTime'", NULL);
 #endif
@@ -3691,21 +3691,21 @@ static int tolua_ClientToLua_Fancy_Animation_GetTime00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetLength of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_GetLength00
-static int tolua_ClientToLua_Fancy_Animation_GetLength00(lua_State* tolua_S)
+/* method: GetLength of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_GetLength00
+static int tolua_ClientToLua_AgentAnim_GetLength00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetLength'", NULL);
 #endif
@@ -3723,21 +3723,21 @@ static int tolua_ClientToLua_Fancy_Animation_GetLength00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetWeight of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_GetWeight00
-static int tolua_ClientToLua_Fancy_Animation_GetWeight00(lua_State* tolua_S)
+/* method: GetWeight of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_GetWeight00
+static int tolua_ClientToLua_AgentAnim_GetWeight00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetWeight'", NULL);
 #endif
@@ -3755,14 +3755,14 @@ static int tolua_ClientToLua_Fancy_Animation_GetWeight00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: SetWeight of class  Fancy::Animation */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_Animation_SetWeight00
-static int tolua_ClientToLua_Fancy_Animation_SetWeight00(lua_State* tolua_S)
+/* method: SetWeight of class  AgentAnim */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_SetWeight00
+static int tolua_ClientToLua_AgentAnim_SetWeight00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnim",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3770,7 +3770,7 @@ static int tolua_ClientToLua_Fancy_Animation_SetWeight00(lua_State* tolua_S)
  else
 #endif
  {
-  Fancy::Animation* self = (Fancy::Animation*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnim* self = (AgentAnim*)  tolua_tousertype(tolua_S,1,0);
   float weight = ((float)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetWeight'", NULL);
@@ -3788,14 +3788,14 @@ static int tolua_ClientToLua_Fancy_Animation_SetWeight00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: RequestState of class  Fancy::AnimationStateMachine */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_AnimationStateMachine_RequestState00
-static int tolua_ClientToLua_Fancy_AnimationStateMachine_RequestState00(lua_State* tolua_S)
+/* method: RequestState of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_RequestState00
+static int tolua_ClientToLua_AgentAnimStateMachine_RequestState00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::AnimationStateMachine",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -3803,7 +3803,7 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_RequestState00(lua_Stat
  else
 #endif
  {
-  Fancy::AnimationStateMachine* self = (Fancy::AnimationStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
   const std::string stateName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RequestState'", NULL);
@@ -3823,21 +3823,21 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_RequestState00(lua_Stat
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetCurrStateName of class  Fancy::AnimationStateMachine */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_AnimationStateMachine_GetCurrStateName00
-static int tolua_ClientToLua_Fancy_AnimationStateMachine_GetCurrStateName00(lua_State* tolua_S)
+/* method: GetCurrStateName of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateName00
+static int tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateName00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::AnimationStateMachine",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  Fancy::AnimationStateMachine* self = (Fancy::AnimationStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurrStateName'", NULL);
 #endif
@@ -3855,16 +3855,16 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_GetCurrStateName00(lua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: AddState of class  Fancy::AnimationStateMachine */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_AnimationStateMachine_AddState00
-static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddState00(lua_State* tolua_S)
+/* method: AddState of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_AddState00
+static int tolua_ClientToLua_AgentAnimStateMachine_AddState00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::AnimationStateMachine",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
-     !tolua_isusertype(tolua_S,3,"Fancy::Animation",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,3,"AgentAnim",0,&tolua_err) ||
      !tolua_isboolean(tolua_S,4,1,&tolua_err) ||
      !tolua_isnumber(tolua_S,5,1,&tolua_err) ||
      !tolua_isnoobj(tolua_S,6,&tolua_err)
@@ -3873,9 +3873,9 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddState00(lua_State* t
  else
 #endif
  {
-  Fancy::AnimationStateMachine* self = (Fancy::AnimationStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
   const std::string name = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
-  Fancy::Animation* animation = ((Fancy::Animation*)  tolua_tousertype(tolua_S,3,0));
+  AgentAnim* animation = ((AgentAnim*)  tolua_tousertype(tolua_S,3,0));
   bool looping = ((bool)  tolua_toboolean(tolua_S,4,false));
   float rate = ((float)  tolua_tonumber(tolua_S,5,1.0f));
 #ifndef TOLUA_RELEASE
@@ -3895,14 +3895,14 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddState00(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: AddTransition of class  Fancy::AnimationStateMachine */
-#ifndef TOLUA_DISABLE_tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00
-static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00(lua_State* tolua_S)
+/* method: AddTransition of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_AddTransition00
+static int tolua_ClientToLua_AgentAnimStateMachine_AddTransition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"Fancy::AnimationStateMachine",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
      !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
@@ -3914,7 +3914,7 @@ static int tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00(lua_Sta
  else
 #endif
  {
-  Fancy::AnimationStateMachine* self = (Fancy::AnimationStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
   const std::string fromState = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
   const std::string toState = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
   float blendOutWindow = ((float)  tolua_tonumber(tolua_S,4,0.0f));
@@ -4316,8 +4316,8 @@ static int tolua_ClientToLua_EntityObject_GetAnimation00(lua_State* tolua_S)
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAnimation'", NULL);
 #endif
   {
-   Fancy::Animation* tolua_ret = (Fancy::Animation*)  self->GetAnimation(animationName);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::Animation");
+   AgentAnim* tolua_ret = (AgentAnim*)  self->GetAnimation(animationName);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentAnim");
   }
  }
  return 1;
@@ -4348,8 +4348,8 @@ static int tolua_ClientToLua_EntityObject_GetObjectASM00(lua_State* tolua_S)
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectASM'", NULL);
 #endif
   {
-   Fancy::AnimationStateMachine* tolua_ret = (Fancy::AnimationStateMachine*)  self->GetObjectASM();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"Fancy::AnimationStateMachine");
+   AgentAnimStateMachine* tolua_ret = (AgentAnimStateMachine*)  self->GetObjectASM();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentAnimStateMachine");
   }
  }
  return 1;
@@ -6791,6 +6791,39 @@ static int tolua_ClientToLua_AgentObject_OnGround00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: RequestState of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_RequestState00
+static int tolua_ClientToLua_AgentObject_RequestState00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  int soldierState = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RequestState'", NULL);
+#endif
+  {
+   self->RequestState(soldierState);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RequestState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetCurStateName of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetCurStateName00
 static int tolua_ClientToLua_AgentObject_GetCurStateName00(lua_State* tolua_S)
@@ -8830,6 +8863,29 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_function(tolua_S,"BtVector3ToVector3",tolua_ClientToLua_BtVector3ToVector300);
   tolua_function(tolua_S,"BtQuaternionToQuaternion",tolua_ClientToLua_BtQuaternionToQuaternion00);
   tolua_function(tolua_S,"GetForward",tolua_ClientToLua_GetForward00);
+  tolua_constant(tolua_S,"SOLDIER_STAND_SPEED",SOLDIER_STAND_SPEED);
+  tolua_constant(tolua_S,"SOLDIER_STAND_HEIGHT",SOLDIER_STAND_HEIGHT);
+  tolua_constant(tolua_S,"SOLDIER_CROUCH_SPEED",SOLDIER_CROUCH_SPEED);
+  tolua_constant(tolua_S,"SOLDIER_CROUCH_HEIGHT",SOLDIER_CROUCH_HEIGHT);
+  tolua_constant(tolua_S,"SSTATE_DEAD",SSTATE_DEAD);
+  tolua_constant(tolua_S,"SSTATE_FIRE",SSTATE_FIRE);
+  tolua_constant(tolua_S,"SSTATE_IDLE_AIM",SSTATE_IDLE_AIM);
+  tolua_constant(tolua_S,"SSTATE_RUN_FORWARD",SSTATE_RUN_FORWARD);
+  tolua_constant(tolua_S,"SSTATE_RUN_BACKWARD",SSTATE_RUN_BACKWARD);
+  tolua_constant(tolua_S,"SSTATE_DEAD_HEADSHOT",SSTATE_DEAD_HEADSHOT);
+  tolua_constant(tolua_S,"SSTATE_FALL_DEAD",SSTATE_FALL_DEAD);
+  tolua_constant(tolua_S,"SSTATE_FALL_IDLE",SSTATE_FALL_IDLE);
+  tolua_constant(tolua_S,"SSTATE_JUMP_LAND",SSTATE_JUMP_LAND);
+  tolua_constant(tolua_S,"SSTATE_JUMP_UP",SSTATE_JUMP_UP);
+  tolua_constant(tolua_S,"SSTATE_MELEE",SSTATE_MELEE);
+  tolua_constant(tolua_S,"SSTATE_RELOAD",SSTATE_RELOAD);
+  tolua_constant(tolua_S,"SSTATE_SMG_TRANSFORM",SSTATE_SMG_TRANSFORM);
+  tolua_constant(tolua_S,"SSTATE_SNIPER_TRANSFORM",SSTATE_SNIPER_TRANSFORM);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_DEAD",CROUCH_SSTATE_DEAD);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_FIRE",CROUCH_SSTATE_FIRE);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_IDLE_AIM",CROUCH_SSTATE_IDLE_AIM);
+  tolua_constant(tolua_S,"CROUCH_SSTATE_FORWARD",CROUCH_SSTATE_FORWARD);
+  tolua_constant(tolua_S,"SSTATE_MAXCOUNT",SSTATE_MAXCOUNT);
   tolua_cclass(tolua_S,"BaseObject","BaseObject","",NULL);
   tolua_beginmodule(tolua_S,"BaseObject");
    tolua_constant(tolua_S,"OBJ_TYPE_NONE",BaseObject::OBJ_TYPE_NONE);
@@ -8867,54 +8923,25 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"isVisible",tolua_ClientToLua_UIComponent_isVisible00);
    tolua_function(tolua_S,"GetDimension",tolua_ClientToLua_UIComponent_GetDimension00);
   tolua_endmodule(tolua_S);
-  tolua_module(tolua_S,"Fancy",0);
-  tolua_beginmodule(tolua_S,"Fancy");
-   tolua_cclass(tolua_S,"Animation","Fancy::Animation","",NULL);
-   tolua_beginmodule(tolua_S,"Animation");
-    tolua_function(tolua_S,"Init",tolua_ClientToLua_Fancy_Animation_Init00);
-    tolua_function(tolua_S,"Clear",tolua_ClientToLua_Fancy_Animation_Clear00);
-    tolua_function(tolua_S,"SetEnabled",tolua_ClientToLua_Fancy_Animation_SetEnabled00);
-    tolua_function(tolua_S,"SetLooping",tolua_ClientToLua_Fancy_Animation_SetLooping00);
-    tolua_function(tolua_S,"AddTime",tolua_ClientToLua_Fancy_Animation_AddTime00);
-    tolua_function(tolua_S,"GetTime",tolua_ClientToLua_Fancy_Animation_GetTime00);
-    tolua_function(tolua_S,"GetLength",tolua_ClientToLua_Fancy_Animation_GetLength00);
-    tolua_function(tolua_S,"GetWeight",tolua_ClientToLua_Fancy_Animation_GetWeight00);
-    tolua_function(tolua_S,"SetWeight",tolua_ClientToLua_Fancy_Animation_SetWeight00);
-   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"AgentAnim","AgentAnim","",NULL);
+  tolua_beginmodule(tolua_S,"AgentAnim");
+   tolua_function(tolua_S,"Init",tolua_ClientToLua_AgentAnim_Init00);
+   tolua_function(tolua_S,"Clear",tolua_ClientToLua_AgentAnim_Clear00);
+   tolua_function(tolua_S,"SetEnabled",tolua_ClientToLua_AgentAnim_SetEnabled00);
+   tolua_function(tolua_S,"SetLooping",tolua_ClientToLua_AgentAnim_SetLooping00);
+   tolua_function(tolua_S,"AddTime",tolua_ClientToLua_AgentAnim_AddTime00);
+   tolua_function(tolua_S,"GetTime",tolua_ClientToLua_AgentAnim_GetTime00);
+   tolua_function(tolua_S,"GetLength",tolua_ClientToLua_AgentAnim_GetLength00);
+   tolua_function(tolua_S,"GetWeight",tolua_ClientToLua_AgentAnim_GetWeight00);
+   tolua_function(tolua_S,"SetWeight",tolua_ClientToLua_AgentAnim_SetWeight00);
   tolua_endmodule(tolua_S);
-  tolua_module(tolua_S,"Fancy",0);
-  tolua_beginmodule(tolua_S,"Fancy");
-   tolua_cclass(tolua_S,"AnimationStateMachine","Fancy::AnimationStateMachine","",NULL);
-   tolua_beginmodule(tolua_S,"AnimationStateMachine");
-    tolua_function(tolua_S,"RequestState",tolua_ClientToLua_Fancy_AnimationStateMachine_RequestState00);
-    tolua_function(tolua_S,"GetCurrStateName",tolua_ClientToLua_Fancy_AnimationStateMachine_GetCurrStateName00);
-    tolua_function(tolua_S,"AddState",tolua_ClientToLua_Fancy_AnimationStateMachine_AddState00);
-    tolua_function(tolua_S,"AddTransition",tolua_ClientToLua_Fancy_AnimationStateMachine_AddTransition00);
-   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"AgentAnimStateMachine","AgentAnimStateMachine","",NULL);
+  tolua_beginmodule(tolua_S,"AgentAnimStateMachine");
+   tolua_function(tolua_S,"RequestState",tolua_ClientToLua_AgentAnimStateMachine_RequestState00);
+   tolua_function(tolua_S,"GetCurrStateName",tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateName00);
+   tolua_function(tolua_S,"AddState",tolua_ClientToLua_AgentAnimStateMachine_AddState00);
+   tolua_function(tolua_S,"AddTransition",tolua_ClientToLua_AgentAnimStateMachine_AddTransition00);
   tolua_endmodule(tolua_S);
-  tolua_constant(tolua_S,"SOLDIER_STAND_SPEED",SOLDIER_STAND_SPEED);
-  tolua_constant(tolua_S,"SOLDIER_STAND_HEIGHT",SOLDIER_STAND_HEIGHT);
-  tolua_constant(tolua_S,"SOLDIER_CROUCH_SPEED",SOLDIER_CROUCH_SPEED);
-  tolua_constant(tolua_S,"SOLDIER_CROUCH_HEIGHT",SOLDIER_CROUCH_HEIGHT);
-  tolua_constant(tolua_S,"SSTATE_DEAD",SSTATE_DEAD);
-  tolua_constant(tolua_S,"SSTATE_FIRE",SSTATE_FIRE);
-  tolua_constant(tolua_S,"SSTATE_IDLE_AIM",SSTATE_IDLE_AIM);
-  tolua_constant(tolua_S,"SSTATE_RUN_FORWARD",SSTATE_RUN_FORWARD);
-  tolua_constant(tolua_S,"SSTATE_RUN_BACKWARD",SSTATE_RUN_BACKWARD);
-  tolua_constant(tolua_S,"SSTATE_DEAD_HEADSHOT",SSTATE_DEAD_HEADSHOT);
-  tolua_constant(tolua_S,"SSTATE_FALL_DEAD",SSTATE_FALL_DEAD);
-  tolua_constant(tolua_S,"SSTATE_FALL_IDLE",SSTATE_FALL_IDLE);
-  tolua_constant(tolua_S,"SSTATE_JUMP_LAND",SSTATE_JUMP_LAND);
-  tolua_constant(tolua_S,"SSTATE_JUMP_UP",SSTATE_JUMP_UP);
-  tolua_constant(tolua_S,"SSTATE_MELEE",SSTATE_MELEE);
-  tolua_constant(tolua_S,"SSTATE_RELOAD",SSTATE_RELOAD);
-  tolua_constant(tolua_S,"SSTATE_SMG_TRANSFORM",SSTATE_SMG_TRANSFORM);
-  tolua_constant(tolua_S,"SSTATE_SNIPER_TRANSFORM",SSTATE_SNIPER_TRANSFORM);
-  tolua_constant(tolua_S,"CROUCH_SSTATE_DEAD",CROUCH_SSTATE_DEAD);
-  tolua_constant(tolua_S,"CROUCH_SSTATE_FIRE",CROUCH_SSTATE_FIRE);
-  tolua_constant(tolua_S,"CROUCH_SSTATE_IDLE_AIM",CROUCH_SSTATE_IDLE_AIM);
-  tolua_constant(tolua_S,"CROUCH_SSTATE_FORWARD",CROUCH_SSTATE_FORWARD);
-  tolua_constant(tolua_S,"SSTATE_MAXCOUNT",SSTATE_MAXCOUNT);
   tolua_cclass(tolua_S,"EntityObject","EntityObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"EntityObject");
    tolua_function(tolua_S,"InitWithOwner",tolua_ClientToLua_EntityObject_InitWithOwner00);
@@ -9005,6 +9032,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"IsMoving",tolua_ClientToLua_AgentObject_IsMoving00);
    tolua_function(tolua_S,"IsFalling",tolua_ClientToLua_AgentObject_IsFalling00);
    tolua_function(tolua_S,"OnGround",tolua_ClientToLua_AgentObject_OnGround00);
+   tolua_function(tolua_S,"RequestState",tolua_ClientToLua_AgentObject_RequestState00);
    tolua_function(tolua_S,"GetCurStateName",tolua_ClientToLua_AgentObject_GetCurStateName00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"SOLDIER_STAND",SOLDIER_STAND);

@@ -14,7 +14,11 @@ IdleState::~IdleState()
 
 void IdleState::OnEnter()
 {
+	if (m_pAgent->IsMoving())
+	{
 
+	}
+	m_pAgent->RequestState(0);
 }
 
 void IdleState::OnLeave()
