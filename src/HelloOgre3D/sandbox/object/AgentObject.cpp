@@ -217,6 +217,18 @@ void AgentObject::OnDeath(float lastSec)
 	m_onPlayDeathAnim = true;
 }
 
+void AgentObject::SlowMoving(float rate /*= 1.0f*/)
+{
+	Ogre::Vector3 horizontalVelocity = this->GetVelocity();
+	Ogre::Real yMovement = horizontalVelocity.y;
+
+	horizontalVelocity.y = 0;
+	horizontalVelocity = horizontalVelocity * 0.91f * (1 / rate);
+	horizontalVelocity.y = yMovement;
+
+	this->SetVelocity(horizontalVelocity);
+}
+
 void AgentObject::setPosition(const Ogre::Vector3& position)
 {
 	VehicleObject::setPosition(position);
@@ -230,3 +242,4 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 	if (m_pAgentBody)
 		m_pAgentBody->setOrientation(quaternion);
 }
+

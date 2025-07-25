@@ -70,6 +70,7 @@ public:
 	Ogre::RenderWindow* getRenderWindow();
 	Ogre::SceneNode* getRootSceneNode();
 	OgreBites::SdkCameraMan* getCameraMan();
+	InputManager* getInputManager() { return m_pInputManager; }
 
 private:
 	void ChooseSceneManager();

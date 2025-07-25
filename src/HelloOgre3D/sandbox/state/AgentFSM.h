@@ -26,6 +26,8 @@ public:
 private:
 	bool ContainsState(const std::string& stateName);
 	bool ContainsTransition(const std::string& from, const std::string& to);
+	
+	bool PerformTransition(const std::string& trans);
 
 private:
 	// 所有注册的状态：状态名 → 状态对象

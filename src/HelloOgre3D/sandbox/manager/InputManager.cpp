@@ -88,6 +88,9 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 	if (m_pGameManager != nullptr)
 		m_pGameManager->HandleKeyPress(event.key, event.text);
 
+	m_KeyMap[event.key] = true;
+	m_KeyDownMap[event.key] = true;
+
 	return true;
 }
 
@@ -97,6 +100,9 @@ bool InputManager::keyReleased(const OIS::KeyEvent& event)
 
 	if (m_pGameManager != nullptr)
 		m_pGameManager->HandleKeyRelease(event.key, event.text);
+
+	m_KeyMap[event.key] = false;
+	m_KeyUpMap[event.key] = true;
 
 	return true;
 }
@@ -134,4 +140,31 @@ bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonI
 		m_pGameManager->HandleMouseRelease(event.state.width, event.state.height, btnId);
 	
 	return true;
+}
+
+bool InputManager::isKeyDown(OIS::KeyCode key) const
+{
+	auto iter = m_KeyMap.find(key);
+	return iter != m_KeyMap.end() && iter->second;
+}
+
+bool InputManager::isKeyPressed(OIS::KeyCode key) const
+{
+	auto iter = m_KeyDownMap.find(key);
+	return iter != m_KeyDownMap.end() && iter->second;
+}
+
+bool InputManager::isKeyReleased(OIS::KeyCode key) const
+{
+	auto iter = m_KeyUpMap.find(key);
+	return iter != m_KeyUpMap.end() && iter->second;
+}
+
+void InputManager::update(float dtime)
+{
+	for (auto& kv : m_KeyDownMap)
+		kv.second = false;
+
+	for (auto& kv : m_KeyUpMap)
+		kv.second = false;
 }

@@ -1,7 +1,7 @@
 #ifndef __INPUT_MANAGER_H__  
 #define __INPUT_MANAGER_H__
 
-#include <string>
+#include <map>
 #include "OISKeyboard.h"
 #include "OISMouse.h"
 
@@ -33,6 +33,13 @@ private:
 	virtual bool mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId);
 	virtual bool mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId);
 
+public:
+	bool isKeyDown(OIS::KeyCode key) const;
+	bool isKeyPressed(OIS::KeyCode key) const;
+	bool isKeyReleased(OIS::KeyCode key) const;
+
+	void update(float dtime); // 每帧调用以清除 KeyDown/KeyUp 状态
+
 private:
 	size_t m_windowHnd;
 	GameManager* m_pGameManager;
@@ -41,6 +48,10 @@ private:
 	OIS::Mouse* m_pMouse;
 	OIS::Keyboard* m_pKeyboard;
 	OIS::InputManager * m_pOISInputMgr;
+
+	std::map<OIS::KeyCode, bool> m_KeyMap;	 //true: 键按下状态
+	std::map<OIS::KeyCode, bool> m_KeyDownMap; //true: 键这一帧弹起
+	std::map<OIS::KeyCode, bool> m_KeyUpMap; //true: 键这一帧按下
 };
 
 #endif; // __INPUT_MANAGER_H__

@@ -17,9 +17,9 @@ void AgentFSM::Update(float dt)
 	if (!m_currState) return;
 	
 	std::string nextState = m_currState->OnUpdate(dt);
-	if (!nextState.empty() && ContainsTransition(m_currStateName, nextState))
+	if (!nextState.empty())
 	{
-		SetCurrentState(nextState);
+		PerformTransition(nextState);
 	}
 }
 
@@ -76,4 +76,16 @@ bool AgentFSM::ContainsTransition(const std::string& from, const std::string& to
 	if (iter == m_transitions.end()) return false;
 	
 	return iter->second.find(to) != iter->second.end();
+}
+
+bool AgentFSM::PerformTransition(const std::string& trans)
+{
+	std::string nextState = trans.substr(2) + "State";
+	if (nextState != m_currStateName && ContainsTransition(m_currStateName, nextState))
+	{
+		SetCurrentState(nextState);
+		return true;
+	}
+
+	return false;
 }

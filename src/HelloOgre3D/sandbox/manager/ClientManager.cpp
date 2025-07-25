@@ -290,6 +290,8 @@ void ClientManager::Update()
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
+
+		m_pInputManager->update(deltaMilliseconds);
     }
 }
 

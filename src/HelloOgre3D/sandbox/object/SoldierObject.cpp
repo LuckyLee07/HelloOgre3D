@@ -5,6 +5,8 @@
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "state/AgentStateController.h"
+#include "manager/ClientManager.h"
+#include "input/PlayerInput.h"
 
 using namespace Ogre;
 
@@ -44,6 +46,8 @@ SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/*
 SoldierObject::~SoldierObject()
 {
 	SAFE_DELETE(m_pWeapon);
+	SAFE_DELETE(m_inputInfo);
+	SAFE_DELETE(m_stateController);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -67,6 +71,8 @@ void SoldierObject::RemoveEventDispatcher()
 
 void SoldierObject::Initialize()
 {
+	m_inputInfo = new PlayerInput(GetClientMgr()->getInputManager());
+
 	m_pAgentBody->InitWithOwner(this);
 	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[SoldierObject]", this);
 }
@@ -98,6 +104,8 @@ void SoldierObject::update(int deltaMilisec)
 	m_pAgentBody->update(deltaMilisec);
 	if (m_pWeapon)
 		m_pWeapon->update(deltaMilisec);
+
+	m_stateController->Update(deltaMilisec);
 
 	this->updateWorldTransform();
 }

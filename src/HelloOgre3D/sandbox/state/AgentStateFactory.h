@@ -7,6 +7,7 @@
 
 class AgentState;
 class AgentObject;
+
 class AgentStateFactory
 {
 public:

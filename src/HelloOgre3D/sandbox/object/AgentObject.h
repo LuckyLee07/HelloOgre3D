@@ -7,6 +7,7 @@
 #include "VehicleObject.h"
 #include "OISKeyboard.h"
 #include "LuaEnvObject.h"
+#include "input/IPlayerInput.h"
 
 namespace Ogre {
 	class SceneNode;
@@ -58,6 +59,9 @@ public:
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 
+	virtual void SlowMoving(float rate = 1.0f);
+	virtual IPlayerInput* GetInput() { return nullptr; }
+
 protected:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
@@ -68,6 +72,7 @@ protected:
 
 private:
 	AGENT_OBJ_TYPE m_agentType;
+
 }; //tolua_exports
 
 #endif  // __AGENT_OBJECT__

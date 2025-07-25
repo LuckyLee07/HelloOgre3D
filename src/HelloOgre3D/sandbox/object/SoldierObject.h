@@ -13,6 +13,7 @@ enum SoldierStanceType
 };
 //tolua_end
 
+class IPlayerInput;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -34,6 +35,7 @@ public:
 	void ShootBullet();
 	//tolua_end
 	
+	virtual IPlayerInput* GetInput() { return m_inputInfo; }
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
 
 protected:
@@ -44,6 +46,7 @@ private:
 	EntityObject* m_pWeapon;
 	SoldierStanceType m_stanceType;
 
+	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
 
 }; //tolua_exports

@@ -66,7 +66,7 @@ function Agent_Update(agent, deltaTimeInMillis)
     if agent:GetHealth() <= 0 then
         return --已经处于DEAD状态
     end
-
+    --[[
     if agent:IsFalling() then
         _soldierState = _soldierStates.FALLING
     end
@@ -82,4 +82,5 @@ function Agent_Update(agent, deltaTimeInMillis)
     elseif _soldierState == _soldierStates.SHOOTING then
         Agent_ShootState(agent, deltaTimeInMillis)
     end
+    --]]
 end
