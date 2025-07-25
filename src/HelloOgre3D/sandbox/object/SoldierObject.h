@@ -3,9 +3,10 @@
 
 #include "AgentObject.h"
 #include "SoldierObjDef.h"
+#include "state/AgentStateController.h"
 
 //tolua_begin
-enum SoldierStance 
+enum SoldierStanceType 
 {
 	SOLDIER_STAND = 0,
 	SOLDIER_CROUCH,
@@ -27,7 +28,7 @@ public:
 	EntityObject* getWeapon() { return m_pWeapon; }
 
 	void changeStanceType(int stanceType);
-	int getStanceType() { return m_eStance; }
+	int getStanceType() { return m_stanceType; }
 
 	void RequestState(int soldierState);
 	void ShootBullet();
@@ -41,7 +42,10 @@ protected:
 	
 private:
 	EntityObject* m_pWeapon;
-	SoldierStance m_eStance;
+	SoldierStanceType m_stanceType;
+
+	AgentStateController* m_stateController;
+
 }; //tolua_exports
 
 #endif  // __SOLDIER_OBJECT__

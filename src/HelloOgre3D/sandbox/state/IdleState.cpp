@@ -4,7 +4,7 @@
 
 IdleState::IdleState(AgentObject* pAgent) : AgentState(pAgent)
 {
-
+	m_stateId = "IdleState";
 }
 
 IdleState::~IdleState()
@@ -22,7 +22,7 @@ void IdleState::OnLeave()
 
 }
 
-std::string IdleState::OnUpdate(float deltaTime)
+std::string IdleState::OnUpdate(float dt)
 {
 	return "";
 }

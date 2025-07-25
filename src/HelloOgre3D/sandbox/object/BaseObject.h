@@ -3,8 +3,8 @@
 
 #include "driver/SandboxEventDispatcherManager.h"
 
+struct Collision;
 class btRigidBody;
-class Collision;
 class BaseObject //tolua_exports
 { //tolua_exports
 public:

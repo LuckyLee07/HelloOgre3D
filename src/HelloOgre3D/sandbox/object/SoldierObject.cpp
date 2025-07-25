@@ -4,6 +4,7 @@
 #include "ScriptLuaVM.h"
 #include "OgreMath.h"
 #include "animation/AnimationStateMachine.h"
+#include "state/AgentStateController.h"
 
 using namespace Ogre;
 
@@ -30,11 +31,14 @@ char* SoldierStates[] =
 };
 
 SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_eStance(SOLDIER_STAND)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
 {
 	this->setObjType(OBJ_TYPE_SOLDIER);
 
 	this->CreateEventDispatcher();
+
+	m_stateController = new AgentStateController(this);
+	m_stateController->Init();
 }
 
 SoldierObject::~SoldierObject()
@@ -142,15 +146,14 @@ void SoldierObject::changeStanceType(int stanceType)
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
 	{
-		m_eStance = SOLDIER_STAND;
+		m_stanceType = SOLDIER_STAND;
 		soldier_height = SOLDIER_STAND_HEIGHT;
 		soldier_speed = SOLDIER_STAND_SPEED;
 		
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
-		m_eStance = SOLDIER_CROUCH;
-
+		m_stanceType = SOLDIER_CROUCH;
 		soldier_height = SOLDIER_CROUCH_HEIGHT;
 		soldier_speed = SOLDIER_CROUCH_SPEED;
 	}

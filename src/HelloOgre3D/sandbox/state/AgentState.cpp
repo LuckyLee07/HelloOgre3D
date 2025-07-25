@@ -11,17 +11,3 @@ AgentState::~AgentState()
 	m_pAgent = nullptr;
 }
 
-void AgentState::OnEnter()
-{
-
-}
-
-void AgentState::OnLeave()
-{
-
-}
-
-std::string AgentState::OnUpdate(float deltaTime)
-{
-	return "";
-}
