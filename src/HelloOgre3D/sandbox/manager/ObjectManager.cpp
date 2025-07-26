@@ -302,6 +302,6 @@ void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seco
 {
 	if (pSceneNode == nullptr)
 		return;
-	m_remSceneNodes[pSceneNode] = seconds * 1000;
+	m_remSceneNodes[pSceneNode] = int(seconds * 1000);
 }
 

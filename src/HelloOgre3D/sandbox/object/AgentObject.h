@@ -26,7 +26,6 @@ public:
 
 	virtual void Initialize();
 	virtual void update(int deltaMilisec);
-	virtual void handleEventByLua(OIS::KeyCode keycode);
 
 	//tolua_begin
 	void initBody(const Ogre::String& meshFile);
@@ -55,18 +54,16 @@ public:
 	//tolua_end
 	
 	virtual void OnDeath(float lastSec);
+	virtual void SlowMoving(float rate = 1.0f);
+	virtual IPlayerInput* GetInput() { return nullptr; }
 	
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
-
-	virtual void SlowMoving(float rate = 1.0f);
-	virtual IPlayerInput* GetInput() { return nullptr; }
 
 protected:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
 	
-	ScriptLuaVM* m_pScriptVM;
 	EntityObject* m_pAgentBody;
 	bool m_onPlayDeathAnim = false;
 
@@ -74,5 +71,7 @@ private:
 	AGENT_OBJ_TYPE m_agentType;
 
 }; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(AgentObject);
 
 #endif  // __AGENT_OBJECT__

@@ -36,6 +36,8 @@ public:
 
 	// 加入TableName
 	bool callFunctionV1(const char* funcname, const char* format, bool needSelf, va_list vl);
+	bool callModuleFuncV(int luaRef, const char* funcname, const char* format, va_list vl);
+
 	bool callModuleFunc(int luaRef, const char* funcname, const char* format, ...);
 	bool callModuleFunc(const char* tableName, const char* funcname, const char* format, ...);
 

@@ -76,6 +76,9 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/base",
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
+      "../src/%{prj.name}/sandbox/base",
+      "../src/%{prj.name}/sandbox/common",
+      "../src/%{prj.name}/sandbox/driver",
       "../src/external",
       "../src/external/lua/lua",
       "../src/external/lua/tolua",
@@ -90,8 +93,7 @@ function CreateGameProject( projectName )
       "../src/external/bullet_linearmath/include/",
       "../src/external/ois/include/",
     } )
-    -- TODO(David Young 6-8-13): the current premake-dev doesn't support
-    -- %{prj.name} within "files"
+
     files( {
       "../src/" .. projectName .. "/**.h",
       "../src/" .. projectName .. "/**.cpp",

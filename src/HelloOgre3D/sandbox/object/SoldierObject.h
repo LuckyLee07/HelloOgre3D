@@ -22,7 +22,6 @@ public:
 
 	virtual void Initialize();
 	virtual void update(int deltaMilisec);
-	virtual void handleEventByLua(OIS::KeyCode keycode);
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
@@ -31,12 +30,14 @@ public:
 	void changeStanceType(int stanceType);
 	int getStanceType() { return m_stanceType; }
 
-	virtual void RequestState(int soldierState);
+	virtual void RequestState(int soldierState, bool forceUpdate = false);
 	void ShootBullet();
 	//tolua_end
 	
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
+
+	static int GetAnimStateId(const std::string& stateName);
 
 protected:
 	void CreateEventDispatcher();
@@ -50,5 +51,7 @@ private:
 	AgentStateController* m_stateController;
 
 }; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(SoldierObject);
 
 #endif  // __SOLDIER_OBJECT__

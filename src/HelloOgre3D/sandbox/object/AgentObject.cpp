@@ -3,7 +3,6 @@
 #include "OgreSceneManager.h"
 #include "btBulletDynamicsCommon.h"
 #include "GameManager.h"
-#include "ScriptLuaVM.h"
 #include "BlockObject.h"
 #include "EntityObject.h"
 #include "play/PhysicsWorld.h"
@@ -19,7 +18,6 @@ AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = n
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
 {
 	m_objType = OBJ_TYPE_AGENT;
-	m_pScriptVM = GetScriptLuaVM();
 
 	SetForward(Ogre::Vector3::UNIT_Z);
 
@@ -62,7 +60,7 @@ void AgentObject::RemoveEventDispatcher()
 void AgentObject::Initialize()
 {
 	m_pAgentBody->InitWithOwner(this);
-	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[AgentObject]", this);
+	this->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
 void AgentObject::initBody(const Ogre::String& meshFile)
@@ -152,7 +150,7 @@ void AgentObject::update(int deltaMilisec)
 	if (true || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
-		m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Update", "u[AgentObject]i", this, deltaMilisec);
+		this->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
 	m_pAgentBody->update(deltaMilisec);
@@ -174,14 +172,9 @@ void AgentObject::updateWorldTransform()
 	m_pAgentBody->SetDerivedOrientation(rotation);
 }
 
-void AgentObject::handleEventByLua(OIS::KeyCode keycode)
-{
-	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[AgentObject]i", this, keycode);
-}
-
 void AgentObject::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 {
-	this->handleEventByLua(keycode);
+	callFunction("Agent_EventHandle", "u[AgentObject]i", this, keycode);
 }
 
 bool AgentObject::IsMoving()
@@ -212,7 +205,7 @@ void AgentObject::OnDeath(float lastSec)
 {
 	if (m_onPlayDeathAnim) return;
 
-	this->setNeedClear(lastSec * 20);
+	this->setNeedClear(int(lastSec * 20));
 
 	m_onPlayDeathAnim = true;
 }
@@ -242,4 +235,3 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 	if (m_pAgentBody)
 		m_pAgentBody->setOrientation(quaternion);
 }
-

@@ -5,7 +5,7 @@
 #include "LogSystem.h"
 #include "GlobalFuncs.h"
 #include "object/BaseObject.h"
-#include "driver/SandboxEventDispatcherManager.h"
+#include "SandboxEventDispatcherManager.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner) : m_owner(owner),
 	m_pCurrState(nullptr), m_pNextState(nullptr),

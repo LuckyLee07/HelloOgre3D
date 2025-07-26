@@ -473,15 +473,11 @@ endwhile:
 	return true;
 }
 
-bool ScriptLuaVM::callModuleFunc(int luaRef, const char* funcname, const char* format, ...)
+bool ScriptLuaVM::callModuleFuncV(int luaRef, const char* funcname, const char* format, va_list vl)
 {
 	if (luaRef <= 0) // 取不到表 直接调用global的
 	{
-		va_list vl;
-		va_start(vl, format);
-		bool result = callFunctionV(funcname, format, vl);
-		va_end(vl);
-		return result;
+		return callFunctionV(funcname, format, vl);
 	}
 
 	// 根据 tableRef 从注册表中获取 Lua 表
@@ -493,13 +489,18 @@ bool ScriptLuaVM::callModuleFunc(int luaRef, const char* funcname, const char* f
 		return false;
 	}
 
+	bool result = callFunctionV1(funcname, format, false, vl);
+	lua_pop(m_pState, 1); // 弹出 table
+
+	return result;
+}
+
+bool ScriptLuaVM::callModuleFunc(int luaRef, const char* funcname, const char* format, ...)
+{
 	va_list vl;
 	va_start(vl, format);
-	bool result = callFunctionV1(funcname, format, false, vl);
-	// 弹出 table
-	lua_pop(m_pState, 1);
+	bool result = callModuleFuncV(luaRef, funcname, format, vl);
 	va_end(vl);
-
 	return result;
 }
 
@@ -533,6 +534,7 @@ bool ScriptLuaVM::callModuleFunc(const char* tableName, const char* funcname, co
 
 	return result;
 }
+
 
 static ScriptLuaVM* s_ScriptLuaVM = nullptr;
 ScriptLuaVM* GetScriptLuaVM()

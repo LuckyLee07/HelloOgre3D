@@ -1,7 +1,6 @@
 #include "SoldierObject.h"
 #include "EntityObject.h"
 #include "manager/SandboxMgr.h"
-#include "ScriptLuaVM.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "state/AgentStateController.h"
@@ -26,11 +25,23 @@ char* SoldierStates[] =
 	"reload",
 	"smg_transform",
 	"sniper_transform",
+
 	"crouch_dead",
 	"crouch_fire",
 	"crouch_idle_aim",
 	"crouch_forward",
 };
+
+int SoldierObject::GetAnimStateId(const std::string& stateName)
+{
+	const int numStates = sizeof(SoldierStates)/sizeof(SoldierStates[0]);
+	for (int index = 0; index < numStates; index++)
+	{
+		if (std::strcmp(SoldierStates[index], stateName.c_str()) == 0)
+			return index;
+	}
+	return -1; // 未找到
+}
 
 SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
@@ -71,10 +82,10 @@ void SoldierObject::RemoveEventDispatcher()
 
 void SoldierObject::Initialize()
 {
-	m_inputInfo = new PlayerInput(GetClientMgr()->getInputManager());
+	AgentObject::Initialize();
 
-	m_pAgentBody->InitWithOwner(this);
-	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Initialize", "u[SoldierObject]", this);
+	auto inputMgr = GetClientMgr()->getInputManager();
+	m_inputInfo = new PlayerInput(inputMgr);
 }
 
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
@@ -98,7 +109,7 @@ void SoldierObject::update(int deltaMilisec)
 	if (true || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
-		m_pScriptVM->callModuleFunc(m_luaRef, "Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
+		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
 	m_pAgentBody->update(deltaMilisec);
@@ -143,11 +154,6 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 	bullet->applyImpulse(forward * 750);
 }
 
-void SoldierObject::handleEventByLua(OIS::KeyCode keycode)
-{
-	m_pScriptVM->callModuleFunc(m_luaRef, "Agent_EventHandle", "u[SoldierObject]i", this, keycode);
-}
-
 void SoldierObject::changeStanceType(int stanceType)
 {
 	float soldier_height = 0.0f;
@@ -175,9 +181,18 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	this->SetHeight(soldier_height);
 	this->SetMaxSpeed(soldier_speed);
+
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return;
+
+	int currStateId = SoldierObject::GetAnimStateId(pAsm->GetCurrStateName());
+	if (currStateId > 0)
+	{
+		RequestState(currStateId, true);
+	}
 }
 
-void SoldierObject::RequestState(int soldierState)
+void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
 	if (m_onPlayDeathAnim) return; //播放死亡动画时不再接受新的状态
 	
@@ -196,7 +211,7 @@ void SoldierObject::RequestState(int soldierState)
 
 	SOLDIER_STATE requestState = (SOLDIER_STATE)soldierState;
 	std::string stateName = SoldierStates[requestState];
-	if (pAsm->GetCurrStateName() == stateName) return;
+	if (pAsm->GetCurrStateName() == stateName && !forceUpdate) return;
 	
 	pAsm->RequestState(stateName);
 }

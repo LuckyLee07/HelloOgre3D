@@ -1,7 +1,8 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
-#include "driver/SandboxEventDispatcherManager.h"
+#include "SandboxEventDispatcherManager.h"
+#include "LuaClassNameTraits.h"
 
 struct Collision;
 class btRigidBody;
