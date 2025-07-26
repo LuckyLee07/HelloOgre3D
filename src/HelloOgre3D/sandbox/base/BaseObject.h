@@ -1,12 +1,12 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
-#include "SandboxEventDispatcherManager.h"
+#include "GameObject.h"
 #include "LuaClassNameTraits.h"
 
 struct Collision;
 class btRigidBody;
-class BaseObject //tolua_exports
+class BaseObject : public GameObject //tolua_exports
 { //tolua_exports
 public:
 	//tolua_begin
@@ -33,8 +33,6 @@ public:
 	virtual void update(int deltaMsec);
 	virtual btRigidBody* getRigidBody();
 
-	SandboxEventDispatcherManager* Event();
-
 	//tolua_begin
 	void setObjId(unsigned int objId);
 	unsigned int getObjId();
@@ -52,11 +50,10 @@ public:
 
 protected:
 	OBJTYPE m_objType;
+
 private:
 	unsigned int m_objId;
 	int m_liveTick; //д╛хо-1
-
-	SandboxEventDispatcherManager* m_eventManager;
 }; //tolua_exports
 
 

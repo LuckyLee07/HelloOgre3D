@@ -4,7 +4,7 @@
 #include "AgentAnimTransition.h"
 #include "LogSystem.h"
 #include "GlobalFuncs.h"
-#include "object/BaseObject.h"
+#include "BaseObject.h"
 #include "SandboxEventDispatcherManager.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner) : m_owner(owner),

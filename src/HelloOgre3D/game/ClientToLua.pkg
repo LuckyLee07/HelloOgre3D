@@ -4,7 +4,7 @@ $cfile "../base/LuaInterface.h"
 $cfile "../sandbox/SandboxDef.h"
 $cfile "../sandbox/AgentTypeDef.h"
 
-$cfile "../sandbox/object/BaseObject.h"
+$cfile "../sandbox/base/BaseObject.h"
 $cfile "../sandbox/object/UIComponent.h"
 
 $cfile "../sandbox/animation/AgentAnim.h"

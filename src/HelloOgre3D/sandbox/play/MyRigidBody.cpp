@@ -1,5 +1,5 @@
 #include "MyRigidBody.h"
-#include "object/BaseObject.h"
+#include "BaseObject.h"
 
 MyRigidBody::MyRigidBody(BaseObject* pObject) : m_pOwnerObj(pObject)
 {

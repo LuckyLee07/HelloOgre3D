@@ -2,7 +2,7 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 #include "manager/ObjectManager.h"
-#include "object/BaseObject.h"
+#include "base/BaseObject.h"
 #include "play/MyRigidBody.h"
 
 PhysicsWorld::PhysicsWorld() : m_pBroadPhase(nullptr), m_pCollisionConfig(nullptr),
