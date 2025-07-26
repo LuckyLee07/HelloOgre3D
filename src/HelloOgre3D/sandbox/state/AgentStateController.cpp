@@ -21,8 +21,20 @@ void AgentStateController::Init()
 
 	AddState("IdleState");
 	AddState("MoveState");
+	AddState("ShootState");
+	AddState("DeathState");
+
 	AddTransition("IdleState", "MoveState");
+	AddTransition("IdleState", "ShootState");
+	AddTransition("IdleState", "DeathState");
+
 	AddTransition("MoveState", "IdleState");
+	AddTransition("MoveState", "ShootState");
+	AddTransition("MoveState", "DeathState");
+
+	AddTransition("ShootState", "IdleState");
+	AddTransition("ShootState", "MoveState");
+	AddTransition("ShootState", "DeathState");
 
 	m_fsm->SetCurrentState("IdleState");
 

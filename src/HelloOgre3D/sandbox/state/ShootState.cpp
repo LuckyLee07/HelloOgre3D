@@ -1,38 +1,38 @@
-#include "IdleState.h"
+#include "ShootState.h"
 #include "object/AgentObject.h"
 #include "AgentTypeDef.h"
 
-IdleState::IdleState(AgentObject* pAgent) : AgentState(pAgent)
+ShootState::ShootState(AgentObject* pAgent) : AgentState(pAgent)
 {
-	m_stateId = "IdleState";
+	m_stateId = "ShootState";
 }
 
-IdleState::~IdleState()
+ShootState::~ShootState()
 {
 	m_pAgent = nullptr;
 }
 
-void IdleState::OnEnter()
+void ShootState::OnEnter()
 {
-	m_pAgent->RequestState(SSTATE_IDLE_AIM);
+	m_pAgent->RequestState(SSTATE_FIRE);
 }
 
-void IdleState::OnLeave()
+void ShootState::OnLeave()
 {
 
 }
 
-std::string IdleState::OnUpdate(float dt)
+std::string ShootState::OnUpdate(float dt)
 {
 	if (m_pAgent->IsMoving())
 	{
-		m_pAgent->SlowMoving(2.0f);
+		m_pAgent->SlowMoving();
 	}
 
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))
 	{
-		return "toShoot";
+		return "";
 	}
 	else if (pInput->isKeyDown(OIS::KC_3))
 	{
@@ -43,5 +43,5 @@ std::string IdleState::OnUpdate(float dt)
 		return "toDeath";
 	}
 
-	return "";
+	return "toIdle";
 }

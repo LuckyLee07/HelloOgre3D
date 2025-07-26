@@ -1,6 +1,8 @@
 #include "AgentStateFactory.h"
 #include "IdleState.h"
 #include "MoveState.h"
+#include "DeathState.h"
+#include "ShootState.h"
 
 std::map<std::string, std::function<AgentState*(AgentObject* agent)>> AgentStateFactory::m_registers;
 
@@ -9,8 +11,8 @@ bool AgentStateFactory::Init()
 	RegisterCreator<IdleState>("IdleState");
 	RegisterCreator<MoveState>("MoveState");
 	//RegisterCreator<IdleState>("FallState");
-	//RegisterCreator<IdleState>("DeathState");
-	//RegisterCreator<IdleState>("ShootState");
+	RegisterCreator<DeathState>("DeathState");
+	RegisterCreator<ShootState>("ShootState");
 
 	return true;
 }
