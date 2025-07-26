@@ -234,7 +234,8 @@ void ClientManager::Initialize()
 
     g_GameManager = new GameManager();
     g_GameManager->Initialize(m_pSceneManager);
-    m_pInputManager->setGameManager(g_GameManager);
+
+    m_pInputManager->registerHandler(g_GameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }

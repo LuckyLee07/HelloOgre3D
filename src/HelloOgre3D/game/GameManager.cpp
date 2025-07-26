@@ -160,29 +160,29 @@ void GameManager::HandleWindowClosed()
 	//m_pScriptVM->callFunction("EventHandle_WindowClosed", "");
 }
 
-void GameManager::HandleKeyPress(OIS::KeyCode keycode, unsigned int key)
+void GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
 }
 
-void GameManager::HandleKeyRelease(OIS::KeyCode keycode, unsigned int key)
+void GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 {
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
 
 	m_pObjectManager->HandleKeyEvent(keycode, key);
 }
 
-void GameManager::HandleMouseMove(int width, int height)
+void GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
 
 }
 
-void GameManager::HandleMousePress(int width, int height, OIS::MouseButtonID buttonId)
+void GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 
 }
 
-void GameManager::HandleMouseRelease(int width, int height, OIS::MouseButtonID buttonId)
+void GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 
 }

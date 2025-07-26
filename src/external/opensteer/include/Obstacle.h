@@ -95,7 +95,7 @@ namespace OpenSteer {
         virtual void setSeenFrom (seenFromState s) {_seenFrom = s;}
 
         virtual float getRadius() const {return radius;}
-        virtual void setRadius(const float radius) {this->radius = radius;}
+        virtual void setRadius(const float radiusx) {this->radius = radiusx;}
 
         // XXX 4-23-03: Temporary work around (see comment above)
         //

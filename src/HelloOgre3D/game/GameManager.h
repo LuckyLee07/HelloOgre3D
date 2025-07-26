@@ -3,10 +3,9 @@
 
 #include <map>
 #include <vector>
-#include "OgrePrerequisites.h"
-#include "OISMouse.h"
-#include "OISKeyboard.h"
 #include "SandboxDef.h"
+#include "OgrePrerequisites.h"
+#include "input/IInputHandler.h"
 
 #define UI_LAYER_COUNT	16
 
@@ -23,7 +22,7 @@ class ScriptLuaVM;
 class PhysicsWorld;
 class ObjectManager;
 
-class GameManager //tolua_exports
+class GameManager : public IInputHandler //tolua_exports
 { //tolua_exports
 public:
 	GameManager();
@@ -55,12 +54,12 @@ public:
 	void HandleWindowResized(unsigned int width, unsigned int height);
 	void HandleWindowClosed();
 
-	void HandleKeyPress(OIS::KeyCode keycode, unsigned int key);
-	void HandleKeyRelease(OIS::KeyCode keycode, unsigned int key);
+	virtual void OnKeyPressed(OIS::KeyCode keycode, unsigned int key);
+	virtual void OnKeyReleased(OIS::KeyCode keycode, unsigned int key);
 
-	void HandleMouseMove(int width, int height);
-	void HandleMousePress(int width, int height, OIS::MouseButtonID buttonId);
-	void HandleMouseRelease(int width, int height, OIS::MouseButtonID buttonId);
+	virtual void OnMouseMoved(const OIS::MouseEvent& evt);
+	virtual void OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
+	virtual void OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
 
 private:
 	Gorilla::Layer* getUILayer(unsigned int index = 0);

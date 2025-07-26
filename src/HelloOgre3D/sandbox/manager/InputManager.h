@@ -2,14 +2,13 @@
 #define __INPUT_MANAGER_H__
 
 #include <map>
-#include "OISKeyboard.h"
-#include "OISMouse.h"
+#include "input/IInputHandler.h"
 
 namespace OIS
 {
 	class InputManager;
 }
-class GameManager;
+
 class InputManager : public OIS::KeyListener, public OIS::MouseListener
 {
 public:
@@ -21,7 +20,9 @@ public:
 	void capture();
 	void closeWindow();
 	void resizeMouseState(int width, int height);
-	void setGameManager(GameManager* pGameManager);
+
+	void registerHandler(IInputHandler* handler);
+	void unregisterHandler(IInputHandler* handler);
 
 private:
 	// OIS::KeyListener
@@ -42,12 +43,13 @@ public:
 
 private:
 	size_t m_windowHnd;
-	GameManager* m_pGameManager;
 
 	// OIS Input devices
 	OIS::Mouse* m_pMouse;
 	OIS::Keyboard* m_pKeyboard;
 	OIS::InputManager * m_pOISInputMgr;
+
+	std::vector<IInputHandler*> m_inputHandlers;
 
 	std::map<OIS::KeyCode, bool> m_KeyMap;	 //true: 键按下状态
 	std::map<OIS::KeyCode, bool> m_KeyDownMap; //true: 键这一帧弹起
