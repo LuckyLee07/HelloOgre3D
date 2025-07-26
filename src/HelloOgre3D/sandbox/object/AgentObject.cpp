@@ -235,3 +235,12 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 	if (m_pAgentBody)
 		m_pAgentBody->setOrientation(quaternion);
 }
+
+//#define USE_CPP_FSM 1
+bool AgentObject::GetUseCppFSM()
+{
+#ifdef USE_CPP_FSM
+	return true;
+#endif // USE_CPP_FSM
+	return false;
+}

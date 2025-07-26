@@ -66,7 +66,10 @@ function Agent_Update(agent, deltaTimeInMillis)
     if agent:GetHealth() <= 0 then
         return --已经处于DEAD状态
     end
-    --[[
+    if agent:GetUseCppFSM() then 
+        return --使用C++端的FSM
+    end
+    
     if agent:IsFalling() then
         _soldierState = _soldierStates.FALLING
     end

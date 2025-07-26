@@ -50,7 +50,9 @@ public:
 
 	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
 
+	bool GetUseCppFSM();
 	std::string GetCurStateName();
+
 	//tolua_end
 	
 	virtual void OnDeath(float lastSec);

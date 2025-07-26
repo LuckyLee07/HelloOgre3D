@@ -48,10 +48,13 @@ SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/*
 {
 	this->setObjType(OBJ_TYPE_SOLDIER);
 
-	this->CreateEventDispatcher();
+	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
 
-	m_stateController = new AgentStateController(this);
-	m_stateController->Init();
+	if (GetUseCppFSM()) // 使用C++或者lua的FSM
+	{
+		m_stateController = new AgentStateController(this);
+		m_stateController->Init();
+	}
 }
 
 SoldierObject::~SoldierObject()
@@ -116,7 +119,8 @@ void SoldierObject::update(int deltaMilisec)
 	if (m_pWeapon)
 		m_pWeapon->update(deltaMilisec);
 
-	m_stateController->Update(deltaMilisec);
+	if (m_stateController)
+		m_stateController->Update(deltaMilisec);
 
 	this->updateWorldTransform();
 }
