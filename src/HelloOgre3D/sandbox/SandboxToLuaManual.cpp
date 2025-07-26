@@ -1,6 +1,6 @@
 #include "tolua++.h"
+#include "base/LuaEnvObject.h"
 #include "object/AgentObject.h"
-
 
 /* Exported function */
 TOLUA_API int tolua_SandboxToLua_Manual(lua_State* tolua_S);
@@ -42,6 +42,7 @@ static int tolua_ClientToLua_AgentObject_setPluginEnv00(lua_State* tolua_S)
 /* function to register type */
 static void tolua_reg_types(lua_State* tolua_S)
 {
+	tolua_usertype(tolua_S, "LuaEnvObject");
     tolua_usertype(tolua_S, "VehicleObject");
 	tolua_usertype(tolua_S, "AgentObject");
 }

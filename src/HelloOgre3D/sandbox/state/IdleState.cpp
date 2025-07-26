@@ -9,7 +9,6 @@ IdleState::IdleState(AgentObject* pAgent) : AgentState(pAgent)
 
 IdleState::~IdleState()
 {
-	m_pAgent = nullptr;
 }
 
 void IdleState::OnEnter()

@@ -186,30 +186,18 @@ void SoldierObject::changeStanceType(int stanceType)
 	if (pAsm == nullptr) return;
 
 	int currStateId = SoldierObject::GetAnimStateId(pAsm->GetCurrStateName());
-	if (currStateId > 0)
-	{
-		RequestState(currStateId, true);
-	}
+	if (currStateId > 0) RequestState(currStateId, true);
 }
 
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
 	if (m_onPlayDeathAnim) return; //播放死亡动画时不再接受新的状态
 	
-	if (soldierState == SSTATE_DEAD || soldierState == SSTATE_FIRE ||
-		soldierState == SSTATE_IDLE_AIM || soldierState == SSTATE_RUN_FORWARD)
-	{
-		if (getStanceType() == SOLDIER_CROUCH)
-		{
-			soldierState = SSTATE_MAXCOUNT - 4 + soldierState;
-		}
-	}
-	assert(soldierState < SSTATE_MAXCOUNT);
+	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(soldierState, getStanceType());
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
-	SOLDIER_STATE requestState = (SOLDIER_STATE)soldierState;
 	std::string stateName = SoldierStates[requestState];
 	if (pAsm->GetCurrStateName() == stateName && !forceUpdate) return;
 	

@@ -48,13 +48,14 @@ public:
 	virtual bool IsFalling();
 	virtual bool OnGround();
 
-	virtual void RequestState(int soldierState) {}
+	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
 
 	std::string GetCurStateName();
 	//tolua_end
 	
 	virtual void OnDeath(float lastSec);
 	virtual void SlowMoving(float rate = 1.0f);
+	
 	virtual IPlayerInput* GetInput() { return nullptr; }
 	
 	void updateWorldTransform();

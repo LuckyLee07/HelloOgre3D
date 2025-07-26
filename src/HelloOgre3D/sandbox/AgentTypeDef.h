@@ -7,7 +7,7 @@
 #define SOLDIER_CROUCH_SPEED	1.0f
 #define SOLDIER_CROUCH_HEIGHT	1.3f
 
-enum SOLDIER_STATE 
+enum SOLDIER_STATE
 {
     SSTATE_DEAD = 0,
     SSTATE_FIRE,
@@ -32,6 +32,34 @@ enum SOLDIER_STATE
 
     SSTATE_MAXCOUNT, // 标记位
 };
+
+enum SOLDIER_STANCE_TYPE
+{
+	SOLDIER_STAND = 0,
+	SOLDIER_CROUCH,
+};
+
 //tolua_end
+
+inline int ConvertAnimID(int animId, int stype)
+{
+	if (stype == SOLDIER_STAND)
+	{
+		if (animId == CROUCH_SSTATE_DEAD || animId == CROUCH_SSTATE_FIRE ||
+			animId == CROUCH_SSTATE_IDLE_AIM || animId == CROUCH_SSTATE_FORWARD)
+		{
+			return (animId - SSTATE_MAXCOUNT + 4);
+		}
+	}
+	else if (stype == SOLDIER_CROUCH)
+	{
+		if (animId == SSTATE_DEAD || animId == SSTATE_FIRE ||
+			animId == SSTATE_IDLE_AIM || animId == SSTATE_RUN_FORWARD)
+		{
+			return (SSTATE_MAXCOUNT - 4 + animId);
+		}
+	}
+	return animId; // 其他状态不处理
+}
 
 #endif  // __AGENT_TYPE_DEF__
