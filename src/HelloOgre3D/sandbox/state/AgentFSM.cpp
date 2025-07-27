@@ -1,6 +1,7 @@
 #include "AgentFSM.h"
 #include "AgentState.h"
 #include "AgentStateFactory.h"
+#include "SandboxDef.h"
 
 AgentFSM::AgentFSM() : m_currState(nullptr)
 {
@@ -8,6 +9,10 @@ AgentFSM::AgentFSM() : m_currState(nullptr)
 
 AgentFSM::~AgentFSM()
 {
+	for (auto& kv : m_states)
+	{
+		SAFE_DELETE(kv.second);
+	}
 	m_states.clear();
 	m_transitions.clear();
 }
