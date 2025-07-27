@@ -3,6 +3,7 @@
 
 #include <string>
 
+class AgentState;
 class AgentFSM;
 class AgentObject;
 class AgentStateController //tolua_exports
@@ -15,10 +16,12 @@ public:
 	void Update(float dtime);	// 每帧驱动 FSM
 	void ChangeState(const std::string& stateName); // 手动切换
 
-	std::string GetCurrState() const;
+	AgentState* GetCurrState() const; // 获取当前State
 
 	//tolua_begin
 	bool AddState(const std::string& name);
+	bool AddStateExByLua(const std::string& name, const std::string& filepath);
+
 	void AddTransition(const std::string& from, const std::string& to);
 	//tolua_end
 

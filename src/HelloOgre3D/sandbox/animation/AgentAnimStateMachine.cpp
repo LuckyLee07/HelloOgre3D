@@ -131,8 +131,9 @@ void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState)
 		return;
 		
 	SandboxContext context;
-	context.Set_String("StateId", pNextState->GetName());
-	m_owner->Event()->Emit("FSM_STATE_CHANGE", context);
+	context.Set_Number("StateId", pNextState->GetID());
+	//context.Set_String("StateId", pNextState->GetName());
+	m_owner->Event()->Emit("ASM_STATE_CHANGE", context);
 }
 
 void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)

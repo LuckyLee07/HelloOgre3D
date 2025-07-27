@@ -25,9 +25,9 @@ public:
 	void ShootBullet();
 
 	virtual void RequestState(int soldierState, bool forceUpdate = false);
-	//tolua_end
-
+	
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
+	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
 

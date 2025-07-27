@@ -21,6 +21,7 @@ public:
 	//tolua_end
 	void SetCurrentState(const std::string& stateName);
 
+    AgentState* GetCurrState() { return m_currState; }
 	std::string GetCurrStateName() const { return m_currStateName; }
 
 private:

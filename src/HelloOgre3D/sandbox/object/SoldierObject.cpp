@@ -6,6 +6,7 @@
 #include "state/AgentStateController.h"
 #include "manager/ClientManager.h"
 #include "input/PlayerInput.h"
+#include "state/AgentState.h"
 
 using namespace Ogre;
 
@@ -32,21 +33,24 @@ SoldierObject::~SoldierObject()
 
 void SoldierObject::CreateEventDispatcher()
 {
-	Event()->CreateDispatcher("FSM_STATE_CHANGE");
-	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
-		std::string stateId = context.Get_String("StateId");
-		if (stateId.empty()) return;
-	
-		if (stateId == "fire" || stateId == "crouch_fire")
+	Event()->CreateDispatcher("ASM_STATE_CHANGE");
+	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
+		int stateId = context.Get_Number("StateId");
+		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
 		{
 			this->ShootBullet(); // 射击
 		}
+		// 将事件传递到State那
+		AgentState* pState = m_stateController->GetCurrState();
+		SandboxContext context1;
+		context1.Set_Number("StateId", stateId);
+		pState->Event()->Emit("FSM_STATE_CHANGE", context);
 	});
 }
 
 void SoldierObject::RemoveEventDispatcher()
 {
-	Event()->RemoveDispatcher("FSM_STATE_CHANGE");
+	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
 }
 
 void SoldierObject::Initialize()

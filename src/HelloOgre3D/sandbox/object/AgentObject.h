@@ -54,12 +54,11 @@ public:
 	int GetCurStateId();
 	std::string GetCurStateName();
 
+	virtual IPlayerInput* GetInput() { return nullptr; }
 	//tolua_end
 	
 	virtual void OnDeath(float lastSec);
 	virtual void SlowMoving(float rate = 1.0f);
-	
-	virtual IPlayerInput* GetInput() { return nullptr; }
 	
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);

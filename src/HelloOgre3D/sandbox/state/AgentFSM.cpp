@@ -27,8 +27,8 @@ void AgentFSM::AddState(AgentState* state)
 {
 	if (!state) return;
 
-	std::string name = state->GetName();
-	m_states[name] = state;
+	std::string stateId = state->GetStateId();
+	m_states[stateId] = state;
 }
 
 void AgentFSM::AddTransition(const std::string& from, const std::string& to)

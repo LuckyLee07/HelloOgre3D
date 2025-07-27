@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sat Jul 26 23:22:01 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Jul 27 16:15:00 2025.
 */
 
 #ifndef __cplusplus
@@ -22,6 +22,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "../sandbox/AgentTypeDef.h"
 #include "../sandbox/base/BaseObject.h"
 #include "../sandbox/object/UIComponent.h"
+#include "../sandbox/input/IPlayerInput.h"
 #include "../sandbox/animation/AgentAnim.h"
 #include "../sandbox/animation/AgentAnimStateMachine.h"
 #include "../sandbox/object/EntityObject.h"
@@ -110,6 +111,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"VehicleObject");
  tolua_usertype(tolua_S,"LuaInterface");
+ tolua_usertype(tolua_S,"IPlayerInput");
  tolua_usertype(tolua_S,"Ogre::Node");
  tolua_usertype(tolua_S,"UIComponent");
  tolua_usertype(tolua_S,"AgentObject");
@@ -126,10 +128,10 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"IInputHandler");
- tolua_usertype(tolua_S,"SoldierObject");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"BaseObject");
  tolua_usertype(tolua_S,"std::vector<BlockObject*>");
+ tolua_usertype(tolua_S,"SoldierObject");
  tolua_usertype(tolua_S,"Ogre::Camera");
 }
 
@@ -3498,6 +3500,108 @@ static int tolua_ClientToLua_UIComponent_GetDimension00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: isKeyDown of class  IPlayerInput */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_IPlayerInput_isKeyDown00
+static int tolua_ClientToLua_IPlayerInput_isKeyDown00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const IPlayerInput",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const IPlayerInput* self = (const IPlayerInput*)  tolua_tousertype(tolua_S,1,0);
+  OIS::KeyCode key = ((OIS::KeyCode) (int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isKeyDown'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isKeyDown(key);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isKeyDown'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isKeyPressed of class  IPlayerInput */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_IPlayerInput_isKeyPressed00
+static int tolua_ClientToLua_IPlayerInput_isKeyPressed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const IPlayerInput",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const IPlayerInput* self = (const IPlayerInput*)  tolua_tousertype(tolua_S,1,0);
+  OIS::KeyCode key = ((OIS::KeyCode) (int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isKeyPressed'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isKeyPressed(key);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isKeyPressed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isKeyReleased of class  IPlayerInput */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_IPlayerInput_isKeyReleased00
+static int tolua_ClientToLua_IPlayerInput_isKeyReleased00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const IPlayerInput",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const IPlayerInput* self = (const IPlayerInput*)  tolua_tousertype(tolua_S,1,0);
+  OIS::KeyCode key = ((OIS::KeyCode) (int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isKeyReleased'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isKeyReleased(key);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isKeyReleased'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: Init of class  AgentAnim */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnim_Init00
 static int tolua_ClientToLua_AgentAnim_Init00(lua_State* tolua_S)
@@ -3798,12 +3902,44 @@ static int tolua_ClientToLua_AgentAnimStateMachine_RequestState00(lua_State* tol
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
-     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  int stateId = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RequestState'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->RequestState(stateId);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RequestState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: RequestState of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_RequestState01
+static int tolua_ClientToLua_AgentAnimStateMachine_RequestState01(lua_State* tolua_S)
+{
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
  {
   AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
   const std::string stateName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
@@ -3817,9 +3953,38 @@ static int tolua_ClientToLua_AgentAnimStateMachine_RequestState00(lua_State* tol
   }
  }
  return 2;
+tolua_lerror:
+ return tolua_ClientToLua_AgentAnimStateMachine_RequestState00(tolua_S);
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetCurrStateID of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateID00
+static int tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateID00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurrStateID'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetCurrStateID();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'RequestState'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'GetCurrStateID'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6860,6 +7025,38 @@ static int tolua_ClientToLua_AgentObject_GetUseCppFSM00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetCurStateId of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetCurStateId00
+static int tolua_ClientToLua_AgentObject_GetCurStateId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurStateId'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetCurStateId();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCurStateId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetCurStateName of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetCurStateName00
 static int tolua_ClientToLua_AgentObject_GetCurStateName00(lua_State* tolua_S)
@@ -6887,6 +7084,38 @@ static int tolua_ClientToLua_AgentObject_GetCurStateName00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetCurStateName'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetInput of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_GetInput00
+static int tolua_ClientToLua_AgentObject_GetInput00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetInput'", NULL);
+#endif
+  {
+   IPlayerInput* tolua_ret = (IPlayerInput*)  self->GetInput();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"IPlayerInput");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetInput'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7084,6 +7313,38 @@ static int tolua_ClientToLua_SoldierObject_RequestState00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'RequestState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetInput of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_SoldierObject_GetInput00
+static int tolua_ClientToLua_SoldierObject_GetInput00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetInput'", NULL);
+#endif
+  {
+   IPlayerInput* tolua_ret = (IPlayerInput*)  self->GetInput();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"IPlayerInput");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetInput'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8963,6 +9224,12 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"isVisible",tolua_ClientToLua_UIComponent_isVisible00);
    tolua_function(tolua_S,"GetDimension",tolua_ClientToLua_UIComponent_GetDimension00);
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"IPlayerInput","IPlayerInput","",NULL);
+  tolua_beginmodule(tolua_S,"IPlayerInput");
+   tolua_function(tolua_S,"isKeyDown",tolua_ClientToLua_IPlayerInput_isKeyDown00);
+   tolua_function(tolua_S,"isKeyPressed",tolua_ClientToLua_IPlayerInput_isKeyPressed00);
+   tolua_function(tolua_S,"isKeyReleased",tolua_ClientToLua_IPlayerInput_isKeyReleased00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"AgentAnim","AgentAnim","",NULL);
   tolua_beginmodule(tolua_S,"AgentAnim");
    tolua_function(tolua_S,"Init",tolua_ClientToLua_AgentAnim_Init00);
@@ -8978,6 +9245,8 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"AgentAnimStateMachine","AgentAnimStateMachine","",NULL);
   tolua_beginmodule(tolua_S,"AgentAnimStateMachine");
    tolua_function(tolua_S,"RequestState",tolua_ClientToLua_AgentAnimStateMachine_RequestState00);
+   tolua_function(tolua_S,"RequestState",tolua_ClientToLua_AgentAnimStateMachine_RequestState01);
+   tolua_function(tolua_S,"GetCurrStateID",tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateID00);
    tolua_function(tolua_S,"GetCurrStateName",tolua_ClientToLua_AgentAnimStateMachine_GetCurrStateName00);
    tolua_function(tolua_S,"AddState",tolua_ClientToLua_AgentAnimStateMachine_AddState00);
    tolua_function(tolua_S,"AddTransition",tolua_ClientToLua_AgentAnimStateMachine_AddTransition00);
@@ -9074,7 +9343,9 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"OnGround",tolua_ClientToLua_AgentObject_OnGround00);
    tolua_function(tolua_S,"RequestState",tolua_ClientToLua_AgentObject_RequestState00);
    tolua_function(tolua_S,"GetUseCppFSM",tolua_ClientToLua_AgentObject_GetUseCppFSM00);
+   tolua_function(tolua_S,"GetCurStateId",tolua_ClientToLua_AgentObject_GetCurStateId00);
    tolua_function(tolua_S,"GetCurStateName",tolua_ClientToLua_AgentObject_GetCurStateName00);
+   tolua_function(tolua_S,"GetInput",tolua_ClientToLua_AgentObject_GetInput00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SoldierObject","SoldierObject","AgentObject",NULL);
   tolua_beginmodule(tolua_S,"SoldierObject");
@@ -9084,6 +9355,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getStanceType",tolua_ClientToLua_SoldierObject_getStanceType00);
    tolua_function(tolua_S,"ShootBullet",tolua_ClientToLua_SoldierObject_ShootBullet00);
    tolua_function(tolua_S,"RequestState",tolua_ClientToLua_SoldierObject_RequestState00);
+   tolua_function(tolua_S,"GetInput",tolua_ClientToLua_SoldierObject_GetInput00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

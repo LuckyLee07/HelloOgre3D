@@ -20,7 +20,8 @@ public:
 	virtual void doBeforeEntering() {}
 	virtual void doBeforeLeaving() {}
 
-	std::string GetName() const { return m_stateId; }
+	void SetStateId(const std::string& stateId);
+	std::string GetStateId() const { return m_stateId; }
 
 protected:
 	std::string m_stateId;

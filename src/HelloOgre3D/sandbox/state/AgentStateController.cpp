@@ -3,6 +3,7 @@
 #include "AgentStateFactory.h"
 #include "ScriptLuaVM.h"
 #include "AgentFSM.h"
+#include "AgentLuaState.h"
 
 AgentStateController::AgentStateController(AgentObject* soldier) : m_agent(soldier)
 {
@@ -20,9 +21,10 @@ void AgentStateController::Init()
 	AgentStateFactory::Init();
 
 	AddState("IdleState");
-	AddState("MoveState");
 	AddState("ShootState");
 	AddState("DeathState");
+	//AddState("MoveState");
+	AddStateExByLua("MoveState", "res/scripts/states/MoveState.lua");
 
 	AddTransition("IdleState", "MoveState");
 	AddTransition("IdleState", "ShootState");
@@ -55,11 +57,11 @@ void AgentStateController::ChangeState(const std::string& stateName)
 		m_fsm->RequestState(stateName);
 }
 
-std::string AgentStateController::GetCurrState() const
+AgentState* AgentStateController::GetCurrState() const
 {
-	if (m_fsm)
-		return m_fsm->GetCurrStateName();
-	return "";
+	if (!m_fsm) return nullptr;
+	
+	return m_fsm->GetCurrState();
 }
 
 bool AgentStateController::AddState(const std::string& name)
@@ -71,6 +73,23 @@ bool AgentStateController::AddState(const std::string& name)
 		return false;
 	}
 	m_fsm->AddState(state);
+	return true;
+}
+
+bool AgentStateController::AddStateExByLua(const std::string& name, const std::string& filepath)
+{
+	AgentState* state = AgentStateFactory::Create("AgentLuaState", m_agent);
+	if (state == nullptr)
+	{
+		CCLOG_INFO("AgentStateController: failed to create state: %s\n", name.c_str());
+		return false;
+	}
+
+	AgentLuaState* pState = static_cast<AgentLuaState*>(state);
+	pState->SetStateId(name);
+	pState->BindToScript(filepath);
+	
+	m_fsm->AddState(pState);
 	return true;
 }
 

@@ -33,17 +33,6 @@ AgentObject::~AgentObject()
 
 void AgentObject::CreateEventDispatcher()
 {
-	Event()->CreateDispatcher("FSM_STATE_CHANGE");
-	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
-		std::string stateId = context.Get_String("StateId");
-		if (stateId.empty()) return;
-
-		if (stateId == "dead" || stateId == "crouch_dead")
-		{
-			this->OnDeath(3.5f);
-		}
-	});
-
 	Event()->CreateDispatcher("HEALTH_CHANGE");
 	Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
 		double health = context.Get_Number("health");
@@ -54,7 +43,6 @@ void AgentObject::CreateEventDispatcher()
 void AgentObject::RemoveEventDispatcher()
 {
 	Event()->RemoveDispatcher("HEALTH_CHANGE");
-	Event()->RemoveDispatcher("FSM_STATE_CHANGE");
 }
 
 void AgentObject::Initialize()

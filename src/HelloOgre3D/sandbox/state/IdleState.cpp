@@ -14,11 +14,20 @@ IdleState::~IdleState()
 void IdleState::OnEnter()
 {
 	m_pAgent->RequestState(SSTATE_IDLE_AIM);
+
+	Event()->Subscribe("FSM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
+		int stateId = context.Get_Number("StateId");
+		
+		if (stateId != SSTATE_IDLE_AIM && stateId != CROUCH_SSTATE_IDLE_AIM)
+		{
+			m_pAgent->RequestState(SSTATE_IDLE_AIM);
+		}
+	});
 }
 
 void IdleState::OnLeave()
 {
-
+	
 }
 
 std::string IdleState::OnUpdate(float dt)

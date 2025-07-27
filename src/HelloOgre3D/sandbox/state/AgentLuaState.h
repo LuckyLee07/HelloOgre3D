@@ -3,6 +3,7 @@
 
 #include "AgentState.h"
 #include "LuaEnvObject.h"
+#include "LuaClassNameTraits.h"
 
 class AgentObject;
 
@@ -17,6 +18,11 @@ public:
 	virtual void doBeforeLeaving();
 
 	virtual std::string OnUpdate(float dt);
+
+	bool BindToScript(const std::string& filepath);
+
 }; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(AgentLuaState);
 
 #endif  // __AGENT_LUA_STATE_H__

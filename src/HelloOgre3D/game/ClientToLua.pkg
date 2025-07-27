@@ -6,6 +6,7 @@ $cfile "../sandbox/AgentTypeDef.h"
 
 $cfile "../sandbox/base/BaseObject.h"
 $cfile "../sandbox/object/UIComponent.h"
+$cfile "../sandbox/input/IPlayerInput.h"
 
 $cfile "../sandbox/animation/AgentAnim.h"
 $cfile "../sandbox/animation/AgentAnimStateMachine.h"
