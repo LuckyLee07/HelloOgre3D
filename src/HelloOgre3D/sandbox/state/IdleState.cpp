@@ -1,6 +1,6 @@
 #include "IdleState.h"
-#include "object/AgentObject.h"
 #include "AgentTypeDef.h"
+#include "object/AgentObject.h"
 
 IdleState::IdleState(AgentObject* pAgent) : AgentState(pAgent)
 {

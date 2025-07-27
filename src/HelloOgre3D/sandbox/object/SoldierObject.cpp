@@ -9,40 +9,6 @@
 
 using namespace Ogre;
 
-char* SoldierStates[] = 
-{	
-	"dead",
-	"fire",
-	"idle_aim",
-	"run_forward",
-	"run_backward",
-	"dead_headshot",
-	"fall_dead",
-	"fall_idle",
-	"jump_land",
-	"jump_up",
-	"melee",
-	"reload",
-	"smg_transform",
-	"sniper_transform",
-
-	"crouch_dead",
-	"crouch_fire",
-	"crouch_idle_aim",
-	"crouch_forward",
-};
-
-int SoldierObject::GetAnimStateId(const std::string& stateName)
-{
-	const int numStates = sizeof(SoldierStates)/sizeof(SoldierStates[0]);
-	for (int index = 0; index < numStates; index++)
-	{
-		if (std::strcmp(SoldierStates[index], stateName.c_str()) == 0)
-			return index;
-	}
-	return -1; // Î´ÕÒµ½
-}
-
 SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
 {
@@ -115,12 +81,12 @@ void SoldierObject::update(int deltaMilisec)
 		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
+	if (m_stateController)
+		m_stateController->Update(deltaMilisec);
+
 	m_pAgentBody->update(deltaMilisec);
 	if (m_pWeapon)
 		m_pWeapon->update(deltaMilisec);
-
-	if (m_stateController)
-		m_stateController->Update(deltaMilisec);
 
 	this->updateWorldTransform();
 }
@@ -189,7 +155,7 @@ void SoldierObject::changeStanceType(int stanceType)
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
-	int currStateId = SoldierObject::GetAnimStateId(pAsm->GetCurrStateName());
+	int currStateId = pAsm->GetCurrStateID();
 	if (currStateId > 0) RequestState(currStateId, true);
 }
 
@@ -202,8 +168,7 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
-	std::string stateName = SoldierStates[requestState];
-	if (pAsm->GetCurrStateName() == stateName && !forceUpdate) return;
-	
-	pAsm->RequestState(stateName);
+	if (!forceUpdate && pAsm->GetCurrStateID() == requestState) return;
+
+	pAsm->RequestState(requestState);
 }

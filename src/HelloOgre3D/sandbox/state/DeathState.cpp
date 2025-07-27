@@ -9,7 +9,7 @@ DeathState::DeathState(AgentObject* pAgent) : AgentState(pAgent)
 
 DeathState::~DeathState()
 {
-	m_pAgent = nullptr;
+
 }
 
 void DeathState::OnEnter()

@@ -6,6 +6,7 @@
 #include "GlobalFuncs.h"
 #include "BaseObject.h"
 #include "SandboxEventDispatcherManager.h"
+#include "AgentTypeDef.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner) : m_owner(owner),
 	m_pCurrState(nullptr), m_pNextState(nullptr),
@@ -37,6 +38,12 @@ AgentAnimStateMachine::~AgentAnimStateMachine()
 	m_animTransitions.clear();
 }
 
+bool AgentAnimStateMachine::RequestState(int stateId)
+{
+	std::string stateName = AgentAnimState::GetNameByID(stateId);
+
+	return RequestState(stateName);
+}
 
 bool AgentAnimStateMachine::RequestState(const std::string& stateName)
 {
@@ -53,6 +60,15 @@ bool AgentAnimStateMachine::RequestState(const std::string& stateName)
 		return true;
 	}
 	return false;
+}
+
+int AgentAnimStateMachine::GetCurrStateID()
+{
+	if (m_pCurrState != nullptr)
+	{
+		return m_pCurrState->GetID();
+	}
+	return -1;
 }
 
 std::string AgentAnimStateMachine::GetCurrStateName()

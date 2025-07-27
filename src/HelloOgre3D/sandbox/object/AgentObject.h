@@ -51,6 +51,7 @@ public:
 	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
 
 	bool GetUseCppFSM();
+	int GetCurStateId();
 	std::string GetCurStateName();
 
 	//tolua_end

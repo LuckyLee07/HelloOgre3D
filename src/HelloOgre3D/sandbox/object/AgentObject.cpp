@@ -193,6 +193,13 @@ bool AgentObject::OnGround()
 	return GetVelocity().y > (-9.8f * 0.1f);
 }
 
+int AgentObject::GetCurStateId()
+{
+	auto pAsm = m_pAgentBody->GetObjectASM();
+	if (pAsm) return pAsm->GetCurrStateID();
+	return -1;
+}
+
 std::string AgentObject::GetCurStateName()
 {
 	auto pAsm = m_pAgentBody->GetObjectASM();
@@ -236,7 +243,7 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 		m_pAgentBody->setOrientation(quaternion);
 }
 
-//#define USE_CPP_FSM 1
+#define USE_CPP_FSM 1
 bool AgentObject::GetUseCppFSM()
 {
 #ifdef USE_CPP_FSM

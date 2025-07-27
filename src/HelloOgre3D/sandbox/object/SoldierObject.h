@@ -12,8 +12,6 @@ public:
 	SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~SoldierObject();
 
-	static int GetAnimStateId(const std::string& stateName);
-
 	virtual void Initialize();
 	virtual void update(int deltaMilisec);
 

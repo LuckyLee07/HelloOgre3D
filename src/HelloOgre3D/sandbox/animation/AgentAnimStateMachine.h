@@ -18,7 +18,10 @@ public:
     void Update(float deltaTimeInMillis, long long currentTimeInMillis);
 
     //tolua_begin
+    bool RequestState(int stateId);
     bool RequestState(const std::string& stateName);
+    
+    int GetCurrStateID();
     std::string GetCurrStateName();
 
     void AddState(const std::string& name, AgentAnim* animation, bool looping = false, float rate = 1.0f);

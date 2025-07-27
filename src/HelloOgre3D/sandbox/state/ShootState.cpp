@@ -9,7 +9,7 @@ ShootState::ShootState(AgentObject* pAgent) : AgentState(pAgent)
 
 ShootState::~ShootState()
 {
-	m_pAgent = nullptr;
+
 }
 
 void ShootState::OnEnter()

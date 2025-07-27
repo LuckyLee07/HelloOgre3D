@@ -10,7 +10,7 @@ MoveState::MoveState(AgentObject* pAgent) : AgentState(pAgent)
 
 MoveState::~MoveState()
 {
-	m_pAgent = nullptr;
+
 }
 
 void MoveState::OnEnter()
@@ -20,7 +20,7 @@ void MoveState::OnEnter()
 
 void MoveState::OnLeave()
 {
-	m_pAgent->RequestState(SSTATE_IDLE_AIM);
+
 }
 
 std::string MoveState::OnUpdate(float dt)
