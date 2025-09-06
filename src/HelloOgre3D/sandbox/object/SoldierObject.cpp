@@ -177,6 +177,14 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 	pAsm->RequestState(requestState);
 }
 
+bool SoldierObject::IsHasNextAnim()
+{
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return false;
+
+	return pAsm->HasNextState();
+}
+
 bool SoldierObject::IsAnimReadyForMove()
 {
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();

@@ -28,6 +28,14 @@ std::string ShootState::OnUpdate(float dt)
 	{
 		m_pAgent->SlowMoving();
 	}
+	if (!m_pAgent->IsAnimReadyForShoot())
+	{
+		if (!m_pAgent->IsHasNextAnim())
+		{
+			m_pAgent->RequestState(SSTATE_FIRE);
+		}
+		return ""; // ¼ÌÐøµÈ´ý
+	}
 
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))

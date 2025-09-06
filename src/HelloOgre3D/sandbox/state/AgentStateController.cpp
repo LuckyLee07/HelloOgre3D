@@ -23,8 +23,8 @@ void AgentStateController::Init()
 	AddState("IdleState");
 	AddState("ShootState");
 	AddState("DeathState");
-	AddState("MoveState");
-	//AddStateExByLua("MoveState", "res/scripts/states/MoveState.lua");
+	//AddState("MoveState");
+	AddStateExByLua("MoveState", "res/scripts/states/MoveState.lua");
 
 	AddTransition("IdleState", "MoveState");
 	AddTransition("IdleState", "ShootState");

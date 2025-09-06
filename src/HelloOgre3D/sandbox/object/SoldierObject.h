@@ -27,8 +27,9 @@ public:
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
 	virtual void RequestState(int soldierState, bool forceUpdate = false);
 
-	bool IsAnimReadyForMove();
-	bool IsAnimReadyForShoot();
+	virtual bool IsHasNextAnim();
+	virtual bool IsAnimReadyForMove();
+	virtual bool IsAnimReadyForShoot();
 
 	//tolua_end
 

@@ -23,6 +23,7 @@ public:
     
     int GetCurrStateID();
     std::string GetCurrStateName();
+    bool HasNextState() { return m_pNextState != nullptr; }
 
     void AddState(const std::string& name, AgentAnim* animation, bool looping = false, float rate = 1.0f);
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
