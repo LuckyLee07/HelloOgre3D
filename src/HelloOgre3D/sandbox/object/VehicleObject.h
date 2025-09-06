@@ -87,6 +87,11 @@ public:
 	bool HasPath() const { return m_hasPath; }
 	void SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic);
 	const std::vector<Ogre::Vector3>& GetPath() { return m_points; }
+
+	Ogre::Real GetDistanceAlongPath(const Ogre::Vector3& position) const;
+	Ogre::Vector3 GetNearestPointOnPath(const Ogre::Vector3& position) const;
+	Ogre::Vector3 GetPointOnPath(const Ogre::Real distance) const;
+
 	//tolua_end
 	void SetPath(const AgentPath& agentPath);
 	

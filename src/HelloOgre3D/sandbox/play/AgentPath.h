@@ -28,6 +28,12 @@ public:
 	Ogre::Real GetRadius() const { return radius; }
 
 	int GetSegmentCount() const;
+
+	Ogre::Real GetDistanceAlongPath(const Ogre::Vector3& position) const;
+
+	Ogre::Vector3 GetNearestPointOnPath(const Ogre::Vector3& position) const;
+
+	Ogre::Vector3 GetPointOnPath(const Ogre::Real distance) const;
 };
 
 #endif  // __AGENT_PATH__

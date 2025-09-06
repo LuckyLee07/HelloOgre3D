@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Jul 27 16:15:00 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Sep  6 20:58:21 2025.
 */
 
 #ifndef __cplusplus
@@ -2143,6 +2143,40 @@ static int tolua_ClientToLua_Ogre_Vector3_normalisedCopy00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'normalisedCopy'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: dotProduct of class  Ogre::Vector3 */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_Ogre_Vector3_dotProduct00
+static int tolua_ClientToLua_Ogre_Vector3_dotProduct00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Ogre::Vector3",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Ogre::Vector3* self = (const Ogre::Vector3*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* vec = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'dotProduct'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->dotProduct(*vec);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'dotProduct'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6455,6 +6489,128 @@ static int tolua_ClientToLua_VehicleObject_GetPath00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetDistanceAlongPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetDistanceAlongPath00
+static int tolua_ClientToLua_VehicleObject_GetDistanceAlongPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDistanceAlongPath'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetDistanceAlongPath(*position);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetDistanceAlongPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetNearestPointOnPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetNearestPointOnPath00
+static int tolua_ClientToLua_VehicleObject_GetNearestPointOnPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetNearestPointOnPath'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetNearestPointOnPath(*position);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetNearestPointOnPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetPointOnPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_VehicleObject_GetPointOnPath00
+static int tolua_ClientToLua_VehicleObject_GetPointOnPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+  const float distance = ((const float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetPointOnPath'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetPointOnPath(distance);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetPointOnPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: initBody of class  AgentObject */
 #ifndef TOLUA_DISABLE_tolua_ClientToLua_AgentObject_initBody00
 static int tolua_ClientToLua_AgentObject_initBody00(lua_State* tolua_S)
@@ -8943,6 +9099,7 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
     tolua_function(tolua_S,"distance",tolua_ClientToLua_Ogre_Vector3_distance00);
     tolua_function(tolua_S,"squaredDistance",tolua_ClientToLua_Ogre_Vector3_squaredDistance00);
     tolua_function(tolua_S,"normalisedCopy",tolua_ClientToLua_Ogre_Vector3_normalisedCopy00);
+    tolua_function(tolua_S,"dotProduct",tolua_ClientToLua_Ogre_Vector3_dotProduct00);
    tolua_endmodule(tolua_S);
    #ifdef __cplusplus
    tolua_cclass(tolua_S,"Quaternion","Ogre::Quaternion","",tolua_collect_Ogre__Quaternion);
@@ -9324,6 +9481,9 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"HasPath",tolua_ClientToLua_VehicleObject_HasPath00);
    tolua_function(tolua_S,"SetPath",tolua_ClientToLua_VehicleObject_SetPath00);
    tolua_function(tolua_S,"GetPath",tolua_ClientToLua_VehicleObject_GetPath00);
+   tolua_function(tolua_S,"GetDistanceAlongPath",tolua_ClientToLua_VehicleObject_GetDistanceAlongPath00);
+   tolua_function(tolua_S,"GetNearestPointOnPath",tolua_ClientToLua_VehicleObject_GetNearestPointOnPath00);
+   tolua_function(tolua_S,"GetPointOnPath",tolua_ClientToLua_VehicleObject_GetPointOnPath00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"AgentObject","AgentObject","VehicleObject",NULL);
   tolua_beginmodule(tolua_S,"AgentObject");

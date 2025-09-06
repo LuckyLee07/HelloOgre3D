@@ -176,3 +176,31 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 
 	pAsm->RequestState(requestState);
 }
+
+bool SoldierObject::IsAnimReadyForMove()
+{
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return false;
+
+	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
+
+	if (animStateId == SSTATE_RUN_FORWARD || animStateId == CROUCH_SSTATE_FORWARD)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool SoldierObject::IsAnimReadyForShoot()
+{
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return false;
+
+	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
+
+	if (animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE)
+	{
+		return true;
+	}
+	return false;
+}

@@ -48,13 +48,16 @@ public:
 	virtual bool IsFalling();
 	virtual bool OnGround();
 
-	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
-
 	bool GetUseCppFSM();
 	int GetCurStateId();
 	std::string GetCurStateName();
 
 	virtual IPlayerInput* GetInput() { return nullptr; }
+	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
+
+	virtual bool IsAnimReadyForMove() { return false; }
+	virtual bool IsAnimReadyForShoot() { return false; }
+
 	//tolua_end
 	
 	virtual void OnDeath(float lastSec);

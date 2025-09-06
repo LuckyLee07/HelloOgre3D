@@ -241,7 +241,7 @@ void AgentAnimStateMachine::CompleteTransition()
 	m_pCurrState = m_pNextState;
 	m_pNextState = nullptr;
 
-	this->FireStateChageEvent(m_pNextState);
+	this->FireStateChageEvent(m_pCurrState);
 }
 
 void AgentAnimStateMachine::StepCurrentAnimation(float deltaTimeInMillis)

@@ -25,6 +25,21 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
     AgentUtilities_ClampHorizontalSpeed(agent);
 end
 
+function Agent_SetPath(agent, path, cyclic)
+    agent:SetPath(path, cyclic)
+
+    local nearest = agent:GetNearestPointOnPath(agent:GetPosition());
+    local distance = agent:GetDistanceAlongPath(nearest);
+    local pointOnPath = agent:GetPointOnPath(distance + 2);
+
+    local forward = pointOnPath - agent:GetPosition();
+    forward.y = 0
+
+    if forward:dotProduct(agent:GetForward()) < 0 then
+        agent:SetVelocity(forward * agent:GetSpeed());
+        agent:SetForward(forward);
+    end
+end
 
 function Agent_Initialize(agent)
     local height = agent:GetHeight()
@@ -32,9 +47,9 @@ function Agent_Initialize(agent)
     local position = agent:GetPosition()
     local randomVec = Vector3(math.random(-5, 5), 0, math.random(-5, 5))
     agent:setPosition(position + posoffset + randomVec)
-
-    agent:SetPath(SandboxUtilities_GetLevelPath(), true)
     agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
+
+    Agent_SetPath(agent, SandboxUtilities_GetLevelPath(), true)
 
     _soldierState = _soldierStates.IDLE
 end

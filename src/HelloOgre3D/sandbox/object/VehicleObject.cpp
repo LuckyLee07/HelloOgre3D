@@ -465,6 +465,21 @@ void VehicleObject::SetPath(const std::vector<Ogre::Vector3>& points, bool cycli
 	SetPath(AgentPath(points, m_radius, cyclic));
 }
 
+Ogre::Real VehicleObject::GetDistanceAlongPath(const Ogre::Vector3& position) const
+{
+	return m_path.GetDistanceAlongPath(position);
+}
+
+Ogre::Vector3 VehicleObject::GetNearestPointOnPath(const Ogre::Vector3& position) const
+{
+	return m_path.GetNearestPointOnPath(position);
+}
+
+Ogre::Vector3 VehicleObject::GetPointOnPath(const Ogre::Real distance) const
+{
+	return m_path.GetPointOnPath(distance);
+}
+
 void VehicleObject::SetPath(const AgentPath& agentPath)
 {
 	m_hasPath = true;

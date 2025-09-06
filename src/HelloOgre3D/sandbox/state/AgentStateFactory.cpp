@@ -10,7 +10,7 @@ std::map<std::string, std::function<AgentState*(AgentObject* agent)>> AgentState
 bool AgentStateFactory::Init()
 {
 	RegisterCreator<IdleState>("IdleState");
-	//RegisterCreator<MoveState>("MoveState");
+	RegisterCreator<MoveState>("MoveState");
 	//RegisterCreator<FallState>("FallState");
 	RegisterCreator<DeathState>("DeathState");
 	RegisterCreator<ShootState>("ShootState");

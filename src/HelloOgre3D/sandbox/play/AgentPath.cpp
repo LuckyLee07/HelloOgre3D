@@ -66,3 +66,29 @@ int AgentPath::GetSegmentCount() const
 {
 	return pointCount - 1;
 }
+
+Ogre::Real AgentPath::GetDistanceAlongPath(const Ogre::Vector3& position) const
+{
+	const OpenSteer::Vec3 vec3(position.x, position.y, position.z);
+
+	return const_cast<AgentPath*>(this)->mapPointToPathDistance(vec3);
+}
+
+Ogre::Vector3 AgentPath::GetNearestPointOnPath(const Ogre::Vector3& position) const
+{
+	const OpenSteer::Vec3 vec3(position.x, position.y, position.z);
+	OpenSteer::Vec3 tangent;
+
+	float outside;
+
+	const OpenSteer::Vec3 pointOnPath = const_cast<AgentPath*>(this)->mapPointToPath(vec3, tangent, outside);
+
+	return Ogre::Vector3(pointOnPath.x, pointOnPath.y, pointOnPath.z);
+}
+
+Ogre::Vector3 AgentPath::GetPointOnPath(const Ogre::Real distance) const
+{
+	const OpenSteer::Vec3 pointOnPath = const_cast<AgentPath*>(this)->mapPathDistanceToPoint(distance);
+
+	return Ogre::Vector3(pointOnPath.x, pointOnPath.y, pointOnPath.z);
+}

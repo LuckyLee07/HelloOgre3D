@@ -27,6 +27,11 @@ std::string MoveState::OnUpdate(float dt)
 {
 	GetScriptLuaVM()->callFunction("Agent_MovingState", "u[AgentObject]i", m_pAgent, (int)dt);
 	
+	if (!m_pAgent->IsAnimReadyForMove())
+	{
+		return "";
+	}
+
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))
 	{
