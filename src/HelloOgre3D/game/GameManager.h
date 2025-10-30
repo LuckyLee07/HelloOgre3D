@@ -3,7 +3,6 @@
 
 #include <map>
 #include <vector>
-#include "SandboxDef.h"
 #include "OgrePrerequisites.h"
 #include "input/IInputHandler.h"
 

@@ -1,6 +1,5 @@
 #include "GameManager.h"
 #include "Ogre.h"
-#include "SandboxDef.h"
 #include "ScriptLuaVM.h"
 #include "tolua++.h"
 #include "LuaInterface.h"
@@ -16,6 +15,7 @@
 
 using namespace Ogre;
 
+extern int tolua_SandboxToLua_open(lua_State* tolua_S);
 extern int tolua_ClientToLua_open(lua_State* tolua_S);
 extern int tolua_SandboxToLua_Manual(lua_State* tolua_S);
 
@@ -103,6 +103,7 @@ void GameManager::InitUIConfig()
 void GameManager::InitLuaEnv()
 {
 	// ÉèÖÃToLua¶ÔÏó 
+	tolua_SandboxToLua_open(m_pScriptVM->getLuaState());
 	tolua_ClientToLua_open(m_pScriptVM->getLuaState());
 	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 

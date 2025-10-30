@@ -2,7 +2,6 @@
 #define __SOLDIER_OBJECT__
 
 #include "AgentObject.h"
-#include "AgentTypeDef.h"
 #include "state/AgentStateController.h"
 
 class IPlayerInput;

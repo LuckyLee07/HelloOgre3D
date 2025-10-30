@@ -1,6 +1,6 @@
 #include "AgentPath.h"
 #include "OgreVector3.h"
-#include "SandboxDef.h"
+#include "GameFunction.h"
 
 AgentPath::AgentPath()
 {

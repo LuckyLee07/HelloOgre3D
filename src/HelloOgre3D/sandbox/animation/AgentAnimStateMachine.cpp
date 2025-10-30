@@ -6,7 +6,7 @@
 #include "GlobalFuncs.h"
 #include "BaseObject.h"
 #include "SandboxEventDispatcherManager.h"
-#include "AgentTypeDef.h"
+#include "GameDefine.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner) : m_owner(owner),
 	m_pCurrState(nullptr), m_pNextState(nullptr),

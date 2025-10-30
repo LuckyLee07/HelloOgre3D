@@ -3,9 +3,14 @@
 
 #include <map>
 #include <vector>
+#include <unordered_map>
 #include "OISKeyboard.h"
-#include "SandboxDef.h"
+#include "GameDefine.h"
 
+namespace Ogre
+{
+	class SceneNode;
+}
 class BaseObject;
 class AgentObject;
 class UIComponent;

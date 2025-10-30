@@ -1,6 +1,7 @@
-#ifndef __SANDBOX_DEF__
-#define __SANDBOX_DEF__
+#ifndef __GAME_FUNCTION__
+#define __GAME_FUNCTION__
 
+#include "GameDefine.h"
 #include "OgreVector3.h"
 #include "OgreMatrix3.h"
 #include "OgreQuaternion.h"
@@ -10,33 +11,26 @@
 #include "LinearMath/btQuaternion.h"
 #include "opensteer/include/Vec3.h"
 
-#define DEFAULT_MATERIAL "White"
-
-#define DEFAULT_ATLAS "fonts/dejavu/dejavu"
-
-#ifdef _DEBUG
-#define APPLICATION_LOG         "Sandbox_d.log"
-#define APPLICATION_CONFIG      "Sandbox_d.cfg"
-#define APPLICATION_RESOURCES	"SandboxResources_d.cfg"
-#else
-#define APPLICATION_LOG         "Sandbox.log"
-#define APPLICATION_CONFIG      "Sandbox.cfg"
-#define APPLICATION_RESOURCES	"SandboxResources.cfg"
-#endif
-
-#define SAFE_DELETE(p)       { if(p) { delete (p);		(p)=NULL; } }
-#define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);	(p)=NULL; } }
-
-//tolua_begin
-enum AGENT_OBJ_TYPE
+inline int ConvertAnimID(int animId, int stype)
 {
-	AGENT_OBJ_NONE = 0,
-	AGENT_OBJ_SEEKING = 1,
-	AGENT_OBJ_FOLLOWER = 2,
-	AGENT_OBJ_PATHING = 3,
-	AGENT_OBJ_PURSUING = 4,
-};
-//tolua_end
+	if (stype == SOLDIER_STAND)
+	{
+		if (animId == CROUCH_SSTATE_DEAD || animId == CROUCH_SSTATE_FIRE ||
+			animId == CROUCH_SSTATE_IDLE_AIM || animId == CROUCH_SSTATE_FORWARD)
+		{
+			return (animId - SSTATE_MAXCOUNT + 4);
+		}
+	}
+	else if (stype == SOLDIER_CROUCH)
+	{
+		if (animId == SSTATE_DEAD || animId == SSTATE_FIRE ||
+			animId == SSTATE_IDLE_AIM || animId == SSTATE_RUN_FORWARD)
+		{
+			return (SSTATE_MAXCOUNT - 4 + animId);
+		}
+	}
+	return animId; // 其他状态不处理
+}
 
 //tolua_begin
 // 给定的三个角度（分别沿X、Y、Z轴的旋转），创建表示这个旋转的Ogre::Quaternion四元数
@@ -95,4 +89,4 @@ inline Ogre::Vector3 Vec3ToVector3(const OpenSteer::Vec3& vector)
 	return Ogre::Vector3(Ogre::Real(vector.x), Ogre::Real(vector.y), Ogre::Real(vector.z));
 }
 
-#endif  // __SANDBOX_MANAGER__
+#endif  // __GAME_FUNCTION__

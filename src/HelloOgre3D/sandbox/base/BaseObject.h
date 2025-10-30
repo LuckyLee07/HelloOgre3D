@@ -1,12 +1,14 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
-#include "GameObject.h"
+#include "SandboxObject.h"
 #include "LuaClassNameTraits.h"
 
+class GameObject;
 struct Collision;
 class btRigidBody;
-class BaseObject : public GameObject //tolua_exports
+
+class BaseObject : public SandboxObject //tolua_exports
 { //tolua_exports
 public:
 	//tolua_begin
@@ -50,6 +52,7 @@ public:
 
 protected:
 	OBJTYPE m_objType;
+	GameObject* m_pGameObjet;
 
 private:
 	unsigned int m_objId;

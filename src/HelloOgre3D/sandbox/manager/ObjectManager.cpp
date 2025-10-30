@@ -5,7 +5,6 @@
 #include "object/BlockObject.h"
 #include "base/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
-#include "SandboxDef.h"
 #include "ClientManager.h"
 #include "SandboxMgr.h"
 

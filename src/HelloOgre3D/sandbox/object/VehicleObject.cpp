@@ -4,6 +4,7 @@
 #include "ScriptLuaVM.h"
 #include "BlockObject.h"
 #include "AgentObject.h"
+#include "GameFunction.h"
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"

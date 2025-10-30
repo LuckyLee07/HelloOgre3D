@@ -1,0 +1,17 @@
+$cfile "GameDefine.h"
+$cfile "GameFunction.h"
+
+$cfile "base/BaseObject.h"
+$cfile "object/UIComponent.h"
+$cfile "input/IPlayerInput.h"
+
+$cfile "animation/AgentAnim.h"
+$cfile "animation/AgentAnimStateMachine.h"
+$cfile "object/EntityObject.h"
+$cfile "object/BlockObject.h"
+$cfile "object/VehicleObject.h"
+$cfile "object/AgentObject.h"
+$cfile "object/SoldierObject.h"
+$cfile "manager/SandboxMgr.h"
+$cfile "manager/ObjectManager.h"
+$cfile "debug/DebugDrawer.h"

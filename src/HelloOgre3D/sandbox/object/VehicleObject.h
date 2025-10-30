@@ -6,7 +6,6 @@
 #include "opensteer/include/Vec3.h"
 #include "opensteer/include/SteerLibrary.h"
 #include "play/AgentPath.h"
-#include "SandboxDef.h"
 #include "BaseObject.h"
 
 class btRigidBody;

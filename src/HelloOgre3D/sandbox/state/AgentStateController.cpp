@@ -4,6 +4,7 @@
 #include "ScriptLuaVM.h"
 #include "AgentFSM.h"
 #include "AgentLuaState.h"
+#include "LogSystem.h"
 
 AgentStateController::AgentStateController(AgentObject* soldier) : m_agent(soldier)
 {

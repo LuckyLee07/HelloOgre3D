@@ -4,6 +4,7 @@
 #include "manager/ObjectManager.h"
 #include "base/BaseObject.h"
 #include "play/MyRigidBody.h"
+#include "SandboxMacros.h"
 
 PhysicsWorld::PhysicsWorld() : m_pBroadPhase(nullptr), m_pCollisionConfig(nullptr),
 	m_pDispatcher(nullptr), m_pSolver(nullptr), m_pDynamicsWorld(nullptr)

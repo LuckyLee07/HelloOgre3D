@@ -1,5 +1,5 @@
 #include "ClientManager.h"
-#include "SandboxDef.h"
+#include "GameDefine.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
 #include "InputManager.h"

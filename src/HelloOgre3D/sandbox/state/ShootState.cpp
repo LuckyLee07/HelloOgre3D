@@ -1,6 +1,6 @@
 #include "ShootState.h"
 #include "object/AgentObject.h"
-#include "AgentTypeDef.h"
+#include "GameDefine.h"
 
 ShootState::ShootState(AgentObject* pAgent) : AgentState(pAgent)
 {

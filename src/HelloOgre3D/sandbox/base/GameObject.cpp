@@ -1,20 +1,78 @@
 #include "GameObject.h"
-#include "SandboxDef.h"
+#include "compents/IComponent.h"
+#include "SandboxMacros.h"
 
-GameObject::GameObject() : m_pEventMgr(nullptr)
+GameObject::GameObject()
 {
 }
 
 GameObject::~GameObject()
 {
-	SAFE_DELETE(m_pEventMgr);
+	auto iter = m_components.begin();
+	for (; iter != m_components.end(); iter++)
+	{
+		if (iter->second)
+		{
+			iter->second->onDetach();
+			SAFE_DELETE(iter->second);
+		}
+	}
+	m_components.clear();
 }
 
-SandboxEventDispatcherManager* GameObject::Event()
+bool GameObject::addComponent(const std::string& key, IComponent* comp)
 {
-	if (m_pEventMgr == nullptr)
+	if (!comp) return false;
+	
+	if (m_components.find(key) != m_components.end())
+		return false;
+	
+	m_components[key] = comp;
+	comp->onAttach(this);
+	comp->start();
+}
+
+IComponent* GameObject::getComponent(const std::string& key)
+{
+	auto iter = m_components.find(key);
+	if (iter != m_components.end())
 	{
-		m_pEventMgr = new SandboxEventDispatcherManager();
+		return iter->second;
 	}
-	return m_pEventMgr;
+	return nullptr;
+}
+
+bool GameObject::removeComponent(const std::string& key)
+{
+	auto iter = m_components.find(key);
+	if (iter == m_components.end()) 
+		return false;
+	
+	if (iter->second)
+	{
+		iter->second->onDetach();
+		SAFE_DELETE(iter->second);
+	}
+	m_components.erase(iter);
+
+	return true;
+}
+
+bool GameObject::removeComponent(IComponent* comp)
+{
+	if (!comp) return false;
+
+	auto iter = m_components.begin();
+	for (; iter != m_components.end(); iter++)
+	{
+		if (iter->second == comp)
+		{
+			iter->second->onDetach();
+			SAFE_DELETE(iter->second);
+
+			m_components.erase(iter);
+			return true;
+		}
+	}
+	return false;
 }

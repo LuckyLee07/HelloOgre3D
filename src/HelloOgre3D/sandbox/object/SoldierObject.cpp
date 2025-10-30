@@ -7,6 +7,7 @@
 #include "manager/ClientManager.h"
 #include "input/PlayerInput.h"
 #include "state/AgentState.h"
+#include "GameFunction.h"
 
 using namespace Ogre;
 

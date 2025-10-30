@@ -1,7 +1,7 @@
 #include "AgentFSM.h"
 #include "AgentState.h"
 #include "AgentStateFactory.h"
-#include "SandboxDef.h"
+#include "SandboxMacros.h"
 
 AgentFSM::AgentFSM() : m_currState(nullptr)
 {

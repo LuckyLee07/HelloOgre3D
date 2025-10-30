@@ -1,6 +1,6 @@
 #include "DeathState.h"
 #include "object/AgentObject.h"
-#include "AgentTypeDef.h"
+#include "GameDefine.h"
 
 DeathState::DeathState(AgentObject* pAgent) : AgentState(pAgent)
 {

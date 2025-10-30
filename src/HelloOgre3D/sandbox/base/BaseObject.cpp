@@ -1,5 +1,4 @@
 #include "BaseObject.h"
-#include "SandboxDef.h"
 
 BaseObject::BaseObject() : m_objId(0), m_liveTick(-1)
 {

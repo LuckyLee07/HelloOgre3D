@@ -3,10 +3,10 @@
 
 #include "OgreMath.h"
 #include "OgreVector3.h"
-#include "SandboxDef.h"
 #include "VehicleObject.h"
 #include "OISKeyboard.h"
 #include "LuaEnvObject.h"
+#include "GameDefine.h"
 #include "input/IPlayerInput.h"
 
 namespace Ogre {

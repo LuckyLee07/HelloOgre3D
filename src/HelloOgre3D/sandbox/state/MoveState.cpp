@@ -1,6 +1,6 @@
 #include "MoveState.h"
 #include "object/AgentObject.h"
-#include "AgentTypeDef.h"
+#include "GameDefine.h"
 #include "ScriptLuaVM.h"
 
 MoveState::MoveState(AgentObject* pAgent) : AgentState(pAgent)

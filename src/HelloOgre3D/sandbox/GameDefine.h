@@ -1,0 +1,71 @@
+#ifndef __GAME_DEFINE__
+#define __GAME_DEFINE__
+
+#define DEFAULT_MATERIAL "White"
+
+#define DEFAULT_ATLAS "fonts/dejavu/dejavu"
+
+#ifdef _DEBUG
+#define APPLICATION_LOG         "Sandbox_d.log"
+#define APPLICATION_CONFIG      "Sandbox_d.cfg"
+#define APPLICATION_RESOURCES	"SandboxResources_d.cfg"
+#else
+#define APPLICATION_LOG         "Sandbox.log"
+#define APPLICATION_CONFIG      "Sandbox.cfg"
+#define APPLICATION_RESOURCES	"SandboxResources.cfg"
+#endif
+
+#define SAFE_DELETE(p)       { if(p) { delete (p);		(p)=NULL; } }
+#define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);	(p)=NULL; } }
+
+//tolua_begin
+
+#define SOLDIER_STAND_SPEED		3.0f
+#define SOLDIER_STAND_HEIGHT	1.6f
+#define SOLDIER_CROUCH_SPEED	1.0f
+#define SOLDIER_CROUCH_HEIGHT	1.3f
+
+enum AGENT_OBJ_TYPE
+{
+	AGENT_OBJ_NONE = 0,
+	AGENT_OBJ_SEEKING = 1,
+	AGENT_OBJ_FOLLOWER = 2,
+	AGENT_OBJ_PATHING = 3,
+	AGENT_OBJ_PURSUING = 4,
+};
+
+enum SOLDIER_STATE
+{
+	SSTATE_DEAD = 0,
+	SSTATE_FIRE,
+	SSTATE_IDLE_AIM,
+	SSTATE_RUN_FORWARD,
+	SSTATE_RUN_BACKWARD,
+	SSTATE_DEAD_HEADSHOT,
+	SSTATE_FALL_DEAD,
+	SSTATE_FALL_IDLE,
+	SSTATE_JUMP_LAND,
+	SSTATE_JUMP_UP,
+	SSTATE_MELEE,
+	SSTATE_RELOAD,
+	SSTATE_SMG_TRANSFORM,
+	SSTATE_SNIPER_TRANSFORM,
+
+	// 不可直接使用
+	CROUCH_SSTATE_DEAD,
+	CROUCH_SSTATE_FIRE,
+	CROUCH_SSTATE_IDLE_AIM,
+	CROUCH_SSTATE_FORWARD,
+
+	SSTATE_MAXCOUNT, // 标记位
+};
+
+enum SOLDIER_STANCE_TYPE
+{
+	SOLDIER_STAND = 0,
+	SOLDIER_CROUCH,
+};
+
+//tolua_end
+
+#endif  // __GAME_DEFINE__

@@ -1,18 +1,25 @@
 #ifndef __GAME_OBJECT__
 #define __GAME_OBJECT__
 
-#include "SandboxEventDispatcherManager.h"
+#include "SandboxObject.h"
+#include <string>
+#include <map>
 
-class GameObject
+class IComponent;
+class GameObject : public SandboxObject
 {
 public:
 	GameObject();
 	virtual ~GameObject();
-	
-	SandboxEventDispatcherManager* Event();
 
+	bool addComponent(const std::string& key, IComponent* comp);
+	IComponent* getComponent(const std::string& key);
+
+	bool removeComponent(const std::string& key);
+	bool removeComponent(IComponent* comp);
+	
 private:
-	SandboxEventDispatcherManager* m_pEventMgr;
+	std::map<std::string, IComponent*> m_components;
 };
 
 #endif // __GAME_OBJECT__
