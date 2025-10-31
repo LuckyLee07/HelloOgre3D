@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Thu Oct 30 21:41:35 2025.
+** Generated automatically by tolua++-1.0.92 on Fri Oct 31 12:39:44 2025.
 */
 
 #ifndef __cplusplus

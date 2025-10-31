@@ -1,3 +1,5 @@
+$pfile "SandboxForTypes.pkg"
+
 $cfile "GameDefine.h"
 $cfile "GameFunction.h"
 

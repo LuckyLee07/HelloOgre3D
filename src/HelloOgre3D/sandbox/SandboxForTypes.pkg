@@ -1,0 +1,33 @@
+$#include <string>
+$#include <vector>
+
+$#include "ogre3d/include/Ogre.h"
+$#include "ois/include/OISKeyboard.h"
+
+namespace Ogre {
+    typedef float Real;
+    typedef std::string String;
+    class Vector2;
+    class Vector3;
+    class Quaternion;
+    class ColourValue;
+    class Camera;
+    class Node;
+    class SceneNode;
+    class AnimationState;
+}
+
+namespace OIS {
+    enum KeyCode{};
+}
+
+namespace Gorilla {
+    enum Gradient{};
+}
+
+// 关键：用 TOLUA_TEMPLATE_BIND 声明允许的向量模板实参
+namespace std {
+    class vector {
+        TOLUA_TEMPLATE_BIND(T, Ogre::Vector3, AgentObject*, BlockObject*, EntityObject*)
+    };
+}

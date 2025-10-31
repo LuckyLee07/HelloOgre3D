@@ -112,7 +112,7 @@ function Sandbox_Initialize(ctype)
     soldierAgent:setRotation(Vector3(0, -90, 0))
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initAgentWeapon(weaponPath)
+    soldierAgent:initWeapon(weaponPath)
     Soldier_InitWeaponAsm(soldierAgent)
 
     local weapon = soldierAgent:getWeapon()
