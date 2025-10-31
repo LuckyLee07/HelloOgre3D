@@ -5,7 +5,7 @@
 #include "OgrePrerequisites.h"
 #include "opensteer/include/Pathway.h"
 
-class AgentPath : private OpenSteer::PolylinePathway
+class AgentPath : public OpenSteer::PolylinePathway
 {
 	friend class VehicleObject;
 public:
@@ -21,7 +21,7 @@ public:
 
 	size_t GetNumberOfPathPoints() const;
 
-	void GetPathPoints(std::vector<Ogre::Vector3>& cpoints);
+	void GetPathPoints(std::vector<Ogre::Vector3>& cpoints) const;
 
 	Ogre::Real GetPathLength() const;
 

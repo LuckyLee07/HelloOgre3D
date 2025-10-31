@@ -14,7 +14,7 @@ namespace Ogre {
 class btRigidBody;
 
 class BlockObject : public EntityObject //tolua_exports
-	, private OpenSteer::SphericalObstacle
+	, public OpenSteer::SphericalObstacle
 { //tolua_exports
 	friend class VehicleObject;
 public:
@@ -53,7 +53,7 @@ public:
 	virtual bool canCollide(); // ÊÇ·ñ¿ÉÒÔÅö×²
 	virtual void onCollideWith(BaseObject* pCollideObj, const Collision& collision);
 
-private:
+public:
 	OpenSteer::Vec3 getPosition() const;
 
 	// Overloading the SphericalObstacle's radius implementation.

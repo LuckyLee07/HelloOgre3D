@@ -46,7 +46,7 @@ size_t AgentPath::GetNumberOfPathPoints() const
 	return pointCount;
 }
 
-void AgentPath::GetPathPoints(std::vector<Ogre::Vector3>& cpoints)
+void AgentPath::GetPathPoints(std::vector<Ogre::Vector3>& cpoints) const
 {
 	cpoints.clear();
 	size_t pointsize = GetNumberOfPathPoints();
