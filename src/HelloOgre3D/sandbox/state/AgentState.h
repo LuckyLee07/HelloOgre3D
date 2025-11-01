@@ -1,12 +1,12 @@
 #ifndef __AGENT_STATE_H__
 #define __AGENT_STATE_H__
 
-#include "GameObject.h"
+#include "SandboxObject.h"
 #include <string>
 
 class AgentObject;
 
-class AgentState : public GameObject
+class AgentState : public SandboxObject
 {
 public:
 	AgentState(AgentObject* pAgent);

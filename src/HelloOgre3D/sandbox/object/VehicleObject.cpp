@@ -1,5 +1,4 @@
 #include "VehicleObject.h"
-#include "btBulletDynamicsCommon.h"
 #include "GameManager.h"
 #include "ScriptLuaVM.h"
 #include "BlockObject.h"
@@ -9,6 +8,7 @@
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
 #include "compents/AgentLocomotion.h"
+#include "compents/PhysicsComponent.h"
 
 using namespace Ogre;
 
@@ -19,38 +19,22 @@ const float VehicleObject::DEFAULT_AGENT_SPEED = 0.0f;			// m/s (0 ft/s)
 const float VehicleObject::DEFAULT_AGENT_HEALTH = 100.0f;			// default
 
 VehicleObject::VehicleObject(btRigidBody* pRigidBody)
-	: m_pRigidBody(pRigidBody), 
-	m_mass(DEFAULT_AGENT_MASS), 
+	: m_mass(DEFAULT_AGENT_MASS), 
 	m_height(DEFAULT_AGENT_HEIGHT), 
 	m_radius(DEFAULT_AGENT_RADIUS),
 	m_speed(DEFAULT_AGENT_SPEED),
 	m_health(DEFAULT_AGENT_HEALTH)
 {
-	if (m_pRigidBody)
-	{
-		this->SetMass(DEFAULT_AGENT_MASS);
-		m_pRigidBody->setUserPointer(this);
-	}
 	m_locomotion = new AgentLocomotion(this);
+	m_physicsComp = new PhysicsComponent(this, pRigidBody);
+
+	this->SetMass(DEFAULT_AGENT_MASS);
 }
 
 VehicleObject::~VehicleObject()
 {
-	this->DeleteRighdBody();
 	SAFE_DELETE(m_locomotion);
-}
-
-void VehicleObject::DeleteRighdBody()
-{
-	if (m_pRigidBody != nullptr)
-	{
-		PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-		pPhysicsWorld->removeRigidBody(m_pRigidBody);
-
-		delete m_pRigidBody->getMotionState();
-		delete m_pRigidBody->getCollisionShape();
-		SAFE_DELETE(m_pRigidBody);
-	}
+	SAFE_DELETE(m_physicsComp);
 }
 
 void VehicleObject::Initialize()
@@ -58,113 +42,73 @@ void VehicleObject::Initialize()
 	
 }
 
+btRigidBody* VehicleObject::getRigidBody() const
+{
+	if (m_physicsComp)
+		return m_physicsComp->GetRigidBody();
+
+	return nullptr;
+}
+
 void VehicleObject::ResetRigidBody(btRigidBody* pRigidBody)
 {
-	const Ogre::Vector3 position = GetPosition();
-	const Ogre::Quaternion rot = GetOrientation();
-
-	this->DeleteRighdBody();
-
-	m_pRigidBody = pRigidBody;
-	this->SetMass(DEFAULT_AGENT_MASS);
-	m_pRigidBody->setUserPointer(this);
-
-	//this->SetMass(this->GetMass());
-	this->setPosition(position);
-	this->setOrientation(rot);
-
-	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-	pPhysicsWorld->addRigidBody(m_pRigidBody, this);
+	if (m_physicsComp)
+		m_physicsComp->ResetRigidBody(pRigidBody);
 }
 
 void VehicleObject::setPosition(const Ogre::Vector3& position)
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btVector3 btPosition(position.x, position.y, position.z);
-		btTransform transform = m_pRigidBody->getWorldTransform();
-		transform.setOrigin(btPosition);
+	if (m_physicsComp)
+		m_physicsComp->SetPosition(position);
 
-		m_pRigidBody->setWorldTransform(transform);
-		m_pRigidBody->activate(true);
-	}
+	this->updateWorldTransform();
+}
+
+void VehicleObject::setOrientation(const Ogre::Quaternion& quaternion)
+{
+	if (m_physicsComp)
+		m_physicsComp->SetOrientation(quaternion);
 
 	this->updateWorldTransform();
 }
 
 void VehicleObject::setRotation(const Ogre::Vector3& rotation)
 {
-	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	this->setOrientation(qRotation);
-}
-
-void VehicleObject::setOrientation(const Ogre::Quaternion& quaternion)
-{
-	if (m_pRigidBody != nullptr)
-	{
-		btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-		btTransform transform = m_pRigidBody->getWorldTransform();
-		transform.setRotation(btRotation);
-
-		m_pRigidBody->setWorldTransform(transform);
-		m_pRigidBody->activate(true);
-	}
+	if (m_physicsComp)
+		m_physicsComp->SetRotation(rotation);
 
 	this->updateWorldTransform();
 }
 
 Ogre::Vector3 VehicleObject::GetPosition() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
-		return BtVector3ToVector3(position);
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetPosition();
 
 	return Ogre::Vector3::ZERO;
 }
 
 Ogre::Quaternion VehicleObject::GetOrientation() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		const btQuaternion& orietation = m_pRigidBody->getOrientation();
-		return BtQuaternionToQuaternion(orietation);
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetOrientation();
 
 	return Ogre::Quaternion::ZERO;
 }
 
 void VehicleObject::SetForward(const Ogre::Vector3& forward)
 {
-	Ogre::Vector3 up = Ogre::Vector3::UNIT_Y;
-
-	Ogre::Vector3 zAxis = forward.normalisedCopy();
-	Ogre::Vector3 xAxis = up.crossProduct(zAxis);
-	Ogre::Vector3 yAxis = zAxis.crossProduct(xAxis);
-
-	Ogre::Quaternion orientation(xAxis, yAxis, zAxis);
-
-	if (m_pRigidBody != nullptr)
-	{
-		btTransform transform = m_pRigidBody->getWorldTransform();
-		btQuaternion btRotation(orientation.x, orientation.y, orientation.z, orientation.w);
-		transform.setRotation(btRotation);
-		m_pRigidBody->setWorldTransform(transform);
-		m_pRigidBody->activate(true);
-	}
+	if (m_physicsComp)
+		m_physicsComp->SetForward(forward);
 
 	this->updateWorldTransform();
 }
 
 void VehicleObject::SetVelocity(const Ogre::Vector3& velocity)
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btVector3 btVelocity(velocity.x, velocity.y, velocity.z);
-		m_pRigidBody->setLinearVelocity(btVelocity);
-		m_pRigidBody->activate(true);
-	}
+	if (m_physicsComp)
+		m_physicsComp->SetVelocity(velocity);
+	
 	SetSpeed(Ogre::Vector3(velocity.x, 0, velocity.z).length());
 }
 
@@ -182,33 +126,24 @@ void VehicleObject::SetTargetRadius(Ogre::Real radius)
 
 Ogre::Vector3 VehicleObject::GetUp() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		const btQuaternion& orietation = m_pRigidBody->getOrientation();
-		return BtQuaternionToQuaternion(orietation).yAxis();
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetUp();
 
 	return Ogre::Vector3::UNIT_Y;
 }
 
 Ogre::Vector3 VehicleObject::GetLeft() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		const btQuaternion& orietation = m_pRigidBody->getOrientation();
-		return BtQuaternionToQuaternion(orietation).xAxis();
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetLeft();
 
 	return Ogre::Vector3::UNIT_X;
 }
 
 Ogre::Vector3 VehicleObject::GetForward() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		const btQuaternion& orietation = m_pRigidBody->getOrientation();
-		return BtQuaternionToQuaternion(orietation).zAxis();
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetForward();
 
 	return Ogre::Vector3::UNIT_Z;
 }
@@ -220,11 +155,8 @@ Ogre::Vector3 VehicleObject::GetTarget() const
 
 Ogre::Vector3 VehicleObject::GetVelocity() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btVector3 velocity = m_pRigidBody->getLinearVelocity();
-		return BtVector3ToVector3(velocity);
-	}
+	if (m_physicsComp)
+		return m_physicsComp->GetVelocity();
 	
 	return GetForward() * m_speed;
 }
@@ -233,25 +165,18 @@ void VehicleObject::SetMass(const Ogre::Real mass)
 {
 	m_mass = std::max(Ogre::Real(0), mass);
 
-	if (m_pRigidBody != nullptr) // SetRigidBodyMass
-	{
-		btVector3 localInertia(0, 0, 0);
-		m_pRigidBody->getCollisionShape()->calculateLocalInertia(mass, localInertia);
-		m_pRigidBody->setMassProps(mass, localInertia);
-		m_pRigidBody->updateInertiaTensor();
-		m_pRigidBody->activate(true);
-	}
+	if (m_physicsComp)
+		m_physicsComp->SetMass(mass);
 }
 
 void VehicleObject::SetHeight(Ogre::Real height)
 {
 	m_height = std::max(Ogre::Real(0), height);
-	if (m_pRigidBody != nullptr)
+	
+	if (m_physicsComp)
 	{
 		Ogre::Real radius = this->GetRadius();
-		btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
-		capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
-		this->ResetRigidBody(capsuleRigidBody);
+		m_physicsComp->RebuildCapsule(height, radius);
 	}
 }
 
@@ -259,12 +184,10 @@ void VehicleObject::SetRadius(Ogre::Real radius)
 {
 	m_radius = std::max(Ogre::Real(0), radius);
 
-	if (m_pRigidBody != nullptr)
+	if (m_physicsComp)
 	{
 		Ogre::Real height = this->GetHeight();
-		btRigidBody* capsuleRigidBody = SandboxMgr::CreateRigidBodyCapsule(height, radius);
-		capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
-		this->ResetRigidBody(capsuleRigidBody);
+		m_physicsComp->RebuildCapsule(height, radius);
 	}
 }
 
@@ -295,23 +218,11 @@ void VehicleObject::SetMaxSpeed(Ogre::Real maxSpeed)
 
 Ogre::Real VehicleObject::GetMass() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btScalar invMass = m_pRigidBody->getInvMass();
-		if (invMass == 0) return Ogre::Real(0.0f);
-		
-		return Ogre::Real(1.0f / invMass);
-	}
 	return m_mass;
 }
 
 Ogre::Real VehicleObject::GetSpeed() const
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btVector3 velocity = m_pRigidBody->getLinearVelocity();
-		return Ogre::Vector3(velocity.x(), 0, velocity.z()).length();
-	}
 	return m_speed;
 }
 
@@ -383,12 +294,8 @@ Ogre::Vector3 VehicleObject::ForceToAvoidObjects(Ogre::Real predictionTime)
 
 void VehicleObject::ApplyForce(const Ogre::Vector3& force)
 {
-	if (m_pRigidBody != nullptr)
-	{
-		btVector3 centralForce(force.x, force.y, force.z);
-		m_pRigidBody->applyCentralForce(centralForce);
-		m_pRigidBody->activate(true);
-	}
+	if (m_physicsComp)
+		m_physicsComp->ApplyForce(force);
 }
 
 void VehicleObject::SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic)

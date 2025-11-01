@@ -11,6 +11,7 @@ class BlockObject;
 class AgentObject;
 class AgentLocomotion;
 class OpenSteerAdapter;
+class PhysicsComponent;
 
 class VehicleObject : public BaseObject //tolua_exports
 { //tolua_exports
@@ -18,16 +19,14 @@ public:
 	VehicleObject(btRigidBody* pRigidBody);
 	virtual ~VehicleObject();
 
+	btRigidBody* getRigidBody() const override;
 	void ResetRigidBody(btRigidBody* pRigidBody);
-	btRigidBody* getRigidBody() { return m_pRigidBody; }
 
 	virtual void Initialize();
 	virtual void update(int deltaMilisec);
 	virtual void updateWorldTransform();
 
 	//tolua_begin
-	void DeleteRighdBody(); //ÒÆ³ý¸ÕÌå
-
 	virtual void setPosition(const Ogre::Vector3& position);
 	virtual void setRotation(const Ogre::Vector3& rotation);
 	virtual void setOrientation(const Ogre::Quaternion& quaternion);
@@ -106,9 +105,6 @@ public:
 	static const float DEFAULT_AGENT_SPEED;
 	static const float DEFAULT_AGENT_HEALTH;
 
-protected:
-	btRigidBody* m_pRigidBody;
-
 private:
 	Ogre::Real m_mass;
 	Ogre::Real m_height;
@@ -117,6 +113,8 @@ private:
 	Ogre::Real m_health;
 
 	AgentLocomotion* m_locomotion = nullptr;
+
+	PhysicsComponent* m_physicsComp = nullptr;
 
 }; //tolua_exports
 

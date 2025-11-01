@@ -76,3 +76,13 @@ bool GameObject::removeComponent(IComponent* comp)
 	}
 	return false;
 }
+
+void GameObject::update(int deltaMs)
+{
+	auto iter = m_components.begin();
+	for (; iter != m_components.end(); iter++)
+	{
+		if (iter->second) 
+			iter->second->update(deltaMs);
+	}
+}

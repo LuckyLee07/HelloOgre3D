@@ -33,7 +33,7 @@ public:
 	virtual void Initialize() {}
 
 	virtual void update(int deltaMsec);
-	virtual btRigidBody* getRigidBody();
+	virtual btRigidBody* getRigidBody() const;
 
 	//tolua_begin
 	void setObjId(unsigned int objId);

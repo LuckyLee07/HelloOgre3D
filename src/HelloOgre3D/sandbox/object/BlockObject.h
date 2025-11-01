@@ -27,7 +27,7 @@ public:
 	//void Initialize(BaseObject *owner = nullptr);
 	void DeleteRighdBody();
 
-	btRigidBody* getRigidBody() { return m_pRigidBody; }
+	btRigidBody* getRigidBody() const override { return m_pRigidBody; }
 
 	virtual void update(int deltaMsec) override;
 	virtual void updateWorldTransform();

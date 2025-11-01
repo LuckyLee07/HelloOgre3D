@@ -63,7 +63,7 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 
 Ogre::Vector3 AgentObject::GetPosition() const
 {
-	if (m_pRigidBody != nullptr)
+	if (getRigidBody() != nullptr)
 	{
 		return VehicleObject::GetPosition();
 	}
@@ -77,7 +77,7 @@ Ogre::Vector3 AgentObject::GetPosition() const
 
 Ogre::Quaternion AgentObject::GetOrientation() const
 {
-	if (m_pRigidBody != nullptr)
+	if (getRigidBody() != nullptr)
 	{
 		return VehicleObject::GetOrientation();
 	}
@@ -91,7 +91,7 @@ Ogre::Quaternion AgentObject::GetOrientation() const
 
 Ogre::Vector3 AgentObject::GetUp() const
 {
-	if (m_pRigidBody != nullptr)
+	if (getRigidBody() != nullptr)
 	{
 		return VehicleObject::GetUp();
 	}
@@ -105,7 +105,7 @@ Ogre::Vector3 AgentObject::GetUp() const
 
 Ogre::Vector3 AgentObject::GetLeft() const
 {
-	if (m_pRigidBody != nullptr)
+	if (getRigidBody() != nullptr)
 	{
 		return VehicleObject::GetLeft();
 	}
@@ -119,7 +119,7 @@ Ogre::Vector3 AgentObject::GetLeft() const
 
 Ogre::Vector3 AgentObject::GetForward() const
 {
-	if (m_pRigidBody != nullptr)
+	if (getRigidBody() != nullptr)
 	{
 		return VehicleObject::GetForward();
 	}
@@ -148,13 +148,14 @@ void AgentObject::update(int deltaMilisec)
 
 void AgentObject::updateWorldTransform()
 {
-	if (m_pRigidBody == nullptr) return;
+	const btRigidBody* pRigidBody = getRigidBody();
+	if (pRigidBody == nullptr) return;
 	
-	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
+	const btVector3& rigidBodyPos = pRigidBody->getWorldTransform().getOrigin();
 	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
 	m_pAgentBody->SetDerivedPosition(position + m_pAgentBody->getOriginPos());
 
-	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
+	const btQuaternion& rigidBodyRotation = pRigidBody->getWorldTransform().getRotation();
 	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
 								rigidBodyRotation.y(), rigidBodyRotation.z());
 	m_pAgentBody->SetDerivedOrientation(rotation);

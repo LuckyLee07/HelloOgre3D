@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Fri Oct 31 12:39:44 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Nov  1 20:46:31 2025.
 */
 
 #ifndef __cplusplus
@@ -2206,37 +2206,6 @@ static int tolua_SandboxToLua_BlockObject_applyAngularImpulse00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: DeleteRighdBody of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_VehicleObject_DeleteRighdBody00
-static int tolua_SandboxToLua_VehicleObject_DeleteRighdBody00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"VehicleObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  VehicleObject* self = (VehicleObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'DeleteRighdBody'", NULL);
-#endif
-  {
-   self->DeleteRighdBody();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'DeleteRighdBody'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: setPosition of class  VehicleObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_VehicleObject_setPosition00
 static int tolua_SandboxToLua_VehicleObject_setPosition00(lua_State* tolua_S)
@@ -3730,38 +3699,6 @@ static int tolua_SandboxToLua_VehicleObject_ApplyForce00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: HasPath of class  VehicleObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_VehicleObject_HasPath00
-static int tolua_SandboxToLua_VehicleObject_HasPath00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasPath'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->HasPath();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'HasPath'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: SetPath of class  VehicleObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_VehicleObject_SetPath00
 static int tolua_SandboxToLua_VehicleObject_SetPath00(lua_State* tolua_S)
@@ -3824,6 +3761,38 @@ static int tolua_SandboxToLua_VehicleObject_GetPath00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasPath of class  VehicleObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_VehicleObject_HasPath00
+static int tolua_SandboxToLua_VehicleObject_HasPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const VehicleObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const VehicleObject* self = (const VehicleObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasPath'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasPath();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasPath'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6575,7 +6544,6 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"VehicleObject","VehicleObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"VehicleObject");
-   tolua_function(tolua_S,"DeleteRighdBody",tolua_SandboxToLua_VehicleObject_DeleteRighdBody00);
    tolua_function(tolua_S,"setPosition",tolua_SandboxToLua_VehicleObject_setPosition00);
    tolua_function(tolua_S,"setRotation",tolua_SandboxToLua_VehicleObject_setRotation00);
    tolua_function(tolua_S,"setOrientation",tolua_SandboxToLua_VehicleObject_setOrientation00);
@@ -6616,9 +6584,9 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"ForceToCombine",tolua_SandboxToLua_VehicleObject_ForceToCombine00);
    tolua_function(tolua_S,"ForceToSeparate",tolua_SandboxToLua_VehicleObject_ForceToSeparate00);
    tolua_function(tolua_S,"ApplyForce",tolua_SandboxToLua_VehicleObject_ApplyForce00);
-   tolua_function(tolua_S,"HasPath",tolua_SandboxToLua_VehicleObject_HasPath00);
    tolua_function(tolua_S,"SetPath",tolua_SandboxToLua_VehicleObject_SetPath00);
    tolua_function(tolua_S,"GetPath",tolua_SandboxToLua_VehicleObject_GetPath00);
+   tolua_function(tolua_S,"HasPath",tolua_SandboxToLua_VehicleObject_HasPath00);
    tolua_function(tolua_S,"GetDistanceAlongPath",tolua_SandboxToLua_VehicleObject_GetDistanceAlongPath00);
    tolua_function(tolua_S,"GetNearestPointOnPath",tolua_SandboxToLua_VehicleObject_GetNearestPointOnPath00);
    tolua_function(tolua_S,"GetPointOnPath",tolua_SandboxToLua_VehicleObject_GetPointOnPath00);

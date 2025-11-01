@@ -1,12 +1,11 @@
 #ifndef __GAME_OBJECT__
 #define __GAME_OBJECT__
 
-#include "SandboxObject.h"
 #include <string>
 #include <map>
 
 class IComponent;
-class GameObject : public SandboxObject
+class GameObject
 {
 public:
 	GameObject();
@@ -18,6 +17,8 @@ public:
 	bool removeComponent(const std::string& key);
 	bool removeComponent(IComponent* comp);
 	
+	void update(int deltaMs);
+
 private:
 	std::map<std::string, IComponent*> m_components;
 };

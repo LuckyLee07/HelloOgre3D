@@ -35,7 +35,7 @@ void BaseObject::update(int deltaMsec)
 	//if (m_liveTick > 0) m_liveTick--;
 }
 
-btRigidBody* BaseObject::getRigidBody()
+btRigidBody* BaseObject::getRigidBody() const
 {
 	return nullptr;
 }
