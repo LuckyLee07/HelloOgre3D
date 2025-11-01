@@ -80,6 +80,11 @@ public:
 
 	OpenSteerAdapter* GetAdapter() const { return m_adapter; }
 
+public:
+	static const float DEFAULT_AGENT_MAX_FORCE;
+	static const float DEFAULT_AGENT_MAX_SPEED;
+	static const float DEFAULT_AGENT_TARGET_RADIUS;
+
 private:
 	VehicleObject* m_owner = nullptr;
 

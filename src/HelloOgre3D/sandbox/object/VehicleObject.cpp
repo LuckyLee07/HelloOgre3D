@@ -17,9 +17,6 @@ const float VehicleObject::DEFAULT_AGENT_HEIGHT = 1.6f;	// meters (5.2 feet)
 const float VehicleObject::DEFAULT_AGENT_RADIUS = 0.3f;	// meters (1.97 feet)
 const float VehicleObject::DEFAULT_AGENT_SPEED = 0.0f;			// m/s (0 ft/s)
 const float VehicleObject::DEFAULT_AGENT_HEALTH = 100.0f;			// default
-const float VehicleObject::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^2)
-const float VehicleObject::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
-const float VehicleObject::DEFAULT_AGENT_TARGET_RADIUS = 0.5f;	// meters (1.64 feet)
 
 VehicleObject::VehicleObject(btRigidBody* pRigidBody)
 	: m_pRigidBody(pRigidBody), 
@@ -433,7 +430,7 @@ void VehicleObject::SetPath(const AgentPath& agentPath)
 
 	// AgentPath 目前没有 IsCyclic 访问器，这里先按需要设置是否循环
 	const bool cyclic = false; // TODO: 若后续 AgentPath 增加 IsCyclic() 则改为读取真实值
-	if (m_locomotion) m_locomotion->SetPath(points, false);
+	if (m_locomotion) m_locomotion->SetPath(points, cyclic);
 }
 
 OpenSteerAdapter* VehicleObject::GetAdapter() const 

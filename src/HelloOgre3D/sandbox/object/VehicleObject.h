@@ -105,9 +105,6 @@ public:
 	static const float DEFAULT_AGENT_RADIUS;
 	static const float DEFAULT_AGENT_SPEED;
 	static const float DEFAULT_AGENT_HEALTH;
-	static const float DEFAULT_AGENT_MAX_FORCE;
-	static const float DEFAULT_AGENT_MAX_SPEED;
-	static const float DEFAULT_AGENT_TARGET_RADIUS;
 
 protected:
 	btRigidBody* m_pRigidBody;

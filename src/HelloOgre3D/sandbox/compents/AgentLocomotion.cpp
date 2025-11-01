@@ -8,9 +8,15 @@
 #include "play/AgentPath.h"
 #include "manager/ObjectManager.h"
 
+const float AgentLocomotion::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^2)
+const float AgentLocomotion::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
+const float AgentLocomotion::DEFAULT_AGENT_TARGET_RADIUS = 0.5f;	// meters (1.64 feet)
 
 AgentLocomotion::AgentLocomotion(VehicleObject* owner) 
-	: m_owner(owner)
+	: m_owner(owner),
+	m_maxForce(DEFAULT_AGENT_MAX_FORCE),
+	m_maxSpeed(DEFAULT_AGENT_MAX_SPEED),
+	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS)
 {
 	m_adapter = new OpenSteerAdapter(this);
 }
