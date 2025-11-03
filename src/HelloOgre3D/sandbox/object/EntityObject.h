@@ -13,6 +13,7 @@ namespace Ogre {
 }
 class AgentAnim;
 class AgentAnimStateMachine;
+class RenderComponent;
 
 class EntityObject : public BaseObject //tolua_exports
 { //tolua_exports
@@ -28,7 +29,7 @@ public:
 	//tolua_begin
 	void InitWithOwner(BaseObject* owner=nullptr, bool canFireEvent=true);
 
-	const Ogre::Vector3& getOriginPos() const;
+	Ogre::Vector3 getOriginPos() const;
 	void setOriginPos(const Ogre::Vector3& position);
 	void setMaterial(const Ogre::String& materialName);
 	
@@ -52,14 +53,12 @@ public:
 	Ogre::Vector3 GetDerivedPosition() const;
 	Ogre::Quaternion GetDerivedOrientation() const;
 
-	Ogre::Entity* getEntity() { return m_pEntity; }
-	Ogre::Entity* getDetachEntity();
-	Ogre::SceneNode* getSceneNode() { return m_pSceneNode; }
+	Ogre::Entity* getEntity();
+	Ogre::SceneNode* getSceneNode();
 
 protected:
-	Ogre::SceneNode* m_pSceneNode;
-	Ogre::Entity* m_pEntity;
-	Ogre::Vector3 m_originPos;
+	
+	RenderComponent* m_renderComp = nullptr;
 
 	BaseObject* m_owner; //≥÷”–’ﬂ
 
