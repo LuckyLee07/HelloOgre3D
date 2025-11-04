@@ -30,6 +30,7 @@ bool GameObject::addComponent(const std::string& key, IComponent* comp)
 	m_components[key] = comp;
 	comp->onAttach(this);
 	comp->start();
+	return true;
 }
 
 IComponent* GameObject::getComponent(const std::string& key)

@@ -47,7 +47,7 @@ void AgentObject::RemoveEventDispatcher()
 
 void AgentObject::Initialize()
 {
-	m_pAgentBody->InitWithOwner(this);
+	m_pAgentBody->InitAsmWithOwner(this, true);
 	this->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
@@ -58,7 +58,7 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 		delete m_pAgentBody;
 	}
 	m_pAgentBody = new EntityObject(meshFile);
-	m_pAgentBody->InitWithOwner(this);
+	m_pAgentBody->InitAsmWithOwner(this, true);
 }
 
 Ogre::Vector3 AgentObject::GetPosition() const

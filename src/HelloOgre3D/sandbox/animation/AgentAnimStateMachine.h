@@ -13,6 +13,7 @@ class AgentAnimStateMachine //tolua_exports
 { //tolua_exports
 public:
 	AgentAnimStateMachine(BaseObject* owner);
+	AgentAnimStateMachine(BaseObject* owner, bool canFireEvent);
     ~AgentAnimStateMachine();
 
     void Update(float deltaTimeInMillis, long long currentTimeInMillis);
@@ -52,18 +53,18 @@ public:
     static void Animation_LinearBlendTo(AgentAnim* startAnim, AgentAnim* endAnim, float blendTime, float startTime, float currTime);
 
 private:
-    BaseObject* m_owner; //持有者
-    bool m_canFireEvent; //可发送事件
+    BaseObject* m_owner = nullptr;	//持有者
+    bool m_canFireEvent = false;	//可发送事件
 
     std::unordered_map<std::string, AgentAnimState*> m_animStates;
 
     typedef std::unordered_map<std::string, AgentAnimTransition*> TransitionMap;
     std::unordered_map<std::string, TransitionMap> m_animTransitions;
 
-	AgentAnimState* m_pCurrState;
-	AgentAnimState* m_pNextState;
-	AgentAnimTransition* m_pCurrTransition;
-    float m_TransitionStartTime;
+	AgentAnimState* m_pCurrState = nullptr;
+	AgentAnimState* m_pNextState = nullptr;
+	AgentAnimTransition* m_pCurrTransition = nullptr;
+    float m_TransitionStartTime = 0.0f;
 }; //tolua_exports
 
 #endif  // __AGENT_ANIM_STATE_MACHINE_H__

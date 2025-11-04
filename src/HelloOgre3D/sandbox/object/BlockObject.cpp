@@ -13,6 +13,7 @@
 #include "play/MyRigidBody.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
+#include "compents/RenderComponent.h"
 
 using namespace Ogre;
 
@@ -20,28 +21,32 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 	: EntityObject(meshFile), m_pRigidBody(pRigidBody)
 {
 	setObjType(BaseObject::OBJ_TYPE_BLOCK);
-	Ogre::Mesh* meshPtr = m_pEntity->getMesh().getPointer();
+
 	if (pRigidBody == nullptr)
 	{
+		Ogre::Entity* pEntity = getEntity();
+		if (!pEntity) return;
+		
+		Ogre::Mesh* meshPtr = pEntity->getMesh().getPointer();
 		m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr, 1.0f);
-		m_pRigidBody->setUserPointer(this);
 	}
+	m_pRigidBody->setUserPointer(this);
 }
 
 BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 	: EntityObject(meshPtr), m_pRigidBody(pRigidBody)
 {
 	if (pRigidBody == nullptr)
-	{
 		m_pRigidBody = SandboxMgr::CreateRigidBodyBox(meshPtr.get(), 1.0f);
-		m_pRigidBody->setUserPointer(this);
-	}
+
+	m_pRigidBody->setUserPointer(this);
 }
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 	: EntityObject(pSceneNode), m_pRigidBody(pRigidBody)
 {	
-	m_pRigidBody->setUserPointer(this);
+	if (m_pRigidBody)
+		m_pRigidBody->setUserPointer(this);
 }
 
 BlockObject::~BlockObject()
@@ -79,10 +84,10 @@ void BlockObject::update(int deltaMsec)
 void BlockObject::updateWorldTransform()
 {
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
-	m_pSceneNode->setPosition(BtVector3ToVector3(rigidBodyPos));
+	m_renderComp->SetPosition(BtVector3ToVector3(rigidBodyPos));
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
-	m_pSceneNode->setOrientation(BtQuaternionToQuaternion(rigidBodyRotation));
+	m_renderComp->SetOrientation(BtQuaternionToQuaternion(rigidBodyRotation));;
 }
 
 void BlockObject::SetMass(const Ogre::Real mass)

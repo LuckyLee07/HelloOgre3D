@@ -52,14 +52,16 @@ public:
 	void SetRadius(Ogre::Real radius);
 	void SetSpeed(Ogre::Real speed);
 	void SetHealth(Ogre::Real health);
-	void SetMaxForce(Ogre::Real maxForce);
-	void SetMaxSpeed(Ogre::Real maxSpeed);
 
 	Ogre::Real GetMass() const;
 	Ogre::Real GetSpeed() const;
 	Ogre::Real GetHeight() const { return m_height; }
 	Ogre::Real GetRadius() const { return m_radius; }
 	Ogre::Real GetHealth() const { return m_health; }
+
+	void SetMaxForce(Ogre::Real maxForce);
+	void SetMaxSpeed(Ogre::Real maxSpeed);
+	
 	Ogre::Real GetMaxForce() const;
 	Ogre::Real GetMaxSpeed() const;
 

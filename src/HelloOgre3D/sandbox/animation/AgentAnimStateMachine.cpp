@@ -8,11 +8,14 @@
 #include "SandboxEventDispatcherManager.h"
 #include "GameDefine.h"
 
-AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner) : m_owner(owner),
-	m_pCurrState(nullptr), m_pNextState(nullptr),
-	m_pCurrTransition(nullptr), m_TransitionStartTime(0.0f), m_canFireEvent(true)
+AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner)
+	: m_owner(owner)
 {
+}
 
+AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner, bool canFireEvent) 
+	: m_owner(owner), m_canFireEvent(canFireEvent)
+{
 }
 
 AgentAnimStateMachine::~AgentAnimStateMachine()

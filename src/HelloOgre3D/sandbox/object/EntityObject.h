@@ -25,10 +25,10 @@ public:
 
 	void update(int deltaMsec) override;
 
-	BaseObject* getOwner() { return m_owner; }
+	//BaseObject* getOwner() { return m_owner; }
+	void InitAsmWithOwner(BaseObject* owner, bool canFireEvent = true);
+	
 	//tolua_begin
-	void InitWithOwner(BaseObject* owner=nullptr, bool canFireEvent=true);
-
 	Ogre::Vector3 getOriginPos() const;
 	void setOriginPos(const Ogre::Vector3& position);
 	void setMaterial(const Ogre::String& materialName);
@@ -40,7 +40,7 @@ public:
 	virtual Ogre::Vector3 GetPosition() const;
 	virtual Ogre::Quaternion GetOrientation() const;
 
-	void AttachToBone(const Ogre::String& boneName, EntityObject* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
+	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* pEntity, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 	AgentAnim* GetAnimation(const char* animationName);
 	AgentAnimStateMachine* GetObjectASM();
@@ -54,16 +54,11 @@ public:
 	Ogre::Quaternion GetDerivedOrientation() const;
 
 	Ogre::Entity* getEntity();
+	Ogre::Entity* getDetachEntity();
 	Ogre::SceneNode* getSceneNode();
 
 protected:
-	
 	RenderComponent* m_renderComp = nullptr;
-
-	BaseObject* m_owner; //≥÷”–’ﬂ
-
-	AgentAnimStateMachine* m_pAnimateStateMachine;
-	std::unordered_map<std::string, AgentAnim*> m_animations;
 }; //tolua_exports
 
 #endif  // __Entity_OBJECT__

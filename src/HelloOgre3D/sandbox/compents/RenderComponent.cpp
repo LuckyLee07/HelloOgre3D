@@ -5,6 +5,10 @@
 #include "OgreSceneManager.h"
 #include "GameFunction.h"
 #include "OgreManualObject.h"
+#include "GameManager.h"
+#include "animation/AgentAnim.h"
+#include "animation/AgentAnimStateMachine.h"
+#include "BaseObject.h"
 
 using namespace Ogre;
 
@@ -42,6 +46,14 @@ RenderComponent::RenderComponent(Ogre::SceneNode* pSceneNode)
 
 RenderComponent::~RenderComponent()
 {
+	auto iter = m_animations.begin();
+	for (; iter != m_animations.end(); iter++)
+	{
+		delete iter->second;
+	}
+	m_animations.clear();
+	SAFE_DELETE(m_pAnimateStateMachine);
+
 	if (m_pEntity != nullptr)
 	{
 		SceneManager* pSceneMananger = GetClientMgr()->getSceneManager();
@@ -143,8 +155,52 @@ Ogre::Quaternion RenderComponent::GetDerivedOrientation() const
 	return m_pSceneNode->_getDerivedOrientation();
 }
 
+Ogre::Entity* RenderComponent::GetDetachEntity()
+{
+	m_pSceneNode->detachObject(m_pEntity);
+	//m_pSceneNode->getCreator()->destroySceneNode(m_pSceneNode);
+	//m_pSceneNode = nullptr;
+
+	return m_pEntity;
+}
+
 void RenderComponent::AttachToBone(const Ogre::String& boneName, Ogre::Entity* entity, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
 {
 	Ogre::Quaternion orientationOffset = QuaternionFromRotationDegrees(rotationOffset.x, rotationOffset.y, rotationOffset.z);
 	m_pEntity->attachObjectToBone(boneName, entity, orientationOffset, positionOffset);
+}
+
+AgentAnim* RenderComponent::GetAnimation(const char* animationName)
+{
+	auto iter = m_animations.find(animationName);
+	if (iter != m_animations.end())
+	{
+		return iter->second;
+	}
+
+	auto pAnimState = m_pEntity->getAnimationState(animationName);
+	if (pAnimState != nullptr)
+	{
+		m_animations[animationName] = new AgentAnim(pAnimState);
+	}
+	return m_animations[animationName];
+}
+
+AgentAnimStateMachine* RenderComponent::GetAnimationFSM()
+{
+	return m_pAnimateStateMachine;
+}
+
+void RenderComponent::CreateAnimationFSM(BaseObject* owner, bool canFireEvent)
+{
+	if (!owner) return;
+	
+	m_pAnimateStateMachine = new AgentAnimStateMachine(owner, canFireEvent);
+}
+
+void RenderComponent::Update(int deltaInMillis)
+{
+	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
+	if (m_pAnimateStateMachine != nullptr)
+		m_pAnimateStateMachine->Update(deltaInMillis, currTimeInMillis);
 }
