@@ -1,8 +1,8 @@
 #include "GameObject.h"
-#include "components/IComponent.h"
+#include "component/IComponent.h"
 #include "SandboxMacros.h"
 
-GameObject::GameObject()
+GameObject::GameObject() : m_userdata(nullptr)
 {
 }
 
@@ -18,6 +18,16 @@ GameObject::~GameObject()
 		}
 	}
 	m_components.clear();
+}
+
+void GameObject::setUserData(void* userdata)
+{
+	m_userdata = userdata;
+}
+
+void* GameObject::getUserData() const
+{
+	return m_userdata;
 }
 
 bool GameObject::addComponent(const std::string& key, IComponent* comp)

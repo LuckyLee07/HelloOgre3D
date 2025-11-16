@@ -7,10 +7,10 @@
 #include "GameFunction.h"
 #include "manager/SandboxMgr.h"
 
-PhysicsComponent::PhysicsComponent(VehicleObject* owner, btRigidBody* body)
-	: m_owner(owner), m_body(body)
+PhysicsComponent::PhysicsComponent(btRigidBody* body)
+	: m_body(body), m_owner(nullptr)
 {
-	if (m_body) m_body->setUserPointer(m_owner);
+	//if (m_body) m_body->setUserPointer(m_owner);
 }
 
 PhysicsComponent::~PhysicsComponent()
@@ -18,12 +18,32 @@ PhysicsComponent::~PhysicsComponent()
 	DeleteRigidBody();
 }
 
+void PhysicsComponent::onAttach(GameObject* owner)
+{
+	IComponent::onAttach(owner);
+
+	auto* pObject = getOwner();
+	assert(pObject != nullptr);
+	m_owner = dynamic_cast<VehicleObject*>(pObject);
+
+	if (m_body != nullptr)
+	{
+		m_body->setUserPointer(m_owner);
+	}
+}
+
+void PhysicsComponent::onDetach()
+{
+	RemoveFromWorld();
+	m_owner = nullptr;
+
+	IComponent::onDetach();
+}
+
 void PhysicsComponent::DeleteRigidBody()
 {
 	if (m_body != nullptr)
 	{
-		RemoveFromWorld();
-
 		btMotionState* motion = m_body->getMotionState();
 		if (motion != nullptr) SAFE_DELETE(motion);
 

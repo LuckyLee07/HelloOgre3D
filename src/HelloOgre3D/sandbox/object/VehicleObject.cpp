@@ -9,6 +9,7 @@
 #include "manager/ObjectManager.h"
 #include "components/AgentLocomotion.h"
 #include "components/PhysicsComponent.h"
+#include "object/GameObject.h"
 
 using namespace Ogre;
 
@@ -25,16 +26,19 @@ VehicleObject::VehicleObject(btRigidBody* pRigidBody)
 	m_speed(DEFAULT_AGENT_SPEED),
 	m_health(DEFAULT_AGENT_HEALTH)
 {
-	m_locomotion = new AgentLocomotion(this);
-	m_physicsComp = new PhysicsComponent(this, pRigidBody);
+	m_locomotion = new AgentLocomotion();
+	m_pGameObjet->addComponent("locomotion", m_locomotion);
+
+	m_physicsComp = new PhysicsComponent(pRigidBody);
+	m_pGameObjet->addComponent("physics", m_physicsComp);
 
 	this->SetMass(DEFAULT_AGENT_MASS);
 }
 
 VehicleObject::~VehicleObject()
 {
-	SAFE_DELETE(m_locomotion);
-	SAFE_DELETE(m_physicsComp);
+	//SAFE_DELETE(m_locomotion);
+	//SAFE_DELETE(m_physicsComp);
 }
 
 void VehicleObject::Initialize()

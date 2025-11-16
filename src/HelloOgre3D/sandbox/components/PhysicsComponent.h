@@ -2,15 +2,18 @@
 #define __PHYSICS_COMPONENT_H__
 
 #include "OgreVector3.h"
+#include "component/IComponent.h"
 
 class btRigidBody;
 class VehicleObject;
-
-class PhysicsComponent
+class PhysicsComponent : public IComponent
 {
 public:
-	PhysicsComponent(VehicleObject* owner, btRigidBody* body);
+	explicit PhysicsComponent(btRigidBody* body);
 	virtual ~PhysicsComponent();
+
+	virtual void onAttach(GameObject* owner);
+	virtual void onDetach();
 	
 	// RigidBody ops
 	btRigidBody* GetRigidBody() const { return m_body; }

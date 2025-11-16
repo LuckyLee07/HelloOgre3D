@@ -1,12 +1,17 @@
 #include "BaseObject.h"
+#include "GameObject.h"
+#include "SandboxMacros.h"
 
 BaseObject::BaseObject() : m_objId(0), m_liveTick(-1)
 {
 	m_objType = OBJ_TYPE_NONE;
+	m_pGameObjet = new GameObject();
+	m_pGameObjet->setUserData(this);
 }
 
 BaseObject::~BaseObject()
 {
+	SAFE_DELETE(m_pGameObjet);
 }
 
 unsigned int BaseObject::getObjId()

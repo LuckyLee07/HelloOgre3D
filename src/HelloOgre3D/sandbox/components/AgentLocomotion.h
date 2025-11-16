@@ -3,16 +3,20 @@
 
 #include <vector>
 #include "OgreVector3.h"
+#include "component/IComponent.h"
 
 class AgentObject;
 class VehicleObject;
 class OpenSteerAdapter;
 
-class AgentLocomotion
+class AgentLocomotion : public IComponent
 {
 public:
-	explicit AgentLocomotion(VehicleObject* owner);
+	AgentLocomotion();
 	virtual ~AgentLocomotion();
+
+	virtual void onAttach(GameObject* owner);
+	virtual void onDetach();
 
 	// Œª÷√…Ë÷√
 	void SetPosition(const Ogre::Vector3& position);

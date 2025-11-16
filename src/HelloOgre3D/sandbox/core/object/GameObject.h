@@ -11,6 +11,9 @@ public:
 	GameObject();
 	virtual ~GameObject();
 
+	void setUserData(void* userdata);
+	void* getUserData() const;
+
 	bool addComponent(const std::string& key, IComponent* comp);
 	IComponent* getComponent(const std::string& key);
 
@@ -18,8 +21,9 @@ public:
 	bool removeComponent(IComponent* comp);
 	
 	void update(int deltaMs);
-
+	
 private:
+	void* m_userdata;
 	std::map<std::string, IComponent*> m_components;
 };
 

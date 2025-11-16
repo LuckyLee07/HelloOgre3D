@@ -12,8 +12,8 @@ const float AgentLocomotion::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*
 const float AgentLocomotion::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
 const float AgentLocomotion::DEFAULT_AGENT_TARGET_RADIUS = 0.5f;	// meters (1.64 feet)
 
-AgentLocomotion::AgentLocomotion(VehicleObject* owner) 
-	: m_owner(owner),
+AgentLocomotion::AgentLocomotion() 
+	: m_owner(nullptr),
 	m_maxForce(DEFAULT_AGENT_MAX_FORCE),
 	m_maxSpeed(DEFAULT_AGENT_MAX_SPEED),
 	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS)
@@ -24,6 +24,21 @@ AgentLocomotion::AgentLocomotion(VehicleObject* owner)
 AgentLocomotion::~AgentLocomotion()
 {
 	SAFE_DELETE(m_adapter);
+}
+
+void AgentLocomotion::onAttach(GameObject* owner)
+{
+	IComponent::onAttach(owner);
+
+	auto* pObject = getOwner();
+	assert(pObject != nullptr);
+	m_owner = dynamic_cast<VehicleObject*>(pObject);
+}
+
+void AgentLocomotion::onDetach()
+{
+	m_owner = nullptr;
+	IComponent::onDetach();
 }
 
 // --- 参数/状态：暂转发 ---

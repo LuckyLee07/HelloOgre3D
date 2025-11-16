@@ -1,23 +1,24 @@
 #ifndef __I_COMPONENT__
 #define __I_COMPONENT__
 
+class BaseObject;
 class GameObject;
 class IComponent
 {
 public:
-	IComponent() : m_owner(nullptr) {}
+	IComponent() : m_gameobj(nullptr) {}
 	virtual ~IComponent() {}
+
+	BaseObject* getOwner() const;
 
 	virtual void onAttach(GameObject* owner);
 	virtual void onDetach();
 
 	virtual void start() {}
-	virtual void update(int deltaMs);
-
-	GameObject* getOwner() const;
+	virtual void update(int deltaMs) {}
 
 protected:
-	GameObject* m_owner;
+	GameObject* m_gameobj;
 };
 
 #endif // __I_COMPONENT__
