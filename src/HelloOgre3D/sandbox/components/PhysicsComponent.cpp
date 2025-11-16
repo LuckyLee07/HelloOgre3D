@@ -5,7 +5,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "SandboxMacros.h"
 #include "GameFunction.h"
-#include "manager/SandboxMgr.h"
+#include "service/PhysicsFactory.h"
 
 PhysicsComponent::PhysicsComponent(btRigidBody* body)
 	: m_body(body), m_owner(nullptr)
@@ -239,7 +239,7 @@ Ogre::Real PhysicsComponent::GetHorizontalSpeed() const
 
 void PhysicsComponent::RebuildCapsule(Ogre::Real height, Ogre::Real radius)
 {
-	btRigidBody* capsule = SandboxMgr::CreateRigidBodyCapsule(height, radius);
+	btRigidBody* capsule = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 	capsule->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 	this->ResetRigidBody(capsule);
 }

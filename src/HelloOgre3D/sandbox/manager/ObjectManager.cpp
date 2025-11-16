@@ -6,7 +6,7 @@
 #include "common/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
 #include "ClientManager.h"
-#include "SandboxMgr.h"
+#include "service/SceneFactory.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -58,7 +58,7 @@ void ObjectManager::Update(int deltaMilliseconds)
 		if (lastMilliSeconds <= 0)
 		{
 			auto pSceneNode = iter->first;
-			SandboxMgr::RemParticleBySceneNode(pSceneNode);
+			SceneFactory::RemParticleBySceneNode(pSceneNode);
 			pRootScene->removeChild(pSceneNode);
 			pRootScene->getCreator()->destroySceneNode(pSceneNode);
 

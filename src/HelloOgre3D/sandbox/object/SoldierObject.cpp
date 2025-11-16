@@ -8,6 +8,9 @@
 #include "input/PlayerInput.h"
 #include "state/AgentState.h"
 #include "GameFunction.h"
+#include "OgreSceneNode.h"
+#include "BlockObject.h"
+#include "service/SceneFactory.h"
 
 using namespace Ogre;
 
@@ -101,9 +104,9 @@ void SoldierObject::ShootBullet()
 	Ogre::SceneNode* pSoldier = m_pAgentBody->getSceneNode();
 
 	Ogre::Vector3 position;
-	SandboxMgr::GetBonePosition(*pSoldier, "b_muzzle", position);
+	SceneFactory::GetBonePosition(*pSoldier, "b_muzzle", position);
 	Ogre::Quaternion orientation;
-	SandboxMgr::GetBoneOrientation(*pSoldier, "b_muzzle", orientation);
+	SceneFactory::GetBoneOrientation(*pSoldier, "b_muzzle", orientation);
 
 	Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
 	this->DoShootBullet(position, rotation);
@@ -122,7 +125,7 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
 	bullet->setOrientation(axisRot);
 	
-	Ogre::SceneNode* bulletParticle = SandboxMgr::CreateParticle(bullet->getSceneNode(), "Bullet");
+	Ogre::SceneNode* bulletParticle = SceneFactory::CreateParticle(bullet->getSceneNode(), "Bullet");
 	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
 	bullet->addParticleNode(bulletParticle);
 
