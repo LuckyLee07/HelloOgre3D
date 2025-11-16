@@ -13,7 +13,7 @@
 #include "play/MyRigidBody.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
-#include "compents/RenderComponent.h"
+#include "components/RenderComponent.h"
 
 using namespace Ogre;
 

@@ -7,8 +7,8 @@
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
-#include "compents/AgentLocomotion.h"
-#include "compents/PhysicsComponent.h"
+#include "components/AgentLocomotion.h"
+#include "components/PhysicsComponent.h"
 
 using namespace Ogre;
 

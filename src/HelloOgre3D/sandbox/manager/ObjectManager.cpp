@@ -3,7 +3,7 @@
 #include "object/UIComponent.h"
 #include "object/EntityObject.h"
 #include "object/BlockObject.h"
-#include "base/ScriptLuaVM.h"
+#include "common/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
 #include "ClientManager.h"
 #include "SandboxMgr.h"

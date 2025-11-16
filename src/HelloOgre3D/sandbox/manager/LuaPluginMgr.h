@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <typeinfo>
 #include "ScriptLuaVM.h"
-#include "LuaClassNameTraits.h"
+#include "script/LuaClassNameTraits.h"
 
 class LuaPluginMgr
 {

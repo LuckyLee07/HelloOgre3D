@@ -73,12 +73,10 @@ function CreateGameProject( projectName )
     configuration( "*" )
     includedirs( {
       "../src/%{prj.name}/",
-      "../src/%{prj.name}/base",
+      "../src/%{prj.name}/common",
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
-      "../src/%{prj.name}/sandbox/base",
-      "../src/%{prj.name}/sandbox/common",
-      "../src/%{prj.name}/sandbox/driver",
+      "../src/%{prj.name}/sandbox/core",
       "../src/external",
       "../src/external/lua/lua",
       "../src/external/lua/tolua",
@@ -97,8 +95,8 @@ function CreateGameProject( projectName )
     files( {
       "../src/" .. projectName .. "/**.h",
       "../src/" .. projectName .. "/**.cpp",
-      "../src/" .. projectName .. "/base/**.h",
-      "../src/" .. projectName .. "/base/**.cpp",
+      "../src/" .. projectName .. "/common/**.h",
+      "../src/" .. projectName .. "/common/**.cpp",
       "../src/" .. projectName .. "/game/**.h",
       "../src/" .. projectName .. "/game/**.cpp",
       "../src/" .. projectName .. "/sandbox/**.h",

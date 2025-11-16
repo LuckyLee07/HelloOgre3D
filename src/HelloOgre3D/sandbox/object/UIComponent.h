@@ -1,7 +1,7 @@
 #ifndef __UI_COMPONENT__
 #define __UI_COMPONENT__
 
-#include "BaseObject.h"
+#include "object/BaseObject.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "ogre3d/include/OgreSceneNode.h"
 #include "ogre3d/include/OgreString.h"

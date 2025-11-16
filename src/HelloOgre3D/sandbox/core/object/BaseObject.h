@@ -1,8 +1,8 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
-#include "SandboxObject.h"
-#include "LuaClassNameTraits.h"
+#include "object/SandboxObject.h"
+#include "script/LuaClassNameTraits.h"
 
 class GameObject;
 struct Collision;

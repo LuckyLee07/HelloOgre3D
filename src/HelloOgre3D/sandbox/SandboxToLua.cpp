@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Mon Nov  3 20:49:48 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Nov 16 09:01:00 2025.
 */
 
 #ifndef __cplusplus
@@ -19,7 +19,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "ois/include/OISKeyboard.h"
 #include "GameDefine.h"
 #include "GameFunction.h"
-#include "base/BaseObject.h"
+#include "core/object/BaseObject.h"
 #include "object/UIComponent.h"
 #include "input/IPlayerInput.h"
 #include "animation/AgentAnim.h"

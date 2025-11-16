@@ -1,5 +1,5 @@
 #include "GameObject.h"
-#include "compents/IComponent.h"
+#include "components/IComponent.h"
 #include "SandboxMacros.h"
 
 GameObject::GameObject()

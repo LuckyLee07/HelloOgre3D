@@ -1,7 +1,7 @@
 #ifndef __SANDBOX_OBJECT__
 #define __SANDBOX_OBJECT__
 
-#include "SandboxEventDispatcherManager.h"
+#include "event/SandboxEventDispatcherManager.h"
 
 class SandboxObject
 {

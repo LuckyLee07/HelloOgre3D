@@ -2,5 +2,5 @@ $#include "object/BlockObject.h"
 $#include "object/AgentObject.h"
 $pfile "ExternalToLua.pkg"
 
-$cfile "../base/LuaInterface.h"
+$cfile "../common/LuaInterface.h"
 $cfile "GameManager.h"

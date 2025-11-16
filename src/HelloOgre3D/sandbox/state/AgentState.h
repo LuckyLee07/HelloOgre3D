@@ -1,7 +1,7 @@
 #ifndef __AGENT_STATE_H__
 #define __AGENT_STATE_H__
 
-#include "SandboxObject.h"
+#include "object/SandboxObject.h"
 #include <string>
 
 class AgentObject;

@@ -2,8 +2,8 @@
 #define __AGENT_LUA_STATE_H__
 
 #include "AgentState.h"
-#include "LuaEnvObject.h"
-#include "LuaClassNameTraits.h"
+#include "object/LuaEnvObject.h"
+#include "script/LuaClassNameTraits.h"
 
 class AgentObject;
 

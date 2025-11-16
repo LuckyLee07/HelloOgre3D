@@ -1,5 +1,5 @@
 #include "tolua++.h"
-#include "base/LuaEnvObject.h"
+#include "object/LuaEnvObject.h"
 #include "object/AgentObject.h"
 #include "state/AgentLuaState.h"
 

@@ -1,7 +1,7 @@
 #ifndef __Entity_OBJECT__
 #define __Entity_OBJECT__
 
-#include "BaseObject.h"
+#include "object/BaseObject.h"
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "OgreVector3.h"

@@ -2,7 +2,7 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 #include "manager/ObjectManager.h"
-#include "base/BaseObject.h"
+#include "BaseObject.h"
 #include "play/MyRigidBody.h"
 #include "SandboxMacros.h"
 

@@ -4,8 +4,8 @@
 #include "AgentAnimTransition.h"
 #include "LogSystem.h"
 #include "GlobalFuncs.h"
-#include "BaseObject.h"
-#include "SandboxEventDispatcherManager.h"
+#include "object/BaseObject.h"
+#include "event/SandboxEventDispatcherManager.h"
 #include "GameDefine.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner)

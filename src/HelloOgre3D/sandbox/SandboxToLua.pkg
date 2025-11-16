@@ -3,7 +3,7 @@ $pfile "SandboxForTypes.pkg"
 $cfile "GameDefine.h"
 $cfile "GameFunction.h"
 
-$cfile "base/BaseObject.h"
+$cfile "core/object/BaseObject.h"
 $cfile "object/UIComponent.h"
 $cfile "input/IPlayerInput.h"
 

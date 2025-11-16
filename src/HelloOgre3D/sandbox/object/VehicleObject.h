@@ -4,7 +4,7 @@
 #include "OgreMath.h"
 #include "OgreVector3.h"
 #include "steer/AgentPath.h"
-#include "BaseObject.h"
+#include "object/BaseObject.h"
 
 class btRigidBody;
 class BlockObject;

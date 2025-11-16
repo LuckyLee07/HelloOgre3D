@@ -5,7 +5,7 @@
 #include "OgreVector3.h"
 #include "VehicleObject.h"
 #include "OISKeyboard.h"
-#include "LuaEnvObject.h"
+#include "object/LuaEnvObject.h"
 #include "GameDefine.h"
 #include "input/IPlayerInput.h"
 

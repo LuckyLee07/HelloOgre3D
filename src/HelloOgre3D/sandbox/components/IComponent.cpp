@@ -1,5 +1,5 @@
 #include "IComponent.h"
-#include "GameObject.h"
+#include "object/GameObject.h"
 
 void IComponent::onAttach(GameObject* owner)
 {
