@@ -6,13 +6,16 @@
 
 namespace Ogre {
 	class Camera;
-	class SceneNode;
 	class SceneManager;
 }
+class ClientManager;
 
 class CameraService
 {
 public:
+	CameraService(ClientManager* pMananger);
+	~CameraService() { m_clientManger = nullptr; }
+
 	Ogre::Camera* GetCamera();
 	Ogre::SceneManager* GetSceneManager();
 
@@ -26,6 +29,9 @@ public:
 	long long GetRenderTime();
 	long long GetSimulateTime();
 	long long GetTotalSimulateTime();
+
+private:
+	ClientManager* m_clientManger;
 };
 
 #endif // __CAMERA_SERVICE_H__

@@ -10,6 +10,10 @@
 #include "Procedural.h"
 #include "btBulletDynamicsCommon.h"
 
+ObjectFactory::ObjectFactory(ObjectManager* pMananger)
+	: m_objectManager(pMananger)
+{
+}
 
 BlockObject* ObjectFactory::CreatePlane(float length, float width)
 {
@@ -20,7 +24,7 @@ BlockObject* ObjectFactory::CreatePlane(float length, float width)
 	BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
 	pObject->setObjType(BaseObject::OBJ_TYPE_PLANE);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -30,7 +34,7 @@ BlockObject* ObjectFactory::CreateBlockObject(const Ogre::String& meshFilePath)
 	BlockObject* pObject = new BlockObject(meshFilePath);
 	pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -52,7 +56,7 @@ BlockObject* ObjectFactory::CreateBlockBox(float width, float height, float leng
 	pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
 	pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -66,7 +70,7 @@ BlockObject* ObjectFactory::CreateBullet(Ogre::Real height, Ogre::Real radius)
 	BlockObject* pBullet = new BlockObject(pSceneNode, capsuleRigidBody);
 	pBullet->setObjType(BaseObject::OBJ_TYPE_BULLET);
 
-	g_ObjectManager->addNewObject(pBullet);
+	m_objectManager->addNewObject(pBullet);
 
 	return pBullet;
 }
@@ -76,7 +80,7 @@ EntityObject* ObjectFactory::CreateEntityObject(const Ogre::String& meshFilePath
 	EntityObject* pObject = new EntityObject(meshFilePath);
 	pObject->setObjType(BaseObject::OBJ_TYPE_ENTITY);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -98,7 +102,7 @@ AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* fi
 	if (filepath != nullptr)
 		LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, filepath);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }
@@ -118,7 +122,7 @@ SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const 
 	if (filepath != nullptr)
 		LuaPluginMgr::BindLuaPluginByFile<SoldierObject>(pObject, filepath);
 
-	g_ObjectManager->addNewObject(pObject);
+	m_objectManager->addNewObject(pObject);
 
 	return pObject;
 }

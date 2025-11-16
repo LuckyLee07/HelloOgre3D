@@ -8,7 +8,6 @@
 
 #include "service/UIService.h"
 #include "service/CameraService.h"
-#include "service/SceneFactory.h"
 #include "service/ObjectFactory.h"
 
 namespace Ogre {
@@ -26,7 +25,10 @@ class UIComponent;
 class SandboxMgr //tolua_exports
 { //tolua_exports
 public:
-	SandboxMgr(Ogre::SceneManager* sceneManager);
+	SandboxMgr(UIService& uiService, 
+		CameraService& cameraService,
+		ObjectFactory& objectFactory,
+		Ogre::SceneManager* sceneManager);
 	~SandboxMgr();
 
 	static SandboxMgr* GetInstance();
@@ -78,7 +80,6 @@ private:
 
 	UIService m_uiService;
 	CameraService m_cameraService;
-	SceneFactory m_sceneFactory;
 	ObjectFactory m_objectFactory;
 
 }; //tolua_exports

@@ -11,10 +11,16 @@
 
 SandboxMgr* g_SandboxMgr = nullptr;
 
-SandboxMgr::SandboxMgr(Ogre::SceneManager* sceneManager)
-    : m_pRootSceneNode(nullptr)
+SandboxMgr::SandboxMgr(UIService& uiService,
+	CameraService& cameraService,
+	ObjectFactory& objectFactory,
+	Ogre::SceneManager* sceneManager)
+	: m_uiService(uiService), 
+	m_cameraService(cameraService),
+	m_objectFactory(objectFactory),
+	m_pRootSceneNode(nullptr)
 {
-    m_pRootSceneNode = sceneManager->getRootSceneNode();
+	m_pRootSceneNode = sceneManager->getRootSceneNode();
 }
 
 SandboxMgr::~SandboxMgr()

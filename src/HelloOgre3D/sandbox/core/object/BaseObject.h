@@ -56,7 +56,7 @@ protected:
 
 private:
 	unsigned int m_objId;
-	int m_liveTick; //д╛хо-1
+	int m_liveTick = -1;
 }; //tolua_exports
 
 

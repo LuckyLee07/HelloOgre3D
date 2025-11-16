@@ -2,7 +2,7 @@
 #include "GameObject.h"
 #include "SandboxMacros.h"
 
-BaseObject::BaseObject() : m_objId(0), m_liveTick(-1)
+BaseObject::BaseObject() : m_objId(0)
 {
 	m_objType = OBJ_TYPE_NONE;
 	m_pGameObjet = new GameObject();

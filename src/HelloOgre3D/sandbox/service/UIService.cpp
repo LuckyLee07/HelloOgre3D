@@ -1,13 +1,18 @@
 #include "UIService.h"
 #include "GameManager.h"
-#include "Object/UIComponent.h"
+#include "object/UIComponent.h"
+
+UIService::UIService(GameManager* pMananger)
+	: m_gameManager(pMananger)
+{
+}
 
 UIComponent* UIService::CreateUIComponent(unsigned int index)
 {
-	return g_GameManager->createUIComponent(index);
+	return m_gameManager->createUIComponent(index);
 }
 
 void UIService::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
 {
-	return g_GameManager->setMarkupColor(index, color);
+	return m_gameManager->setMarkupColor(index, color);
 }

@@ -9,19 +9,26 @@ class BlockObject;
 class AgentObject;
 class SoldierObject;
 class UIComponent;
+class ObjectManager;
 
 class ObjectFactory
 {
 public:
-	static BlockObject* CreatePlane(float length, float width);
-	static BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
-	static BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
-	static BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
+	ObjectFactory(ObjectManager* pMananger);
+	~ObjectFactory() { m_objectManager = nullptr; }
 
-	static EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
+	BlockObject* CreatePlane(float length, float width);
+	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
+	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
+	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 
-	static AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
-	static SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
+	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
+
+	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
+	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
+
+private:
+	ObjectManager* m_objectManager;
 };
 
 #endif // __OBJECT_FACTORY_H__

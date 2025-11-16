@@ -1,16 +1,21 @@
 #include "CameraService.h"
-#include "manager/ClientManager.h"
 #include "OgreSceneManager.h"
 #include "GameFunction.h"
+#include "manager/ClientManager.h"
+
+CameraService::CameraService(ClientManager* pMananger)
+	: m_clientManger(pMananger)
+{
+}
 
 Ogre::Camera* CameraService::GetCamera()
 {
-	return GetClientMgr()->getCamera();
+	return m_clientManger->getCamera();
 }
 
 Ogre::SceneManager* CameraService::GetSceneManager()
 {
-	auto* pRootSceneNode = GetClientMgr()->getRootSceneNode();
+	auto* pRootSceneNode = m_clientManger->getRootSceneNode();
 	return pRootSceneNode->getCreator();
 }
 
@@ -52,17 +57,17 @@ Ogre::Quaternion CameraService::GetCameraOrientation()
 long long CameraService::GetRenderTime()
 {
 	ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_RENDER_TIME;
-	return GetClientMgr()->GetProfileTime(profileType);
+	return m_clientManger->GetProfileTime(profileType);
 }
 
 long long CameraService::GetSimulateTime()
 {
 	ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_SIMULATE_TIME;
-	return GetClientMgr()->GetProfileTime(profileType);
+	return m_clientManger->GetProfileTime(profileType);
 }
 
 long long CameraService::GetTotalSimulateTime()
 {
 	ClientManager::ProfileTimeType profileType = ClientManager::ProfileTimeType::P_TOTAL_SIMULATE_TIME;
-	return GetClientMgr()->GetProfileTime(profileType);
+	return m_clientManger->GetProfileTime(profileType);
 }

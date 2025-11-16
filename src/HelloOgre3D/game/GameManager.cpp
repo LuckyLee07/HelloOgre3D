@@ -64,11 +64,15 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	m_pPhysicsWorld = new PhysicsWorld();
 	m_pPhysicsWorld->initilize();
 
-	m_pSandboxMgr = new SandboxMgr(sceneManager);
-	g_SandboxMgr = m_pSandboxMgr;
-
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
 	g_ObjectManager = m_pObjectManager;
+
+	UIService uiservice(this);
+	CameraService camservice(GetClientMgr());
+	ObjectFactory objfactory(m_pObjectManager);
+
+	m_pSandboxMgr = new SandboxMgr(uiservice, camservice, objfactory, sceneManager);
+	g_SandboxMgr = m_pSandboxMgr;
 
 	this->InitLuaEnv();
 }
