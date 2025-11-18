@@ -1,7 +1,6 @@
 #include "ObjectManager.h"
 #include "object/AgentObject.h"
 #include "object/UIComponent.h"
-#include "object/EntityObject.h"
 #include "object/BlockObject.h"
 #include "common/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
@@ -120,19 +119,6 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		m_uicomps.clear();
 	}
 
-	if ((objType & MGR_OBJ_ENTITY) != 0)
-	{
-		auto iter = m_entitys.begin();
-		for (; iter != m_entitys.end(); iter++)
-		{
-			auto pEntity = *iter;
-			m_objects.erase(pEntity->getObjId());
-
-			SAFE_DELETE(pEntity);
-		}
-		m_entitys.clear();
-	}
-
 	if ((objType & MGR_OBJ_BLOCK) != 0)
 	{
 		auto iter = m_blocks.begin();
@@ -199,12 +185,6 @@ void ObjectManager::realAddObject(BaseObject* pObject)
 		assert(newObject != nullptr);
 		m_blocks.push_back(newObject);
 	}
-	else if (objtype >= BaseObject::OBJ_TYPE_ENTITY)
-	{
-		auto newObject = dynamic_cast<EntityObject*>(pObject);
-		assert(newObject != nullptr);
-		m_entitys.push_back(newObject);
-	}
 	else if (objtype >= BaseObject::OBJ_TYPE_UIOBJ)
 	{
 		auto newObject = dynamic_cast<UIComponent*>(pObject);
@@ -240,19 +220,6 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_blocks.erase(it);
-				SAFE_DELETE(pObject);
-				return true;
-			}
-		}
-	}
-	
-	if (objtype >= BaseObject::OBJ_TYPE_ENTITY)
-	{
-		for (auto it = m_entitys.begin(); it != m_entitys.end(); it++)
-		{
-			if ((*it)->getObjId() == objid)
-			{
-				m_entitys.erase(it);
 				SAFE_DELETE(pObject);
 				return true;
 			}

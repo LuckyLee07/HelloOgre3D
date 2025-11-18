@@ -1,7 +1,7 @@
 #ifndef __BLOCK_OBJECT__
 #define __BLOCK_OBJECT__
 
-#include "EntityObject.h"
+#include "object/BaseObject.h"
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "opensteer/include/Obstacle.h"
@@ -12,8 +12,9 @@ namespace Ogre {
 }
 
 class btRigidBody;
+class RenderableObject;
 
-class BlockObject : public EntityObject //tolua_exports
+class BlockObject : public BaseObject //tolua_exports
 	, public OpenSteer::SphericalObstacle
 { //tolua_exports
 	friend class VehicleObject;
@@ -33,9 +34,9 @@ public:
 	virtual void updateWorldTransform();
 
 	//tolua_begin
-	void setPosition(const Ogre::Vector3& position) override;
-	void setRotation(const Ogre::Vector3& position) override;
-	void setOrientation(const Ogre::Quaternion& quaternion) override;
+	void setPosition(const Ogre::Vector3& position);
+	void setRotation(const Ogre::Vector3& position);
+	void setOrientation(const Ogre::Quaternion& quaternion);
 
 	Ogre::Real GetMass() const;
 	void SetMass(const Ogre::Real mass);
@@ -53,6 +54,9 @@ public:
 	virtual bool canCollide(); // ÊÇ·ñ¿ÉÒÔÅö×²
 	virtual void onCollideWith(BaseObject* pCollideObj, const Collision& collision);
 
+	Ogre::Entity* GetEntity();
+	Ogre::SceneNode* GetSceneNode();
+
 public:
 	OpenSteer::Vec3 getPosition() const;
 
@@ -63,7 +67,8 @@ public:
 		const float minTimeToCollision) const;
 
 private:
-	btRigidBody* m_pRigidBody;
+	btRigidBody* m_pRigidBody = nullptr;
+	RenderableObject* m_pEntity = nullptr;
 	std::vector<Ogre::SceneNode*> m_particleNodes;
 
 }; //tolua_exports

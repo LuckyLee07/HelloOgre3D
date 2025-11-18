@@ -53,6 +53,7 @@ bool BaseObject::checkNeedClear()
 	return m_liveTick == 0;
 }
 
+// 在特殊场景下强制重置销毁状态，确保对象能被立即回收，而无需等待之前设置的 liveTick
 void BaseObject::setNeedClear(int liveTick, bool force)
 {
 	if (!force && m_liveTick >= 0) return;

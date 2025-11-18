@@ -1,5 +1,5 @@
 #include "SoldierObject.h"
-#include "EntityObject.h"
+#include "RenderableObject.h"
 #include "manager/SandboxMgr.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
@@ -14,7 +14,7 @@
 
 using namespace Ogre;
 
-SoldierObject::SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
+SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
 {
 	this->setObjType(OBJ_TYPE_SOLDIER);
@@ -71,12 +71,12 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	{
 		SAFE_DELETE(m_pWeapon);
 	}
-	m_pWeapon = new EntityObject(meshFile);
+	m_pWeapon = new RenderableObject(meshFile);
 	m_pWeapon->InitAsmWithOwner(this, false);
 
 	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
 	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);
-	m_pAgentBody->AttachToBone("b_RightHand", m_pWeapon->getDetachEntity(), positionOffset, rotationOffset);
+	m_pAgentBody->AttachToBone("b_RightHand", m_pWeapon->GetDetachEntity(), positionOffset, rotationOffset);
 }
 
 void SoldierObject::update(int deltaMilisec)
@@ -92,16 +92,16 @@ void SoldierObject::update(int deltaMilisec)
 	if (m_stateController)
 		m_stateController->Update(deltaMilisec);
 
-	m_pAgentBody->update(deltaMilisec);
+	m_pAgentBody->Update(deltaMilisec);
 	if (m_pWeapon)
-		m_pWeapon->update(deltaMilisec);
+		m_pWeapon->Update(deltaMilisec);
 
 	this->updateWorldTransform();
 }
 
 void SoldierObject::ShootBullet()
 {
-	Ogre::SceneNode* pSoldier = m_pAgentBody->getSceneNode();
+	Ogre::SceneNode* pSoldier = m_pAgentBody->GetSceneNode();
 
 	Ogre::Vector3 position;
 	SceneFactory::GetBonePosition(*pSoldier, "b_muzzle", position);
@@ -125,7 +125,7 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
 	bullet->setOrientation(axisRot);
 	
-	Ogre::SceneNode* bulletParticle = SceneFactory::CreateParticle(bullet->getSceneNode(), "Bullet");
+	Ogre::SceneNode* bulletParticle = SceneFactory::CreateParticle(bullet->GetSceneNode(), "Bullet");
 	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
 	bullet->addParticleNode(bulletParticle);
 
@@ -152,7 +152,7 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	if (soldier_height <= 0.0f || soldier_speed <= 0.0f) return;
 
-	m_pAgentBody->setOriginPos(Ogre::Vector3(0, -soldier_height / 2, 0));
+	m_pAgentBody->SetOriginPos(Ogre::Vector3(0, -soldier_height / 2, 0));
 
 	Ogre::Real newPosY = (this->GetHeight() - soldier_height) / 2;
 	this->setPosition((GetPosition() - Ogre::Vector3(0, newPosY, 0)));

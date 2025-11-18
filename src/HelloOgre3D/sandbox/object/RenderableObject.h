@@ -1,5 +1,5 @@
-#ifndef __Entity_OBJECT__
-#define __Entity_OBJECT__
+#ifndef __RENDERABLE_OBJECT__
+#define __RENDERABLE_OBJECT__
 
 #include "object/BaseObject.h"
 #include "OgreString.h"
@@ -15,27 +15,27 @@ class AgentAnim;
 class AgentAnimStateMachine;
 class RenderComponent;
 
-class EntityObject : public BaseObject //tolua_exports
-{ //tolua_exports
+class RenderableObject
+{
 public:
-	EntityObject(const Ogre::String& meshFile);
-	EntityObject(const Ogre::MeshPtr& meshPtr);
-	EntityObject(Ogre::SceneNode* pSceneNode);
-	virtual ~EntityObject();
+	RenderableObject(const Ogre::String& meshFile);
+	RenderableObject(const Ogre::MeshPtr& meshPtr);
+	RenderableObject(Ogre::SceneNode* pSceneNode);
+	virtual ~RenderableObject();
 
-	void update(int deltaMsec) override;
+	virtual void Update(int deltaMsec);
 
 	//BaseObject* getOwner() { return m_owner; }
 	void InitAsmWithOwner(BaseObject* owner, bool canFireEvent = true);
 	
 	//tolua_begin
-	Ogre::Vector3 getOriginPos() const;
-	void setOriginPos(const Ogre::Vector3& position);
-	void setMaterial(const Ogre::String& materialName);
+	Ogre::Vector3 GetOriginPos() const;
+	void SetOriginPos(const Ogre::Vector3& position);
+	void SetMaterial(const Ogre::String& materialName);
 	
-	virtual void setPosition(const Ogre::Vector3& position);
-	virtual void setRotation(const Ogre::Vector3& position);
-	virtual void setOrientation(const Ogre::Quaternion& quaternion);
+	virtual void SetPosition(const Ogre::Vector3& position);
+	virtual void SetRotation(const Ogre::Vector3& position);
+	virtual void SetOrientation(const Ogre::Quaternion& quaternion);
 
 	virtual Ogre::Vector3 GetPosition() const;
 	virtual Ogre::Quaternion GetOrientation() const;
@@ -53,12 +53,12 @@ public:
 	Ogre::Vector3 GetDerivedPosition() const;
 	Ogre::Quaternion GetDerivedOrientation() const;
 
-	Ogre::Entity* getEntity();
-	Ogre::Entity* getDetachEntity();
-	Ogre::SceneNode* getSceneNode();
+	Ogre::Entity* GetEntity();
+	Ogre::Entity* GetDetachEntity();
+	Ogre::SceneNode* GetSceneNode();
 
 protected:
 	RenderComponent* m_renderComp = nullptr;
 }; //tolua_exports
 
-#endif  // __Entity_OBJECT__
+#endif  // __RENDERABLE_OBJECT__

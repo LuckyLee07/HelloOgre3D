@@ -113,11 +113,6 @@ BlockObject* SandboxMgr::CreateBullet(Ogre::Real height, Ogre::Real radius)
 	return m_objectFactory.CreateBullet(height, radius);
 }
 
-EntityObject* SandboxMgr::CreateEntityObject(const Ogre::String& meshFilePath)
-{
-	return m_objectFactory.CreateEntityObject(meshFilePath);
-}
-
 AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath/* = nullptr */)
 {
 	return m_objectFactory.CreateAgent(agentType, filepath);
@@ -161,7 +156,7 @@ Ogre::Light* SandboxMgr::CreateDirectionalLight(const Ogre::Vector3& direction)
 void SandboxMgr::setMaterial(BlockObject* pObject, const Ogre::String& materialName)
 {
     assert(pObject != nullptr);
-    setMaterial(pObject->getSceneNode(), materialName);
+    setMaterial(pObject->GetSceneNode(), materialName);
 }
 
 void SandboxMgr::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName)

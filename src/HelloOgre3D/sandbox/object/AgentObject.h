@@ -15,13 +15,13 @@ namespace Ogre {
 
 class ScriptLuaVM;
 class BlockObject;
-class EntityObject;
+class RenderableObject;
 
 class AgentObject : public VehicleObject //tolua_exports
 	, public LuaEnvObject
 { //tolua_exports
 public:
-	AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
+	AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~AgentObject();
 
 	virtual void Initialize();
@@ -29,7 +29,7 @@ public:
 
 	//tolua_begin
 	void initBody(const Ogre::String& meshFile);
-	EntityObject* getBody() { return m_pAgentBody; }
+	RenderableObject* getBody() { return m_pAgentBody; }
 
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }
@@ -71,7 +71,7 @@ protected:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
 	
-	EntityObject* m_pAgentBody;
+	RenderableObject* m_pAgentBody;
 	bool m_onPlayDeathAnim = false;
 
 private:

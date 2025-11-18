@@ -4,7 +4,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "GameManager.h"
 #include "BlockObject.h"
-#include "EntityObject.h"
+#include "RenderableObject.h"
 #include "play/PhysicsWorld.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
@@ -14,7 +14,7 @@ using namespace Ogre;
 
 static std::string g_EmptyStr = "";
 
-AgentObject::AgentObject(EntityObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
+AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
 {
 	m_objType = OBJ_TYPE_AGENT;
@@ -57,7 +57,7 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 	{
 		delete m_pAgentBody;
 	}
-	m_pAgentBody = new EntityObject(meshFile);
+	m_pAgentBody = new RenderableObject(meshFile);
 	m_pAgentBody->InitAsmWithOwner(this, true);
 }
 
@@ -141,7 +141,7 @@ void AgentObject::update(int deltaMilisec)
 		this->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
-	m_pAgentBody->update(deltaMilisec);
+	m_pAgentBody->Update(deltaMilisec);
 
 	this->updateWorldTransform();
 }
@@ -153,7 +153,7 @@ void AgentObject::updateWorldTransform()
 	
 	const btVector3& rigidBodyPos = pRigidBody->getWorldTransform().getOrigin();
 	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
-	m_pAgentBody->SetDerivedPosition(position + m_pAgentBody->getOriginPos());
+	m_pAgentBody->SetDerivedPosition(position + m_pAgentBody->GetOriginPos());
 
 	const btQuaternion& rigidBodyRotation = pRigidBody->getWorldTransform().getRotation();
 	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
@@ -222,14 +222,14 @@ void AgentObject::setPosition(const Ogre::Vector3& position)
 {
 	VehicleObject::setPosition(position);
 	if (m_pAgentBody) 
-		m_pAgentBody->setPosition(position);
+		m_pAgentBody->SetPosition(position);
 }
 
 void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
 	VehicleObject::setOrientation(quaternion);
 	if (m_pAgentBody)
-		m_pAgentBody->setOrientation(quaternion);
+		m_pAgentBody->SetOrientation(quaternion);
 }
 
 #define USE_CPP_FSM 1

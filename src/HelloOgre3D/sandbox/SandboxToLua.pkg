@@ -9,7 +9,6 @@ $cfile "input/IPlayerInput.h"
 
 $cfile "animation/AgentAnim.h"
 $cfile "animation/AgentAnimStateMachine.h"
-$cfile "object/EntityObject.h"
 $cfile "object/BlockObject.h"
 $cfile "object/VehicleObject.h"
 $cfile "object/AgentObject.h"

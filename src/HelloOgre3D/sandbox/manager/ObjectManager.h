@@ -50,7 +50,6 @@ public:
 
 	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }
 	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
-	const std::vector<EntityObject*>& getAllEntitys() { return m_entitys; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	//tolua_end
@@ -73,11 +72,10 @@ private:
 	unsigned int getNextObjId() { return ++m_objIndex; }
 
 	std::vector<AgentObject*> m_agents;
-	std::vector<EntityObject*> m_entitys;
 	std::vector<BlockObject*> m_blocks;
 	std::vector<UIComponent*> m_uicomps;
 
-	std::map<int, BaseObject*> m_objects;
+	std::unordered_map<int, BaseObject*> m_objects;
 
 	// 存储需要定时删除的RootScene下的Node
 	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;

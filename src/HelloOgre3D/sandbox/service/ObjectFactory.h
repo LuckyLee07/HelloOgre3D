@@ -22,8 +22,6 @@ public:
 	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
 	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 
-	EntityObject* CreateEntityObject(const Ogre::String& meshFilePath);
-
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 

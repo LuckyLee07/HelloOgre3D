@@ -5,6 +5,7 @@
 #include "object/UIComponent.h"
 #include "object/AgentObject.h"
 #include "object/SoldierObject.h"
+#include "object/RenderableObject.h"
 #include "manager/ObjectManager.h"
 #include "manager/LuaPluginMgr.h"
 #include "Procedural.h"
@@ -54,7 +55,7 @@ BlockObject* ObjectFactory::CreateBlockBox(float width, float height, float leng
 
 	BlockObject* pObject = new BlockObject(meshPtr, planeRigidBody);
 	pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
-	pObject->getEntity()->setMaterialName(DEFAULT_MATERIAL);
+	pObject->GetEntity()->setMaterialName(DEFAULT_MATERIAL);
 
 	m_objectManager->addNewObject(pObject);
 
@@ -75,24 +76,14 @@ BlockObject* ObjectFactory::CreateBullet(Ogre::Real height, Ogre::Real radius)
 	return pBullet;
 }
 
-EntityObject* ObjectFactory::CreateEntityObject(const Ogre::String& meshFilePath)
-{
-	EntityObject* pObject = new EntityObject(meshFilePath);
-	pObject->setObjType(BaseObject::OBJ_TYPE_ENTITY);
-
-	m_objectManager->addNewObject(pObject);
-
-	return pObject;
-}
-
 AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath)
 {
 	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
 	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
 	Ogre::SceneNode* capsuleNode = SceneFactory::CreateNodeCapsule(height, radius);
-	EntityObject* pEntityObj = new EntityObject(capsuleNode);
-	pEntityObj->setMaterial("Ground2");
+	RenderableObject* pEntityObj = new RenderableObject(capsuleNode);
+	pEntityObj->SetMaterial("Ground2");
 
 	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
@@ -112,8 +103,8 @@ SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const 
 	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
 	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
 
-	EntityObject* pEntityObj = new EntityObject(meshFile);
-	pEntityObj->setOriginPos(Ogre::Vector3(0.0f, -height * 0.5f, 0.0f));
+	RenderableObject* pEntityObj = new RenderableObject(meshFile);
+	pEntityObj->SetOriginPos(Ogre::Vector3(0.0f, -height * 0.5f, 0.0f));
 
 	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));

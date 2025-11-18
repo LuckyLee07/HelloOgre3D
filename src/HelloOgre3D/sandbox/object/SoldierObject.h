@@ -8,7 +8,7 @@ class IPlayerInput;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
-	SoldierObject(EntityObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
+	SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~SoldierObject();
 
 	virtual void Initialize();
@@ -16,7 +16,7 @@ public:
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
-	EntityObject* getWeapon() { return m_pWeapon; }
+	RenderableObject* getWeapon() { return m_pWeapon; }
 
 	void changeStanceType(int stanceType);
 	int getStanceType() { return m_stanceType; }
@@ -39,7 +39,7 @@ protected:
 	void RemoveEventDispatcher();
 	
 private:
-	EntityObject* m_pWeapon;
+	RenderableObject* m_pWeapon;
 	SOLDIER_STANCE_TYPE m_stanceType;
 
 	IPlayerInput* m_inputInfo;

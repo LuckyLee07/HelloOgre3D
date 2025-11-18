@@ -16,17 +16,20 @@
 #include "components/RenderComponent.h"
 #include "service/SceneFactory.h"
 #include "service/PhysicsFactory.h"
+#include "RenderableObject.h"
 
 using namespace Ogre;
 
 BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
-	: EntityObject(meshFile), m_pRigidBody(pRigidBody)
+	: m_pRigidBody(pRigidBody)
 {
+	m_pEntity = new RenderableObject(meshFile);
+
 	setObjType(BaseObject::OBJ_TYPE_BLOCK);
 
 	if (pRigidBody == nullptr)
 	{
-		Ogre::Entity* pEntity = getEntity();
+		Ogre::Entity* pEntity = m_pEntity->GetEntity();
 		if (!pEntity) return;
 		
 		Ogre::Mesh* meshPtr = pEntity->getMesh().getPointer();
@@ -36,8 +39,10 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 }
 
 BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
-	: EntityObject(meshPtr), m_pRigidBody(pRigidBody)
+	: m_pRigidBody(pRigidBody)
 {
+	m_pEntity = new RenderableObject(meshPtr);
+
 	if (pRigidBody == nullptr)
 		m_pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr.get(), 1.0f);
 
@@ -45,8 +50,9 @@ BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 }
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: EntityObject(pSceneNode), m_pRigidBody(pRigidBody)
+	: m_pRigidBody(pRigidBody)
 {	
+	m_pEntity = new RenderableObject(pSceneNode);
 	if (m_pRigidBody)
 		m_pRigidBody->setUserPointer(this);
 }
@@ -62,6 +68,7 @@ BlockObject::~BlockObject()
 	}
 	m_particleNodes.clear();
 
+	SAFE_DELETE(m_pEntity);
 	this->DeleteRighdBody();
 }
 
@@ -70,7 +77,8 @@ void BlockObject::DeleteRighdBody()
 	if (m_pRigidBody != nullptr)
 	{
 		PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-		pPhysicsWorld->removeRigidBody(m_pRigidBody);
+		if (pPhysicsWorld)
+			pPhysicsWorld->removeRigidBody(m_pRigidBody);
 
 		delete m_pRigidBody->getMotionState();
 		delete m_pRigidBody->getCollisionShape();
@@ -86,10 +94,10 @@ void BlockObject::update(int deltaMsec)
 void BlockObject::updateWorldTransform()
 {
 	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
-	m_renderComp->SetPosition(BtVector3ToVector3(rigidBodyPos));
+	m_pEntity->SetPosition(BtVector3ToVector3(rigidBodyPos));
 
 	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
-	m_renderComp->SetOrientation(BtQuaternionToQuaternion(rigidBodyRotation));;
+	m_pEntity->SetOrientation(BtQuaternionToQuaternion(rigidBodyRotation));;
 }
 
 void BlockObject::SetMass(const Ogre::Real mass)
@@ -270,4 +278,14 @@ OpenSteer::Vec3 BlockObject::steerToAvoid(const OpenSteer::AbstractVehicle& vehi
 	{
 		return OpenSteer::Vec3::zero;
 	}
+}
+
+Ogre::Entity* BlockObject::GetEntity()
+{
+	return m_pEntity->GetEntity();
+}
+
+Ogre::SceneNode* BlockObject::GetSceneNode()
+{
+	return m_pEntity->GetSceneNode();
 }
