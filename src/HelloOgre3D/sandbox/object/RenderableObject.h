@@ -15,8 +15,8 @@ class AgentAnim;
 class AgentAnimStateMachine;
 class RenderComponent;
 
-class RenderableObject
-{
+class RenderableObject //tolua_exports
+{ //tolua_exports
 public:
 	RenderableObject(const Ogre::String& meshFile);
 	RenderableObject(const Ogre::MeshPtr& meshPtr);
@@ -28,7 +28,6 @@ public:
 	//BaseObject* getOwner() { return m_owner; }
 	void InitAsmWithOwner(BaseObject* owner, bool canFireEvent = true);
 	
-	//tolua_begin
 	Ogre::Vector3 GetOriginPos() const;
 	void SetOriginPos(const Ogre::Vector3& position);
 	void SetMaterial(const Ogre::String& materialName);
@@ -42,6 +41,7 @@ public:
 
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* pEntity, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
+	//tolua_begin
 	AgentAnim* GetAnimation(const char* animationName);
 	AgentAnimStateMachine* GetObjectASM();
 	//tolua_end

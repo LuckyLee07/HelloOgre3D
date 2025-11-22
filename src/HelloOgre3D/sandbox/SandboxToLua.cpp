@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Tue Nov 18 20:19:22 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Nov 22 22:39:15 2025.
 */
 
 #ifndef __cplusplus
@@ -24,6 +24,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "input/IPlayerInput.h"
 #include "animation/AgentAnim.h"
 #include "animation/AgentAnimStateMachine.h"
+#include "object/RenderableObject.h"
 #include "object/BlockObject.h"
 #include "object/VehicleObject.h"
 #include "object/AgentObject.h"
@@ -73,12 +74,12 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
  tolua_usertype(tolua_S,"btQuaternion");
- tolua_usertype(tolua_S,"SandboxObject");
+ tolua_usertype(tolua_S,"AgentAnimStateMachine");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"BaseObject");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
- tolua_usertype(tolua_S,"AgentAnimStateMachine");
+ tolua_usertype(tolua_S,"SandboxObject");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"SandboxMgr");
@@ -1477,6 +1478,72 @@ static int tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetAnimation of class  RenderableObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_RenderableObject_GetAnimation00
+static int tolua_SandboxToLua_RenderableObject_GetAnimation00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"RenderableObject",0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  RenderableObject* self = (RenderableObject*)  tolua_tousertype(tolua_S,1,0);
+  const char* animationName = ((const char*)  tolua_tostring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAnimation'", NULL);
+#endif
+  {
+   AgentAnim* tolua_ret = (AgentAnim*)  self->GetAnimation(animationName);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentAnim");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetAnimation'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetObjectASM of class  RenderableObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_RenderableObject_GetObjectASM00
+static int tolua_SandboxToLua_RenderableObject_GetObjectASM00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"RenderableObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  RenderableObject* self = (RenderableObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectASM'", NULL);
+#endif
+  {
+   AgentAnimStateMachine* tolua_ret = (AgentAnimStateMachine*)  self->GetObjectASM();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentAnimStateMachine");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetObjectASM'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setPosition of class  BlockObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BlockObject_setPosition00
 static int tolua_SandboxToLua_BlockObject_setPosition00(lua_State* tolua_S)
@@ -1710,6 +1777,40 @@ static int tolua_SandboxToLua_BlockObject_GetPosition00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setMaterial of class  BlockObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BlockObject_setMaterial00
+static int tolua_SandboxToLua_BlockObject_setMaterial00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BlockObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BlockObject* self = (BlockObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string materialName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMaterial'", NULL);
+#endif
+  {
+   self->setMaterial(materialName);
+   tolua_pushcppstring(tolua_S,(const char*)materialName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setMaterial'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5991,6 +6092,11 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"AddState",tolua_SandboxToLua_AgentAnimStateMachine_AddState00);
    tolua_function(tolua_S,"AddTransition",tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00);
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"RenderableObject","RenderableObject","",NULL);
+  tolua_beginmodule(tolua_S,"RenderableObject");
+   tolua_function(tolua_S,"GetAnimation",tolua_SandboxToLua_RenderableObject_GetAnimation00);
+   tolua_function(tolua_S,"GetObjectASM",tolua_SandboxToLua_RenderableObject_GetObjectASM00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BlockObject","BlockObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"BlockObject");
    tolua_function(tolua_S,"setPosition",tolua_SandboxToLua_BlockObject_setPosition00);
@@ -6000,6 +6106,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetMass",tolua_SandboxToLua_BlockObject_SetMass00);
    tolua_function(tolua_S,"GetRadius",tolua_SandboxToLua_BlockObject_GetRadius00);
    tolua_function(tolua_S,"GetPosition",tolua_SandboxToLua_BlockObject_GetPosition00);
+   tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_BlockObject_setMaterial00);
    tolua_function(tolua_S,"applyImpulse",tolua_SandboxToLua_BlockObject_applyImpulse00);
    tolua_function(tolua_S,"applyAngularImpulse",tolua_SandboxToLua_BlockObject_applyAngularImpulse00);
   tolua_endmodule(tolua_S);

@@ -164,6 +164,11 @@ void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 	this->updateWorldTransform();
 }
 
+void BlockObject::setMaterial(const Ogre::String& materialName)
+{
+	m_pEntity->SetMaterial(materialName);
+}
+
 void BlockObject::applyImpulse(const Ogre::Vector3& impulse)
 {
 	btVector3 torque(impulse.x, impulse.y, impulse.z);

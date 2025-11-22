@@ -1,4 +1,4 @@
-require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
+require("res.scripts.samples.chapter4.SoldierAgent.lua")
 
 local textSize = {w = 300, h = 300}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -204,7 +204,6 @@ function Sandbox_Initialize(ctype)
     --]]
 end
 
-
 function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
@@ -222,4 +221,7 @@ function Sandbox_Update(deltaTimeInMillis)
             weaponAsm:RequestState("smg_idle")
         end
     end
+end
+
+function Agent_Update(agent, deltaTimeInMillis)
 end

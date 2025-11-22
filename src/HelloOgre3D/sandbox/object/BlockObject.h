@@ -43,6 +43,8 @@ public:
 
 	Ogre::Real GetRadius() const;
 	Ogre::Vector3 GetPosition() const;
+	
+	void setMaterial(const Ogre::String& materialName);
 
 	void applyImpulse(const Ogre::Vector3& impulse);
 	void applyAngularImpulse(const Ogre::Vector3& aImpulse);

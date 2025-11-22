@@ -44,6 +44,8 @@ void SoldierObject::CreateEventDispatcher()
 		{
 			this->ShootBullet(); // 射击
 		}
+		if (!m_stateController) return;
+		
 		// 将事件传递到State那
 		AgentState* pState = m_stateController->GetCurrState();
 		SandboxContext context1;
