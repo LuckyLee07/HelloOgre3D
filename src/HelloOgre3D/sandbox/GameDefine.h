@@ -1,23 +1,6 @@
 #ifndef __GAME_DEFINE__
 #define __GAME_DEFINE__
 
-#define DEFAULT_MATERIAL "White"
-
-#define DEFAULT_ATLAS "fonts/dejavu/dejavu"
-
-#ifdef _DEBUG
-#define APPLICATION_LOG         "Sandbox_d.log"
-#define APPLICATION_CONFIG      "Sandbox_d.cfg"
-#define APPLICATION_RESOURCES	"SandboxResources_d.cfg"
-#else
-#define APPLICATION_LOG         "Sandbox.log"
-#define APPLICATION_CONFIG      "Sandbox.cfg"
-#define APPLICATION_RESOURCES	"SandboxResources.cfg"
-#endif
-
-#define SAFE_DELETE(p)       { if(p) { delete (p);		(p)=NULL; } }
-#define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);	(p)=NULL; } }
-
 //tolua_begin
 
 #define SOLDIER_STAND_SPEED		3.0f

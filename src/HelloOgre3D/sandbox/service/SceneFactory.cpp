@@ -2,7 +2,7 @@
 #include "Ogre.h"
 #include "Procedural.h"
 #include "GameManager.h"
-#include "GameDefine.h"
+#include "AppConfig.h"
 
 Ogre::NameGenerator SceneFactory::s_nameGenerator("UnnamedParticle_");
 

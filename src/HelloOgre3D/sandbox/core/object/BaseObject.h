@@ -1,6 +1,7 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
+#include "SandboxMacros.h"
 #include "object/SandboxObject.h"
 #include "script/LuaClassNameTraits.h"
 

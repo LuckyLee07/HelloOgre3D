@@ -1,5 +1,5 @@
 #include "ClientManager.h"
-#include "GameDefine.h"
+#include "AppConfig.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
 #include "Samples/SdkCameraMan.h"

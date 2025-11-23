@@ -10,6 +10,7 @@
 #include "Ogre.h"
 #include "Procedural.h"
 #include "btBulletDynamicsCommon.h"
+#include "AppConfig.h"
 
 ObjectFactory::ObjectFactory(ObjectManager* pMananger)
 	: m_objectManager(pMananger)

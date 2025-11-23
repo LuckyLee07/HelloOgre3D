@@ -12,6 +12,7 @@
 #include "manager/ObjectManager.h"
 #include "debug/DebugDrawer.h"
 #include "play/PhysicsWorld.h"
+#include "core/SandboxMacros.h"
 
 using namespace Ogre;
 

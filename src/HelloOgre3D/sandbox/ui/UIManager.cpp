@@ -1,7 +1,7 @@
 #include "UIManager.h"
 #include "UIFrame.h"
+#include "AppConfig.h"
 #include "GameManager.h"
-#include "GameDefine.h"
 
 UIManager::UIManager(GameManager* gameMnanager)
 	: m_pGameManager(gameMnanager), m_pUIScene(nullptr), m_pMarkupText(nullptr)
