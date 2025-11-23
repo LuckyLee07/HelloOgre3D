@@ -11,8 +11,8 @@ public:
 	SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~SoldierObject();
 
-	virtual void Initialize();
-	virtual void update(int deltaMilisec);
+	virtual void Init() override;
+	virtual void Update(int deltaMs) override;
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);

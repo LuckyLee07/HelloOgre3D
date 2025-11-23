@@ -14,6 +14,8 @@ public:
 	virtual void onAttach(GameObject* owner);
 	virtual void onDetach();
 
+	virtual void onDestroy() {}
+
 	virtual void start() {}
 	virtual void update(int deltaMs) {}
 

@@ -13,6 +13,7 @@
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
 #include "components/RenderComponent.h"
+#include "components/PhysicsComponent.h"
 #include "service/SceneFactory.h"
 #include "service/PhysicsFactory.h"
 #include "RenderableObject.h"
@@ -20,11 +21,10 @@
 using namespace Ogre;
 
 BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
-	: m_pRigidBody(pRigidBody)
 {
-	m_pEntity = new RenderableObject(meshFile);
+	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-	setObjType(BaseObject::OBJ_TYPE_BLOCK);
+	m_pEntity = new RenderableObject(meshFile);
 
 	if (pRigidBody == nullptr)
 	{
@@ -32,28 +32,30 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 		if (!pEntity) return;
 		
 		Ogre::Mesh* meshPtr = pEntity->getMesh().getPointer();
-		m_pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr, 1.0f);
+		pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr, 1.0f);
 	}
-	m_pRigidBody->setUserPointer(this);
+
+	m_physicsComp = new PhysicsComponent(pRigidBody);
+	this->AddComponent("physics", m_physicsComp);
 }
 
 BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
-	: m_pRigidBody(pRigidBody)
 {
 	m_pEntity = new RenderableObject(meshPtr);
 
 	if (pRigidBody == nullptr)
-		m_pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr.get(), 1.0f);
+		pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr.get(), 1.0f);
 
-	m_pRigidBody->setUserPointer(this);
+	m_physicsComp = new PhysicsComponent(pRigidBody);
+	this->AddComponent("physics", m_physicsComp);
 }
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
-	: m_pRigidBody(pRigidBody)
-{	
+{
 	m_pEntity = new RenderableObject(pSceneNode);
-	if (m_pRigidBody)
-		m_pRigidBody->setUserPointer(this);
+	
+	m_physicsComp = new PhysicsComponent(pRigidBody);
+	this->AddComponent("physics", m_physicsComp);
 }
 
 BlockObject::~BlockObject()
@@ -68,80 +70,57 @@ BlockObject::~BlockObject()
 	m_particleNodes.clear();
 
 	SAFE_DELETE(m_pEntity);
-	this->DeleteRighdBody();
 }
 
-void BlockObject::DeleteRighdBody()
-{
-	if (m_pRigidBody != nullptr)
-	{
-		PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
-		if (pPhysicsWorld)
-			pPhysicsWorld->removeRigidBody(m_pRigidBody);
-
-		delete m_pRigidBody->getMotionState();
-		delete m_pRigidBody->getCollisionShape();
-		SAFE_DELETE(m_pRigidBody);
-	}
-}
-
-void BlockObject::update(int deltaMsec)
+void BlockObject::Update(int deltaMsec)
 {
 	this->updateWorldTransform();
 }
 
 void BlockObject::updateWorldTransform()
 {
-	const btVector3& rigidBodyPos = m_pRigidBody->getWorldTransform().getOrigin();
+	btRigidBody* pRigidBody = m_physicsComp->GetRigidBody();
+	assert(pRigidBody != nullptr);
+	if (!pRigidBody) return;
+
+	const btVector3& rigidBodyPos = pRigidBody->getWorldTransform().getOrigin();
 	m_pEntity->SetPosition(BtVector3ToVector3(rigidBodyPos));
 
-	const btQuaternion& rigidBodyRotation = m_pRigidBody->getWorldTransform().getRotation();
+	const btQuaternion& rigidBodyRotation = pRigidBody->getWorldTransform().getRotation();
 	m_pEntity->SetOrientation(BtQuaternionToQuaternion(rigidBodyRotation));;
 }
 
 void BlockObject::SetMass(const Ogre::Real mass)
 {
-	btVector3 localInertia(0, 0, 0);
-	m_pRigidBody->getCollisionShape()->calculateLocalInertia(mass, localInertia);
-	m_pRigidBody->setMassProps(mass, localInertia);
-	m_pRigidBody->updateInertiaTensor();
-	m_pRigidBody->activate(true);
+	m_physicsComp->SetMass(mass);
 }
 
 Ogre::Real BlockObject::GetMass() const
 {
-	btScalar inverseMass = m_pRigidBody->getInvMass();
-
-	if (inverseMass <= 0)
-		return 0.0f;
-
-	return 1.0f / inverseMass;
+	return m_physicsComp->GetMass();
 }
 
 void BlockObject::setPosition(const Ogre::Vector3& position)
 {
-	btVector3 btPosition(position.x, position.y, position.z);
-	btTransform transform = m_pRigidBody->getWorldTransform();
-	transform.setOrigin(btPosition);
-
-	m_pRigidBody->setWorldTransform(transform);
-	m_pRigidBody->activate(true);
+	m_physicsComp->SetPosition(position);
 
 	this->updateWorldTransform();
 }
 
 Ogre::Vector3 BlockObject::GetPosition() const
 {
-	const btVector3& position = m_pRigidBody->getCenterOfMassPosition();
-	return BtVector3ToVector3(position);
+	return m_physicsComp->GetPosition();
 }
 
 Ogre::Real BlockObject::GetRadius() const
 {
+	btRigidBody* pRigidBody = m_physicsComp->GetRigidBody();
+	assert(pRigidBody != nullptr);
+
 	btVector3 aabbMin;
 	btVector3 aabbMax;
 
-	m_pRigidBody->getAabb(aabbMin, aabbMax);
+	pRigidBody->getAabb(aabbMin, aabbMax);
 	return aabbMax.distance(aabbMin) / 2.0f;
 }
 
@@ -153,12 +132,7 @@ void BlockObject::setRotation(const Ogre::Vector3& rotation)
 
 void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
-	btQuaternion btRotation(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-	btTransform transform = m_pRigidBody->getWorldTransform();
-	transform.setRotation(btRotation);
-
-	m_pRigidBody->setWorldTransform(transform);
-	m_pRigidBody->activate(true);
+	m_physicsComp->SetOrientation(quaternion);
 
 	this->updateWorldTransform();
 }
@@ -170,35 +144,22 @@ void BlockObject::setMaterial(const Ogre::String& materialName)
 
 void BlockObject::applyImpulse(const Ogre::Vector3& impulse)
 {
-	btVector3 torque(impulse.x, impulse.y, impulse.z);
-	m_pRigidBody->applyCentralForce(torque);
-	m_pRigidBody->activate(true);
+	m_physicsComp->ApplyForce(impulse);
 }
 
 void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 {
-	btVector3 torqueImpulse(aImpulse.x, aImpulse.y, aImpulse.z);
-	m_pRigidBody->applyTorque(torqueImpulse);
-	m_pRigidBody->activate(true);
+	m_physicsComp->ApplyAngularForce(aImpulse);
 }
 
-bool BlockObject::canCollide() 
-{ 
-	if (m_objType == OBJ_TYPE_BULLET)
-	{
-		return true;
-	}
-	return false;
-}
-
-void BlockObject::onCollideWith(BaseObject* pCollideObj, const Collision& collision)
+void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& collision)
 {
 	if (pCollideObj == nullptr) return;
 
-	int objType = pCollideObj->getObjType();
+	int objType = pCollideObj->GetObjType();
 	if (objType == OBJ_TYPE_BULLET) // 子弹类型
 	{
-		pCollideObj->setNeedClear(); // 标记为清理
+		pCollideObj->SetNeedClear(); // 标记为清理
 		this->setBulletCollideImpact(collision);
 	}
 }

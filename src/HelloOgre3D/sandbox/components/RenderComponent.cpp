@@ -201,5 +201,5 @@ void RenderComponent::Update(int deltaInMillis)
 {
 	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
 	if (m_pAnimateStateMachine != nullptr)
-		m_pAnimateStateMachine->Update(deltaInMillis, currTimeInMillis);
+		m_pAnimateStateMachine->Update((float)deltaInMillis, currTimeInMillis);
 }

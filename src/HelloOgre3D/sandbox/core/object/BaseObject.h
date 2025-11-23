@@ -4,15 +4,14 @@
 #include "object/SandboxObject.h"
 #include "script/LuaClassNameTraits.h"
 
+class IComponent;
 class GameObject;
 struct Collision;
-class btRigidBody;
 
 class BaseObject : public SandboxObject //tolua_exports
 { //tolua_exports
 public:
-	//tolua_begin
-	enum OBJTYPE
+	enum ObjectType
 	{
 		OBJ_TYPE_NONE = 0,
 		// OBJ_BLOCK
@@ -23,38 +22,42 @@ public:
 		OBJ_TYPE_AGENT = 20,
 		OBJ_TYPE_SOLDIER,
 	};
-	//tolua_end
 public:
 	BaseObject();
 	virtual ~BaseObject();
 
-	virtual void Initialize() {}
-
-	virtual void update(int deltaMsec);
-	virtual btRigidBody* getRigidBody() const;
+	virtual void Init() {}
+	virtual void Update(int deltaMs);
+	virtual void OnDestroy();
 
 	//tolua_begin
-	void setObjId(unsigned int objId);
-	unsigned int getObjId();
-	
-	void setObjType(OBJTYPE objType);
-	OBJTYPE getObjType();
+	unsigned int GetObjId();
 	//tolua_end
+	void SetObjId(unsigned int objId);
 	
-	int getClearTick() { return m_liveTick; }
-	virtual bool checkNeedClear();
-	virtual void setNeedClear(int liveTick = 0, bool force = false);
+	ObjectType GetObjType();
+	void SetObjType(ObjectType objType);
+	
+	int GetLiveTicks() { return m_liveTicks; }
+	virtual bool CheckNeedClear();
+	virtual void SetNeedClear(int delay_ticks = 0, bool force = false);
 
-	virtual bool canCollide() { return false; }
-	virtual void onCollideWith(BaseObject*, const Collision&);
+	virtual void CollideWithObject(BaseObject* pCollideObj, const Collision& collision);
+
+	bool AddComponent(const std::string& key, IComponent* comp);
+	bool RemoveComponent(IComponent* comp);
+
+	IComponent* GetComponent(const std::string& key);
 
 protected:
-	OBJTYPE m_objType;
+	ObjectType m_objType;
 	GameObject* m_pGameObjet;
 
 private:
 	unsigned int m_objId;
-	int m_liveTick = -1;
+	int m_liveTicks = -1;
+	int m_needClearTicks = -1;
+	
 }; //tolua_exports
 
 

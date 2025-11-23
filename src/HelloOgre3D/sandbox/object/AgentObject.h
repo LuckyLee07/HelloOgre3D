@@ -24,8 +24,8 @@ public:
 	AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
 	virtual ~AgentObject();
 
-	virtual void Initialize();
-	virtual void update(int deltaMilisec);
+	virtual void Init() override;
+	virtual void Update(int deltaMs);
 
 	//tolua_begin
 	void initBody(const Ogre::String& meshFile);

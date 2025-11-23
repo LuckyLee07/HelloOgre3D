@@ -36,6 +36,7 @@ public:
 	Ogre::Vector3 GetForward() const;
 
 	void ApplyForce(const Ogre::Vector3& force);
+	void ApplyAngularForce(const Ogre::Vector3& force);
 
 	// Parameters
 	void SetMass(Ogre::Real mass);

@@ -112,7 +112,10 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 	BaseObject* pCollideObjA = myRigidBodyA->getOwner();
 	BaseObject* pCollideObjB = myRigidBodyB->getOwner();
 
-	if (!pCollideObjA->canCollide() && !pCollideObjB->canCollide())
+	BaseObject::ObjectType obj1Type = pCollideObjA->GetObjType();
+	BaseObject::ObjectType obj2Type = pCollideObjB->GetObjType();
+
+	if (!(obj1Type == BaseObject::OBJ_TYPE_BULLET || obj2Type == BaseObject::OBJ_TYPE_BULLET))
 	{
 		return false; // 两者都没碰撞属性
 	}
@@ -122,7 +125,7 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 		point.m_positionWorldOnB,
 		point.m_normalWorldOnB);
 
-	pCollideObjA->onCollideWith(pCollideObjB, myCollision);
+	pCollideObjA->CollideWithObject(pCollideObjB, myCollision);
 
 	return true;
 }

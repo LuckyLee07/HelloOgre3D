@@ -23,7 +23,7 @@ BlockObject* ObjectFactory::CreatePlane(float length, float width)
 	btRigidBody* planeRigidBody = PhysicsFactory::CreateRigidBodyPlane(btVector3(0, 1.0f, 0), 0);
 
 	BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
-	pObject->setObjType(BaseObject::OBJ_TYPE_PLANE);
+	pObject->SetObjType(BaseObject::OBJ_TYPE_PLANE);
 
 	m_objectManager->addNewObject(pObject);
 
@@ -33,7 +33,7 @@ BlockObject* ObjectFactory::CreatePlane(float length, float width)
 BlockObject* ObjectFactory::CreateBlockObject(const Ogre::String& meshFilePath)
 {
 	BlockObject* pObject = new BlockObject(meshFilePath);
-	pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
+	pObject->SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
 	m_objectManager->addNewObject(pObject);
 
@@ -54,7 +54,7 @@ BlockObject* ObjectFactory::CreateBlockBox(float width, float height, float leng
 	btRigidBody* planeRigidBody = PhysicsFactory::CreateRigidBodyBox(width, height, length);
 
 	BlockObject* pObject = new BlockObject(meshPtr, planeRigidBody);
-	pObject->setObjType(BaseObject::OBJ_TYPE_BLOCK);
+	pObject->SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 	pObject->GetEntity()->setMaterialName(DEFAULT_MATERIAL);
 
 	m_objectManager->addNewObject(pObject);
@@ -69,7 +69,7 @@ BlockObject* ObjectFactory::CreateBullet(Ogre::Real height, Ogre::Real radius)
 	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 
 	BlockObject* pBullet = new BlockObject(pSceneNode, capsuleRigidBody);
-	pBullet->setObjType(BaseObject::OBJ_TYPE_BULLET);
+	pBullet->SetObjType(BaseObject::OBJ_TYPE_BULLET);
 
 	m_objectManager->addNewObject(pBullet);
 

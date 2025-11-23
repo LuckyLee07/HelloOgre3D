@@ -17,7 +17,7 @@ using namespace Ogre;
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
 {
-	this->setObjType(OBJ_TYPE_SOLDIER);
+	this->SetObjType(OBJ_TYPE_SOLDIER);
 
 	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
 
@@ -59,9 +59,9 @@ void SoldierObject::RemoveEventDispatcher()
 	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
 }
 
-void SoldierObject::Initialize()
+void SoldierObject::Init()
 {
-	AgentObject::Initialize();
+	AgentObject::Init();
 
 	auto inputMgr = GetGameManager()->getInputManager();
 	m_inputInfo = new PlayerInput(inputMgr);
@@ -81,7 +81,7 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	m_pAgentBody->AttachToBone("b_RightHand", m_pWeapon->GetDetachEntity(), positionOffset, rotationOffset);
 }
 
-void SoldierObject::update(int deltaMilisec)
+void SoldierObject::Update(int deltaMilisec)
 {
 	static int totalMilisec = 0;
 	totalMilisec += deltaMilisec;

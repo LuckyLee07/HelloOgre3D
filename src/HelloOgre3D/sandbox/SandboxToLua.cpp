@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sun Nov 23 11:38:44 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Nov 23 15:48:23 2025.
 */
 
 #ifndef __cplusplus
@@ -1346,42 +1346,9 @@ static int tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setObjId of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjId00
-static int tolua_SandboxToLua_BaseObject_setObjId00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-  unsigned int objId = ((unsigned int)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjId'", NULL);
-#endif
-  {
-   self->setObjId(objId);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setObjId'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getObjId of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjId00
-static int tolua_SandboxToLua_BaseObject_getObjId00(lua_State* tolua_S)
+/* method: GetObjId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_GetObjId00
+static int tolua_SandboxToLua_BaseObject_GetObjId00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -1395,82 +1362,17 @@ static int tolua_SandboxToLua_BaseObject_getObjId00(lua_State* tolua_S)
  {
   BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjId'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjId'", NULL);
 #endif
   {
-   unsigned int tolua_ret = (unsigned int)  self->getObjId();
+   unsigned int tolua_ret = (unsigned int)  self->GetObjId();
    tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getObjId'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: setObjType of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjType00
-static int tolua_SandboxToLua_BaseObject_setObjType00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-  BaseObject::OBJTYPE objType = ((BaseObject::OBJTYPE) (int)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjType'", NULL);
-#endif
-  {
-   self->setObjType(objType);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setObjType'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getObjType of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjType00
-static int tolua_SandboxToLua_BaseObject_getObjType00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjType'", NULL);
-#endif
-  {
-   BaseObject::OBJTYPE tolua_ret = (BaseObject::OBJTYPE)  self->getObjType();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getObjType'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'GetObjId'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5856,16 +5758,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BaseObject","BaseObject","SandboxObject",NULL);
   tolua_beginmodule(tolua_S,"BaseObject");
-   tolua_constant(tolua_S,"OBJ_TYPE_NONE",BaseObject::OBJ_TYPE_NONE);
-   tolua_constant(tolua_S,"OBJ_TYPE_BLOCK",BaseObject::OBJ_TYPE_BLOCK);
-   tolua_constant(tolua_S,"OBJ_TYPE_PLANE",BaseObject::OBJ_TYPE_PLANE);
-   tolua_constant(tolua_S,"OBJ_TYPE_BULLET",BaseObject::OBJ_TYPE_BULLET);
-   tolua_constant(tolua_S,"OBJ_TYPE_AGENT",BaseObject::OBJ_TYPE_AGENT);
-   tolua_constant(tolua_S,"OBJ_TYPE_SOLDIER",BaseObject::OBJ_TYPE_SOLDIER);
-   tolua_function(tolua_S,"setObjId",tolua_SandboxToLua_BaseObject_setObjId00);
-   tolua_function(tolua_S,"getObjId",tolua_SandboxToLua_BaseObject_getObjId00);
-   tolua_function(tolua_S,"setObjType",tolua_SandboxToLua_BaseObject_setObjType00);
-   tolua_function(tolua_S,"getObjType",tolua_SandboxToLua_BaseObject_getObjType00);
+   tolua_function(tolua_S,"GetObjId",tolua_SandboxToLua_BaseObject_GetObjId00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"RenderableObject","RenderableObject","",NULL);
   tolua_beginmodule(tolua_S,"RenderableObject");

@@ -45,7 +45,7 @@ void AgentObject::RemoveEventDispatcher()
 	Event()->RemoveDispatcher("HEALTH_CHANGE");
 }
 
-void AgentObject::Initialize()
+void AgentObject::Init()
 {
 	m_pAgentBody->InitAsmWithOwner(this, true);
 	this->callFunction("Agent_Initialize", "u[AgentObject]", this);
@@ -131,7 +131,7 @@ Ogre::Vector3 AgentObject::GetForward() const
 	return Ogre::Vector3::UNIT_Z;
 }
 
-void AgentObject::update(int deltaMilisec)
+void AgentObject::Update(int deltaMilisec)
 {
 	static int totalMilisec = 0;
 	totalMilisec += deltaMilisec;
@@ -201,7 +201,7 @@ void AgentObject::OnDeath(float lastSec)
 {
 	if (m_onPlayDeathAnim) return;
 
-	this->setNeedClear(int(lastSec * 20));
+	this->SetNeedClear(int(lastSec * 20));
 
 	m_onPlayDeathAnim = true;
 }

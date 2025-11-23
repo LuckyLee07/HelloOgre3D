@@ -19,11 +19,12 @@ public:
 	VehicleObject(btRigidBody* pRigidBody);
 	virtual ~VehicleObject();
 
-	btRigidBody* getRigidBody() const override;
+	virtual void Init() override;
+	virtual void Update(int deltaMs) override;
+
+	btRigidBody* getRigidBody() const;
 	void ResetRigidBody(btRigidBody* pRigidBody);
 
-	virtual void Initialize();
-	virtual void update(int deltaMilisec);
 	virtual void updateWorldTransform();
 
 	//tolua_begin

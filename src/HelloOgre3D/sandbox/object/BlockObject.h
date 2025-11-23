@@ -5,6 +5,7 @@
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "opensteer/include/Obstacle.h"
+#include "play/MyRigidBody.h"
 
 namespace Ogre {
 	class SceneNode;
@@ -13,6 +14,7 @@ namespace Ogre {
 
 class btRigidBody;
 class RenderableObject;
+class PhysicsComponent;
 
 class BlockObject : public BaseObject //tolua_exports
 	, public OpenSteer::SphericalObstacle
@@ -28,9 +30,7 @@ public:
 	//void Initialize(BaseObject *owner = nullptr);
 	void DeleteRighdBody();
 
-	btRigidBody* getRigidBody() const override { return m_pRigidBody; }
-
-	virtual void update(int deltaMsec) override;
+	virtual void Update(int deltaMsec) override;
 	virtual void updateWorldTransform();
 
 	//tolua_begin
@@ -53,8 +53,7 @@ public:
 	void addParticleNode(Ogre::SceneNode* particleNode);
 	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
 
-	virtual bool canCollide(); // 是否可以碰撞
-	virtual void onCollideWith(BaseObject* pCollideObj, const Collision& collision);
+	void CollideWithObject(BaseObject* pCollideObj, const Collision& collision) override;
 
 	Ogre::Entity* GetEntity();
 	Ogre::SceneNode* GetSceneNode();
@@ -69,8 +68,8 @@ public:
 		const float minTimeToCollision) const;
 
 private:
-	btRigidBody* m_pRigidBody = nullptr;
 	RenderableObject* m_pEntity = nullptr;
+	PhysicsComponent* m_physicsComp = nullptr;
 	std::vector<Ogre::SceneNode*> m_particleNodes;
 
 }; //tolua_exports

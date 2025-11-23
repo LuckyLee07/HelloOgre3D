@@ -207,6 +207,15 @@ void PhysicsComponent::ApplyForce(const Ogre::Vector3& force)
 	m_body->activate(true);
 }
 
+void PhysicsComponent::ApplyAngularForce(const Ogre::Vector3& agforce)
+{
+	if (!m_body) return;
+
+	btVector3 torqueImpulse(agforce.x, agforce.y, agforce.z);
+	m_body->applyTorque(torqueImpulse);
+	m_body->activate(true);
+}
+
 // Parameters
 void PhysicsComponent::SetMass(Ogre::Real mass)
 {

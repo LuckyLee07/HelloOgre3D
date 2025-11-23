@@ -1,5 +1,6 @@
 #include "MyRigidBody.h"
 #include "object/BaseObject.h"
+#include "components/PhysicsComponent.h"
 
 MyRigidBody::MyRigidBody(BaseObject* pObject) : m_pOwnerObj(pObject)
 {
@@ -18,5 +19,7 @@ BaseObject* MyRigidBody::getOwner()
 
 btRigidBody* MyRigidBody::getRigidBody()
 {
-	return m_pOwnerObj->getRigidBody();
+	IComponent* pComponent = m_pOwnerObj->GetComponent("physics");
+	PhysicsComponent* pPhysicsComp = dynamic_cast<PhysicsComponent*>(pComponent);
+	return pPhysicsComp ? pPhysicsComp->GetRigidBody() : nullptr;
 }

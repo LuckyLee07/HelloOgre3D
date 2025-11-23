@@ -41,9 +41,8 @@ VehicleObject::~VehicleObject()
 	//SAFE_DELETE(m_physicsComp);
 }
 
-void VehicleObject::Initialize()
+void VehicleObject::Init()
 {
-	
 }
 
 btRigidBody* VehicleObject::getRigidBody() const
@@ -349,7 +348,7 @@ OpenSteerAdapter* VehicleObject::GetAdapter() const
 	return m_locomotion ? m_locomotion->GetAdapter() : nullptr;
 }
 
-void VehicleObject::update(int deltaMilisec)
+void VehicleObject::Update(int deltaMs)
 {
 	this->updateWorldTransform();
 }

@@ -7,6 +7,7 @@
 #include "service/SceneFactory.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
+#include "components/PhysicsComponent.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -34,15 +35,15 @@ void ObjectManager::Update(int deltaMilliseconds)
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;
-		if (pObject == nullptr || pObject->checkNeedClear())
+		if (pObject == nullptr || pObject->CheckNeedClear())
 		{
 			iter = m_objects.erase(iter);
 			this->realRemoveObject(pObject);
 		}
 		else
 		{
-			pObject->update(deltaMilliseconds);
-			if (pObject->getObjType() == BaseObject::OBJ_TYPE_BLOCK)
+			pObject->Update(deltaMilliseconds);
+			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
 			{
 				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
 			}
@@ -113,10 +114,10 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		for (; iter != m_blocks.end(); iter++)
 		{
 			auto pBlock = *iter;
-			if (!forceAll && pBlock->getObjType() != BaseObject::OBJ_TYPE_BLOCK)
+			if (!forceAll && pBlock->GetObjType() != BaseObject::OBJ_TYPE_BLOCK)
 				continue; //·ÀÖ¹É¾³ýPlane
 
-			m_objects.erase(pBlock->getObjId());
+			m_objects.erase(pBlock->GetObjId());
 			SAFE_DELETE(pBlock);
 		}
 		m_blocks.clear();
@@ -128,7 +129,7 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		for (; iter != m_agents.end(); iter++)
 		{
 			auto pAgent = *iter;
-			m_objects.erase(pAgent->getObjId());
+			m_objects.erase(pAgent->GetObjId());
 
 			SAFE_DELETE(pAgent);
 		}
@@ -145,13 +146,15 @@ std::vector<VehicleObject*> ObjectManager::getAllVehicles()
 void ObjectManager::addNewObject(BaseObject* pObject)
 {
 	unsigned int objectId = getNextObjId();
-	pObject->setObjId(objectId);
-	pObject->Initialize();
+	pObject->SetObjId(objectId);
+	pObject->Init();
 	m_objects[objectId] = pObject;
 
-	auto rigidBody = pObject->getRigidBody();
-	if (rigidBody != nullptr)
+	IComponent* pComponent = pObject->GetComponent("physics");
+	auto* pPhysicsComp = dynamic_cast<PhysicsComponent*>(pComponent);
+	if (pPhysicsComp && pPhysicsComp->GetRigidBody())
 	{
+		auto* rigidBody = pPhysicsComp->GetRigidBody();
 		m_pPhysicsWorld->addRigidBody(rigidBody, pObject);
 	}
 
@@ -160,7 +163,7 @@ void ObjectManager::addNewObject(BaseObject* pObject)
 
 void ObjectManager::realAddObject(BaseObject* pObject)
 {
-	int objtype = pObject->getObjType();
+	int objtype = pObject->GetObjType();
 	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
 	{
 		auto newObject = dynamic_cast<AgentObject*>(pObject);
@@ -180,13 +183,13 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	if (pObject == nullptr) 
 		return false;
 	
-	int objtype = pObject->getObjType();
-	unsigned int objid = pObject->getObjId();
+	int objtype = pObject->GetObjType();
+	unsigned int objid = pObject->GetObjId();
 	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
 	{
 		for (auto it = m_agents.begin(); it != m_agents.end(); it++)
 		{
-			if ((*it)->getObjId() == objid)
+			if ((*it)->GetObjId() == objid)
 			{
 				m_agents.erase(it);
 				SAFE_DELETE(pObject);
@@ -199,7 +202,7 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	{
 		for (auto it = m_blocks.begin(); it != m_blocks.end(); it++)
 		{
-			if ((*it)->getObjId() == objid)
+			if ((*it)->GetObjId() == objid)
 			{
 				m_blocks.erase(it);
 				SAFE_DELETE(pObject);

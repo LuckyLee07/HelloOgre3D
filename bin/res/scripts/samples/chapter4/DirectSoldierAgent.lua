@@ -15,7 +15,7 @@ local _soldierState = nil
 -- Accumulates acceleration to smooth out jerks in movement.
 local _agentAccumulators = {};
 function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
-    local agentId = agent:getObjId();
+    local agentId = agent:GetObjId();
 
     if (_agentAccumulators[agentId] == nil) then
         _agentAccumulators[agentId] = Vector3(0.0);
