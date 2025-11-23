@@ -26,7 +26,7 @@ ClientManager* GetClientMgr()
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), 
-    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr), m_shutdown(false)
+    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr), m_pGameManager(nullptr), m_shutdown(false)
 {
     m_Timer.reset();
 
@@ -37,8 +37,10 @@ ClientManager::ClientManager()
 
 ClientManager::~ClientManager()
 {
-    delete g_GameManager;
-    delete m_pInputManager;
+    SAFE_DELETE(m_pInputManager);
+    SAFE_DELETE(m_pDebugDrawer);
+    SAFE_DELETE(m_pGameManager);
+    g_GameManager = nullptr;
 
     Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
     if (pSilverback != nullptr) delete pSilverback;
@@ -232,10 +234,11 @@ void ClientManager::Initialize()
     m_pInputManager = new InputManager();
     m_pInputManager->Initialize();
 
-    g_GameManager = new GameManager();
-    g_GameManager->Initialize(m_pSceneManager);
+    m_pGameManager = new GameManager();
+    m_pGameManager->Initialize(m_pSceneManager);
+    g_GameManager = m_pGameManager;
 
-    m_pInputManager->registerHandler(g_GameManager);
+    m_pInputManager->registerHandler(m_pGameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }
@@ -278,13 +281,13 @@ void ClientManager::Update()
     long long currTimeInMicros = m_Timer.getMicroseconds();
     long long timeDeltaInMicros = currTimeInMicros - m_lastUpdateTimeInMicro;
 
-    if (g_GameManager && timeDeltaInMicros >= updatePerSecondInMicros)
+    if (m_pGameManager && timeDeltaInMicros >= updatePerSecondInMicros)
     {
         SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
 
         m_pDebugDrawer->clear();
 
-        g_GameManager->Update(deltaMilliseconds);
+        m_pGameManager->Update(deltaMilliseconds);
         m_lastUpdateTimeInMicro = currTimeInMicros;
 
         m_pDebugDrawer->build();
@@ -309,11 +312,11 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 void ClientManager::WindowClosed()
 {
     m_pInputManager->closeWindow();
-    g_GameManager->HandleWindowClosed();
+    m_pGameManager->HandleWindowClosed();
 }
 
 void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
     m_pInputManager->resizeMouseState(width, height);
-    g_GameManager->HandleWindowResized(width, height);
+    m_pGameManager->HandleWindowResized(width, height);
 }

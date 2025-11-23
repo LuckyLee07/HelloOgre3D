@@ -1,14 +1,13 @@
-#ifndef __UI_COMPONENT__
-#define __UI_COMPONENT__
+#ifndef __UI_FRAME__
+#define __UI_FRAME__
 
-#include "object/BaseObject.h"
+#include <vector>
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "ogre3d/include/OgreSceneNode.h"
 #include "ogre3d/include/OgreString.h"
 #include "ogre3d/include/OgrePrerequisites.h"
-#include <vector>
 
-class UIComponent : public BaseObject //tolua_exports
+class UIFrame //tolua_exports
 { //tolua_exports
 public:
 	//tolua_begin
@@ -24,13 +23,13 @@ public:
 	};
 	//tolua_end
 public:
-	UIComponent(Gorilla::Layer* pUILayer);
-	~UIComponent();
+	UIFrame(Gorilla::Layer* pUILayer);
+	virtual ~UIFrame();
 
-	void Initialize();
+	virtual void Initialize();
 
 	//tolua_begin
-	void addChild(UIComponent* pChild);
+	void addChild(UIFrame* pChild);
 	void setFontType(FontType fontType);
 
 	void setText(const Ogre::String& pText);
@@ -48,11 +47,11 @@ public:
 	bool isVisible() { return m_IsVisible; }
 
 	Ogre::Vector2 GetDimension() { return m_dimension; }
-	
 	//tolua_end
+
 private:
 	bool m_IsVisible;
-	std::vector<UIComponent*> m_children;
+	std::vector<UIFrame*> m_children;
 
 	Ogre::SceneNode* m_pSceneNode;
 	Gorilla::Layer* m_pUILayer;
@@ -69,5 +68,4 @@ private:
 
 }; //tolua_exports
 
-
-#endif  // __UI_COMPONENT__
+#endif  // __UI_FRAME__

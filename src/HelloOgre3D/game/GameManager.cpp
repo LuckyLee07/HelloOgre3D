@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "GlobalFuncs.h"
 #include <winsock.h>
-#include "object/UIComponent.h"
+#include "ui/UIManager.h"
 #include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
@@ -25,29 +25,21 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager() : m_pUIScene(nullptr), m_SimulationTime(0), m_pScriptVM(nullptr), 
-	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pMarkupText(nullptr)
+GameManager::GameManager() : m_SimulationTime(0), m_pScriptVM(nullptr), 
+	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr)
 {
-	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
+	
 }
 
 GameManager::~GameManager()
 {
-	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pSandboxMgr);
+	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pPhysicsWorld);
+	SAFE_DELETE(m_pUIManager);
+
 	g_SandboxMgr = nullptr;
 	g_ObjectManager = nullptr;
-
-	for (size_t index = 0; index < UI_LAYER_COUNT; index++)
-	{
-		if (m_pUILayers[index] != nullptr)
-			m_pUIScene->destroy(m_pUILayers[index]);
-		m_pUILayers[index] = nullptr;
-	}
-	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
-	pSilverback->destroyScreen(m_pUIScene);
-	m_pUIScene = nullptr;
 }
 
 GameManager* GameManager::GetInstance()
@@ -57,9 +49,10 @@ GameManager* GameManager::GetInstance()
 
 void GameManager::Initialize(SceneManager* sceneManager)
 {
-	this->InitUIConfig();
-
 	m_pScriptVM = GetScriptLuaVM();
+
+	m_pUIManager = new UIManager(GetClientMgr());
+	m_pUIManager->InitConfig();
 
 	m_pPhysicsWorld = new PhysicsWorld();
 	m_pPhysicsWorld->initilize();
@@ -67,7 +60,7 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
 	g_ObjectManager = m_pObjectManager;
 
-	UIService uiservice(this);
+	UIService uiservice(m_pUIManager);
 	CameraService camservice(GetClientMgr());
 	ObjectFactory objfactory(m_pObjectManager);
 
@@ -75,33 +68,6 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	g_SandboxMgr = m_pSandboxMgr;
 
 	this->InitLuaEnv();
-}
-
-Gorilla::Layer* GameManager::getUILayer(unsigned int index)
-{
-	if (index >= UI_LAYER_COUNT) return nullptr;
-	
-	if (m_pUILayers[index] == nullptr)
-	{
-		m_pUILayers[index] = m_pUIScene->createLayer(index);
-	}
-	return m_pUILayers[index];
-}
-
-void GameManager::InitUIConfig()
-{
-	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
-	Ogre::Camera* pCamera = GetClientMgr()->getCamera();
-	m_pUIScene = pSilverback->createScreen(pCamera->getViewport(), DEFAULT_ATLAS);
-	
-	m_pMarkupText = getUILayer()->createMarkupText(
-		91, m_pUIScene->getWidth(), m_pUIScene->getHeight(),
-		"Learning Game AI Programming. " __TIMESTAMP__);
-
-	Ogre::Real leftPos = m_pUIScene->getWidth() - m_pMarkupText->maxTextWidth() - 4;
-	Ogre::Real topPos = m_pUIScene->getHeight() - m_pUIScene->getAtlas()->getGlyphData(9)->mLineHeight - 4;
-	m_pMarkupText->left(leftPos);
-	m_pMarkupText->top(topPos);
 }
 
 void GameManager::InitLuaEnv()
@@ -142,20 +108,17 @@ void GameManager::Update(int deltaMilliseconds)
 
 Ogre::Real GameManager::getScreenWidth()
 {
-	return m_pUIScene->getWidth();
+	return m_pUIManager->GetScreenWidth();
 }
 
 Ogre::Real GameManager::getScreenHeight()
 {
-	return m_pUIScene->getHeight();
+	return m_pUIManager->GetScreenHeight();
 }
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 {
-	Ogre::Real leftPos = width - m_pMarkupText->maxTextWidth() - 4;
-	Ogre::Real topPos = height - m_pUIScene->getAtlas()->getGlyphData(9)->mLineHeight - 4;
-	m_pMarkupText->left(leftPos);
-	m_pMarkupText->top(topPos);
+	m_pUIManager->HandleWindowResized(width, height);
 
 	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
 }
@@ -190,25 +153,6 @@ void GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID 
 void GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 
-}
-
-UIComponent* GameManager::createUIComponent(unsigned int index)
-{
-	if (index < UI_LAYER_COUNT)
-	{
-		UIComponent* pComponent = new UIComponent(getUILayer(index));
-		m_pObjectManager->addNewObject(pComponent);
-		return pComponent;
-	}
-	return nullptr;
-}
-
-void GameManager::setMarkupColor(unsigned int index, const Ogre::ColourValue& color)
-{
-	for (size_t layerIndex = 0; layerIndex < UI_LAYER_COUNT; layerIndex++)
-	{
-		getUILayer(layerIndex)->_getAtlas()->setMarkupColour(index, color);
-	}
 }
 
 long long GameManager::getTimeInMillis()

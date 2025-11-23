@@ -21,6 +21,7 @@ namespace OgreBites
 }
 class DebugDrawer;
 class InputManager;
+class GameManager;
 class ObfuscatedZipFactory;
 class ClientManager : public Fancy::Singleton<ClientManager>
 {
@@ -95,6 +96,7 @@ private:
 	long long m_lastDrawTimeInMicro;
 	long long m_profileTimes[PROFILE_TIME_COUNT];
 	
+	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;
 	InputManager* m_pInputManager;
 	OgreBites::SdkCameraMan* m_pCameraMan;

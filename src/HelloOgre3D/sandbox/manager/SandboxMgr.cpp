@@ -5,9 +5,9 @@
 #include "GameFunction.h"
 #include "GameManager.h"
 #include "object/BlockObject.h"
-#include "object/UIComponent.h"
 #include "object/AgentObject.h"
 #include "object/SoldierObject.h"
+#include "OgreSceneManager.h"
 
 SandboxMgr* g_SandboxMgr = nullptr;
 
@@ -191,9 +191,9 @@ void SandboxMgr::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materia
     }
 }
 
-UIComponent* SandboxMgr::CreateUIComponent(unsigned int index/* = 1 */)
+UIFrame* SandboxMgr::CreateUIFrame(unsigned int index/* = 1 */)
 {
-	return m_uiService.CreateUIComponent(index);
+	return m_uiService.CreateUIFrame(index);
 }
 
 void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)

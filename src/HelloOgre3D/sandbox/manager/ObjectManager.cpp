@@ -1,11 +1,12 @@
 #include "ObjectManager.h"
 #include "object/AgentObject.h"
-#include "object/UIComponent.h"
 #include "object/BlockObject.h"
 #include "common/ScriptLuaVM.h"
 #include "play/PhysicsWorld.h"
 #include "ClientManager.h"
 #include "service/SceneFactory.h"
+#include "OgreSceneNode.h"
+#include "OgreSceneManager.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -106,19 +107,6 @@ std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentTy
 
 void ObjectManager::clearAllObjects(int objType, bool forceAll)
 {
-	if ((objType & MGR_OBJ_UIOBJ) != 0)
-	{
-		auto iter = m_uicomps.begin();
-		for (; iter != m_uicomps.end(); iter++)
-		{
-			auto pUIObj = *iter;
-			m_objects.erase(pUIObj->getObjId());
-
-			SAFE_DELETE(pUIObj);
-		}
-		m_uicomps.clear();
-	}
-
 	if ((objType & MGR_OBJ_BLOCK) != 0)
 	{
 		auto iter = m_blocks.begin();
@@ -185,12 +173,6 @@ void ObjectManager::realAddObject(BaseObject* pObject)
 		assert(newObject != nullptr);
 		m_blocks.push_back(newObject);
 	}
-	else if (objtype >= BaseObject::OBJ_TYPE_UIOBJ)
-	{
-		auto newObject = dynamic_cast<UIComponent*>(pObject);
-		assert(newObject != nullptr);
-		m_uicomps.push_back(newObject);
-	}
 }
 
 bool ObjectManager::realRemoveObject(BaseObject* pObject)
@@ -220,18 +202,6 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->getObjId() == objid)
 			{
 				m_blocks.erase(it);
-				SAFE_DELETE(pObject);
-				return true;
-			}
-		}
-	}
-	else if (objtype >= BaseObject::OBJ_TYPE_UIOBJ)
-	{
-		for (auto it = m_uicomps.begin(); it != m_uicomps.end(); it++)
-		{
-			if ((*it)->getObjId() == objid)
-			{
-				m_uicomps.erase(it);
 				SAFE_DELETE(pObject);
 				return true;
 			}

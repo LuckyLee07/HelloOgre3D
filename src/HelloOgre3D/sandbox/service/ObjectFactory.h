@@ -4,11 +4,9 @@
 #include "OgreString.h"
 #include "GameDefine.h"
 
-class EntityObject;
 class BlockObject;
 class AgentObject;
 class SoldierObject;
-class UIComponent;
 class ObjectManager;
 
 class ObjectFactory

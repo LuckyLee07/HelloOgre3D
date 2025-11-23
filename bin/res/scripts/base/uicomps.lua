@@ -83,7 +83,7 @@ function GUI_CreateCameraInfo()
     local screenWidth = GameManager:getScreenWidth()
     --local screenHeight = GameManager:getScreenHeight()
 
-    local uiComponent = Sandbox:CreateUIComponent()
+    local uiComponent = Sandbox:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     local ui_posy = 35 + ui_height;
     uiComponent:setPosition(Vector2(ui_posx, ui_posy))
@@ -104,7 +104,7 @@ function GUI_CreateProfileInfo()
     local screenWidth = GameManager:getScreenWidth()
     --local screenHeight = GameManager:getScreenHeight()
 
-    local uiComponent = Sandbox:CreateUIComponent()
+    local uiComponent = Sandbox:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     uiComponent:setPosition(Vector2(ui_posx, 20))
     uiComponent:setDimension(Vector2(ui_width, ui_height))
@@ -240,7 +240,7 @@ function GUI_CreateSandboxText(infoText, boxSize)
     
     --local ui_width, ui_height = 300, 180;
     local ui_width, ui_height = boxSize.w, boxSize.h;
-    local sandboxMenuInfo = Sandbox:CreateUIComponent()
+    local sandboxMenuInfo = Sandbox:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     local ui_posy = screenHeight - ui_height - 35;
     sandboxMenuInfo:setPosition(Vector2(ui_posx, ui_posy))

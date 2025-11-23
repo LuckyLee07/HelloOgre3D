@@ -6,19 +6,10 @@
 #include "OgrePrerequisites.h"
 #include "input/IInputHandler.h"
 
-#define UI_LAYER_COUNT	16
-
-namespace Gorilla
-{
-	class Layer;
-	class Screen;
-	class MarkupText;
-}
-
-class UIComponent;
 class SandboxMgr;
 class ScriptLuaVM;
 class PhysicsWorld;
+class UIManager;
 class ObjectManager;
 
 class GameManager : public IInputHandler //tolua_exports
@@ -33,7 +24,6 @@ public:
 	void Update(int deltaMilliseconds);
 
 	void InitLuaEnv();
-	void InitUIConfig();
 	
 public:
 	//tolua_begin
@@ -46,9 +36,6 @@ public:
 
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
-	UIComponent* createUIComponent(unsigned int index);
-	void setMarkupColor(unsigned int index, const Ogre::ColourValue& color);
-	
 public:
 	void HandleWindowResized(unsigned int width, unsigned int height);
 	void HandleWindowClosed();
@@ -61,17 +48,12 @@ public:
 	virtual void OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
 
 private:
-	Gorilla::Layer* getUILayer(unsigned int index = 0);
-
-private:
 	ScriptLuaVM* m_pScriptVM;
 	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
+	
+	UIManager* m_pUIManager;
 	ObjectManager* m_pObjectManager;
-
-	Gorilla::Screen* m_pUIScene;
-	Gorilla::MarkupText* m_pMarkupText;
-	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
 
 	long long m_SimulationTime; // 运行时间
 

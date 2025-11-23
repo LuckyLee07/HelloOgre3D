@@ -2,12 +2,12 @@
 #include "SceneFactory.h"
 #include "PhysicsFactory.h"
 #include "object/BlockObject.h"
-#include "object/UIComponent.h"
 #include "object/AgentObject.h"
 #include "object/SoldierObject.h"
 #include "object/RenderableObject.h"
 #include "manager/ObjectManager.h"
 #include "manager/LuaPluginMgr.h"
+#include "Ogre.h"
 #include "Procedural.h"
 #include "btBulletDynamicsCommon.h"
 

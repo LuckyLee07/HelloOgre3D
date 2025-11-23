@@ -16,10 +16,10 @@ namespace Ogre {
 	class SceneManager;
 }
 
+class UIFrame;
 class BlockObject;
 class AgentObject;
 class SoldierObject;
-class UIComponent;
 
 class SandboxMgr //tolua_exports
 { //tolua_exports
@@ -60,7 +60,7 @@ public:
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
 	void setMaterial(BlockObject* pObject, const Ogre::String& materialName);
 	
-	UIComponent* CreateUIComponent(unsigned int index = 1);
+	UIFrame* CreateUIFrame(unsigned int index = 1);
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 
 	BlockObject* CreatePlane(float length, float width);

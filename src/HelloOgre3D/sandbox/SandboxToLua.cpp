@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat Nov 22 22:39:15 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Nov 23 10:52:07 2025.
 */
 
 #ifndef __cplusplus
@@ -19,11 +19,11 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "ois/include/OISKeyboard.h"
 #include "GameDefine.h"
 #include "GameFunction.h"
-#include "core/object/BaseObject.h"
-#include "object/UIComponent.h"
+#include "ui/UIFrame.h"
 #include "input/IPlayerInput.h"
 #include "animation/AgentAnim.h"
 #include "animation/AgentAnimStateMachine.h"
+#include "core/object/BaseObject.h"
 #include "object/RenderableObject.h"
 #include "object/BlockObject.h"
 #include "object/VehicleObject.h"
@@ -74,12 +74,12 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
  tolua_usertype(tolua_S,"btQuaternion");
- tolua_usertype(tolua_S,"AgentAnimStateMachine");
+ tolua_usertype(tolua_S,"SandboxObject");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
- tolua_usertype(tolua_S,"BaseObject");
+ tolua_usertype(tolua_S,"UIFrame");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
- tolua_usertype(tolua_S,"SandboxObject");
+ tolua_usertype(tolua_S,"btVector3");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"SandboxMgr");
@@ -90,9 +90,9 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"AgentAnim");
  tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"VehicleObject");
- tolua_usertype(tolua_S,"btVector3");
+ tolua_usertype(tolua_S,"BaseObject");
  tolua_usertype(tolua_S,"Ogre::Vector3");
- tolua_usertype(tolua_S,"UIComponent");
+ tolua_usertype(tolua_S,"AgentAnimStateMachine");
  tolua_usertype(tolua_S,"RenderableObject");
  tolua_usertype(tolua_S,"IPlayerInput");
  tolua_usertype(tolua_S,"Ogre::Node");
@@ -299,153 +299,23 @@ static int tolua_SandboxToLua_GetForward00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setObjId of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjId00
-static int tolua_SandboxToLua_BaseObject_setObjId00(lua_State* tolua_S)
+/* method: addChild of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_addChild00
+static int tolua_SandboxToLua_UIFrame_addChild00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"UIFrame",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-  unsigned int objId = ((unsigned int)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjId'", NULL);
-#endif
-  {
-   self->setObjId(objId);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setObjId'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getObjId of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjId00
-static int tolua_SandboxToLua_BaseObject_getObjId00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjId'", NULL);
-#endif
-  {
-   unsigned int tolua_ret = (unsigned int)  self->getObjId();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getObjId'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: setObjType of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjType00
-static int tolua_SandboxToLua_BaseObject_setObjType00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-  BaseObject::OBJTYPE objType = ((BaseObject::OBJTYPE) (int)  tolua_tonumber(tolua_S,2,0));
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjType'", NULL);
-#endif
-  {
-   self->setObjType(objType);
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'setObjType'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: getObjType of class  BaseObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjType00
-static int tolua_SandboxToLua_BaseObject_getObjType00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjType'", NULL);
-#endif
-  {
-   BaseObject::OBJTYPE tolua_ret = (BaseObject::OBJTYPE)  self->getObjType();
-   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'getObjType'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: addChild of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_addChild00
-static int tolua_SandboxToLua_UIComponent_addChild00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
-     !tolua_isusertype(tolua_S,2,"UIComponent",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,3,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
-  UIComponent* pChild = ((UIComponent*)  tolua_tousertype(tolua_S,2,0));
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* pChild = ((UIFrame*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'addChild'", NULL);
 #endif
@@ -462,14 +332,14 @@ static int tolua_SandboxToLua_UIComponent_addChild00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setFontType of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setFontType00
-static int tolua_SandboxToLua_UIComponent_setFontType00(lua_State* tolua_S)
+/* method: setFontType of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setFontType00
+static int tolua_SandboxToLua_UIFrame_setFontType00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -477,8 +347,8 @@ static int tolua_SandboxToLua_UIComponent_setFontType00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
-  UIComponent::FontType fontType = ((UIComponent::FontType) (int)  tolua_tonumber(tolua_S,2,0));
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame::FontType fontType = ((UIFrame::FontType) (int)  tolua_tonumber(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setFontType'", NULL);
 #endif
@@ -495,14 +365,14 @@ static int tolua_SandboxToLua_UIComponent_setFontType00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setText of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setText00
-static int tolua_SandboxToLua_UIComponent_setText00(lua_State* tolua_S)
+/* method: setText of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setText00
+static int tolua_SandboxToLua_UIFrame_setText00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -510,7 +380,7 @@ static int tolua_SandboxToLua_UIComponent_setText00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   const std::string pText = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setText'", NULL);
@@ -529,14 +399,14 @@ static int tolua_SandboxToLua_UIComponent_setText00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setMarkupText of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setMarkupText00
-static int tolua_SandboxToLua_UIComponent_setMarkupText00(lua_State* tolua_S)
+/* method: setMarkupText of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setMarkupText00
+static int tolua_SandboxToLua_UIFrame_setMarkupText00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -544,7 +414,7 @@ static int tolua_SandboxToLua_UIComponent_setMarkupText00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   const std::string pText = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setMarkupText'", NULL);
@@ -563,14 +433,14 @@ static int tolua_SandboxToLua_UIComponent_setMarkupText00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setPosition of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setPosition00
-static int tolua_SandboxToLua_UIComponent_setPosition00(lua_State* tolua_S)
+/* method: setPosition of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setPosition00
+static int tolua_SandboxToLua_UIFrame_setPosition00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector2",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -578,7 +448,7 @@ static int tolua_SandboxToLua_UIComponent_setPosition00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector2* position = ((const Ogre::Vector2*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
@@ -596,14 +466,14 @@ static int tolua_SandboxToLua_UIComponent_setPosition00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setDimension of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setDimension00
-static int tolua_SandboxToLua_UIComponent_setDimension00(lua_State* tolua_S)
+/* method: setDimension of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setDimension00
+static int tolua_SandboxToLua_UIFrame_setDimension00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector2",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -611,7 +481,7 @@ static int tolua_SandboxToLua_UIComponent_setDimension00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::Vector2* dimension = ((const Ogre::Vector2*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setDimension'", NULL);
@@ -629,14 +499,14 @@ static int tolua_SandboxToLua_UIComponent_setDimension00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setTextMargin of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setTextMargin00
-static int tolua_SandboxToLua_UIComponent_setTextMargin00(lua_State* tolua_S)
+/* method: setTextMargin of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setTextMargin00
+static int tolua_SandboxToLua_UIFrame_setTextMargin00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,4,&tolua_err)
@@ -645,7 +515,7 @@ static int tolua_SandboxToLua_UIComponent_setTextMargin00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
    float top = ((  float)  tolua_tonumber(tolua_S,2,0));
    float left = ((  float)  tolua_tonumber(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
@@ -664,14 +534,14 @@ static int tolua_SandboxToLua_UIComponent_setTextMargin00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setBackgroundColor of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setBackgroundColor00
-static int tolua_SandboxToLua_UIComponent_setBackgroundColor00(lua_State* tolua_S)
+/* method: setBackgroundColor of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setBackgroundColor00
+static int tolua_SandboxToLua_UIFrame_setBackgroundColor00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::ColourValue",0,&tolua_err)) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -679,7 +549,7 @@ static int tolua_SandboxToLua_UIComponent_setBackgroundColor00(lua_State* tolua_
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   const Ogre::ColourValue* colorValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setBackgroundColor'", NULL);
@@ -697,14 +567,14 @@ static int tolua_SandboxToLua_UIComponent_setBackgroundColor00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setGradientColor of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setGradientColor00
-static int tolua_SandboxToLua_UIComponent_setGradientColor00(lua_State* tolua_S)
+/* method: setGradientColor of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setGradientColor00
+static int tolua_SandboxToLua_UIFrame_setGradientColor00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::ColourValue",0,&tolua_err)) ||
      (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
@@ -714,7 +584,7 @@ static int tolua_SandboxToLua_UIComponent_setGradientColor00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   Gorilla::Gradient direction = ((Gorilla::Gradient) (int)  tolua_tonumber(tolua_S,2,0));
   const Ogre::ColourValue* startColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,3,0));
   const Ogre::ColourValue* endColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
@@ -734,14 +604,14 @@ static int tolua_SandboxToLua_UIComponent_setGradientColor00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: setVisible of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_setVisible00
-static int tolua_SandboxToLua_UIComponent_setVisible00(lua_State* tolua_S)
+/* method: setVisible of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_setVisible00
+static int tolua_SandboxToLua_UIFrame_setVisible00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
@@ -749,7 +619,7 @@ static int tolua_SandboxToLua_UIComponent_setVisible00(lua_State* tolua_S)
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
   bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setVisible'", NULL);
@@ -767,21 +637,21 @@ static int tolua_SandboxToLua_UIComponent_setVisible00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: isVisible of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_isVisible00
-static int tolua_SandboxToLua_UIComponent_isVisible00(lua_State* tolua_S)
+/* method: isVisible of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_isVisible00
+static int tolua_SandboxToLua_UIFrame_isVisible00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isVisible'", NULL);
 #endif
@@ -799,21 +669,21 @@ static int tolua_SandboxToLua_UIComponent_isVisible00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetDimension of class  UIComponent */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIComponent_GetDimension00
-static int tolua_SandboxToLua_UIComponent_GetDimension00(lua_State* tolua_S)
+/* method: GetDimension of class  UIFrame */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIFrame_GetDimension00
+static int tolua_SandboxToLua_UIFrame_GetDimension00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"UIComponent",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"UIFrame",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  UIComponent* self = (UIComponent*)  tolua_tousertype(tolua_S,1,0);
+  UIFrame* self = (UIFrame*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDimension'", NULL);
 #endif
@@ -1473,6 +1343,136 @@ static int tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00(lua_State* t
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'AddTransition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setObjId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjId00
+static int tolua_SandboxToLua_BaseObject_setObjId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  unsigned int objId = ((unsigned int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjId'", NULL);
+#endif
+  {
+   self->setObjId(objId);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setObjId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getObjId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjId00
+static int tolua_SandboxToLua_BaseObject_getObjId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjId'", NULL);
+#endif
+  {
+   unsigned int tolua_ret = (unsigned int)  self->getObjId();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getObjId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setObjType of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_setObjType00
+static int tolua_SandboxToLua_BaseObject_setObjType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  BaseObject::OBJTYPE objType = ((BaseObject::OBJTYPE) (int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setObjType'", NULL);
+#endif
+  {
+   self->setObjType(objType);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setObjType'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getObjType of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_getObjType00
+static int tolua_SandboxToLua_BaseObject_getObjType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjType'", NULL);
+#endif
+  {
+   BaseObject::OBJTYPE tolua_ret = (BaseObject::OBJTYPE)  self->getObjType();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getObjType'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5266,9 +5266,9 @@ tolua_lerror:
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: CreateUIComponent of class  SandboxMgr */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_CreateUIComponent00
-static int tolua_SandboxToLua_SandboxMgr_CreateUIComponent00(lua_State* tolua_S)
+/* method: CreateUIFrame of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_CreateUIFrame00
+static int tolua_SandboxToLua_SandboxMgr_CreateUIFrame00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
@@ -5284,17 +5284,17 @@ static int tolua_SandboxToLua_SandboxMgr_CreateUIComponent00(lua_State* tolua_S)
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
   unsigned int index = ((unsigned int)  tolua_tonumber(tolua_S,2,1));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateUIComponent'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateUIFrame'", NULL);
 #endif
   {
-   UIComponent* tolua_ret = (UIComponent*)  self->CreateUIComponent(index);
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"UIComponent");
+   UIFrame* tolua_ret = (UIFrame*)  self->CreateUIFrame(index);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"UIFrame");
   }
  }
  return 1;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'CreateUIComponent'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'CreateUIFrame'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6027,42 +6027,27 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_function(tolua_S,"BtVector3ToVector3",tolua_SandboxToLua_BtVector3ToVector300);
   tolua_function(tolua_S,"BtQuaternionToQuaternion",tolua_SandboxToLua_BtQuaternionToQuaternion00);
   tolua_function(tolua_S,"GetForward",tolua_SandboxToLua_GetForward00);
-  tolua_cclass(tolua_S,"BaseObject","BaseObject","SandboxObject",NULL);
-  tolua_beginmodule(tolua_S,"BaseObject");
-   tolua_constant(tolua_S,"OBJ_TYPE_NONE",BaseObject::OBJ_TYPE_NONE);
-   tolua_constant(tolua_S,"OBJ_TYPE_UIOBJ",BaseObject::OBJ_TYPE_UIOBJ);
-   tolua_constant(tolua_S,"OBJ_TYPE_ENTITY",BaseObject::OBJ_TYPE_ENTITY);
-   tolua_constant(tolua_S,"OBJ_TYPE_BLOCK",BaseObject::OBJ_TYPE_BLOCK);
-   tolua_constant(tolua_S,"OBJ_TYPE_PLANE",BaseObject::OBJ_TYPE_PLANE);
-   tolua_constant(tolua_S,"OBJ_TYPE_BULLET",BaseObject::OBJ_TYPE_BULLET);
-   tolua_constant(tolua_S,"OBJ_TYPE_AGENT",BaseObject::OBJ_TYPE_AGENT);
-   tolua_constant(tolua_S,"OBJ_TYPE_SOLDIER",BaseObject::OBJ_TYPE_SOLDIER);
-   tolua_function(tolua_S,"setObjId",tolua_SandboxToLua_BaseObject_setObjId00);
-   tolua_function(tolua_S,"getObjId",tolua_SandboxToLua_BaseObject_getObjId00);
-   tolua_function(tolua_S,"setObjType",tolua_SandboxToLua_BaseObject_setObjType00);
-   tolua_function(tolua_S,"getObjType",tolua_SandboxToLua_BaseObject_getObjType00);
-  tolua_endmodule(tolua_S);
-  tolua_cclass(tolua_S,"UIComponent","UIComponent","BaseObject",NULL);
-  tolua_beginmodule(tolua_S,"UIComponent");
-   tolua_constant(tolua_S,"FONT_SMALL",UIComponent::FONT_SMALL);
-   tolua_constant(tolua_S,"FONT_SMALL_MONO",UIComponent::FONT_SMALL_MONO);
-   tolua_constant(tolua_S,"FONT_MEDIUM",UIComponent::FONT_MEDIUM);
-   tolua_constant(tolua_S,"FONT_MEDIUM_MONO",UIComponent::FONT_MEDIUM_MONO);
-   tolua_constant(tolua_S,"FONT_LARGE",UIComponent::FONT_LARGE);
-   tolua_constant(tolua_S,"FONT_LARGE_MONO",UIComponent::FONT_LARGE_MONO);
-   tolua_constant(tolua_S,"FONT_UNKNOWN",UIComponent::FONT_UNKNOWN);
-   tolua_function(tolua_S,"addChild",tolua_SandboxToLua_UIComponent_addChild00);
-   tolua_function(tolua_S,"setFontType",tolua_SandboxToLua_UIComponent_setFontType00);
-   tolua_function(tolua_S,"setText",tolua_SandboxToLua_UIComponent_setText00);
-   tolua_function(tolua_S,"setMarkupText",tolua_SandboxToLua_UIComponent_setMarkupText00);
-   tolua_function(tolua_S,"setPosition",tolua_SandboxToLua_UIComponent_setPosition00);
-   tolua_function(tolua_S,"setDimension",tolua_SandboxToLua_UIComponent_setDimension00);
-   tolua_function(tolua_S,"setTextMargin",tolua_SandboxToLua_UIComponent_setTextMargin00);
-   tolua_function(tolua_S,"setBackgroundColor",tolua_SandboxToLua_UIComponent_setBackgroundColor00);
-   tolua_function(tolua_S,"setGradientColor",tolua_SandboxToLua_UIComponent_setGradientColor00);
-   tolua_function(tolua_S,"setVisible",tolua_SandboxToLua_UIComponent_setVisible00);
-   tolua_function(tolua_S,"isVisible",tolua_SandboxToLua_UIComponent_isVisible00);
-   tolua_function(tolua_S,"GetDimension",tolua_SandboxToLua_UIComponent_GetDimension00);
+  tolua_cclass(tolua_S,"UIFrame","UIFrame","",NULL);
+  tolua_beginmodule(tolua_S,"UIFrame");
+   tolua_constant(tolua_S,"FONT_SMALL",UIFrame::FONT_SMALL);
+   tolua_constant(tolua_S,"FONT_SMALL_MONO",UIFrame::FONT_SMALL_MONO);
+   tolua_constant(tolua_S,"FONT_MEDIUM",UIFrame::FONT_MEDIUM);
+   tolua_constant(tolua_S,"FONT_MEDIUM_MONO",UIFrame::FONT_MEDIUM_MONO);
+   tolua_constant(tolua_S,"FONT_LARGE",UIFrame::FONT_LARGE);
+   tolua_constant(tolua_S,"FONT_LARGE_MONO",UIFrame::FONT_LARGE_MONO);
+   tolua_constant(tolua_S,"FONT_UNKNOWN",UIFrame::FONT_UNKNOWN);
+   tolua_function(tolua_S,"addChild",tolua_SandboxToLua_UIFrame_addChild00);
+   tolua_function(tolua_S,"setFontType",tolua_SandboxToLua_UIFrame_setFontType00);
+   tolua_function(tolua_S,"setText",tolua_SandboxToLua_UIFrame_setText00);
+   tolua_function(tolua_S,"setMarkupText",tolua_SandboxToLua_UIFrame_setMarkupText00);
+   tolua_function(tolua_S,"setPosition",tolua_SandboxToLua_UIFrame_setPosition00);
+   tolua_function(tolua_S,"setDimension",tolua_SandboxToLua_UIFrame_setDimension00);
+   tolua_function(tolua_S,"setTextMargin",tolua_SandboxToLua_UIFrame_setTextMargin00);
+   tolua_function(tolua_S,"setBackgroundColor",tolua_SandboxToLua_UIFrame_setBackgroundColor00);
+   tolua_function(tolua_S,"setGradientColor",tolua_SandboxToLua_UIFrame_setGradientColor00);
+   tolua_function(tolua_S,"setVisible",tolua_SandboxToLua_UIFrame_setVisible00);
+   tolua_function(tolua_S,"isVisible",tolua_SandboxToLua_UIFrame_isVisible00);
+   tolua_function(tolua_S,"GetDimension",tolua_SandboxToLua_UIFrame_GetDimension00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"IPlayerInput","IPlayerInput","",NULL);
   tolua_beginmodule(tolua_S,"IPlayerInput");
@@ -6091,6 +6076,19 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"HasNextState",tolua_SandboxToLua_AgentAnimStateMachine_HasNextState00);
    tolua_function(tolua_S,"AddState",tolua_SandboxToLua_AgentAnimStateMachine_AddState00);
    tolua_function(tolua_S,"AddTransition",tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"BaseObject","BaseObject","SandboxObject",NULL);
+  tolua_beginmodule(tolua_S,"BaseObject");
+   tolua_constant(tolua_S,"OBJ_TYPE_NONE",BaseObject::OBJ_TYPE_NONE);
+   tolua_constant(tolua_S,"OBJ_TYPE_BLOCK",BaseObject::OBJ_TYPE_BLOCK);
+   tolua_constant(tolua_S,"OBJ_TYPE_PLANE",BaseObject::OBJ_TYPE_PLANE);
+   tolua_constant(tolua_S,"OBJ_TYPE_BULLET",BaseObject::OBJ_TYPE_BULLET);
+   tolua_constant(tolua_S,"OBJ_TYPE_AGENT",BaseObject::OBJ_TYPE_AGENT);
+   tolua_constant(tolua_S,"OBJ_TYPE_SOLDIER",BaseObject::OBJ_TYPE_SOLDIER);
+   tolua_function(tolua_S,"setObjId",tolua_SandboxToLua_BaseObject_setObjId00);
+   tolua_function(tolua_S,"getObjId",tolua_SandboxToLua_BaseObject_getObjId00);
+   tolua_function(tolua_S,"setObjType",tolua_SandboxToLua_BaseObject_setObjType00);
+   tolua_function(tolua_S,"getObjType",tolua_SandboxToLua_BaseObject_getObjType00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"RenderableObject","RenderableObject","",NULL);
   tolua_beginmodule(tolua_S,"RenderableObject");
@@ -6215,7 +6213,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateDirectionalLight",tolua_SandboxToLua_SandboxMgr_CreateDirectionalLight00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SandboxMgr_setMaterial00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SandboxMgr_setMaterial01);
-   tolua_function(tolua_S,"CreateUIComponent",tolua_SandboxToLua_SandboxMgr_CreateUIComponent00);
+   tolua_function(tolua_S,"CreateUIFrame",tolua_SandboxToLua_SandboxMgr_CreateUIFrame00);
    tolua_function(tolua_S,"SetMarkupColor",tolua_SandboxToLua_SandboxMgr_SetMarkupColor00);
    tolua_function(tolua_S,"CreatePlane",tolua_SandboxToLua_SandboxMgr_CreatePlane00);
    tolua_function(tolua_S,"CreateBlockObject",tolua_SandboxToLua_SandboxMgr_CreateBlockObject00);
@@ -6225,8 +6223,6 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_SandboxMgr_CreateSoldier00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"MGR_OBJ_NONE",MGR_OBJ_NONE);
-  tolua_constant(tolua_S,"MGR_OBJ_UIOBJ",MGR_OBJ_UIOBJ);
-  tolua_constant(tolua_S,"MGR_OBJ_ENTITY",MGR_OBJ_ENTITY);
   tolua_constant(tolua_S,"MGR_OBJ_BLOCK",MGR_OBJ_BLOCK);
   tolua_constant(tolua_S,"MGR_OBJ_AGENT",MGR_OBJ_AGENT);
   tolua_constant(tolua_S,"MGR_OBJ_ALLS",MGR_OBJ_ALLS);

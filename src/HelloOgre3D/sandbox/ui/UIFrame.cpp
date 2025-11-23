@@ -1,23 +1,22 @@
-#include "UIComponent.h"
+#include "UIFrame.h"
 #include "Ogre.h"
 
 static const int markupTextTopOffset = 1;
 static const int markupTextLeftOffset = 1;
 
-UIComponent::UIComponent(Gorilla::Layer* pUILayer)
+UIFrame::UIFrame(Gorilla::Layer* pUILayer)
 	: m_pSceneNode(nullptr), m_pUILayer(pUILayer), m_IsVisible(true), m_fontType(FONT_MEDIUM),
 	m_pScreen(nullptr), m_pRectangle(nullptr), m_pText(nullptr), m_pMarkupText(nullptr),
 	m_dimension(0, 0), m_textMargin(0, 0), m_topLeftPos(0, 0), m_topLeftOffset(0, 0)
 {
-	setObjType(OBJ_TYPE_UIOBJ);
 }
 
-UIComponent::~UIComponent()
+UIFrame::~UIFrame()
 {
 	m_pUILayer = nullptr;
 }
 
-void UIComponent::Initialize()
+void UIFrame::Initialize()
 {
 	Ogre::Real textPosx = m_textMargin.x + m_topLeftOffset.x;
 	Ogre::Real textPosy = m_textMargin.y + m_topLeftOffset.y;
@@ -27,7 +26,7 @@ void UIComponent::Initialize()
 	m_pRectangle = m_pUILayer->createRectangle(m_topLeftPos + m_topLeftOffset, m_dimension);
 
 	m_pMarkupText = m_pUILayer->createMarkupText(
-		UIComponent::FONT_SMALL,
+		UIFrame::FONT_SMALL,
 		textPosx + markupTextLeftOffset,
 		textPosy + markupTextTopOffset,
 		"");
@@ -36,27 +35,27 @@ void UIComponent::Initialize()
 	setDimension(Ogre::Vector2(100, 100));
 }
 
-void UIComponent::addChild(UIComponent* pChild)
+void UIFrame::addChild(UIFrame* pChild)
 {
 
 }
 
-void UIComponent::setFontType(FontType fontType)
+void UIFrame::setFontType(FontType fontType)
 {
 	m_fontType = fontType;
 }
 
-void UIComponent::setText(const Ogre::String& pText)
+void UIFrame::setText(const Ogre::String& pText)
 {
 	m_pText->text(pText);
 }
 
-void UIComponent::setMarkupText(const Ogre::String& pText)
+void UIFrame::setMarkupText(const Ogre::String& pText)
 {
 	m_pMarkupText->text(pText);
 }
 
-void UIComponent::setTextMargin(Ogre::Real top, Ogre::Real left)
+void UIFrame::setTextMargin(Ogre::Real top, Ogre::Real left)
 {
 	m_textMargin.x = left;
 	m_textMargin.y = top;
@@ -76,7 +75,7 @@ void UIComponent::setTextMargin(Ogre::Real top, Ogre::Real left)
 	m_pMarkupText->size(textWidth, textHeight);
 }
 
-void UIComponent::setPosition(const Ogre::Vector2& position)
+void UIFrame::setPosition(const Ogre::Vector2& position)
 {
 	m_topLeftPos = position;
 
@@ -91,7 +90,7 @@ void UIComponent::setPosition(const Ogre::Vector2& position)
 	m_pMarkupText->left(textLeft + markupTextLeftOffset);
 }
 
-void UIComponent::setDimension(const Ogre::Vector2& dimension)
+void UIFrame::setDimension(const Ogre::Vector2& dimension)
 {
 	m_dimension = dimension;
 
@@ -105,17 +104,17 @@ void UIComponent::setDimension(const Ogre::Vector2& dimension)
 	m_pMarkupText->size(textWidth, textHeight);
 }
 
-void UIComponent::setBackgroundColor(const Ogre::ColourValue& colorValue)
+void UIFrame::setBackgroundColor(const Ogre::ColourValue& colorValue)
 {
 	m_pRectangle->background_colour(colorValue);
 }
 
-void UIComponent::setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor)
+void UIFrame::setGradientColor(Gorilla::Gradient direction, const Ogre::ColourValue& startColor, const Ogre::ColourValue& endColor)
 {
 	m_pRectangle->background_gradient(direction, startColor, endColor);
 }
 
-void UIComponent::setVisible(bool visible)
+void UIFrame::setVisible(bool visible)
 {
 	m_IsVisible = visible;
 

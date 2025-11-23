@@ -13,9 +13,7 @@ namespace Ogre
 }
 class BaseObject;
 class AgentObject;
-class UIComponent;
 class BlockObject;
-class EntityObject;
 class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
@@ -24,11 +22,9 @@ class PhysicsWorld;
 enum MGR_OBJ_TYPE
 {
 	MGR_OBJ_NONE = 0,
-	MGR_OBJ_UIOBJ = 1 << 0,
-	MGR_OBJ_ENTITY = 1 << 1,
-	MGR_OBJ_BLOCK = 1 << 2,
-	MGR_OBJ_AGENT = 1 << 3,
-	MGR_OBJ_ALLS = 15, // 0x1111
+	MGR_OBJ_BLOCK = 1 << 0,
+	MGR_OBJ_AGENT = 1 << 1,
+	MGR_OBJ_ALLS = 11, // 0x11
 };
 //tolua_end
 
@@ -73,8 +69,6 @@ private:
 
 	std::vector<AgentObject*> m_agents;
 	std::vector<BlockObject*> m_blocks;
-	std::vector<UIComponent*> m_uicomps;
-
 	std::unordered_map<int, BaseObject*> m_objects;
 
 	// 存储需要定时删除的RootScene下的Node

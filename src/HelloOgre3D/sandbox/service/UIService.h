@@ -3,20 +3,20 @@
 
 #include "OgreColourValue.h"
 
-class UIComponent;
-class GameManager;
+class UIFrame;
+class UIManager;
 
 class UIService
 {
 public:
-	UIService(GameManager* pMananger);
-	~UIService() { m_gameManager = nullptr; }
+	UIService(UIManager* pMananger);
+	~UIService() { m_pUIManager = nullptr; }
 
-	UIComponent* CreateUIComponent(unsigned int index);
+	UIFrame* CreateUIFrame(unsigned int index);
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 
 private:
-	GameManager* m_gameManager;
+	UIManager* m_pUIManager;
 };
 
 #endif // __UI_SERVICE_H__
