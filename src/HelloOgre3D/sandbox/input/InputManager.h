@@ -39,7 +39,7 @@ public:
 	bool isKeyPressed(OIS::KeyCode key) const;
 	bool isKeyReleased(OIS::KeyCode key) const;
 
-	void update(float dtime); // 每帧调用以清除 KeyDown/KeyUp 状态
+	void update(int deltaMs); // 每帧调用以清除 KeyDown/KeyUp 状态
 
 private:
 	size_t m_windowHnd;

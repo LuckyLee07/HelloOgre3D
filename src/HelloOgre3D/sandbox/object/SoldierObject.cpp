@@ -39,7 +39,7 @@ void SoldierObject::CreateEventDispatcher()
 {
 	Event()->CreateDispatcher("ASM_STATE_CHANGE");
 	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
-		int stateId = context.Get_Number("StateId");
+		int stateId = (int)context.Get_Number("StateId");
 		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
 		{
 			this->ShootBullet(); // Éä»÷
@@ -85,14 +85,16 @@ void SoldierObject::update(int deltaMilisec)
 {
 	static int totalMilisec = 0;
 	totalMilisec += deltaMilisec;
-	if (true || totalMilisec > 1000)
+
+	bool forceUpdate = true;
+	if (forceUpdate || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
 		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
 	if (m_stateController)
-		m_stateController->Update(deltaMilisec);
+		m_stateController->Update((float)deltaMilisec);
 
 	m_pAgentBody->Update(deltaMilisec);
 	if (m_pWeapon)

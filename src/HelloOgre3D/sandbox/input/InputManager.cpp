@@ -158,7 +158,7 @@ bool InputManager::isKeyReleased(OIS::KeyCode key) const
 	return iter != m_KeyUpMap.end() && iter->second;
 }
 
-void InputManager::update(float dtime)
+void InputManager::update(int deltaMs)
 {
 	for (auto& kv : m_KeyDownMap)
 		kv.second = false;

@@ -9,12 +9,12 @@ class IInputHandler
 public:
 	virtual ~IInputHandler() = default;
 
-	virtual void OnKeyPressed(OIS::KeyCode keycode, unsigned int key) {}
-	virtual void OnKeyReleased(OIS::KeyCode keycode, unsigned int key) {}
+	virtual void OnKeyPressed(OIS::KeyCode, unsigned int) {}
+	virtual void OnKeyReleased(OIS::KeyCode, unsigned int) {}
 
-	virtual void OnMouseMoved(const OIS::MouseEvent& evt) {}
-	virtual void OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn) {}
-	virtual void OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn) {}
+	virtual void OnMouseMoved(const OIS::MouseEvent&) {}
+	virtual void OnMousePressed(const OIS::MouseEvent&, OIS::MouseButtonID) {}
+	virtual void OnMouseReleased(const OIS::MouseEvent&, OIS::MouseButtonID) {}
 };
 
 #endif; // __IINPUT_HANDLER_H__
