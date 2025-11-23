@@ -201,7 +201,9 @@ void VehicleObject::SetSpeed(Ogre::Real speed)
 
 void VehicleObject::SetHealth(Ogre::Real health)
 {
-	if (m_health == health) return;
+	if (m_health == health || m_health <= 0.0f) 
+		return;
+
 	m_health = health;
 
 	Event()->Emit("HEALTH_CHANGE", SandboxContext().Set_Number("health", health));
@@ -334,12 +336,12 @@ Ogre::Vector3 VehicleObject::GetPointOnPath(const Ogre::Real distance) const
 
 void VehicleObject::SetPath(const AgentPath& agentPath)
 {
-	// ²»ÔÙ±£´æ³ÉÔ± m_path/m_hasPath£¬½ö°ÑµãÍ¬²½¸ø Locomotion
+	// ä¸å†ä¿å­˜æˆå‘˜ m_path/m_hasPathï¼Œä»…æŠŠç‚¹åŒæ­¥ç»™ Locomotion
 	std::vector<Ogre::Vector3> points;
 	agentPath.GetPathPoints(points);
 
-	// AgentPath Ä¿Ç°Ã»ÓĞ IsCyclic ·ÃÎÊÆ÷£¬ÕâÀïÏÈ°´ĞèÒªÉèÖÃÊÇ·ñÑ­»·
-	const bool cyclic = false; // TODO: ÈôºóĞø AgentPath Ôö¼Ó IsCyclic() Ôò¸ÄÎª¶ÁÈ¡ÕæÊµÖµ
+	// AgentPath ç›®å‰æ²¡æœ‰ IsCyclic è®¿é—®å™¨ï¼Œè¿™é‡Œå…ˆæŒ‰éœ€è¦è®¾ç½®æ˜¯å¦å¾ªç¯
+	const bool cyclic = false; // TODO: è‹¥åç»­ AgentPath å¢åŠ  IsCyclic() åˆ™æ”¹ä¸ºè¯»å–çœŸå®å€¼
 	if (m_locomotion) m_locomotion->SetPath(points, cyclic);
 }
 

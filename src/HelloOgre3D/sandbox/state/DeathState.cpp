@@ -30,7 +30,14 @@ std::string DeathState::OnUpdate(float dt)
 	}
 	else
 	{
-		m_pAgent->SetHealth(0.0f);
+		if (m_pAgent->GetCurStateId() != SSTATE_DEAD)
+		{
+			m_pAgent->RequestState(SSTATE_DEAD);
+		}
+		else
+		{
+			m_pAgent->SetHealth(0.0f);
+		}
 	}
 
 	return "";

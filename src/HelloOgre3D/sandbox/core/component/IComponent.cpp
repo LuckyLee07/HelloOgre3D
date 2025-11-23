@@ -1,9 +1,9 @@
 #include "IComponent.h"
 #include "object/GameObject.h"
 
-void IComponent::onAttach(GameObject* owner)
+void IComponent::onAttach(GameObject* gameobj)
 {
-	m_gameobj = owner;
+	m_gameobj = gameobj;
 }
 
 void IComponent::onDetach()

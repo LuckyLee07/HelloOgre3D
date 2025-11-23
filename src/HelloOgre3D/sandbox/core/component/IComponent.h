@@ -11,7 +11,7 @@ public:
 
 	BaseObject* getOwner() const;
 
-	virtual void onAttach(GameObject* owner);
+	virtual void onAttach(GameObject* gameobj);
 	virtual void onDetach();
 
 	virtual void onDestroy() {}

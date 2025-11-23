@@ -52,7 +52,7 @@ private:
 private:
 	btRigidBody* m_body = nullptr;
 
-	VehicleObject* m_owner = nullptr;
+	BaseObject* m_owner = nullptr;
 };
 
 #endif // __PHYSICS_COMPONENT_H__

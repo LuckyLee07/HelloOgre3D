@@ -24,7 +24,7 @@ void PhysicsComponent::onAttach(GameObject* owner)
 
 	auto* pObject = getOwner();
 	assert(pObject != nullptr);
-	m_owner = dynamic_cast<VehicleObject*>(pObject);
+	m_owner = dynamic_cast<BaseObject*>(pObject);
 
 	if (m_body != nullptr)
 	{
@@ -78,6 +78,7 @@ void PhysicsComponent::ResetRigidBody(btRigidBody* newBody)
 	const Ogre::Vector3 position = GetPosition();
 	const Ogre::Quaternion rot = GetOrientation();
 
+	this->RemoveFromWorld();
 	this->DeleteRigidBody();
 
 	m_body = newBody;
