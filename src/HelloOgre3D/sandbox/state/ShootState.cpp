@@ -30,7 +30,7 @@ std::string ShootState::OnUpdate(float dt)
 	}
 	if (!m_pAgent->IsAnimReadyForShoot())
 	{
-		if (!m_pAgent->IsHasNextAnim())
+		if (!m_pAgent->HasNextAnim())
 		{
 			m_pAgent->RequestState(SSTATE_FIRE);
 		}

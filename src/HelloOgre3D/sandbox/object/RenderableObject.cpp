@@ -30,17 +30,30 @@ RenderableObject::RenderableObject(Ogre::SceneNode* pSceneNode)
 
 RenderableObject::~RenderableObject()
 {
+	auto iter = m_animations.begin();
+	for (; iter != m_animations.end(); iter++)
+	{
+		SAFE_DELETE(iter->second);
+	}
+	m_animations.clear();
+
 	SAFE_DELETE(m_renderComp);
+	SAFE_DELETE(m_pAnimateStateMachine);
 }
 
 void RenderableObject::InitAsmWithOwner(BaseObject *owner, bool canFireEvent)
 {
-	m_renderComp->CreateAnimationFSM(owner, canFireEvent);
+	assert(owner != nullptr);
+	m_pAnimateStateMachine = new AgentAnimStateMachine(owner, canFireEvent);
 }
 
 void RenderableObject::Update(int deltaInMillis)
 {
 	m_renderComp->Update(deltaInMillis);
+
+	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
+	if (m_pAnimateStateMachine != nullptr)
+		m_pAnimateStateMachine->Update((float)deltaInMillis, currTimeInMillis);
 }
 
 void RenderableObject::SetPosition(const Ogre::Vector3& position)
@@ -132,10 +145,21 @@ Ogre::SceneNode* RenderableObject::GetSceneNode()
 
 AgentAnim* RenderableObject::GetAnimation(const char* animationName)
 {
-	return m_renderComp->GetAnimation(animationName);
+	auto iter = m_animations.find(animationName);
+	if (iter != m_animations.end())
+	{
+		return iter->second;
+	}
+
+	auto pAnimState = GetEntity()->getAnimationState(animationName);
+	if (pAnimState != nullptr)
+	{
+		m_animations[animationName] = new AgentAnim(pAnimState);
+	}
+	return m_animations[animationName];
 }
 
 AgentAnimStateMachine* RenderableObject::GetObjectASM()
 {
-	return m_renderComp->GetAnimationFSM();
+	return m_pAnimateStateMachine;
 }

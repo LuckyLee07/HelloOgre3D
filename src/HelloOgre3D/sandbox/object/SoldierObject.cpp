@@ -173,19 +173,21 @@ void SoldierObject::changeStanceType(int stanceType)
 
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
-	if (m_onPlayDeathAnim) return; //播放死亡动画时不再接受新的状态
-	
-	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(soldierState, getStanceType());
+	//播放死亡动画时不再接受新的状态
+	if (m_onPlayDeathAnim) return;
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
-	if (!forceUpdate && pAsm->GetCurrStateID() == requestState) return;
+	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
+	
+	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(soldierState, getStanceType());
+	if (!forceUpdate && currState == requestState) return;
 
 	pAsm->RequestState(requestState);
 }
 
-bool SoldierObject::IsHasNextAnim()
+bool SoldierObject::HasNextAnim()
 {
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return false;

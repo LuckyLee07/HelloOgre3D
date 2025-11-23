@@ -12,8 +12,8 @@ namespace Ogre {
 	class SceneNode;
 }
 class AgentAnim;
-class AgentAnimStateMachine;
 class RenderComponent;
+class AgentAnimStateMachine;
 
 class RenderableObject //tolua_exports
 { //tolua_exports
@@ -59,6 +59,10 @@ public:
 
 protected:
 	RenderComponent* m_renderComp = nullptr;
+
+	std::unordered_map<std::string, AgentAnim*> m_animations;
+	AgentAnimStateMachine* m_pAnimateStateMachine = nullptr;
+	
 }; //tolua_exports
 
 #endif  // __RENDERABLE_OBJECT__

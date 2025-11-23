@@ -12,7 +12,6 @@
 #include "play/MyRigidBody.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
-#include "components/RenderComponent.h"
 #include "components/PhysicsComponent.h"
 #include "service/SceneFactory.h"
 #include "service/PhysicsFactory.h"

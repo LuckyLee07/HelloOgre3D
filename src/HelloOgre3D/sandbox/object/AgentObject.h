@@ -55,7 +55,7 @@ public:
 	virtual IPlayerInput* GetInput() { return nullptr; }
 	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
 
-	virtual bool IsHasNextAnim() { return false; }
+	virtual bool HasNextAnim() { return false; }
 	virtual bool IsAnimReadyForMove() { return false; }
 	virtual bool IsAnimReadyForShoot() { return false; }
 

@@ -37,6 +37,8 @@ public:
 	
 	ObjectType GetObjType();
 	void SetObjType(ObjectType objType);
+
+	float GetMass() const { return 0.0f; }
 	
 	int GetLiveTicks() { return m_liveTicks; }
 	virtual bool CheckNeedClear();
