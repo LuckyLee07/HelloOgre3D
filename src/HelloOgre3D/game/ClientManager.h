@@ -23,6 +23,7 @@ class DebugDrawer;
 class InputManager;
 class GameManager;
 class ObfuscatedZipFactory;
+
 class ClientManager : public Fancy::Singleton<ClientManager>
 {
 public:
@@ -72,6 +73,8 @@ public:
 	Ogre::SceneNode* getRootSceneNode();
 	OgreBites::SdkCameraMan* getCameraMan();
 
+	InputManager* getInputManager() { return m_pInputManager; }
+
 private:
 	void ChooseSceneManager();
 	bool Configure();
@@ -89,6 +92,8 @@ private:
 
 	Ogre::String m_applicationTitle;
 	Ogre::String m_resourceConfig;
+
+	InputManager* m_pInputManager;
 
 	Ogre::Timer m_Timer;
 	long long m_lastUpdateTimeInMicro;

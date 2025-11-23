@@ -2,7 +2,7 @@
 #define __PLAYER_INPUT_H__
 
 #include "IPlayerInput.h"
-#include "manager/InputManager.h"
+#include "InputManager.h"
 
 class PlayerInput : public IPlayerInput
 {

@@ -39,12 +39,11 @@ public:
 	Ogre::Camera* getCamera();
 	Ogre::SceneNode* getRootSceneNode();
 	Ogre::SceneManager* getSceneManager();
-
-	InputManager* getInputManager() { return m_pInputManager; }
+	
+	InputManager* getInputManager();
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 public:
-	void InputCapture();
 	void HandleWindowClosed();
 	void HandleWindowResized(unsigned int width, unsigned int height);
 
@@ -61,7 +60,6 @@ private:
 	ScriptLuaVM* m_pScriptVM;
 	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
-	InputManager* m_pInputManager;
 
 	UIManager* m_pUIManager;
 	ObjectManager* m_pObjectManager;

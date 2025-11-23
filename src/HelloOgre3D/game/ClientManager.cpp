@@ -4,7 +4,7 @@
 #include "ObfuscatedZip.h"
 #include "Samples/SdkCameraMan.h"
 #include "debug/DebugDrawer.h"
-
+#include "input/InputManager.h"
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
 #include "OgreParticleFXPlugin.h"
@@ -36,9 +36,10 @@ ClientManager::ClientManager()
 
 ClientManager::~ClientManager()
 {
-    SAFE_DELETE(m_pDebugDrawer);
     SAFE_DELETE(m_pGameManager);
     g_GameManager = nullptr;
+    SAFE_DELETE(m_pDebugDrawer);
+    SAFE_DELETE(m_pInputManager);
 
     Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
     if (pSilverback != nullptr) delete pSilverback;
@@ -225,12 +226,18 @@ void ClientManager::Initialize()
     Gorilla::Silverback* pSilverback = new Gorilla::Silverback();
     pSilverback->loadAtlas(DEFAULT_ATLAS);
 
+    // Initialize InputManager
+    m_pInputManager = new InputManager();
+    m_pInputManager->Initialize();
+
     m_pDebugDrawer = new DebugDrawer();
     m_pDebugDrawer->Initialize();
 
     m_pGameManager = new GameManager(this);
     m_pGameManager->Initialize();
     g_GameManager = m_pGameManager;
+
+    m_pInputManager->registerHandler(m_pGameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }
@@ -286,12 +293,14 @@ void ClientManager::Update()
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
+
+        m_pInputManager->update(deltaMilliseconds);
     }
 }
 
 void ClientManager::InputCapture()
 {
-    m_pGameManager->InputCapture();
+    m_pInputManager->capture();
 }
 
 void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
@@ -301,10 +310,12 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 
 void ClientManager::WindowClosed()
 {
+    m_pInputManager->closeWindow();
     m_pGameManager->HandleWindowClosed();
 }
 
 void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
+    m_pInputManager->resizeMouseState(width, height);
     m_pGameManager->HandleWindowResized(width, height);
 }

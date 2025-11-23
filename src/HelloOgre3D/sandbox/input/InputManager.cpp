@@ -1,7 +1,6 @@
 #include "InputManager.h"
 #include "OISInputManager.h"
 #include "ClientManager.h"
-#include "GameManager.h"
 #include "OgreRenderWindow.h"
 #include "Samples/SdkCameraMan.h"
 

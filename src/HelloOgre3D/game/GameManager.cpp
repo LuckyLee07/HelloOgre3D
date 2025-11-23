@@ -10,7 +10,6 @@
 #include "ui/UIManager.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
-#include "manager/InputManager.h"
 #include "debug/DebugDrawer.h"
 #include "play/PhysicsWorld.h"
 
@@ -27,7 +26,7 @@ GameManager* GetGameManager()
 }
 
 GameManager::GameManager(ClientManager* pClientMgr)
-	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr), m_pInputManager(nullptr),
+	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr)
 {
 	
@@ -39,7 +38,6 @@ GameManager::~GameManager()
 	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pPhysicsWorld);
 	SAFE_DELETE(m_pUIManager);
-	SAFE_DELETE(m_pInputManager);
 
 	g_SandboxMgr = nullptr;
 	g_ObjectManager = nullptr;
@@ -54,11 +52,6 @@ GameManager* GameManager::GetInstance()
 void GameManager::Initialize()
 {
 	m_pScriptVM = GetScriptLuaVM();
-
-	// Initialize InputManager
-	m_pInputManager = new InputManager();
-	m_pInputManager->Initialize();
-	m_pInputManager->registerHandler(this);
 
 	m_pUIManager = new UIManager(this);
 	m_pUIManager->InitConfig();
@@ -114,8 +107,6 @@ void GameManager::Update(int deltaMilliseconds)
 	m_pPhysicsWorld->stepWorld();
 
 	m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
-
-	m_pInputManager->update(deltaMilliseconds);
 }
 
 Ogre::Camera* GameManager::getCamera()
@@ -143,21 +134,18 @@ Ogre::Real GameManager::getScreenHeight()
 	return m_pUIManager->GetScreenHeight();
 }
 
-void GameManager::InputCapture()
+InputManager* GameManager::getInputManager()
 {
-	m_pInputManager->capture();
+	return m_pClientManager->getInputManager();
 }
 
 void GameManager::HandleWindowClosed()
 {
-	m_pInputManager->closeWindow();
 	//m_pScriptVM->callFunction("EventHandle_WindowClosed", "");
 }
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 {
-	m_pInputManager->resizeMouseState(width, height);
-
 	m_pUIManager->HandleWindowResized(width, height);
 	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
 }
