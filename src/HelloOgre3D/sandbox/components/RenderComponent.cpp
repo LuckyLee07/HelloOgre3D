@@ -1,5 +1,4 @@
 #include "RenderComponent.h"
-#include "manager/ClientManager.h"
 #include "OgreSceneNode.h"
 #include "OgreEntity.h"
 #include "OgreSceneManager.h"
@@ -15,7 +14,7 @@ using namespace Ogre;
 RenderComponent::RenderComponent(const Ogre::String& meshFile)
 	: m_originPos(Ogre::Vector3::ZERO)
 {
-	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	m_pSceneNode = pRootScene->createChildSceneNode();
 
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
@@ -25,7 +24,7 @@ RenderComponent::RenderComponent(const Ogre::String& meshFile)
 RenderComponent::RenderComponent(const Ogre::MeshPtr& meshPtr)
 	: m_originPos(Ogre::Vector3::ZERO)
 {
-	SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	m_pSceneNode = pRootScene->createChildSceneNode();
 
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshPtr);
@@ -56,7 +55,7 @@ RenderComponent::~RenderComponent()
 
 	if (m_pEntity != nullptr)
 	{
-		SceneManager* pSceneMananger = GetClientMgr()->getSceneManager();
+		SceneManager* pSceneMananger = GetGameManager()->getSceneManager();
 		pSceneMananger->destroyEntity(m_pEntity);
 		m_pEntity = nullptr;
 	}

@@ -4,7 +4,6 @@
 #include "OgreSceneManager.h"
 #include "GameDefine.h"
 #include "GameFunction.h"
-#include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
 #include "animation/AgentAnim.h"
 #include "animation/AgentAnimStateMachine.h"

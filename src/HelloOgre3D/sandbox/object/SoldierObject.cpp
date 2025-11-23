@@ -1,10 +1,10 @@
 #include "SoldierObject.h"
 #include "RenderableObject.h"
+#include "GameManager.h"
 #include "manager/SandboxMgr.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "state/AgentStateController.h"
-#include "manager/ClientManager.h"
 #include "input/PlayerInput.h"
 #include "state/AgentState.h"
 #include "GameFunction.h"
@@ -63,7 +63,7 @@ void SoldierObject::Initialize()
 {
 	AgentObject::Initialize();
 
-	auto inputMgr = GetClientMgr()->getInputManager();
+	auto inputMgr = GetGameManager()->getInputManager();
 	m_inputInfo = new PlayerInput(inputMgr);
 }
 

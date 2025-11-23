@@ -1,7 +1,7 @@
 #include "CameraService.h"
 #include "OgreSceneManager.h"
 #include "GameFunction.h"
-#include "manager/ClientManager.h"
+#include "ClientManager.h"
 
 CameraService::CameraService(ClientManager* pMananger)
 	: m_clientManger(pMananger)

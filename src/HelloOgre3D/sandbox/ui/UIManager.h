@@ -12,14 +12,13 @@ namespace Gorilla
 	class Screen;
 	class MarkupText;
 }
-
 class UIFrame;
-class ClientManager;
+class GameManager;
 
 class UIManager
 {
 public:
-	explicit UIManager(ClientManager* gamaMnanager);
+	explicit UIManager(GameManager* gamaMnanager);
 	~UIManager();
 
 	void InitConfig();
@@ -39,9 +38,8 @@ private:
 	Gorilla::MarkupText* m_pMarkupText;
 	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
 
-	ClientManager* m_pClientManager;
-
 private:
+	GameManager* m_pGameManager;
 	std::vector<UIFrame*> m_uiframes;
 };
 

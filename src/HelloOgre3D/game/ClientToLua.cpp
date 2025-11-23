@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Nov 16 09:01:00 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Nov 23 11:38:43 2025.
 */
 
 #ifndef __cplusplus
@@ -21,6 +21,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "../common/LuaInterface.h"
 #include "GameManager.h"
+#include "debug/DebugDrawer.h"
 
 /* function to release collected object via destructor */
 #ifdef __cplusplus
@@ -101,6 +102,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"GameManager");
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
+ tolua_usertype(tolua_S,"DebugDrawer");
  tolua_usertype(tolua_S,"Ogre::Node");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
  tolua_usertype(tolua_S,"Ogre::Camera");
@@ -2892,6 +2894,227 @@ static int tolua_ClientToLua_GameManager_getTimeInSeconds00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getIsEnable of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_getIsEnable00
+static int tolua_ClientToLua_DebugDrawer_getIsEnable00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getIsEnable'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->getIsEnable();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getIsEnable'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setIsEnable of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_setIsEnable00
+static int tolua_ClientToLua_DebugDrawer_setIsEnable00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  bool isEnable = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setIsEnable'", NULL);
+#endif
+  {
+   self->setIsEnable(isEnable);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setIsEnable'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: drawLine of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_drawLine00
+static int tolua_ClientToLua_DebugDrawer_drawLine00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* start = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::Vector3* end = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+  const Ogre::ColourValue* color = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawLine'", NULL);
+#endif
+  {
+   self->drawLine(*start,*end,*color);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawLine'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: drawCircle of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_drawCircle00
+static int tolua_ClientToLua_DebugDrawer_drawCircle00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isboolean(tolua_S,6,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,7,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* centre = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  float radius = ((float)  tolua_tonumber(tolua_S,3,0));
+  int segmentsCount = ((int)  tolua_tonumber(tolua_S,4,0));
+  const Ogre::ColourValue* color = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,5,0));
+  bool isFilled = ((bool)  tolua_toboolean(tolua_S,6,false));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawCircle'", NULL);
+#endif
+  {
+   self->drawCircle(*centre,radius,segmentsCount,*color,isFilled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawCircle'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: drawSquare of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_drawSquare00
+static int tolua_ClientToLua_DebugDrawer_drawSquare00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isboolean(tolua_S,5,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+   float length = ((  float)  tolua_tonumber(tolua_S,3,0));
+  const Ogre::ColourValue* color = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
+  bool isFilled = ((bool)  tolua_toboolean(tolua_S,5,false));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawSquare'", NULL);
+#endif
+  {
+   self->drawSquare(*position,length,*color,isFilled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawSquare'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: drawPath of class  DebugDrawer */
+#ifndef TOLUA_DISABLE_tolua_ClientToLua_DebugDrawer_drawPath00
+static int tolua_ClientToLua_DebugDrawer_drawPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"DebugDrawer",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const std::vector<Ogre::Vector3>",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isboolean(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  DebugDrawer* self = (DebugDrawer*)  tolua_tousertype(tolua_S,1,0);
+  const std::vector<Ogre::Vector3> points = *((const std::vector<Ogre::Vector3>*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::ColourValue* color = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,3,0));
+  bool cyclic = ((bool)  tolua_toboolean(tolua_S,4,0));
+  const Ogre::Vector3* offset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawPath'", NULL);
+#endif
+  {
+   self->drawPath(points,*color,cyclic,*offset);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* Open function */
 TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
 {
@@ -3236,6 +3459,15 @@ TOLUA_API int tolua_ClientToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getScreenHeight",tolua_ClientToLua_GameManager_getScreenHeight00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_ClientToLua_GameManager_getTimeInMillis00);
    tolua_function(tolua_S,"getTimeInSeconds",tolua_ClientToLua_GameManager_getTimeInSeconds00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"DebugDrawer","DebugDrawer","",NULL);
+  tolua_beginmodule(tolua_S,"DebugDrawer");
+   tolua_function(tolua_S,"getIsEnable",tolua_ClientToLua_DebugDrawer_getIsEnable00);
+   tolua_function(tolua_S,"setIsEnable",tolua_ClientToLua_DebugDrawer_setIsEnable00);
+   tolua_function(tolua_S,"drawLine",tolua_ClientToLua_DebugDrawer_drawLine00);
+   tolua_function(tolua_S,"drawCircle",tolua_ClientToLua_DebugDrawer_drawCircle00);
+   tolua_function(tolua_S,"drawSquare",tolua_ClientToLua_DebugDrawer_drawSquare00);
+   tolua_function(tolua_S,"drawPath",tolua_ClientToLua_DebugDrawer_drawPath00);
   tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

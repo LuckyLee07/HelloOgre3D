@@ -2,7 +2,6 @@
 #include "GameDefine.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
-#include "InputManager.h"
 #include "Samples/SdkCameraMan.h"
 #include "debug/DebugDrawer.h"
 
@@ -25,8 +24,8 @@ ClientManager* GetClientMgr()
 
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pInputManager(nullptr), 
-    m_pCameraMan(nullptr), m_pDebugDrawer(nullptr), m_pGameManager(nullptr), m_shutdown(false)
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraMan(nullptr), 
+    m_pDebugDrawer(nullptr), m_pGameManager(nullptr), m_shutdown(false)
 {
     m_Timer.reset();
 
@@ -37,7 +36,6 @@ ClientManager::ClientManager()
 
 ClientManager::~ClientManager()
 {
-    SAFE_DELETE(m_pInputManager);
     SAFE_DELETE(m_pDebugDrawer);
     SAFE_DELETE(m_pGameManager);
     g_GameManager = nullptr;
@@ -230,15 +228,9 @@ void ClientManager::Initialize()
     m_pDebugDrawer = new DebugDrawer();
     m_pDebugDrawer->Initialize();
 
-    // Initialize InputManager
-    m_pInputManager = new InputManager();
-    m_pInputManager->Initialize();
-
-    m_pGameManager = new GameManager();
-    m_pGameManager->Initialize(m_pSceneManager);
+    m_pGameManager = new GameManager(this);
+    m_pGameManager->Initialize();
     g_GameManager = m_pGameManager;
-
-    m_pInputManager->registerHandler(m_pGameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
 }
@@ -294,14 +286,12 @@ void ClientManager::Update()
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
-
-		m_pInputManager->update(deltaMilliseconds);
     }
 }
 
 void ClientManager::InputCapture()
 {
-    m_pInputManager->capture();
+    m_pGameManager->InputCapture();
 }
 
 void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
@@ -311,12 +301,10 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 
 void ClientManager::WindowClosed()
 {
-    m_pInputManager->closeWindow();
     m_pGameManager->HandleWindowClosed();
 }
 
 void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
-    m_pInputManager->resizeMouseState(width, height);
     m_pGameManager->HandleWindowResized(width, height);
 }

@@ -6,10 +6,11 @@
 #include <algorithm>
 #include "GlobalFuncs.h"
 #include <winsock.h>
+#include "ClientManager.h"
 #include "ui/UIManager.h"
-#include "manager/ClientManager.h"
 #include "manager/SandboxMgr.h"
 #include "manager/ObjectManager.h"
+#include "manager/InputManager.h"
 #include "debug/DebugDrawer.h"
 #include "play/PhysicsWorld.h"
 
@@ -25,7 +26,8 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
-GameManager::GameManager() : m_SimulationTime(0), m_pScriptVM(nullptr), 
+GameManager::GameManager(ClientManager* pClientMgr)
+	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr), m_pInputManager(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr)
 {
 	
@@ -37,9 +39,11 @@ GameManager::~GameManager()
 	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pPhysicsWorld);
 	SAFE_DELETE(m_pUIManager);
+	SAFE_DELETE(m_pInputManager);
 
 	g_SandboxMgr = nullptr;
 	g_ObjectManager = nullptr;
+	m_pClientManager = nullptr;
 }
 
 GameManager* GameManager::GetInstance()
@@ -47,11 +51,16 @@ GameManager* GameManager::GetInstance()
 	return g_GameManager;
 }
 
-void GameManager::Initialize(SceneManager* sceneManager)
+void GameManager::Initialize()
 {
 	m_pScriptVM = GetScriptLuaVM();
 
-	m_pUIManager = new UIManager(GetClientMgr());
+	// Initialize InputManager
+	m_pInputManager = new InputManager();
+	m_pInputManager->Initialize();
+	m_pInputManager->registerHandler(this);
+
+	m_pUIManager = new UIManager(this);
 	m_pUIManager->InitConfig();
 
 	m_pPhysicsWorld = new PhysicsWorld();
@@ -61,10 +70,11 @@ void GameManager::Initialize(SceneManager* sceneManager)
 	g_ObjectManager = m_pObjectManager;
 
 	UIService uiservice(m_pUIManager);
-	CameraService camservice(GetClientMgr());
 	ObjectFactory objfactory(m_pObjectManager);
+	CameraService camservice(m_pClientManager);
 
-	m_pSandboxMgr = new SandboxMgr(uiservice, camservice, objfactory, sceneManager);
+	Ogre::SceneManager* pSceneManager = m_pClientManager->getSceneManager();
+	m_pSandboxMgr = new SandboxMgr(uiservice, camservice, objfactory, pSceneManager);
 	g_SandboxMgr = m_pSandboxMgr;
 
 	this->InitLuaEnv();
@@ -104,6 +114,23 @@ void GameManager::Update(int deltaMilliseconds)
 	m_pPhysicsWorld->stepWorld();
 
 	m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
+
+	m_pInputManager->update(deltaMilliseconds);
+}
+
+Ogre::Camera* GameManager::getCamera()
+{
+	return m_pClientManager->getCamera();
+}
+
+Ogre::SceneNode* GameManager::getRootSceneNode()
+{
+	return m_pClientManager->getRootSceneNode();
+}
+
+Ogre::SceneManager* GameManager::getSceneManager()
+{
+	return m_pClientManager->getSceneManager();
 }
 
 Ogre::Real GameManager::getScreenWidth()
@@ -116,16 +143,23 @@ Ogre::Real GameManager::getScreenHeight()
 	return m_pUIManager->GetScreenHeight();
 }
 
-void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
+void GameManager::InputCapture()
 {
-	m_pUIManager->HandleWindowResized(width, height);
-
-	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
+	m_pInputManager->capture();
 }
 
 void GameManager::HandleWindowClosed()
 {
+	m_pInputManager->closeWindow();
 	//m_pScriptVM->callFunction("EventHandle_WindowClosed", "");
+}
+
+void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
+{
+	m_pInputManager->resizeMouseState(width, height);
+
+	m_pUIManager->HandleWindowResized(width, height);
+	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
 }
 
 void GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)

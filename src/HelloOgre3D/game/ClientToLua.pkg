@@ -4,3 +4,4 @@ $pfile "ExternalToLua.pkg"
 
 $cfile "../common/LuaInterface.h"
 $cfile "GameManager.h"
+$cfile "debug/DebugDrawer.h"

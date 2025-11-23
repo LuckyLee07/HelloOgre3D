@@ -1,15 +1,14 @@
 #include "SceneFactory.h"
 #include "Ogre.h"
 #include "Procedural.h"
-//#include "OgreSceneManager.h"
-#include "manager/ClientManager.h"
+#include "GameManager.h"
 #include "GameDefine.h"
 
 Ogre::NameGenerator SceneFactory::s_nameGenerator("UnnamedParticle_");
 
 Ogre::SceneNode* SceneFactory::CreateChildSceneNode()
 {
-	Ogre::SceneNode* pRootSceneNode = GetClientMgr()->getRootSceneNode();
+	Ogre::SceneNode* pRootSceneNode = GetGameManager()->getRootSceneNode();
 	return pRootSceneNode->createChildSceneNode();
 }
 

@@ -10,17 +10,19 @@ class SandboxMgr;
 class ScriptLuaVM;
 class PhysicsWorld;
 class UIManager;
+class InputManager;
 class ObjectManager;
+class ClientManager;
 
 class GameManager : public IInputHandler //tolua_exports
 { //tolua_exports
 public:
-	GameManager();
+	GameManager(ClientManager*);
 	~GameManager();
 
 	static GameManager* GetInstance();
 
-	void Initialize(Ogre::SceneManager* sceneManager);
+	void Initialize();
 	void Update(int deltaMilliseconds);
 
 	void InitLuaEnv();
@@ -34,11 +36,17 @@ public:
 	Ogre::Real getTimeInSeconds();
 	//tolua_end
 
+	Ogre::Camera* getCamera();
+	Ogre::SceneNode* getRootSceneNode();
+	Ogre::SceneManager* getSceneManager();
+
+	InputManager* getInputManager() { return m_pInputManager; }
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 public:
-	void HandleWindowResized(unsigned int width, unsigned int height);
+	void InputCapture();
 	void HandleWindowClosed();
+	void HandleWindowResized(unsigned int width, unsigned int height);
 
 	virtual void OnKeyPressed(OIS::KeyCode keycode, unsigned int key);
 	virtual void OnKeyReleased(OIS::KeyCode keycode, unsigned int key);
@@ -48,10 +56,13 @@ public:
 	virtual void OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
 
 private:
+	ClientManager* m_pClientManager;
+
 	ScriptLuaVM* m_pScriptVM;
 	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
-	
+	InputManager* m_pInputManager;
+
 	UIManager* m_pUIManager;
 	ObjectManager* m_pObjectManager;
 

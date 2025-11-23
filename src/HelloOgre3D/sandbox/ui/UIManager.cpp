@@ -2,10 +2,9 @@
 #include "UIFrame.h"
 #include "GameManager.h"
 #include "GameDefine.h"
-#include "manager/ClientManager.h"
 
-UIManager::UIManager(ClientManager* clientMnanager)
-	: m_pClientManager(clientMnanager), m_pUIScene(nullptr), m_pMarkupText(nullptr)
+UIManager::UIManager(GameManager* gameMnanager)
+	: m_pGameManager(gameMnanager), m_pUIScene(nullptr), m_pMarkupText(nullptr)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
@@ -26,7 +25,7 @@ UIManager::~UIManager()
 void UIManager::InitConfig()
 {
 	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
-	Ogre::Camera* pCamera = m_pClientManager->getCamera();
+	Ogre::Camera* pCamera = m_pGameManager->getCamera();
 	m_pUIScene = pSilverback->createScreen(pCamera->getViewport(), DEFAULT_ATLAS);
 
 	m_pMarkupText = GetUILayer()->createMarkupText(

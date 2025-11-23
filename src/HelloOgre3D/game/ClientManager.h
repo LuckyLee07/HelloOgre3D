@@ -71,7 +71,6 @@ public:
 	Ogre::RenderWindow* getRenderWindow();
 	Ogre::SceneNode* getRootSceneNode();
 	OgreBites::SdkCameraMan* getCameraMan();
-	InputManager* getInputManager() { return m_pInputManager; }
 
 private:
 	void ChooseSceneManager();
@@ -98,7 +97,6 @@ private:
 	
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;
-	InputManager* m_pInputManager;
 	OgreBites::SdkCameraMan* m_pCameraMan;
 
 	bool m_shutdown; //game exit  

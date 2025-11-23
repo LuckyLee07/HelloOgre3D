@@ -6,7 +6,6 @@
 #include "GameDefine.h"
 #include "GameFunction.h"
 #include "manager/SandboxMgr.h"
-#include "manager/ClientManager.h"
 #include "play/PhysicsWorld.h"
 #include "game/GameManager.h"
 #include "manager/ObjectManager.h"
@@ -212,7 +211,7 @@ void BlockObject::addParticleNode(Ogre::SceneNode* particleNode)
 void BlockObject::setBulletCollideImpact(const Collision& collision)
 {
 	// 创建射击碰撞效果
-	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	Ogre::SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle(pRootScene, "BulletImpact");
 
 	// 2秒后清掉该粒子效果
