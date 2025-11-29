@@ -150,14 +150,6 @@ void ObjectManager::addNewObject(BaseObject* pObject)
 	pObject->Init();
 	m_objects[objectId] = pObject;
 
-	IComponent* pComponent = pObject->GetComponent("physics");
-	auto* pPhysicsComp = dynamic_cast<PhysicsComponent*>(pComponent);
-	if (pPhysicsComp && pPhysicsComp->GetRigidBody())
-	{
-		auto* rigidBody = pPhysicsComp->GetRigidBody();
-		m_pPhysicsWorld->addRigidBody(rigidBody, pObject);
-	}
-
 	this->realAddObject(pObject);
 }
 

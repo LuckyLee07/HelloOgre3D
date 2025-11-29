@@ -26,7 +26,7 @@ public:
 	void stepWorld();
 	void checkCollision();
 
-	void addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject);
+	void addRigidBody(btRigidBody* pRigidBody);
 	void removeRigidBody(btRigidBody* pRigidBody);
 
 	bool tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point);
@@ -37,8 +37,6 @@ private:
 	btCollisionDispatcher* m_pDispatcher;
 	btSequentialImpulseConstraintSolver* m_pSolver;
 	btDiscreteDynamicsWorld* m_pDynamicsWorld;
-
-	std::map<btRigidBody*, MyRigidBody*> m_rigidBodys;
 };
 
 #endif; // __PHYSICS_WORLD_H__

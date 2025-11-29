@@ -56,13 +56,6 @@ void PhysicsWorld::cleanup()
 
 	if (m_pBroadPhase != nullptr)
 		delete m_pBroadPhase;
-
-	auto iter = m_rigidBodys.begin();
-	for (; iter != m_rigidBodys.end(); iter++)
-	{
-		SAFE_DELETE(iter->second);
-	}
-	m_rigidBodys.clear();
 }
 
 void PhysicsWorld::stepWorld()
@@ -106,11 +99,8 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 	const btRigidBody* pRigidBody0 = static_cast<const btRigidBody*>(pManifold->getBody0());
 	const btRigidBody* pRigidBody1 = static_cast<const btRigidBody*>(pManifold->getBody1());
 
-	MyRigidBody* myRigidBodyA = static_cast<MyRigidBody*>(pRigidBody0->getUserPointer());
-	MyRigidBody* myRigidBodyB = static_cast<MyRigidBody*>(pRigidBody1->getUserPointer());
-
-	BaseObject* pCollideObjA = myRigidBodyA->getOwner();
-	BaseObject* pCollideObjB = myRigidBodyB->getOwner();
+	BaseObject* pCollideObjA = static_cast<BaseObject*>(pRigidBody0->getUserPointer());
+	BaseObject* pCollideObjB = static_cast<BaseObject*>(pRigidBody0->getUserPointer());
 
 	BaseObject::ObjectType obj1Type = pCollideObjA->GetObjType();
 	BaseObject::ObjectType obj2Type = pCollideObjB->GetObjType();
@@ -130,22 +120,12 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 	return true;
 }
 
-void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody, BaseObject* pObject)
+void PhysicsWorld::addRigidBody(btRigidBody* pRigidBody)
 {
-	MyRigidBody *pTempRigid = new MyRigidBody(pObject);
-	m_rigidBodys[pRigidBody] = pTempRigid;
-	pRigidBody->setUserPointer(pTempRigid);
-
 	m_pDynamicsWorld->addRigidBody(pRigidBody);
 }
 
 void PhysicsWorld::removeRigidBody(btRigidBody* pRigidBody)
 {
 	m_pDynamicsWorld->removeRigidBody(pRigidBody);
-	auto iter = m_rigidBodys.find(pRigidBody);
-	if (iter != m_rigidBodys.end())
-	{
-		SAFE_DELETE(iter->second);
-		m_rigidBodys.erase(iter);
-	}
 }

@@ -30,6 +30,8 @@ void PhysicsComponent::onAttach(GameObject* owner)
 	{
 		m_body->setUserPointer(m_owner);
 	}
+
+	AddToWorld();
 }
 
 void PhysicsComponent::onDetach()
@@ -60,7 +62,7 @@ void PhysicsComponent::AddToWorld()
 
 	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
 	if (pPhysicsWorld)
-		pPhysicsWorld->addRigidBody(m_body, m_owner);
+		pPhysicsWorld->addRigidBody(m_body);
 }
 
 void PhysicsComponent::RemoveFromWorld()

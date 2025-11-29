@@ -71,6 +71,11 @@ BlockObject::~BlockObject()
 	SAFE_DELETE(m_pEntity);
 }
 
+void BlockObject::Init()
+{
+
+}
+
 void BlockObject::Update(int deltaMsec)
 {
 	this->updateWorldTransform();

@@ -27,8 +27,7 @@ public:
 
 	virtual ~BlockObject();
 
-	//void Initialize(BaseObject *owner = nullptr);
-	void DeleteRighdBody();
+	virtual void Init() override;
 
 	virtual void Update(int deltaMsec) override;
 	virtual void updateWorldTransform();
