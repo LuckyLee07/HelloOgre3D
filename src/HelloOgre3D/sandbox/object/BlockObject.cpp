@@ -9,7 +9,6 @@
 #include "play/PhysicsWorld.h"
 #include "game/GameManager.h"
 #include "manager/ObjectManager.h"
-#include "play/MyRigidBody.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleEmitter.h"
 #include "components/PhysicsComponent.h"

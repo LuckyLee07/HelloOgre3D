@@ -3,7 +3,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "manager/ObjectManager.h"
 #include "object/BaseObject.h"
-#include "play/MyRigidBody.h"
+#include "play/Collision.h"
 #include "SandboxMacros.h"
 
 PhysicsWorld::PhysicsWorld() : m_pBroadPhase(nullptr), m_pCollisionConfig(nullptr),
@@ -100,7 +100,7 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 	const btRigidBody* pRigidBody1 = static_cast<const btRigidBody*>(pManifold->getBody1());
 
 	BaseObject* pCollideObjA = static_cast<BaseObject*>(pRigidBody0->getUserPointer());
-	BaseObject* pCollideObjB = static_cast<BaseObject*>(pRigidBody0->getUserPointer());
+	BaseObject* pCollideObjB = static_cast<BaseObject*>(pRigidBody1->getUserPointer());
 
 	BaseObject::ObjectType obj1Type = pCollideObjA->GetObjType();
 	BaseObject::ObjectType obj2Type = pCollideObjB->GetObjType();

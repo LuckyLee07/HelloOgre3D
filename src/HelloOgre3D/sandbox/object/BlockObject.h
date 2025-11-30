@@ -5,7 +5,7 @@
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "opensteer/include/Obstacle.h"
-#include "play/MyRigidBody.h"
+#include "play/Collision.h"
 
 namespace Ogre {
 	class SceneNode;

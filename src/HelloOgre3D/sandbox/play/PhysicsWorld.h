@@ -12,7 +12,6 @@ class btRigidBody;
 class btManifoldPoint;
 class btPersistentManifold;
 class BaseObject;
-class MyRigidBody;
 
 class PhysicsWorld
 {

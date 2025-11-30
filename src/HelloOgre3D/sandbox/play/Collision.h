@@ -1,10 +1,9 @@
-#ifndef __MY_RIGIDBODY__
-#define __MY_RIGIDBODY__
+#ifndef __COLLISION_H__
+#define __COLLISION_H__
 
 #include "OgreVector3.h"
 #include "LinearMath/btVector3.h"
 
-class BaseObject;
 class btRigidBody;
 
 struct Collision
@@ -29,18 +28,4 @@ struct Collision
 	}
 };
 
-class MyRigidBody
-{
-public:
-	MyRigidBody(BaseObject *pObject);
-	~MyRigidBody();
-
-	BaseObject* getOwner();
-	btRigidBody* getRigidBody();
-
-private:
-	BaseObject* m_pOwnerObj;
-}; //tolua_exports
-
-
-#endif  // __MY_RIGIDBODY__
+#endif  // __COLLISION_H__
