@@ -6,7 +6,7 @@ set PATH_TOLUA_EXE=%CURR_DIR%\..\..\tools\tolua++\tolua++.exe
 
 pushd game
 echo ------------- client tolua -------------
-%PATH_TOLUA_EXE% -o ClientToLua.cpp ClientToLua.pkg
+%PATH_TOLUA_EXE% -o GameToLua.cpp GameToLua.pkg
 popd
 
 pushd sandbox

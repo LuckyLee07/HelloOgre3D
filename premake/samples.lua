@@ -95,10 +95,12 @@ function CreateGameProject( projectName )
     files( {
       "../src/" .. projectName .. "/**.h",
       "../src/" .. projectName .. "/**.cpp",
-      "../src/" .. projectName .. "/common/**.h",
-      "../src/" .. projectName .. "/common/**.cpp",
       "../src/" .. projectName .. "/game/**.h",
       "../src/" .. projectName .. "/game/**.cpp",
+      "../src/" .. projectName .. "/client/**.h",
+      "../src/" .. projectName .. "/client/**.cpp",
+      "../src/" .. projectName .. "/common/**.h",
+      "../src/" .. projectName .. "/common/**.cpp",
       "../src/" .. projectName .. "/sandbox/**.h",
       "../src/" .. projectName .. "/sandbox/**.cpp",
     } )
