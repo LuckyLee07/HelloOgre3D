@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sun Nov 23 20:09:04 2025.
+** Generated automatically by tolua++-1.0.92 on Fri Dec 19 07:55:16 2025.
 */
 
 #ifndef __cplusplus
@@ -15,7 +15,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 
 #include <string>
 #include <vector>
-#include "ogre3d/include/Ogre.h"
+#include "Ogre.h"
 #include "ois/include/OISKeyboard.h"
 #include "GameDefine.h"
 #include "GameFunction.h"

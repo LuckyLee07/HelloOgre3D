@@ -1,7 +1,7 @@
 $#include <string>
 $#include <vector>
 
-$#include "ogre3d/include/Ogre.h"
+$#include "Ogre.h"
 $#include "ois/include/OISKeyboard.h"
 
 namespace Ogre {

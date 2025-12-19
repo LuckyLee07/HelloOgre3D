@@ -49,25 +49,25 @@ function CreateGameProject( projectName )
     configuration( { "windows", "x32", "Debug" } )
       defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
-        "\"../build/external/ogre3d/obj/x32/Debug\"",
+        "\"../build/Engine/ogre3d/obj/x32/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x32", "Release" } )
       defines { "_ITERATOR_DEBUG_LEVEL=0" }
       libdirs( {
-        "\"../build/external/ogre3d/obj/x32/Release\"",
+        "\"../build/Engine/ogre3d/obj/x32/Release\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x64", "Debug" } )
       defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
-        "\"../build/external/ogre3d/obj/x64/Debug\"",
+        "\"../build/Engine/ogre3d/obj/x64/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( { "windows", "x64", "Release" } )
       defines { "_ITERATOR_DEBUG_LEVEL=0" } 
       libdirs( {
-        "\"../build/external/ogre3d/obj/x64/Release\"",
+        "\"../build/Engine/ogre3d/obj/x64/Release\"",
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( "*" )
@@ -77,19 +77,19 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
       "../src/%{prj.name}/sandbox/core",
-      "../src/external",
-      "../src/external/lua/lua",
-      "../src/external/lua/tolua",
-      "../src/external/lua/luasocket",
-      "../src/external/zzip/include/",
-      "../src/external/ogre3d/include/",
-      "../src/external/ogre3d_direct3d9/include/",
-      "../src/external/ogre3d_particlefx/include/",
-      "../src/external/ogre3d_procedural/include/",
-      "../src/external/bullet_collision/include/",
-      "../src/external/bullet_dynamics/include/",
-      "../src/external/bullet_linearmath/include/",
-      "../src/external/ois/include/",
+      "../src/External",
+      "../src/External/lua/lua",
+      "../src/External/lua/tolua",
+      "../src/External/lua/luasocket",
+      "../src/Engine/ogre3d/include/",
+      "../src/Engine/ogre3d_direct3d9/include/",
+      "../src/Engine/ogre3d_particlefx/include/",
+      "../src/Engine/ogre3d_procedural/include/",
+      "../src/Engine/ThirdParty/zzip/include/",
+      "../src/External/bullet_collision/include/",
+      "../src/External/bullet_dynamics/include/",
+      "../src/External/bullet_linearmath/include/",
+      "../src/External/ois/include/",
     } )
 
     files( {
@@ -120,11 +120,11 @@ function CreateToluaProject( projectName )
     } )
     libdirs{ "../libs/" }
     includedirs( {
-      "../src/external/lua/lua",
-      "../src/external/lua/luasocket",
+      "../src/External/lua/lua",
+      "../src/External/lua/luasocket",
     } )
     files( {
-      "../src/external/lua/tolua/**.h",
-      "../src/external/lua/tolua/**.c",
+      "../src/External/lua/tolua/**.h",
+      "../src/External/lua/tolua/**.c",
     } )
 end

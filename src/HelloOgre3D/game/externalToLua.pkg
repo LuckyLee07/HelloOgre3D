@@ -17,7 +17,7 @@ namespace std
 	};
 }
 
-$#include "ogre3d/include/Ogre.h"
+$#include "Ogre.h"
 
 namespace Ogre
 {

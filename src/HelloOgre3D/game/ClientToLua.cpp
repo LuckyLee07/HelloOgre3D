@@ -1,6 +1,6 @@
 /*
 ** Lua binding: ClientToLua
-** Generated automatically by tolua++-1.0.92 on Sun Nov 23 11:38:43 2025.
+** Generated automatically by tolua++-1.0.92 on Fri Dec 19 07:55:15 2025.
 */
 
 #ifndef __cplusplus
@@ -16,7 +16,7 @@ TOLUA_API int  tolua_ClientToLua_open (lua_State* tolua_S);
 #include "object/BlockObject.h"
 #include "object/AgentObject.h"
 #include <vector>
-#include "ogre3d/include/Ogre.h"
+#include "Ogre.h"
 #include "ois/include/OISKeyboard.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "../common/LuaInterface.h"

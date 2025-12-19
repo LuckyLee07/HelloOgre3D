@@ -3,9 +3,9 @@
 
 #include <vector>
 #include "ogre3d_gorilla/include/Gorilla.h"
-#include "ogre3d/include/OgreSceneNode.h"
-#include "ogre3d/include/OgreString.h"
-#include "ogre3d/include/OgrePrerequisites.h"
+#include "OgreSceneNode.h"
+#include "OgreString.h"
+#include "OgrePrerequisites.h"
 
 class UIFrame //tolua_exports
 { //tolua_exports
