@@ -591,7 +591,7 @@ solution( "HelloOgre3D" )
 -- ogre3d gorilla ui "master" static library
 	project( "ogre3d_gorilla" )
 		kind( "StaticLib" )
-		location( "../build/Engine/ogre3d_gorilla" )
+		location( "../build/External/ogre3d_gorilla" )
 		includedirs( { 
 			"../src/Engine/ogre3d/include/",
 			"../src/External/ogre3d_gorilla/include/"
@@ -605,3 +605,25 @@ solution( "HelloOgre3D" )
 			"../src/External/ogre3d_gorilla/src/**.cpp"
 		} )
 		defines( { "WIN32" } )
+
+-- recast v1.4 static library
+	project( "recast" )
+		kind( "StaticLib" )
+		location( "../build/External/recast" )
+		includedirs( {"../src/External/recast/include/" } )
+		files( { 
+			"../src/External/recast/include/**.h", 
+			"../src/External/recast/src/**.cpp"
+		} )
+		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
+
+-- detour v1.4 static library
+	project( "detour" )
+		kind( "StaticLib" )
+		location( "../build/External/detour" )
+		includedirs( {"../src/External/detour/include/" } )
+		files( { 
+			"../src/External/detour/include/**.h", 
+			"../src/External/detour/src/**.cpp"
+		} )
+		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )

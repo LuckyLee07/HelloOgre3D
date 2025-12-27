@@ -30,6 +30,8 @@ function CreateGameProject( projectName )
       "ogre3d_gorilla",
       "ois",
       "opensteer",
+      "recast",
+      "detour",
     } )
     libdirs{ "../libs/" }
     configuration( { "windows" } )
