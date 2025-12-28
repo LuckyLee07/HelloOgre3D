@@ -1,5 +1,5 @@
-$#include "object/BlockObject.h"
-$#include "object/AgentObject.h"
+$#include "objects/BlockObject.h"
+$#include "objects/AgentObject.h"
 $pfile "ExternalToLua.pkg"
 
 $cfile "../common/LuaInterface.h"

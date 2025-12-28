@@ -7,17 +7,17 @@
 #include "GlobalFuncs.h"
 #include <winsock.h>
 #include "ClientManager.h"
-#include "ui/UIManager.h"
-#include "manager/SandboxMgr.h"
-#include "manager/ObjectManager.h"
+#include "systems/ui/UIManager.h"
+#include "systems/manager/SandboxMgr.h"
+#include "systems/manager/ObjectManager.h"
 #include "debug/DebugDrawer.h"
-#include "play/PhysicsWorld.h"
+#include "systems/physics/PhysicsWorld.h"
 #include "core/SandboxMacros.h"
 
 using namespace Ogre;
 
 extern int tolua_SandboxToLua_open(lua_State* tolua_S);
-extern int tolua_ClientToLua_open(lua_State* tolua_S);
+extern int tolua_GameToLua_open(lua_State* tolua_S);
 extern int tolua_SandboxToLua_Manual(lua_State* tolua_S);
 
 GameManager* g_GameManager = nullptr;
@@ -78,7 +78,7 @@ void GameManager::InitLuaEnv()
 {
 	// 设置ToLua对象 
 	tolua_SandboxToLua_open(m_pScriptVM->getLuaState());
-	tolua_ClientToLua_open(m_pScriptVM->getLuaState());
+	tolua_GameToLua_open(m_pScriptVM->getLuaState());
 	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 

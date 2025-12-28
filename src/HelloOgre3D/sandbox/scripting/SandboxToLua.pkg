@@ -1,0 +1,18 @@
+$pfile "SandboxForTypes.pkg"
+
+$cfile "../gameplay/GameDefine.h"
+$cfile "../gameplay/GameFunction.h"
+
+$cfile "../systems/ui/UIFrame.h"
+$cfile "../systems/input/IPlayerInput.h"
+
+$cfile "../objects/animation/AgentAnim.h"
+$cfile "../objects/animation/AgentAnimStateMachine.h"
+$cfile "../core/object/BaseObject.h"
+$cfile "../objects/RenderableObject.h"
+$cfile "../objects/BlockObject.h"
+$cfile "../objects/VehicleObject.h"
+$cfile "../objects/AgentObject.h"
+$cfile "../objects/SoldierObject.h"
+$cfile "../systems/manager/SandboxMgr.h"
+$cfile "../systems/manager/ObjectManager.h"

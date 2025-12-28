@@ -4,7 +4,7 @@
 #include "ObfuscatedZip.h"
 #include "Samples/SdkCameraMan.h"
 #include "debug/DebugDrawer.h"
-#include "input/InputManager.h"
+#include "systems/input/InputManager.h"
 #include "Ogre.h"
 #include "OgreD3D9Plugin.h"
 #include "OgreParticleFXPlugin.h"

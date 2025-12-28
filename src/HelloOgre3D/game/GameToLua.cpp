@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Fri Dec 19 08:24:38 2025.
+** Generated automatically by tolua++-1.0.92 on Sun Dec 28 10:18:55 2025.
 */
 
 #ifndef __cplusplus
@@ -13,8 +13,8 @@
 /* Exported function */
 TOLUA_API int  tolua_GameToLua_open (lua_State* tolua_S);
 
-#include "object/BlockObject.h"
-#include "object/AgentObject.h"
+#include "objects/BlockObject.h"
+#include "objects/AgentObject.h"
 #include <vector>
 #include "Ogre.h"
 #include "ois/include/OISKeyboard.h"

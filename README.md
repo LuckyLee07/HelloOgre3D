@@ -9,14 +9,14 @@
 
 3、新增lua/tolua库，编写基础C++类并进行tolua
 
-4、以tolua的形式实现原书chapter_1_introduction的内容
+4、以tolua的形式实现chapter1项目搭建的内容
 (0)搭建新框架
 (1)tolua场景创建相关的对象及接口
 (2)加入bullet物理世界
 (3)加入UI显示系统
 (4)加入输入响应系统
 
-5、完成原书chapter_2_introduction的内容
+5、完成chapter2智能体移动的内容
 
 2024-05-22：
 6、内存泄露问题进度：内存问题早查明是由于tolua对象没释放导致，使用gc释放即可

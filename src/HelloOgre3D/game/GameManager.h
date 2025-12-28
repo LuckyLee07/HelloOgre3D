@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include "OgrePrerequisites.h"
-#include "input/IInputHandler.h"
+#include "systems/input/IInputHandler.h"
 
 class SandboxMgr;
 class ScriptLuaVM;

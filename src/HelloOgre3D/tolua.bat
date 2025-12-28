@@ -9,7 +9,7 @@ echo ------------- client tolua -------------
 %PATH_TOLUA_EXE% -o GameToLua.cpp GameToLua.pkg
 popd
 
-pushd sandbox
+pushd sandbox\scripting
 echo ------------- sandbox tolua -------------
 %PATH_TOLUA_EXE% -o SandboxToLua.cpp SandboxToLua.pkg
 popd

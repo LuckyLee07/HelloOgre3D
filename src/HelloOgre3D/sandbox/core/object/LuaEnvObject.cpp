@@ -1,7 +1,7 @@
 #include "LuaEnvObject.h"
 #include "ScriptLuaVM.h"
 #include "LogSystem.h"
-#include "manager/LuaPluginMgr.h"
+#include "systems/manager/LuaPluginMgr.h"
 
 extern "C" {
 #include <lua.h>
