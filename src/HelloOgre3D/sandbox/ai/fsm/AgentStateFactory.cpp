@@ -1,9 +1,9 @@
 #include "AgentStateFactory.h"
-#include "IdleState.h"
-#include "MoveState.h"
-#include "DeathState.h"
-#include "ShootState.h"
-#include "AgentLuaState.h"
+#include "states/IdleState.h"
+#include "states/MoveState.h"
+#include "states/DeathState.h"
+#include "states/ShootState.h"
+#include "states/AgentLuaState.h"
 
 std::map<std::string, std::function<AgentState*(AgentObject* agent)>> AgentStateFactory::m_registers;
 

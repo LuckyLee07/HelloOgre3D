@@ -1,5 +1,5 @@
 #include "AgentFSM.h"
-#include "AgentState.h"
+#include "states/AgentState.h"
 #include "AgentStateFactory.h"
 #include "SandboxMacros.h"
 

@@ -6,7 +6,7 @@
 #include "animation/AgentAnimStateMachine.h"
 #include "ai/fsm/AgentStateController.h"
 #include "systems/input/PlayerInput.h"
-#include "ai/fsm/AgentState.h"
+#include "ai/fsm/states/AgentState.h"
 #include "GameFunction.h"
 #include "OgreSceneNode.h"
 #include "BlockObject.h"

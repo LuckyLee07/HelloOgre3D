@@ -1,7 +1,7 @@
 #include "tolua++.h"
 #include "object/LuaEnvObject.h"
 #include "objects/AgentObject.h"
-#include "ai/fsm/AgentLuaState.h"
+#include "ai/fsm/states/AgentLuaState.h"
 
 /* Exported function */
 TOLUA_API int tolua_SandboxToLua_Manual(lua_State* tolua_S);
