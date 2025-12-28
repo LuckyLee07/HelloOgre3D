@@ -1,6 +1,6 @@
 #include "AgentLuaState.h"
 #include "objects/AgentObject.h"
-#include "systems/manager/LuaPluginMgr.h"
+#include "scripting/LuaPluginMgr.h"
 
 AgentLuaState::AgentLuaState(AgentObject* pAgent) : AgentState(pAgent)
 {

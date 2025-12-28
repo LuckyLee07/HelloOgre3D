@@ -6,7 +6,7 @@
 #include "objects/SoldierObject.h"
 #include "objects/RenderableObject.h"
 #include "systems/manager/ObjectManager.h"
-#include "systems/manager/LuaPluginMgr.h"
+#include "scripting/LuaPluginMgr.h"
 #include "Ogre.h"
 #include "Procedural.h"
 #include "btBulletDynamicsCommon.h"
