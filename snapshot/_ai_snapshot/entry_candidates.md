@@ -1,367 +1,911 @@
-# Entry & Critical Path Candidates
+# Entry & Critical Path Candidates (v6)
 
-## Entry points
-- `src/Engine/ogre3d/include/OgreWorkQueue.h`
-- `tools/tolua++/lua/LuaPanda.lua`
-- `src/Engine/ogre3d/src/Threading/OgreDefaultWorkQueueStandard.cpp`
-- `src/Engine/ogre3d/src/OgreWorkQueue.cpp`
-- `src/Engine/ogre3d/src/OgreRoot.cpp`
-- `src/Engine/ogre3d/include/nedmalloc/malloc.c.h`
-- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueTBB.h`
-- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueStandard.h`
-- `src/Engine/ogre3d/include/OgreRoot.h`
+> CORE_PATH_PREFIXES=['src/HelloOgre3D/', 'bin/res/', 'premake/', 'scripts/']
+
+## CORE: Entry points
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.cpp` (score=7.13, lines=60, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.h` (score=7.13, lines=34, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp` (score=7.13, lines=93, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.h` (score=7.13, lines=39, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp` (score=7.13, lines=291, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=7.13, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp` (score=3.96, lines=28, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=2)
+- `src/HelloOgre3D/client/DemoHelloWorld.h` (score=3.96, lines=19, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/client/main.cpp` (score=3.96, lines=24, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=1)
+- `src/HelloOgre3D/game/ClientManager.cpp` (score=3.96, lines=321, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/game/ClientManager.h` (score=3.96, lines=112, module2=`src/HelloOgre3D`, hints: entry=2, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.h` (score=3.56, lines=39, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=3.56, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=3.56, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.h` (score=3.56, lines=38, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/ai/steer/AgentPath.cpp` (score=3.56, lines=94, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=3.56, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp` (score=3.56, lines=243, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=3.56, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp` (score=3.56, lines=259, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.h` (score=3.56, lines=76, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp` (score=3.56, lines=164, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.h` (score=3.56, lines=68, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp` (score=3.56, lines=303, module2=`src/HelloOgre3D`, hints: entry=1, tick=4, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=3.56, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp` (score=3.56, lines=361, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.h` (score=3.56, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h` (score=3.56, lines=70, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp` (score=3.56, lines=168, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.h` (score=3.56, lines=59, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp` (score=3.56, lines=238, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.cpp` (score=3.56, lines=131, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.h` (score=3.56, lines=41, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.cpp` (score=3.56, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.h` (score=3.56, lines=71, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.cpp` (score=3.56, lines=89, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.h` (score=3.56, lines=46, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
 - `bin/res/scripts/base/LuaPanda.lua`
-- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.h`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.h`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.cpp`
-- `src/HelloOgre3D/game/ClientManager.h`
-- `src/HelloOgre3D/game/ClientManager.cpp`
-- `src/HelloOgre3D/client/main.cpp`
-- `src/HelloOgre3D/client/DemoHelloWorld.h`
-- `src/HelloOgre3D/client/DemoHelloWorld.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
-- `src/Engine/ogre3d/src/WIN32/OgreTimer.cpp`
-- `src/Engine/ogre3d/src/OgreUTFString.cpp`
-- `src/Engine/ogre3d/src/OgreTexture.cpp`
-- `src/Engine/ogre3d/src/OgreTangentSpaceCalc.cpp`
-- `src/Engine/ogre3d/src/OgreSubMesh.cpp`
-- `src/Engine/ogre3d/src/OgreString.cpp`
-- `src/Engine/ogre3d/src/OgreShadowVolumeExtrudeProgram.cpp`
-- `src/Engine/ogre3d/src/OgreShadowCameraSetupPlaneOptimal.cpp`
-- `src/Engine/ogre3d/src/OgreScriptCompiler.cpp`
-- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
-- `src/Engine/ogre3d/src/OgreProfiler.cpp`
-- `src/Engine/ogre3d/src/OgrePredefinedControllers.cpp`
-- `src/Engine/ogre3d/src/OgreParticleSystem.cpp`
-- `src/Engine/ogre3d/src/OgreParticleEmitter.cpp`
-- `src/Engine/ogre3d/src/OgreMeshSerializerImpl.cpp`
-- `src/Engine/ogre3d/src/OgreMesh.cpp`
-- `src/Engine/ogre3d/src/OgreGpuProgramParams.cpp`
-- `src/Engine/ogre3d/src/OgreFreeImageCodec.cpp`
-- `src/Engine/ogre3d/src/OgreExternalTextureSource.cpp`
-- `src/Engine/ogre3d/src/OgreDDSCodec.cpp`
-- `src/Engine/ogre3d/src/OgreConvexBody.cpp`
-- `src/Engine/ogre3d/src/OgreCamera.cpp`
-- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
-- `src/Engine/ogre3d/src/OgreAnimationState.cpp`
-- `src/Engine/ogre3d/include/OgreViewport.h`
-- `src/Engine/ogre3d/include/OgreTextureUnitState.h`
-- `src/Engine/ogre3d/include/OgreStringInterface.h`
-- `src/Engine/ogre3d/include/OgreSceneManager.h`
-- `src/Engine/ogre3d/include/OgreRenderTarget.h`
-- `src/Engine/ogre3d/include/OgreRenderSystem.h`
-- `src/Engine/ogre3d/include/OgreProfiler.h`
-- `src/Engine/ogre3d/include/OgrePlugin.h`
-- `src/Engine/ogre3d/include/OgreParticleSystemManager.h`
-- `src/Engine/ogre3d/include/OgreParticleSystem.h`
-- `src/Engine/ogre3d/include/OgreNode.h`
-- `src/Engine/ogre3d/include/OgreMesh.h`
-- `src/Engine/ogre3d/include/OgreExternalTextureSource.h`
-- `src/Engine/ogre3d/include/OgreBillboardSet.h`
-- `src/Engine/ogre3d/include/OgreAnimationState.h`
-- `bin/res/scripts/samples/Sandbox3.lua`
-- `tools/tolua++/lua/typedef.lua`
-- `tools/tolua++/lua/namespace.lua`
-- `tools/tolua++/lua/function.lua`
-- `tools/tolua++/lua/feature.lua`
-- `tools/tolua++/lua/enumerate.lua`
-- `tools/tolua++/lua/define.lua`
-- `tools/tolua++/lua/code.lua`
-- `tools/tolua++/lua/class.lua`
-- `src/HelloOgre3D/sandbox/systems/ui/UIManager.h`
-- `src/HelloOgre3D/sandbox/systems/ui/UIManager.cpp`
-- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.h`
-- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.cpp`
-- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.h`
-- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.cpp`
-- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp`
-- `src/HelloOgre3D/sandbox/systems/input/InputManager.h`
-- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h`
-- `src/HelloOgre3D/sandbox/objects/VehicleObject.h`
-- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.h`
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/RenderableObject.h`
-- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/BlockObject.h`
-- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/AgentObject.h`
-- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp`
-- `src/HelloOgre3D/sandbox/core/object/BaseObject.h`
-- `src/HelloOgre3D/sandbox/ai/steer/AgentPath.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp`
-- `src/HelloOgre3D/game/debug/DebugDrawer.h`
-- `src/HelloOgre3D/game/debug/DebugDrawer.cpp`
-- `src/HelloOgre3D/game/GameManager.h`
-- `src/HelloOgre3D/game/GameManager.cpp`
-- `src/HelloOgre3D/common/ScriptLuaVM.cpp`
-- `src/HelloOgre3D/common/ObfuscatedZip.cpp`
-- `src/HelloOgre3D/common/FileManager.h`
-- `src/HelloOgre3D/common/FileManager.cpp`
+- `src/HelloOgre3D/client/Application.cpp`
 - `src/HelloOgre3D/client/Application.h`
-- `src/HelloOgre3D/client/Application.cpp`
-- `src/Engine/ogre3d_procedural/src/ProceduralTriangulator.cpp`
-- `src/Engine/ogre3d_procedural/include/ProceduralTrack.h`
-- `src/Engine/ogre3d_particlefx/src/OgreScaleAffector.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreRotationAffector.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreRingEmitter.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgrePointEmitter.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreParticleFXPlugin.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreHollowEllipsoidEmitter.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreEllipsoidEmitter.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreCylinderEmitter.cpp`
-- `src/Engine/ogre3d_particlefx/src/OgreColourInterpolatorAffector.cpp`
-
-## Tick/Update/AI loop
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp`
-- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp`
-- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.cpp`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp`
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.h`
-- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.cpp`
-- `src/HelloOgre3D/game/ClientManager.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
-- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
-- `src/Engine/ogre3d/src/OgreRenderSystem.cpp`
-- `src/Engine/ogre3d/src/OgreBillboardChain.cpp`
-- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp`
-- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp`
-- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.h`
-- `src/HelloOgre3D/sandbox/objects/VehicleObject.h`
-- `src/HelloOgre3D/sandbox/objects/RenderableObject.h`
-- `src/HelloOgre3D/sandbox/objects/BlockObject.h`
-- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/AgentObject.h`
-- `src/HelloOgre3D/sandbox/core/object/BaseObject.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/states/IdleState.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp`
-- `src/HelloOgre3D/game/debug/DebugDrawer.cpp`
+- `src/HelloOgre3D/common/FileManager.cpp`
+- `src/HelloOgre3D/common/FileManager.h`
+- `src/HelloOgre3D/common/ObfuscatedZip.cpp`
+- `src/HelloOgre3D/common/ScriptLuaVM.cpp`
 - `src/HelloOgre3D/game/GameManager.cpp`
-- `src/HelloOgre3D/game/ClientManager.h`
+- `src/HelloOgre3D/game/GameManager.h`
+- `src/HelloOgre3D/game/debug/DebugDrawer.cpp`
+- `src/HelloOgre3D/game/debug/DebugDrawer.h`
+- `bin/res/scripts/script_init.lua`
+- `bin/res/scripts/base/class.lua`
+- `bin/res/scripts/base/threadpool.lua`
+- `bin/res/scripts/manager/LuaPluginMgr.lua`
+- `bin/res/scripts/samples/game_init.lua`
+- `bin/res/scripts/samples/Sandbox1.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `bin/res/scripts/samples/chapter4/SoldierAgent.lua`
+- `premake/premake.lua`
+- `premake/samples.lua`
+
+## CORE: Tick/Update/AI loop
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp` (score=14.26, lines=303, module2=`src/HelloOgre3D`, hints: entry=1, tick=4, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.cpp` (score=10.69, lines=96, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.h` (score=10.69, lines=45, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=10.69, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp` (score=10.69, lines=243, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp` (score=10.69, lines=164, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=10.69, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp` (score=10.69, lines=291, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h` (score=10.69, lines=70, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.cpp` (score=10.69, lines=165, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=10.69, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp` (score=7.13, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=7.13, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h` (score=7.13, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/IdleState.cpp` (score=7.13, lines=46, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=7.13, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=7.13, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp` (score=7.13, lines=259, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.h` (score=7.13, lines=76, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.h` (score=7.13, lines=68, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.h` (score=7.13, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.h` (score=7.13, lines=56, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp` (score=7.13, lines=111, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp` (score=7.13, lines=168, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/game/ClientManager.cpp` (score=5.94, lines=321, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/client/Application.cpp` (score=3.96, lines=85, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/game/ClientManager.h` (score=3.96, lines=112, module2=`src/HelloOgre3D`, hints: entry=2, tick=2, script=0)
+- `src/HelloOgre3D/game/GameManager.cpp` (score=3.96, lines=189, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=5)
+- `src/HelloOgre3D/game/debug/DebugDrawer.cpp` (score=3.96, lines=171, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/GameDefine.h` (score=3.56, lines=54, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/GameFunction.h` (score=3.56, lines=92, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.h` (score=3.56, lines=21, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.h` (score=3.56, lines=39, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/ActionTask/DTActionDie.h` (score=3.56, lines=18, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/ActionTask/DTActionIdle.h` (score=3.56, lines=18, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.cpp` (score=3.56, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentState.cpp` (score=3.56, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentState.h` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/DeathState.cpp` (score=3.56, lines=44, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/DeathState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/IdleState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.cpp`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/ShootState.cpp`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/ShootState.h`
+- `src/HelloOgre3D/sandbox/core/component/IComponent.h`
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.cpp`
+- `src/HelloOgre3D/sandbox/core/object/GameObject.cpp`
+- `src/HelloOgre3D/sandbox/core/object/GameObject.h`
+- `src/HelloOgre3D/sandbox/core/script/LuaClassNameTraits.h`
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp`
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp`
+- `src/HelloOgre3D/sandbox/objects/components/AgentLocomotion.cpp`
+- `src/HelloOgre3D/sandbox/scripting/LuaPluginMgr.h`
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.h`
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp`
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h`
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.cpp`
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.h`
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.cpp`
+- `bin/res/scripts/samples/game_init.lua`
+- `bin/res/scripts/samples/Sandbox1.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp`
+- `src/HelloOgre3D/client/main.cpp`
+- `src/HelloOgre3D/common/LuaInterface.cpp`
+- `src/HelloOgre3D/common/LuaInterface.h`
+- `src/HelloOgre3D/game/GameManager.h`
+- `src/HelloOgre3D/game/GameToLua.cpp`
+- `src/HelloOgre3D/game/debug/DebugDrawer.h`
+- `bin/res/scripts/base/LuaPanda.lua`
+- `bin/res/scripts/base/threadpool.lua`
+- `bin/res/scripts/base/uicomps.lua`
+- `bin/res/scripts/base/utils.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierState.lua`
+- `bin/res/scripts/samples/chapter4/SoldierAgent.lua`
+- `premake/premake.lua`
+
+## CORE: Script/Lua/binding
+- `src/HelloOgre3D/game/GameManager.cpp` (score=9.90, lines=189, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=5)
+- `src/HelloOgre3D/common/ScriptLuaVM.cpp` (score=7.92, lines=628, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=4)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=7.13, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.cpp` (score=7.13, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h` (score=7.13, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.cpp` (score=7.13, lines=50, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=7.13, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.cpp` (score=7.13, lines=49, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.h` (score=7.13, lines=23, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=7.13, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp` (score=7.13, lines=361, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/scripting/LuaPluginMgr.h` (score=7.13, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp` (score=7.13, lines=111, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=7.13, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp` (score=7.13, lines=238, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h` (score=7.13, lines=83, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/SandboxMgr.cpp` (score=7.13, lines=204, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/systems/service/ObjectFactory.cpp` (score=7.13, lines=121, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `bin/res/scripts/samples/game_init.lua` (score=5.00, lines=48, module2=`bin/res`, hints: entry=1, tick=2, script=5)
+- `premake/premake.lua` (score=4.00, lines=629, module2=`premake/premake.lua`, hints: entry=1, tick=1, script=4)
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp` (score=3.96, lines=28, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=2)
+- `src/HelloOgre3D/common/ScriptLuaVM.h` (score=3.96, lines=57, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/game/GameManager.h` (score=3.96, lines=74, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/game/GameToLua.cpp` (score=3.96, lines=3482, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTreeInstance.h` (score=3.56, lines=31, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionNode.h` (score=3.56, lines=14, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTEvaluator.h` (score=3.56, lines=15, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBase.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.cpp` (score=3.56, lines=25, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.h` (score=3.56, lines=26, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_CriticalHealth.h` (score=3.56, lines=21, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_HasMovePosition.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_IsAlive.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=3.56, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/core/script/LuaClassNameTraits.h` (score=3.56, lines=14, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=3.56, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/systems/service/SceneFactory.cpp` (score=3.56, lines=306, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `bin/res/scripts/script_init.lua` (score=3.00, lines=12, module2=`bin/res`, hints: entry=1, tick=0, script=3)
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierState.lua`
+- `bin/res/scripts/base/LuaPanda.lua`
+- `bin/res/scripts/base/utils.lua`
+- `bin/res/scripts/manager/LuaPluginMgr.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `premake/samples.lua`
+- `src/HelloOgre3D/client/main.cpp`
+- `src/HelloOgre3D/common/LogSystem.h`
+- `src/HelloOgre3D/common/LuaInterface.cpp`
+- `src/HelloOgre3D/common/LuaInterface.h`
+- `src/HelloOgre3D/common/ObfuscatedZip.cpp`
+
+---
+
+## ALL: Entry points
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.cpp` (score=7.13, lines=60, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.h` (score=7.13, lines=34, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp` (score=7.13, lines=93, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.h` (score=7.13, lines=39, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp` (score=7.13, lines=291, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=7.13, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp` (score=3.96, lines=28, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=2)
+- `src/HelloOgre3D/client/DemoHelloWorld.h` (score=3.96, lines=19, module2=`src/HelloOgre3D`, hints: entry=2, tick=0, script=0)
+- `src/HelloOgre3D/client/main.cpp` (score=3.96, lines=24, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=1)
+- `src/HelloOgre3D/game/ClientManager.cpp` (score=3.96, lines=321, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/game/ClientManager.h` (score=3.96, lines=112, module2=`src/HelloOgre3D`, hints: entry=2, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.h` (score=3.56, lines=39, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=3.56, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=3.56, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.h` (score=3.56, lines=38, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/ai/steer/AgentPath.cpp` (score=3.56, lines=94, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=3.56, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp` (score=3.56, lines=243, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=3.56, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp` (score=3.56, lines=259, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.h` (score=3.56, lines=76, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp` (score=3.56, lines=164, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.h` (score=3.56, lines=68, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp` (score=3.56, lines=303, module2=`src/HelloOgre3D`, hints: entry=1, tick=4, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=3.56, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp` (score=3.56, lines=361, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.h` (score=3.56, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h` (score=3.56, lines=70, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp` (score=3.56, lines=168, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.h` (score=3.56, lines=59, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp` (score=3.56, lines=238, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.cpp` (score=3.56, lines=131, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.h` (score=3.56, lines=41, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.cpp` (score=3.56, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.h` (score=3.56, lines=71, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.cpp` (score=3.56, lines=89, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.h` (score=3.56, lines=46, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=0)
+- `bin/res/scripts/base/LuaPanda.lua`
 - `src/HelloOgre3D/client/Application.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Texture.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderWindow.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9MultiRenderTarget.cpp`
-- `src/Engine/ogre3d_direct3d9/include/OgreD3D9Texture.h`
-- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderWindow.h`
-- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderSystem.h`
-- `src/Engine/ogre3d_direct3d9/include/OgreD3D9MultiRenderTarget.h`
-- `src/Engine/ogre3d/src/OgreViewport.cpp`
-- `src/Engine/ogre3d/src/OgreTagPoint.cpp`
-- `src/Engine/ogre3d/src/OgreSkeletonInstance.cpp`
-- `src/Engine/ogre3d/src/OgreSkeleton.cpp`
-- `src/Engine/ogre3d/src/OgreShadowCaster.cpp`
-- `src/Engine/ogre3d/src/OgreSceneNode.cpp`
-- `src/Engine/ogre3d/src/OgreRibbonTrail.cpp`
-- `src/Engine/ogre3d/src/OgreRenderToVertexBuffer.cpp`
-- `src/Engine/ogre3d/src/OgreRenderTarget.cpp`
-- `src/Engine/ogre3d/src/OgrePatchMesh.cpp`
-- `src/Engine/ogre3d/src/OgreParticleSystem.cpp`
-- `src/Engine/ogre3d/src/OgreOptimisedUtil.cpp`
-- `src/Engine/ogre3d/src/OgreNode.cpp`
-- `src/Engine/ogre3d/src/OgreManualObject.cpp`
-- `src/Engine/ogre3d/src/OgreLight.cpp`
-- `src/Engine/ogre3d/src/OgreInstancedGeometry.cpp`
-- `src/Engine/ogre3d/src/OgreInstancedEntity.cpp`
-- `src/Engine/ogre3d/src/OgreInstanceManager.cpp`
-- `src/Engine/ogre3d/src/OgreInstanceBatchHW_VTF.cpp`
-- `src/Engine/ogre3d/src/OgreInstanceBatchHW.cpp`
-- `src/Engine/ogre3d/src/OgreInstanceBatch.cpp`
-- `src/Engine/ogre3d/src/OgreHardwareBufferManager.cpp`
-- `src/Engine/ogre3d/src/OgreFrustum.cpp`
-- `src/Engine/ogre3d/src/OgreEntity.cpp`
-- `src/Engine/ogre3d/src/OgreControllerManager.cpp`
-- `src/Engine/ogre3d/src/OgreCompositorInstance.cpp`
-- `src/Engine/ogre3d/src/OgreCompositorChain.cpp`
-- `src/Engine/ogre3d/src/OgreCamera.cpp`
-- `src/Engine/ogre3d/src/OgreBone.cpp`
-- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
-- `src/Engine/ogre3d/include/nedmalloc/malloc.c.h`
-- `src/Engine/ogre3d/include/Samples/SdkTrays.h`
-- `src/Engine/ogre3d/include/OgreViewport.h`
-- `src/Engine/ogre3d/include/OgreTagPoint.h`
-- `src/Engine/ogre3d/include/OgreShadowCaster.h`
-- `src/Engine/ogre3d/include/OgreSceneNode.h`
-- `src/Engine/ogre3d/include/OgreSceneManager.h`
-- `src/Engine/ogre3d/include/OgreRoot.h`
-- `src/Engine/ogre3d/include/OgreRibbonTrail.h`
-- `src/Engine/ogre3d/include/OgreRenderable.h`
-- `src/Engine/ogre3d/include/OgreRenderToVertexBuffer.h`
-- `src/Engine/ogre3d/include/OgreRenderTargetListener.h`
-- `src/Engine/ogre3d/include/OgreRenderTarget.h`
-- `src/Engine/ogre3d/include/OgreRenderSystem.h`
-- `src/Engine/ogre3d/include/OgrePatchMesh.h`
-- `src/Engine/ogre3d/include/OgreParticleSystem.h`
+- `src/HelloOgre3D/client/Application.h`
+- `src/HelloOgre3D/common/FileManager.cpp`
+- `src/HelloOgre3D/common/FileManager.h`
+- `src/HelloOgre3D/common/ObfuscatedZip.cpp`
+- `src/HelloOgre3D/common/ScriptLuaVM.cpp`
+- `src/HelloOgre3D/game/GameManager.cpp`
+- `src/HelloOgre3D/game/GameManager.h`
+- `src/HelloOgre3D/game/debug/DebugDrawer.cpp`
+- `src/HelloOgre3D/game/debug/DebugDrawer.h`
+- `tools/tolua++/lua/LuaPanda.lua`
+- `bin/res/scripts/script_init.lua`
+- `bin/res/scripts/base/class.lua`
+- `bin/res/scripts/base/threadpool.lua`
+- `bin/res/scripts/manager/LuaPluginMgr.lua`
+- `bin/res/scripts/samples/game_init.lua`
+- `bin/res/scripts/samples/Sandbox1.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `bin/res/scripts/samples/chapter4/SoldierAgent.lua`
+- `media/animations/futuristic_soldier/LICENSE.txt`
+- `media/models/futuristic_soldier/LICENSE.txt`
+- `media/textures/futuristic_soldier/LICENSE.txt`
+- `media/textures/skybox_set/LICENSE.txt`
+- `premake/premake.lua`
+- `premake/samples.lua`
+- `src/Engine/ogre3d/include/OgreWorkQueue.h`
+- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueStandard.h`
+- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueTBB.h`
+- `src/Engine/ogre3d/src/Threading/OgreDefaultWorkQueueStandard.cpp`
+- `tools/tolua++/lua/function.lua`
+- `src/Engine/ogre3d/include/OgreAnimationState.h`
+- `src/Engine/ogre3d/include/OgreExternalTextureSource.h`
+- `src/Engine/ogre3d/src/OgreAnimationState.cpp`
+- `src/Engine/ogre3d/src/OgreFreeImageCodec.cpp`
+- `src/Engine/ogre3d/src/OgreParticleEmitter.cpp`
+- `src/Engine/ogre3d/src/OgreRoot.cpp`
+- `src/Engine/ogre3d/src/OgreShadowCameraSetupPlaneOptimal.cpp`
+- `src/Engine/ogre3d/src/OgreShadowVolumeExtrudeProgram.cpp`
+- `src/Engine/ogre3d/src/OgreWorkQueue.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
+- `src/Engine/ogre3d/include/OgreAnimable.h`
+- `src/Engine/ogre3d/include/OgreAny.h`
+- `src/Engine/ogre3d/include/OgreAtomicObject.h`
+- `src/Engine/ogre3d/include/OgreAtomicScalar.h`
+- `src/Engine/ogre3d/include/OgreAxisAlignedBox.h`
+- `src/Engine/ogre3d/include/OgreCompositionTargetPass.h`
+- `src/Engine/ogre3d/include/OgreCompositionTechnique.h`
+- `src/Engine/ogre3d/include/OgreCompositorInstance.h`
+- `src/Engine/ogre3d/include/OgreCompositorManager.h`
+- `src/Engine/ogre3d/include/OgreConvexBody.h`
+- `src/Engine/ogre3d/include/OgreDDSCodec.h`
+- `src/Engine/ogre3d/include/OgreDeflate.h`
+- `src/Engine/ogre3d/include/OgreEntity.h`
+- `src/Engine/ogre3d/include/OgreETCCodec.h`
+- `src/Engine/ogre3d/include/OgreFreeImageCodec.h`
+- `src/Engine/ogre3d/include/OgreFrustum.h`
+- `src/Engine/ogre3d/include/OgreGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreGpuProgramParams.h`
+- `src/Engine/ogre3d/include/OgreHighLevelGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreInstancedGeometry.h`
+- `src/Engine/ogre3d/include/OgreMaterialManager.h`
+- `src/Engine/ogre3d/include/OgreMaterialSerializer.h`
+- `src/Engine/ogre3d/include/OgreMath.h`
+- `src/Engine/ogre3d/include/OgreMesh.h`
+- `src/Engine/ogre3d/include/OgreMeshManager.h`
 - `src/Engine/ogre3d/include/OgreNode.h`
-- `src/Engine/ogre3d/include/OgreManualObject.h`
-- `src/Engine/ogre3d/include/OgreLight.h`
+- `src/Engine/ogre3d/include/OgreParticleAffector.h`
+- `src/Engine/ogre3d/include/OgreParticleEmitter.h`
+- `src/Engine/ogre3d/include/OgreParticleSystem.h`
+- `src/Engine/ogre3d/include/OgreParticleSystemManager.h`
+- `src/Engine/ogre3d/include/OgrePlaneBoundedVolume.h`
+- `src/Engine/ogre3d/include/OgrePlugin.h`
+- `src/Engine/ogre3d/include/OgreProfiler.h`
+- `src/Engine/ogre3d/include/OgrePVRTCCodec.h`
+- `src/Engine/ogre3d/include/OgreRectangle2D.h`
+- `src/Engine/ogre3d/include/OgreRenderSystem.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilities.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilitiesSerializer.h`
+- `src/Engine/ogre3d/include/OgreResourceBackgroundQueue.h`
+- `src/Engine/ogre3d/include/OgreResourceGroupManager.h`
+- `src/Engine/ogre3d/include/OgreRibbonTrail.h`
+- `src/Engine/ogre3d/include/OgreRoot.h`
+- `src/Engine/ogre3d/include/OgreSceneManager.h`
+- `src/Engine/ogre3d/include/OgreSceneManagerEnumerator.h`
+- `src/Engine/ogre3d/include/OgreScriptCompiler.h`
+- `src/Engine/ogre3d/include/OgreShadowCaster.h`
+- `src/Engine/ogre3d/include/OgreShadowVolumeExtrudeProgram.h`
+- `src/Engine/ogre3d/include/OgreSkeleton.h`
+- `src/Engine/ogre3d/include/OgreSkeletonInstance.h`
+- `src/Engine/ogre3d/include/OgreString.h`
+- `src/Engine/ogre3d/include/OgreSubMesh.h`
+- `src/Engine/ogre3d/include/OgreUnifiedHighLevelGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreUTFString.h`
+- `src/Engine/ogre3d/include/OgreWireBoundingBox.h`
+- `src/Engine/ogre3d/include/nedmalloc/malloc.c.h`
+- `src/Engine/ogre3d/include/nedmalloc/Readme.txt`
+- `src/Engine/ogre3d/include/Samples/SdkTrays.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesBoost.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesNone.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesPoco.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesTBB.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadHeadersTBB.h`
+- `src/Engine/ogre3d/src/nedmalloc.c`
+- `src/Engine/ogre3d/src/OgreAtomicScalar.cpp`
+- `src/Engine/ogre3d/src/OgreAxisAlignedBox.cpp`
+- `src/Engine/ogre3d/src/OgreBillboardChain.cpp`
+- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
+- `src/Engine/ogre3d/src/OgreBone.cpp`
+- `src/Engine/ogre3d/src/OgreCompositionTargetPass.cpp`
+- `src/Engine/ogre3d/src/OgreCompositionTechnique.cpp`
+- `src/Engine/ogre3d/src/OgreCompositor.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorChain.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorInstance.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorManager.cpp`
+- `src/Engine/ogre3d/src/OgreConvexBody.cpp`
+- `src/Engine/ogre3d/src/OgreDDSCodec.cpp`
+- `src/Engine/ogre3d/src/OgreDeflate.cpp`
+- `src/Engine/ogre3d/src/OgreEntity.cpp`
+- `src/Engine/ogre3d/src/OgreETCCodec.cpp`
+- `src/Engine/ogre3d/src/OgreExternalTextureSource.cpp`
+- `src/Engine/ogre3d/src/OgreExternalTextureSourceManager.cpp`
+- `src/Engine/ogre3d/src/OgreFrustum.cpp`
+- `src/Engine/ogre3d/src/OgreGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreGpuProgramParams.cpp`
+- `src/Engine/ogre3d/src/OgreHighLevelGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreHighLevelGpuProgramManager.cpp`
+- `src/Engine/ogre3d/src/OgreImage.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatch.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchShader.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchVTF.cpp`
+- `src/Engine/ogre3d/src/OgreInstancedEntity.cpp`
+- `src/Engine/ogre3d/src/OgreInstancedGeometry.cpp`
+- `src/Engine/ogre3d/src/OgreLight.cpp`
+- `src/Engine/ogre3d/src/OgreManualObject.cpp`
+- `src/Engine/ogre3d/src/OgreMaterialManager.cpp`
+- `src/Engine/ogre3d/src/OgreMaterialSerializer.cpp`
+- `src/Engine/ogre3d/src/OgreMath.cpp`
+- `src/Engine/ogre3d/src/OgreMesh.cpp`
+- `src/Engine/ogre3d/src/OgreMeshManager.cpp`
+- `src/Engine/ogre3d/src/OgreNode.cpp`
+- `src/Engine/ogre3d/src/OgreParticleSystem.cpp`
+- `src/Engine/ogre3d/src/OgreParticleSystemManager.cpp`
+- `src/Engine/ogre3d/src/OgrePlane.cpp`
+- `src/Engine/ogre3d/src/OgreProfiler.cpp`
+- `src/Engine/ogre3d/src/OgrePVRTCCodec.cpp`
+- `src/Engine/ogre3d/src/OgreRectangle2D.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystem.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystemCapabilities.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystemCapabilitiesSerializer.cpp`
+- `src/Engine/ogre3d/src/OgreResourceBackgroundQueue.cpp`
+- `src/Engine/ogre3d/src/OgreResourceGroupManager.cpp`
+- `src/Engine/ogre3d/src/OgreRibbonTrail.cpp`
+- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
+- `src/Engine/ogre3d/src/OgreSceneManagerEnumerator.cpp`
+- `src/Engine/ogre3d/src/OgreScriptCompiler.cpp`
+- `src/Engine/ogre3d/src/OgreScriptTranslator.cpp`
+- `src/Engine/ogre3d/src/OgreShadowCaster.cpp`
+- `src/Engine/ogre3d/src/OgreSkeleton.cpp`
+- `src/Engine/ogre3d/src/OgreSkeletonInstance.cpp`
+- `src/Engine/ogre3d/src/OgreStaticGeometry.cpp`
+- `src/Engine/ogre3d/src/OgreStreamSerialiser.cpp`
+- `src/Engine/ogre3d/src/OgreString.cpp`
+- `src/Engine/ogre3d/src/OgreSubEntity.cpp`
+- `src/Engine/ogre3d/src/OgreSubMesh.cpp`
+- `src/Engine/ogre3d/src/OgreUnifiedHighLevelGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreUTFString.cpp`
+- `src/Engine/ogre3d/src/OgreWireBoundingBox.cpp`
+- `src/Engine/ogre3d/src/OgreZip.cpp`
+- `src/Engine/ogre3d/src/WIN32/OgreConfigDialog.cpp`
+- `src/Engine/ogre3d/src/WIN32/OgreErrorDialog.cpp`
+- `src/Engine/ogre3d/src/WIN32/OgreTimer.cpp`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9HLSLProgram.h`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9Plugin.h`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderSystem.h`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9HLSLProgram.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Plugin.cpp`
+- `src/Engine/ogre3d_particlefx/include/OgreAreaEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreBoxEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreColourImageAffector.h`
+- `src/Engine/ogre3d_particlefx/include/OgreCylinderEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreEllipsoidEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreHollowEllipsoidEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreParticleFXPlugin.h`
+- `src/Engine/ogre3d_particlefx/include/OgrePointEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreRingEmitter.h`
+- `src/Engine/ogre3d_particlefx/include/OgreRotationAffector.h`
+- `src/Engine/ogre3d_particlefx/src/OgreAreaEmitter.cpp`
+- `src/Engine/ogre3d_particlefx/src/OgreBoxEmitter.cpp`
+- `src/Engine/ogre3d_particlefx/src/OgreColourImageAffector.cpp`
+- `src/Engine/ogre3d_particlefx/src/OgreCylinderEmitter.cpp`
+- `src/Engine/ogre3d_particlefx/src/OgreEllipsoidEmitter.cpp`
+
+## ALL: Tick/Update/AI loop
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp` (score=14.26, lines=303, module2=`src/HelloOgre3D`, hints: entry=1, tick=4, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.cpp` (score=10.69, lines=96, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.h` (score=10.69, lines=45, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=10.69, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.cpp` (score=10.69, lines=243, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp` (score=10.69, lines=164, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=10.69, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp` (score=10.69, lines=291, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h` (score=10.69, lines=70, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.cpp` (score=10.69, lines=165, module2=`src/HelloOgre3D`, hints: entry=0, tick=3, script=0)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=10.69, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.cpp` (score=7.13, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=7.13, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h` (score=7.13, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/IdleState.cpp` (score=7.13, lines=46, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=7.13, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=7.13, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.cpp` (score=7.13, lines=259, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/BlockObject.h` (score=7.13, lines=76, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/RenderableObject.h` (score=7.13, lines=68, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.h` (score=7.13, lines=124, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/objects/components/RenderComponent.h` (score=7.13, lines=56, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp` (score=7.13, lines=111, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.cpp` (score=7.13, lines=168, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/game/ClientManager.cpp` (score=5.94, lines=321, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=0)
+- `src/HelloOgre3D/client/Application.cpp` (score=3.96, lines=85, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/game/ClientManager.h` (score=3.96, lines=112, module2=`src/HelloOgre3D`, hints: entry=2, tick=2, script=0)
+- `src/HelloOgre3D/game/GameManager.cpp` (score=3.96, lines=189, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=5)
+- `src/HelloOgre3D/game/debug/DebugDrawer.cpp` (score=3.96, lines=171, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=0)
+- `src/HelloOgre3D/sandbox/GameDefine.h` (score=3.56, lines=54, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/GameFunction.h` (score=3.56, lines=92, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.h` (score=3.56, lines=21, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionBase.h` (score=3.56, lines=39, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/ActionTask/DTActionDie.h` (score=3.56, lines=18, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/ActionTask/DTActionIdle.h` (score=3.56, lines=18, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.cpp` (score=3.56, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentState.cpp` (score=3.56, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentState.h` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/DeathState.cpp` (score=3.56, lines=44, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=0)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/DeathState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/IdleState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.cpp`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.h`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/ShootState.cpp`
+- `src/HelloOgre3D/sandbox/ai/fsm/states/ShootState.h`
+- `src/HelloOgre3D/sandbox/core/component/IComponent.h`
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.cpp`
+- `src/HelloOgre3D/sandbox/core/object/GameObject.cpp`
+- `src/HelloOgre3D/sandbox/core/object/GameObject.h`
+- `src/HelloOgre3D/sandbox/core/script/LuaClassNameTraits.h`
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp`
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp`
+- `src/HelloOgre3D/sandbox/objects/components/AgentLocomotion.cpp`
+- `src/HelloOgre3D/sandbox/scripting/LuaPluginMgr.h`
+- `src/HelloOgre3D/sandbox/systems/input/InputManager.h`
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp`
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h`
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.cpp`
+- `src/HelloOgre3D/sandbox/systems/physics/PhysicsWorld.h`
+- `src/HelloOgre3D/sandbox/systems/ui/UIManager.cpp`
+- `bin/res/scripts/samples/game_init.lua`
+- `bin/res/scripts/samples/Sandbox1.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp`
+- `src/HelloOgre3D/client/main.cpp`
+- `src/HelloOgre3D/common/LuaInterface.cpp`
+- `src/HelloOgre3D/common/LuaInterface.h`
+- `src/HelloOgre3D/game/GameManager.h`
+- `src/HelloOgre3D/game/GameToLua.cpp`
+- `src/HelloOgre3D/game/debug/DebugDrawer.h`
+- `bin/res/scripts/base/LuaPanda.lua`
+- `bin/res/scripts/base/threadpool.lua`
+- `bin/res/scripts/base/uicomps.lua`
+- `bin/res/scripts/base/utils.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierState.lua`
+- `bin/res/scripts/samples/chapter4/SoldierAgent.lua`
+- `media/animations/futuristic_soldier/LICENSE.txt`
+- `media/fonts/dejavu/LICENSE.txt`
+- `media/models/futuristic_soldier/LICENSE.txt`
+- `media/models/nobiax_modular/LICENSE.txt`
+- `media/textures/futuristic_soldier/LICENSE.txt`
+- `media/textures/nobiax_modular/LICENSE.txt`
+- `media/textures/nobiax_textures/LICENSE.txt`
+- `media/textures/skybox_set/LICENSE.txt`
+- `premake/premake.lua`
+- `src/Engine/ogre3d/src/OgreBillboardChain.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystem.cpp`
+- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
+- `tools/premake/LICENSE.txt`
+- `tools/tolua++/lua/all.lua`
+- `tools/tolua++/lua/class.lua`
+- `tools/tolua++/lua/container.lua`
+- `tools/tolua++/lua/doit.lua`
+- `tools/tolua++/lua/enumerate.lua`
+- `tools/tolua++/lua/feature.lua`
+- `tools/tolua++/lua/LuaPanda.lua`
+- `tools/tolua++/lua/module.lua`
+- `tools/tolua++/lua/namespace.lua`
+- `tools/tolua++/lua/package.lua`
+- `tools/tolua++/lua/template_class.lua`
+- `src/Engine/ogre3d/include/OgreBillboardChain.h`
+- `src/Engine/ogre3d/include/OgreBillboardSet.h`
+- `src/Engine/ogre3d/include/OgreCamera.h`
+- `src/Engine/ogre3d/include/OgreCompositorChain.h`
+- `src/Engine/ogre3d/include/OgreCompositorInstance.h`
+- `src/Engine/ogre3d/include/OgreController.h`
+- `src/Engine/ogre3d/include/OgreEntity.h`
+- `src/Engine/ogre3d/include/OgreFrustum.h`
 - `src/Engine/ogre3d/include/OgreInstancedGeometry.h`
 - `src/Engine/ogre3d/include/OgreInstanceManager.h`
-- `src/Engine/ogre3d/include/OgreInstanceBatchHW_VTF.h`
-- `src/Engine/ogre3d/include/OgreInstanceBatchHW.h`
-- `src/Engine/ogre3d/include/OgreInstanceBatch.h`
-- `src/Engine/ogre3d/include/OgreHardwareBuffer.h`
-- `src/Engine/ogre3d/include/OgreFrustum.h`
-- `src/Engine/ogre3d/include/OgreEntity.h`
-- `src/Engine/ogre3d/include/OgreController.h`
-- `src/Engine/ogre3d/include/OgreCompositorInstance.h`
-- `src/Engine/ogre3d/include/OgreCompositorChain.h`
-- `src/Engine/ogre3d/include/OgreCamera.h`
-- `src/Engine/ogre3d/include/OgreBone.h`
-- `src/Engine/ogre3d/include/OgreBillboardSet.h`
-- `src/Engine/ogre3d/include/OgreBillboardChain.h`
-- `bin/res/scripts/samples/game_init.lua`
-- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
-- `bin/res/scripts/samples/Sandbox5.lua`
-- `bin/res/scripts/samples/Sandbox4.lua`
-- `bin/res/scripts/samples/Sandbox3.lua`
-- `bin/res/scripts/samples/Sandbox2.lua`
-- `bin/res/scripts/samples/Sandbox1.lua`
-- `tools/tolua++/lua/verbatim.lua`
-- `tools/tolua++/lua/variable.lua`
-- `tools/tolua++/lua/typedef.lua`
-- `tools/tolua++/lua/template_class.lua`
-- `tools/tolua++/lua/package.lua`
-- `tools/tolua++/lua/operator.lua`
-- `tools/tolua++/lua/namespace.lua`
-- `tools/tolua++/lua/module.lua`
-- `tools/tolua++/lua/function.lua`
-
-## Script/Lua/binding
-- `bin/res/scripts/samples/game_init.lua`
-- `src/HelloOgre3D/game/GameManager.cpp`
-- `src/HelloOgre3D/common/ScriptLuaVM.cpp`
-- `premake/premake.lua`
-- `tools/tolua++/lua/verbatim.lua`
-- `tools/tolua++/lua/variable.lua`
-- `tools/tolua++/lua/package.lua`
-- `tools/tolua++/lua/function.lua`
-- `tools/tolua++/lua/feature.lua`
-- `tools/tolua++/lua/custom.lua`
-- `tools/tolua++/lua/array.lua`
-- `tools/tolua++/lua/all.lua`
-- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h`
-- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp`
-- `src/HelloOgre3D/sandbox/objects/AgentObject.h`
-- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.h`
-- `src/HelloOgre3D/sandbox/core/object/BaseObject.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h`
-- `src/HelloOgre3D/game/GameToLua.cpp`
-- `src/HelloOgre3D/game/GameManager.h`
-- `src/Engine/ogre3d/src/OgreSubEntity.cpp`
-- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
-- `src/Engine/ogre3d/include/OgreTextureUnitState.h`
-- `src/Engine/ogre3d/include/OgreSceneManager.h`
-- `src/Engine/ogre3d/include/OgrePass.h`
-- `bin/res/scripts/script_init.lua`
-- `bin/res/scripts/samples/chapter4/DirectSoldierState.lua`
-- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
-- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
-- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
-- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
-- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
-- `bin/res/scripts/samples/Sandbox5.lua`
-- `bin/res/scripts/samples/Sandbox4.lua`
-- `bin/res/scripts/samples/Sandbox3.lua`
-- `tools/tolua++/lua/typedef.lua`
-- `tools/tolua++/lua/operator.lua`
-- `tools/tolua++/lua/namespace.lua`
-- `tools/tolua++/lua/module.lua`
-- `tools/tolua++/lua/enumerate.lua`
-- `tools/tolua++/lua/doit.lua`
-- `tools/tolua++/lua/define.lua`
-- `tools/tolua++/lua/declaration.lua`
-- `tools/tolua++/lua/container.lua`
-- `tools/tolua++/lua/code.lua`
-- `tools/tolua++/lua/class.lua`
-- `tools/tolua++/lua/basic.lua`
-- `tools/tolua++/lua/LuaPanda.lua`
-- `src/HelloOgre3D/sandbox/systems/ui/UIFrame.h`
-- `src/HelloOgre3D/sandbox/systems/service/ObjectFactory.cpp`
-- `src/HelloOgre3D/sandbox/systems/manager/SandboxMgr.h`
-- `src/HelloOgre3D/sandbox/systems/manager/SandboxMgr.cpp`
-- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp`
-- `src/HelloOgre3D/sandbox/systems/input/IPlayerInput.h`
-- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp`
-- `src/HelloOgre3D/sandbox/scripting/LuaPluginMgr.h`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.h`
-- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.h`
-- `src/HelloOgre3D/sandbox/objects/VehicleObject.h`
-- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp`
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.h`
-- `src/HelloOgre3D/sandbox/objects/RenderableObject.h`
-- `src/HelloOgre3D/sandbox/objects/BlockObject.h`
-- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.h`
-- `src/HelloOgre3D/sandbox/GameFunction.h`
-- `src/HelloOgre3D/sandbox/GameDefine.h`
-- `src/HelloOgre3D/game/debug/DebugDrawer.h`
-- `src/HelloOgre3D/common/ScriptLuaVM.h`
-- `src/HelloOgre3D/common/LuaInterface.h`
-- `src/HelloOgre3D/common/GlobalFuncs.h`
-- `src/HelloOgre3D/client/DemoHelloWorld.cpp`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
-- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderSystem.h`
-- `src/Engine/ogre3d/src/OgreTextureUnitState.cpp`
-- `src/Engine/ogre3d/src/OgreScriptTranslator.cpp`
-- `src/Engine/ogre3d/src/OgreScriptCompiler.cpp`
-- `src/Engine/ogre3d/src/OgreRenderSystem.cpp`
-- `src/Engine/ogre3d/src/OgreMeshManager.cpp`
-- `src/Engine/ogre3d/src/OgreMaterialSerializer.cpp`
-- `src/Engine/ogre3d/src/OgreManualObject.cpp`
-- `src/Engine/ogre3d/src/OgreEntity.cpp`
-- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
-- `src/Engine/ogre3d/src/OgreBillboardChain.cpp`
-- `src/Engine/ogre3d/include/OgreVertexIndexData.h`
-- `src/Engine/ogre3d/include/OgreTechnique.h`
-- `src/Engine/ogre3d/include/OgreScriptCompiler.h`
+- `src/Engine/ogre3d/include/OgreLight.h`
+- `src/Engine/ogre3d/include/OgreManualObject.h`
+- `src/Engine/ogre3d/include/OgreParticleSystem.h`
 - `src/Engine/ogre3d/include/OgreRenderSystem.h`
-- `src/Engine/ogre3d/include/OgrePrerequisites.h`
-- `src/Engine/ogre3d/include/OgreGpuProgramUsage.h`
-- `src/Engine/ogre3d/include/OgreGpuProgram.h`
-- `src/Engine/ogre3d/include/OgreEntity.h`
+- `src/Engine/ogre3d/include/OgreRibbonTrail.h`
+- `src/Engine/ogre3d/include/OgreSceneManager.h`
+- `src/Engine/ogre3d/include/nedmalloc/malloc.c.h`
+- `src/Engine/ogre3d/include/Samples/SdkTrays.h`
+- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
+- `src/Engine/ogre3d/src/OgreCamera.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorChain.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorInstance.cpp`
+- `src/Engine/ogre3d/src/OgreEntity.cpp`
+- `src/Engine/ogre3d/src/OgreFrustum.cpp`
+- `src/Engine/ogre3d/src/OgreHardwareBufferManager.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchHW_VTF.cpp`
+- `src/Engine/ogre3d/src/OgreInstancedGeometry.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceManager.cpp`
+- `src/Engine/ogre3d/src/OgreLight.cpp`
+- `src/Engine/ogre3d/src/OgreManualObject.cpp`
+- `src/Engine/ogre3d/src/OgreParticleSystem.cpp`
+- `src/Engine/ogre3d/src/OgreRibbonTrail.cpp`
+- `src/Engine/ogre3d/src/OgreSceneNode.cpp`
+- `src/Engine/ogre3d/src/OgreShadowCaster.cpp`
+- `src/Engine/ogre3d/src/OgreSkeleton.cpp`
+- `src/Engine/ogre3d/src/OgreViewport.cpp`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderSystem.h`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderWindow.h`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderWindow.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Texture.cpp`
+- `src/Engine/ogre3d/LICENSE.txt`
+- `src/Engine/ogre3d/include/Ogre.h`
+- `src/Engine/ogre3d/include/OgreAnimation.h`
+- `src/Engine/ogre3d/include/OgreAutoParamDataSource.h`
+- `src/Engine/ogre3d/include/OgreAxisAlignedBox.h`
 - `src/Engine/ogre3d/include/OgreBone.h`
-- `premake/samples.lua`
-- `media/textures/futuristic_soldier/LICENSE.txt`
-- `media/models/futuristic_soldier/LICENSE.txt`
-- `media/animations/futuristic_soldier/LICENSE.txt`
-- `bin/res/scripts/samples/Sandbox2.lua`
-- `bin/res/scripts/manager/LuaPluginMgr.lua`
-- `bin/res/scripts/base/utils.lua`
-- `bin/res/scripts/base/LuaPanda.lua`
+- `src/Engine/ogre3d/include/OgreBuildSettings.h`
+- `src/Engine/ogre3d/include/OgreCodec.h`
+- `src/Engine/ogre3d/include/OgreCommon.h`
+- `src/Engine/ogre3d/include/OgreCompositionPass.h`
+- `src/Engine/ogre3d/include/OgreCompositionTechnique.h`
+- `src/Engine/ogre3d/include/OgreCompositorManager.h`
+- `src/Engine/ogre3d/include/OgreConfig.h`
+- `src/Engine/ogre3d/include/OgreConvexBody.h`
+- `src/Engine/ogre3d/include/OgreDataStream.h`
+- `src/Engine/ogre3d/include/OgreDeflate.h`
+- `src/Engine/ogre3d/include/OgreEdgeListBuilder.h`
+- `src/Engine/ogre3d/include/OgreException.h`
+- `src/Engine/ogre3d/include/OgreFileSystem.h`
+- `src/Engine/ogre3d/include/OgreGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreGpuProgramManager.h`
+- `src/Engine/ogre3d/include/OgreGpuProgramParams.h`
+- `src/Engine/ogre3d/include/OgreHardwareBuffer.h`
+- `src/Engine/ogre3d/include/OgreHardwareVertexBuffer.h`
+- `src/Engine/ogre3d/include/OgreHighLevelGpuProgramManager.h`
+- `src/Engine/ogre3d/include/OgreInstanceBatch.h`
+- `src/Engine/ogre3d/include/OgreInstanceBatchHW.h`
+- `src/Engine/ogre3d/include/OgreInstanceBatchHW_VTF.h`
+- `src/Engine/ogre3d/include/OgreIteratorWrapper.h`
+- `src/Engine/ogre3d/include/OgreLog.h`
+- `src/Engine/ogre3d/include/OgreLogManager.h`
+- `src/Engine/ogre3d/include/OgreMaterial.h`
+- `src/Engine/ogre3d/include/OgreMaterialManager.h`
+- `src/Engine/ogre3d/include/OgreMaterialSerializer.h`
+- `src/Engine/ogre3d/include/OgreMath.h`
+- `src/Engine/ogre3d/include/OgreMesh.h`
+- `src/Engine/ogre3d/include/OgreMeshManager.h`
+- `src/Engine/ogre3d/include/OgreMovableObject.h`
+- `src/Engine/ogre3d/include/OgreNode.h`
+- `src/Engine/ogre3d/include/OgreParticleEmitter.h`
+- `src/Engine/ogre3d/include/OgreParticleSystemManager.h`
+- `src/Engine/ogre3d/include/OgrePass.h`
+- `src/Engine/ogre3d/include/OgrePatchMesh.h`
+- `src/Engine/ogre3d/include/OgrePlaneBoundedVolume.h`
+- `src/Engine/ogre3d/include/OgrePolygon.h`
+- `src/Engine/ogre3d/include/OgrePredefinedControllers.h`
+- `src/Engine/ogre3d/include/OgrePrerequisites.h`
+- `src/Engine/ogre3d/include/OgreRadixSort.h`
+- `src/Engine/ogre3d/include/OgreRay.h`
+- `src/Engine/ogre3d/include/OgreRenderable.h`
+- `src/Engine/ogre3d/include/OgreRenderOperation.h`
+- `src/Engine/ogre3d/include/OgreRenderQueue.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilities.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilitiesSerializer.h`
+- `src/Engine/ogre3d/include/OgreRenderTarget.h`
+- `src/Engine/ogre3d/include/OgreRenderTargetListener.h`
+- `src/Engine/ogre3d/include/OgreRenderToVertexBuffer.h`
+- `src/Engine/ogre3d/include/OgreRenderWindow.h`
+- `src/Engine/ogre3d/include/OgreResourceBackgroundQueue.h`
+- `src/Engine/ogre3d/include/OgreResourceGroupManager.h`
+- `src/Engine/ogre3d/include/OgreResourceManager.h`
+- `src/Engine/ogre3d/include/OgreRoot.h`
+- `src/Engine/ogre3d/include/OgreSceneManagerEnumerator.h`
+- `src/Engine/ogre3d/include/OgreSceneNode.h`
+- `src/Engine/ogre3d/include/OgreSceneQuery.h`
+- `src/Engine/ogre3d/include/OgreScriptCompiler.h`
+- `src/Engine/ogre3d/include/OgreScriptTranslator.h`
+- `src/Engine/ogre3d/include/OgreShadowCameraSetupPlaneOptimal.h`
+- `src/Engine/ogre3d/include/OgreShadowCaster.h`
+- `src/Engine/ogre3d/include/OgreSkeleton.h`
+- `src/Engine/ogre3d/include/OgreSkeletonManager.h`
+- `src/Engine/ogre3d/include/OgreStreamSerialiser.h`
+- `src/Engine/ogre3d/include/OgreStringInterface.h`
+- `src/Engine/ogre3d/include/OgreSubMesh.h`
+- `src/Engine/ogre3d/include/OgreTagPoint.h`
+- `src/Engine/ogre3d/include/OgreTangentSpaceCalc.h`
+- `src/Engine/ogre3d/include/OgreTechnique.h`
+- `src/Engine/ogre3d/include/OgreTextureManager.h`
+- `src/Engine/ogre3d/include/OgreTextureUnitState.h`
+- `src/Engine/ogre3d/include/OgreUTFString.h`
+- `src/Engine/ogre3d/include/OgreVertexIndexData.h`
+- `src/Engine/ogre3d/include/OgreViewport.h`
+- `src/Engine/ogre3d/include/OgreWorkQueue.h`
+- `src/Engine/ogre3d/include/nedmalloc/License.txt`
+- `src/Engine/ogre3d/include/nedmalloc/Readme.txt`
+- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueStandard.h`
+- `src/Engine/ogre3d/include/Threading/OgreDefaultWorkQueueTBB.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesBoost.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesNone.h`
+- `src/Engine/ogre3d/include/Threading/OgreThreadDefinesPoco.h`
+
+## ALL: Script/Lua/binding
+- `src/HelloOgre3D/game/GameManager.cpp` (score=9.90, lines=189, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=5)
+- `src/HelloOgre3D/common/ScriptLuaVM.cpp` (score=7.92, lines=628, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=4)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (score=7.13, lines=100, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.cpp` (score=7.13, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/AgentLuaState.h` (score=7.13, lines=28, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/ai/fsm/states/MoveState.cpp` (score=7.13, lines=50, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/core/object/BaseObject.h` (score=7.13, lines=67, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.cpp` (score=7.13, lines=49, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/core/object/LuaEnvObject.h` (score=7.13, lines=23, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/objects/AgentObject.h` (score=7.13, lines=84, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp` (score=7.13, lines=361, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/scripting/LuaPluginMgr.h` (score=7.13, lines=35, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/scripting/ManualToLua.cpp` (score=7.13, lines=111, module2=`src/HelloOgre3D`, hints: entry=0, tick=2, script=2)
+- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` (score=7.13, lines=5916, module2=`src/HelloOgre3D`, hints: entry=2, tick=3, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp` (score=7.13, lines=238, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h` (score=7.13, lines=83, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/systems/manager/SandboxMgr.cpp` (score=7.13, lines=204, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/sandbox/systems/service/ObjectFactory.cpp` (score=7.13, lines=121, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `bin/res/scripts/samples/game_init.lua` (score=5.00, lines=48, module2=`bin/res`, hints: entry=1, tick=2, script=5)
+- `premake/premake.lua` (score=4.00, lines=629, module2=`premake/premake.lua`, hints: entry=1, tick=1, script=4)
+- `src/HelloOgre3D/client/DemoHelloWorld.cpp` (score=3.96, lines=28, module2=`src/HelloOgre3D`, hints: entry=2, tick=1, script=2)
+- `src/HelloOgre3D/common/ScriptLuaVM.h` (score=3.96, lines=57, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=2)
+- `src/HelloOgre3D/game/GameManager.h` (score=3.96, lines=74, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=2)
+- `src/HelloOgre3D/game/GameToLua.cpp` (score=3.96, lines=3482, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=2)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp` (score=3.56, lines=36, module2=`src/HelloOgre3D`, hints: entry=1, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTreeInstance.h` (score=3.56, lines=31, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTActionNode.h` (score=3.56, lines=14, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTEvaluator.h` (score=3.56, lines=15, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBase.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.cpp` (score=3.56, lines=25, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.h` (score=3.56, lines=26, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_CriticalHealth.h` (score=3.56, lines=21, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_HasMovePosition.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_IsAlive.h` (score=3.56, lines=16, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.h` (score=3.56, lines=34, module2=`src/HelloOgre3D`, hints: entry=1, tick=2, script=1)
+- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp` (score=3.56, lines=33, module2=`src/HelloOgre3D`, hints: entry=1, tick=0, script=1)
+- `src/HelloOgre3D/sandbox/core/script/LuaClassNameTraits.h` (score=3.56, lines=14, module2=`src/HelloOgre3D`, hints: entry=0, tick=1, script=1)
+- `src/HelloOgre3D/sandbox/objects/SoldierObject.h` (score=3.56, lines=57, module2=`src/HelloOgre3D`, hints: entry=1, tick=3, script=1)
+- `src/HelloOgre3D/sandbox/systems/service/SceneFactory.cpp` (score=3.56, lines=306, module2=`src/HelloOgre3D`, hints: entry=0, tick=0, script=1)
+- `bin/res/scripts/script_init.lua` (score=3.00, lines=12, module2=`bin/res`, hints: entry=1, tick=0, script=3)
+- `bin/res/scripts/samples/Sandbox3.lua`
+- `bin/res/scripts/samples/Sandbox4.lua`
+- `bin/res/scripts/samples/Sandbox5.lua`
+- `bin/res/scripts/samples/chapter2/FollowerAgent.lua`
+- `bin/res/scripts/samples/chapter2/PathingAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierAgent.lua`
+- `bin/res/scripts/samples/chapter4/DirectSoldierState.lua`
+- `tools/tolua++/lua/all.lua`
+- `tools/tolua++/lua/custom.lua`
+- `tools/tolua++/lua/package.lua`
 - `README.md`
-- `tools/tolua++/lua/compat.lua`
+- `bin/res/scripts/base/LuaPanda.lua`
+- `bin/res/scripts/base/utils.lua`
+- `bin/res/scripts/manager/LuaPluginMgr.lua`
+- `bin/res/scripts/samples/Sandbox2.lua`
+- `bin/res/scripts/samples/chapter2/PursuingAgent.lua`
+- `bin/res/scripts/samples/chapter2/SeekingAgent.lua`
+- `media/animations/futuristic_soldier/LICENSE.txt`
+- `media/models/futuristic_soldier/LICENSE.txt`
+- `media/textures/futuristic_soldier/LICENSE.txt`
+- `premake/samples.lua`
+- `src/HelloOgre3D/client/main.cpp`
+- `src/HelloOgre3D/common/LogSystem.h`
+- `src/HelloOgre3D/common/LuaInterface.cpp`
+- `src/HelloOgre3D/common/LuaInterface.h`
+- `src/HelloOgre3D/common/ObfuscatedZip.cpp`
+- `tools/tolua++/lua/array.lua`
+- `tools/tolua++/lua/basic.lua`
+- `tools/tolua++/lua/class.lua`
+- `tools/tolua++/lua/code.lua`
+- `tools/tolua++/lua/container.lua`
+- `tools/tolua++/lua/declaration.lua`
+- `tools/tolua++/lua/define.lua`
+- `tools/tolua++/lua/enumerate.lua`
+- `tools/tolua++/lua/function.lua`
+- `tools/tolua++/lua/LuaPanda.lua`
+- `tools/tolua++/lua/module.lua`
+- `tools/tolua++/lua/operator.lua`
+- `tools/tolua++/lua/typedef.lua`
+- `tools/tolua++/lua/variable.lua`
+- `src/Engine/ogre3d/src/OgreSubEntity.cpp`
 - `tools/tolua++/lua/compat-5.1.lua`
-- `src/HelloOgre3D/sandbox/systems/service/SceneFactory.cpp`
-- `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp`
-- `src/HelloOgre3D/sandbox/core/script/LuaClassNameTraits.h`
-- `src/HelloOgre3D/sandbox/ai/fsm/AgentStateFactory.cpp`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_IsAlive.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_HasMovePosition.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/Evaluator/DTEval_CriticalHealth.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTreeInstance.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DecisionTree.cpp`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.h`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBranch.cpp`
-- `src/HelloOgre3D/sandbox/ai/decision_tree/DTNodeBase.h`
+- `tools/tolua++/lua/doit.lua`
+- `src/Engine/ogre3d/include/OgreEntity.h`
+- `src/Engine/ogre3d/include/OgrePrerequisites.h`
+- `src/Engine/ogre3d/include/OgreRenderSystem.h`
+- `src/Engine/ogre3d/include/OgreScriptCompiler.h`
+- `src/Engine/ogre3d/src/OgreBillboardChain.cpp`
+- `src/Engine/ogre3d/src/OgreBillboardSet.cpp`
+- `src/Engine/ogre3d/src/OgreEntity.cpp`
+- `src/Engine/ogre3d/src/OgreManualObject.cpp`
+- `src/Engine/ogre3d/src/OgreMaterialSerializer.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystem.cpp`
+- `src/Engine/ogre3d/src/OgreSceneManager.cpp`
+- `src/Engine/ogre3d/src/OgreScriptCompiler.cpp`
+- `src/Engine/ogre3d/src/OgreScriptTranslator.cpp`
+- `src/Engine/ogre3d/src/OgreTextureUnitState.cpp`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9RenderSystem.h`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp`
+- `src/Engine/ogre3d/include/OgreBone.h`
+- `src/Engine/ogre3d/include/OgreCommon.h`
+- `src/Engine/ogre3d/include/OgreCompositorManager.h`
+- `src/Engine/ogre3d/include/OgreException.h`
+- `src/Engine/ogre3d/include/OgreGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreHardwareBufferManager.h`
+- `src/Engine/ogre3d/include/OgreHardwareVertexBuffer.h`
+- `src/Engine/ogre3d/include/OgreHighLevelGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreMaterialManager.h`
+- `src/Engine/ogre3d/include/OgreMaterialSerializer.h`
+- `src/Engine/ogre3d/include/OgreMemoryAllocatorConfig.h`
+- `src/Engine/ogre3d/include/OgreMovableObject.h`
+- `src/Engine/ogre3d/include/OgreNode.h`
+- `src/Engine/ogre3d/include/OgreParticleSystemManager.h`
+- `src/Engine/ogre3d/include/OgrePass.h`
+- `src/Engine/ogre3d/include/OgrePixelFormatDescriptions.h`
+- `src/Engine/ogre3d/include/OgreRenderable.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilitiesManager.h`
+- `src/Engine/ogre3d/include/OgreRenderSystemCapabilitiesSerializer.h`
+- `src/Engine/ogre3d/include/OgreResourceGroupManager.h`
+- `src/Engine/ogre3d/include/OgreResourceManager.h`
+- `src/Engine/ogre3d/include/OgreRoot.h`
+- `src/Engine/ogre3d/include/OgreSceneManager.h`
+- `src/Engine/ogre3d/include/OgreScriptLexer.h`
+- `src/Engine/ogre3d/include/OgreScriptLoader.h`
+- `src/Engine/ogre3d/include/OgreScriptParser.h`
+- `src/Engine/ogre3d/include/OgreScriptTranslator.h`
+- `src/Engine/ogre3d/include/OgreSkeleton.h`
+- `src/Engine/ogre3d/include/OgreStableHeaders.h`
+- `src/Engine/ogre3d/include/OgreStringInterface.h`
+- `src/Engine/ogre3d/include/OgreSubEntity.h`
+- `src/Engine/ogre3d/include/OgreTechnique.h`
+- `src/Engine/ogre3d/include/OgreTextureUnitState.h`
+- `src/Engine/ogre3d/include/OgreUnifiedHighLevelGpuProgram.h`
+- `src/Engine/ogre3d/include/OgreUserObjectBindings.h`
+- `src/Engine/ogre3d/include/OgreVertexIndexData.h`
+- `src/Engine/ogre3d/include/Samples/SdkTrays.h`
+- `src/Engine/ogre3d/src/compile_OgreMain_5.cpp`
+- `src/Engine/ogre3d/src/compile_OgreMain_6.cpp`
+- `src/Engine/ogre3d/src/OgreAnimationTrack.cpp`
+- `src/Engine/ogre3d/src/OgreBone.cpp`
+- `src/Engine/ogre3d/src/OgreCompositorManager.cpp`
+- `src/Engine/ogre3d/src/OgreDefaultHardwareBufferManager.cpp`
+- `src/Engine/ogre3d/src/OgreEdgeListBuilder.cpp`
+- `src/Engine/ogre3d/src/OgreException.cpp`
+- `src/Engine/ogre3d/src/OgreFrustum.cpp`
+- `src/Engine/ogre3d/src/OgreGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreHardwareBufferManager.cpp`
+- `src/Engine/ogre3d/src/OgreHardwareVertexBuffer.cpp`
+- `src/Engine/ogre3d/src/OgreHighLevelGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchHW.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchHW_VTF.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchShader.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceBatchVTF.cpp`
+- `src/Engine/ogre3d/src/OgreInstancedGeometry.cpp`
+- `src/Engine/ogre3d/src/OgreInstanceManager.cpp`
+- `src/Engine/ogre3d/src/OgreMaterialManager.cpp`
+- `src/Engine/ogre3d/src/OgreMemoryAllocatedObject.cpp`
+- `src/Engine/ogre3d/src/OgreMesh.cpp`
+- `src/Engine/ogre3d/src/OgreMeshManager.cpp`
+- `src/Engine/ogre3d/src/OgreMeshSerializerImpl.cpp`
+- `src/Engine/ogre3d/src/OgreParticleSystemManager.cpp`
+- `src/Engine/ogre3d/src/OgrePatchMesh.cpp`
+- `src/Engine/ogre3d/src/OgrePixelFormat.cpp`
+- `src/Engine/ogre3d/src/OgrePose.cpp`
+- `src/Engine/ogre3d/src/OgrePrefabFactory.cpp`
+- `src/Engine/ogre3d/src/OgreRectangle2D.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystemCapabilitiesManager.cpp`
+- `src/Engine/ogre3d/src/OgreRenderSystemCapabilitiesSerializer.cpp`
+- `src/Engine/ogre3d/src/OgreResourceBackgroundQueue.cpp`
+- `src/Engine/ogre3d/src/OgreResourceGroupManager.cpp`
+- `src/Engine/ogre3d/src/OgreRoot.cpp`
+- `src/Engine/ogre3d/src/OgreSceneManagerEnumerator.cpp`
+- `src/Engine/ogre3d/src/OgreScriptLexer.cpp`
+- `src/Engine/ogre3d/src/OgreScriptParser.cpp`
+- `src/Engine/ogre3d/src/OgreSkeleton.cpp`
+- `src/Engine/ogre3d/src/OgreSkeletonInstance.cpp`
+- `src/Engine/ogre3d/src/OgreSkeletonSerializer.cpp`
+- `src/Engine/ogre3d/src/OgreStaticGeometry.cpp`
+- `src/Engine/ogre3d/src/OgreSubMesh.cpp`
+- `src/Engine/ogre3d/src/OgreTangentSpaceCalc.cpp`
+- `src/Engine/ogre3d/src/OgreUnifiedHighLevelGpuProgram.cpp`
+- `src/Engine/ogre3d/src/OgreUserObjectBindings.cpp`
+- `src/Engine/ogre3d/src/OgreVertexIndexData.cpp`
+- `src/Engine/ogre3d/src/OgreWireBoundingBox.cpp`
+- `src/Engine/ogre3d/src/OgreZip.cpp`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9Driver.h`
+- `src/Engine/ogre3d_direct3d9/include/OgreD3D9VideoMode.h`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Device.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9DeviceManager.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Driver.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9DriverList.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9HardwareBufferManager.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9HardwareIndexBuffer.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9HardwareVertexBuffer.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9HLSLProgram.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9Texture.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9VertexDeclaration.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9VideoMode.cpp`
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9VideoModeList.cpp`
+

@@ -1,0 +1,258 @@
+{
+  "generated_at": "2026-02-14 16:10:27",
+  "profile": "lite",
+  "project_root": "C:/Workspace/HelloOgre3D",
+  "snapshot_dir": "C:/Workspace/HelloOgre3D/snapshot",
+  "out_dir": "C:/Workspace/HelloOgre3D/snapshot/_ai_snapshot",
+  "total_files": 2694,
+  "indexed_files": 849,
+  "rules": {
+    "ignore_dir_names_global": [
+      ".git",
+      ".hg",
+      ".idea",
+      ".pytest_cache",
+      ".svn",
+      ".vs",
+      ".vscode",
+      "Binaries",
+      "Build",
+      "Intermediate",
+      "Obj",
+      "Out",
+      "__pycache__",
+      "build",
+      "obj",
+      "out",
+      "snapshot"
+    ],
+    "ignore_dir_names_for_index": [
+      ".git",
+      ".hg",
+      ".idea",
+      ".pytest_cache",
+      ".svn",
+      ".vs",
+      ".vscode",
+      "Binaries",
+      "Build",
+      "Intermediate",
+      "Obj",
+      "Out",
+      "__pycache__",
+      "build",
+      "obj",
+      "out",
+      "snapshot"
+    ],
+    "ignore_path_globs_for_index": [
+      "*/ThirdParty/*",
+      "*/third_party/*",
+      "*/External/*",
+      "*/external/*",
+      "*/vendor/*",
+      "*/deps/*",
+      "*/Dependencies/*",
+      "*/SDK/*",
+      "*/Plugins/*",
+      "*/libs/*",
+      "*/Libs/*",
+      "*/media/*",
+      "*/Media/*",
+      "*/assets/*",
+      "*/Assets/*",
+      "*/bin/*.pdb",
+      "*/bin/*.exe",
+      "*/bin/*.dll",
+      "*/bin/*.lib"
+    ],
+    "index_exts": [
+      ".c",
+      ".cc",
+      ".cfg",
+      ".cpp",
+      ".cxx",
+      ".h",
+      ".hh",
+      ".hpp",
+      ".ini",
+      ".inl",
+      ".json",
+      ".lua",
+      ".m",
+      ".md",
+      ".mm",
+      ".txt",
+      ".xml",
+      ".yaml",
+      ".yml"
+    ],
+    "max_read_bytes": 2097152,
+    "max_read_bytes_entry_boost": 8388608,
+    "dir_weight_rules": [
+      {
+        "glob": "src/HelloOgre3D/*",
+        "w": 1.8
+      },
+      {
+        "glob": "src/HelloOgre3D/sandbox/*",
+        "w": 1.8
+      },
+      {
+        "glob": "src/Engine/*",
+        "w": 0.3
+      },
+      {
+        "glob": "src/External/*",
+        "w": 0.3
+      },
+      {
+        "glob": "ThirdParty/*",
+        "w": 0.3
+      },
+      {
+        "glob": "third_party/*",
+        "w": 0.3
+      },
+      {
+        "glob": "src/*",
+        "w": 1.1
+      },
+      {
+        "glob": "Source/*",
+        "w": 1.1
+      },
+      {
+        "glob": "sandbox/*",
+        "w": 1.1
+      },
+      {
+        "glob": "app/*",
+        "w": 1.1
+      },
+      {
+        "glob": "game/*",
+        "w": 1.1
+      },
+      {
+        "glob": "test/*",
+        "w": 0.6
+      },
+      {
+        "glob": "tests/*",
+        "w": 0.6
+      },
+      {
+        "glob": "tools/*",
+        "w": 0.7
+      },
+      {
+        "glob": "tool/*",
+        "w": 0.7
+      }
+    ],
+    "symbol_keywords": [
+      "main",
+      "WinMain",
+      "AppDelegate",
+      "Init",
+      "Initialize",
+      "Startup",
+      "Run",
+      "Loop",
+      "Tick",
+      "OnTick",
+      "Update",
+      "FixedUpdate",
+      "LateUpdate",
+      "Render",
+      "Draw",
+      "Frame",
+      "AI",
+      "Agent",
+      "Controller",
+      "FSM",
+      "State",
+      "StateMachine",
+      "BehaviorTree",
+      "BTree",
+      "BT",
+      "Task",
+      "Evaluator",
+      "Event",
+      "Dispatcher",
+      "Message",
+      "Load",
+      "Reload",
+      "Lua",
+      "Script",
+      "tolua",
+      "binding",
+      "Require"
+    ],
+    "entry_hints": [
+      "main(",
+      "WinMain(",
+      "SDL_main(",
+      "AppDelegate",
+      "Init",
+      "Startup",
+      "Run(",
+      "Loop"
+    ],
+    "tick_hints": [
+      "Tick(",
+      "OnTick(",
+      "Update(",
+      "FixedUpdate(",
+      "Render(",
+      "Draw(",
+      "BehaviorTree",
+      "FSM",
+      "StateMachine",
+      "AI"
+    ],
+    "script_hints": [
+      "lua",
+      "script",
+      "tolua",
+      "binding",
+      "require(",
+      "dofile(",
+      "__init__",
+      "__tick__"
+    ],
+    "dir_summary_fold_prefixes": [
+      "src/External",
+      "src/Engine/ThirdParty"
+    ],
+    "thirdparty_prefixes": [
+      "src/External",
+      "src/Engine/ThirdParty"
+    ],
+    "thirdparty_lib_depth": 1,
+    "thirdparty_list_max": 200,
+    "core_path_prefixes": [
+      "src/HelloOgre3D/",
+      "bin/res/",
+      "premake/",
+      "scripts/"
+    ],
+    "module_levels_legacy": 2,
+    "module_levels_extra": [
+      2,
+      4
+    ]
+  },
+  "outputs": {
+    "lite": [
+      "dir_map.jsonl",
+      "index.jsonl",
+      "edges.jsonl",
+      "entry_candidates.md",
+      "PROJECT_SNAPSHOT.md",
+      "snapshot_meta.json"
+    ],
+    "full_extra": []
+  }
+}
