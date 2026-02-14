@@ -89,10 +89,12 @@
 
 ---
 
-- Generated at: `2026-02-14 16:10:27`
+- Generated at: `2026-02-14 22:50:35`
 - Project root: `C:/Workspace/HelloOgre3D`
 - Total files: `2694`
 - Indexed files: `849`
+
+> Note: Engine layer is infrastructure; for gameplay logic, focus on `src/HelloOgre3D/` (CORE).
 
 ## Quick Entry Points (Top)
 - `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.cpp`
@@ -160,36 +162,6 @@
 - `bin/res/scripts/samples/game_init.lua`
 - `premake/premake.lua`
 
-## Key Output Files (Lite 6)
-- `dir_map.jsonl`: full project map (lightweight)
-- `index.jsonl`: file manifest + filtered symbols (jsonl)
-- `edges.jsonl`: unified edges (include/require/hint) (jsonl)
-- `entry_candidates.md`: entry/tick/script candidates (annotated)
-- `snapshot_meta.json`: snapshot meta/config/rules
-
-## Top Third-Party Libraries (summary)
-- `src/External` top libs:
-  - `src/External/bullet_collision` total=217 code=215 config=0 doc=2
-  - `src/External/lua` total=137 code=135 config=0 doc=0
-  - `src/External/ois` total=84 code=82 config=0 doc=2
-  - `src/External/bullet_dynamics` total=52 code=50 config=0 doc=2
-  - `src/External/bullet_linearmath` total=36 code=34 config=0 doc=2
-  - `src/External/detour` total=16 code=14 config=0 doc=2
-  - `src/External/opensteer` total=15 code=13 config=0 doc=2
-  - `src/External/recast` total=15 code=13 config=0 doc=2
-  - `src/External/ogre3d_gorilla` total=4 code=2 config=0 doc=2
-- `src/Engine/ThirdParty` top libs:
-  - `src/Engine/ThirdParty/freetype` total=526 code=453 config=0 doc=3
-  - `src/Engine/ThirdParty/openexr` total=196 code=193 config=0 doc=3
-  - `src/Engine/ThirdParty/freeimage` total=101 code=99 config=0 doc=2
-  - `src/Engine/ThirdParty/libjpeg` total=61 code=59 config=0 doc=2
-  - `src/Engine/ThirdParty/libtiff4` total=56 code=54 config=0 doc=2
-  - `src/Engine/ThirdParty/libopenjpeg` total=51 code=49 config=0 doc=2
-  - `src/Engine/ThirdParty/zlib` total=28 code=26 config=0 doc=2
-  - `src/Engine/ThirdParty/zzip` total=27 code=25 config=0 doc=2
-  - `src/Engine/ThirdParty/libpng` total=24 code=22 config=0 doc=2
-  - `src/Engine/ThirdParty/libraw` total=21 code=18 config=0 doc=1
-
 ## Top Modules (by symbol count)
 - `src/Engine` symbols=1982
 - `src/HelloOgre3D` symbols=711
@@ -197,59 +169,52 @@
 - `tools/tolua++` symbols=13
 - `premake/samples.lua` symbols=1
 
-## Top Edge Hotspots (most dependencies)
-- `src/Engine/ogre3d/include/Ogre.h` out_edges=190 lines=129 module2=`src/Engine`
-- `src/Engine/ogre3d/src/OgreRoot.cpp` out_edges=97 lines=1611 module2=`src/Engine`
-- `src/Engine/ogre3d/src/OgreSceneManager.cpp` out_edges=91 lines=7356 module2=`src/Engine`
-- `src/Engine/ogre3d/include/OgreStdHeaders.h` out_edges=84 lines=123 module2=`src/Engine`
-- `src/Engine/ogre3d/include/OgreStableHeaders.h` out_edges=75 lines=82 module2=`src/Engine`
-- `src/Engine/ogre3d/src/OgreEntity.cpp` out_edges=55 lines=2568 module2=`src/Engine`
-- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp` out_edges=55 lines=4459 module2=`src/Engine`
-- `src/Engine/ogre3d/include/OgreSceneManager.h` out_edges=53 lines=3675 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_6.cpp` out_edges=53 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_0.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_1.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_2.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_3.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_4.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/compile_OgreMain_5.cpp` out_edges=52 lines=27 module2=`src/Engine`
-- `src/Engine/ogre3d/src/OgreCompositorInstance.cpp` out_edges=47 lines=1303 module2=`src/Engine`
-- `src/Engine/ogre3d/src/OgreScriptTranslator.cpp` out_edges=45 lines=7027 module2=`src/Engine`
-- `src/Engine/ogre3d_procedural/include/Procedural.h` out_edges=44 lines=54 module2=`src/Engine`
-- `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` out_edges=43 lines=5916 module2=`src/HelloOgre3D`
-- `src/Engine/ogre3d/src/OgreMesh.cpp` out_edges=39 lines=2476 module2=`src/Engine`
+## CORE Subgraph Summary
+### CORE Modules (by symbol count)
+- `src/HelloOgre3D` symbols=711
+- `bin/res` symbols=68
+- `premake/samples.lua` symbols=1
 
-## CORE Subgraph Summary (quick map)
-- CORE_PATH_PREFIXES=['src/HelloOgre3D/', 'bin/res/', 'premake/', 'scripts/']
-- Edge types (CORE-only):
-  - cpp_include_raw: 538
-  - cpp_include_resolved_or_unresolved: 538
-  - lua_require: 29
-  - cpp_to_lua_hint: 23
-  - lua_dofile: 1
-- Top CORE edge hotspots (from-files with most outgoing edges):
-  - `src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp` out_edges=43 lines=5916 module2=`src/HelloOgre3D` hints(entry=2,tick=3,script=2)
-  - `src/HelloOgre3D/sandbox/objects/BlockObject.cpp` out_edges=34 lines=259 module2=`src/HelloOgre3D` hints(entry=1,tick=2,script=0)
-  - `src/HelloOgre3D/common/FileManager.cpp` out_edges=32 lines=266 module2=`src/HelloOgre3D` hints(entry=1,tick=0,script=0)
-  - `src/HelloOgre3D/game/GameManager.cpp` out_edges=31 lines=189 module2=`src/HelloOgre3D` hints(entry=1,tick=2,script=5)
-  - `src/HelloOgre3D/sandbox/objects/SoldierObject.cpp` out_edges=28 lines=303 module2=`src/HelloOgre3D` hints(entry=1,tick=4,script=0)
-  - `src/HelloOgre3D/sandbox/systems/service/ObjectFactory.cpp` out_edges=27 lines=121 module2=`src/HelloOgre3D` hints(entry=0,tick=0,script=2)
-  - `src/HelloOgre3D/game/GameToLua.cpp` out_edges=25 lines=3482 module2=`src/HelloOgre3D` hints(entry=0,tick=1,script=2)
-  - `src/HelloOgre3D/sandbox/objects/VehicleObject.cpp` out_edges=24 lines=361 module2=`src/HelloOgre3D` hints(entry=1,tick=1,script=2)
-  - `src/HelloOgre3D/game/ClientManager.cpp` out_edges=23 lines=321 module2=`src/HelloOgre3D` hints(entry=2,tick=3,script=0)
-  - `src/HelloOgre3D/sandbox/objects/AgentObject.cpp` out_edges=22 lines=243 module2=`src/HelloOgre3D` hints(entry=1,tick=3,script=0)
-  - `src/HelloOgre3D/sandbox/objects/RenderableObject.cpp` out_edges=22 lines=164 module2=`src/HelloOgre3D` hints(entry=1,tick=3,script=0)
-  - `src/HelloOgre3D/common/ScriptLuaVM.cpp` out_edges=21 lines=628 module2=`src/HelloOgre3D` hints(entry=1,tick=0,script=4)
-  - `src/HelloOgre3D/sandbox/objects/components/RenderComponent.cpp` out_edges=20 lines=165 module2=`src/HelloOgre3D` hints(entry=0,tick=3,script=0)
-  - `src/HelloOgre3D/sandbox/systems/manager/ObjectManager.cpp` out_edges=20 lines=238 module2=`src/HelloOgre3D` hints(entry=1,tick=1,script=2)
-  - `src/HelloOgre3D/sandbox/systems/manager/SandboxMgr.cpp` out_edges=20 lines=204 module2=`src/HelloOgre3D` hints(entry=0,tick=0,script=2)
-  - `src/HelloOgre3D/sandbox/objects/animation/AgentAnimStateMachine.cpp` out_edges=18 lines=291 module2=`src/HelloOgre3D` hints(entry=2,tick=3,script=0)
-  - `src/HelloOgre3D/sandbox/objects/components/AgentLocomotion.cpp` out_edges=18 lines=343 module2=`src/HelloOgre3D` hints(entry=0,tick=1,script=0)
-  - `src/HelloOgre3D/sandbox/GameFunction.h` out_edges=16 lines=92 module2=`src/HelloOgre3D` hints(entry=0,tick=1,script=0)
-  - `src/HelloOgre3D/sandbox/objects/components/PhysicsComponent.cpp` out_edges=16 lines=258 module2=`src/HelloOgre3D` hints(entry=0,tick=0,script=0)
-  - `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` out_edges=15 lines=100 module2=`src/HelloOgre3D` hints(entry=1,tick=3,script=2)
-- Top CORE modules (module2) by file count & hint strength:
-  - `src/HelloOgre3D` files=137 hint_strength=240
-  - `bin/res` files=23 hint_strength=83
-  - `premake/premake.lua` files=1 hint_strength=6
-  - `premake/samples.lua` files=1 hint_strength=3
+## Top Edge Hotspots (Outgoing)
+- `src/Engine/ogre3d/include/Ogre.h` out_edges=95
+- `src/Engine/ogre3d/src/OgreRoot.cpp` out_edges=48
+- `src/Engine/ogre3d/src/OgreSceneManager.cpp` out_edges=45
+- `src/Engine/ogre3d/include/OgreStdHeaders.h` out_edges=42
+- `src/Engine/ogre3d/include/OgreStableHeaders.h` out_edges=37
+- `src/Engine/ogre3d/src/OgreEntity.cpp` out_edges=27
+- `src/Engine/ogre3d_direct3d9/src/OgreD3D9RenderSystem.cpp` out_edges=27
+- `src/Engine/ogre3d/include/OgreSceneManager.h` out_edges=26
+- `src/Engine/ogre3d/src/compile_OgreMain_0.cpp` out_edges=26
+- `src/Engine/ogre3d/src/compile_OgreMain_1.cpp` out_edges=26
+
+## Top Incoming Dependency Targets
+- `src/Engine/ogre3d/include/OgrePrerequisites.h` in_edges=224
+- `src/Engine/ogre3d/include/OgreStableHeaders.h` in_edges=201
+- `src/Engine/ogre3d/include/OgreHeaderPrefix.h` in_edges=150
+- `src/Engine/ogre3d/include/OgreHeaderSuffix.h` in_edges=148
+- `src/Engine/ogre3d/include/OgreException.h` in_edges=125
+- `src/Engine/ogre3d/include/OgreLogManager.h` in_edges=81
+- `src/Engine/ogre3d/include/OgreRoot.h` in_edges=73
+- `src/Engine/ogre3d/include/OgreStringConverter.h` in_edges=71
+- `src/Engine/ogre3d/include/OgreVector3.h` in_edges=62
+- `src/Engine/ogre3d/include/OgreString.h` in_edges=57
+
+## Top Incoming Modules (module2)
+- `src/Engine` in_edges=3704
+- `src/HelloOgre3D` in_edges=313
+- `src/External` in_edges=46
+
+## Example Control-Flow Hypotheses (heuristic)
+- `src/HelloOgre3D/client/main.cpp` -> `src/HelloOgre3D/game/ClientManager.cpp` -> `src/HelloOgre3D/common/ScriptLuaVM.cpp` (evidence: entry_hint=main.cpp, tick_hint=ClientManager, script_hint=Lua)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnim.h` -> `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.cpp` -> `src/HelloOgre3D/common/ScriptLuaVM.cpp` (evidence: candidates rank≈2)
+- `src/HelloOgre3D/sandbox/objects/animation/AgentAnimState.cpp` -> `src/HelloOgre3D/sandbox/ai/fsm/AgentFSM.h` -> `src/HelloOgre3D/sandbox/ai/fsm/AgentStateController.cpp` (evidence: candidates rank≈3)
+
+## Key Output Files
+- `PROJECT_SNAPSHOT.md`: front page (with AI prompt + hotspots + hypotheses)
+- `entry_candidates.md`: CORE-first entry/tick/script candidates
+- `index.jsonl`: file records + filtered symbols (module2/module4)
+- `edges.jsonl`: include/include_resolved + Lua edges + C++->Lua hints
+- `dir_map.jsonl`: full directory map (lightweight)
+- `snapshot_meta.json`: config/rules/stats
+
+Tip: If you need deeper analysis on a submodule, generate an extra focused snapshot on that sub-tree only.

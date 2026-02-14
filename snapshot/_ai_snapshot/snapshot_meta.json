@@ -1,6 +1,5 @@
 {
-  "generated_at": "2026-02-14 16:10:27",
-  "profile": "lite",
+  "generated_at": "2026-02-14 22:50:35",
   "project_root": "C:/Workspace/HelloOgre3D",
   "snapshot_dir": "C:/Workspace/HelloOgre3D/snapshot",
   "out_dir": "C:/Workspace/HelloOgre3D/snapshot/_ai_snapshot",
@@ -222,16 +221,6 @@
       "__init__",
       "__tick__"
     ],
-    "dir_summary_fold_prefixes": [
-      "src/External",
-      "src/Engine/ThirdParty"
-    ],
-    "thirdparty_prefixes": [
-      "src/External",
-      "src/Engine/ThirdParty"
-    ],
-    "thirdparty_lib_depth": 1,
-    "thirdparty_list_max": 200,
     "core_path_prefixes": [
       "src/HelloOgre3D/",
       "bin/res/",
@@ -242,17 +231,20 @@
     "module_levels_extra": [
       2,
       4
+    ],
+    "v8_additions": [
+      "edges.jsonl merged (include/include_resolved/lua_require/cpp_lua_hint)",
+      "index.jsonl merged (file+symbol records)",
+      "PROJECT_SNAPSHOT.md adds incoming hotspots + module2 incoming + control-flow hypotheses",
+      "PROJECT_SNAPSHOT.md embeds AI_README_PROMPT.md if exists"
     ]
   },
   "outputs": {
-    "lite": [
-      "dir_map.jsonl",
-      "index.jsonl",
-      "edges.jsonl",
-      "entry_candidates.md",
-      "PROJECT_SNAPSHOT.md",
-      "snapshot_meta.json"
-    ],
-    "full_extra": []
+    "PROJECT_SNAPSHOT.md": "PROJECT_SNAPSHOT.md",
+    "entry_candidates.md": "entry_candidates.md",
+    "index.jsonl": "index.jsonl",
+    "edges.jsonl": "edges.jsonl",
+    "dir_map.jsonl": "dir_map.jsonl",
+    "snapshot_meta.json": "snapshot_meta.json"
   }
 }
