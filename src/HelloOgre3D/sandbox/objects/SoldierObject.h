@@ -34,6 +34,10 @@ public:
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
 
+private:
+	void ApplyStanceParams(int stanceType);
+	void TryApplyPendingStance();
+
 protected:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
@@ -41,6 +45,7 @@ protected:
 private:
 	RenderableObject* m_pWeapon;
 	SOLDIER_STANCE_TYPE m_stanceType;
+	int m_pendingStanceType = -1;
 
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;

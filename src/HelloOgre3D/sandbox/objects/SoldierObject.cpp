@@ -11,17 +11,26 @@
 #include "OgreSceneNode.h"
 #include "BlockObject.h"
 #include "systems/service/SceneFactory.h"
+#include "animation/AgentAnimState.h"
 
 using namespace Ogre;
+
+namespace
+{
+	bool IsCrouchAnimState(int stateId)
+	{
+		return stateId >= CROUCH_SSTATE_DEAD && stateId <= CROUCH_SSTATE_FORWARD;
+	}
+}
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
-	this->CreateEventDispatcher(); // ¹¹Ôìº¯ÊýÀïÊ¹ÓÃÐéº¯Êý»áµ¼ÖÂÎ´¶¨Òå
+	this->CreateEventDispatcher(); // æž„é€ å‡½æ•°é‡Œä½¿ç”¨è™šå‡½æ•°ä¼šå¯¼è‡´æœªå®šä¹‰
 
-	if (GetUseCppFSM()) // Ê¹ÓÃC++»òÕßluaµÄFSM
+	if (GetUseCppFSM()) // ä½¿ç”¨C++æˆ–è€…luaçš„FSM
 	{
 		m_stateController = new AgentStateController(this);
 		m_stateController->Init();
@@ -42,11 +51,11 @@ void SoldierObject::CreateEventDispatcher()
 		int stateId = (int)context.Get_Number("StateId");
 		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
 		{
-			this->ShootBullet(); // Éä»÷
+			this->ShootBullet(); // å°„å‡»
 		}
 		if (!m_stateController) return;
 		
-		// ½«ÊÂ¼þ´«µÝµ½StateÄÇ
+		// å°†äº‹ä»¶ä¼ é€’åˆ°Stateé‚£
 		AgentState* pState = m_stateController->GetCurrState();
 		SandboxContext context1;
 		context1.Set_Number("StateId", stateId);
@@ -100,6 +109,8 @@ void SoldierObject::Update(int deltaMilisec)
 	if (m_pWeapon)
 		m_pWeapon->Update(deltaMilisec);
 
+	TryApplyPendingStance();
+
 	this->updateWorldTransform();
 }
 
@@ -138,6 +149,32 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vec
 
 void SoldierObject::changeStanceType(int stanceType)
 {
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return;
+
+	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
+	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(currState, stanceType);
+	if (currState == requestState)
+		return;
+
+	if (stanceType == SOLDIER_STAND)
+	{
+		m_pendingStanceType = SOLDIER_STAND;
+	}
+	else if (stanceType == SOLDIER_CROUCH)
+	{
+		m_pendingStanceType = SOLDIER_CROUCH;
+	}
+	else
+	{
+		return;
+	}
+
+	TryApplyPendingStance();
+}
+
+void SoldierObject::ApplyStanceParams(int stanceType)
+{
 	float soldier_height = 0.0f;
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
@@ -145,13 +182,16 @@ void SoldierObject::changeStanceType(int stanceType)
 		m_stanceType = SOLDIER_STAND;
 		soldier_height = SOLDIER_STAND_HEIGHT;
 		soldier_speed = SOLDIER_STAND_SPEED;
-		
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
 		m_stanceType = SOLDIER_CROUCH;
 		soldier_height = SOLDIER_CROUCH_HEIGHT;
 		soldier_speed = SOLDIER_CROUCH_SPEED;
+	}
+	else
+	{
+		return;
 	}
 
 	if (soldier_height <= 0.0f || soldier_speed <= 0.0f) return;
@@ -163,17 +203,56 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	this->SetHeight(soldier_height);
 	this->SetMaxSpeed(soldier_speed);
-
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return;
-
-	int currStateId = pAsm->GetCurrStateID();
-	if (currStateId > 0) RequestState(currStateId, true);
 }
 
+void SoldierObject::TryApplyPendingStance()
+{
+	if (m_pendingStanceType < 0 || m_onPlayDeathAnim)
+	{
+		return;
+	}
+
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr)
+	{
+		return;
+	}
+
+	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
+	if (currState < 0)
+	{
+		return;
+	}
+
+	bool isCrouchState = IsCrouchAnimState(currState);
+	if (!pAsm->HasNextState())
+	{
+		if ((m_pendingStanceType == SOLDIER_CROUCH && isCrouchState) ||
+			(m_pendingStanceType == SOLDIER_STAND && !isCrouchState))
+		{
+			ApplyStanceParams(m_pendingStanceType);
+			m_pendingStanceType = -1;
+			return;
+		}
+
+		SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(currState, m_pendingStanceType);
+		if (requestState != currState)
+		{
+			pAsm->RequestState(requestState);
+		}
+		else if (m_pendingStanceType == SOLDIER_CROUCH)
+		{
+			pAsm->RequestState("crouch_idle_aim");
+		}
+		else
+		{
+			pAsm->RequestState("idle_aim");
+		}
+	}
+}
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
-	//²¥·ÅËÀÍö¶¯»­Ê±²»ÔÙ½ÓÊÜÐÂµÄ×´Ì¬
+	//æ’­æ”¾æ­»äº¡åŠ¨ç”»æ—¶ä¸å†æŽ¥å—æ–°çš„çŠ¶æ€
 	if (m_onPlayDeathAnim) return;
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
