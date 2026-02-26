@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@ THE SOFTWARE.
 */
 #include "OgreStableHeaders.h"
 #include "OgreStringConverter.h"
+#include "OgreException.h"
+#include "OgrePlatform.h"
 
 namespace Ogre {
 
@@ -34,23 +36,26 @@ namespace Ogre {
     std::locale StringConverter::msLocale = std::locale(msDefaultStringLocale.c_str());
     bool StringConverter::msUseLocale = false;
 
-    //-----------------------------------------------------------------------
-    String StringConverter::toString(Real val, unsigned short precision, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
+    template<typename T>
+    String StringConverter::_toString(T val, uint16 width, char fill, std::ios::fmtflags flags)
     {
         StringStream stream;
         if (msUseLocale)
             stream.imbue(msLocale);
-        stream.precision(precision);
         stream.width(width);
         stream.fill(fill);
-        if (flags)
+        if (flags & std::ios::basefield) {
+            stream.setf(flags, std::ios::basefield);
+            stream.setf((flags & ~std::ios::basefield) | std::ios::showbase);
+        }
+        else if (flags)
             stream.setf(flags);
+
         stream << val;
 
         return stream.str();
     }
-#if OGRE_DOUBLE_PRECISION == 1
+
     //-----------------------------------------------------------------------
     String StringConverter::toString(float val, unsigned short precision,
                                      unsigned short width, char fill, std::ios::fmtflags flags)
@@ -66,7 +71,7 @@ namespace Ogre {
         stream << val;
         return stream.str();
     }
-#else
+
     //-----------------------------------------------------------------------
     String StringConverter::toString(double val, unsigned short precision,
                                      unsigned short width, char fill, std::ios::fmtflags flags)
@@ -82,110 +87,47 @@ namespace Ogre {
         stream << val;
         return stream.str();
     }
-#endif
-    //-----------------------------------------------------------------------
-    String StringConverter::toString(int val, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
-    {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
-    }
-    //-----------------------------------------------------------------------
-#if OGRE_PLATFORM != OGRE_PLATFORM_NACL &&  ( OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64 || OGRE_PLATFORM == OGRE_PLATFORM_APPLE || OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS )
-    String StringConverter::toString(unsigned int val, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
-    {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
-    }
-    //-----------------------------------------------------------------------
-    String StringConverter::toString(size_t val, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
-    {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
-    }
-#if OGRE_COMPILER == OGRE_COMPILER_MSVC
-    //-----------------------------------------------------------------------
-    String StringConverter::toString(unsigned long val, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
-    {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
-    }
 
-#endif
     //-----------------------------------------------------------------------
+    String StringConverter::toString(int val,
+        unsigned short width, char fill, std::ios::fmtflags flags)
+    {
+        return _toString(val, width, fill, flags);
+    }
+#if OGRE_PLATFORM != OGRE_PLATFORM_NACL &&  ( OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64 || OGRE_PLATFORM == OGRE_PLATFORM_APPLE || OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS )
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(unsigned int val,
+        unsigned short width, char fill, std::ios::fmtflags flags)
+    {
+        return _toString(val, width, fill, flags);
+    }
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC || defined(__MINGW32__)
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(unsigned long val,
+        unsigned short width, char fill, std::ios::fmtflags flags)
+    {
+        return _toString(val, width, fill, flags);
+    }
+#endif
 #else
-    String StringConverter::toString(size_t val, 
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(unsigned long val,
         unsigned short width, char fill, std::ios::fmtflags flags)
     {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
+        return _toString(val, width, fill, flags);
     }
-    //-----------------------------------------------------------------------
-    String StringConverter::toString(unsigned long val, 
-        unsigned short width, char fill, std::ios::fmtflags flags)
-    {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
-    }
-    //-----------------------------------------------------------------------
 #endif
-    String StringConverter::toString(long val, 
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(size_t val,
         unsigned short width, char fill, std::ios::fmtflags flags)
     {
-        StringStream stream;
-        if (msUseLocale)
-            stream.imbue(msLocale);
-        stream.width(width);
-        stream.fill(fill);
-        if (flags)
-            stream.setf(flags);
-        stream << val;
-        return stream.str();
+        return _toString(val, width, fill, flags);
+    }
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(long val,
+        unsigned short width, char fill, std::ios::fmtflags flags)
+    {
+        return _toString(val, width, fill, flags);
     }
     //-----------------------------------------------------------------------
     String StringConverter::toString(const Vector2& val)
@@ -572,6 +514,80 @@ namespace Ogre {
         str >> tst;
         return !str.fail() && str.eof();
     }
+	//-----------------------------------------------------------------------
+    String StringConverter::toString(ColourBufferType val)
+    {
+		StringStream stream;
+		switch (val)
+		{
+		case CBT_BACK:
+		  stream << "Back";
+		  break;
+		case CBT_BACK_LEFT:
+		  stream << "Back Left";
+		  break;
+		case CBT_BACK_RIGHT:
+		  stream << "Back Right";
+		  break;
+		default:
+		  OGRE_EXCEPT(Exception::ERR_NOT_IMPLEMENTED, "Unsupported colour buffer value", "StringConverter::toString(const ColourBufferType& val)");
+		}
+
+		return stream.str();
+    }
+    //-----------------------------------------------------------------------
+    ColourBufferType StringConverter::parseColourBuffer(const String& val, ColourBufferType defaultValue)
+    {
+		ColourBufferType result = defaultValue;
+		if (val.compare("Back") == 0)
+		{
+			result = CBT_BACK;
+		}
+		else if (val.compare("Back Left") == 0)
+		{
+			result = CBT_BACK_LEFT;
+		}
+		else if (val.compare("Back Right") == 0)
+		{
+			result = CBT_BACK_RIGHT;
+		}		
+		
+		return result;
+    }
+    //-----------------------------------------------------------------------
+    String StringConverter::toString(StereoModeType val)
+    {
+		StringStream stream;
+		switch (val)
+		{
+		case SMT_NONE:
+		  stream << "None";
+		  break;
+		case SMT_FRAME_SEQUENTIAL:
+		  stream << "Frame Sequential";
+		  break;
+		default:
+		  OGRE_EXCEPT(Exception::ERR_NOT_IMPLEMENTED, "Unsupported stereo mode value", "StringConverter::toString(const StereoModeType& val)");
+		}
+
+		return stream.str();
+    }
+    //-----------------------------------------------------------------------
+    StereoModeType StringConverter::parseStereoMode(const String& val, StereoModeType defaultValue)
+    {
+		StereoModeType result = defaultValue;
+		if (val.compare("None") == 0)
+		{
+			result = SMT_NONE;
+		}
+		else if (val.compare("Frame Sequential") == 0)
+		{
+			result = SMT_FRAME_SEQUENTIAL;
+		}
+		
+		return result;
+    }
+	//-----------------------------------------------------------------------
 }
 
 

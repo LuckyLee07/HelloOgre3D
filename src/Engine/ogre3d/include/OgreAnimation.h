@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,9 +30,7 @@ THE SOFTWARE.
 #define __Animation_H__
 
 #include "OgrePrerequisites.h"
-#include "OgreString.h"
 #include "OgreIteratorWrappers.h"
-#include "OgreAnimable.h"
 #include "OgreAnimationTrack.h"
 #include "OgreAnimationState.h"
 #include "OgreHeaderPrefix.h"
@@ -243,6 +241,7 @@ namespace Ogre {
         @remarks
             It does not consider the actual node tracks are attached to.
             As such, it resembles the apply method for a given skeleton (see below).
+        @param node
         @param timePos The time position in the animation to apply.
         @param weight The influence to give to this track, 1.0 for full influence, less to blend with
           other animations.
@@ -255,6 +254,7 @@ namespace Ogre {
         @remarks
             Where you have associated animation tracks with Node objects, you can easily apply
             an animation to those nodes by calling this method.
+        @param skeleton
         @param timePos The time position in the animation to apply.
         @param weight The influence to give to this track, 1.0 for full influence, less to blend with
             other animations.
@@ -267,6 +267,7 @@ namespace Ogre {
         @remarks
             Where you have associated animation tracks with Node objects, you can easily apply
             an animation to those nodes by calling this method.
+        @param skeleton
         @param timePos The time position in the animation to apply.
         @param weight The influence to give to this track, 1.0 for full influence, less to blend with
             other animations.
@@ -292,6 +293,7 @@ namespace Ogre {
         /** Applies all numeric tracks given a specific time point and weight to the specified animable value.
         @remarks
             It does not applies to actual attached animable values but rather uses all tracks for a single animable value.
+        @param anim
         @param timePos The time position in the animation to apply.
         @param weight The influence to give to this track, 1.0 for full influence, less to blend with
           other animations.
@@ -303,6 +305,7 @@ namespace Ogre {
         /** Applies all vertex tracks given a specific time point and weight to the specified vertex data.
         @remarks
             It does not apply to the actual attached vertex data but rather uses all tracks for a given vertex data.
+        @param data
         @param timePos The time position in the animation to apply.
         @param weight The influence to give to this track, 1.0 for full influence, less to blend with
           other animations.
@@ -487,7 +490,7 @@ namespace Ogre {
         @param keyframeTime The time corresponding to the base keyframe, if any
         @param baseAnimName Optionally a different base animation (must contain the same tracks)
         */
-        void setUseBaseKeyFrame(bool useBaseKeyFrame, Real keyframeTime = 0.0f, const String& baseAnimName = StringUtil::BLANK);
+        void setUseBaseKeyFrame(bool useBaseKeyFrame, Real keyframeTime = 0.0f, const String& baseAnimName = BLANKSTRING);
         /** Whether a base keyframe is being used for this Animation. */
         bool getUseBaseKeyFrame() const;
         /** If a base keyframe is being used, the time of that keyframe. */

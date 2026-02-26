@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,13 +42,13 @@ THE SOFTWARE.
 
 namespace Ogre {
 
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup Math
-	*  @{
-	*/
-	/** Defines a plane in 3D space.
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup Math
+    *  @{
+    */
+    /** Defines a plane in 3D space.
         @remarks
             A plane is defined in 3D space by the equation
             Ax + By + Cz + D = 0
@@ -61,14 +61,18 @@ namespace Ogre {
     class _OgreExport Plane
     {
     public:
+        Vector3 normal;
+        Real d;
+
+    public:
         /** Default constructor - sets everything to 0.
         */
         Plane ();
         Plane (const Plane& rhs);
         /** Construct a plane through a normal, and a distance to move the plane along the normal.*/
         Plane (const Vector3& rkNormal, Real fConstant);
-		/** Construct a plane using the 4 constants directly **/
-		Plane (Real a, Real b, Real c, Real d);
+        /** Construct a plane using the 4 constants directly **/
+        Plane (Real a, Real b, Real c, Real d);
         Plane (const Vector3& rkNormal, const Vector3& rkPoint);
         Plane (const Vector3& rkPoint0, const Vector3& rkPoint1,
             const Vector3& rkPoint2);
@@ -118,17 +122,17 @@ namespace Ogre {
         void redefine(const Vector3& rkPoint0, const Vector3& rkPoint1,
             const Vector3& rkPoint2);
 
-		/** Redefine this plane based on a normal and a point. */
-		void redefine(const Vector3& rkNormal, const Vector3& rkPoint);
+        /** Redefine this plane based on a normal and a point. */
+        void redefine(const Vector3& rkNormal, const Vector3& rkPoint);
 
-		/** Project a vector onto the plane. 
-		@remarks This gives you the element of the input vector that is perpendicular 
-			to the normal of the plane. You can get the element which is parallel
-			to the normal of the plane by subtracting the result of this method
-			from the original vector, since parallel + perpendicular = original.
-		@param v The input vector
-		*/
-		Vector3 projectVector(const Vector3& v) const;
+        /** Project a vector onto the plane. 
+        @remarks This gives you the element of the input vector that is perpendicular 
+            to the normal of the plane. You can get the element which is parallel
+            to the normal of the plane by subtracting the result of this method
+            from the original vector, since parallel + perpendicular = original.
+        @param v The input vector
+        */
+        Vector3 projectVector(const Vector3& v) const;
 
         /** Normalises the plane.
             @remarks
@@ -141,8 +145,11 @@ namespace Ogre {
         */
         Real normalise(void);
 
-		Vector3 normal;
-        Real d;
+        /// Get flipped plane, with same location but reverted orientation
+        Plane operator - () const
+        {
+            return Plane(-(normal.x), -(normal.y), -(normal.z), -d); // not equal to Plane(-normal, -d)
+        }
 
         /// Comparison operator
         bool operator==(const Plane& rhs) const
@@ -158,8 +165,8 @@ namespace Ogre {
     };
 
     typedef vector<Plane>::type PlaneList;
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
 } // namespace Ogre
 

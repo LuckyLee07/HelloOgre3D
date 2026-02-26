@@ -55,3 +55,20 @@
 
 新增代办：决策树/行为树/黑板/触发器/技能timeline/Jobs多线程等功能实现，以及崩溃上报模块/optick性能分析模块，结合imgui开发性能分析面板
 
+## macOS / Xcode 迁移说明（进行中）
+
+当前仓库默认是 Windows + Direct3D9 路线。已补充第一批跨平台改造：
+
+1. `HelloOgre3D` 入口、日志、时间函数、文件工具的 Win32 依赖已改为条件编译。
+2. `ClientManager` 在非 Windows 下改为尝试加载 `RenderSystem_GL` / `RenderSystem_GL3Plus`。
+3. `premake` 路径统一为 `src/external`（避免大小写在部分 macOS 文件系统下出错）。
+4. 新增 `xcode.sh`（依赖本机安装 `premake5`）用于生成 Xcode 工程。
+
+生成方式：
+
+```bash
+./tools/import_ogre_opengl.sh v1.10.0
+./xcode.sh
+```
+
+如果项目根目录存在 `ogre-1.10.0.tar.gz`，脚本会优先使用本地包离线导入。

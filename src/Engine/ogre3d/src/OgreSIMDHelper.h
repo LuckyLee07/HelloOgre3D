@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -86,12 +86,12 @@ THE SOFTWARE.
 
 
 namespace Ogre {
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup Math
-	*  @{
-	*/
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup Math
+    *  @{
+    */
 
 #if __OGRE_HAVE_SSE
 
@@ -250,11 +250,11 @@ namespace Ogre {
     template <bool aligned = false>
     struct SSEMemoryAccessor
     {
-        static FORCEINLINE __m128 load(const float *p)
+        static OGRE_FORCE_INLINE __m128 load(const float *p)
         {
             return _mm_loadu_ps(p);
         }
-        static FORCEINLINE void store(float *p, const __m128& v)
+        static OGRE_FORCE_INLINE void store(float *p, const __m128& v)
         {
             _mm_storeu_ps(p, v);
         }
@@ -263,11 +263,11 @@ namespace Ogre {
     template <>
     struct SSEMemoryAccessor<true>
     {
-        static FORCEINLINE const __m128& load(const float *p)
+        static OGRE_FORCE_INLINE const __m128& load(const float *p)
         {
             return __MM_LOAD_PS(p);
         }
-        static FORCEINLINE void store(float *p, const __m128& v)
+        static OGRE_FORCE_INLINE void store(float *p, const __m128& v)
         {
             __MM_STORE_PS(p, v);
         }
@@ -275,7 +275,7 @@ namespace Ogre {
 
     /** Check whether or not the given pointer perfect aligned for SSE.
     */
-    static FORCEINLINE bool _isAlignedForSSE(const void *p)
+    static OGRE_FORCE_INLINE bool _isAlignedForSSE(const void *p)
     {
         return (((size_t)p) & 15) == 0;
     }
@@ -283,7 +283,7 @@ namespace Ogre {
     /** Calculate NewtonRaphson Reciprocal Square Root with formula:
             0.5 * rsqrt(x) * (3 - x * rsqrt(x)^2)
     */
-    static FORCEINLINE __m128 __mm_rsqrt_nr_ps(const __m128& x)
+    static OGRE_FORCE_INLINE __m128 __mm_rsqrt_nr_ps(const __m128& x)
     {
         static const __m128 v0pt5 = { 0.5f, 0.5f, 0.5f, 0.5f };
         static const __m128 v3pt0 = { 3.0f, 3.0f, 3.0f, 3.0f };
@@ -307,8 +307,8 @@ namespace Ogre {
 
 
 #endif  // __OGRE_HAVE_SSE
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
 }
 

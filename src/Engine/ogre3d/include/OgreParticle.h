@@ -4,7 +4,7 @@ This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,36 +29,35 @@ THE SOFTWARE.
 #define __Particle_H__
 
 #include "OgrePrerequisites.h"
-#include "OgreBillboard.h"
 #include "OgreHeaderPrefix.h"
 
 namespace Ogre {
 
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup Effects
-	*  @{
-	*/
-	/** Abstract class containing any additional data required to be associated
-		with a particle to perform the required rendering. 
-	@remarks
-		Because you can specialise the way that particles are rendered by supplying
-		custom ParticleSystemRenderer classes, you might well need some additional 
-		data for your custom rendering routine which is not held on the default particle
-		class. If that's the case, then you should define a subclass of this class, 
-		and construct it when asked in your custom ParticleSystemRenderer class.
-	*/
-	class _OgreExport ParticleVisualData : public FXAlloc
-	{
-	public:
-		ParticleVisualData() {}
-		virtual ~ParticleVisualData() {}
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup Effects
+    *  @{
+    */
+    /** Abstract class containing any additional data required to be associated
+        with a particle to perform the required rendering. 
+    @remarks
+        Because you can specialise the way that particles are rendered by supplying
+        custom ParticleSystemRenderer classes, you might well need some additional 
+        data for your custom rendering routine which is not held on the default particle
+        class. If that's the case, then you should define a subclass of this class, 
+        and construct it when asked in your custom ParticleSystemRenderer class.
+    */
+    class _OgreExport ParticleVisualData : public FXAlloc
+    {
+    public:
+        ParticleVisualData() {}
+        virtual ~ParticleVisualData() {}
 
-	};
+    };
 
-	/** Class representing a single particle instance. */
-	class _OgreExport Particle : public FXAlloc
+    /** Class representing a single particle instance. */
+    class _OgreExport Particle : public FXAlloc
     {
     protected:
         /// Parent ParticleSystem
@@ -139,16 +138,16 @@ namespace Ogre {
 
         /** Internal method for notifying the particle of it's optional visual data.
         */
-		void _notifyVisualData(ParticleVisualData* vis) { mVisual = vis; }
+        void _notifyVisualData(ParticleVisualData* vis) { mVisual = vis; }
 
-		/// Get the optional visual data associated with the class
-		ParticleVisualData* getVisualData(void) const { return mVisual; }
+        /// Get the optional visual data associated with the class
+        ParticleVisualData* getVisualData(void) const { return mVisual; }
 
         /// Utility method to reset this particle
         void resetDimensions(void);
     };
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 }
 
 #include "OgreHeaderSuffix.h"

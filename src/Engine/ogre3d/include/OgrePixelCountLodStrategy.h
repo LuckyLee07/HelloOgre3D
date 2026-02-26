@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,26 +32,24 @@ THE SOFTWARE.
 
 #include "OgreLodStrategy.h"
 #include "OgreSingleton.h"
-#include "OgreNode.h"
 
 namespace Ogre {
 
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup LOD
-	*  @{
-	*/
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup LOD
+    *  @{
+    */
 
-	class AbsolutePixelCountLodStrategy;
-	/// Backward compatible name for Distance_Box strategy.
-	typedef AbsolutePixelCountLodStrategy PixelCountLodStrategy;
+    class AbsolutePixelCountLodStrategy;
+    /// Backward compatible name for Distance_Box strategy.
+    typedef AbsolutePixelCountLodStrategy PixelCountLodStrategy;
 
-	/** Abstract base class for level of detail strategy based on pixel count approximations from bounding sphere projection. */
+    /** Abstract base class for level of detail strategy based on pixel count approximations from bounding sphere projection. */
     class _OgreExport PixelCountLodStrategyBase : public LodStrategy
     {
     protected:
-        /// @copydoc LodStrategy::getValueImpl
         virtual Real getValueImpl(const MovableObject *movableObject, const Camera *camera) const = 0;
 
     public:
@@ -76,8 +74,8 @@ namespace Ogre {
         /// @copydoc LodStrategy::isSorted
         virtual bool isSorted(const Mesh::LodValueList& values) const;
     };
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
     class _OgreExport AbsolutePixelCountLodStrategy : public PixelCountLodStrategyBase, public Singleton<AbsolutePixelCountLodStrategy>
     {
@@ -85,7 +83,6 @@ namespace Ogre {
         /** Default constructor. */
         AbsolutePixelCountLodStrategy();
 
-        /// @copydoc LodStrategy::getValueImpl
         Real getValueImpl(const MovableObject *movableObject, const Camera *camera) const;
 
         /** Override standard Singleton retrieval.
@@ -130,7 +127,6 @@ namespace Ogre {
         /** Default constructor. */
         ScreenRatioPixelCountLodStrategy();
 
-        /// @copydoc LodStrategy::getValueImpl
         Real getValueImpl(const MovableObject *movableObject, const Camera *camera) const;
 
         /** Override standard Singleton retrieval.

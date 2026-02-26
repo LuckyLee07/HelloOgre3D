@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,16 +29,12 @@ THE SOFTWARE.
 #ifndef __StringConverter_H__
 #define __StringConverter_H__
 
+#include "OgreCommon.h"
 #include "OgrePrerequisites.h"
 #include "OgreStringVector.h"
 #include "OgreColourValue.h"
-#include "OgreMath.h"
-#include "OgreMatrix3.h"
 #include "OgreMatrix4.h"
-#include "OgreQuaternion.h"
 #include "OgreVector2.h"
-#include "OgreVector3.h"
-#include "OgreVector4.h"
 
 namespace Ogre {
 
@@ -68,22 +64,16 @@ namespace Ogre {
     class _OgreExport StringConverter
     {
     public:
-
-        /** Converts a Real to a String. */
-        static String toString(Real val, unsigned short precision = 6, 
-            unsigned short width = 0, char fill = ' ', 
-            std::ios::fmtflags flags = std::ios::fmtflags(0));
-#if OGRE_DOUBLE_PRECISION == 1
         /** Converts a float to a String. */
         static String toString(float val, unsigned short precision = 6,
                                unsigned short width = 0, char fill = ' ',
                                std::ios::fmtflags flags = std::ios::fmtflags(0));
-#else
+
         /** Converts a double to a String. */
         static String toString(double val, unsigned short precision = 6,
                                unsigned short width = 0, char fill = ' ',
                                std::ios::fmtflags flags = std::ios::fmtflags(0));
-#endif
+
         /** Converts a Radian to a String. */
         static String toString(Radian val, unsigned short precision = 6, 
             unsigned short width = 0, char fill = ' ', 
@@ -102,35 +92,35 @@ namespace Ogre {
         static String toString(int val, unsigned short width = 0, 
             char fill = ' ', 
             std::ios::fmtflags flags = std::ios::fmtflags(0));
+
 #if OGRE_PLATFORM != OGRE_PLATFORM_NACL &&  ( OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64 || OGRE_PLATFORM == OGRE_PLATFORM_APPLE || OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS )
         /** Converts an unsigned int to a String. */
         static String toString(unsigned int val, 
             unsigned short width = 0, char fill = ' ', 
             std::ios::fmtflags flags = std::ios::fmtflags(0));
-        /** Converts a size_t to a String. */
-        static String toString(size_t val, 
-            unsigned short width = 0, char fill = ' ', 
-            std::ios::fmtflags flags = std::ios::fmtflags(0));
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
+
+        #if OGRE_COMPILER == OGRE_COMPILER_MSVC || defined(__MINGW32__)
         /** Converts an unsigned long to a String. */
         static String toString(unsigned long val, 
             unsigned short width = 0, char fill = ' ', 
             std::ios::fmtflags flags = std::ios::fmtflags(0));
         #endif
 #else
-        /** Converts a size_t to a String. */
-        static String toString(size_t val, 
-            unsigned short width = 0, char fill = ' ', 
-            std::ios::fmtflags flags = std::ios::fmtflags(0));
         /** Converts an unsigned long to a String. */
-        static String toString(unsigned long val, 
+        static String toString(unsigned long val,
             unsigned short width = 0, char fill = ' ', 
             std::ios::fmtflags flags = std::ios::fmtflags(0));
 #endif
+        /** Converts a size_t to a String. */
+        static String toString(size_t val,
+            unsigned short width = 0, char fill = ' ', 
+            std::ios::fmtflags flags = std::ios::fmtflags(0));
+
         /** Converts a long to a String. */
         static String toString(long val, 
             unsigned short width = 0, char fill = ' ', 
             std::ios::fmtflags flags = std::ios::fmtflags(0));
+
         /** Converts a boolean to a String. 
         @param yesNo If set to true, result is 'yes' or 'no' instead of 'true' or 'false'
         */
@@ -274,6 +264,34 @@ namespace Ogre {
         /** Checks the String is a valid number value. */
         static bool isNumber(const String& val);
 
+        /** templated parse call that forwards to StringConverter::parse*(str)
+         useful for template metaprogramming */
+        template <typename T> static void parse(const String& str, T& v); // no implementation so we get compile time error for unknown types
+
+		/** Converts a ColourBufferType to a String.
+		@remarks
+			String output format is "Back", "Back Left", "Back Right", etc.
+		*/
+		static String toString(ColourBufferType val);
+
+		/** Converts a String to a ColourBufferType.
+		@remarks
+			String input format should be "Back", "Back Left", "Back Right", etc.
+		*/
+		static ColourBufferType parseColourBuffer(const String& val, ColourBufferType defaultValue = CBT_BACK);
+
+		/** Converts a StereoModeType to a String
+		@remarks
+			String output format is "None", "Frame Sequential", etc.
+		*/
+		static String toString(StereoModeType val);
+
+		/** Converts a String to a StereoModeType
+		@remarks
+			String input format should be "None", "Frame Sequential", etc.
+		*/
+		static StereoModeType parseStereoMode(const String& val, StereoModeType defaultValue = SMT_NONE);
+		
         //-----------------------------------------------------------------------
         static void setDefaultStringLocale(const String &loc)
         {
@@ -289,10 +307,56 @@ namespace Ogre {
         //-----------------------------------------------------------------------
 
     protected:
+        template<typename T>
+        static String _toString(T val, uint16 width, char fill, std::ios::fmtflags flags);
+
         static String msDefaultStringLocale;
         static std::locale msLocale;
-        static bool msUseLocale;
+        static bool msUseLocale;		
     };
+
+    template<> inline void StringConverter::parse(const String& str, ColourValue& v) {
+        v = Ogre::StringConverter::parseColourValue(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Quaternion& v) {
+        v = Ogre::StringConverter::parseQuaternion(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Matrix4& v) {
+        v = Ogre::StringConverter::parseMatrix4(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Matrix3& v) {
+        v = Ogre::StringConverter::parseMatrix3(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Vector4& v) {
+        v = Ogre::StringConverter::parseVector4(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Vector3& v) {
+        v = Ogre::StringConverter::parseVector3(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Vector2& v) {
+        v = Ogre::StringConverter::parseVector2(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, size_t& v) {
+        v = Ogre::StringConverter::parseSizeT(str);
+    }
+    /*possibly same as size_t template<> inline void StringConverter::parse(const String& str, unsigned int& v) {
+        v = Ogre::StringConverter::parseUnsignedInt(str);
+    }*/
+    template<> inline void StringConverter::parse(const String& str, long& v) {
+        v = Ogre::StringConverter::parseLong(str);
+    }
+    /*possibly same as size_t template<> inline void StringConverter::parse(const String& str, unsigned long& v) {
+        v = Ogre::StringConverter::parseUnsignedLong(str);
+    }*/
+    template<> inline void StringConverter::parse(const String& str, bool& v) {
+        v = Ogre::StringConverter::parseBool(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, int& v) {
+        v = Ogre::StringConverter::parseInt(str);
+    }
+    template<> inline void StringConverter::parse(const String& str, Real& v) {
+        v = Ogre::StringConverter::parseReal(str);
+    }
 
     /** @} */
     /** @} */

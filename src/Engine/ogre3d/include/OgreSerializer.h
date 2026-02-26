@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +30,6 @@ THE SOFTWARE.
 #define __Serializer_H__
 
 #include "OgrePrerequisites.h"
-#include "OgreString.h"
-#include "OgreDataStream.h"
 #include "OgreHeaderPrefix.h"
 
 #ifndef OGRE_SERIALIZER_VALIDATE_CHUNKSIZE
@@ -40,33 +38,33 @@ THE SOFTWARE.
 
 namespace Ogre {
 
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup General
-	*  @{
-	*/
-	/** Generic class for serialising data to / from binary stream-based files.
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup General
+    *  @{
+    */
+    /** Generic class for serialising data to / from binary stream-based files.
     @remarks
         This class provides a number of useful methods for exporting / importing data
         from stream-oriented binary files (e.g. .mesh and .skeleton).
     */
-	class _OgreExport Serializer : public SerializerAlloc
+    class _OgreExport Serializer : public SerializerAlloc
     {
     public:
         Serializer();
         virtual ~Serializer();
 
-		/// The endianness of written files
-		enum Endian
-		{
-			/// Use the platform native endian
-			ENDIAN_NATIVE,
-			/// Use big endian (0x1000 is serialised as 0x10 0x00)
-			ENDIAN_BIG,
-			/// Use little endian (0x1000 is serialised as 0x00 0x10)
-			ENDIAN_LITTLE
-		};
+        /// The endianness of written files
+        enum Endian
+        {
+            /// Use the platform native endian
+            ENDIAN_NATIVE,
+            /// Use big endian (0x1000 is serialised as 0x10 0x00)
+            ENDIAN_BIG,
+            /// Use little endian (0x1000 is serialised as 0x00 0x10)
+            ENDIAN_LITTLE
+        };
 
 
     protected:
@@ -74,7 +72,7 @@ namespace Ogre {
         uint32 mCurrentstreamLen;
         DataStreamPtr mStream;
         String mVersion;
-		bool mFlipEndian; /// Default to native endian, derive from header
+        bool mFlipEndian; /// Default to native endian, derive from header
 
         // Internal methods
         virtual void writeFileHeader(void);
@@ -107,28 +105,25 @@ namespace Ogre {
         String readString(DataStreamPtr& stream);
         String readString(DataStreamPtr& stream, size_t numChars);
         
-        virtual void flipToLittleEndian(void* pData, size_t size, size_t count = 1);
-        virtual void flipFromLittleEndian(void* pData, size_t size, size_t count = 1);
-        
-        virtual void flipEndian(void * pData, size_t size, size_t count);
-        virtual void flipEndian(void * pData, size_t size);
+        void flipToLittleEndian(void* pData, size_t size, size_t count = 1);
+        void flipFromLittleEndian(void* pData, size_t size, size_t count = 1);
 
-		/// Determine the endianness of the incoming stream compared to native
-		virtual void determineEndianness(DataStreamPtr& stream);
-		/// Determine the endianness to write with based on option
-		virtual void determineEndianness(Endian requestedEndian);
+        /// Determine the endianness of the incoming stream compared to native
+        virtual void determineEndianness(DataStreamPtr& stream);
+        /// Determine the endianness to write with based on option
+        virtual void determineEndianness(Endian requestedEndian);
 
 #if OGRE_SERIALIZER_VALIDATE_CHUNKSIZE
-		typedef vector<size_t>::type ChunkSizeStack;
-		ChunkSizeStack mChunkSizeStack;
-		bool mReportChunkErrors;
+        typedef vector<size_t>::type ChunkSizeStack;
+        ChunkSizeStack mChunkSizeStack;
+        bool mReportChunkErrors;
 #endif
-		virtual void pushInnerChunk(const DataStreamPtr& stream);
-		virtual void popInnerChunk(const DataStreamPtr& stream);
-		virtual void backpedalChunkHeader(DataStreamPtr& stream);
+        virtual void pushInnerChunk(const DataStreamPtr& stream);
+        virtual void popInnerChunk(const DataStreamPtr& stream);
+        virtual void backpedalChunkHeader(DataStreamPtr& stream);
     };
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
 }
 

@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,14 +51,16 @@ namespace Ogre {
 
 #elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE && defined(__BIG_ENDIAN__)
 #   define OGRE_CPU OGRE_CPU_PPC
+#elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE && (defined(__arm__) || defined(_M_ARM) || defined(__arm64__) || defined(__aarch64__))
+#   define OGRE_CPU OGRE_CPU_ARM
 #elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE
-#	define OGRE_CPU OGRE_CPU_X86
+#   define OGRE_CPU OGRE_CPU_X86
 #elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS && (defined(__i386__) || defined(__x86_64__))
-#	define OGRE_CPU OGRE_CPU_X86
-#elif defined(__arm__) || defined(_M_ARM) || defined(__arm64__) || defined(_aarch64_)
-#	define OGRE_CPU OGRE_CPU_ARM
+#   define OGRE_CPU OGRE_CPU_X86
+#elif defined(__arm__) || defined(_M_ARM) || defined(__arm64__) || defined(__aarch64__)
+#   define OGRE_CPU OGRE_CPU_ARM
 #elif defined(__mips64) || defined(__mips64_)
-#	define OGRE_CPU OGRE_CPU_MIPS
+#   define OGRE_CPU OGRE_CPU_MIPS
 #else
 #   define OGRE_CPU OGRE_CPU_UNKNOWN
 #endif
@@ -132,12 +134,12 @@ namespace Ogre {
 #   define __OGRE_HAVE_MSA  0
 #endif
 
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup General
-	*  @{
-	*/
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup General
+    *  @{
+    */
 
 
     /** Class which provides the run-time platform information Ogre runs on.
@@ -161,26 +163,29 @@ namespace Ogre {
         enum CpuFeatures
         {
 #if OGRE_CPU == OGRE_CPU_X86
-            CPU_FEATURE_SSE         = 1 << 0,
-            CPU_FEATURE_SSE2        = 1 << 1,
-            CPU_FEATURE_SSE3        = 1 << 2,
-            CPU_FEATURE_MMX         = 1 << 3,
-            CPU_FEATURE_MMXEXT      = 1 << 4,
-            CPU_FEATURE_3DNOW       = 1 << 5,
-            CPU_FEATURE_3DNOWEXT    = 1 << 6,
-            CPU_FEATURE_CMOV        = 1 << 7,
-            CPU_FEATURE_TSC         = 1 << 8,
-            CPU_FEATURE_FPU         = 1 << 9,
-            CPU_FEATURE_PRO         = 1 << 10,
-            CPU_FEATURE_HTT         = 1 << 11,
-#elif OGRE_CPU == OGRE_CPU_ARM
-            CPU_FEATURE_VFP         = 1 << 12,
-            CPU_FEATURE_NEON        = 1 << 13,
-#elif OGRE_CPU == OGRE_CPU_MIPS
-            CPU_FEATURE_MSA         = 1 << 14,
+            CPU_FEATURE_SSE             = 1 << 0,
+            CPU_FEATURE_SSE2            = 1 << 1,
+            CPU_FEATURE_SSE3            = 1 << 2,
+            CPU_FEATURE_SSE41           = 1 << 3,
+            CPU_FEATURE_SSE42           = 1 << 4,
+            CPU_FEATURE_MMX             = 1 << 5,
+            CPU_FEATURE_MMXEXT          = 1 << 6,
+            CPU_FEATURE_3DNOW           = 1 << 7,
+            CPU_FEATURE_3DNOWEXT        = 1 << 8,
+            CPU_FEATURE_CMOV            = 1 << 9,
+            CPU_FEATURE_TSC             = 1 << 10,
+            CPU_FEATURE_INVARIANT_TSC   = 1 << 11,
+            CPU_FEATURE_FPU             = 1 << 12,
+            CPU_FEATURE_PRO             = 1 << 13,
+            CPU_FEATURE_HTT             = 1 << 14,
+#elif OGRE_CPU == OGRE_CPU_ARM          
+            CPU_FEATURE_VFP             = 1 << 15,
+            CPU_FEATURE_NEON            = 1 << 16,
+#elif OGRE_CPU == OGRE_CPU_MIPS         
+            CPU_FEATURE_MSA             = 1 << 17,
 #endif
 
-            CPU_FEATURE_NONE        = 0
+            CPU_FEATURE_NONE            = 0
         };
 
         /** Gets a string of the CPU identifier.
@@ -197,20 +202,20 @@ namespace Ogre {
         */
         static uint getCpuFeatures(void);
 
-		/** Gets whether a specific feature is supported by the CPU.
-		@note
-			Actual detecting are performs in the first time call to this function,
-			and then all future calls with return internal cached value.
-		*/
-		static bool hasCpuFeature(CpuFeatures feature);
+        /** Gets whether a specific feature is supported by the CPU.
+        @note
+            Actual detecting are performs in the first time call to this function,
+            and then all future calls with return internal cached value.
+        */
+        static bool hasCpuFeature(CpuFeatures feature);
 
 
-		/** Write the CPU information to the passed in Log */
-		static void log(Log* pLog);
+        /** Write the CPU information to the passed in Log */
+        static void log(Log* pLog);
 
     };
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
 }
 

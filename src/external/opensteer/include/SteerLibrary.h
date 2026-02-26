@@ -57,6 +57,20 @@ namespace OpenSteer {
     class SteerLibraryMixin : public Super
     {
     public:
+        // Resolve dependent-base lookups on modern compilers (Clang/GCC).
+        using Super::forward;
+        using Super::localRotateForwardToSide;
+        using Super::localizeDirection;
+        using Super::localizePosition;
+        using Super::maxForce;
+        using Super::maxSpeed;
+        using Super::position;
+        using Super::predictFuturePosition;
+        using Super::radius;
+        using Super::side;
+        using Super::speed;
+        using Super::up;
+        using Super::velocity;
 
         // Constructor: initializes state
         SteerLibraryMixin ()
@@ -913,6 +927,16 @@ steerForPursuit (const AbstractVehicle& quarry,
 
     float timeFactor = 0; // to be filled in below
     Vec3 color;           // to be filled in below (xxx just for debugging)
+    const Vec3 gBlack(0.0f, 0.0f, 0.0f);
+    const Vec3 gGray50(0.5f, 0.5f, 0.5f);
+    const Vec3 gWhite(1.0f, 1.0f, 1.0f);
+    const Vec3 gRed(1.0f, 0.0f, 0.0f);
+    const Vec3 gYellow(1.0f, 1.0f, 0.0f);
+    const Vec3 gGreen(0.0f, 1.0f, 0.0f);
+    const Vec3 gCyan(0.0f, 1.0f, 1.0f);
+    const Vec3 gBlue(0.0f, 0.0f, 1.0f);
+    const Vec3 gMagenta(1.0f, 0.0f, 1.0f);
+    const Vec3 gGray40(0.4f, 0.4f, 0.4f);
 
     // Break the pursuit into nine cases, the cross product of the
     // quarry being [ahead, aside, or behind] us and heading
@@ -999,7 +1023,7 @@ steerForEvasion (const AbstractVehicle& menace,
                  const float maxPredictionTime)
 {
     // offset from this to menace, that distance, unit vector toward menace
-    const Vec3 offset = menace.position - position;
+    const Vec3 offset = menace.position() - position();
     const float distance = offset.length ();
 
     const float roughTime = distance / menace.speed();

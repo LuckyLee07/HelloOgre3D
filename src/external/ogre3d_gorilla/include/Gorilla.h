@@ -289,9 +289,9 @@ namespace Gorilla
     if (mUsed != 0)
     {
      if (mUsed < new_capacity)  // Copy all
-      std::copy(mBuffer, mBuffer + mUsed, stdext::checked_array_iterator<T*>(new_buffer, mUsed));
+      std::copy(mBuffer, mBuffer + mUsed, new_buffer);
      else if (mUsed >= new_capacity) // Copy some
-      std::copy(mBuffer, mBuffer + new_capacity, stdext::checked_array_iterator<T*>(new_buffer, new_capacity));
+      std::copy(mBuffer, mBuffer + new_capacity, new_buffer);
     }
 
     OGRE_FREE(mBuffer, Ogre::MEMCATEGORY_GEOMETRY);
@@ -953,7 +953,7 @@ namespace Gorilla
     void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
 
     // Internal -- Prepares RenderSystem for rendering.
-    void _prepareRenderSystem();
+    bool _prepareRenderSystem();
 
     // Internal -- Renders mVertexData to screen.
     void renderOnce();

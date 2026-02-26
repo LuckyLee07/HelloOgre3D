@@ -30,6 +30,11 @@
 */
 
 #include "Gorilla.h"
+#include "OgreLogManager.h"
+#include "OgreMaterialManager.h"
+#include "OgreSceneNode.h"
+#include "OgreTextureManager.h"
+#include "OgreViewport.h"
 
 #pragma warning ( disable : 4244 )
 
@@ -77,6 +82,56 @@ namespace Gorilla
  {
   SCREEN_RENDERQUEUE = Ogre::RENDER_QUEUE_OVERLAY
  };
+
+ namespace
+ {
+  bool isPassRenderable(Ogre::Pass* pass)
+  {
+   if (!pass)
+    return false;
+
+   Ogre::Technique* technique = pass->getParent();
+   if (!technique || !technique->isSupported())
+    return false;
+
+   if (pass->hasVertexProgram())
+   {
+    const Ogre::GpuProgramPtr& vp = pass->getVertexProgram();
+    if (vp.isNull() || !vp->isSupported())
+     return false;
+   }
+
+   if (pass->hasFragmentProgram())
+   {
+    const Ogre::GpuProgramPtr& fp = pass->getFragmentProgram();
+    if (fp.isNull() || !fp->isSupported())
+     return false;
+   }
+
+   if (pass->hasGeometryProgram())
+   {
+    const Ogre::GpuProgramPtr& gp = pass->getGeometryProgram();
+    if (gp.isNull() || !gp->isSupported())
+     return false;
+   }
+
+   if (pass->hasTessellationHullProgram())
+   {
+    const Ogre::GpuProgramPtr& hp = pass->getTessellationHullProgram();
+    if (hp.isNull() || !hp->isSupported())
+     return false;
+   }
+
+   if (pass->hasTessellationDomainProgram())
+   {
+    const Ogre::GpuProgramPtr& dp = pass->getTessellationDomainProgram();
+    if (dp.isNull() || !dp->isSupported())
+     return false;
+   }
+
+   return true;
+  }
+ }
 
  Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a )
  {
@@ -999,12 +1054,17 @@ namespace Gorilla
    renderOnce();
  }
 
- void Screen::_prepareRenderSystem()
+ bool Screen::_prepareRenderSystem()
  {
+  Ogre::Pass* pass = mAtlas->get2DPass();
+  if (!isPassRenderable(pass))
+   return false;
+
   mRenderSystem->_setWorldMatrix( Ogre::Matrix4::IDENTITY );
   mRenderSystem->_setProjectionMatrix( Ogre::Matrix4::IDENTITY );
   mRenderSystem->_setViewMatrix( Ogre::Matrix4::IDENTITY );
-  mSceneMgr->_setPass(mAtlas->get2DPass());
+  mSceneMgr->_setPass(pass);
+  return true;
  }
 
  void Screen::renderOnce()
@@ -1051,8 +1111,18 @@ namespace Gorilla
   _renderVertices(force);
   if (mRenderOp.vertexData->vertexCount)
   {
-   _prepareRenderSystem();
-   mRenderSystem->_render(mRenderOp);
+   try
+   {
+    if (!_prepareRenderSystem())
+     return;
+    mRenderSystem->_render(mRenderOp);
+   }
+   catch (const Ogre::Exception& e)
+   {
+    Ogre::LogManager::getSingleton().logMessage(
+      "[Gorilla] Disabling screen after render failure: " + e.getFullDescription());
+    mIsVisible = false;
+   }
   }
  }
 

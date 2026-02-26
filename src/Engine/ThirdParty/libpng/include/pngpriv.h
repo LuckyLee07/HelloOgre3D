@@ -322,7 +322,9 @@ typedef PNG_CONST png_uint_16p FAR * png_const_uint_16pp;
     */
 #  include <float.h>
 
-#  if (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
+#  if defined(__APPLE__)
+#    include <math.h>
+#  elif (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
     defined(THINK_C) || defined(__SC__) || defined(TARGET_OS_MAC)
      /* We need to check that <math.h> hasn't already been included earlier
       * as it seems it doesn't agree with <fp.h>, yet we should really use

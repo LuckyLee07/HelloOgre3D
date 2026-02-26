@@ -27,6 +27,7 @@ THE SOFTWARE.
 */
 #include "ProceduralStableHeaders.h"
 #include "ProceduralShape.h"
+#include "ProceduralMultiShape.h"
 #include "ProceduralGeometryHelpers.h"
 #include "ProceduralPath.h"
 

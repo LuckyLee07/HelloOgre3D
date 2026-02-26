@@ -29,11 +29,10 @@ THE SOFTWARE.
 #define PROCEDURAL_MULTISHAPE_INCLUDED
 
 #include "ProceduralRoot.h"
+#include "ProceduralShape.h"
 
 namespace Procedural
 {
-	class Shape;
-
 /** Holds a bunch of shapes.
  * There are a number of assumptions that are made and are not checked
  * against : the shapes must not cross each other

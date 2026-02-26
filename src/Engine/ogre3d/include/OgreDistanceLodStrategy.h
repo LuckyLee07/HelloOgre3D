@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,19 +32,18 @@ THE SOFTWARE.
 
 #include "OgreLodStrategy.h"
 #include "OgreSingleton.h"
-#include "OgreNode.h"
 
 namespace Ogre {
-	/** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup LOD
-	*  @{
-	*/
+    /** \addtogroup Core
+    *  @{
+    */
+    /** \addtogroup LOD
+    *  @{
+    */
 
-	class DistanceLodBoxStrategy;
-	/// Backward compatible name for Distance_Box strategy.
-	typedef DistanceLodBoxStrategy DistanceLodStrategy;
+    class DistanceLodBoxStrategy;
+    /// Backward compatible name for Distance_Box strategy.
+    typedef DistanceLodBoxStrategy DistanceLodStrategy;
 
     /** Level of detail strategy based on distance from camera. This is an abstract base class for DistanceLodBoxStrategy and DistanceLodSphereStrategy.
         @remarks
@@ -112,15 +111,15 @@ namespace Ogre {
         Real mReferenceViewValue;
 
     };
-	/** @} */
-	/** @} */
+    /** @} */
+    /** @} */
 
     /** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup LOD
-	*  @{
-	*/
+    *  @{
+    */
+    /** \addtogroup LOD
+    *  @{
+    */
 
     /** Level of detail strategy based on distance from camera to an object's bounding sphere.
         @remarks
@@ -138,7 +137,6 @@ namespace Ogre {
         /** Default constructor. */
         DistanceLodSphereStrategy();
 
-        /// @copydoc DistanceLodStrategy::getSquaredDepth
         Real getSquaredDepth(const MovableObject *movableObject, const Ogre::Camera *camera) const;
 
         /** Override standard Singleton retrieval.
@@ -178,11 +176,11 @@ namespace Ogre {
     /** @} */
 
     /** \addtogroup Core
-	*  @{
-	*/
-	/** \addtogroup LOD
-	*  @{
-	*/
+    *  @{
+    */
+    /** \addtogroup LOD
+    *  @{
+    */
 
     /** Level of detail strategy based on distance from camera to an object's bounding box.
         @remarks
@@ -200,7 +198,6 @@ namespace Ogre {
         /** Default constructor. */
         DistanceLodBoxStrategy();
 
-        /// @copydoc DistanceLodStrategy::getSquaredDepth
         Real getSquaredDepth(const MovableObject *movableObject, const Ogre::Camera *camera) const;
 
         /** Override standard Singleton retrieval.

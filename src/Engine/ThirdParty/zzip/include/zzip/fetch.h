@@ -8,7 +8,14 @@
 
 /* linux knows "byteswap.h" giving us an optimized variant */
 #ifdef ZZIP_HAVE_BYTESWAP_H
-#include <byteswap.h>
+# if defined(__APPLE__)
+#  include <libkern/OSByteOrder.h>
+#  define bswap_16 OSSwapInt16
+#  define bswap_32 OSSwapInt32
+#  define bswap_64 OSSwapInt64
+# else
+#  include <byteswap.h>
+# endif
 #endif
 
 #ifdef __cplusplus

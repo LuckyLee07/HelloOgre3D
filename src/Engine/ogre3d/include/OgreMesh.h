@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,17 +31,12 @@ THE SOFTWARE.
 #include "OgrePrerequisites.h"
 
 #include "OgreResource.h"
-#include "OgreVertexIndexData.h"
 #include "OgreAxisAlignedBox.h"
 #include "OgreVertexBoneAssignment.h"
-#include "OgreIteratorWrappers.h"
-#include "OgreHardwareVertexBuffer.h"
-#include "OgreSkeleton.h"
 #include "OgreAnimation.h"
 #include "OgreAnimationTrack.h"
-#include "OgrePose.h"
-#include "OgreDataStream.h"
 #include "OgreHeaderPrefix.h"
+#include "OgreSharedPtr.h"
 
 
 namespace Ogre {
@@ -95,7 +90,7 @@ namespace Ogre {
         friend class MeshSerializerImpl;
         friend class MeshSerializerImpl_v1_8;
         friend class MeshSerializerImpl_v1_4;
-		friend class MeshSerializerImpl_v1_3;
+        friend class MeshSerializerImpl_v1_3;
         friend class MeshSerializerImpl_v1_2;
         friend class MeshSerializerImpl_v1_1;
 
@@ -126,7 +121,7 @@ namespace Ogre {
         /** A hashmap used to store optional SubMesh names.
             Translates a name into SubMesh index.
         */
-        typedef HashMap<String, ushort> SubMeshNameMap ;
+        typedef OGRE_HashMap<String, ushort> SubMeshNameMap ;
 
         
     protected:
@@ -162,14 +157,14 @@ namespace Ogre {
             VertexData* targetVertexData);
 #if !OGRE_NO_MESHLOD
         const LodStrategy *mLodStrategy;
-		bool mHasManualLodLevel;
+        bool mHasManualLodLevel;
         ushort mNumLods;
         MeshLodUsageList mMeshLodUsageList;
 #else
-		const LodStrategy *mLodStrategy;
-		const bool mHasManualLodLevel;
-		const ushort mNumLods;
-		MeshLodUsageList mMeshLodUsageList;
+        const LodStrategy *mLodStrategy;
+        const bool mHasManualLodLevel;
+        const ushort mNumLods;
+        MeshLodUsageList mMeshLodUsageList;
 #endif
         HardwareBuffer::Usage mVertexBufferUsage;
         HardwareBuffer::Usage mIndexBufferUsage;
@@ -214,8 +209,8 @@ namespace Ogre {
         /// @copydoc Resource::calculateSize
         size_t calculateSize(void) const;
 
-		void mergeAdjacentTexcoords( unsigned short finalTexCoordSet,
-									 unsigned short texCoordSetToDestroy, VertexData *vertexData );
+        void mergeAdjacentTexcoords( unsigned short finalTexCoordSet,
+                                     unsigned short texCoordSetToDestroy, VertexData *vertexData );
 
 
     public:
@@ -259,11 +254,11 @@ namespace Ogre {
 
         /** Gets the number of sub meshes which comprise this mesh.
         */
-        unsigned short getNumSubMeshes(void) const;
+        size_t getNumSubMeshes(void) const;
 
         /** Gets a pointer to the submesh indicated by the index.
         */
-        SubMesh* getSubMesh(unsigned short index) const;
+        SubMesh* getSubMesh(size_t index) const;
 
         /** Gets a SubMesh by name
         */
@@ -333,7 +328,10 @@ namespace Ogre {
             if you leave this blank, the clone will be assigned to the same
             group as this Mesh.
         */
-        MeshPtr clone(const String& newName, const String& newGroup = StringUtil::BLANK);
+        MeshPtr clone(const String& newName, const String& newGroup = BLANKSTRING);
+
+        /** @copydoc Resource::reload */
+        void reload(LoadingFlags flags = LF_DEFAULT);
 
         /** Get the axis-aligned bounding box for this mesh.
         */
@@ -377,22 +375,22 @@ namespace Ogre {
         */
         void _computeBoneBoundingRadius();
 
-		/** Automatically update the bounding radius and bounding box for this Mesh.
-		@remarks
-		Calling this method is required when building manual meshes. However it is recommended to
-		use _setBounds and _setBoundingSphereRadius instead, because the vertex buffer may not have
-		a shadow copy in the memory. Reading back the buffer from video memory is very slow!
-		@param pad If true, a certain padding will be added to the bounding box to separate it from the mesh
-		*/
-		void _updateBoundsFromVertexBuffers(bool pad = false);
+        /** Automatically update the bounding radius and bounding box for this Mesh.
+        @remarks
+        Calling this method is required when building manual meshes. However it is recommended to
+        use _setBounds and _setBoundingSphereRadius instead, because the vertex buffer may not have
+        a shadow copy in the memory. Reading back the buffer from video memory is very slow!
+        @param pad If true, a certain padding will be added to the bounding box to separate it from the mesh
+        */
+        void _updateBoundsFromVertexBuffers(bool pad = false);
 
-		/** Calculates 
-		@remarks
-		Calling this method is required when building manual meshes. However it is recommended to
-		use _setBounds and _setBoundingSphereRadius instead, because the vertex buffer may not have
-		a shadow copy in the memory. Reading back the buffer from video memory is very slow!
-		*/
-		void _calcBoundsFromVertexBuffer(VertexData* vertexData, AxisAlignedBox& outAABB, Real& outRadius, bool updateOnly = false);
+        /** Calculates 
+        @remarks
+        Calling this method is required when building manual meshes. However it is recommended to
+        use _setBounds and _setBoundingSphereRadius instead, because the vertex buffer may not have
+        a shadow copy in the memory. Reading back the buffer from video memory is very slow!
+        */
+        void _calcBoundsFromVertexBuffer(VertexData* vertexData, AxisAlignedBox& outAABB, Real& outRadius, bool updateOnly = false);
         /** Sets the name of the skeleton this Mesh uses for animation.
         @remarks
             Meshes can optionally be assigned a skeleton which can be used to animate
@@ -486,12 +484,12 @@ namespace Ogre {
         */
         ushort getLodIndex(Real value) const;
 
-		/** Returns true if this mesh has a manual LOD level.
-		@remarks
-		    A mesh can either use automatically generated LOD, or it can use alternative
-		    meshes as provided by an artist.
-		*/
-		bool hasManualLodLevel(void) const { return mHasManualLodLevel; }
+        /** Returns true if this mesh has a manual LOD level.
+        @remarks
+            A mesh can either use automatically generated LOD, or it can use alternative
+            meshes as provided by an artist.
+        */
+        bool hasManualLodLevel(void) const { return mHasManualLodLevel; }
 #if !OGRE_NO_MESHLOD
         /** Changes the alternate mesh to use as a manual LOD at the given index.
         @remarks
@@ -507,7 +505,7 @@ namespace Ogre {
         /** Internal methods for loading LOD, do not use. */
         void _setLodInfo(unsigned short numLevels);
         /** Internal methods for loading LOD, do not use. */
-        void _setLodUsage(unsigned short level, MeshLodUsage& usage);
+        void _setLodUsage(unsigned short level, const MeshLodUsage& usage);
         /** Internal methods for loading LOD, do not use. */
         void _setSubMeshLodFaceList(unsigned short subIdx, unsigned short level, IndexData* facedata);
 #endif
@@ -612,22 +610,22 @@ namespace Ogre {
         */
         void _updateCompiledBoneAssignments(void);
 
-		/** This method collapses two texcoords into one for all submeshes where this is possible.
+        /** This method collapses two texcoords into one for all submeshes where this is possible.
         @remarks
-			Often a submesh can have two tex. coords. (i.e. TEXCOORD0 & TEXCOORD1), being both
-			composed of two floats. There are many practical reasons why it would be more convenient
-			to merge both of them into one TEXCOORD0 of 4 floats. This function does exactly that
-			The finalTexCoordSet must have enough space for the merge, or else the submesh will be
-			skipped. (i.e. you can't merge a tex. coord with 3 floats with one having 2 floats)
+            Often a submesh can have two tex. coords. (i.e. TEXCOORD0 & TEXCOORD1), being both
+            composed of two floats. There are many practical reasons why it would be more convenient
+            to merge both of them into one TEXCOORD0 of 4 floats. This function does exactly that
+            The finalTexCoordSet must have enough space for the merge, or else the submesh will be
+            skipped. (i.e. you can't merge a tex. coord with 3 floats with one having 2 floats)
 
-			finalTexCoordSet & texCoordSetToDestroy must be in the same buffer source, and must
-			be adjacent.
-		@param finalTexCoordSet The tex. coord index to merge to. Should have enough space to
-			actually work.
+            finalTexCoordSet & texCoordSetToDestroy must be in the same buffer source, and must
+            be adjacent.
+        @param finalTexCoordSet The tex. coord index to merge to. Should have enough space to
+            actually work.
         @param texCoordSetToDestroy The texture coordinate index that will disappear on
-			successful merges.
+            successful merges.
         */
-		void mergeAdjacentTexcoords( unsigned short finalTexCoordSet, unsigned short texCoordSetToDestroy );
+        void mergeAdjacentTexcoords( unsigned short finalTexCoordSet, unsigned short texCoordSetToDestroy );
 
         /** This method builds a set of tangent vectors for a given mesh into a 3D texture coordinate buffer.
         @remarks
@@ -929,7 +927,7 @@ namespace Ogre {
         @return
             A new Pose ready for population.
         */
-        Pose* createPose(ushort target, const String& name = StringUtil::BLANK);
+        Pose* createPose(ushort target, const String& name = BLANKSTRING);
         /** Get the number of poses.*/
         size_t getPoseCount(void) const { return mPoseList.size(); }
         /** Retrieve an existing Pose by index.*/

@@ -21,6 +21,24 @@
 #include <stdlib.h>
 #include <math.h>
 
+#if !defined(_MSC_VER)
+static int strncat_s(char *dest, size_t destsz, const char *src, size_t count)
+{
+	size_t dest_len = strlen(dest);
+	size_t max_copy = 0;
+	if (dest_len < destsz) {
+		max_copy = destsz - dest_len - 1;
+	}
+	if (count < max_copy) {
+		max_copy = count;
+	}
+	if (max_copy > 0) {
+		strncat(dest, src, max_copy);
+	}
+	return 0;
+}
+#endif
+
 
 /* Create metatable
 	* Create and register new metatable
@@ -703,4 +721,3 @@ TOLUA_API void tolua_dobuffer(lua_State* L, char* B, unsigned int size, const ch
  lua_dobuffer(L, B, size, name);
  #endif
 };
-

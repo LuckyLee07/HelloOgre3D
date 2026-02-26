@@ -35,12 +35,12 @@ THE SOFTWARE.
 #include "OgreMesh.h"
 #include "OgreManualObject.h"
 #include "ProceduralRoot.h"
-#include "ProceduralMultiShape.h"
 #include "ProceduralTrack.h"
 
 namespace Procedural
 {
 	class Path;
+	class MultiShape;
 
 enum Side {SIDE_LEFT, SIDE_RIGHT};
 

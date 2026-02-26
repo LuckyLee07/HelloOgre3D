@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2013 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@ namespace Ogre {
     {
         // precalculate distance of plane from origin
         Real planeDistance = - mPlaneNormal.dotProduct(mPlanePoint) / Math::Sqrt(mPlaneNormal.dotProduct(mPlaneNormal));
-		Vector3 directionPart;
+        Vector3 directionPart;
 
         ParticleIterator pi = pSystem->_getIterator();
 
@@ -81,12 +81,12 @@ namespace Ogre {
                 if (a > 0.0)
                 {
                     // for intersection point
-					directionPart = direction * (- a / direction.dotProduct( mPlaneNormal ));
+                    directionPart = direction * (- a / direction.dotProduct( mPlaneNormal ));
                     // set new position
-					p->mPosition = (p->mPosition + ( directionPart )) + (((directionPart) - direction) * mBounce);
+                    p->mPosition = (p->mPosition + ( directionPart )) + (((directionPart) - direction) * mBounce);
 
                     // reflect direction vector
-                    p->mDirection = (p->mDirection - (2.0 * p->mDirection.dotProduct( mPlaneNormal ) * mPlaneNormal)) * mBounce;
+                    p->mDirection = (p->mDirection - (2.0f * p->mDirection.dotProduct( mPlaneNormal ) * mPlaneNormal)) * mBounce;
                 }
             }
         }
