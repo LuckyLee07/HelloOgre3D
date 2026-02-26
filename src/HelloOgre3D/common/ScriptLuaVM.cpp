@@ -2,10 +2,10 @@
 #include "FileManager.h"
 
 extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#include <luasocket.h>
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+#include "luasocket.h"
 }
 #include <assert.h>
 #include <iostream>
@@ -94,13 +94,18 @@ bool ScriptLuaVM::callFile(const char *fpath)
 	std::string fullPath = GetFileManager()->getFullPath(fpath);
 
 	FILE* pfile = fopen(fullPath.c_str(), "rb");
-	assert(pfile != NULL);
+	if (pfile == nullptr)
+	{
+		CCLUA_ERROR("call_file open failed: %s | resolved path: %s", fpath, fullPath.c_str());
+		return false;
+	}
 	if (lua_load(m_pState, (lua_Reader)lua_readfile, pfile, fullPath.c_str()) != LUA_OK)
 	{
 		const char *perr = lua_tostring(m_pState, -1);
 		CCLUA_ERROR("call_file error: %s | error: %s", fpath, perr);
 		lua_pop(m_pState, 1);
 		//showLuaError(m_pState, perr);
+		fclose(pfile);
 		return false;
 	}
 
@@ -110,9 +115,11 @@ bool ScriptLuaVM::callFile(const char *fpath)
 		CCLUA_ERROR("lua_pcall path: %s | error: %s", fpath, perr);
 		lua_pop(m_pState, 1);
 		//showLuaError(m_pState, perr);
+		fclose(pfile);
 		return false;
 	}
 
+	fclose(pfile);
 	return true;
 }
 

@@ -39,7 +39,7 @@ public:
     void unload();
 
     /// @copydoc Archive::open
-    Ogre::DataStreamPtr open(const Ogre::String& filename, bool readOnly = true) const;
+    Ogre::DataStreamPtr open(const Ogre::String& filename, bool readOnly = true);
 
     /// @copydoc Archive::list
     Ogre::StringVectorPtr list(bool recursive = true, bool dirs = false);
@@ -53,7 +53,7 @@ public:
 
     /// @copydoc Archive::findFileInfo
     Ogre::FileInfoListPtr findFileInfo(const Ogre::String& pattern, bool recursive = true,
-        bool dirs = false) const;
+        bool dirs = false);
 
     /// @copydoc Archive::exists
     bool exists(const Ogre::String& filename);

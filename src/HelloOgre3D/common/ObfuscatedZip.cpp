@@ -6,7 +6,11 @@
 #include "ObfuscatedZip.h"
 #include "OgreLogManager.h"
 
+#if defined(_WIN32)
 #include <corecrt_io.h>
+#else
+#include <unistd.h>
+#endif
 #include <zzip/zzip.h>
 #include <zzip/plugin.h>
 
@@ -118,7 +122,7 @@ void ObfuscatedZip::unload()
     }
 }
 //-----------------------------------------------------------------------
-Ogre::DataStreamPtr ObfuscatedZip::open(const Ogre::String& filename, bool readOnly) const
+Ogre::DataStreamPtr ObfuscatedZip::open(const Ogre::String& filename, bool readOnly)
 {
     // Format not used here (always binary)
     ZZIP_FILE* zzipFile =
@@ -189,7 +193,7 @@ Ogre::StringVectorPtr ObfuscatedZip::find(const Ogre::String& pattern, bool recu
 }
 //-----------------------------------------------------------------------
 Ogre::FileInfoListPtr ObfuscatedZip::findFileInfo(const Ogre::String& pattern,
-    bool recursive, bool dirs) const
+    bool recursive, bool dirs)
 {
     Ogre::FileInfoListPtr ret = Ogre::FileInfoListPtr(OGRE_NEW_T(Ogre::FileInfoList, Ogre::MEMCATEGORY_GENERAL)(), Ogre::SPFM_DELETE_T);
     // If pattern contains a directory name, do a full match

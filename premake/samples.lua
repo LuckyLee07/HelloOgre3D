@@ -15,7 +15,9 @@ function CreateGameProject( projectName )
       "libraw",
       "libtiff4",
       "ogre3d",
-      "ogre3d_direct3d9",
+      "ogre3d_glsupport",
+      "ogre3d_opengl",
+      "ogre3d_gl3plus",
       "ogre3d_particlefx",
       "ogre3d_procedural",
       "openexr",
@@ -28,13 +30,14 @@ function CreateGameProject( projectName )
       "bullet_dynamics",
       "bullet_linearmath",
       "ogre3d_gorilla",
-      "ois",
       "opensteer",
       "recast",
       "detour",
     } )
     libdirs{ "../libs/" }
     configuration( { "windows" } )
+      links { "ois" }
+      links { "ogre3d_direct3d9" }
       -- add the directx include directory
       buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
       -- link against directx libraries
@@ -48,6 +51,36 @@ function CreateGameProject( projectName )
       } )
       -- static linking against ogre requires linking against ogre's resource file
       linkoptions( "OgreWin32Resources.res" )
+    configuration( { "macosx" } )
+      links { "ois" }
+      links {
+        "Cocoa.framework",
+        "Carbon.framework",
+        "IOKit.framework"
+      }
+      linkoptions {
+        "-framework Cocoa",
+        "-framework Carbon",
+        "-framework IOKit",
+        "-framework Foundation",
+        "-framework AppKit",
+        "-framework CoreFoundation",
+        "-framework OpenGL"
+      }
+    configuration( { "linux" } )
+      links { "ois" }
+    filter "system:macosx"
+      linkoptions {
+        "-framework Cocoa",
+        "-framework Carbon",
+        "-framework IOKit",
+        "-framework Foundation",
+        "-framework AppKit",
+        "-framework CoreFoundation",
+        "-framework OpenGL",
+        "-lobjc"
+      }
+    filter {}
     configuration( { "windows", "x32", "Debug" } )
       defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
@@ -79,20 +112,32 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/game",
       "../src/%{prj.name}/sandbox",
       "../src/%{prj.name}/sandbox/core",
-      "../src/External",
-      "../src/External/lua/lua",
-      "../src/External/lua/tolua",
-      "../src/External/lua/luasocket",
+      "../src/external",
+      "../src/external/lua/lua",
+      "../src/external/lua/tolua",
+      "../src/external/lua/luasocket",
       "../src/Engine/ogre3d/include/",
-      "../src/Engine/ogre3d_direct3d9/include/",
+      "../src/Engine/ogre3d_glsupport/include/",
+      "../src/Engine/ogre3d_opengl/include/",
+      "../src/Engine/ogre3d_gl3plus/include/",
+      "../src/Engine/ogre3d_gl3plus/include/GLSL/",
+      "../src/Engine/ogre3d_glsupport/include/win32/",
       "../src/Engine/ogre3d_particlefx/include/",
       "../src/Engine/ogre3d_procedural/include/",
       "../src/Engine/ThirdParty/zzip/include/",
-      "../src/External/bullet_collision/include/",
-      "../src/External/bullet_dynamics/include/",
-      "../src/External/bullet_linearmath/include/",
-      "../src/External/ois/include/",
+      "../src/external/bullet_collision/include/",
+      "../src/external/bullet_dynamics/include/",
+      "../src/external/bullet_linearmath/include/",
+      "../src/external/ois15/includes/",
     } )
+    configuration( { "windows" } )
+      includedirs { "../src/Engine/ogre3d_direct3d9/include/" }
+    configuration( "*" )
+    filter { "system:not windows" }
+      buildoptions {
+        "-I" .. path.getabsolute("../src/Engine/ThirdParty/zzip/include/")
+      }
+    filter {}
 
     files( {
       "../src/" .. projectName .. "/**.h",
@@ -106,6 +151,22 @@ function CreateGameProject( projectName )
       "../src/" .. projectName .. "/sandbox/**.h",
       "../src/" .. projectName .. "/sandbox/**.cpp",
     } )
+    filter "system:windows"
+      postbuildcommands {}
+    filter "system:macosx"
+      postbuildcommands( {
+        "{MKDIR} \"$TARGET_BUILD_DIR/res\"",
+        "{COPYFILE} ../../bin/Sandbox.cfg \"$TARGET_BUILD_DIR\"",
+        "{COPYFILE} ../../bin/Sandbox_d.cfg \"$TARGET_BUILD_DIR\"",
+        "{COPYFILE} ../../bin/SandboxResources.cfg \"$TARGET_BUILD_DIR\"",
+        "{COPYFILE} ../../bin/SandboxResources_d.cfg \"$TARGET_BUILD_DIR\"",
+        "{COPYDIR} ../../bin/res \"$TARGET_BUILD_DIR/res\"",
+        "{MKDIR} \"$TARGET_BUILD_DIR/res/scripts\"",
+        "/bin/cp -R \"$SRCROOT/../../bin/res/scripts/.\" \"$TARGET_BUILD_DIR/res/scripts/\"",
+        "/bin/ln -sfn \"$SRCROOT/../../media\" \"$TARGET_BUILD_DIR/../media\"",
+        "/bin/ln -sfn \"$SRCROOT/../../media\" \"$PROJECT_DIR/../media\""
+      } )
+    filter {}
 end
 
 function CreateToluaProject( projectName )
@@ -119,16 +180,20 @@ function CreateToluaProject( projectName )
     links( {
       "lua",
       "luasocket",
-      "ws2_32", -- 添加 Winsock 依赖
-      "wsock32", -- 兼容旧版本 Winsock
     } )
+    configuration( { "windows" } )
+      links {
+        "ws2_32", -- 添加 Winsock 依赖
+        "wsock32", -- 兼容旧版本 Winsock
+      }
+    configuration( "*" )
     libdirs{ "../libs/" }
     includedirs( {
-      "../src/External/lua/lua",
-      "../src/External/lua/luasocket",
+      "../src/external/lua/lua",
+      "../src/external/lua/luasocket",
     } )
     files( {
-      "../src/External/lua/tolua/**.h",
-      "../src/External/lua/tolua/**.c",
+      "../src/external/lua/tolua/**.h",
+      "../src/external/lua/tolua/**.c",
     } )
 end

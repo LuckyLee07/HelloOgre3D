@@ -16,7 +16,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include <string>
 #include <vector>
 #include "Ogre.h"
-#include "ois/include/OISKeyboard.h"
+#include "ois15/includes/OISKeyboard.h"
 #include "../GameDefine.h"
 #include "../GameFunction.h"
 #include "../systems/ui/UIFrame.h"

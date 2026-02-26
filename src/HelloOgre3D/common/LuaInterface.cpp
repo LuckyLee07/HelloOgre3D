@@ -1,9 +1,5 @@
 #include "LuaInterface.h"
 #include "LogSystem.h"
-#include <windows.h>
-#include <tchar.h>
-#include <codecvt>
-#include <assert.h>
 
 LuaInterface::LuaInterface()
 {
@@ -19,4 +15,3 @@ void LuaInterface::log(const char* msg)
 	
 	CCLUA_INFO("Lua:%s", msg);
 }
-

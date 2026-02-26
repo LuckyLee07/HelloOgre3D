@@ -7,7 +7,7 @@
 #define LUA_VER	"Lua 5.1.4"
 
 extern "C" {
-#include <lua.h>
+#include "lua.h"
 }
 //struct lua_State;
 class ScriptLuaVM : public Fancy::Singleton<ScriptLuaVM>

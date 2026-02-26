@@ -10,6 +10,7 @@
 #include "game/GameManager.h"
 #include "systems/manager/ObjectManager.h"
 #include "OgreParticleSystemManager.h"
+#include "OgreParticleSystem.h"
 #include "OgreParticleEmitter.h"
 #include "components/PhysicsComponent.h"
 #include "systems/service/SceneFactory.h"

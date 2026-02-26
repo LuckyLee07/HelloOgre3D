@@ -108,7 +108,7 @@ namespace Ogre
     };
 }
 
-$#include "ois/include/OISKeyboard.h"
+$#include "ois15/includes/OISKeyboard.h"
 namespace OIS
 {
 	//! Keyboard scan codes

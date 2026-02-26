@@ -1,5 +1,7 @@
 #include "CameraService.h"
 #include "OgreSceneManager.h"
+#include "OgreSceneNode.h"
+#include "OgreCamera.h"
 #include "GameFunction.h"
 #include "ClientManager.h"
 

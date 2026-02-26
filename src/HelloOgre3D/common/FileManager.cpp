@@ -1,4 +1,5 @@
 #include "FileManager.h"
+#include <cstdio>
 
 #ifdef _WIN32
 #include <io.h>
@@ -196,7 +197,7 @@ bool FileManager::renameFile(const char *oldname, const char *newname)
 		if(rename(oldname, newname) == 0) return true;
 		::Sleep(100);
 #else
-		::sleep(100);
+		::usleep(100 * 1000);
 #endif
 	}
 	return false;
@@ -229,7 +230,11 @@ bool FileManager::WriteWholeFile(const char *path, const void *data, int datalen
 	if(safely)
 	{
 		char tmppath[256];
+#if defined(_WIN32)
 		sprintf_s(tmppath, "%s.tmp", path);
+#else
+		snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
+#endif
 		std::string fullpath = getFullPath(path);
 
 		FileAutoClose fp(fullpath, O_CREAT|O_WRONLY|O_TRUNC|O_BINARY);

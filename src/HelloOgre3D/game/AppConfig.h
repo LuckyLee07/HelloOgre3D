@@ -5,7 +5,7 @@
 
 #define DEFAULT_ATLAS "fonts/dejavu/dejavu"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || !defined(NDEBUG)
 #define APPLICATION_LOG         "Sandbox_d.log"
 #define APPLICATION_CONFIG      "Sandbox_d.cfg"
 #define APPLICATION_RESOURCES	"SandboxResources_d.cfg"

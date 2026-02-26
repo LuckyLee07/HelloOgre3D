@@ -1,5 +1,7 @@
 #include "InputManager.h"
+#if !defined(__APPLE__)
 #include "OISInputManager.h"
+#endif
 #include "ClientManager.h"
 #include "OgreRenderWindow.h"
 #include "Samples/SdkCameraMan.h"
@@ -18,6 +20,13 @@ InputManager::~InputManager()
 
 void InputManager::Initialize()
 {
+#if defined(__APPLE__)
+	// macOS build: run without OIS backend for now.
+	m_pOISInputMgr = nullptr;
+	m_pMouse = nullptr;
+	m_pKeyboard = nullptr;
+	return;
+#else
 	std::ostringstream windowHndStr;
 	windowHndStr << m_windowHnd;
 
@@ -41,6 +50,7 @@ void InputManager::Initialize()
 
 	m_pMouse->setEventCallback(this);
 	m_pKeyboard->setEventCallback(this);
+#endif
 }
 
 void InputManager::capture()
@@ -51,14 +61,19 @@ void InputManager::capture()
 
 void InputManager::closeWindow()
 {
+#if !defined(__APPLE__)
+	if (m_pOISInputMgr == nullptr) return;
+
 	m_pOISInputMgr->destroyInputObject(m_pMouse);
 	m_pOISInputMgr->destroyInputObject(m_pKeyboard);
 	m_pMouse = nullptr;
 	m_pKeyboard = nullptr;
 
 	OIS::InputManager::destroyInputSystem(m_pOISInputMgr);
-
+#endif
 	m_pOISInputMgr = nullptr;
+	m_pMouse = nullptr;
+	m_pKeyboard = nullptr;
 }
 
 void InputManager::resizeMouseState(int width, int height)

@@ -10,10 +10,14 @@ UIService::UIService(UIManager* pMananger)
 
 UIFrame* UIService::CreateUIFrame(unsigned int index)
 {
+	if (m_pUIManager == nullptr)
+		return nullptr;
 	return m_pUIManager->CreateUIFrame(index);
 }
 
 void UIService::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
 {
+	if (m_pUIManager == nullptr)
+		return;
 	return m_pUIManager->SetMarkupColor(index, color);
 }

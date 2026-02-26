@@ -5,8 +5,13 @@
 #include "Samples/SdkCameraMan.h"
 #include "debug/DebugDrawer.h"
 #include "systems/input/InputManager.h"
+#include "core/SandboxMacros.h"
 #include "Ogre.h"
+#if defined(_WIN32)
 #include "OgreD3D9Plugin.h"
+#else
+#include "OgreGLPlugin.h"
+#endif
 #include "OgreParticleFXPlugin.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
 
@@ -122,6 +127,90 @@ bool ClientManager::Configure()
     // Show the configuration dialog and initialise the system
     // You can skip this and use root.restoreConfig() to load configuration
     // settings if you were sure there are valid ones saved in ogre.cfg
+    const Ogre::RenderSystemList& renderers = m_pRoot->getAvailableRenderers();
+
+    if (renderers.empty())
+    {
+        Ogre::LogManager::getSingleton().logMessage("No render systems available. Check OpenGL/GL3Plus plugin linkage.");
+        return false;
+    }
+
+#if defined(__APPLE__)
+    Ogre::RenderSystem* selected = 0;
+    Ogre::RenderSystem* gl3Fallback = 0;
+    for (Ogre::RenderSystemList::const_iterator it = renderers.begin(); it != renderers.end(); ++it)
+    {
+        if (!*it)
+            continue;
+
+        const Ogre::String& rsName = (*it)->getName();
+        if (rsName.find("OpenGL Rendering Subsystem") != Ogre::String::npos)
+        {
+            selected = *it;
+            break;
+        }
+
+        if (rsName.find("GL 3+") != Ogre::String::npos || rsName.find("3+") != Ogre::String::npos)
+            gl3Fallback = *it;
+    }
+    if (!selected)
+        selected = gl3Fallback ? gl3Fallback : renderers.front();
+    m_pRoot->setRenderSystem(selected);
+    // Force a known-good macOS option set; old cfg files may contain invalid Windows-style video modes.
+    try { selected->setConfigOption("Video Mode", "1280 x 720"); } catch (...) {}
+    try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
+    try { selected->setConfigOption("Colour Depth", "32"); } catch (...) {}
+    try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
+    try { selected->setConfigOption("RTT Preferred Mode", "FBO"); } catch (...) {}
+    try { selected->setConfigOption("sRGB Gamma Conversion", "No"); } catch (...) {}
+    try { selected->setConfigOption("macAPI", "cocoa"); } catch (...) {}
+    try { selected->setConfigOption("Content Scaling Factor", "2.0"); } catch (...) {}
+
+    m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
+    if (m_pRenderWindow)
+    {
+        m_pRenderWindow->setVisible(true);
+        m_pRenderWindow->setActive(true);
+    }
+    return m_pRenderWindow != 0;
+#elif defined(_WIN32)
+    Ogre::RenderSystem* selected = 0;
+    for (Ogre::RenderSystemList::const_iterator it = renderers.begin(); it != renderers.end(); ++it)
+    {
+        if (!*it)
+            continue;
+
+        const Ogre::String& rsName = (*it)->getName();
+        Ogre::LogManager::getSingleton().logMessage("Detected renderer: " + rsName);
+        if (rsName.find("Direct3D9") != Ogre::String::npos || rsName.find("D3D9") != Ogre::String::npos)
+        {
+            selected = *it;
+            break;
+        }
+    }
+
+    if (!selected)
+    {
+        selected = renderers.front();
+        Ogre::LogManager::getSingleton().logMessage("D3D9 not found, fallback renderer: " + selected->getName());
+    }
+
+    m_pRoot->setRenderSystem(selected);
+    try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
+    try { selected->setConfigOption("Video Mode", "1280 x 720 @ 32-bit colour"); } catch (...) {}
+    try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
+    try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
+
+    m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
+    return m_pRenderWindow != 0;
+#else
+    if (renderers.size() == 1)
+    {
+        m_pRoot->setRenderSystem(renderers.front());
+        m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
+        return true;
+    }
+
     if (m_pRoot->restoreConfig() || m_pRoot->showConfigDialog())
     {
         // If returned true, user clicked OK so initialise
@@ -130,10 +219,9 @@ bool ClientManager::Configure()
 
         return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
+#endif
 }
 
 void ClientManager::ChooseSceneManager()
@@ -162,11 +250,11 @@ void ClientManager::CreateViewports()
 {
     // Create one viewport, entire window
     Ogre::Viewport* vp = m_pRenderWindow->addViewport(m_pCamera);
+    vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
     vp->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.0f));
 
     // Alter the camera aspect ratio to match the viewport
-    m_pCamera->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-}
+    m_pCamera->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));}
 
 void ClientManager::LoadResources(void)
 {
@@ -176,7 +264,11 @@ void ClientManager::LoadResources(void)
 bool ClientManager::Setup(void)
 {
     m_pRoot = new Ogre::Root("", APPLICATION_CONFIG, APPLICATION_LOG);
+#if defined(_WIN32)
     m_pRoot->installPlugin(new Ogre::D3D9Plugin());
+#else
+    m_pRoot->installPlugin(new Ogre::GLPlugin());
+#endif
     m_pRoot->installPlugin(new Ogre::ParticleFXPlugin());
 
     m_pObfuscatedZipFactory = new ObfuscatedZipFactory();
@@ -223,8 +315,11 @@ void ClientManager::Initialize()
 
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(4);
     
-    Gorilla::Silverback* pSilverback = new Gorilla::Silverback();
-    pSilverback->loadAtlas(DEFAULT_ATLAS);
+    if (Gorilla::Silverback::getSingletonPtr() == nullptr)
+    {
+        Gorilla::Silverback* pSilverback = new Gorilla::Silverback();
+        pSilverback->loadAtlas(DEFAULT_ATLAS);
+    }
 
     // Initialize InputManager
     m_pInputManager = new InputManager();
@@ -306,6 +401,19 @@ void ClientManager::InputCapture()
 void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 {
     m_pCameraMan->frameRenderingQueued(event);
+
+    if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
+    {
+        Ogre::Viewport* vp = m_pRenderWindow->getViewport(0);
+        if (vp)
+        {
+            vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+            const unsigned int vw = vp->getActualWidth();
+            const unsigned int vh = vp->getActualHeight();
+            if (m_pCamera && vh > 0)
+                m_pCamera->setAspectRatio(Ogre::Real(vw) / Ogre::Real(vh));
+        }
+    }
 }
 
 void ClientManager::WindowClosed()
@@ -318,4 +426,14 @@ void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
     m_pInputManager->resizeMouseState(width, height);
     m_pGameManager->HandleWindowResized(width, height);
+
+    if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
+    {
+        Ogre::Viewport* vp = m_pRenderWindow->getViewport(0);
+        if (vp)
+        {
+            vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+            if (height > 0 && m_pCamera)
+                m_pCamera->setAspectRatio(Ogre::Real(width) / Ogre::Real(height));        }
+    }
 }

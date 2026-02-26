@@ -1,10 +1,12 @@
 #include "GlobalFuncs.h"
+
+#if defined(_WIN32)
 #include <windows.h>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
-#define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
 #else
-#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#define DELTA_EPOCH_IN_MICROSECS 11644473600000000ULL
 #endif
 
 int gettimeofday(struct timeval* tv, struct timezone* tz)
@@ -22,7 +24,7 @@ int gettimeofday(struct timeval* tv, struct timezone* tz)
 		tmpres <<= 32;
 		tmpres |= ft.dwLowDateTime;
 
-		tmpres /= 10; /*convert into microseconds*/
+		tmpres /= 10;
 		tmpres -= DELTA_EPOCH_IN_MICROSECS;
 		tv->tv_sec = (long)(tmpres / 1000000UL);
 		tv->tv_usec = (long)(tmpres % 1000000UL);
@@ -40,3 +42,4 @@ int gettimeofday(struct timeval* tv, struct timezone* tz)
 	}
 	return 0;
 }
+#endif

@@ -17,7 +17,7 @@ TOLUA_API int  tolua_GameToLua_open (lua_State* tolua_S);
 #include "objects/AgentObject.h"
 #include <vector>
 #include "Ogre.h"
-#include "ois/include/OISKeyboard.h"
+#include "ois15/includes/OISKeyboard.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
 #include "../common/LuaInterface.h"
 #include "GameManager.h"

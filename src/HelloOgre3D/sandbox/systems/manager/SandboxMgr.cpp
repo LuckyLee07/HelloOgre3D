@@ -8,6 +8,7 @@
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "OgreSceneManager.h"
+#include "OgreSceneNode.h"
 
 SandboxMgr* g_SandboxMgr = nullptr;
 
@@ -200,5 +201,4 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
 {
     return m_uiService.SetMarkupColor(index, color);
 }
-
 

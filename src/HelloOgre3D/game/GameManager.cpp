@@ -5,7 +5,11 @@
 #include "LuaInterface.h"
 #include <algorithm>
 #include "GlobalFuncs.h"
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #include <winsock.h>
+#else
+#include <sys/time.h>
+#endif
 #include "ClientManager.h"
 #include "systems/ui/UIManager.h"
 #include "systems/manager/SandboxMgr.h"
@@ -127,11 +131,25 @@ Ogre::SceneManager* GameManager::getSceneManager()
 
 Ogre::Real GameManager::getScreenWidth()
 {
+	if (m_pUIManager == nullptr)
+	{
+		Ogre::Camera* camera = m_pClientManager->getCamera();
+		if (camera && camera->getViewport())
+			return Ogre::Real(camera->getViewport()->getActualWidth());
+		return 0.0f;
+	}
 	return m_pUIManager->GetScreenWidth();
 }
 
 Ogre::Real GameManager::getScreenHeight()
 {
+	if (m_pUIManager == nullptr)
+	{
+		Ogre::Camera* camera = m_pClientManager->getCamera();
+		if (camera && camera->getViewport())
+			return Ogre::Real(camera->getViewport()->getActualHeight());
+		return 0.0f;
+	}
 	return m_pUIManager->GetScreenHeight();
 }
 
@@ -147,7 +165,8 @@ void GameManager::HandleWindowClosed()
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 {
-	m_pUIManager->HandleWindowResized(width, height);
+	if (m_pUIManager != nullptr)
+		m_pUIManager->HandleWindowResized(width, height);
 	m_pScriptVM->callFunction("EventHandle_WindowResized", "ii", width, height);
 }
 
