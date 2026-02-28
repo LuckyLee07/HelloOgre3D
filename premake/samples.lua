@@ -128,7 +128,7 @@ function CreateGameProject( projectName )
       "../src/external/bullet_collision/include/",
       "../src/external/bullet_dynamics/include/",
       "../src/external/bullet_linearmath/include/",
-      "../src/external/ois15/includes/",
+      "../src/external/ois/includes/",
     } )
     configuration( { "windows" } )
       includedirs { "../src/Engine/ogre3d_direct3d9/include/" }

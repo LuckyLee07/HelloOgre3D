@@ -842,44 +842,44 @@ solution( "HelloOgre3D" )
 			"/wd\"4512\"", "/wd\"4100\"", "/wd\"4189\""
 		} )
 		includedirs( {
-			"../src/external/ois15/includes/",
-			"../src/external/ois15/includes/win32/",
-			"../src/external/ois15/includes/mac/",
-			"../src/external/ois15/includes/linux/",
-			"../src/external/ois15/includes/iphone/"
+			"../src/external/ois/includes/",
+			"../src/external/ois/includes/win32/",
+			"../src/external/ois/includes/mac/",
+			"../src/external/ois/includes/linux/",
+			"../src/external/ois/includes/iphone/"
 		} )
 		files( {
-			"../src/external/ois15/includes/**.h",
-			"../src/external/ois15/src/**.cpp",
-			"../src/external/ois15/src/**.mm"
+			"../src/external/ois/includes/**.h",
+			"../src/external/ois/src/**.cpp",
+			"../src/external/ois/src/**.mm"
 		} )
 		filter "system:windows"
 			buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
-			includedirs { "../src/external/ois15/includes/win32/" }
+			includedirs { "../src/external/ois/includes/win32/" }
 			excludes {
-				"../src/external/ois15/src/mac/**",
-				"../src/external/ois15/src/linux/**",
-				"../src/external/ois15/src/iphone/**",
-				"../src/external/ois15/src/SDL/**",
-				"../src/external/ois15/src/extras/**"
+				"../src/external/ois/src/mac/**",
+				"../src/external/ois/src/linux/**",
+				"../src/external/ois/src/iphone/**",
+				"../src/external/ois/src/SDL/**",
+				"../src/external/ois/src/extras/**"
 			}
 		filter "system:macosx"
-			includedirs { "../src/external/ois15/includes/mac/" }
+			includedirs { "../src/external/ois/includes/mac/" }
 			excludes {
-				"../src/external/ois15/src/win32/**",
-				"../src/external/ois15/src/linux/**",
-				"../src/external/ois15/src/iphone/**",
-				"../src/external/ois15/src/SDL/**",
-				"../src/external/ois15/src/extras/**"
+				"../src/external/ois/src/win32/**",
+				"../src/external/ois/src/linux/**",
+				"../src/external/ois/src/iphone/**",
+				"../src/external/ois/src/SDL/**",
+				"../src/external/ois/src/extras/**"
 			}
-			removefiles { "../src/external/ois15/src/OISInputManager.cpp" }
+			removefiles { "../src/external/ois/src/OISInputManager.cpp" }
 		filter "system:linux"
-			includedirs { "../src/external/ois15/includes/linux/" }
+			includedirs { "../src/external/ois/includes/linux/" }
 			excludes {
-				"../src/external/ois15/src/win32/**",
-				"../src/external/ois15/src/mac/**",
-				"../src/external/ois15/src/iphone/**",
-				"../src/external/ois15/src/SDL/**"
+				"../src/external/ois/src/win32/**",
+				"../src/external/ois/src/mac/**",
+				"../src/external/ois/src/iphone/**",
+				"../src/external/ois/src/SDL/**"
 			}
 		filter {}
 
