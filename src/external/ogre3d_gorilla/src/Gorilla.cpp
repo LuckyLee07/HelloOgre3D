@@ -35,6 +35,7 @@
 #include "OgreSceneNode.h"
 #include "OgreTextureManager.h"
 #include "OgreViewport.h"
+#include "OgreDpiHelper.h"
 
 #pragma warning ( disable : 4244 )
 
@@ -78,7 +79,6 @@ template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::msSingleto
 
 namespace Gorilla
 {
-
  static Ogre::Technique* choosePreferredTechnique(Ogre::MaterialPtr material)
  {
   if (material.isNull())
@@ -1043,8 +1043,8 @@ namespace Gorilla
 
   mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
 
-  mWidth = mViewport->getActualWidth();
-  mHeight = mViewport->getActualHeight();
+  mWidth = Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualWidth())));
+  mHeight = Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualHeight())));
 #if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
   mOrientation = mViewport->getOrientationMode();
 #else
@@ -1092,9 +1092,13 @@ namespace Gorilla
 
  void Screen::renderOnce()
  {
+  const Ogre::Real currentWidth =
+      Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualWidth())));
+  const Ogre::Real currentHeight =
+      Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualHeight())));
   bool force = false;
   // force == true if viewport size changed.
-  if (mWidth != mViewport->getActualWidth() || mHeight != mViewport->getActualHeight()
+  if (mWidth != currentWidth || mHeight != currentHeight
 #if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
     || mOrientation != mViewport->getOrientationMode()
 #else
@@ -1102,8 +1106,8 @@ namespace Gorilla
 #endif
     )
   {
-   mWidth = mViewport->getActualWidth();
-   mHeight = mViewport->getActualHeight();
+   mWidth = currentWidth;
+   mHeight = currentHeight;
 
    mInvWidth = 1.0f / mWidth;
    mInvHeight = 1.0f / mHeight;

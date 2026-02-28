@@ -7,9 +7,9 @@
 #include "systems/input/InputManager.h"
 #include "core/SandboxMacros.h"
 #include "Ogre.h"
+#include "OgreDpiHelper.h"
 #if defined(_WIN32)
 #include "OgreD3D9Plugin.h"
-#include <windows.h>
 #elif defined(__APPLE__)
 #include "OgreGL3PlusPlugin.h"
 #else
@@ -22,21 +22,8 @@ using namespace Ogre;
 #if defined(_WIN32)
 static Ogre::String BuildDpiScaledVideoMode(unsigned int baseWidth, unsigned int baseHeight)
 {
-    UINT dpi = 96;
-    HMODULE user32 = GetModuleHandleA("user32.dll");
-    if (user32)
-    {
-        typedef UINT (WINAPI *GetDpiForSystemFn)();
-        GetDpiForSystemFn getDpiForSystemFn = (GetDpiForSystemFn)GetProcAddress(user32, "GetDpiForSystem");
-        if (getDpiForSystemFn)
-            dpi = getDpiForSystemFn();
-    }
-
-    if (dpi == 0)
-        dpi = 96;
-
-    const unsigned int scaledWidth = (unsigned int)MulDiv((int)baseWidth, (int)dpi, 96);
-    const unsigned int scaledHeight = (unsigned int)MulDiv((int)baseHeight, (int)dpi, 96);
+    const unsigned int scaledWidth = Ogre::DpiHelper::toPhysicalPixels(baseWidth);
+    const unsigned int scaledHeight = Ogre::DpiHelper::toPhysicalPixels(baseHeight);
 
     return Ogre::StringConverter::toString(scaledWidth) + " x " +
            Ogre::StringConverter::toString(scaledHeight) + " @ 32-bit colour";
@@ -474,15 +461,24 @@ void ClientManager::WindowClosed()
 void ClientManager::WindowResized(unsigned int width, unsigned int height)
 {
     m_pInputManager->resizeMouseState(width, height);
-    m_pGameManager->HandleWindowResized(width, height);
 
+    Ogre::Viewport* vp = nullptr;
     if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
+        vp = m_pRenderWindow->getViewport(0);
+
+    const unsigned int physicalWidth = vp ? vp->getActualWidth() : width;
+    const unsigned int physicalHeight = vp ? vp->getActualHeight() : height;
+
+    const unsigned int uiWidth = Ogre::DpiHelper::toLogicalPixels(physicalWidth);
+    const unsigned int uiHeight = Ogre::DpiHelper::toLogicalPixels(physicalHeight);
+    m_pGameManager->HandleWindowResized(uiWidth, uiHeight);
+
+    if (vp)
     {
-        Ogre::Viewport* vp = m_pRenderWindow->getViewport(0);
-        if (vp)
-        {
-            vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
-            if (height > 0 && m_pCamera)
-                m_pCamera->setAspectRatio(Ogre::Real(width) / Ogre::Real(height));        }
+        vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+        const unsigned int vw = vp->getActualWidth();
+        const unsigned int vh = vp->getActualHeight();
+        if (m_pCamera && vh > 0)
+            m_pCamera->setAspectRatio(Ogre::Real(vw) / Ogre::Real(vh));
     }
 }

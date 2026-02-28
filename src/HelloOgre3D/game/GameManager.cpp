@@ -1,5 +1,6 @@
 #include "GameManager.h"
 #include "Ogre.h"
+#include "OgreDpiHelper.h"
 #include "ScriptLuaVM.h"
 #include "tolua++.h"
 #include "LuaInterface.h"
@@ -144,12 +145,12 @@ Ogre::Real GameManager::getScreenWidth()
 		unsigned int width = 0, height = 0, depth = 0;
 		int left = 0, top = 0;
 		renderWindow->getMetrics(width, height, depth, left, top);
-		return Ogre::Real(width);
+		return Ogre::Real(Ogre::DpiHelper::toLogicalPixels(width));
 	}
 
 	Ogre::Camera* camera = m_pClientManager->getCamera();
 	if (camera && camera->getViewport())
-		return Ogre::Real(camera->getViewport()->getActualWidth());
+		return Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(camera->getViewport()->getActualWidth())));
 	return 0.0f;
 }
 
@@ -168,12 +169,12 @@ Ogre::Real GameManager::getScreenHeight()
 		unsigned int width = 0, height = 0, depth = 0;
 		int left = 0, top = 0;
 		renderWindow->getMetrics(width, height, depth, left, top);
-		return Ogre::Real(height);
+		return Ogre::Real(Ogre::DpiHelper::toLogicalPixels(height));
 	}
 
 	Ogre::Camera* camera = m_pClientManager->getCamera();
 	if (camera && camera->getViewport())
-		return Ogre::Real(camera->getViewport()->getActualHeight());
+		return Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(camera->getViewport()->getActualHeight())));
 	return 0.0f;
 }
 
