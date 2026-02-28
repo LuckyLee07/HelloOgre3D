@@ -747,6 +747,7 @@ static const String glsles_prefix = "precision highp float;\n"
 	{
 		bool vs_4_0 = GpuProgramManager::getSingleton().isSyntaxSupported("vs_4_0_level_9_1");
 		bool ps_4_0 = GpuProgramManager::getSingleton().isSyntaxSupported("ps_4_0_level_9_1");
+		bool hlsl = GpuProgramManager::getSingleton().isSyntaxSupported("hlsl");
 		bool glsl = GpuProgramManager::getSingleton().isSyntaxSupported("glsl");
 		bool glsles = GpuProgramManager::getSingleton().isSyntaxSupported("glsles");
 
@@ -778,25 +779,26 @@ static const String glsles_prefix = "precision highp float;\n"
             vsProgram = glsles_prefix+mModulate_Vs_glsl;
             fsProgram = glsles_prefix+mModulate_Fs_glsl;
 		}
-		else
-		{
-			if (ps_4_0 && vs_4_0)
-			{
-				vsTarget = "vs_4_0_level_9_1";
-				fsTarget = "ps_4_0_level_9_1";
-				language = "hlsl";
-				vsProgram = mModulate_Vs_hlsl_4_0;
-				fsProgram = mModulate_Fs_hlsl_4_0;
-			}
 			else
 			{
-				vsTarget = "vs_2_0";
-				fsTarget = "ps_2_0";
-				language = "cg";
-				vsProgram = mModulate_Vs_cg;
-				fsProgram = mModulate_Fs_cg;
+				if (ps_4_0 && vs_4_0)
+				{
+					vsTarget = "vs_4_0_level_9_1";
+					fsTarget = "ps_4_0_level_9_1";
+					language = "hlsl";
+					vsProgram = mModulate_Vs_hlsl_4_0;
+					fsProgram = mModulate_Fs_hlsl_4_0;
+				}
+				else
+				{
+					vsTarget = "vs_2_0";
+					fsTarget = "ps_2_0";
+					// Prefer HLSL on D3D9 to avoid hard dependency on Cg compiler/runtime.
+					language = hlsl ? "hlsl" : "cg";
+					vsProgram = mModulate_Vs_cg;
+					fsProgram = mModulate_Fs_cg;
+				}
 			}
-		}
 
 		//Add vertex program
 		AddInternalProgram(vsProgramName, vsProgram, language, vsEntryPoint, vsTarget, GPT_VERTEX_PROGRAM);

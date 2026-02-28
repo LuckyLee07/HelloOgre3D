@@ -2192,7 +2192,7 @@ namespace Ogre
         {
             if (throwExceptionIfNotFound)
                 OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
-                            "Named constants have not been initialised, perhaps a compile error.",
+                            "Named constants have not been initialised, perhaps a compile error. Requested parameter: " + name,
                             "GpuProgramParameters::_findNamedConstantDefinition");
             return 0;
         }

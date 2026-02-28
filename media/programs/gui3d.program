@@ -38,11 +38,29 @@ fragment_program gorilla3DFPHLSL hlsl
     target ps_2_0
 }
 
+vertex_program gorilla3DVPGLSL glsl
+{
+    source shaders/gui3d_vs.glsl
+    syntax glsl150
+    default_params
+    {
+        param_named_auto worldViewProj WORLDVIEWPROJ_MATRIX
+    }
+}
+
+fragment_program gorilla3DFPGLSL glsl
+{
+    source shaders/gui3d_fs.glsl
+    syntax glsl150
+}
+
 vertex_program gorilla3DVP unified
 {
+    delegate gorilla3DVPGLSL
     delegate gorilla3DVPHLSL
 }
 fragment_program gorilla3DFP unified
 {
+    delegate gorilla3DFPGLSL
     delegate gorilla3DFPHLSL
 }

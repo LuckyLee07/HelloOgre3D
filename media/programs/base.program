@@ -96,6 +96,7 @@ fragment_program diffuse_ps_hlsl hlsl
 vertex_program ambient_vs_glsl glsl
 {
     source shaders/base_ambient_vs.glsl
+    syntax glsl150
 
     default_params
     {
@@ -106,6 +107,7 @@ vertex_program ambient_vs_glsl glsl
 fragment_program ambient_ps_glsl glsl
 {
     source shaders/base_ambient_fs.glsl
+    syntax glsl150
 
     default_params
     {
@@ -117,6 +119,7 @@ fragment_program ambient_ps_glsl glsl
 vertex_program diffuse_vs_glsl glsl
 {
     source shaders/base_diffuse_vs.glsl
+    syntax glsl150
 
     default_params
     {
@@ -130,6 +133,7 @@ vertex_program diffuse_vs_glsl glsl
 fragment_program diffuse_ps_glsl glsl
 {
     source shaders/base_diffuse_fs.glsl
+    syntax glsl150
 
     default_params
     {

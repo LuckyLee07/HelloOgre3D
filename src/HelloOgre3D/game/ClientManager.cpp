@@ -9,6 +9,9 @@
 #include "Ogre.h"
 #if defined(_WIN32)
 #include "OgreD3D9Plugin.h"
+#include <windows.h>
+#elif defined(__APPLE__)
+#include "OgreGL3PlusPlugin.h"
 #else
 #include "OgreGLPlugin.h"
 #endif
@@ -16,6 +19,30 @@
 #include "ogre3d_gorilla/include/Gorilla.h"
 
 using namespace Ogre;
+#if defined(_WIN32)
+static Ogre::String BuildDpiScaledVideoMode(unsigned int baseWidth, unsigned int baseHeight)
+{
+    UINT dpi = 96;
+    HMODULE user32 = GetModuleHandleA("user32.dll");
+    if (user32)
+    {
+        typedef UINT (WINAPI *GetDpiForSystemFn)();
+        GetDpiForSystemFn getDpiForSystemFn = (GetDpiForSystemFn)GetProcAddress(user32, "GetDpiForSystem");
+        if (getDpiForSystemFn)
+            dpi = getDpiForSystemFn();
+    }
+
+    if (dpi == 0)
+        dpi = 96;
+
+    const unsigned int scaledWidth = (unsigned int)MulDiv((int)baseWidth, (int)dpi, 96);
+    const unsigned int scaledHeight = (unsigned int)MulDiv((int)baseHeight, (int)dpi, 96);
+
+    return Ogre::StringConverter::toString(scaledWidth) + " x " +
+           Ogre::StringConverter::toString(scaledHeight) + " @ 32-bit colour";
+}
+#endif
+
 
 static ClientManager* s_ClientMgr = nullptr;
 ClientManager* GetClientMgr()
@@ -137,34 +164,52 @@ bool ClientManager::Configure()
 
 #if defined(__APPLE__)
     Ogre::RenderSystem* selected = 0;
-    Ogre::RenderSystem* gl3Fallback = 0;
+    Ogre::RenderSystem* glFallback = 0;
     for (Ogre::RenderSystemList::const_iterator it = renderers.begin(); it != renderers.end(); ++it)
     {
         if (!*it)
             continue;
 
         const Ogre::String& rsName = (*it)->getName();
-        if (rsName.find("OpenGL Rendering Subsystem") != Ogre::String::npos)
+        if (rsName.find("GL 3+") != Ogre::String::npos || rsName.find("OpenGL 3+") != Ogre::String::npos)
         {
             selected = *it;
             break;
         }
 
-        if (rsName.find("GL 3+") != Ogre::String::npos || rsName.find("3+") != Ogre::String::npos)
-            gl3Fallback = *it;
+        if (rsName.find("OpenGL Rendering Subsystem") != Ogre::String::npos)
+            glFallback = *it;
     }
+
     if (!selected)
-        selected = gl3Fallback ? gl3Fallback : renderers.front();
+        selected = glFallback ? glFallback : renderers.front();
+
     m_pRoot->setRenderSystem(selected);
-    // Force a known-good macOS option set; old cfg files may contain invalid Windows-style video modes.
-    try { selected->setConfigOption("Video Mode", "1280 x 720"); } catch (...) {}
-    try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
-    try { selected->setConfigOption("Colour Depth", "32"); } catch (...) {}
-    try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
-    try { selected->setConfigOption("RTT Preferred Mode", "FBO"); } catch (...) {}
-    try { selected->setConfigOption("sRGB Gamma Conversion", "No"); } catch (...) {}
-    try { selected->setConfigOption("macAPI", "cocoa"); } catch (...) {}
-    try { selected->setConfigOption("Content Scaling Factor", "2.0"); } catch (...) {}
+
+    const Ogre::ConfigOptionMap& configOptions = selected->getConfigOptions();
+    const bool isGL3 = selected->getName().find("GL 3+") != Ogre::String::npos ||
+        selected->getName().find("OpenGL 3+") != Ogre::String::npos;
+
+    if (configOptions.find("Video Mode") != configOptions.end())
+        try { selected->setConfigOption("Video Mode", "1280 x 720"); } catch (...) {}
+    if (configOptions.find("Full Screen") != configOptions.end())
+        try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
+    if (configOptions.find("FSAA") != configOptions.end())
+        try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
+    if (configOptions.find("VSync") != configOptions.end())
+        try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
+    if (configOptions.find("Colour Depth") != configOptions.end())
+        try { selected->setConfigOption("Colour Depth", "32"); } catch (...) {}
+    if (configOptions.find("RTT Preferred Mode") != configOptions.end())
+        try { selected->setConfigOption("RTT Preferred Mode", "FBO"); } catch (...) {}
+    if (configOptions.find("sRGB Gamma Conversion") != configOptions.end())
+        try { selected->setConfigOption("sRGB Gamma Conversion", "No"); } catch (...) {}
+    if (configOptions.find("macAPI") != configOptions.end())
+        try { selected->setConfigOption("macAPI", "cocoa"); } catch (...) {}
+    if (configOptions.find("Content Scaling Factor") != configOptions.end())
+        try { selected->setConfigOption("Content Scaling Factor", "1.0"); } catch (...) {}
+    if (configOptions.find("contextProfile") != configOptions.end())
+        try { selected->setConfigOption("contextProfile", isGL3 ? "1" : "0"); } catch (...) {}
 
     m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
     if (m_pRenderWindow)
@@ -191,13 +236,15 @@ bool ClientManager::Configure()
 
     if (!selected)
     {
-        selected = renderers.front();
-        Ogre::LogManager::getSingleton().logMessage("D3D9 not found, fallback renderer: " + selected->getName());
+        Ogre::LogManager::getSingleton().logMessage("D3D9 renderer not found on Windows. Abort initialise to avoid shader/profile mismatch.");
+        return false;
     }
 
     m_pRoot->setRenderSystem(selected);
     try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
-    try { selected->setConfigOption("Video Mode", "1280 x 720 @ 32-bit colour"); } catch (...) {}
+    const Ogre::String dpiScaledVideoMode = BuildDpiScaledVideoMode(1280, 720);
+    Ogre::LogManager::getSingleton().logMessage("Windows DPI-scaled video mode: " + dpiScaledVideoMode);
+    try { selected->setConfigOption("Video Mode", dpiScaledVideoMode); } catch (...) {}
     try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
     try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
 
@@ -266,6 +313,8 @@ bool ClientManager::Setup(void)
     m_pRoot = new Ogre::Root("", APPLICATION_CONFIG, APPLICATION_LOG);
 #if defined(_WIN32)
     m_pRoot->installPlugin(new Ogre::D3D9Plugin());
+#elif defined(__APPLE__)
+    m_pRoot->installPlugin(new Ogre::GL3PlusPlugin());
 #else
     m_pRoot->installPlugin(new Ogre::GLPlugin());
 #endif

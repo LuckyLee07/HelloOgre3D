@@ -397,16 +397,15 @@ namespace Ogre {
         if (getNativeShadingLanguageVersion() >= 130)
             rsc->addShaderProfile("glsl130");
 
-        // FIXME: This isn't working right yet in some rarer cases.
-        // On macOS in this project, separable programs are unstable and can fail
-        // repeatedly at runtime ("Failed to create separable program"), so force
-        // the stable monolithic GLSL path.
-#if defined(__APPLE__)
-        // keep RSC_SEPARATE_SHADER_OBJECTS disabled
-#else
         if (mGLSupport->checkExtension("GL_ARB_separate_shader_objects") || hasGL41)
+        {
+#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+            // Apple OpenGL drivers are known to be flaky with program pipelines.
+            // Keep GL3+ enabled but force monolithic program linking for stability.
+#else
             rsc->setCapability(RSC_SEPARATE_SHADER_OBJECTS);
 #endif
+        }
 
         // Vertex/Fragment Programs
         rsc->setCapability(RSC_VERTEX_PROGRAM);
@@ -1562,6 +1561,9 @@ namespace Ogre {
     {
         // Call super class.
         RenderSystem::_render(op);
+        const bool noActiveGraphicsShaders =
+            !mCurrentVertexShader && !mCurrentFragmentShader && !mCurrentGeometryShader &&
+            !mCurrentHullShader && !mCurrentDomainShader;
 
         // Create variables related to instancing.
         HardwareVertexBufferSharedPtr globalInstanceVertexBuffer = getGlobalInstanceVertexBuffer();
@@ -1602,14 +1604,32 @@ namespace Ogre {
             }
             else
             {
-                static bool sLoggedSeparableProgramFailure = false;
-                if (!sLoggedSeparableProgramFailure)
+                // Fallback: some drivers can advertise separate shader objects but
+                // still fail transiently. Try monolithic program path before giving up.
+                GLSLMonolithicProgram* monolithicProgram =
+                    GLSLMonolithicProgramManager::getSingleton().getActiveMonolithicProgram();
+                if (monolithicProgram)
                 {
-                    Ogre::LogManager::getSingleton().logMessage(
-                        "ERROR: Failed to create separable program.", LML_CRITICAL);
-                    sLoggedSeparableProgramFailure = true;
+                    updateVAO = !monolithicProgram->getVertexArrayObject()->isInitialised();
+                    monolithicProgram->getVertexArrayObject()->bind();
                 }
-                return;
+                else
+                {
+                    if (noActiveGraphicsShaders)
+                    {
+                        // A pass without active GLSL stages can appear in migrated content.
+                        // Skip silently instead of emitting misleading shader-link errors.
+                        return;
+                    }
+                    static bool sLoggedSeparableProgramFailure = false;
+                    if (!sLoggedSeparableProgramFailure)
+                    {
+                        Ogre::LogManager::getSingleton().logMessage(
+                            "ERROR: Failed to create separable program (and fallback monolithic program).", LML_CRITICAL);
+                        sLoggedSeparableProgramFailure = true;
+                    }
+                    return;
+                }
             }
         }
         else
@@ -1623,6 +1643,12 @@ namespace Ogre {
             }
             else
             {
+                if (noActiveGraphicsShaders)
+                {
+                    // A pass without active GLSL stages can appear in migrated content.
+                    // Skip silently instead of emitting misleading shader-link errors.
+                    return;
+                }
                 static bool sLoggedMonolithicProgramFailure = false;
                 if (!sLoggedMonolithicProgramFailure)
                 {

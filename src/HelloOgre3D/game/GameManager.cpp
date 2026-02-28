@@ -131,26 +131,50 @@ Ogre::SceneManager* GameManager::getSceneManager()
 
 Ogre::Real GameManager::getScreenWidth()
 {
-	if (m_pUIManager == nullptr)
+	if (m_pUIManager != nullptr)
 	{
-		Ogre::Camera* camera = m_pClientManager->getCamera();
-		if (camera && camera->getViewport())
-			return Ogre::Real(camera->getViewport()->getActualWidth());
-		return 0.0f;
+		Ogre::Real uiWidth = m_pUIManager->GetScreenWidth();
+		if (uiWidth > 0.0f)
+			return uiWidth;
 	}
-	return m_pUIManager->GetScreenWidth();
+
+	Ogre::RenderWindow* renderWindow = m_pClientManager->getRenderWindow();
+	if (renderWindow != nullptr)
+	{
+		unsigned int width = 0, height = 0, depth = 0;
+		int left = 0, top = 0;
+		renderWindow->getMetrics(width, height, depth, left, top);
+		return Ogre::Real(width);
+	}
+
+	Ogre::Camera* camera = m_pClientManager->getCamera();
+	if (camera && camera->getViewport())
+		return Ogre::Real(camera->getViewport()->getActualWidth());
+	return 0.0f;
 }
 
 Ogre::Real GameManager::getScreenHeight()
 {
-	if (m_pUIManager == nullptr)
+	if (m_pUIManager != nullptr)
 	{
-		Ogre::Camera* camera = m_pClientManager->getCamera();
-		if (camera && camera->getViewport())
-			return Ogre::Real(camera->getViewport()->getActualHeight());
-		return 0.0f;
+		Ogre::Real uiHeight = m_pUIManager->GetScreenHeight();
+		if (uiHeight > 0.0f)
+			return uiHeight;
 	}
-	return m_pUIManager->GetScreenHeight();
+
+	Ogre::RenderWindow* renderWindow = m_pClientManager->getRenderWindow();
+	if (renderWindow != nullptr)
+	{
+		unsigned int width = 0, height = 0, depth = 0;
+		int left = 0, top = 0;
+		renderWindow->getMetrics(width, height, depth, left, top);
+		return Ogre::Real(height);
+	}
+
+	Ogre::Camera* camera = m_pClientManager->getCamera();
+	if (camera && camera->getViewport())
+		return Ogre::Real(camera->getViewport()->getActualHeight());
+	return 0.0f;
 }
 
 InputManager* GameManager::getInputManager()

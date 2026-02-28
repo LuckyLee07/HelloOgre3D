@@ -69,6 +69,7 @@ fragment_program animated_fs_hlsl hlsl
 vertex_program animated_vs_glsl glsl
 {
     source shaders/skinning_vs.glsl
+    syntax glsl150
 
     default_params
     {
@@ -83,6 +84,7 @@ vertex_program animated_vs_glsl glsl
 fragment_program animated_fs_glsl glsl
 {
     source shaders/skinning_fs.glsl
+    syntax glsl150
 
     default_params
     {

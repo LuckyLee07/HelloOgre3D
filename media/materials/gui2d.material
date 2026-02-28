@@ -26,6 +26,8 @@ material Gorilla2D
 		pass
 		{
 			lighting off
+			cull_hardware none
+			cull_software none
 			depth_check off
 			depth_write off
 			diffuse vertexcolour
@@ -39,6 +41,27 @@ material Gorilla2D
 			fragment_program_ref gorilla2DFP
 			{
 			}
+			
+			texture_unit 
+			{ 
+				texture fonts/dejavu/dejavu.png
+				filtering none none none
+				tex_address_mode clamp
+			}
+		}
+	}
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			cull_software none
+			depth_check off
+			depth_write off
+			diffuse vertexcolour
+			ambient vertexcolour
+			scene_blend alpha_blend
 			
 			texture_unit 
 			{ 

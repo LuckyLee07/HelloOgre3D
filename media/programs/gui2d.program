@@ -33,12 +33,26 @@ fragment_program gorilla2DFPHLSL hlsl
     target ps_2_0
 }
 
+vertex_program gorilla2DVPGLSL glsl
+{
+    source shaders/gui2d_vs.glsl
+    syntax glsl150
+}
+
+fragment_program gorilla2DFPGLSL glsl
+{
+    source shaders/gui2d_fs.glsl
+    syntax glsl150
+}
+
 vertex_program gorilla2DVP unified
 {
+    delegate gorilla2DVPGLSL
     delegate gorilla2DVPHLSL
 }
 
 fragment_program gorilla2DFP unified
 {
+    delegate gorilla2DFPGLSL
     delegate gorilla2DFPHLSL
 }

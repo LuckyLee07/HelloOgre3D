@@ -78,6 +78,45 @@ template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::msSingleto
 
 namespace Gorilla
 {
+
+ static Ogre::Technique* choosePreferredTechnique(Ogre::MaterialPtr material)
+ {
+  if (material.isNull())
+   return 0;
+
+  Ogre::RenderSystem* renderSystem = Ogre::Root::getSingletonPtr() ? Ogre::Root::getSingletonPtr()->getRenderSystem() : 0;
+  const Ogre::String renderSystemName = renderSystem ? renderSystem->getName() : Ogre::String();
+  const bool isD3D9 = renderSystemName.find("Direct3D9") != Ogre::String::npos;
+
+  // On some D3D9 drivers (notably virtualized adapters), Gorilla's shader path
+  // may compile but still render nothing. Prefer fixed-function there.
+  if (isD3D9)
+  {
+   const unsigned short techCount = material->getNumTechniques();
+   for (unsigned short i = 0; i < techCount; ++i)
+   {
+    Ogre::Technique* candidate = material->getTechnique(i);
+    if (!candidate || !candidate->isSupported())
+     continue;
+
+    if (candidate->getNumPasses() == 0)
+     continue;
+
+    Ogre::Pass* pass = candidate->getPass(0);
+    if (!pass)
+     continue;
+
+    if (!pass->hasVertexProgram() && !pass->hasFragmentProgram())
+     return candidate;
+   }
+  }
+
+  // For non-D3D9 renderers, prefer the material-selected best technique.
+  Ogre::Technique* best = material->getBestTechnique();
+  if (best)
+   return best;
+  return material->getTechnique(0);
+ }
  enum
  {
   SCREEN_RENDERQUEUE = Ogre::RENDER_QUEUE_OVERLAY
@@ -91,7 +130,7 @@ namespace Gorilla
     return false;
 
    Ogre::Technique* technique = pass->getParent();
-   if (!technique || !technique->isSupported())
+   if (!technique)
     return false;
 
    if (pass->hasVertexProgram())
@@ -108,29 +147,9 @@ namespace Gorilla
      return false;
    }
 
-   if (pass->hasGeometryProgram())
-   {
-    const Ogre::GpuProgramPtr& gp = pass->getGeometryProgram();
-    if (gp.isNull() || !gp->isSupported())
-     return false;
-   }
-
-   if (pass->hasTessellationHullProgram())
-   {
-    const Ogre::GpuProgramPtr& hp = pass->getTessellationHullProgram();
-    if (hp.isNull() || !hp->isSupported())
-     return false;
-   }
-
-   if (pass->hasTessellationDomainProgram())
-   {
-    const Ogre::GpuProgramPtr& dp = pass->getTessellationDomainProgram();
-    if (dp.isNull() || !dp->isSupported())
-     return false;
-   }
-
    return true;
   }
+
  }
 
  Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a )
@@ -483,7 +502,8 @@ namespace Gorilla
   Ogre::MaterialPtr d2Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla2D");
   if (d2Material.isNull() == false)
   {
-    Ogre::Pass* pass = d2Material->getTechnique(0)->getPass(0);
+    Ogre::Technique* tech = choosePreferredTechnique(d2Material);
+    Ogre::Pass* pass = tech->getPass(0);
 
     if(pass->hasVertexProgram())
     {
@@ -520,7 +540,8 @@ namespace Gorilla
   Ogre::MaterialPtr d3Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla3D");
   if (d3Material.isNull() == false)
   {
-    Ogre::Pass* pass = d3Material->getTechnique(0)->getPass(0);
+    Ogre::Technique* tech = choosePreferredTechnique(d3Material);
+    Ogre::Pass* pass = tech->getPass(0);
 
     if(pass->hasVertexProgram())
     {
@@ -560,9 +581,10 @@ namespace Gorilla
   if (m2DMaterial.isNull())
    m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
 
-  m2DPass = m2DMaterial->getTechnique(0)->getPass(0);
+  Ogre::Technique* tech = choosePreferredTechnique(m2DMaterial);
+  m2DPass = tech->getPass(0);
   m2DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
- }
+}
 
  void  TextureAtlas::_create3DMaterial()
  {
@@ -572,9 +594,10 @@ namespace Gorilla
   if (m3DMaterial.isNull())
    m3DMaterial = createOrGet3DMasterMaterial()->clone(matName);
 
-  m3DPass = m3DMaterial->getTechnique(0)->getPass(0);
+  Ogre::Technique* tech = choosePreferredTechnique(m3DMaterial);
+  m3DPass = tech->getPass(0);
   m3DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
- }
+}
 
  void  TextureAtlas::_calculateCoordinates()
  {
@@ -1047,11 +1070,11 @@ namespace Gorilla
  {
     (void)invocation;
     (void)repeatThisInvocation;
-
-  if (mRenderSystem->_getViewport() != mViewport || queueGroupId != SCREEN_RENDERQUEUE)
+  if (queueGroupId != SCREEN_RENDERQUEUE)
    return;
-  if (mIsVisible && mLayers.size())
-   renderOnce();
+  if (!mIsVisible || mLayers.empty())
+   return;
+  renderOnce();
  }
 
  bool Screen::_prepareRenderSystem()
@@ -1108,9 +1131,9 @@ namespace Gorilla
    force = true;
   }
 
-  _renderVertices(force);
-  if (mRenderOp.vertexData->vertexCount)
-  {
+ _renderVertices(force);
+ if (mRenderOp.vertexData->vertexCount)
+ {
    try
    {
     if (!_prepareRenderSystem())
@@ -1119,8 +1142,7 @@ namespace Gorilla
    }
    catch (const Ogre::Exception& e)
    {
-    Ogre::LogManager::getSingleton().logMessage(
-      "[Gorilla] Disabling screen after render failure: " + e.getFullDescription());
+    (void)e;
     mIsVisible = false;
    }
   }
