@@ -32,11 +32,11 @@
  * http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Normal+Mapping+with+Hardware+Skinning+and+Specular&structure=Cookbook
  */
 
-vertex_program animated_vs hlsl
+vertex_program animated_vs_hlsl hlsl
 {
     source shaders/skinning.hlsl
     entry_point animated_vs
-    target vs_2_0
+    target vs_3_0
     includes_skeletal_animation true
     column_major_matrices false
     
@@ -50,11 +50,11 @@ vertex_program animated_vs hlsl
     }
 }
 
-fragment_program animated_fs hlsl
+fragment_program animated_fs_hlsl hlsl
 {
     source shaders/skinning.hlsl
     entry_point animated_fs
-    target ps_2_0
+    target ps_3_0
 
     default_params
     { 
@@ -64,4 +64,44 @@ fragment_program animated_fs hlsl
         param_named_auto matDif surface_diffuse_colour
         param_named_auto matShininess surface_shininess
     }
+}
+
+vertex_program animated_vs_glsl glsl
+{
+    source shaders/skinning_vs.glsl
+
+    default_params
+    {
+        param_named_auto light_position light_position_object_space 0
+        param_named_auto eye_position camera_position_object_space
+        param_named_auto worldMatrix3x4Array world_matrix_array_3x4
+        param_named_auto viewProjectionMatrix viewproj_matrix
+        param_named_auto invworldmatrix inverse_world_matrix
+    }
+}
+
+fragment_program animated_fs_glsl glsl
+{
+    source shaders/skinning_fs.glsl
+
+    default_params
+    {
+        param_named_auto lightDif0 light_diffuse_colour 0
+        param_named_auto lightSpec0 light_specular_colour 0
+        param_named_auto ambient ambient_light_colour
+        param_named_auto matDif surface_diffuse_colour
+        param_named_auto matShininess surface_shininess
+    }
+}
+
+vertex_program animated_vs unified
+{
+    delegate animated_vs_glsl
+    delegate animated_vs_hlsl
+}
+
+fragment_program animated_fs unified
+{
+    delegate animated_fs_glsl
+    delegate animated_fs_hlsl
 }

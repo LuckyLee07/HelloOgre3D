@@ -32,10 +32,10 @@
  * http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Normal+AO+Specular+Mapping+Shader&structure=Cookbook
  */
 
-vertex_program diffuse_vs hlsl
+vertex_program diffuse_vs_hlsl hlsl
 {
     source shaders/base.hlsl
-    target vs_2_0
+    target vs_3_0
     entry_point diffuse_vs
  
     default_params
@@ -47,10 +47,10 @@ vertex_program diffuse_vs hlsl
     }
 }
  
-vertex_program ambient_vs hlsl
+vertex_program ambient_vs_hlsl hlsl
 {
     source shaders/base.hlsl
-    target vs_2_0
+    target vs_3_0
     entry_point ambient_vs
  
     default_params
@@ -59,10 +59,10 @@ vertex_program ambient_vs hlsl
     }
 }
  
-fragment_program ambient_ps hlsl
+fragment_program ambient_ps_hlsl hlsl
 {
     source shaders/base.hlsl
-    target ps_2_0
+    target ps_3_0
     entry_point ambient_ps
  
     default_params
@@ -72,10 +72,10 @@ fragment_program ambient_ps hlsl
     }
 }
  
-fragment_program diffuse_ps hlsl
+fragment_program diffuse_ps_hlsl hlsl
 {
     source shaders/base.hlsl
-    target ps_2_0
+    target ps_3_0
     entry_point diffuse_ps
  
     default_params
@@ -91,4 +91,81 @@ fragment_program diffuse_ps hlsl
         param_named_auto iTWMat inverse_transpose_world_matrix
         param_named_auto spotlightParams spotlight_params 0
     }
+}
+
+vertex_program ambient_vs_glsl glsl
+{
+    source shaders/base_ambient_vs.glsl
+
+    default_params
+    {
+        param_named_auto wvpMat worldviewproj_matrix
+    }
+}
+
+fragment_program ambient_ps_glsl glsl
+{
+    source shaders/base_ambient_fs.glsl
+
+    default_params
+    {
+        param_named_auto ambient ambient_light_colour
+        param_named_auto matDif surface_diffuse_colour
+    }
+}
+
+vertex_program diffuse_vs_glsl glsl
+{
+    source shaders/base_diffuse_vs.glsl
+
+    default_params
+    {
+        param_named_auto wMat world_matrix
+        param_named_auto wvpMat worldviewproj_matrix
+        param_named_auto tvpMat texture_viewproj_matrix 0
+        param_named_auto spotlightDir light_direction_object_space 0
+    }
+}
+
+fragment_program diffuse_ps_glsl glsl
+{
+    source shaders/base_diffuse_fs.glsl
+
+    default_params
+    {
+        param_named_auto lightDif0 light_diffuse_colour 0
+        param_named_auto lightSpec0 light_specular_colour 0
+        param_named_auto camPos camera_position
+        param_named_auto matShininess surface_shininess
+        param_named_auto matDif surface_diffuse_colour
+        param_named_auto matSpec surface_specular_colour
+        param_named_auto lightPos0 light_position 0
+        param_named_auto lightAtt0 light_attenuation 0
+        param_named_auto iTWMat inverse_transpose_world_matrix
+        param_named_auto spotlightParams spotlight_params 0
+    }
+}
+
+vertex_program ambient_vs unified
+{
+    delegate ambient_vs_glsl
+    delegate ambient_vs_hlsl
+}
+
+fragment_program ambient_ps unified
+{
+    delegate ambient_ps_glsl
+    delegate ambient_ps_hlsl
+}
+
+vertex_program diffuse_vs unified
+{
+    delegate diffuse_vs_glsl
+    delegate diffuse_vs_hlsl
+}
+
+fragment_program diffuse_ps unified
+{
+    delegate diffuse_ps_glsl
+    delegate diffuse_ps_hlsl
 }
