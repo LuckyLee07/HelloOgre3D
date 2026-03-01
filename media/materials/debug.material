@@ -42,6 +42,24 @@ material debug_draw
          scene_blend alpha_blend
          depth_check on
          depth_write off
+
+         vertex_program_ref debug_draw_vs
+         {
+            param_named_auto wvpMat worldviewproj_matrix
+         }
+         fragment_program_ref debug_draw_fs
+         {
+         }
+      }
+   }
+   technique
+   {
+      pass
+      {
+         lighting off
+         scene_blend alpha_blend
+         depth_check on
+         depth_write off
          ambient vertexcolour
          diffuse vertexcolour
          specular vertexcolour

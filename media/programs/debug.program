@@ -1,0 +1,47 @@
+vertex_program debug_draw_vs_hlsl hlsl
+{
+    source shaders/debug_draw.hlsl
+    entry_point main_vs
+    target vs_2_0
+
+    default_params
+    {
+        param_named_auto wvpMat worldviewproj_matrix
+    }
+}
+
+fragment_program debug_draw_fs_hlsl hlsl
+{
+    source shaders/debug_draw.hlsl
+    entry_point main_ps
+    target ps_2_0
+}
+
+vertex_program debug_draw_vs_glsl glsl
+{
+    source shaders/debug_draw_vs.glsl
+    syntax glsl150
+
+    default_params
+    {
+        param_named_auto wvpMat worldviewproj_matrix
+    }
+}
+
+fragment_program debug_draw_fs_glsl glsl
+{
+    source shaders/debug_draw_fs.glsl
+    syntax glsl150
+}
+
+vertex_program debug_draw_vs unified
+{
+    delegate debug_draw_vs_glsl
+    delegate debug_draw_vs_hlsl
+}
+
+fragment_program debug_draw_fs unified
+{
+    delegate debug_draw_fs_glsl
+    delegate debug_draw_fs_hlsl
+}
