@@ -454,8 +454,16 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 
 void ClientManager::WindowClosed()
 {
-    m_pInputManager->closeWindow();
-    m_pGameManager->HandleWindowClosed();
+    m_shutdown = true;
+
+    if (m_pRoot)
+        m_pRoot->queueEndRendering();
+
+    if (m_pInputManager)
+        m_pInputManager->closeWindow();
+
+    if (m_pGameManager)
+        m_pGameManager->HandleWindowClosed();
 }
 
 void ClientManager::WindowResized(unsigned int width, unsigned int height)

@@ -30,11 +30,12 @@
 
 #import <AppKit/NSWindow.h>
 
-@interface CocoaWindowDelegate : NSObject
+@interface CocoaWindowDelegate : NSObject <NSWindowDelegate>
 {
 @private
     Ogre::RenderWindow *ogreWindow;
     NSWindow *window;
+    BOOL closeRequested;
 }
 
 -(id)initWithNSWindow:(NSWindow*)nswin ogreWindow:(Ogre::RenderWindow*)ogrewin;

@@ -42,6 +42,8 @@ using namespace Ogre;
     {
 		window = nswin;
 		ogreWindow = ogrewin;
+        closeRequested = NO;
+        [window setDelegate:self];
 		
         // Register ourselves for several window event notifications
 		// Note that
@@ -53,11 +55,6 @@ using namespace Ogre;
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(windowWillMove:)
                                                      name:@"NSWindowWillMoveNotification"
-												   object:window];
-
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(windowWillClose:)
-                                                     name:@"NSWindowWillCloseNotification"
 												   object:window];
 
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -86,8 +83,57 @@ using namespace Ogre;
 - (void)dealloc {
     // Stop observing notifications
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    if ([window delegate] == self)
+        [window setDelegate:nil];
 
     [super dealloc];
+}
+
+- (BOOL)notifyWindowShouldClose
+{
+    CocoaWindow * curWindow = static_cast<CocoaWindow *>(ogreWindow);
+    if (curWindow->isClosed())
+        return YES;
+
+    if (closeRequested)
+        return YES;
+
+    closeRequested = YES;
+
+    bool close = true;
+    WindowEventUtilities::WindowEventListeners::iterator
+    start = WindowEventUtilities::_msListeners.lower_bound(curWindow),
+    end = WindowEventUtilities::_msListeners.upper_bound(curWindow);
+
+    for( ; start != end; ++start )
+    {
+        if (!(start->second)->windowClosing(curWindow))
+            close = false;
+    }
+
+    if (!close)
+    {
+        closeRequested = NO;
+        return NO;
+    }
+
+    for(start = WindowEventUtilities::_msListeners.lower_bound(curWindow); start != end; ++start)
+    {
+        (start->second)->windowClosed(curWindow);
+    }
+
+    return YES;
+}
+
+- (BOOL)windowShouldClose:(id)sender
+{
+    if (![self notifyWindowShouldClose])
+        return NO;
+
+    // Let OGRE shut down first; this avoids AppKit closing GL resources
+    // while the render thread is still unwinding.
+    [window orderOut:nil];
+    return NO;
 }
 
 - (void)windowDidResize:(NSNotification *)notification
@@ -120,16 +166,8 @@ using namespace Ogre;
 
 - (void)windowWillClose:(NSNotification *)notification
 {
-    CocoaWindow * curWindow = static_cast<CocoaWindow *>(ogreWindow);
-
-    WindowEventUtilities::WindowEventListeners::iterator
-    start = WindowEventUtilities::_msListeners.lower_bound(curWindow),
-    end = WindowEventUtilities::_msListeners.upper_bound(curWindow);
-
-    for( ; start != end; ++start )
-    {
-        (start->second)->windowClosing(curWindow);
-    }
+    (void)notification;
+    [self notifyWindowShouldClose];
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
