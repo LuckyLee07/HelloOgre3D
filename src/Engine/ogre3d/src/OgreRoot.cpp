@@ -993,6 +993,11 @@ namespace Ogre {
             //Pump messages in all registered RenderWindow windows
             WindowEventUtilities::messagePump();
 
+            // A window-close callback may request shutdown during message pumping.
+            // Avoid rendering one more frame against a window/context that is closing.
+            if (mQueuedEnd)
+                break;
+
             if (!renderOneFrame())
                 break;
         }

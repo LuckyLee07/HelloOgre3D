@@ -60,6 +60,52 @@ THE SOFTWARE.
 @end
 
 namespace Ogre {
+    namespace
+    {
+#if defined(NSWindowStyleMaskTitled)
+        static const NSUInteger kOgreWindowedStyleMask = NSWindowStyleMaskTitled |
+            NSWindowStyleMaskClosable |
+            NSWindowStyleMaskMiniaturizable |
+            NSWindowStyleMaskResizable;
+        static const NSUInteger kOgreBorderlessStyleMask = NSWindowStyleMaskBorderless;
+#else
+        static const NSUInteger kOgreWindowedStyleMask = NSTitledWindowMask |
+            NSClosableWindowMask |
+            NSMiniaturizableWindowMask |
+            NSResizableWindowMask;
+        static const NSUInteger kOgreBorderlessStyleMask = NSBorderlessWindowMask;
+#endif
+
+        static void applyWindowedWindowChrome(NSWindow *window)
+        {
+            if (!window)
+                return;
+
+            [window setStyleMask:kOgreWindowedStyleMask];
+
+            // Keep all traffic-light buttons available after fullscreen/windowed switches.
+            NSButton *closeButton = [window standardWindowButton:NSWindowCloseButton];
+            if (closeButton)
+            {
+                [closeButton setHidden:NO];
+                [closeButton setEnabled:YES];
+            }
+
+            NSButton *miniButton = [window standardWindowButton:NSWindowMiniaturizeButton];
+            if (miniButton)
+            {
+                [miniButton setHidden:NO];
+                [miniButton setEnabled:YES];
+            }
+
+            NSButton *zoomButton = [window standardWindowButton:NSWindowZoomButton];
+            if (zoomButton)
+            {
+                [zoomButton setHidden:NO];
+                [zoomButton setEnabled:YES];
+            }
+        }
+    }
 
     CocoaWindow::CocoaWindow() : mWindow(nil), mView(nil), mGLContext(nil), mGLPixelFormat(nil), mWindowOriginPt(NSZeroPoint),
         mWindowDelegate(NULL), mActive(false), mClosed(false), mVSync(true), mHasResized(false), mIsExternal(false), mWindowTitle(""),
@@ -381,6 +427,12 @@ namespace Ogre {
 
     void CocoaWindow::destroy(void)
     {
+        if (mClosed)
+            return;
+
+        mClosed = true;
+        mActive = false;
+
         if(!mIsFullScreen)
         {
             // Unregister and destroy OGRE GL3PlusContext
@@ -412,7 +464,6 @@ namespace Ogre {
 		}
 		
         mActive = false;
-        mClosed = true;
     }
 
     bool CocoaWindow::isActive() const
@@ -422,7 +473,7 @@ namespace Ogre {
 
     bool CocoaWindow::isClosed() const
     {
-        return false;
+        return mClosed;
     }
 
     void CocoaWindow::setHidden(bool hidden)
@@ -642,7 +693,7 @@ namespace Ogre {
             windowRect = NSMakeRect(0.0, 0.0, widthPt, heightPt);
 
         mWindow = [[OgreGL3PlusWindow alloc] initWithContentRect:windowRect
-                                              styleMask:mIsFullScreen ? NSBorderlessWindowMask : NSResizableWindowMask|NSTitledWindowMask
+                                              styleMask:mIsFullScreen ? kOgreBorderlessStyleMask : kOgreWindowedStyleMask
                                                 backing:NSBackingStoreBuffered
                                                   defer:YES];
         [mWindow setTitle:[NSString stringWithCString:title.c_str() encoding:NSUTF8StringEncoding]];
@@ -713,7 +764,7 @@ namespace Ogre {
                 [mView setFrame:windowRect];
 
                 // Set window properties for full screen and save the origin in case the window has been moved
-                [mWindow setStyleMask:NSBorderlessWindowMask];
+                [mWindow setStyleMask:kOgreBorderlessStyleMask];
                 [mWindow setOpaque:YES];
                 [mWindow setHidesOnDeactivate:YES];
                 [mWindow setContentView:mView];
@@ -730,7 +781,7 @@ namespace Ogre {
                 CGLSetParameter((CGLContextObj)[mGLContext CGLContextObj], kCGLCPSurfaceBackingSize, backingStoreDimensions);
                 CGLDisable((CGLContextObj)[mGLContext CGLContextObj], kCGLCESurfaceBackingSize);
 
-                [mWindow setStyleMask:NSResizableWindowMask|NSTitledWindowMask];
+                applyWindowedWindowChrome(mWindow);
                 [mWindow setOpaque:YES];
                 [mWindow setHidesOnDeactivate:NO];
                 if ([mWindow contentView] != mView)
