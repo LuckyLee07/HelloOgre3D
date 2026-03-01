@@ -37,6 +37,7 @@ public:
 private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
+	void SyncWeaponToHandBone();
 
 protected:
 	void CreateEventDispatcher();
@@ -44,6 +45,8 @@ protected:
 	
 private:
 	RenderableObject* m_pWeapon;
+	Ogre::Vector3 m_weaponHandOffsetPos = Ogre::Vector3::ZERO;
+	Ogre::Quaternion m_weaponHandOffsetOrientation = Ogre::Quaternion::IDENTITY;
 	SOLDIER_STANCE_TYPE m_stanceType;
 	int m_pendingStanceType = -1;
 

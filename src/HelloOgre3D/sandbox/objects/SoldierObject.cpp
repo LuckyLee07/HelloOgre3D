@@ -85,13 +85,16 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	m_pWeapon = new RenderableObject(meshFile);
 	m_pWeapon->InitAsmWithOwner(this, false);
 
-	Ogre::Vector3 positionOffset(0.04f, 0.05f, -0.01f);
-	Ogre::Vector3 rotationOffset(98.0f, 97.0f, 0.0f);
-	m_pAgentBody->AttachToBone("b_RightHand", m_pWeapon->GetDetachEntity(), positionOffset, rotationOffset);
+	m_weaponHandOffsetPos = Ogre::Vector3(0.04f, 0.05f, -0.01f);
+	m_weaponHandOffsetOrientation = QuaternionFromRotationDegrees(98.0f, 97.0f, 0.0f);
+	SyncWeaponToHandBone();
 }
 
 void SoldierObject::Update(int deltaMilisec)
 {
+	// Keep body transform in sync with physics before animation/bone evaluation.
+	this->updateWorldTransform();
+
 	static int totalMilisec = 0;
 	totalMilisec += deltaMilisec;
 
@@ -106,12 +109,39 @@ void SoldierObject::Update(int deltaMilisec)
 		m_stateController->Update((float)deltaMilisec);
 
 	m_pAgentBody->Update(deltaMilisec);
+	SyncWeaponToHandBone();
 	if (m_pWeapon)
 		m_pWeapon->Update(deltaMilisec);
 
 	TryApplyPendingStance();
+}
 
-	this->updateWorldTransform();
+void SoldierObject::SyncWeaponToHandBone()
+{
+	if (m_pWeapon == nullptr || m_pAgentBody == nullptr)
+	{
+		return;
+	}
+
+	Ogre::SceneNode* soldierNode = m_pAgentBody->GetSceneNode();
+	if (soldierNode == nullptr)
+	{
+		return;
+	}
+
+	Ogre::Vector3 handPosition;
+	Ogre::Quaternion handOrientation;
+	if (!SceneFactory::GetBonePosition(*soldierNode, "b_RightHand", handPosition))
+	{
+		return;
+	}
+	if (!SceneFactory::GetBoneOrientation(*soldierNode, "b_RightHand", handOrientation))
+	{
+		return;
+	}
+
+	m_pWeapon->SetPosition(handPosition + (handOrientation * m_weaponHandOffsetPos));
+	m_pWeapon->SetOrientation(handOrientation * m_weaponHandOffsetOrientation);
 }
 
 void SoldierObject::ShootBullet()

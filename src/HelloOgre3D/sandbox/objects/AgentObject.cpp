@@ -133,6 +133,10 @@ Ogre::Vector3 AgentObject::GetForward() const
 
 void AgentObject::Update(int deltaMilisec)
 {
+	// Sync physics transform before stepping animations so bone attachments
+	// use the latest world transform in the current frame.
+	this->updateWorldTransform();
+
 	static int totalMilisec = 0;
 	totalMilisec += deltaMilisec;
 	if (true || totalMilisec > 1000)
@@ -142,8 +146,6 @@ void AgentObject::Update(int deltaMilisec)
 	}
 
 	m_pAgentBody->Update(deltaMilisec);
-
-	this->updateWorldTransform();
 }
 
 void AgentObject::updateWorldTransform()
