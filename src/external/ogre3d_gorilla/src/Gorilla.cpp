@@ -32,6 +32,7 @@
 #include "Gorilla.h"
 #include "OgreLogManager.h"
 #include "OgreMaterialManager.h"
+#include "OgreRenderWindow.h"
 #include "OgreSceneNode.h"
 #include "OgreTextureManager.h"
 #include "OgreViewport.h"
@@ -79,6 +80,31 @@ template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::msSingleto
 
 namespace Gorilla
 {
+ namespace
+ {
+  static Ogre::Real viewportLogicalExtent(Ogre::Viewport* viewport, unsigned int actualPixels)
+  {
+   if (!viewport)
+    return Ogre::Real(actualPixels);
+
+   // Windows path keeps using DpiHelper.
+   Ogre::Real logicalPixels = Ogre::Real(Ogre::DpiHelper::toLogicalPixels(actualPixels));
+
+   // macOS Retina path: viewport actual size is backing-store pixels.
+   // Convert back to logical points so Gorilla UI scale stays consistent.
+   Ogre::RenderTarget* target = viewport->getTarget();
+   Ogre::RenderWindow* renderWindow = dynamic_cast<Ogre::RenderWindow*>(target);
+   if (renderWindow)
+   {
+    const float pointToPixelScale = renderWindow->getViewPointToPixelScale();
+    if (pointToPixelScale > 1.0f)
+     logicalPixels = Ogre::Real(actualPixels) / Ogre::Real(pointToPixelScale);
+   }
+
+   return logicalPixels;
+  }
+ }
+
  static Ogre::Technique* choosePreferredTechnique(Ogre::MaterialPtr material)
  {
   if (material.isNull())
@@ -1043,8 +1069,8 @@ namespace Gorilla
 
   mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
 
-  mWidth = Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualWidth())));
-  mHeight = Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualHeight())));
+  mWidth = viewportLogicalExtent(mViewport, static_cast<unsigned int>(mViewport->getActualWidth()));
+  mHeight = viewportLogicalExtent(mViewport, static_cast<unsigned int>(mViewport->getActualHeight()));
 #if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
   mOrientation = mViewport->getOrientationMode();
 #else
@@ -1093,9 +1119,9 @@ namespace Gorilla
  void Screen::renderOnce()
  {
   const Ogre::Real currentWidth =
-      Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualWidth())));
+      viewportLogicalExtent(mViewport, static_cast<unsigned int>(mViewport->getActualWidth()));
   const Ogre::Real currentHeight =
-      Ogre::Real(Ogre::DpiHelper::toLogicalPixels(static_cast<unsigned int>(mViewport->getActualHeight())));
+      viewportLogicalExtent(mViewport, static_cast<unsigned int>(mViewport->getActualHeight()));
   bool force = false;
   // force == true if viewport size changed.
   if (mWidth != currentWidth || mHeight != currentHeight

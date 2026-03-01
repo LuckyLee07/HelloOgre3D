@@ -6,6 +6,7 @@
 #include "debug/DebugDrawer.h"
 #include "systems/input/InputManager.h"
 #include "core/SandboxMacros.h"
+#include "common/RenderConfigHelper.h"
 #include "Ogre.h"
 #include "OgreDpiHelper.h"
 #if defined(_WIN32)
@@ -182,7 +183,10 @@ bool ClientManager::Configure()
     if (configOptions.find("Full Screen") != configOptions.end())
         try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
     if (configOptions.find("FSAA") != configOptions.end())
-        try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
+    {
+        const Ogre::String fsaa = RenderConfigHelper::SelectBestMacFsaa(configOptions);
+        try { selected->setConfigOption("FSAA", fsaa); } catch (...) {}
+    }
     if (configOptions.find("VSync") != configOptions.end())
         try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
     if (configOptions.find("Colour Depth") != configOptions.end())
@@ -194,7 +198,10 @@ bool ClientManager::Configure()
     if (configOptions.find("macAPI") != configOptions.end())
         try { selected->setConfigOption("macAPI", "cocoa"); } catch (...) {}
     if (configOptions.find("Content Scaling Factor") != configOptions.end())
-        try { selected->setConfigOption("Content Scaling Factor", "1.0"); } catch (...) {}
+    {
+        const Ogre::String contentScale = RenderConfigHelper::SelectBestMacContentScale(configOptions);
+        try { selected->setConfigOption("Content Scaling Factor", contentScale); } catch (...) {}
+    }
     if (configOptions.find("contextProfile") != configOptions.end())
         try { selected->setConfigOption("contextProfile", isGL3 ? "1" : "0"); } catch (...) {}
 
@@ -477,8 +484,17 @@ void ClientManager::WindowResized(unsigned int width, unsigned int height)
     const unsigned int physicalWidth = vp ? vp->getActualWidth() : width;
     const unsigned int physicalHeight = vp ? vp->getActualHeight() : height;
 
-    const unsigned int uiWidth = Ogre::DpiHelper::toLogicalPixels(physicalWidth);
-    const unsigned int uiHeight = Ogre::DpiHelper::toLogicalPixels(physicalHeight);
+    unsigned int uiWidth = Ogre::DpiHelper::toLogicalPixels(physicalWidth);
+    unsigned int uiHeight = Ogre::DpiHelper::toLogicalPixels(physicalHeight);
+    if (m_pRenderWindow)
+    {
+        const float pointToPixelScale = m_pRenderWindow->getViewPointToPixelScale();
+        if (pointToPixelScale > 1.0f)
+        {
+            uiWidth = static_cast<unsigned int>(Ogre::Real(physicalWidth) / pointToPixelScale + 0.5f);
+            uiHeight = static_cast<unsigned int>(Ogre::Real(physicalHeight) / pointToPixelScale + 0.5f);
+        }
+    }
     m_pGameManager->HandleWindowResized(uiWidth, uiHeight);
 
     if (vp)
