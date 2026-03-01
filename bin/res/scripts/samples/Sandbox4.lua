@@ -51,13 +51,13 @@ function EventHandle_Keyboard(keycode, pressed)
     GUI_HandleKeyEvent(keycode, pressed)
 
     if not pressed then return end
-    if (keycode == OIS.KC_F1) then
+    if (keycode == Map_Platform_KC(OIS.KC_F1)) then
         local camera = Sandbox:GetCamera();
         camera:setPosition(Vector3(-17, 10, 0));
         camera:setOrientation(Quaternion(-145, -50, -150));
-    elseif (keycode == OIS.KC_F3) then
+    elseif (keycode == Map_Platform_KC(OIS.KC_F3)) then
         Create_LightSoldier("DirectSoldierAgent.lua")
-    elseif (keycode == OIS.KC_F4) then
+    elseif (keycode == Map_Platform_KC(OIS.KC_F4)) then
         Create_DarkSoldier("DirectSoldierAgent.lua")
     end
 end

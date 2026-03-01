@@ -263,3 +263,27 @@ function SandboxUtilities_GetLevelPath()
     points:push_back(Vector3(-26, 0, 19));
     return points;
 end
+
+------------win/mac------------
+local OIS_MacOS_KeyCodes = {
+    [OIS.KC_F3] = OIS.KC_TAB,
+    [OIS.KC_F4] = OIS.KC_H,
+    [OIS.KC_F5] = OIS.KC_TAB,
+    [OIS.KC_F6] = OIS.KC_TAB,
+    [OIS.KC_F7] = OIS.KC_TAB,
+}
+
+function IsWindowsPlatform()
+    return package.config ~= nil and package.config:sub(1, 1) == "\\"
+end
+
+function Map_Platform_KC(key_code)
+    if IsWindowsPlatform() then
+        return key_code
+    end
+
+    local macOS_keycode = OIS_MacOS_KeyCodes[key_code]
+    if not macOS_keycode then return key_code end
+    
+    return macOS_keycode
+end

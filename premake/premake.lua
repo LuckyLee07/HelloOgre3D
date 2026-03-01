@@ -159,7 +159,7 @@ solution( "HelloOgre3D" )
 --------------------------------------------------------------------------------
 ------------Engine------------
 	group( "Engine" )
--- ogre3d v1.8.1 static library
+-- ogre3d v1.10.0 static library
 	project( "ogre3d" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d" )
@@ -273,7 +273,7 @@ solution( "HelloOgre3D" )
 			["resources/*"] = { "**.rc", "**.bmp", "**.ico" }
 		} )
 	
--- ogre3d direct3d9 plugin v1.8.1 static library
+-- ogre3d direct3d9 plugin v1.10.0 static library
 	project( "ogre3d_direct3d9" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d_direct3d9" )
@@ -298,7 +298,7 @@ solution( "HelloOgre3D" )
 		configuration( "*" )
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
 
--- ogre3d OpenGL plugin v1.10 static library
+-- ogre3d OpenGL plugin v1.10.0git static library
 	project( "ogre3d_opengl" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d_opengl" )
@@ -336,7 +336,7 @@ solution( "HelloOgre3D" )
 			"../src/Engine/ogre3d_opengl/src/nvparse/ps1.0__test_main.cpp",
 		}
 
--- ogre3d GL3Plus plugin v1.10 static library
+-- ogre3d GL3Plus plugin v1.10.0 static library
 	project( "ogre3d_gl3plus" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d_gl3plus" )
@@ -364,7 +364,7 @@ solution( "HelloOgre3D" )
 			"../src/Engine/ogre3d_gl3plus/src/**.cpp",
 		} )
 
--- ogre3d GLSupport v1.10 static library
+-- ogre3d GLSupport v1.10.0 static library
 	project( "ogre3d_glsupport" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d_glsupport" )
@@ -401,7 +401,7 @@ solution( "HelloOgre3D" )
 			}
 		filter {}
      
--- ogre3d particlefx plugin v1.8.1 static library
+-- ogre3d particlefx plugin v1.10.0 static library
 	project( "ogre3d_particlefx" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ogre3d_particlefx" )
@@ -543,7 +543,7 @@ solution( "HelloOgre3D" )
 			}
 		filter {}
 
--- libjpeg 8d static library
+-- libjpeg v8d static library
 	project( "libjpeg" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ThirdParty/libjpeg" )
@@ -587,7 +587,7 @@ solution( "HelloOgre3D" )
 		} )
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
 
--- libraw v1.5.13 static library
+-- libraw v0.14.7 static library
 	project( "libraw" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ThirdParty/libraw" )
@@ -634,7 +634,7 @@ solution( "HelloOgre3D" )
 		filter {}
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
 
--- openexr v1.5.13 static library
+-- openexr v1.5.0 (ilmbase v0.9.0) static library
 	project( "openexr" )
 		kind( "StaticLib" )
 		location( "../build/Engine/ThirdParty/openexr" )
@@ -834,7 +834,7 @@ solution( "HelloOgre3D" )
 		} )
 		defines( { "WIN32", "_CRT_SECURE_NO_WARNINGS" } )
 
--- ois v1.5 static library
+-- ois v1.5.0 static library
 	project( "ois" )
 		kind( "StaticLib" )
 		location( "../build/External/ois" )
@@ -883,7 +883,7 @@ solution( "HelloOgre3D" )
 			}
 		filter {}
 
--- opensteer revision 190 static library
+-- opensteer v0.8.2 static library
 	project( "opensteer" )
 		kind( "StaticLib" )
 		location( "../build/External/opensteer" )
@@ -896,7 +896,7 @@ solution( "HelloOgre3D" )
 		} )
 		defines( { "WIN32", "HAVE_NO_GLUT" } )
 
--- ogre3d gorilla ui "master" static library
+-- ogre3d gorilla ui snapshot (2013-12-26) static library
 	project( "ogre3d_gorilla" )
 		kind( "StaticLib" )
 		location( "../build/External/ogre3d_gorilla" )
