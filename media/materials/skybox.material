@@ -80,6 +80,29 @@ material ThickCloudsWaterSkyBox
 			lighting off
 			depth_write off
 
+			vertex_program_ref skybox_vs_glsl
+			{
+			}
+
+			fragment_program_ref skybox_fs_glsl
+			{
+			}
+
+			texture_unit skyboxMap
+			{
+				cubic_texture textures/skybox_set/ThickCloudsWater/ThickCloudsWaterFront1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterBack1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterRight1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterLeft1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterUp1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterDown1024.tga separateUV
+				tex_address_mode clamp
+			}
+		}
+	}
+
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+
 			texture_unit
 			{
 				cubic_texture textures/skybox_set/ThickCloudsWater/ThickCloudsWaterFront1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterBack1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterRight1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterLeft1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterUp1024.tga textures/skybox_set/ThickCloudsWater/ThickCloudsWaterDown1024.tga separateUV

@@ -1,0 +1,19 @@
+vertex_program skybox_vs_glsl glsl
+{
+    source shaders/skybox_vs.glsl
+    syntax glsl150
+    default_params
+    {
+        param_named_auto worldViewProj worldviewproj_matrix
+    }
+}
+
+fragment_program skybox_fs_glsl glsl
+{
+    source shaders/skybox_fs.glsl
+    syntax glsl150
+    default_params
+    {
+        param_named skyboxMap int 0
+    }
+}
