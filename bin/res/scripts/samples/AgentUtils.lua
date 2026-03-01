@@ -34,7 +34,9 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
     newVelocity.y = 0;
 
     -- Point the agent in the direction of movement.
-    agent:SetForward(newVelocity);
+    if (Vector.LengthSquared(newVelocity) > 1e-8) then
+        agent:SetForward(newVelocity);
+    end
 end
 
 -- 将计算得到的转向力转化为智能体的运动变化

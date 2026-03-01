@@ -74,7 +74,10 @@ inline Ogre::Quaternion BtQuaternionToQuaternion(const btQuaternion& orientation
 
 inline Ogre::Quaternion GetForward(const Ogre::Vector3& forward)
 {
-	return Ogre::Vector3::UNIT_Z.getRotationTo(forward);
+	if (forward.isNaN() || forward.isZeroLength())
+		return Ogre::Quaternion::IDENTITY;
+
+	return Ogre::Vector3::UNIT_Z.getRotationTo(forward.normalisedCopy());
 }
 
 //tolua_end
