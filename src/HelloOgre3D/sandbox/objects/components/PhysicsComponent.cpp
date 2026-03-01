@@ -79,6 +79,14 @@ void PhysicsComponent::ResetRigidBody(btRigidBody* newBody)
 {
 	const Ogre::Vector3 position = GetPosition();
 	const Ogre::Quaternion rot = GetOrientation();
+	const Ogre::Vector3 linearVelocity = GetVelocity();
+	const Ogre::Real previousMass = GetMass();
+
+	btVector3 angularVelocity(0.0f, 0.0f, 0.0f);
+	if (m_body != nullptr)
+	{
+		angularVelocity = m_body->getAngularVelocity();
+	}
 
 	this->RemoveFromWorld();
 	this->DeleteRigidBody();
@@ -87,11 +95,16 @@ void PhysicsComponent::ResetRigidBody(btRigidBody* newBody)
 	if (!m_body) return;
 	m_body->setUserPointer(m_owner);
 
-	// 还原质量（需在写回 transform 前设置惯量）
-	this->SetMass(m_owner->GetMass());
+	// Keep dynamic/kinematic nature consistent across capsule rebuilds.
+	// NOTE: BaseObject::GetMass() returns 0 by default; using previous rigid-body mass is required.
+	const Ogre::Real massToRestore = previousMass > 0.0f ? previousMass : 1.0f;
+	this->SetMass(massToRestore);
 	
 	this->SetPosition(position);
 	this->SetOrientation(rot);
+	this->SetVelocity(linearVelocity);
+	m_body->setAngularVelocity(angularVelocity);
+	m_body->activate(true);
 
 	// 重新加入物理世界
 	this->AddToWorld();
@@ -255,4 +268,3 @@ void PhysicsComponent::RebuildCapsule(Ogre::Real height, Ogre::Real radius)
 	capsule->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 	this->ResetRigidBody(capsule);
 }
-
