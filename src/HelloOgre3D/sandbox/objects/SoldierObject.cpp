@@ -233,6 +233,7 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 	this->SetHeight(soldier_height);
 	this->SetMaxSpeed(soldier_speed);
+	this->updateWorldTransform();
 }
 
 void SoldierObject::TryApplyPendingStance()

@@ -223,14 +223,16 @@ void AgentObject::SlowMoving(float rate /*= 1.0f*/)
 void AgentObject::setPosition(const Ogre::Vector3& position)
 {
 	VehicleObject::setPosition(position);
-	if (m_pAgentBody) 
+	// Physics-driven agents must keep render transform sourced from rigid body.
+	// Otherwise we can momentarily overwrite origin-offset corrections (e.g. crouch/stand).
+	if (m_pAgentBody && getRigidBody() == nullptr)
 		m_pAgentBody->SetPosition(position);
 }
 
 void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
 	VehicleObject::setOrientation(quaternion);
-	if (m_pAgentBody)
+	if (m_pAgentBody && getRigidBody() == nullptr)
 		m_pAgentBody->SetOrientation(quaternion);
 }
 
