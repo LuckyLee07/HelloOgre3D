@@ -1,7 +1,5 @@
 #include "InputManager.h"
-#if !defined(__APPLE__)
 #include "OISInputManager.h"
-#endif
 #include "ClientManager.h"
 #include "OgreRenderWindow.h"
 #include "Samples/SdkCameraMan.h"
@@ -20,13 +18,6 @@ InputManager::~InputManager()
 
 void InputManager::Initialize()
 {
-#if defined(__APPLE__)
-	// macOS build: run without OIS backend for now.
-	m_pOISInputMgr = nullptr;
-	m_pMouse = nullptr;
-	m_pKeyboard = nullptr;
-	return;
-#else
 	std::ostringstream windowHndStr;
 	windowHndStr << m_windowHnd;
 
@@ -42,26 +33,37 @@ void InputManager::Initialize()
 	oispl.insert(std::make_pair(std::string("x11_mouse_hide"), std::string("false")));
 	oispl.insert(std::make_pair(std::string("x11_keyboard_grab"), std::string("false")));
 	oispl.insert(std::make_pair(std::string("XAutorepeatOn"), std::string("true")));
+#elif defined OIS_APPLE_PLATFORM
+	oispl.insert(std::make_pair(std::string("MacAutoRepeatOn"), std::string("true")));
 #endif
 	m_pOISInputMgr = OIS::InputManager::createInputSystem(oispl);
 
+#if defined(OIS_APPLE_PLATFORM)
+	// Cocoa mouse path in OIS 1.5 can stall on some runtime combinations.
+	// Keep keyboard enabled for gameplay input (F-keys) and skip mouse temporarily.
+	m_pMouse = nullptr;
+#else
 	m_pMouse = static_cast<OIS::Mouse*>(m_pOISInputMgr->createInputObject(OIS::OISMouse, true));
+#endif
 	m_pKeyboard = static_cast<OIS::Keyboard*>(m_pOISInputMgr->createInputObject(OIS::OISKeyboard, true));
 
-	m_pMouse->setEventCallback(this);
-	m_pKeyboard->setEventCallback(this);
-#endif
+	if (m_pMouse != nullptr)
+		m_pMouse->setEventCallback(this);
+	if (m_pKeyboard != nullptr)
+		m_pKeyboard->setEventCallback(this);
 }
 
 void InputManager::capture()
 {
-	if (m_pMouse != nullptr) m_pMouse->capture();
-	if (m_pKeyboard != nullptr) m_pKeyboard->capture();
+	if (m_pMouse != nullptr)
+		m_pMouse->capture();
+
+	if (m_pKeyboard != nullptr)
+		m_pKeyboard->capture();
 }
 
 void InputManager::closeWindow()
 {
-#if !defined(__APPLE__)
 	if (m_pOISInputMgr == nullptr) return;
 
 	m_pOISInputMgr->destroyInputObject(m_pMouse);
@@ -70,7 +72,6 @@ void InputManager::closeWindow()
 	m_pKeyboard = nullptr;
 
 	OIS::InputManager::destroyInputSystem(m_pOISInputMgr);
-#endif
 	m_pOISInputMgr = nullptr;
 	m_pMouse = nullptr;
 	m_pKeyboard = nullptr;
@@ -78,6 +79,8 @@ void InputManager::closeWindow()
 
 void InputManager::resizeMouseState(int width, int height)
 {
+	if (m_pMouse == nullptr)
+		return;
 	const OIS::MouseState& mouseState = m_pMouse->getMouseState();
 	mouseState.width = width;
 	mouseState.height = height;

@@ -14,6 +14,7 @@ function CreateGameProject( projectName )
       "libpng",
       "libraw",
       "libtiff4",
+      "ois",
       "ogre3d",
       "ogre3d_glsupport",
       "ogre3d_opengl",
@@ -36,7 +37,6 @@ function CreateGameProject( projectName )
     } )
     libdirs{ "../libs/" }
     configuration( { "windows" } )
-      links { "ois" }
       links { "ogre3d_direct3d9" }
       -- add the directx include directory
       buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
@@ -52,7 +52,6 @@ function CreateGameProject( projectName )
       -- static linking against ogre requires linking against ogre's resource file
       linkoptions( "OgreWin32Resources.res" )
     configuration( { "macosx" } )
-      links { "ois" }
       links {
         "Cocoa.framework",
         "Carbon.framework",
@@ -68,7 +67,6 @@ function CreateGameProject( projectName )
         "-framework OpenGL"
       }
     configuration( { "linux" } )
-      links { "ois" }
     filter "system:macosx"
       linkoptions {
         "-framework Cocoa",

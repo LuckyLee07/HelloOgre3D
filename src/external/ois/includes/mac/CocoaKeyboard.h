@@ -100,9 +100,10 @@ namespace OIS
 typedef std::map<unsigned short, KeyCode> VirtualtoOIS_KeyMap;
 typedef std::list<OIS::CocoaKeyStackEvent> eventStack;
 
-@interface CocoaKeyboardView : NSResponder {
+@interface CocoaKeyboardView : NSView {
 	CocoaKeyboard* oisKeyboardObj;
 	VirtualtoOIS_KeyMap keyConversion;
+	id localEventMonitor;
 
 	char KeyBuffer[256];
 	NSUInteger prevModMask;

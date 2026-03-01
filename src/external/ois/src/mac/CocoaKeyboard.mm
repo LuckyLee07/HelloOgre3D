@@ -43,13 +43,16 @@ CocoaKeyboard::CocoaKeyboard(InputManager* creator, bool buffered, bool repeat) 
  Keyboard(creator->inputSystemName(), buffered, 0, creator)
 {
 	CocoaInputManager* man = static_cast<CocoaInputManager*>(mCreator);
-	mResponder			   = [[CocoaKeyboardView alloc] init];
+	NSView* contentView = [man->_getWindow() contentView];
+	mResponder          = [[CocoaKeyboardView alloc] initWithFrame:[contentView bounds]];
 	if(!mResponder)
 		OIS_EXCEPT(E_General, "CocoaKeyboardView::CocoaKeyboardView >> Error creating event responder");
 
-	[man->_getWindow() makeFirstResponder:mResponder];
-	[mResponder setUseRepeat:repeat];
+	[mResponder setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[mResponder setOISKeyboardObj:this];
+	[mResponder setUseRepeat:repeat];
+	[contentView addSubview:mResponder];
+	[man->_getWindow() makeFirstResponder:mResponder];
 
 	static_cast<CocoaInputManager*>(mCreator)->_setKeyboardUsed(true);
 }
@@ -59,6 +62,7 @@ CocoaKeyboard::~CocoaKeyboard()
 {
 	if(mResponder)
 	{
+		[mResponder removeFromSuperview];
 		[mResponder release];
 		mResponder = nil;
 	}
@@ -82,6 +86,19 @@ bool CocoaKeyboard::isKeyDown(KeyCode key) const
 //-------------------------------------------------------------------//
 void CocoaKeyboard::capture()
 {
+	// Ogre custom main loop may not always run Cocoa's event pump.
+	// Pump pending app events here so keyDown/keyUp callbacks are dispatched.
+	NSEvent* event = nil;
+	do
+	{
+		event = [NSApp nextEventMatchingMask:NSEventMaskAny
+									untilDate:[NSDate distantPast]
+									   inMode:NSDefaultRunLoopMode
+									  dequeue:YES];
+		if(event)
+			[NSApp sendEvent:event];
+	} while(event);
+
 	[mResponder capture];
 }
 
@@ -125,15 +142,47 @@ void CocoaKeyboard::copyKeyStates(char keys[256]) const
 
 @implementation CocoaKeyboardView
 
-- (id)init
+- (id)initWithFrame:(NSRect)frame
 {
-	self = [super init];
+	self = [super initWithFrame:frame];
 	if(self) {
 		[self populateKeyConversion];
 		memset(&KeyBuffer, 0, 256);
 		prevModMask = 0;
+
+		// Fallback path: if this responder is not firstResponder, still mirror key events.
+		__unsafe_unretained CocoaKeyboardView* weakSelf = self;
+		localEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:(NSEventMaskKeyDown | NSEventMaskKeyUp | NSEventMaskFlagsChanged)
+																 handler:^NSEvent* _Nullable(NSEvent* _Nonnull event) {
+			CocoaKeyboardView* strongSelf = weakSelf;
+			if(!strongSelf)
+				return event;
+
+			NSWindow* w = [event window];
+			if(w && [w firstResponder] == strongSelf)
+				return event;
+
+			switch([event type])
+			{
+				case NSEventTypeKeyDown: [strongSelf keyDown:event]; break;
+				case NSEventTypeKeyUp: [strongSelf keyUp:event]; break;
+				case NSEventTypeFlagsChanged: [strongSelf flagsChanged:event]; break;
+				default: break;
+			}
+			return event;
+		}];
 	}
 	return self;
+}
+
+- (void)dealloc
+{
+	if(localEventMonitor)
+	{
+		[NSEvent removeMonitor:localEventMonitor];
+		localEventMonitor = nil;
+	}
+	[super dealloc];
 }
 
 - (BOOL)acceptsFirstResponder

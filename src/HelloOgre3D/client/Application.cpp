@@ -1,7 +1,6 @@
 #include "Application.h"
 #include "OgreRenderWindow.h"
 #include "ClientManager.h"
-//#include <iostream>
 
 Application::Application(const std::string& appTitle)
 {
