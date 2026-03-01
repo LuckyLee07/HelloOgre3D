@@ -53,8 +53,8 @@ public:
     static void Animation_LinearBlendTo(AgentAnim* startAnim, AgentAnim* endAnim, float blendTime, float startTime, float currTime);
 
 private:
-    BaseObject* m_owner = nullptr;	//³ÖÓĞÕß
-    bool m_canFireEvent = false;	//¿É·¢ËÍÊÂ¼ş
+    BaseObject* m_owner = nullptr;	//æŒæœ‰è€…
+    bool m_canFireEvent = false;	//å¯å‘é€äº‹ä»¶
 
     std::unordered_map<std::string, AgentAnimState*> m_animStates;
 

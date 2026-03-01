@@ -12,11 +12,11 @@ public:
 	AgentStateController(AgentObject* soldier);
 	~AgentStateController();
 
-	void Init();				// ×¢²áËùÓĞ×´Ì¬ + Ìø×ª
-	void Update(float dtime);	// Ã¿Ö¡Çı¶¯ FSM
-	void ChangeState(const std::string& stateName); // ÊÖ¶¯ÇĞ»»
+	void Init();				// æ³¨å†Œæ‰€æœ‰çŠ¶æ€ + è·³è½¬
+	void Update(float dtime);	// æ¯å¸§é©±åŠ¨ FSM
+	void ChangeState(const std::string& stateName); // æ‰‹åŠ¨åˆ‡æ¢
 
-	AgentState* GetCurrState() const; // »ñÈ¡µ±Ç°State
+	AgentState* GetCurrState() const; // è·å–å½“å‰State
 
 	//tolua_begin
 	bool AddState(const std::string& name);

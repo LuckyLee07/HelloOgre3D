@@ -226,7 +226,7 @@ void AgentAnimStateMachine::UpdateTransition(float deltaTimeInMillis, float curr
 	m_pCurrState->StepAnim(deltaTimeInMillis);
 	m_pNextState->StepAnim(deltaTimeInMillis);
 
-	const float epsilon = 0.0001f;  // Éè¶¨¸ö½ÏÐ¡µÄÈÝ²îÖµ
+	const float epsilon = 0.0001f;  // è®¾å®šä¸ªè¾ƒå°çš„å®¹å·®å€¼
 	if (m_pCurrState->GetAnimWeight() < epsilon)
 	{
 		m_pCurrState->ClearAnim();

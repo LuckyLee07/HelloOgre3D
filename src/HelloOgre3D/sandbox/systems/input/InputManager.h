@@ -39,7 +39,7 @@ public:
 	bool isKeyPressed(OIS::KeyCode key) const;
 	bool isKeyReleased(OIS::KeyCode key) const;
 
-	void update(int deltaMs); // Ã¿Ö¡µ÷ÓÃÒÔÇå³ı KeyDown/KeyUp ×´Ì¬
+	void update(int deltaMs); // æ¯å¸§è°ƒç”¨ä»¥æ¸…é™¤ KeyDown/KeyUp çŠ¶æ€
 
 private:
 	size_t m_windowHnd;
@@ -51,9 +51,9 @@ private:
 
 	std::vector<IInputHandler*> m_inputHandlers;
 
-	std::map<OIS::KeyCode, bool> m_KeyMap;	 //true: ¼ü°´ÏÂ×´Ì¬
-	std::map<OIS::KeyCode, bool> m_KeyDownMap; //true: ¼üÕâÒ»Ö¡µ¯Æğ
-	std::map<OIS::KeyCode, bool> m_KeyUpMap; //true: ¼üÕâÒ»Ö¡°´ÏÂ
+	std::map<OIS::KeyCode, bool> m_KeyMap;	 //true: é”®æŒ‰ä¸‹çŠ¶æ€
+	std::map<OIS::KeyCode, bool> m_KeyDownMap; //true: é”®è¿™ä¸€å¸§å¼¹èµ·
+	std::map<OIS::KeyCode, bool> m_KeyUpMap; //true: é”®è¿™ä¸€å¸§æŒ‰ä¸‹
 };
 
 #endif; // __INPUT_MANAGER_H__

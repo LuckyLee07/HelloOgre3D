@@ -233,7 +233,7 @@ bool SceneFactory::GetBonePosition(Ogre::MovableObject& object, const Ogre::Stri
 			outPosition = skeleton->getBone(boneName)->_getDerivedPosition();
 			if (node != nullptr)
 			{
-				//outPosition = ¸¸½ÚµãÆ½ÒÆ + (¸¸½ÚµãÐý×ª¡Á¹Ç÷À¾Ö²¿Î»ÖÃ)
+				//outPosition = çˆ¶èŠ‚ç‚¹å¹³ç§» + (çˆ¶èŠ‚ç‚¹æ—‹è½¬Ã—éª¨éª¼å±€éƒ¨ä½ç½®)
 				outPosition = node->_getDerivedPosition() + (node->_getDerivedOrientation() * outPosition);
 			}
 			return true;

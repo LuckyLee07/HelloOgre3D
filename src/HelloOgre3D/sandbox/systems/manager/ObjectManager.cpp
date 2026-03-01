@@ -115,7 +115,7 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		{
 			auto pBlock = *iter;
 			if (!forceAll && pBlock->GetObjType() != BaseObject::OBJ_TYPE_BLOCK)
-				continue; //·ÀÖ¹É¾³ýPlane
+				continue; //é˜²æ­¢åˆ é™¤Plane
 
 			m_objects.erase(pBlock->GetObjId());
 			SAFE_DELETE(pBlock);

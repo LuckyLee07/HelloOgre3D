@@ -34,7 +34,7 @@ std::string ShootState::OnUpdate(float dt)
 		{
 			m_pAgent->RequestState(SSTATE_FIRE);
 		}
-		return ""; // ¼ÌĞøµÈ´ı
+		return ""; // ç»§ç»­ç­‰å¾…
 	}
 
 	auto pInput = m_pAgent->GetInput();

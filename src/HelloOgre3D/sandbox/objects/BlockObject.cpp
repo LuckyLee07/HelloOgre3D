@@ -59,7 +59,7 @@ BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 
 BlockObject::~BlockObject()
 {
-	// ÏÈÇåÀí°ó¶¨µÄÁ£×Ó
+	// å…ˆæ¸…ç†ç»‘å®šçš„ç²’å­
 	auto iter = m_particleNodes.begin();
 	for (; iter != m_particleNodes.end(); iter++)
 	{
@@ -161,9 +161,9 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	if (pCollideObj == nullptr) return;
 
 	int objType = pCollideObj->GetObjType();
-	if (objType == OBJ_TYPE_BULLET) // ×Óµ¯ÀàÐÍ
+	if (objType == OBJ_TYPE_BULLET) // å­å¼¹ç±»åž‹
 	{
-		pCollideObj->SetNeedClear(); // ±ê¼ÇÎªÇåÀí
+		pCollideObj->SetNeedClear(); // æ ‡è®°ä¸ºæ¸…ç†
 		this->setBulletCollideImpact(collision);
 	}
 }
@@ -175,14 +175,14 @@ void BlockObject::addParticleNode(Ogre::SceneNode* particleNode)
 
 void BlockObject::setBulletCollideImpact(const Collision& collision)
 {
-	// ´´½¨Éä»÷Åö×²Ð§¹û
+	// åˆ›å»ºå°„å‡»ç¢°æ’žæ•ˆæžœ
 	Ogre::SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle(pRootScene, "BulletImpact");
 
-	// 2ÃëºóÇåµô¸ÃÁ£×ÓÐ§¹û
+	// 2ç§’åŽæ¸…æŽ‰è¯¥ç²’å­æ•ˆæžœ
 	g_ObjectManager->markNodeRemInSeconds(particleImpact, 2.0f);
 
-	// »ñÈ¡¸¸½ÚµãµÄÊÀ½çÎ»ÖÃºÍÐý×ª
+	// èŽ·å–çˆ¶èŠ‚ç‚¹çš„ä¸–ç•Œä½ç½®å’Œæ—‹è½¬
 	particleImpact->setPosition(collision.pointA_);
 
 	const unsigned short numAttachedObjects = particleImpact->numAttachedObjects();

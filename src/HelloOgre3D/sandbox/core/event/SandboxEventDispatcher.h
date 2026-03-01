@@ -10,13 +10,13 @@ class SandboxEventDispatcher
 public:
 	using Callback = std::function<void(const SandboxContext&)>;
 
-	// 绑定回调
+	// 缁戝畾鍥炶皟
 	void BindCallback(const Callback& callback)
 	{
 		m_callbacks.push_back(callback);
 	}
 
-	// 执行回调
+	// 鎵ц鍥炶皟
 	void Invoke(const SandboxContext& context)
 	{
 		for (const auto& callback: m_callbacks)

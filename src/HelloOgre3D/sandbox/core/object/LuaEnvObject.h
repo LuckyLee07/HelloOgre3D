@@ -10,12 +10,12 @@ public:
 	LuaEnvObject();
 	virtual ~LuaEnvObject();
 
-	bool setPluginEnv(lua_State* L); // ÊÖ¶¯tolua
+	bool setPluginEnv(lua_State* L); // æ‰‹åŠ¨tolua
 
 	bool callFunction(const char* funcname, const char* format, ...);
 
 private:
-	int m_luaRef = 0; // °ó¶¨µÄLua±í
+	int m_luaRef = 0; // ç»‘å®šçš„Luaè¡¨
 
 	ScriptLuaVM* m_pScriptVM;
 };

@@ -64,7 +64,7 @@ private:
 	UIManager* m_pUIManager;
 	ObjectManager* m_pObjectManager;
 
-	long long m_SimulationTime; // 运行时间
+	long long m_SimulationTime; // 杩愯鏃堕棿
 
 }; //tolua_exports
 

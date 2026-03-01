@@ -1,7 +1,7 @@
 #ifndef __LUA_PLUGIN_MGR_H__  
 #define __LUA_PLUGIN_MGR_H__
 
-#include <regex> //C++11ÒýÈë
+#include <regex> //C++11å¼•å…¥
 #include <string>
 #include <assert.h>
 #include <typeinfo>
@@ -21,7 +21,7 @@ public:
 		bool result = false;
 		GetScriptLuaVM()->callModuleFunc("LuaPluginMgr", "BindByLuaFile", formatStr, bindObj, fileName.c_str(), &result);
 
-		assert(result && "Failed on bind lua plugin to obj"); // ±¨´íassert
+		assert(result && "Failed on bind lua plugin to obj"); // æŠ¥é”™assert
 
 		return result;
 	}

@@ -5,7 +5,7 @@
 
 struct AgentContext;
 
-// Ҷ�ӽڵ�
+// 叶子节点
 class DTActionBase
 {
 public:

@@ -81,12 +81,12 @@ void GameManager::Initialize()
 
 void GameManager::InitLuaEnv()
 {
-	// ÉèÖÃToLua¶ÔÏó 
+	// è®¾ç½®ToLuaå¯¹è±¡ 
 	tolua_SandboxToLua_open(m_pScriptVM->getLuaState());
 	tolua_GameToLua_open(m_pScriptVM->getLuaState());
 	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 
-	// ÉèÖÃlua¿ÉÓÃµÄc++¶ÔÏó 
+	// è®¾ç½®luaå¯ç”¨çš„c++å¯¹è±¡ 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
 	m_pScriptVM->setUserTypePointer("ObjectManager", "ObjectManager", m_pObjectManager);

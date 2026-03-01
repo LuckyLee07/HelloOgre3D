@@ -7,7 +7,7 @@
 class SandboxContext
 {
 public:
-	// std::stringÀàĞÍ
+	// std::stringç±»å‹
 	SandboxContext& Set_String(const std::string& key, const std::string& value)
 	{
 		return Set(key, value);
@@ -17,7 +17,7 @@ public:
 		return Get<std::string>(key);
 	}
 
-	// number ÀàĞÍ
+	// number ç±»å‹
 	SandboxContext& Set_Number(const std::string& key, double value)
 	{
 		return Set(key, value);
@@ -27,11 +27,11 @@ public:
 		return Get<double>(key);
 	}
 
-	// Reference ÀàĞÍ
+	// Reference ç±»å‹
 	template<typename T>
 	SandboxContext& Set_Ref(const std::string& key, T& value)
 	{
-		return Set(key, std::make_shared<T>(value)); // Ê¹ÓÃ shared_ptr ´æ´¢ÒıÓÃ
+		return Set(key, std::make_shared<T>(value)); // ä½¿ç”¨ shared_ptr å­˜å‚¨å¼•ç”¨
 	}
 	template<typename T>
 	T& Get_Ref(const std::string& key) const
@@ -40,11 +40,11 @@ public:
 		return *ptr;
 	}
 
-	// Pointer ÀàĞÍ
+	// Pointer ç±»å‹
 	template<typename T>
 	SandboxContext& Set_Ptr(const std::string& key, T* value)
 	{
-		return Set(key, value); // ´æ´¢Ö¸ÕëÀàĞÍ
+		return Set(key, value); // å­˜å‚¨æŒ‡é’ˆç±»å‹
 	}
 	template<typename T>
 	T* Get_Ptr(const std::string& key) const
@@ -53,7 +53,7 @@ public:
 	}
 
 private:
-	// ÉèÖÃ²ÎÊı
+	// è®¾ç½®å‚æ•°
 	template<typename T>
 	SandboxContext& Set(const std::string& key, const T& value)
 	{
@@ -61,20 +61,20 @@ private:
 		return *this;
 	}
 
-	// »ñÈ¡²ÎÊı£¨´øÄ¬ÈÏÖµ£©
+	// è·å–å‚æ•°ï¼ˆå¸¦é»˜è®¤å€¼ï¼‰
 	template<typename T>
 	T Get(const std::string& key, const T& defaultValue = T()) const
 	{
 		return m_params.Get<T>(key, defaultValue);
 	}
 
-	//¼ì²é²ÎÊıÊÇ·ñ´æÔÚ
+	//æ£€æŸ¥å‚æ•°æ˜¯å¦å­˜åœ¨
 	bool Has(const std::string& key) const
 	{
 		return m_params.Has(key);
 	}
 
-	// ÒÆ³ı²ÎÊı
+	// ç§»é™¤å‚æ•°
 	void Remove(const std::string& key)
 	{
 		m_params.Remove(key);
@@ -95,7 +95,7 @@ private:
 
 /*
 #include <any>
-// std::any°æ±¾ C++17
+// std::anyç‰ˆæœ¬ C++17
 class SandboxContext
 {
 public:

@@ -48,9 +48,9 @@ ClientManager::ClientManager()
 {
     m_Timer.reset();
 
-    m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();//΢�뼶
-    //m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();//���뼶
-    m_lastDrawTimeInMicro = m_Timer.getMicroseconds();   //΢�뼶
+    m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();//微秒级
+    //m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();//毫秒级
+    m_lastDrawTimeInMicro = m_Timer.getMicroseconds();   //微秒级
 }
 
 ClientManager::~ClientManager()

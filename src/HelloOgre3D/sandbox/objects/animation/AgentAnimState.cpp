@@ -2,7 +2,7 @@
 #include "AgentAnim.h"
 #include "OgreAnimationState.h"
 
-// ”Î SOLDIER_STATE∂‘”¶
+// ‰∏é SOLDIER_STATEÂØπÂ∫î
 char* AgentAnims[] =
 {
 	"dead",

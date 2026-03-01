@@ -9,7 +9,7 @@
 AgentStateController::AgentStateController(AgentObject* soldier) : m_agent(soldier)
 {
 	m_fsm = new AgentFSM();
-	//Init(); // ·Åµ½Lua³õÊ¼»¯
+	//Init(); // æ”¾åˆ°Luaåˆå§‹åŒ–
 }
 
 AgentStateController::~AgentStateController()

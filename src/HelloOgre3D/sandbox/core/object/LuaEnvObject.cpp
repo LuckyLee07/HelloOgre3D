@@ -20,7 +20,7 @@ LuaEnvObject::~LuaEnvObject()
 		lua_State* L = m_pScriptVM->getLuaState();
 		luaL_unref(L, LUA_REGISTRYINDEX, m_luaRef);
 
-		LuaPluginMgr::RemoveLocalEnvForObject(this); // Ö÷¶¯Çå³ý¾Ö²¿±í
+		LuaPluginMgr::RemoveLocalEnvForObject(this); // ä¸»åŠ¨æ¸…é™¤å±€éƒ¨è¡¨
 	}
 }
 
@@ -31,9 +31,9 @@ bool LuaEnvObject::setPluginEnv(lua_State* L)
 		return false;
 	}
 
-	lua_pushvalue(L, 2); //self->Îª1 ´Ë´¦°Ñtable²ÎÊýÑ¹Èë
+	lua_pushvalue(L, 2); //self->ä¸º1 æ­¤å¤„æŠŠtableå‚æ•°åŽ‹å…¥
 
-	// Îª·ÀÖ¹±»À¬»ø»ØÊÕ ÔÚ Lua ×¢²á±íÖÐ´´½¨Ò»¸öÒýÓÃ
+	// ä¸ºé˜²æ­¢è¢«åžƒåœ¾å›žæ”¶ åœ¨ Lua æ³¨å†Œè¡¨ä¸­åˆ›å»ºä¸€ä¸ªå¼•ç”¨
 	m_luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
 
 	return true;

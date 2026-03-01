@@ -50,7 +50,7 @@ public:
 	//tolua_end
 
 	void addParticleNode(Ogre::SceneNode* particleNode);
-	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
+	void setBulletCollideImpact(const Collision& collision); //璁剧疆瀛愬脊纰版挒鍚庣殑鏁堟灉
 
 	void CollideWithObject(BaseObject* pCollideObj, const Collision& collision) override;
 

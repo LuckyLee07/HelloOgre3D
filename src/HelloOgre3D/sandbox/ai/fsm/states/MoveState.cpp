@@ -39,7 +39,7 @@ std::string MoveState::OnUpdate(float dt)
 	}
 	else if (pInput->isKeyDown(OIS::KC_3))
 	{
-		return ""; // ¼ÌÐøWalk
+		return ""; // ç»§ç»­Walk
 	}
 	else if (pInput->isKeyDown(OIS::KC_4))
 	{
