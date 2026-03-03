@@ -1,12 +1,12 @@
-#ifndef __DT_ACTION_BASE_H__
-#define __DT_ACTION_BASE_H__
+#ifndef __DTREE_ACTION_BASE_H__
+#define __DTREE_ACTION_BASE_H__
 
 #include <string>
 
 struct AgentContext;
 
 // 叶子节点
-class DTActionBase
+class DTreeActionBase
 {
 public:
 	enum Status
@@ -17,8 +17,8 @@ public:
 	};
 
 public:
-	DTActionBase(const char* name);
-	virtual ~DTActionBase() {}
+	DTreeActionBase(const char* name);
+	virtual ~DTreeActionBase() {}
 
 	void Initialize(AgentContext& ctx);
 	Status Update(int deltaMs, AgentContext& ctx);
@@ -27,9 +27,9 @@ public:
 	const char* GetName() const { return m_name.c_str(); }
 
 protected:
-	virtual void OnInitialize(AgentContext& ctx) {}
+	virtual void OnInitialize(AgentContext& ctx) { (void)ctx; }
 	virtual Status OnUpdate(int deltaMs, AgentContext& ctx) = 0;
-	virtual void OnClearUp(AgentContext& ctx) {}
+	virtual void OnClearUp(AgentContext& ctx) { (void)ctx; }
 
 private:
 	std::string m_name;

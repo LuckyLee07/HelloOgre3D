@@ -1,11 +1,11 @@
-#include "DTActionBase.h"
+#include "DTreeActionBase.h"
 #include "ai/AgentContext.h"
 
-DTActionBase::DTActionBase(const char* name) : m_name(name ? name : ""), m_status(TERMINATED)
+DTreeActionBase::DTreeActionBase(const char* name) : m_name(name ? name : ""), m_status(TERMINATED)
 {
 }
 
-void DTActionBase::Initialize(AgentContext& ctx)
+void DTreeActionBase::Initialize(AgentContext& ctx)
 {
 	if (m_status == UNINITIALIZED)
 	{
@@ -14,7 +14,7 @@ void DTActionBase::Initialize(AgentContext& ctx)
 	}
 }
 
-DTActionBase::Status DTActionBase::Update(int deltaMs, AgentContext& ctx)
+DTreeActionBase::Status DTreeActionBase::Update(int deltaMs, AgentContext& ctx)
 {
 	if (m_status == TERMINATED)
 		return TERMINATED;
@@ -26,7 +26,7 @@ DTActionBase::Status DTActionBase::Update(int deltaMs, AgentContext& ctx)
 	return m_status;
 }
 
-void DTActionBase::ClearUp(AgentContext& ctx)
+void DTreeActionBase::ClearUp(AgentContext& ctx)
 {
 	if (m_status == TERMINATED)
 	{

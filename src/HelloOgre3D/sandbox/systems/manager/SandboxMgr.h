@@ -70,6 +70,7 @@ public:
 	
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
+	
 	//tolua_end
 
 private:

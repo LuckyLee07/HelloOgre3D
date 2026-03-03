@@ -1,13 +1,13 @@
 #include "DecisionTree.h"
-#include "DTActionBase.h"
-#include "DTNodeBase.h"
+#include "DTreeActionBase.h"
+#include "DTreeNodeBase.h"
 
 DecisionTree::DecisionTree() : m_pRootNode(nullptr), m_pCurrAction(nullptr)
 {
 
 }
 
-void DecisionTree::SetRootNode(DTNodeBase* pRootNode)
+void DecisionTree::SetRootNode(DTreeNodeBase* pRootNode)
 {
 	m_pRootNode = pRootNode;
 }
@@ -27,8 +27,8 @@ void DecisionTree::Update(int deltaMs, AgentContext& ctx)
 	if (!m_pCurrAction)
 		return;
 
-	DTActionBase::Status result = m_pCurrAction->Update(deltaMs, ctx);
-	if (result == DTActionBase::TERMINATED)
+	DTreeActionBase::Status result = m_pCurrAction->Update(deltaMs, ctx);
+	if (result == DTreeActionBase::TERMINATED)
 	{
 		m_pCurrAction->ClearUp(ctx);
 		m_pCurrAction = nullptr;

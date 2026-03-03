@@ -1,11 +1,11 @@
 #include "AgentLocomotion.h"
-#include "ai/steer/OpenSteerAdapter.h"
 #include "SandboxMacros.h"
 #include "GameFunction.h"
 #include "objects/VehicleObject.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
-#include "ai/steer/AgentPath.h"
+#include "objects/steer/AgentPath.h"
+#include "objects/steer/OpenSteerAdapter.h"
 #include "systems/manager/ObjectManager.h"
 
 const float AgentLocomotion::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^2)

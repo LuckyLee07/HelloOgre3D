@@ -3,7 +3,7 @@
 
 #include "OgreMath.h"
 #include "OgreVector3.h"
-#include "ai/steer/AgentPath.h"
+#include "steer/AgentPath.h"
 #include "object/BaseObject.h"
 
 class btRigidBody;

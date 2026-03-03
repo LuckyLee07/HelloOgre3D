@@ -1,18 +1,18 @@
-#include "DTNodeBranch.h"
-#include "DTEvaluator.h"
+#include "DTreeNodeBranch.h"
+#include "DTreeEvaluator.h"
 #include <assert.h>
 
-void DTNodeBranch::SetEvaluator(DTEvaluator* pEval)
+void DTreeNodeBranch::SetEvaluator(DTreeEvaluator* pEval)
 {
 	m_pEval = pEval;
 }
 
-void DTNodeBranch::AddChild(DTNodeBase* pNode)
+void DTreeNodeBranch::AddChild(DTreeNodeBase* pNode)
 {
 	m_children.push_back(pNode);
 }
 
-DTActionBase* DTNodeBranch::Evaluate(AgentContext& ctx)
+DTreeActionBase* DTreeNodeBranch::Evaluate(AgentContext& ctx)
 {
 	assert(m_pEval != nullptr);
 	int idx = m_pEval->Evaluate(ctx);
