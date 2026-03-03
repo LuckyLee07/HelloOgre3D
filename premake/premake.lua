@@ -71,26 +71,34 @@ if configuration == nil then
 	end
 end
 
+local macos_deployment_target = "15.6"
+
+local _project = project
+project = function(...)
+	_project(...)
+	filter "system:macosx"
+		systemversion(macos_deployment_target)
+		xcodebuildsettings {
+			["MACOSX_DEPLOYMENT_TARGET"] = macos_deployment_target
+		}
+	filter {}
+end
+
 dofile("samples.lua");
 
 solution( "HelloOgre3D" )
 	location( "../build/" )
 	configurations( { "Debug", "Release" } )
-	platforms( { "x32", "x64" } )
+	platforms( { "x86", "x64" } )
 -- configuration shared between all projects
 	language( "C++" )
 	--includedirs( { "../src/external/%{prj.name}/include/" } )
     warnings( "Extra" )
-	flags( {
-		--"FatalWarnings",
-		"MultiProcessorCompile",
-		--"NoEditAndContinue",
-		"NoImplicitLink",
-		"NoImportLib",
-		"NoIncrementalLink",
-		"NoMinimalRebuild",
-		--"StaticRuntime"
-	} )
+	multiprocessorcompile "On"
+	implicitlink "Off"
+	useimportlib "Off"
+	incrementallink "Off"
+	minimalrebuild "Off"
 	editandcontinue "Off"
 	staticruntime  "On"
 
@@ -122,7 +130,7 @@ solution( "HelloOgre3D" )
 	configuration( "*" )
 
 -- platform configurations
-	configuration( "x32" )
+	configuration( "x86" )
 		vectorextensions( "SSE" )
 		vectorextensions( "SSE2" )
 -- build for x86-32bit machines

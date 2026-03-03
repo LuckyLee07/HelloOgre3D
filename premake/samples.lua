@@ -79,16 +79,16 @@ function CreateGameProject( projectName )
         "-lobjc"
       }
     filter {}
-    configuration( { "windows", "x32", "Debug" } )
+    configuration( { "windows", "x86", "Debug" } )
       defines { "_ITERATOR_DEBUG_LEVEL=2" }
       libdirs( {
-        "\"../build/Engine/ogre3d/obj/x32/Debug\"",
+        "\"../build/Engine/ogre3d/obj/x86/Debug\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
-    configuration( { "windows", "x32", "Release" } )
+    configuration( { "windows", "x86", "Release" } )
       defines { "_ITERATOR_DEBUG_LEVEL=0" }
       libdirs( {
-        "\"../build/Engine/ogre3d/obj/x32/Release\"",
+        "\"../build/Engine/ogre3d/obj/x86/Release\"",
         "\"$(DXSDK_DIR)/Lib/x86\"",
       } )
     configuration( { "windows", "x64", "Debug" } )
