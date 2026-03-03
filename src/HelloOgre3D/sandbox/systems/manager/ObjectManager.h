@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "OISKeyboard.h"
 #include "GameDefine.h"
+#include "OgreString.h"
 
 namespace Ogre
 {
@@ -17,6 +18,7 @@ class BlockObject;
 class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
+class NavigationMesh;
 
 //tolua_begin
 enum MGR_OBJ_TYPE
@@ -50,6 +52,7 @@ public:
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	//tolua_end
 
+	std::vector<BaseObject*> getFixedObjects();
 	std::vector<VehicleObject*> getAllVehicles();
 
 	void addNewObject(BaseObject* pObject);
@@ -58,6 +61,8 @@ public:
 	BaseObject* getObjectById(int objid);
 
 	void markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds);
+
+	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
 
 private:
 	void realAddObject(BaseObject* pObject);
@@ -73,6 +78,8 @@ private:
 
 	// 存储需要定时删除的RootScene下的Node
 	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;
+
+	std::unordered_map<Ogre::String, NavigationMesh*> m_navMeshes;
 
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;

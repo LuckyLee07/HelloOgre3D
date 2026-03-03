@@ -8,6 +8,7 @@
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
 #include "objects/components/PhysicsComponent.h"
+#include "ai/navigation/NavigationMesh.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -23,6 +24,13 @@ ObjectManager::~ObjectManager()
 	m_pPhysicsWorld = nullptr;
 
 	this->clearAllObjects(MGR_OBJ_ALLS);
+
+	auto iter = m_navMeshes.begin();
+	for ( ; iter != m_navMeshes.end(); iter++)
+	{
+		SAFE_DELETE(iter->second);
+	}
+	m_navMeshes.clear();
 }
 
 ObjectManager* ObjectManager::GetInstance()
@@ -136,6 +144,40 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		m_agents.clear();
 	}
 }
+std::vector<BaseObject*> ObjectManager::getFixedObjects()
+{
+	std::size_t fixedObjects = 0;
+
+	auto iter = m_objects.begin();
+	for (; iter != m_objects.end(); iter++)
+	{
+		BaseObject* pObject = iter->second;
+		if (pObject && pObject->GetMass() <= 0.0f)
+		{
+			if (pObject->GetObjType() != BaseObject::OBJ_TYPE_PLANE)
+			{
+				fixedObjects++;
+			}
+		}
+	}
+
+	std::vector<BaseObject*> objects;
+	objects.reserve(fixedObjects);
+
+	for (; iter != m_objects.end(); iter++)
+	{
+		BaseObject* pObject = iter->second;
+		if (pObject && pObject->GetMass() <= 0.0f)
+		{
+			if (pObject->GetObjType() != BaseObject::OBJ_TYPE_PLANE)
+			{
+				objects.push_back(pObject);
+			}
+		}
+	}
+
+	return objects;
+}
 
 std::vector<VehicleObject*> ObjectManager::getAllVehicles()
 {
@@ -234,5 +276,15 @@ void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seco
 	if (pSceneNode == nullptr)
 		return;
 	m_remSceneNodes[pSceneNode] = int(seconds * 1000);
+}
+
+bool ObjectManager::addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh)
+{
+	if (m_navMeshes[navName])
+	{
+		SAFE_DELETE(m_navMeshes[navName]);
+	}
+	m_navMeshes[navName] = pNavMesh;
+	return true;
 }
 

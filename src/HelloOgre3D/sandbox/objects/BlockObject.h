@@ -54,7 +54,7 @@ public:
 
 	void CollideWithObject(BaseObject* pCollideObj, const Collision& collision) override;
 
-	Ogre::Entity* GetEntity();
+	Ogre::Entity* GetEntity() const;
 	Ogre::SceneNode* GetSceneNode();
 
 public:

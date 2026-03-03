@@ -249,7 +249,7 @@ OpenSteer::Vec3 BlockObject::steerToAvoid(const OpenSteer::AbstractVehicle& vehi
 	}
 }
 
-Ogre::Entity* BlockObject::GetEntity()
+Ogre::Entity* BlockObject::GetEntity() const
 {
 	return m_pEntity->GetEntity();
 }
