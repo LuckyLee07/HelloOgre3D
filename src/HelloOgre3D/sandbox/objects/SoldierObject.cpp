@@ -146,23 +146,91 @@ void SoldierObject::SyncWeaponToHandBone()
 
 void SoldierObject::ShootBullet()
 {
-	Ogre::SceneNode* pSoldier = m_pAgentBody->GetSceneNode();
+	if (m_pAgentBody == nullptr)
+	{
+		return;
+	}
 
-	Ogre::Vector3 position;
-	SceneFactory::GetBonePosition(*pSoldier, "b_muzzle", position);
-	Ogre::Quaternion orientation;
-	SceneFactory::GetBoneOrientation(*pSoldier, "b_muzzle", orientation);
+	Ogre::SceneNode* soldierNode = m_pAgentBody->GetSceneNode();
+	if (soldierNode == nullptr)
+	{
+		return;
+	}
 
-	Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
-	this->DoShootBullet(position, rotation);
+	Ogre::Vector3 position = soldierNode->_getDerivedPosition();
+	Ogre::Quaternion orientation = soldierNode->_getDerivedOrientation();
+	bool hasPosition = false;
+	bool hasOrientation = false;
+
+	// Preferred path: fire from muzzle bone on soldier mesh.
+	hasPosition = SceneFactory::GetBonePosition(*soldierNode, "b_muzzle", position);
+	hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_muzzle", orientation);
+
+	// Fallback: some assets keep muzzle data on weapon mesh.
+	if ((!hasPosition || !hasOrientation) && m_pWeapon != nullptr)
+	{
+		Ogre::SceneNode* weaponNode = m_pWeapon->GetSceneNode();
+		if (weaponNode != nullptr)
+		{
+			if (!hasPosition)
+			{
+				hasPosition = SceneFactory::GetBonePosition(*weaponNode, "b_muzzle", position);
+				if (!hasPosition)
+				{
+					position = weaponNode->_getDerivedPosition();
+					hasPosition = true;
+				}
+			}
+			if (!hasOrientation)
+			{
+				hasOrientation = SceneFactory::GetBoneOrientation(*weaponNode, "b_muzzle", orientation);
+				if (!hasOrientation)
+				{
+					orientation = weaponNode->_getDerivedOrientation();
+					hasOrientation = true;
+				}
+			}
+		}
+	}
+
+	// Last fallback: hand bone usually exists even if muzzle does not.
+	if (!hasPosition)
+	{
+		hasPosition = SceneFactory::GetBonePosition(*soldierNode, "b_RightHand", position);
+	}
+	if (!hasOrientation)
+	{
+		hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_RightHand", orientation);
+	}
+
+	this->DoShootBullet(position, orientation);
 }
 
-void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation)
+void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
-	Ogre::Quaternion qRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	Vector3 forward = qRotation * Vector3(1, 0, 0);
-	Vector3 up = qRotation * Vector3(0, 1, 0);
-	Vector3 left = qRotation * Vector3(0, 0, -1);
+	Ogre::Quaternion qRotation = orientation;
+	qRotation.normalise();
+
+	Vector3 forward = qRotation * Vector3::UNIT_X;
+	Vector3 up = qRotation * Vector3::UNIT_Y;
+	Vector3 left = qRotation * (-Vector3::UNIT_Z);
+
+	if (forward.isNaN() || forward.isZeroLength())
+	{
+		forward = GetForward();
+	}
+	forward.normalise();
+	if (up.isNaN() || up.isZeroLength())
+	{
+		up = Vector3::UNIT_Y;
+	}
+	up.normalise();
+	left = up.crossProduct(forward);
+	if (left.isNaN() || left.isZeroLength())
+	{
+		left = Vector3::UNIT_X;
+	}
+	left.normalise();
 
 	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
 	bullet->SetMass(0.1f);

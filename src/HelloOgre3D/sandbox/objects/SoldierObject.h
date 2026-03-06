@@ -32,7 +32,7 @@ public:
 
 	//tolua_end
 
-	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Vector3& rotation);
+	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 
 private:
 	void ApplyStanceParams(int stanceType);
