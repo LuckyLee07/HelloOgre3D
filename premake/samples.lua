@@ -42,6 +42,7 @@ function CreateGameProject( projectName )
       buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
       -- link against directx libraries
       links( {
+        "ws2_32",
         "d3d9",
         "dinput8",
         "dxguid",

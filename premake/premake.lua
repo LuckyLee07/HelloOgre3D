@@ -66,8 +66,74 @@ defines = function(items)
 end
 
 if configuration == nil then
+	local legacy_config_term_map = {
+		windows = "system:windows",
+		linux = "system:linux",
+		macosx = "system:macosx",
+		debug = "configurations:Debug",
+		release = "configurations:Release",
+		x86 = "platforms:x86",
+		x64 = "platforms:x64",
+		staticlib = "kind:StaticLib",
+		consoleapp = "kind:ConsoleApp",
+		windowedapp = "kind:WindowedApp"
+	}
+
+	local function trim_spaces(value)
+		return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+	end
+
+	local function map_legacy_config_term(term)
+		if type(term) ~= "string" then
+			return nil
+		end
+		local raw = trim_spaces(term)
+		if raw == "" or raw == "*" then
+			return nil
+		end
+		if string.find(raw, ":", 1, true) then
+			return raw
+		end
+
+		local lower = string.lower(raw)
+		local mapped = legacy_config_term_map[lower]
+		if mapped ~= nil then
+			return mapped
+		end
+
+		local lhs, rhs = raw:match("^(.-)%s+[oO][rR]%s+(.+)$")
+		if lhs ~= nil and rhs ~= nil then
+			local mapped_lhs = map_legacy_config_term(lhs)
+			local mapped_rhs = map_legacy_config_term(rhs)
+			if mapped_lhs ~= nil and mapped_rhs ~= nil then
+				return mapped_lhs .. " or " .. mapped_rhs
+			end
+		end
+
+		return raw
+	end
+
 	function configuration(terms)
-		filter(terms)
+		local normalized = normalize_list(terms)
+		if #normalized == 0 then
+			filter {}
+			return
+		end
+
+		local translated = {}
+		for _, term in ipairs(normalized) do
+			local mapped = map_legacy_config_term(term)
+			if mapped ~= nil then
+				table.insert(translated, mapped)
+			end
+		end
+
+		if #translated == 0 then
+			filter {}
+			return
+		end
+
+		filter(translated)
 	end
 end
 
