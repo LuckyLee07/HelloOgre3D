@@ -9,7 +9,9 @@
 #include "ClientManager.h"
 #include "Ogre.h"
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <unordered_set>
 #include "systems/manager/SandboxMgr.h"
 
 namespace
@@ -133,89 +135,162 @@ namespace
 
 	static Ogre::ManualObject* BuildDebugManualObject(Ogre::SceneManager& sceneMgr, const dtNavMesh& navMesh)
 	{
-		Ogre::ManualObject* manual = sceneMgr.createManualObject();
-		if (!manual)
+		Ogre::ManualObject* manualObj = sceneMgr.createManualObject();
+		if (!manualObj)
 			return NULL;
 
-		manual->setCastShadows(false);
-		manual->setDynamic(false);
+		manualObj->setCastShadows(false);
 
-		manual->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		manualObj->begin("debug_draw", Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		for (int ti = 0; ti < navMesh.getMaxTiles(); ++ti)
 		{
 			const dtMeshTile* tile = navMesh.getTile(ti);
 			if (!tile || !tile->header)
 				continue;
 
-			for (int pi = 0; pi < tile->header->polyCount; ++pi)
-			{
-				const dtPoly* poly = &tile->polys[pi];
-				if (!poly || poly->vertCount < 3)
-					continue;
-				if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
-					continue;
-
-				const Ogre::ColourValue color = AreaColor(poly->getArea());
-				const unsigned short v0 = poly->verts[0];
-				const float* p0 = &tile->verts[v0 * 3];
-
-				for (int k = 2; k < poly->vertCount; ++k)
-				{
-					const unsigned short v1 = poly->verts[k - 1];
-					const unsigned short v2 = poly->verts[k];
-					const float* p1 = &tile->verts[v1 * 3];
-					const float* p2 = &tile->verts[v2 * 3];
-
-					const unsigned int idx = static_cast<unsigned int>(manual->getCurrentVertexCount());
-
-					manual->position(p0[0], p0[1] + 0.05f, p0[2]);
-					manual->colour(color);
-					manual->position(p1[0], p1[1] + 0.05f, p1[2]);
-					manual->colour(color);
-					manual->position(p2[0], p2[1] + 0.05f, p2[2]);
-					manual->colour(color);
-
-					manual->triangle(idx, idx + 1, idx + 2);
-				}
-			}
+			NavigationMesh::DrawMeshTile(*manualObj, navMesh, *tile);
 		}
-		manual->end();
+		manualObj->end();
 
-		manual->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_LIST);
+		manualObj->begin("debug_opaque_draw", Ogre::RenderOperation::OT_LINE_LIST);
 		for (int ti = 0; ti < navMesh.getMaxTiles(); ++ti)
 		{
 			const dtMeshTile* tile = navMesh.getTile(ti);
 			if (!tile || !tile->header)
 				continue;
 
-			for (int pi = 0; pi < tile->header->polyCount; ++pi)
-			{
-				const dtPoly* poly = &tile->polys[pi];
-				if (!poly || poly->vertCount < 2)
-					continue;
-				if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
-					continue;
-
-				const Ogre::ColourValue lineColor(0.05f, 0.35f, 0.45f, 1.0f);
-				for (int e = 0; e < poly->vertCount; ++e)
-				{
-					const int ne = (e + 1) % poly->vertCount;
-					const float* pa = &tile->verts[poly->verts[e] * 3];
-					const float* pb = &tile->verts[poly->verts[ne] * 3];
-
-					manual->position(pa[0], pa[1] + 0.08f, pa[2]);
-					manual->colour(lineColor);
-					manual->position(pb[0], pb[1] + 0.08f, pb[2]);
-					manual->colour(lineColor);
-				}
-			}
+			NavigationMesh::DrawMeshOutline(*manualObj, navMesh, *tile);
 		}
-		manual->end();
+		manualObj->end();
 
-		return manual;
+		return manualObj;
 	}
 }
 
+void NavigationMesh::DrawMeshTile(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile)
+{
+	(void)navMesh;
+	if (!tile.header) return;
+
+	for (int pi = 0; pi < tile.header->polyCount; ++pi)
+	{
+		const dtPoly* poly = &tile.polys[pi];
+		if (!poly || poly->vertCount < 3)
+			continue;
+		if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
+			continue;
+
+		const dtPolyDetail* pd = &tile.detailMeshes[pi];
+		if (!pd || pd->triCount <= 0)
+			continue;
+
+		const Ogre::ColourValue color = AreaColor(poly->getArea());
+
+		for (int tri = 0; tri < pd->triCount; ++tri)
+		{
+			const unsigned int index = static_cast<unsigned int>(manualObject.getCurrentVertexCount());
+			const unsigned char* t = &tile.detailTris[(pd->triBase + tri) * 4];
+
+			for (int corner = 0; corner < 3; ++corner)
+			{
+				const float* vertex = 0;
+				if (t[corner] < poly->vertCount)
+					vertex = &tile.verts[poly->verts[t[corner]] * 3];
+				else
+					vertex = &tile.detailVerts[(pd->vertBase + t[corner] - poly->vertCount) * 3];
+
+				manualObject.position(vertex[0], vertex[1], vertex[2]);
+				manualObject.colour(color);
+			}
+
+			manualObject.triangle(index, index + 1, index + 2);
+		}
+	}
+}
+void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile)
+{
+	(void)navMesh;
+	if (!tile.header)
+		return;
+
+	const Ogre::ColourValue boundaryColor(
+		0.0f / 255.0f,
+		128.0f / 255.0f,
+		128.0f / 255.0f);
+	const Ogre::ColourValue internalColor(
+		0.0f / 255.0f,
+		150.0f / 255.0f,
+		150.0f / 255.0f);
+	const float yOffset = 0.08f;
+	std::unordered_set<std::uint64_t> internalEdgeKeys;
+
+	for (int pi = 0; pi < tile.header->polyCount; ++pi)
+	{
+		const dtPoly* poly = &tile.polys[pi];
+		if (!poly || poly->vertCount < 2)
+			continue;
+		if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
+			continue;
+
+		const int polyVertCount = poly->vertCount;
+		const dtPolyDetail* pd = &tile.detailMeshes[pi];
+		if (!pd || pd->triCount <= 0)
+			continue;
+
+		// Draw detail edges that map to original polygon edges.
+		for (int tri = 0; tri < pd->triCount; ++tri)
+		{
+			const unsigned char* t = &tile.detailTris[(pd->triBase + tri) * 4];
+			const float* tv[3];
+			for (int corner = 0; corner < 3; ++corner)
+			{
+				if (t[corner] < polyVertCount)
+					tv[corner] = &tile.verts[poly->verts[t[corner]] * 3];
+				else
+					tv[corner] = &tile.detailVerts[(pd->vertBase + (t[corner] - polyVertCount)) * 3];
+			}
+
+			for (int m = 0, n = 2; m < 3; n = m++)
+			{
+				const unsigned char edgeFlags = static_cast<unsigned char>((t[3] >> (n * 2)) & 0x3);
+				if (edgeFlags == 0)
+					continue; // Skip inner detail edges.
+
+				if (t[n] >= polyVertCount || t[m] >= polyVertCount)
+					continue; // Not an edge on original polygon vertices.
+
+				const int a = static_cast<int>(t[n]);
+				const int b = static_cast<int>(t[m]);
+				int polyEdge = -1;
+				if (((a + 1) % polyVertCount) == b)
+					polyEdge = a;
+				else if (((b + 1) % polyVertCount) == a)
+					polyEdge = b;
+
+				if (polyEdge < 0)
+					continue;
+
+				const bool isBoundary = (poly->neis[polyEdge] == 0);
+				if (!isBoundary)
+				{
+					const unsigned int ia = static_cast<unsigned int>(poly->verts[a]);
+					const unsigned int ib = static_cast<unsigned int>(poly->verts[b]);
+					const unsigned int lo = (ia < ib) ? ia : ib;
+					const unsigned int hi = (ia < ib) ? ib : ia;
+					const std::uint64_t edgeKey = (static_cast<std::uint64_t>(lo) << 32) | static_cast<std::uint64_t>(hi);
+					if (!internalEdgeKeys.insert(edgeKey).second)
+						continue; // Shared edge already drawn by neighbor polygon.
+				}
+
+				const Ogre::ColourValue& lineColor = isBoundary ? boundaryColor : internalColor;
+				manualObject.position(tv[n][0], tv[n][1] + yOffset, tv[n][2]);
+				manualObject.colour(lineColor);
+				manualObject.position(tv[m][0], tv[m][1] + yOffset, tv[m][2]);
+				manualObject.colour(lineColor);
+			}
+		}
+	}
+}
 NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BaseObject*> objects)
 	: m_navMesh(NULL)
 	, m_navQuery(NULL)

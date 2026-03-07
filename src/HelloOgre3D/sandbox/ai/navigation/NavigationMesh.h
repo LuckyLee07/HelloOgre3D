@@ -9,10 +9,12 @@ struct rcConfig;
 class BaseObject;
 class dtNavMesh;
 class dtNavMeshQuery;
+struct dtMeshTile;
 
 namespace Ogre
 {
 	class SceneNode;
+	class ManualObject;
 }
 
 class NavigationMesh //tolua_exports
@@ -35,6 +37,9 @@ public:
 
 	bool RebuildDebugVisual();
 	Ogre::SceneNode* GetDebugNode() const;
+	
+	static void DrawMeshTile(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile);
+	static void DrawMeshOutline(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile);
 
 private:
 	void DestroyDebugVisual();
