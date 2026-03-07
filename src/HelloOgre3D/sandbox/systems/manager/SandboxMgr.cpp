@@ -9,6 +9,10 @@
 #include "objects/SoldierObject.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
+#include "recast/include/Recast.h"
+#include "ai/navigation/NavigationMesh.h"
+#include "ObjectManager.h"
+#include "objects/VehicleObject.h"
 
 SandboxMgr* g_SandboxMgr = nullptr;
 
@@ -202,3 +206,42 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
     return m_uiService.SetMarkupColor(index, color);
 }
 
+void SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
+{
+    const std::vector<BaseObject*>& fixedObjects = g_ObjectManager->getFixedObjects();
+    NavigationMesh* pNavmesh = new NavigationMesh(config, fixedObjects);
+    g_ObjectManager->addNavigationMesh(navMeshName, pNavmesh);
+}
+
+rcConfig SandboxMgr::GetDefaultConfig()
+{
+    rcConfig config;
+    config.cs = 0.1f;
+    config.ch = 0.1f;
+    config.walkableSlopeAngle = VehicleObject::DEFAULT_AGENT_WALKABLE_SLOPE;
+    config.walkableHeight = static_cast<int>(
+        ceilf(VehicleObject::DEFAULT_AGENT_HEIGHT / config.ch));
+    config.walkableClimb = static_cast<int>(
+        floorf(VehicleObject::DEFAULT_AGENT_WALKABLE_CLIMB / config.ch));
+    config.walkableRadius = static_cast<int>(
+        ceilf(VehicleObject::DEFAULT_AGENT_RADIUS * 1.25f / config.cs));
+    config.maxEdgeLen = static_cast<int>(20.0f / config.cs);
+    config.maxSimplificationError = 1.0f;
+    config.minRegionArea = static_cast<int>(pow(50.0f, 2));
+    config.mergeRegionArea = static_cast<int>(pow(100.0f, 2));
+    config.maxVertsPerPoly = 3;
+    config.detailSampleDist = 5.0f * config.cs;
+    config.detailSampleMaxError = 1.0f * config.ch;
+
+    config.bmin[0] = -100.05f;
+    config.bmin[1] = -100.05f;
+    config.bmin[2] = -100.05f;
+
+    config.bmax[0] = 100.05f;
+    config.bmax[1] = 100.05f;
+    config.bmax[2] = 100.05f;
+
+    rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+
+    return config;
+}

@@ -273,3 +273,31 @@ namespace Gorilla
 		Gradient_Diagonal
 	};
 }
+
+$#include "recast/include/Recast.h"
+struct rcConfig
+{      
+	rcConfig();
+	
+	int width;
+	int height;
+	int tileSize;
+	int borderSize;
+
+	float cs;
+	float ch;
+	float bmin[3]; 
+	float bmax[3];
+	
+	float walkableSlopeAngle;
+	int walkableHeight;
+	int walkableClimb;
+	int walkableRadius;
+	int maxEdgeLen;
+	float maxSimplificationError;
+	int minRegionArea;
+	int mergeRegionArea;
+	int maxVertsPerPoly;
+	float detailSampleDist;
+	float detailSampleMaxError;
+};

@@ -50,7 +50,7 @@ bool NavBuilder::Build(const rcConfig& cfg,
 		return false;
 	}
 
-	// ÖĞ¼ä²úÎïÊÍ·Å
+	// ä¸­é—´äº§ç‰©é‡Šæ”¾
 	DestroyPolyMesh(pmesh);
 	DestroyPolyMeshDetail(dmesh);
 
@@ -143,7 +143,7 @@ bool NavBuilder::BuildPolyMeshes(const rcConfig& cfg,
 		return false;
 	}
 
-	// pipeline ÖĞ¼ä²úÎïÊÍ·Å
+	// pipeline ä¸­é—´äº§ç‰©é‡Šæ”¾
 	DestroyHeightfield(hf);
 	DestroyCompactHeightfield(chf);
 	DestroyContourSet(cset);
@@ -378,7 +378,7 @@ rcPolyMesh* NavBuilder::CreatePolyMesh(const rcConfig& cfg, rcContourSet& cset)
 		return NULL;
 	}
 
-	// Ä¬ÈÏ flags: È«²¿¿ÉÓÃ
+	// é»˜è®¤ flags: å…¨éƒ¨å¯ç”¨
 	for (int i = 0; i < pmesh->npolys; i++)
 		pmesh->flags[i] = 1;
 
@@ -408,7 +408,7 @@ bool NavBuilder::RasterizeObjects(const rcConfig& cfg,
 	std::vector<float> verts;
 	std::vector<int> tris;
 
-	std::vector<unsigned char> areaBuff; // Ã¿¸öÈı½ÇÒ»¸öbyte
+	std::vector<unsigned char> areaBuff; // æ¯ä¸ªä¸‰è§’ä¸€ä¸ªbyte
 	for (size_t i = 0; i < objects.size(); ++i)
 	{
 		if (!objects[i])
@@ -418,7 +418,7 @@ bool NavBuilder::RasterizeObjects(const rcConfig& cfg,
 		tris.clear();
 
 		if (!ExtractTriangleSoup(*objects[i], verts, tris))
-			continue; // Ä³Ğ©¶ÔÏóÃ» mesh ÔòÌø¹ı
+			continue; // æŸäº›å¯¹è±¡æ²¡ mesh åˆ™è·³è¿‡
 
 		if (verts.empty() || tris.empty())
 			continue;
@@ -446,13 +446,13 @@ bool NavBuilder::RasterizeTriangleSoup(const rcConfig& cfg,
 	rcHeightfield& hf,
 	std::vector<unsigned char>& areaBuff)
 {
-	// 1) ±ê¼Ç¿É×ßÈı½ÇĞÎ£¨°´ÆÂ¶È£©
+	// 1) æ ‡è®°å¯èµ°ä¸‰è§’å½¢ï¼ˆæŒ‰å¡åº¦ï¼‰
 	rcMarkWalkableTriangles(&m_ctx, cfg.walkableSlopeAngle,
 		soup.verts, soup.vertCount,
 		soup.tris, soup.triCount, &areaBuff[0]);
 
-	// 2) ¹âÕ¤»¯
-	// walkableClimb Ó°Ïì¿çÔ½¸ß¶È´¦Àí
+	// 2) å…‰æ …åŒ–
+	// walkableClimb å½±å“è·¨è¶Šé«˜åº¦å¤„ç†
 	rcRasterizeTriangles(&m_ctx, soup.verts, soup.vertCount, 
 		soup.tris, &areaBuff[0], soup.triCount, hf, cfg.walkableClimb);
 
@@ -598,7 +598,7 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 		ibuf->unlock();
 	}
 
-	// ±ØĞëÊÇÈı½ÇĞÎË÷Òı
+	// å¿…é¡»æ˜¯ä¸‰è§’å½¢ç´¢å¼•
 	if (outTris.size() % 3 != 0) 
 		return false;
 

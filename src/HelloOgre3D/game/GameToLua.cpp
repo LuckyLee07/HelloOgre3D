@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Sun Dec 28 10:18:55 2025.
+** Generated automatically by tolua++-1.0.92 on Sat Mar  7 09:43:37 2026.
 */
 
 #ifndef __cplusplus
@@ -19,6 +19,7 @@ TOLUA_API int  tolua_GameToLua_open (lua_State* tolua_S);
 #include "Ogre.h"
 #include "ois/includes/OISKeyboard.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
+#include "recast/include/Recast.h"
 #include "../common/LuaInterface.h"
 #include "GameManager.h"
 #include "debug/DebugDrawer.h"
@@ -33,9 +34,9 @@ static int tolua_collect_Ogre__Vector2 (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_Ogre__Vector3 (lua_State* tolua_S)
+static int tolua_collect_std__vector_int_ (lua_State* tolua_S)
 {
- Ogre::Vector3* self = (Ogre::Vector3*) tolua_tousertype(tolua_S,1,0);
+ std::vector<int>* self = (std::vector<int>*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -47,13 +48,6 @@ static int tolua_collect_std__vector_AgentObject__ (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_Ogre__ColourValue (lua_State* tolua_S)
-{
- Ogre::ColourValue* self = (Ogre::ColourValue*) tolua_tousertype(tolua_S,1,0);
-	Mtolua_delete(self);
-	return 0;
-}
-
 static int tolua_collect_std__vector_Ogre__Vector3_ (lua_State* tolua_S)
 {
  std::vector<Ogre::Vector3>* self = (std::vector<Ogre::Vector3>*) tolua_tousertype(tolua_S,1,0);
@@ -61,9 +55,9 @@ static int tolua_collect_std__vector_Ogre__Vector3_ (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_Ogre__Quaternion (lua_State* tolua_S)
+static int tolua_collect_Ogre__Vector3 (lua_State* tolua_S)
 {
- Ogre::Quaternion* self = (Ogre::Quaternion*) tolua_tousertype(tolua_S,1,0);
+ Ogre::Vector3* self = (Ogre::Vector3*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -75,9 +69,23 @@ static int tolua_collect_std__vector_BlockObject__ (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_std__vector_int_ (lua_State* tolua_S)
+static int tolua_collect_rcConfig (lua_State* tolua_S)
 {
- std::vector<int>* self = (std::vector<int>*) tolua_tousertype(tolua_S,1,0);
+ rcConfig* self = (rcConfig*) tolua_tousertype(tolua_S,1,0);
+	Mtolua_delete(self);
+	return 0;
+}
+
+static int tolua_collect_Ogre__ColourValue (lua_State* tolua_S)
+{
+ Ogre::ColourValue* self = (Ogre::ColourValue*) tolua_tousertype(tolua_S,1,0);
+	Mtolua_delete(self);
+	return 0;
+}
+
+static int tolua_collect_Ogre__Quaternion (lua_State* tolua_S)
+{
+ Ogre::Quaternion* self = (Ogre::Quaternion*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -103,6 +111,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::Vector3");
  tolua_usertype(tolua_S,"LuaInterface");
  tolua_usertype(tolua_S,"DebugDrawer");
+ tolua_usertype(tolua_S,"rcConfig");
  tolua_usertype(tolua_S,"Ogre::Node");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
  tolua_usertype(tolua_S,"Ogre::Camera");
@@ -2733,6 +2742,677 @@ static int tolua_GameToLua_Ogre_AnimationState_addTime00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: new of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_rcConfig_new00
+static int tolua_GameToLua_rcConfig_new00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertable(tolua_S,1,"rcConfig",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  {
+   rcConfig* tolua_ret = (rcConfig*)  Mtolua_new((rcConfig)());
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"rcConfig");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'new'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: new_local of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_rcConfig_new00_local
+static int tolua_GameToLua_rcConfig_new00_local(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertable(tolua_S,1,"rcConfig",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  {
+   rcConfig* tolua_ret = (rcConfig*)  Mtolua_new((rcConfig)());
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"rcConfig");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'new'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: width of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_width
+static int tolua_get_rcConfig_width(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'width'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->width);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: width of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_width
+static int tolua_set_rcConfig_width(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'width'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->width = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: height of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_height
+static int tolua_get_rcConfig_height(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'height'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->height);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: height of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_height
+static int tolua_set_rcConfig_height(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'height'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->height = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: tileSize of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_tileSize
+static int tolua_get_rcConfig_tileSize(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'tileSize'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->tileSize);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: tileSize of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_tileSize
+static int tolua_set_rcConfig_tileSize(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'tileSize'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->tileSize = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: borderSize of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_borderSize
+static int tolua_get_rcConfig_borderSize(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'borderSize'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->borderSize);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: borderSize of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_borderSize
+static int tolua_set_rcConfig_borderSize(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'borderSize'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->borderSize = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: cs of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_cs
+static int tolua_get_rcConfig_cs(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'cs'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->cs);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: cs of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_cs
+static int tolua_set_rcConfig_cs(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'cs'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->cs = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: ch of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_ch
+static int tolua_get_rcConfig_ch(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'ch'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->ch);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: ch of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_ch
+static int tolua_set_rcConfig_ch(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'ch'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->ch = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: bmin of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_GameToLua_rcConfig_bmin
+static int tolua_get_GameToLua_rcConfig_bmin(lua_State* tolua_S)
+{
+ int tolua_index;
+  rcConfig* self;
+ lua_pushstring(tolua_S,".self");
+ lua_rawget(tolua_S,1);
+ self = (rcConfig*)  lua_touserdata(tolua_S,-1);
+#ifndef TOLUA_RELEASE
+ {
+  tolua_Error tolua_err;
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in array indexing.",&tolua_err);
+ }
+#endif
+ tolua_index = (int)tolua_tonumber(tolua_S,2,0);
+#ifndef TOLUA_RELEASE
+ if (tolua_index<0 || tolua_index>=3)
+  tolua_error(tolua_S,"array indexing out of range.",NULL);
+#endif
+ tolua_pushnumber(tolua_S,(lua_Number)self->bmin[tolua_index]);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: bmin of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_GameToLua_rcConfig_bmin
+static int tolua_set_GameToLua_rcConfig_bmin(lua_State* tolua_S)
+{
+ int tolua_index;
+  rcConfig* self;
+ lua_pushstring(tolua_S,".self");
+ lua_rawget(tolua_S,1);
+ self = (rcConfig*)  lua_touserdata(tolua_S,-1);
+#ifndef TOLUA_RELEASE
+ {
+  tolua_Error tolua_err;
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in array indexing.",&tolua_err);
+ }
+#endif
+ tolua_index = (int)tolua_tonumber(tolua_S,2,0);
+#ifndef TOLUA_RELEASE
+ if (tolua_index<0 || tolua_index>=3)
+  tolua_error(tolua_S,"array indexing out of range.",NULL);
+#endif
+  self->bmin[tolua_index] = ((float)  tolua_tonumber(tolua_S,3,0));
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: bmax of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_GameToLua_rcConfig_bmax
+static int tolua_get_GameToLua_rcConfig_bmax(lua_State* tolua_S)
+{
+ int tolua_index;
+  rcConfig* self;
+ lua_pushstring(tolua_S,".self");
+ lua_rawget(tolua_S,1);
+ self = (rcConfig*)  lua_touserdata(tolua_S,-1);
+#ifndef TOLUA_RELEASE
+ {
+  tolua_Error tolua_err;
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in array indexing.",&tolua_err);
+ }
+#endif
+ tolua_index = (int)tolua_tonumber(tolua_S,2,0);
+#ifndef TOLUA_RELEASE
+ if (tolua_index<0 || tolua_index>=3)
+  tolua_error(tolua_S,"array indexing out of range.",NULL);
+#endif
+ tolua_pushnumber(tolua_S,(lua_Number)self->bmax[tolua_index]);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: bmax of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_GameToLua_rcConfig_bmax
+static int tolua_set_GameToLua_rcConfig_bmax(lua_State* tolua_S)
+{
+ int tolua_index;
+  rcConfig* self;
+ lua_pushstring(tolua_S,".self");
+ lua_rawget(tolua_S,1);
+ self = (rcConfig*)  lua_touserdata(tolua_S,-1);
+#ifndef TOLUA_RELEASE
+ {
+  tolua_Error tolua_err;
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in array indexing.",&tolua_err);
+ }
+#endif
+ tolua_index = (int)tolua_tonumber(tolua_S,2,0);
+#ifndef TOLUA_RELEASE
+ if (tolua_index<0 || tolua_index>=3)
+  tolua_error(tolua_S,"array indexing out of range.",NULL);
+#endif
+  self->bmax[tolua_index] = ((float)  tolua_tonumber(tolua_S,3,0));
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: walkableSlopeAngle of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_walkableSlopeAngle
+static int tolua_get_rcConfig_walkableSlopeAngle(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableSlopeAngle'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->walkableSlopeAngle);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: walkableSlopeAngle of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_walkableSlopeAngle
+static int tolua_set_rcConfig_walkableSlopeAngle(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableSlopeAngle'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->walkableSlopeAngle = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: walkableHeight of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_walkableHeight
+static int tolua_get_rcConfig_walkableHeight(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableHeight'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->walkableHeight);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: walkableHeight of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_walkableHeight
+static int tolua_set_rcConfig_walkableHeight(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableHeight'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->walkableHeight = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: walkableClimb of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_walkableClimb
+static int tolua_get_rcConfig_walkableClimb(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableClimb'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->walkableClimb);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: walkableClimb of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_walkableClimb
+static int tolua_set_rcConfig_walkableClimb(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableClimb'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->walkableClimb = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: walkableRadius of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_walkableRadius
+static int tolua_get_rcConfig_walkableRadius(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableRadius'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->walkableRadius);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: walkableRadius of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_walkableRadius
+static int tolua_set_rcConfig_walkableRadius(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'walkableRadius'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->walkableRadius = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: maxEdgeLen of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_maxEdgeLen
+static int tolua_get_rcConfig_maxEdgeLen(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxEdgeLen'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->maxEdgeLen);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: maxEdgeLen of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_maxEdgeLen
+static int tolua_set_rcConfig_maxEdgeLen(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxEdgeLen'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->maxEdgeLen = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: maxSimplificationError of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_maxSimplificationError
+static int tolua_get_rcConfig_maxSimplificationError(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxSimplificationError'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->maxSimplificationError);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: maxSimplificationError of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_maxSimplificationError
+static int tolua_set_rcConfig_maxSimplificationError(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxSimplificationError'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->maxSimplificationError = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: minRegionArea of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_minRegionArea
+static int tolua_get_rcConfig_minRegionArea(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'minRegionArea'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->minRegionArea);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: minRegionArea of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_minRegionArea
+static int tolua_set_rcConfig_minRegionArea(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'minRegionArea'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->minRegionArea = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: mergeRegionArea of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_mergeRegionArea
+static int tolua_get_rcConfig_mergeRegionArea(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'mergeRegionArea'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->mergeRegionArea);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: mergeRegionArea of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_mergeRegionArea
+static int tolua_set_rcConfig_mergeRegionArea(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'mergeRegionArea'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->mergeRegionArea = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: maxVertsPerPoly of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_maxVertsPerPoly
+static int tolua_get_rcConfig_maxVertsPerPoly(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxVertsPerPoly'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->maxVertsPerPoly);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: maxVertsPerPoly of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_maxVertsPerPoly
+static int tolua_set_rcConfig_maxVertsPerPoly(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'maxVertsPerPoly'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->maxVertsPerPoly = ((int)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: detailSampleDist of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_detailSampleDist
+static int tolua_get_rcConfig_detailSampleDist(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'detailSampleDist'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->detailSampleDist);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: detailSampleDist of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_detailSampleDist
+static int tolua_set_rcConfig_detailSampleDist(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'detailSampleDist'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->detailSampleDist = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: detailSampleMaxError of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_get_rcConfig_detailSampleMaxError
+static int tolua_get_rcConfig_detailSampleMaxError(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'detailSampleMaxError'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->detailSampleMaxError);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: detailSampleMaxError of class  rcConfig */
+#ifndef TOLUA_DISABLE_tolua_set_rcConfig_detailSampleMaxError
+static int tolua_set_rcConfig_detailSampleMaxError(lua_State* tolua_S)
+{
+  rcConfig* self = (rcConfig*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'detailSampleMaxError'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->detailSampleMaxError = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: log of class  LuaInterface */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_LuaInterface_log00
 static int tolua_GameToLua_LuaInterface_log00(lua_State* tolua_S)
@@ -3448,6 +4128,35 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_constant(tolua_S,"Gradient_NorthSouth",Gorilla::Gradient_NorthSouth);
    tolua_constant(tolua_S,"Gradient_WestEast",Gorilla::Gradient_WestEast);
    tolua_constant(tolua_S,"Gradient_Diagonal",Gorilla::Gradient_Diagonal);
+  tolua_endmodule(tolua_S);
+  #ifdef __cplusplus
+  tolua_cclass(tolua_S,"rcConfig","rcConfig","",tolua_collect_rcConfig);
+  #else
+  tolua_cclass(tolua_S,"rcConfig","rcConfig","",NULL);
+  #endif
+  tolua_beginmodule(tolua_S,"rcConfig");
+   tolua_function(tolua_S,"new",tolua_GameToLua_rcConfig_new00);
+   tolua_function(tolua_S,"new_local",tolua_GameToLua_rcConfig_new00_local);
+   tolua_function(tolua_S,".call",tolua_GameToLua_rcConfig_new00_local);
+   tolua_variable(tolua_S,"width",tolua_get_rcConfig_width,tolua_set_rcConfig_width);
+   tolua_variable(tolua_S,"height",tolua_get_rcConfig_height,tolua_set_rcConfig_height);
+   tolua_variable(tolua_S,"tileSize",tolua_get_rcConfig_tileSize,tolua_set_rcConfig_tileSize);
+   tolua_variable(tolua_S,"borderSize",tolua_get_rcConfig_borderSize,tolua_set_rcConfig_borderSize);
+   tolua_variable(tolua_S,"cs",tolua_get_rcConfig_cs,tolua_set_rcConfig_cs);
+   tolua_variable(tolua_S,"ch",tolua_get_rcConfig_ch,tolua_set_rcConfig_ch);
+   tolua_array(tolua_S,"bmin",tolua_get_GameToLua_rcConfig_bmin,tolua_set_GameToLua_rcConfig_bmin);
+   tolua_array(tolua_S,"bmax",tolua_get_GameToLua_rcConfig_bmax,tolua_set_GameToLua_rcConfig_bmax);
+   tolua_variable(tolua_S,"walkableSlopeAngle",tolua_get_rcConfig_walkableSlopeAngle,tolua_set_rcConfig_walkableSlopeAngle);
+   tolua_variable(tolua_S,"walkableHeight",tolua_get_rcConfig_walkableHeight,tolua_set_rcConfig_walkableHeight);
+   tolua_variable(tolua_S,"walkableClimb",tolua_get_rcConfig_walkableClimb,tolua_set_rcConfig_walkableClimb);
+   tolua_variable(tolua_S,"walkableRadius",tolua_get_rcConfig_walkableRadius,tolua_set_rcConfig_walkableRadius);
+   tolua_variable(tolua_S,"maxEdgeLen",tolua_get_rcConfig_maxEdgeLen,tolua_set_rcConfig_maxEdgeLen);
+   tolua_variable(tolua_S,"maxSimplificationError",tolua_get_rcConfig_maxSimplificationError,tolua_set_rcConfig_maxSimplificationError);
+   tolua_variable(tolua_S,"minRegionArea",tolua_get_rcConfig_minRegionArea,tolua_set_rcConfig_minRegionArea);
+   tolua_variable(tolua_S,"mergeRegionArea",tolua_get_rcConfig_mergeRegionArea,tolua_set_rcConfig_mergeRegionArea);
+   tolua_variable(tolua_S,"maxVertsPerPoly",tolua_get_rcConfig_maxVertsPerPoly,tolua_set_rcConfig_maxVertsPerPoly);
+   tolua_variable(tolua_S,"detailSampleDist",tolua_get_rcConfig_detailSampleDist,tolua_set_rcConfig_detailSampleDist);
+   tolua_variable(tolua_S,"detailSampleMaxError",tolua_get_rcConfig_detailSampleMaxError,tolua_set_rcConfig_detailSampleMaxError);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"LuaInterface","LuaInterface","",NULL);
   tolua_beginmodule(tolua_S,"LuaInterface");

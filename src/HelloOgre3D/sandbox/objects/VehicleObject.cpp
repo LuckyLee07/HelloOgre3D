@@ -18,6 +18,8 @@ const float VehicleObject::DEFAULT_AGENT_HEIGHT = 1.6f;	// meters (5.2 feet)
 const float VehicleObject::DEFAULT_AGENT_RADIUS = 0.3f;	// meters (1.97 feet)
 const float VehicleObject::DEFAULT_AGENT_SPEED = 0.0f;			// m/s (0 ft/s)
 const float VehicleObject::DEFAULT_AGENT_HEALTH = 100.0f;			// default
+const float VehicleObject::DEFAULT_AGENT_WALKABLE_CLIMB = DEFAULT_AGENT_RADIUS / 2.0f;
+const float VehicleObject::DEFAULT_AGENT_WALKABLE_SLOPE = 45.0f;
 
 VehicleObject::VehicleObject(btRigidBody* pRigidBody)
 	: m_mass(DEFAULT_AGENT_MASS), 

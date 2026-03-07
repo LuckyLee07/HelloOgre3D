@@ -1,7 +1,8 @@
 --require("res.scripts.samples.Sandbox1")
 --require("res.scripts.samples.Sandbox2")
 --require("res.scripts.samples.Sandbox3")
-require("res.scripts.samples.Sandbox4")
+--require("res.scripts.samples.Sandbox4")
+require("res.scripts.samples.Sandbox5")
 
 _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 
