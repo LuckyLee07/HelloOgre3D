@@ -206,16 +206,29 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
     return m_uiService.SetMarkupColor(index, color);
 }
 
-void SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
+NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
 {
-    const std::vector<BaseObject*>& fixedObjects = g_ObjectManager->getFixedObjects();
-    NavigationMesh* pNavmesh = new NavigationMesh(config, fixedObjects);
-    g_ObjectManager->addNavigationMesh(navMeshName, pNavmesh);
+    const std::vector<BaseObject*> objects = g_ObjectManager->getFixedObjects();
+    NavigationMesh* pNavMesh = new NavigationMesh(config, objects);
+
+    if (!pNavMesh->IsValid())
+    {
+        SAFE_DELETE(pNavMesh);
+        return NULL;
+    }
+
+    bool result = g_ObjectManager->addNavigationMesh(navMeshName, pNavMesh);
+    if (!result)
+    {
+        SAFE_DELETE(pNavMesh);
+        return NULL;
+    }
+
+    return pNavMesh;
 }
 
-rcConfig SandboxMgr::GetDefaultConfig()
+void SandboxMgr::DefaultConfig(rcConfig& config)
 {
-    rcConfig config;
     config.cs = 0.1f;
     config.ch = 0.1f;
     config.walkableSlopeAngle = VehicleObject::DEFAULT_AGENT_WALKABLE_SLOPE;
@@ -242,6 +255,4 @@ rcConfig SandboxMgr::GetDefaultConfig()
     config.bmax[2] = 100.05f;
 
     rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
-
-    return config;
 }

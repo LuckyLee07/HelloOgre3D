@@ -10,6 +10,7 @@
 #include "Ogre.h"
 #include <cmath>
 #include <cstdlib>
+#include "systems/manager/SandboxMgr.h"
 
 namespace
 {
@@ -17,27 +18,7 @@ namespace
 	{
 		memset(&cfg, 0, sizeof(cfg));
 
-		cfg.cs = 0.1f;
-		cfg.ch = 0.1f;
-		cfg.walkableSlopeAngle = 45.0f;
-		cfg.walkableHeight = static_cast<int>(ceilf(2.0f / cfg.ch));
-		cfg.walkableClimb = static_cast<int>(floorf(0.9f / cfg.ch));
-		cfg.walkableRadius = static_cast<int>(ceilf(0.6f / cfg.cs));
-		cfg.maxEdgeLen = static_cast<int>(20.0f / cfg.cs);
-		cfg.maxSimplificationError = 1.0f;
-		cfg.minRegionArea = static_cast<int>(powf(8.0f, 2));
-		cfg.mergeRegionArea = static_cast<int>(powf(20.0f, 2));
-		cfg.maxVertsPerPoly = 3;
-		cfg.detailSampleDist = 5.0f * cfg.cs;
-		cfg.detailSampleMaxError = 1.0f * cfg.ch;
-
-		cfg.bmin[0] = -100.0f;
-		cfg.bmin[1] = -100.0f;
-		cfg.bmin[2] = -100.0f;
-		cfg.bmax[0] = 100.0f;
-		cfg.bmax[1] = 100.0f;
-		cfg.bmax[2] = 100.0f;
-		rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
+		g_SandboxMgr->DefaultConfig(cfg);
 	}
 
 	static void EnsureConfig(rcConfig& cfg)
@@ -233,26 +214,6 @@ namespace
 
 		return manual;
 	}
-}
-
-bool NavigationMesh::CreateNavMesh(const rcConfig& cfg, const std::string& navMeshName)
-{
-	const std::vector<BaseObject*> objects = g_ObjectManager->getFixedObjects();
-	NavigationMesh* pNavMesh = new NavigationMesh(cfg, objects);
-
-	if (!pNavMesh->IsValid())
-	{
-		delete pNavMesh;
-		return false;
-	}
-
-	const bool result = g_ObjectManager->addNavigationMesh(navMeshName, pNavMesh);
-	if (!result)
-	{
-		delete pNavMesh;
-	}
-
-	return result;
 }
 
 NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BaseObject*> objects)

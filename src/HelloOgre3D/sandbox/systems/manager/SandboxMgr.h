@@ -21,6 +21,7 @@ class BlockObject;
 class AgentObject;
 class SoldierObject;
 struct rcConfig;
+class NavigationMesh;
 
 class SandboxMgr //tolua_exports
 { //tolua_exports
@@ -72,8 +73,8 @@ public:
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 	
-	rcConfig GetDefaultConfig(); // 获取默认的rcConfig
-	void CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
+	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
+	NavigationMesh* CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
 
 	//tolua_end
 

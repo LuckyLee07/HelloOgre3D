@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar  7 09:45:52 2026.
+** Generated automatically by tolua++-1.0.92 on Sat Mar  7 10:59:32 2026.
 */
 
 #ifndef __cplusplus
@@ -32,13 +32,14 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "../objects/SoldierObject.h"
 #include "../systems/manager/SandboxMgr.h"
 #include "../systems/manager/ObjectManager.h"
+#include "../ai/navigation/NavigationMesh.h"
 
 /* function to release collected object via destructor */
 #ifdef __cplusplus
 
-static int tolua_collect_Ogre__Vector2 (lua_State* tolua_S)
+static int tolua_collect_Ogre__Quaternion (lua_State* tolua_S)
 {
- Ogre::Vector2* self = (Ogre::Vector2*) tolua_tousertype(tolua_S,1,0);
+ Ogre::Quaternion* self = (Ogre::Quaternion*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -57,16 +58,9 @@ static int tolua_collect_std__vector_AgentObject__ (lua_State* tolua_S)
 	return 0;
 }
 
-static int tolua_collect_rcConfig (lua_State* tolua_S)
+static int tolua_collect_Ogre__Vector2 (lua_State* tolua_S)
 {
- rcConfig* self = (rcConfig*) tolua_tousertype(tolua_S,1,0);
-	Mtolua_delete(self);
-	return 0;
-}
-
-static int tolua_collect_Ogre__Quaternion (lua_State* tolua_S)
-{
- Ogre::Quaternion* self = (Ogre::Quaternion*) tolua_tousertype(tolua_S,1,0);
+ Ogre::Vector2* self = (Ogre::Vector2*) tolua_tousertype(tolua_S,1,0);
 	Mtolua_delete(self);
 	return 0;
 }
@@ -80,6 +74,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
+ tolua_usertype(tolua_S,"NavigationMesh");
  tolua_usertype(tolua_S,"btQuaternion");
  tolua_usertype(tolua_S,"SandboxObject");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
@@ -5466,43 +5461,34 @@ static int tolua_SandboxToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: GetDefaultConfig of class  SandboxMgr */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_GetDefaultConfig00
-static int tolua_SandboxToLua_SandboxMgr_GetDefaultConfig00(lua_State* tolua_S)
+/* method: DefaultConfig of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_DefaultConfig00
+static int tolua_SandboxToLua_SandboxMgr_DefaultConfig00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"rcConfig",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
+  rcConfig* config = ((rcConfig*)  tolua_tousertype(tolua_S,2,0));
 #ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDefaultConfig'", NULL);
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'DefaultConfig'", NULL);
 #endif
   {
-   rcConfig tolua_ret = (rcConfig)  self->GetDefaultConfig();
-   {
-#ifdef __cplusplus
-    void* tolua_obj = Mtolua_new((rcConfig)(tolua_ret));
-     tolua_pushusertype(tolua_S,tolua_obj,"rcConfig");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#else
-    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(rcConfig));
-     tolua_pushusertype(tolua_S,tolua_obj,"rcConfig");
-    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
-#endif
-   }
+   self->DefaultConfig(*config);
   }
  }
- return 1;
+ return 0;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetDefaultConfig'.",&tolua_err);
+ tolua_error(tolua_S,"#ferror in function 'DefaultConfig'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5531,11 +5517,12 @@ static int tolua_SandboxToLua_SandboxMgr_CreateNavigationMesh00(lua_State* tolua
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateNavigationMesh'", NULL);
 #endif
   {
-   self->CreateNavigationMesh(*config,navMeshName);
+   NavigationMesh* tolua_ret = (NavigationMesh*)  self->CreateNavigationMesh(*config,navMeshName);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"NavigationMesh");
    tolua_pushcppstring(tolua_S,(const char*)navMeshName);
   }
  }
- return 1;
+ return 2;
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'CreateNavigationMesh'.",&tolua_err);
@@ -5687,6 +5674,227 @@ static int tolua_SandboxToLua_ObjectManager_getSpecifyAgents00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: IsValid of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_IsValid00
+static int tolua_SandboxToLua_NavigationMesh_IsValid00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const NavigationMesh",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const NavigationMesh* self = (const NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsValid'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsValid();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsValid'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: FindClosestPoint of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_FindClosestPoint00
+static int tolua_SandboxToLua_NavigationMesh_FindClosestPoint00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const NavigationMesh",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const NavigationMesh* self = (const NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* point = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'FindClosestPoint'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->FindClosestPoint(*point);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'FindClosestPoint'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: FindPath of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_FindPath00
+static int tolua_SandboxToLua_NavigationMesh_FindPath00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const NavigationMesh",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"std::vector<Ogre::Vector3>",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const NavigationMesh* self = (const NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* start = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::Vector3* end = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+  std::vector<Ogre::Vector3>* outPath = ((std::vector<Ogre::Vector3>*)  tolua_tousertype(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'FindPath'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->FindPath(*start,*end,*outPath);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'FindPath'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: RandomPoint of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_RandomPoint00
+static int tolua_SandboxToLua_NavigationMesh_RandomPoint00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const NavigationMesh",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const NavigationMesh* self = (const NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RandomPoint'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->RandomPoint();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RandomPoint'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasDebugVisual of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_HasDebugVisual00
+static int tolua_SandboxToLua_NavigationMesh_HasDebugVisual00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const NavigationMesh",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const NavigationMesh* self = (const NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasDebugVisual'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasDebugVisual();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasDebugVisual'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetDebugVisible of class  NavigationMesh */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_NavigationMesh_SetDebugVisible00
+static int tolua_SandboxToLua_NavigationMesh_SetDebugVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"NavigationMesh",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  NavigationMesh* self = (NavigationMesh*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetDebugVisible'", NULL);
+#endif
+  {
+   self->SetDebugVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetDebugVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* Open function */
 TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
 {
@@ -5758,11 +5966,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_beginmodule(tolua_S,"vector_EntityObject__");
    tolua_endmodule(tolua_S);
   tolua_endmodule(tolua_S);
-  #ifdef __cplusplus
-  tolua_cclass(tolua_S,"rcConfig","rcConfig","",tolua_collect_rcConfig);
-  #else
   tolua_cclass(tolua_S,"rcConfig","rcConfig","",NULL);
-  #endif
   tolua_beginmodule(tolua_S,"rcConfig");
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"SOLDIER_STAND_SPEED",SOLDIER_STAND_SPEED);
@@ -5985,7 +6189,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateBullet",tolua_SandboxToLua_SandboxMgr_CreateBullet00);
    tolua_function(tolua_S,"CreateAgent",tolua_SandboxToLua_SandboxMgr_CreateAgent00);
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_SandboxMgr_CreateSoldier00);
-   tolua_function(tolua_S,"GetDefaultConfig",tolua_SandboxToLua_SandboxMgr_GetDefaultConfig00);
+   tolua_function(tolua_S,"DefaultConfig",tolua_SandboxToLua_SandboxMgr_DefaultConfig00);
    tolua_function(tolua_S,"CreateNavigationMesh",tolua_SandboxToLua_SandboxMgr_CreateNavigationMesh00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"MGR_OBJ_NONE",MGR_OBJ_NONE);
@@ -5998,6 +6202,15 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAllAgents",tolua_SandboxToLua_ObjectManager_getAllAgents00);
    tolua_function(tolua_S,"getAllBlocks",tolua_SandboxToLua_ObjectManager_getAllBlocks00);
    tolua_function(tolua_S,"getSpecifyAgents",tolua_SandboxToLua_ObjectManager_getSpecifyAgents00);
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"NavigationMesh","NavigationMesh","",NULL);
+  tolua_beginmodule(tolua_S,"NavigationMesh");
+   tolua_function(tolua_S,"IsValid",tolua_SandboxToLua_NavigationMesh_IsValid00);
+   tolua_function(tolua_S,"FindClosestPoint",tolua_SandboxToLua_NavigationMesh_FindClosestPoint00);
+   tolua_function(tolua_S,"FindPath",tolua_SandboxToLua_NavigationMesh_FindPath00);
+   tolua_function(tolua_S,"RandomPoint",tolua_SandboxToLua_NavigationMesh_RandomPoint00);
+   tolua_function(tolua_S,"HasDebugVisual",tolua_SandboxToLua_NavigationMesh_HasDebugVisual00);
+   tolua_function(tolua_S,"SetDebugVisible",tolua_SandboxToLua_NavigationMesh_SetDebugVisible00);
   tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

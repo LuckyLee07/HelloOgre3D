@@ -164,9 +164,10 @@ std::vector<BaseObject*> ObjectManager::getFixedObjects()
 	std::vector<BaseObject*> objects;
 	objects.reserve(fixedObjects);
 
-	for (; iter != m_objects.end(); iter++)
+	auto iter1 = m_objects.begin();
+	for (; iter1 != m_objects.end(); iter1++)
 	{
-		BaseObject* pObject = iter->second;
+		BaseObject* pObject = iter1->second;
 		if (pObject && pObject->GetMass() <= 0.0f)
 		{
 			if (pObject->GetObjType() != BaseObject::OBJ_TYPE_PLANE)
@@ -276,6 +277,15 @@ void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seco
 	if (pSceneNode == nullptr)
 		return;
 	m_remSceneNodes[pSceneNode] = int(seconds * 1000);
+}
+
+NavigationMesh* ObjectManager::getNavigationMesh(const Ogre::String& navName)
+{
+	if (m_navMeshes.find(navName) == m_navMeshes.end())
+	{
+		return NULL;
+	}
+	return m_navMeshes[navName];
 }
 
 bool ObjectManager::addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh)

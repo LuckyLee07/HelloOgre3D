@@ -62,6 +62,7 @@ public:
 
 	void markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds);
 
+	NavigationMesh* getNavigationMesh(const Ogre::String& navName);
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
 
 private:

@@ -98,12 +98,14 @@ function Sandbox_Initialize()
     SandboxUtilities_CreateLevel()
 
     -- Create default navigation mesh
-    local navMeshConfig = Sandbox:GetDefaultConfig()
+    local navMeshConfig = rcConfig();
+    Sandbox:DefaultConfig(navMeshConfig)
     navMeshConfig.minRegionArea = math.pow(100, 2)
     navMeshConfig.walkableRadius = math.ceil(0.4 / navMeshConfig.cs)
     navMeshConfig.walkableClimb = math.floor(0.2 / navMeshConfig.ch)
     navMeshConfig.walkableSlopeAngle = math.pow(100, 2)
-    Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 end
 
 
