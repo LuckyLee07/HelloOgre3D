@@ -77,6 +77,9 @@ public:
 	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
 	NavigationMesh* CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
 
+	Ogre::Vector3 RandomPoint(const Ogre::String& navMeshName) const;
+	Ogre::Vector3 FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const;
+	bool FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const;
 	//tolua_end
 
 private:

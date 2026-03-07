@@ -303,8 +303,7 @@ Ogre::Vector3 NavigationMesh::FindClosestPoint(const Ogre::Vector3& point) const
 	return Ogre::Vector3(nearest[0], nearest[1], nearest[2]);
 }
 
-bool NavigationMesh::FindPath(const Ogre::Vector3& start,
-	const Ogre::Vector3& end,
+bool NavigationMesh::FindPath(const Ogre::Vector3& start, const Ogre::Vector3& end,
 	std::vector<Ogre::Vector3>& outPath) const
 {
 	outPath.clear();

@@ -262,3 +262,33 @@ void SandboxMgr::DefaultConfig(rcConfig& config)
 
     rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
 }
+
+Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
+{
+    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+    if (pNavmesh != NULL)
+    {
+        return pNavmesh->RandomPoint();
+    }
+    return Ogre::Vector3::ZERO;
+}
+
+Ogre::Vector3 SandboxMgr::FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const
+{
+    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+    if (pNavmesh != NULL)
+    {
+        return pNavmesh->FindClosestPoint(point);
+    }
+    return Ogre::Vector3::ZERO;
+}
+
+bool SandboxMgr::FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const
+{
+    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+    if (pNavmesh != NULL)
+    {
+        return pNavmesh->FindPath(start, end, outPath);
+    }
+    return false;
+}

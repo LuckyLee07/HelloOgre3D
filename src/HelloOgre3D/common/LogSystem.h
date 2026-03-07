@@ -4,8 +4,6 @@
 #include "OgreLog.h"
 #include <string.h>
 
-#define LOG_WITH_TIME	1 // 打印日志时加入时间戳
-
 namespace Fancy 
 {
 	extern void LogMessage(const char* format, ...);

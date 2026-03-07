@@ -1,4 +1,5 @@
 
+require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
 
 local textSize = {w = 300, h = 260}
@@ -22,31 +23,47 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "  Num 5: stand/crouch stance" .. GUI.MarkupNewline;
 
 
-local agents = {}
-local drawNavMesh;
+local _agents = {}
 
-function GetFilePath(luafile)
+local function _GetFilePath(luafile)
     return "res/scripts/samples/chapter4/".. luafile;
 end
 
-function Create_LightSoldier(luafile)
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
-    Soldier_InitSoldierAsm(soldierAgent)
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initWeapon(weaponPath)
-    Soldier_InitWeaponAsm(soldierAgent)
+local function _DrawPaths()
+    for index, agent in pairs(_agents) do
+        -- Draw the agent's cyclic path, offset slightly above the level
+        -- geometry.
+        DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, true, Vector3(0.0, 0.02, 0.0))
+        DebugDrawer:drawSquare(agent:GetTarget(), 0.1, UtilColors.Red, true);
+    end
 end
 
-function Create_DarkSoldier(luafile)
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
-    Soldier_InitSoldierAsm(soldierAgent)
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initWeapon(weaponPath)
-    Soldier_InitWeaponAsm(soldierAgent)
+local function _UpdatePaths()
+    for index, agent in pairs(_agents) do
+        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
+        local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
+        local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
+        local target = agent:GetTarget()
+        
+        -- Determine if the agent is within the target radius to their
+        -- target position.
+        if (distanceSquared < targetRadiusSquared) then
+            print("Fxkk1===============>>>", index, distanceSquared, navPosition.x, navPosition.y, navPosition.z, target.x, target.y, target.z)
+            local endPoint;
+            local path = std.vector_Ogre__Vector3_();
+            
+            -- Randomly try and pathfind to a new navmesh point, keep trying
+            -- until a valid path is found.
+            while path:size() == 0 do
+                endPoint = Sandbox:RandomPoint("default");
+                result = Sandbox:FindPath("default", agent:GetPosition(), endPoint, path);
+            end
+            print("Fxkk2===============>>>", index, endPoint.x, endPoint.y, endPoint.z)
+            -- Assign a new path and target position.
+            agent:SetPath(path, false);
+            agent:SetTarget(endPoint);
+        end
+    end
 end
 
 function EventHandle_Keyboard(keycode, pressed)
@@ -109,14 +126,39 @@ function Sandbox_Initialize()
     navMeshConfig.walkableSlopeAngle = 45
     local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
+
+    -- Create agents and randomly place them on the navmesh.
+    local agentLuafile = _GetFilePath("DirectSoldierAgent.lua")
+    local points = {
+        Vector3(-2.48, 4.05, 26.2),
+        Vector3(49.4, 0.05, 3.78),
+        Vector3(5.47, 0.05, 2.44),
+        Vector3(14.5, 0.05, 13.36),
+        Vector3(20.56, 0.05, 3.47),
+    }
+    for i=1, 5 do
+        local agent = Create_Soldier(agentLuafile)
+        table.insert(_agents, agent);
+
+        local randomPoint = points[i]--Sandbox:RandomPoint("default");
+        agent:setPosition(randomPoint);
+        print("Fxkk===============>>>", i, randomPoint.x, randomPoint.y, randomPoint.z)
+
+        -- Use the Agent's closest point to the navmesh as their target position.
+        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
+        agent:SetTarget(navPosition);
+
+        -- Increase the target radius to prevent agents from slowing to reach
+        -- their target position.
+        agent:SetTargetRadius(1);
+    end
 end
 
 function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
+    _UpdatePaths()
 
-    -- Draw the agent's cyclic path, offset slightly above the level geometry.
-    local agentPath = SandboxUtilities_GetLevelPath()
-    DebugDrawer:drawPath(agentPath, UtilColors.Blue, true, Vector3(0.0, 0.02, 0.0))
+    _DrawPaths()
 end

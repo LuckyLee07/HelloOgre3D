@@ -23,28 +23,8 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "  Num 5: stand/crouch stance" .. GUI.MarkupNewline;
 
 
-function GetFilePath(luafile)
+function _GetFilePath(luafile)
     return "res/scripts/samples/chapter4/".. luafile;
-end
-
-function Create_LightSoldier(luafile)
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
-    Soldier_InitSoldierAsm(soldierAgent)
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initWeapon(weaponPath)
-    Soldier_InitWeaponAsm(soldierAgent)
-end
-
-function Create_DarkSoldier(luafile)
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, GetFilePath(luafile))
-    Soldier_InitSoldierAsm(soldierAgent)
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    soldierAgent:initWeapon(weaponPath)
-    Soldier_InitWeaponAsm(soldierAgent)
 end
 
 function EventHandle_Keyboard(keycode, pressed)
@@ -56,9 +36,9 @@ function EventHandle_Keyboard(keycode, pressed)
         camera:setPosition(Vector3(-17, 10, 0));
         camera:setOrientation(Quaternion(-145, -50, -150));
     elseif (keycode == Map_Platform_KC(OIS.KC_F3)) then
-        Create_LightSoldier("DirectSoldierAgent.lua")
+        Create_Soldier(_GetFilePath("DirectSoldierAgent.lua"), Soldier.AppearanceTypes.LIGHT)
     elseif (keycode == Map_Platform_KC(OIS.KC_F4)) then
-        Create_DarkSoldier("DirectSoldierAgent.lua")
+        Create_Soldier(_GetFilePath("DirectSoldierAgent.lua"), Soldier.AppearanceTypes.DARK)
     end
 end
 

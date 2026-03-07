@@ -1,4 +1,4 @@
-require("res.scripts.samples.chapter4.SoldierAgent.lua")
+require("res.scripts.agent.SoldierAgent.lua")
 
 local textSize = {w = 300, h = 300}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..

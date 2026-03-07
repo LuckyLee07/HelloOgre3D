@@ -10,6 +10,8 @@
 
 using namespace std::chrono;
 
+#define LOG_WITH_TIME	0 // 打印日志时加入时间戳
+
 namespace Fancy
 {
 	static int s_iLine;

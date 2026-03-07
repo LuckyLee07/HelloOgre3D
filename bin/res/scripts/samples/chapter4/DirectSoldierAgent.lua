@@ -1,4 +1,4 @@
-require("res.scripts.samples.chapter4.SoldierAgent.lua")
+require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierState.lua")
 require("res.scripts.samples.AgentUtils.lua")
 

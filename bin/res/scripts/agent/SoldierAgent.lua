@@ -38,13 +38,17 @@ Soldier.States = {
     SSTATE_SNIPER_TRANSFORM = SSTATE_SNIPER_TRANSFORM,
 }
 
-
 Soldier.weaponStates = {
     SMG_IDLE =                  "smg_idle",
     SMG_TRANSFORM =             "smg_transform",
     SNIPER_IDLE =               "sniper_idle",
     SNIPER_RELOAD =             "sniper_reload",
     SNIPER_TRANSFORM =          "sniper_transform"
+}
+
+Soldier.AppearanceTypes = {
+    LIGHT = 'Light',
+    DARK = 'Dark',
 }
 
 function Soldier_InitSoldierAsm(agent)
@@ -169,4 +173,24 @@ function Soldier_InitWeaponAsm(agent)
     weaponAsm:AddTransition("smg_transform", "smg_idle", 0.2, 0.2);
 
     weaponAsm:RequestState("sniper_idle");
+end
+
+
+function Create_Soldier(luafile, soldier1Type)
+    -- default light soldier
+    local soldierType = soldier1Type or Soldier.AppearanceTypes.LIGHT
+
+    local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
+    if soldierType == Soldier.AppearanceTypes.DRAK then
+        soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
+    end
+
+    local soldierAgent = Sandbox:CreateSoldier(soldierPath, luafile)
+    Soldier_InitSoldierAsm(soldierAgent)
+
+    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
+    soldierAgent:initWeapon(weaponPath)
+    Soldier_InitWeaponAsm(soldierAgent)
+
+    return soldierAgent
 end
