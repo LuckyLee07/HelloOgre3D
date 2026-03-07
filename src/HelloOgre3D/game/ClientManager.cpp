@@ -236,7 +236,7 @@ bool ClientManager::Configure()
 
     m_pRoot->setRenderSystem(selected);
     try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
-    const Ogre::String dpiScaledVideoMode = BuildDpiScaledVideoMode(1280, 720);
+    const Ogre::String dpiScaledVideoMode = BuildDpiScaledVideoMode(1280, 800);
     Ogre::LogManager::getSingleton().logMessage("Windows DPI-scaled video mode: " + dpiScaledVideoMode);
     try { selected->setConfigOption("Video Mode", dpiScaledVideoMode); } catch (...) {}
     try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}

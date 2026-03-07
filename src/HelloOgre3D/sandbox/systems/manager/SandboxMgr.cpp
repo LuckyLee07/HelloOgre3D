@@ -206,6 +206,12 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
     return m_uiService.SetMarkupColor(index, color);
 }
 
+void SandboxMgr::UpdateSceneGraph()
+{
+    Ogre::SceneManager* sceneMgr = GetSceneCreator();
+    if (sceneMgr) sceneMgr->_updateSceneGraph(GetCamera());
+}
+
 NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
 {
     const std::vector<BlockObject*> objects = g_ObjectManager->getFixedObjects();

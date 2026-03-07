@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar  7 10:59:32 2026.
+** Generated automatically by tolua++-1.0.92 on Sat Mar  7 14:39:39 2026.
 */
 
 #ifndef __cplusplus
@@ -5461,6 +5461,37 @@ static int tolua_SandboxToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: UpdateSceneGraph of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00
+static int tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'UpdateSceneGraph'", NULL);
+#endif
+  {
+   self->UpdateSceneGraph();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'UpdateSceneGraph'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: DefaultConfig of class  SandboxMgr */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_DefaultConfig00
 static int tolua_SandboxToLua_SandboxMgr_DefaultConfig00(lua_State* tolua_S)
@@ -6189,6 +6220,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateBullet",tolua_SandboxToLua_SandboxMgr_CreateBullet00);
    tolua_function(tolua_S,"CreateAgent",tolua_SandboxToLua_SandboxMgr_CreateAgent00);
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_SandboxMgr_CreateSoldier00);
+   tolua_function(tolua_S,"UpdateSceneGraph",tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00);
    tolua_function(tolua_S,"DefaultConfig",tolua_SandboxToLua_SandboxMgr_DefaultConfig00);
    tolua_function(tolua_S,"CreateNavigationMesh",tolua_SandboxToLua_SandboxMgr_CreateNavigationMesh00);
   tolua_endmodule(tolua_S);

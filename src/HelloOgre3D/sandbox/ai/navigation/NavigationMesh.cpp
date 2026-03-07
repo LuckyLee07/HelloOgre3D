@@ -16,45 +16,6 @@
 
 namespace
 {
-	static void DefaultConfig(rcConfig& cfg)
-	{
-		memset(&cfg, 0, sizeof(cfg));
-
-		g_SandboxMgr->DefaultConfig(cfg);
-	}
-
-	static void EnsureConfig(rcConfig& cfg)
-	{
-		if (cfg.cs <= 0.0f || cfg.ch <= 0.0f)
-		{
-			DefaultConfig(cfg);
-			return;
-		}
-
-		if (cfg.walkableHeight <= 0)
-			cfg.walkableHeight = static_cast<int>(ceilf(2.0f / cfg.ch));
-		if (cfg.walkableClimb < 0)
-			cfg.walkableClimb = static_cast<int>(floorf(0.9f / cfg.ch));
-		if (cfg.walkableRadius < 0)
-			cfg.walkableRadius = static_cast<int>(ceilf(0.6f / cfg.cs));
-		if (cfg.maxEdgeLen <= 0)
-			cfg.maxEdgeLen = static_cast<int>(20.0f / cfg.cs);
-		if (cfg.maxSimplificationError <= 0.0f)
-			cfg.maxSimplificationError = 1.0f;
-		if (cfg.minRegionArea <= 0)
-			cfg.minRegionArea = static_cast<int>(powf(8.0f, 2));
-		if (cfg.mergeRegionArea <= 0)
-			cfg.mergeRegionArea = static_cast<int>(powf(20.0f, 2));
-		if (cfg.maxVertsPerPoly <= 0)
-			cfg.maxVertsPerPoly = 3;
-		if (cfg.detailSampleDist <= 0.0f)
-			cfg.detailSampleDist = 5.0f * cfg.cs;
-		if (cfg.detailSampleMaxError <= 0.0f)
-			cfg.detailSampleMaxError = 1.0f * cfg.ch;
-		if (cfg.walkableSlopeAngle <= 0.0f)
-			cfg.walkableSlopeAngle = 45.0f;
-	}
-
 	static bool SetBoundsFromObjects(rcConfig& cfg, const std::vector<BlockObject*>& objects)
 	{
 		bool hasBounds = false;

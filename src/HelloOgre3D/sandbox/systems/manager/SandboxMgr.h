@@ -73,7 +73,8 @@ public:
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 	
-	void DefaultConfig(rcConfig& config); // ��ȡĬ�ϵ�rcConfig
+	void UpdateSceneGraph(); // 强制刷新场景图
+	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
 	NavigationMesh* CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
 
 	//tolua_end

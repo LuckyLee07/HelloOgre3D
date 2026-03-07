@@ -96,30 +96,25 @@ function Sandbox_Initialize()
 
 	-- Create the sandbox level
     SandboxUtilities_CreateLevel()
-
     
+    -- 强制刷新下场景图 防止getWorldAABB()时拿不到有效包围盒
+    Sandbox:UpdateSceneGraph()
+
+    -- Create default navigation mesh
+    local navMeshConfig = rcConfig();
+    Sandbox:DefaultConfig(navMeshConfig)
+    navMeshConfig.minRegionArea = math.pow(100, 2)
+    navMeshConfig.walkableRadius = math.ceil(0.4 / navMeshConfig.cs)
+    navMeshConfig.walkableClimb = math.ceil(0.2 / navMeshConfig.ch)
+    navMeshConfig.walkableSlopeAngle = 45
+    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 end
 
-local delayInitTick = 2
 function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
-    if delayInitTick > 0 then
-        delayInitTick = delayInitTick - 1
-
-        if delayInitTick == 0 then
-            -- Create default navigation mesh
-            local navMeshConfig = rcConfig();
-            Sandbox:DefaultConfig(navMeshConfig)
-            navMeshConfig.minRegionArea = math.pow(100, 2)
-            navMeshConfig.walkableRadius = math.ceil(0.4 / navMeshConfig.cs)
-            navMeshConfig.walkableClimb = math.ceil(0.2 / navMeshConfig.ch)
-            navMeshConfig.walkableSlopeAngle = 45
-            local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
-            if navMesh ~= nil then navMesh:SetDebugVisible(true) end
-        end
-    end
 
     -- Draw the agent's cyclic path, offset slightly above the level geometry.
     local agentPath = SandboxUtilities_GetLevelPath()
