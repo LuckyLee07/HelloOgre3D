@@ -208,7 +208,7 @@ void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& col
 
 NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
 {
-    const std::vector<BaseObject*> objects = g_ObjectManager->getFixedObjects();
+    const std::vector<BlockObject*> objects = g_ObjectManager->getFixedObjects();
     NavigationMesh* pNavMesh = new NavigationMesh(config, objects);
 
     if (!pNavMesh->IsValid())

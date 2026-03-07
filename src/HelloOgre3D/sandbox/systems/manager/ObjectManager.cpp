@@ -144,7 +144,7 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		m_agents.clear();
 	}
 }
-std::vector<BaseObject*> ObjectManager::getFixedObjects()
+std::vector<BlockObject*> ObjectManager::getFixedObjects()
 {
 	std::size_t fixedObjects = 0;
 
@@ -161,13 +161,13 @@ std::vector<BaseObject*> ObjectManager::getFixedObjects()
 		}
 	}
 
-	std::vector<BaseObject*> objects;
+	std::vector<BlockObject*> objects;
 	objects.reserve(fixedObjects);
 
 	auto iter1 = m_objects.begin();
 	for (; iter1 != m_objects.end(); iter1++)
 	{
-		BaseObject* pObject = iter1->second;
+		BlockObject* pObject = dynamic_cast<BlockObject*>(iter1->second);
 		if (pObject && pObject->GetMass() <= 0.0f)
 		{
 			if (pObject->GetObjType() != BaseObject::OBJ_TYPE_PLANE)

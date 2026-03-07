@@ -13,8 +13,8 @@ class BlockObject;
 class NavBuilder
 {
 public:
-	NavBuilder();
-	~NavBuilder();
+	NavBuilder() = default;
+	~NavBuilder() = default;
 
 	// Build dtNavMesh + dtNavMeshQuery from scene objects and recast config.
 	bool Build(const rcConfig& cfg,

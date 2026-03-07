@@ -52,7 +52,7 @@ public:
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	//tolua_end
 
-	std::vector<BaseObject*> getFixedObjects();
+	std::vector<BlockObject*> getFixedObjects();
 	std::vector<VehicleObject*> getAllVehicles();
 
 	void addNewObject(BaseObject* pObject);

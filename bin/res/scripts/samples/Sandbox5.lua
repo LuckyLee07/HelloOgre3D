@@ -114,7 +114,7 @@ function Sandbox_Update(deltaTimeInMillis)
             Sandbox:DefaultConfig(navMeshConfig)
             navMeshConfig.minRegionArea = math.pow(100, 2)
             navMeshConfig.walkableRadius = math.ceil(0.4 / navMeshConfig.cs)
-            navMeshConfig.walkableClimb = math.floor(0.2 / navMeshConfig.ch)
+            navMeshConfig.walkableClimb = math.ceil(0.2 / navMeshConfig.ch)
             navMeshConfig.walkableSlopeAngle = 45
             local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
             if navMesh ~= nil then navMesh:SetDebugVisible(true) end

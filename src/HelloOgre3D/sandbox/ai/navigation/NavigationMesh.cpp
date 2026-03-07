@@ -207,16 +207,20 @@ void NavigationMesh::DrawMeshTile(Ogre::ManualObject& manualObject, const dtNavM
 		}
 	}
 }
+
 void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile)
 {
 	(void)navMesh;
 	if (!tile.header)
 		return;
 
+	// 外边界颜色
 	const Ogre::ColourValue boundaryColor(
 		0.0f / 255.0f,
 		128.0f / 255.0f,
 		128.0f / 255.0f);
+
+	// 内部连接颜色
 	const Ogre::ColourValue internalColor(
 		0.0f / 255.0f,
 		150.0f / 255.0f,
@@ -291,29 +295,13 @@ void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtN
 		}
 	}
 }
-NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BaseObject*> objects)
+NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BlockObject*> blocks)
 	: m_navMesh(NULL)
 	, m_navQuery(NULL)
 	, m_debugNode(NULL)
 {
-	std::vector<BlockObject*> blocks;
-	blocks.reserve(objects.size());
-	for (size_t i = 0; i < objects.size(); ++i)
-	{
-		BaseObject* obj = objects[i];
-		if (!obj)
-			continue;
-
-		BlockObject* block = dynamic_cast<BlockObject*>(obj);
-		if (block)
-			blocks.push_back(block);
-	}
-
-	if (blocks.empty())
-		return;
-
 	rcConfig buildCfg = config;
-	EnsureConfig(buildCfg);
+	//EnsureConfig(buildCfg);
 	if (!SetBoundsFromObjects(buildCfg, blocks))
 		return;
 

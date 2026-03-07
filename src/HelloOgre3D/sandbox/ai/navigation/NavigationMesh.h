@@ -6,7 +6,7 @@
 #include "OgreVector3.h"
 
 struct rcConfig;
-class BaseObject;
+class BlockObject;
 class dtNavMesh;
 class dtNavMeshQuery;
 struct dtMeshTile;
@@ -20,7 +20,7 @@ namespace Ogre
 class NavigationMesh //tolua_exports
 { //tolua_exports
 public:
-	NavigationMesh(const rcConfig& config, const std::vector<BaseObject*> objects);
+	NavigationMesh(const rcConfig& config, const std::vector<BlockObject*> objects);
 	~NavigationMesh();
 
 	//tolua_begin

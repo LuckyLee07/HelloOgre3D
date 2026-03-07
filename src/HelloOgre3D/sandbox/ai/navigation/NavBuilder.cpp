@@ -3,16 +3,6 @@
 #include "objects/BlockObject.h"
 #include "Ogre.h"
 
-NavBuilder::NavBuilder() : m_ctx()
-{
-
-}
-
-NavBuilder::~NavBuilder()
-{
-
-}
-
 bool NavBuilder::Build(const rcConfig& cfg,
 	const std::vector<BlockObject*>& objects,
 	dtNavMesh*& outNavMesh,
