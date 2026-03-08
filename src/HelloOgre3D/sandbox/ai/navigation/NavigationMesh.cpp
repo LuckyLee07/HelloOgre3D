@@ -16,6 +16,7 @@
 
 namespace
 {
+	// TODO：先使用固定 width/height = 2001/2001 后续再优化成真实重算边界
 	static bool SetBoundsFromObjects(rcConfig& cfg, const std::vector<BlockObject*>& objects)
 	{
 		bool hasBounds = false;
@@ -256,15 +257,15 @@ void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtN
 		}
 	}
 }
+
 NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BlockObject*> blocks)
 	: m_navMesh(NULL)
 	, m_navQuery(NULL)
 	, m_debugNode(NULL)
 {
 	rcConfig buildCfg = config;
+	// Keep the caller-provided bounds to match the legacy navigation build.
 	//EnsureConfig(buildCfg);
-	if (!SetBoundsFromObjects(buildCfg, blocks))
-		return;
 
 	NavBuilder builder;
 	if (!builder.Build(buildCfg, blocks, m_navMesh, m_navQuery))

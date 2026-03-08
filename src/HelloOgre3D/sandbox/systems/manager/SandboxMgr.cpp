@@ -263,6 +263,17 @@ void SandboxMgr::DefaultConfig(rcConfig& config)
     rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
 }
 
+void SandboxMgr::ApplySettingConfig(rcConfig& config, float height, float radius, float climb)
+{
+    if (height > 0.0f)
+        config.walkableHeight = static_cast<int>(ceilf(height / config.ch));
+    if (radius > 0.0f)
+        config.walkableRadius = static_cast<int>(ceilf(radius / config.cs));
+    if (climb > 0.0f)
+        config.walkableClimb = static_cast<int>(floorf(climb / config.ch));
+    
+}
+
 Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
 {
     NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);

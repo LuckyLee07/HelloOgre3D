@@ -75,6 +75,7 @@ public:
 	
 	void UpdateSceneGraph(); // 强制刷新场景图
 	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
+	void ApplySettingConfig(rcConfig& config, float height, float radius, float climb);
 	NavigationMesh* CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
 
 	Ogre::Vector3 RandomPoint(const Ogre::String& navMeshName) const;

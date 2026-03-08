@@ -509,8 +509,10 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 	outVerts.reserve(totalVerts * 3);
 	outTris.reserve(totalIdx);
 
-	int baseVertex = 0;
-	int sharedBaseVertex = 0;
+	int currentOffset = 0;
+	int sharedOffset = 0;
+	int nextOffset = 0;
+	int indexOffset = 0;
 	addedShared = false;
 
 	for (unsigned short si = 0; si < numSubMeshes; ++si)
@@ -528,18 +530,14 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 		if (!vd || !id)
 			continue;
 
-		int subMeshBaseVertex = baseVertex;
-		const bool needCopyVertices = (!sm->useSharedVertices) || (sm->useSharedVertices && !addedShared);
-
-		if (needCopyVertices)
+		if ((!sm->useSharedVertices) || (sm->useSharedVertices && !addedShared))
 		{
 			if (sm->useSharedVertices)
 			{
 				addedShared = true;
-				sharedBaseVertex = baseVertex;
-				subMeshBaseVertex = sharedBaseVertex;
+				sharedOffset = currentOffset;
 			}
-			
+
 			// ----- read positions -----
 			const Ogre::VertexElement* posElem = vd->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
 			Ogre::HardwareVertexBufferSharedPtr vbuf = vd->vertexBufferBinding->getBuffer(posElem->getSource());
@@ -560,37 +558,42 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 				pVertex += vbuf->getVertexSize();
 			}
 			vbuf->unlock();
+			nextOffset += static_cast<int>(vd->vertexCount);
+		}
 
-			baseVertex += static_cast<int>(vd->vertexCount);
-		}
-		else
-		{
-			subMeshBaseVertex = sharedBaseVertex;
-		}
-		
 		// ----- read indices -----
+		const int vertexOffset = sm->useSharedVertices ? sharedOffset : currentOffset;
 		Ogre::HardwareIndexBufferSharedPtr ibuf = id->indexBuffer;
 		const bool use32bit = ibuf->getType() == Ogre::HardwareIndexBuffer::IT_32BIT;
-
 		void* idxPtr = ibuf->lock(Ogre::HardwareBuffer::HBL_READ_ONLY);
+
 		if (use32bit)
 		{
 			unsigned int* pIdx = static_cast<unsigned int*>(idxPtr);
 			for (size_t k = 0; k < id->indexCount; ++k)
-				outTris.push_back(static_cast<int>(pIdx[k]) + subMeshBaseVertex);
+			{
+				outTris.push_back(static_cast<int>(pIdx[k]) + vertexOffset);
+				++indexOffset;
+			}
 		}
 		else
 		{
 			unsigned short* pIdx = static_cast<unsigned short*>(idxPtr);
 			for (size_t k = 0; k < id->indexCount; ++k)
-				outTris.push_back(static_cast<int>(pIdx[k]) + subMeshBaseVertex);
+			{
+				outTris.push_back(static_cast<int>(pIdx[k]) + vertexOffset);
+				++indexOffset;
+			}
 		}
+
 		ibuf->unlock();
+		currentOffset = nextOffset;
 	}
 
 	// 必须是三角形索引
-	if (outTris.size() % 3 != 0) 
+	if (indexOffset == 0 || (outTris.size() % 3) != 0)
 		return false;
 
 	return true;
 }
+
