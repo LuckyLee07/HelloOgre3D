@@ -337,6 +337,8 @@ bool NavigationMesh::FindPath(const Ogre::Vector3& start, const Ogre::Vector3& e
 
 	if (dtStatusFailed(status) || pathCount <= 0)
 		return false;
+	if (path[pathCount - 1] != endPoly)
+		return false;
 
 	const int kMaxStraightPath = 512;
 	float straightPath[kMaxStraightPath * 3];

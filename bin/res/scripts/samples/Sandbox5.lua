@@ -33,7 +33,7 @@ local function _DrawPaths()
     for index, agent in pairs(_agents) do
         -- Draw the agent's cyclic path, offset slightly above the level
         -- geometry.
-        DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, true, Vector3(0.0, 0.02, 0.0))
+        DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
         DebugDrawer:drawSquare(agent:GetTarget(), 0.1, UtilColors.Red, true);
     end
 end
@@ -43,12 +43,9 @@ local function _UpdatePaths()
         local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
         local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
         local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
-        local target = agent:GetTarget()
-        
         -- Determine if the agent is within the target radius to their
         -- target position.
         if (distanceSquared < targetRadiusSquared) then
-            print("Fxkk1===============>>>", index, distanceSquared, navPosition.x, navPosition.y, navPosition.z, target.x, target.y, target.z)
             local endPoint;
             local path = std.vector_Ogre__Vector3_();
             
@@ -58,7 +55,6 @@ local function _UpdatePaths()
                 endPoint = Sandbox:RandomPoint("default");
                 result = Sandbox:FindPath("default", agent:GetPosition(), endPoint, path);
             end
-            print("Fxkk2===============>>>", index, endPoint.x, endPoint.y, endPoint.z)
             -- Assign a new path and target position.
             agent:SetPath(path, false);
             agent:SetTarget(endPoint);
@@ -142,8 +138,7 @@ function Sandbox_Initialize()
 
         local randomPoint = points[i]--Sandbox:RandomPoint("default");
         agent:setPosition(randomPoint);
-        print("Fxkk===============>>>", i, randomPoint.x, randomPoint.y, randomPoint.z)
-
+        
         -- Use the Agent's closest point to the navmesh as their target position.
         local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
         agent:SetTarget(navPosition);
