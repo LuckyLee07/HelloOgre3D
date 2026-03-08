@@ -51,5 +51,6 @@ std::string ShootState::OnUpdate(float dt)
 		return "toDeath";
 	}
 
-	return "toIdle";
+	return "";
+	//return "toIdle";
 }

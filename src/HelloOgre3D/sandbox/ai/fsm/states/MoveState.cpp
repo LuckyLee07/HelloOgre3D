@@ -46,5 +46,6 @@ std::string MoveState::OnUpdate(float dt)
 		return "toDeath";
 	}
 
-	return "toIdle";
+	return "";
+	//return "toIdle";
 }

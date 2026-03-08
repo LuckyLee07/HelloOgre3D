@@ -38,6 +38,7 @@ AgentState_OnUpdate = function(agent, deltaTime)
         return "toDeath";
     end
 
-    return "toIdle";
+    return "";
+    --return "toIdle";
 end
 
