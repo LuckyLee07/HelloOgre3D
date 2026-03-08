@@ -7,6 +7,7 @@
 #include "OgreSceneNode.h"
 #include "OIS.h"
 
+#include <cmath>
 #include <limits>
 
 class OgreCameraController {
@@ -31,7 +32,12 @@ public:
         , mGoingRight(false)
         , mGoingUp(false)
         , mGoingDown(false)
-        , mFastMove(false) {
+        , mFastMove(false)
+        , mMouseSensitivity(0.09f)
+        , mMouseSmoothing(0.45f)
+        , mMouseDeadZone(0.01f)
+        , mSmoothedMouseDeltaX(0.0f)
+        , mSmoothedMouseDeltaY(0.0f) {
         setCamera(cam);
         setStyle(CS_FREELOOK);
     }
@@ -40,6 +46,7 @@ public:
 
     virtual void setCamera(Ogre::Camera* cam) {
         mCamera = cam;
+        resetMouseSmoothing();
     }
 
     virtual Ogre::Camera* getCamera() {
@@ -78,6 +85,7 @@ public:
         mCamera->yaw(yaw);
         mCamera->pitch(-pitch);
         mCamera->moveRelative(Ogre::Vector3(0, 0, dist));
+        resetMouseSmoothing();
     }
 
     virtual void setTopSpeed(Ogre::Real topSpeed) {
@@ -106,6 +114,7 @@ public:
         } else if (mStyle != CS_FREELOOK && style == CS_FREELOOK) {
             mCamera->setAutoTracking(false);
             mCamera->setFixedYawAxis(true);
+            resetMouseSmoothing();
         } else if (mStyle != CS_MANUAL && style == CS_MANUAL) {
             mCamera->setAutoTracking(false);
             manualStop();
@@ -130,6 +139,7 @@ public:
         mGoingUp = false;
         mGoingDown = false;
         mVelocity = Ogre::Vector3::ZERO;
+        resetMouseSmoothing();
     }
 
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt) {
@@ -217,10 +227,23 @@ public:
             } else if (evt.state.Z.rel != 0) {
                 mCamera->moveRelative(Ogre::Vector3(0, 0, -evt.state.Z.rel * 0.0008f * dist));
             }
-        } else if (mStyle == CS_FREELOOK) {
-            mCamera->yaw(Ogre::Degree(-evt.state.X.rel * 0.15f));
-            mCamera->pitch(Ogre::Degree(-evt.state.Y.rel * 0.15f));
+            return;
         }
+
+        if (mStyle != CS_FREELOOK) {
+            return;
+        }
+
+        const Ogre::Real rawX = static_cast<Ogre::Real>(evt.state.X.rel);
+        const Ogre::Real rawY = static_cast<Ogre::Real>(evt.state.Y.rel);
+        if (std::abs(rawX) <= mMouseDeadZone && std::abs(rawY) <= mMouseDeadZone) {
+            return;
+        }
+
+        mSmoothedMouseDeltaX = mSmoothedMouseDeltaX * mMouseSmoothing + rawX * (1.0f - mMouseSmoothing);
+        mSmoothedMouseDeltaY = mSmoothedMouseDeltaY * mMouseSmoothing + rawY * (1.0f - mMouseSmoothing);
+        mCamera->yaw(Ogre::Degree(-mSmoothedMouseDeltaX * mMouseSensitivity));
+        mCamera->pitch(Ogre::Degree(-mSmoothedMouseDeltaY * mMouseSensitivity));
     }
 
     virtual void injectMouseDown(const OIS::MouseEvent&, OIS::MouseButtonID id) {
@@ -242,6 +265,12 @@ public:
     }
 
 protected:
+    void resetMouseSmoothing() {
+        mSmoothedMouseDeltaX = 0.0f;
+        mSmoothedMouseDeltaY = 0.0f;
+    }
+
+protected:
     Ogre::Camera* mCamera;
     CameraStyle mStyle;
     Ogre::SceneNode* mTarget;
@@ -256,6 +285,11 @@ protected:
     bool mGoingUp;
     bool mGoingDown;
     bool mFastMove;
+    Ogre::Real mMouseSensitivity;
+    Ogre::Real mMouseSmoothing;
+    Ogre::Real mMouseDeadZone;
+    Ogre::Real mSmoothedMouseDeltaX;
+    Ogre::Real mSmoothedMouseDeltaY;
 };
 
 #endif
