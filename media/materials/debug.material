@@ -74,7 +74,6 @@ material debug_opaque_draw
       pass
       {
          lighting off
-         depth_write off
          ambient vertexcolour
          diffuse vertexcolour
          specular vertexcolour

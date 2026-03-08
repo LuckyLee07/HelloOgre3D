@@ -198,62 +198,28 @@ void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtN
 		if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
 			continue;
 
-		const int polyVertCount = poly->vertCount;
-		const dtPolyDetail* pd = &tile.detailMeshes[pi];
-		if (!pd || pd->triCount <= 0)
-			continue;
-
-		// Draw detail edges that map to original polygon edges.
-		for (int tri = 0; tri < pd->triCount; ++tri)
+		for (int e = 0; e < poly->vertCount; ++e)
 		{
-			const unsigned char* t = &tile.detailTris[(pd->triBase + tri) * 4];
-			const float* tv[3];
-			for (int corner = 0; corner < 3; ++corner)
+			const int ne = (e + 1) % poly->vertCount;
+			const bool isBoundary = (poly->neis[e] == 0);
+			if (!isBoundary)
 			{
-				if (t[corner] < polyVertCount)
-					tv[corner] = &tile.verts[poly->verts[t[corner]] * 3];
-				else
-					tv[corner] = &tile.detailVerts[(pd->vertBase + (t[corner] - polyVertCount)) * 3];
+				const unsigned int ia = static_cast<unsigned int>(poly->verts[e]);
+				const unsigned int ib = static_cast<unsigned int>(poly->verts[ne]);
+				const unsigned int lo = (ia < ib) ? ia : ib;
+				const unsigned int hi = (ia < ib) ? ib : ia;
+				const std::uint64_t edgeKey = (static_cast<std::uint64_t>(lo) << 32) | static_cast<std::uint64_t>(hi);
+				if (!internalEdgeKeys.insert(edgeKey).second)
+					continue; // Shared edge already drawn by neighbor polygon.
 			}
 
-			for (int m = 0, n = 2; m < 3; n = m++)
-			{
-				const unsigned char edgeFlags = static_cast<unsigned char>((t[3] >> (n * 2)) & 0x3);
-				if (edgeFlags == 0)
-					continue; // Skip inner detail edges.
-
-				if (t[n] >= polyVertCount || t[m] >= polyVertCount)
-					continue; // Not an edge on original polygon vertices.
-
-				const int a = static_cast<int>(t[n]);
-				const int b = static_cast<int>(t[m]);
-				int polyEdge = -1;
-				if (((a + 1) % polyVertCount) == b)
-					polyEdge = a;
-				else if (((b + 1) % polyVertCount) == a)
-					polyEdge = b;
-
-				if (polyEdge < 0)
-					continue;
-
-				const bool isBoundary = (poly->neis[polyEdge] == 0);
-				if (!isBoundary)
-				{
-					const unsigned int ia = static_cast<unsigned int>(poly->verts[a]);
-					const unsigned int ib = static_cast<unsigned int>(poly->verts[b]);
-					const unsigned int lo = (ia < ib) ? ia : ib;
-					const unsigned int hi = (ia < ib) ? ib : ia;
-					const std::uint64_t edgeKey = (static_cast<std::uint64_t>(lo) << 32) | static_cast<std::uint64_t>(hi);
-					if (!internalEdgeKeys.insert(edgeKey).second)
-						continue; // Shared edge already drawn by neighbor polygon.
-				}
-
-				const Ogre::ColourValue& lineColor = isBoundary ? boundaryColor : internalColor;
-				manualObject.position(tv[n][0], tv[n][1] + yOffset, tv[n][2]);
-				manualObject.colour(lineColor);
-				manualObject.position(tv[m][0], tv[m][1] + yOffset, tv[m][2]);
-				manualObject.colour(lineColor);
-			}
+			const float* pa = &tile.verts[poly->verts[e] * 3];
+			const float* pb = &tile.verts[poly->verts[ne] * 3];
+			const Ogre::ColourValue& lineColor = isBoundary ? boundaryColor : internalColor;
+			manualObject.position(pa[0], pa[1] + yOffset, pa[2]);
+			manualObject.colour(lineColor);
+			manualObject.position(pb[0], pb[1] + yOffset, pb[2]);
+			manualObject.colour(lineColor);
 		}
 	}
 }
