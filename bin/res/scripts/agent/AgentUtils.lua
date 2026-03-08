@@ -1,3 +1,23 @@
+
+-- 设置路径 朝向预校正
+function Agent_SetPath(agent, path, cyclic)
+    if cyclic == nil then cyclic = false end
+    agent:SetPath(path, cyclic)
+
+    local nearest = agent:GetNearestPointOnPath(agent:GetPosition());
+    local distance = agent:GetDistanceAlongPath(nearest);
+    local pointOnPath = agent:GetPointOnPath(distance + 2);
+
+    local forward = pointOnPath - agent:GetPosition();
+    forward.y = 0
+
+    if forward:dotProduct(agent:GetForward()) < 0 then
+        agent:SetVelocity(forward * agent:GetSpeed());
+        agent:SetForward(forward);
+    end
+end
+
+
 -- 将计算得到的转向力转化为智能体的运动变化
 function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTimeInSeconds)
 

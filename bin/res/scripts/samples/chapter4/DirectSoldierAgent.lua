@@ -1,6 +1,6 @@
+require("res.scripts.agent.AgentUtils.lua")
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierState.lua")
-require("res.scripts.samples.AgentUtils.lua")
 
 local _soldierStates = {
     DEATH = "DEATH",
@@ -23,22 +23,6 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
     
     AgentUtilities_ApplySteeringForce2(agent, steeringForces, _agentAccumulators[agentId], deltaTimeInSeconds);
     AgentUtilities_ClampHorizontalSpeed(agent);
-end
-
-function Agent_SetPath(agent, path, cyclic)
-    agent:SetPath(path, cyclic)
-
-    local nearest = agent:GetNearestPointOnPath(agent:GetPosition());
-    local distance = agent:GetDistanceAlongPath(nearest);
-    local pointOnPath = agent:GetPointOnPath(distance + 2);
-
-    local forward = pointOnPath - agent:GetPosition();
-    forward.y = 0
-
-    if forward:dotProduct(agent:GetForward()) < 0 then
-        agent:SetVelocity(forward * agent:GetSpeed());
-        agent:SetForward(forward);
-    end
 end
 
 function Agent_Initialize(agent)
