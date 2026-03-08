@@ -22,8 +22,9 @@ void DebugDrawer::Initialize()
 	m_pManualObject = pSceneManager->createManualObject();
 	m_pManualNode->attachObject(m_pManualObject);
 	m_pManualObject->setDynamic(true);
+	m_pManualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, 110);
 
-	m_pManualObject->begin("debug_draw", Ogre::RenderOperation::OT_LINE_LIST);
+	m_pManualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_LINE_LIST);
 	m_pManualObject->position(Ogre::Vector3::ZERO);
 	m_pManualObject->colour(Ogre::ColourValue::ZERO);
 	m_pManualObject->index(0);
