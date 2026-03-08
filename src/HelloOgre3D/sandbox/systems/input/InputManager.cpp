@@ -2,7 +2,7 @@
 #include "OISInputManager.h"
 #include "ClientManager.h"
 #include "OgreRenderWindow.h"
-#include "Samples/SdkCameraMan.h"
+#include "ogre/OgreCameraController.h"
 
 InputManager::InputManager() : m_pOISInputMgr(nullptr),
 	m_pMouse(nullptr), m_pKeyboard(nullptr), m_windowHnd(0)
@@ -101,7 +101,7 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 	if (event.key == OIS::KC_ESCAPE)
 		GetClientMgr()->SetShutdown(true);
 
-	GetClientMgr()->getCameraMan()->injectKeyDown(event);
+	GetClientMgr()->getCameraController()->injectKeyDown(event);
 
 	for (auto* handler : m_inputHandlers)
 		handler->OnKeyPressed(event.key, event.text);
@@ -114,7 +114,7 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 
 bool InputManager::keyReleased(const OIS::KeyEvent& event)
 {
-	GetClientMgr()->getCameraMan()->injectKeyUp(event);
+	GetClientMgr()->getCameraController()->injectKeyUp(event);
 
 	for (auto* handler : m_inputHandlers)
 		handler->OnKeyReleased(event.key, event.text);
@@ -128,7 +128,7 @@ bool InputManager::keyReleased(const OIS::KeyEvent& event)
 bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 {
 	if (event.state.buttonDown(OIS::MB_Right))
-		GetClientMgr()->getCameraMan()->injectMouseMove(event);
+		GetClientMgr()->getCameraController()->injectMouseMove(event);
 
 	GetClientMgr()->SetWindowActive(true);
 
@@ -140,7 +140,7 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 
 bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
-	GetClientMgr()->getCameraMan()->injectMouseDown(event, btnId);
+	GetClientMgr()->getCameraController()->injectMouseDown(event, btnId);
 	
 	for (auto* handler : m_inputHandlers)
 		handler->OnMousePressed(event, btnId);
@@ -150,7 +150,7 @@ bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID
 
 bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
-	GetClientMgr()->getCameraMan()->injectMouseUp(event, btnId);
+	GetClientMgr()->getCameraController()->injectMouseUp(event, btnId);
 
 	for (auto* handler : m_inputHandlers)
 		handler->OnMouseReleased(event, btnId);

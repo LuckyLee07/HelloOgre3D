@@ -15,10 +15,7 @@ namespace Ogre
 	class FrameListener;
 	class WindowEventListener;
 }
-namespace OgreBites
-{
-	class SdkCameraMan;
-}
+class OgreCameraController;
 class DebugDrawer;
 class InputManager;
 class GameManager;
@@ -71,7 +68,7 @@ public:
 	Ogre::SceneManager* getSceneManager();
 	Ogre::RenderWindow* getRenderWindow();
 	Ogre::SceneNode* getRootSceneNode();
-	OgreBites::SdkCameraMan* getCameraMan();
+	OgreCameraController* getCameraController();
 
 	InputManager* getInputManager() { return m_pInputManager; }
 
@@ -102,7 +99,7 @@ private:
 	
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;
-	OgreBites::SdkCameraMan* m_pCameraMan;
+	OgreCameraController* m_pCameraController;
 
 	bool m_shutdown; //game exit  
 };

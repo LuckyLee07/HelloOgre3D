@@ -109,6 +109,7 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/",
       "../src/%{prj.name}/common",
       "../src/%{prj.name}/game",
+      "../src/%{prj.name}/runtime",
       "../src/%{prj.name}/sandbox",
       "../src/%{prj.name}/sandbox/core",
       "../src/external",
@@ -149,6 +150,8 @@ function CreateGameProject( projectName )
       "../src/" .. projectName .. "/common/**.cpp",
       "../src/" .. projectName .. "/sandbox/**.h",
       "../src/" .. projectName .. "/sandbox/**.cpp",
+      "../src/" .. projectName .. "/runtime/**.h",
+      "../src/" .. projectName .. "/runtime/**.cpp",
     } )
     filter "system:windows"
       postbuildcommands {}

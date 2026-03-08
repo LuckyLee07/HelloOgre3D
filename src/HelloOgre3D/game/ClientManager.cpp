@@ -2,7 +2,7 @@
 #include "AppConfig.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
-#include "Samples/SdkCameraMan.h"
+#include "ogre/OgreCameraController.h"
 #include "debug/DebugDrawer.h"
 #include "systems/input/InputManager.h"
 #include "core/SandboxMacros.h"
@@ -44,7 +44,7 @@ ClientManager* GetClientMgr()
 
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraMan(nullptr), 
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraController(nullptr), 
     m_pDebugDrawer(nullptr), m_pGameManager(nullptr), m_shutdown(false)
 {
     m_Timer.reset();
@@ -72,9 +72,9 @@ Ogre::Camera* ClientManager::getCamera()
 	return m_pCamera;
 }
 
-OgreBites::SdkCameraMan* ClientManager::getCameraMan()
+OgreCameraController* ClientManager::getCameraController()
 {
-    return m_pCameraMan;
+    return m_pCameraController;
 }
 
 RenderWindow* ClientManager::getRenderWindow()
@@ -283,8 +283,8 @@ void ClientManager::CreateCamera()
 
     m_pCamera->setAutoAspectRatio(true);
 
-    m_pCameraMan = new OgreBites::SdkCameraMan(m_pCamera);
-    m_pCameraMan->setTopSpeed(5.0f);
+    m_pCameraController = new OgreCameraController(m_pCamera);
+    m_pCameraController->setTopSpeed(5.0f);
 }
 
 void ClientManager::CreateViewports()
@@ -443,7 +443,7 @@ void ClientManager::InputCapture()
 
 void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 {
-    m_pCameraMan->frameRenderingQueued(event);
+    m_pCameraController->frameRenderingQueued(event);
 
     if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
     {
