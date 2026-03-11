@@ -1,4 +1,6 @@
 ﻿#include "RandomMoveState.h"
+
+#include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
 
 RandomMoveState::RandomMoveState(AgentObject* pAgent)
@@ -15,20 +17,12 @@ void RandomMoveState::OnEnter()
 {
 	SetTerminated(false);
 
-	bool planned = false;
-	if (m_controller)
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
 	{
-		for (int i = 0; i < 12 && !planned; ++i)
-		{
-			const Ogre::Vector3 target = m_controller->RandomPoint();
-			if (target == Ogre::Vector3::ZERO)
-				continue;
-
-			planned = m_controller->PlanPathTo(target, true);
-		}
+		(void)actions->SelectRandomDestination(12);
 	}
 
-	(void)planned;
 	SetTerminated(true);
 }
 

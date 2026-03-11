@@ -101,6 +101,10 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 
 	BaseObject* pCollideObjA = static_cast<BaseObject*>(pRigidBody0->getUserPointer());
 	BaseObject* pCollideObjB = static_cast<BaseObject*>(pRigidBody1->getUserPointer());
+	if (pCollideObjA == nullptr || pCollideObjB == nullptr)
+	{
+		return false;
+	}
 
 	BaseObject::ObjectType obj1Type = pCollideObjA->GetObjType();
 	BaseObject::ObjectType obj2Type = pCollideObjB->GetObjType();
@@ -114,8 +118,13 @@ bool PhysicsWorld::tiggerCollideEvent(btPersistentManifold* pManifold, btManifol
 		point.m_positionWorldOnA,
 		point.m_positionWorldOnB,
 		point.m_normalWorldOnB);
+	Collision reverseCollision(pRigidBody1, pRigidBody0,
+		point.m_positionWorldOnB,
+		point.m_positionWorldOnA,
+		-point.m_normalWorldOnB);
 
 	pCollideObjA->CollideWithObject(pCollideObjB, myCollision);
+	pCollideObjB->CollideWithObject(pCollideObjA, reverseCollision);
 
 	return true;
 }

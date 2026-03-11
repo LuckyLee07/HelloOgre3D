@@ -1,8 +1,9 @@
-#include "ShootState.h"
+﻿#include "ShootState.h"
 
-#include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "GameDefine.h"
+#include "ai/fsm/AgentActionContext.h"
+#include "ai/fsm/AgentStateController.h"
+#include "objects/AgentObject.h"
 
 ShootState::ShootState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -22,7 +23,12 @@ void ShootState::OnEnter()
 	m_elapsedMs = 0.0f;
 	m_shotConsumed = false;
 
-	if (m_pAgent)
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->EnterShoot();
+	}
+	else if (m_pAgent)
 	{
 		m_pAgent->RequestState(SSTATE_FIRE, true);
 	}
@@ -45,26 +51,43 @@ std::string ShootState::OnUpdate(float dt)
 
 	m_elapsedMs += dt;
 
-	if (m_pAgent->IsMoving())
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->SlowMovement();
+		actions->FaceEnemy();
+	}
+	else if (m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving();
 	}
 
-	if (!m_pAgent->IsAnimReadyForShoot())
+	const bool shootReady = actions ? actions->IsShootAnimationReady() : m_pAgent->IsAnimReadyForShoot();
+	const bool hasPendingAnim = actions ? actions->HasPendingAnimation() : m_pAgent->HasNextAnim();
+	if (!shootReady)
 	{
-		if (!m_pAgent->HasNextAnim())
+		if (!hasPendingAnim)
 		{
-			m_pAgent->RequestState(SSTATE_FIRE, true);
+			if (actions)
+			{
+				actions->EnterShoot();
+			}
+			else
+			{
+				m_pAgent->RequestState(SSTATE_FIRE, true);
+			}
 		}
 		return "";
 	}
 
-	if ((m_elapsedMs >= 120.0f && !m_pAgent->HasNextAnim()) || m_elapsedMs >= 350.0f)
+	if ((m_elapsedMs >= 120.0f && !hasPendingAnim) || m_elapsedMs >= 350.0f)
 	{
-		SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
-		if (!m_shotConsumed && soldier)
+		if (!m_shotConsumed)
 		{
-			soldier->ConsumeAmmo(1);
+			if (actions)
+			{
+				actions->ConsumeAmmo(1);
+			}
 			m_shotConsumed = true;
 		}
 

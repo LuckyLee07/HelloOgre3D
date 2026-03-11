@@ -1,8 +1,9 @@
-#include "AgentStateController.h"
+﻿#include "AgentStateController.h"
 
 #include <utility>
 #include <vector>
 
+#include "AgentActionContext.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "AgentStateEvaluators.h"
@@ -23,12 +24,16 @@ namespace
 AgentStateController::AgentStateController(AgentObject* soldier)
 	: m_fsm(new AgentFSM())
 	, m_agent(soldier)
+	, m_actionContext(new AgentActionContext(*this))
 	, m_navMeshName("default")
 {
 }
 
 AgentStateController::~AgentStateController()
 {
+	delete m_actionContext;
+	m_actionContext = nullptr;
+
 	delete m_fsm;
 	m_fsm = nullptr;
 }

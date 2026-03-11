@@ -16,6 +16,7 @@ namespace Ogre {
 class ScriptLuaVM;
 class BlockObject;
 class RenderableObject;
+struct Collision;
 
 class AgentObject : public VehicleObject //tolua_exports
 	, public LuaEnvObject
@@ -63,6 +64,7 @@ public:
 	
 	virtual void OnDeath(float lastSec);
 	virtual void SlowMoving(float rate = 1.0f);
+	virtual void CollideWithObject(BaseObject* pCollideObj, const Collision& collision) override;
 	
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);

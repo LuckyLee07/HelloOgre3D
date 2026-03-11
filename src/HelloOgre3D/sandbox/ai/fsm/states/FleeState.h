@@ -12,9 +12,6 @@ public:
 	void OnEnter() override;
 	void OnLeave() override;
 	std::string OnUpdate(float deltaTime) override;
-
-private:
-	void SelectFleeDestination();
 };
 
 #endif  // __FLEE_STATE_H__

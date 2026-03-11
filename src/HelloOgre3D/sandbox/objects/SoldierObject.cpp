@@ -241,6 +241,7 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Qua
 	left.normalise();
 
 	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
+	bullet->SetOwner(this);
 	bullet->SetMass(0.1f);
 	bullet->setPosition(position + forward * 0.2f);
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);

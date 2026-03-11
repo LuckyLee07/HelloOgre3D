@@ -1,10 +1,10 @@
-#include "MoveState.h"
+﻿#include "MoveState.h"
 
+#include "GameDefine.h"
+#include "ai/fsm/AgentActionContext.h"
+#include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
-#include "GameDefine.h"
-#include "ai/fsm/AgentStateController.h"
-#include "debug/DebugDrawer.h"
 
 MoveState::MoveState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -22,7 +22,12 @@ void MoveState::OnEnter()
 	SetTerminated(false);
 	m_elapsedMs = 0.0f;
 
-	if (m_pAgent)
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->EnterMove(false);
+	}
+	else if (m_pAgent)
 	{
 		m_pAgent->RequestState(SSTATE_RUN_FORWARD);
 	}
@@ -45,30 +50,19 @@ std::string MoveState::OnUpdate(float dt)
 
 	m_elapsedMs += dt;
 
-	if (m_controller && m_pAgent->IsAnimReadyForMove())
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
 	{
-		m_controller->ApplySteering(dt * 0.001f, false);
-	}
-
-	DebugDrawer* debugDrawer = DebugDrawer::GetInstance();
-	if (debugDrawer)
-	{
-		const std::vector<Ogre::Vector3>& path = m_pAgent->GetPath();
-		if (!path.empty())
-		{
-			const Ogre::Vector3 offset(0.0f, 0.05f, 0.0f);
-			const Ogre::ColourValue color(1.0f, 0.5f, 0.0f);
-			debugDrawer->drawPath(path, color, false, offset);
-			debugDrawer->drawCircle(path.back() + offset, 1.5f, 20, color, false);
-		}
+		actions->TickMovement(dt, false);
+		actions->DrawPath(Ogre::ColourValue(1.0f, 0.5f, 0.0f), Ogre::Vector3(0.0f, 0.05f, 0.0f), 1.5f);
 	}
 
 	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
 	const bool timeout = (m_elapsedMs >= 500.0f);
-	const bool reached = (soldier && soldier->IsTargetReached(1.5f));
+	const bool reached = actions ? actions->IsTargetReached(1.5f, true) : (soldier && soldier->IsTargetReached(1.5f));
 	if (timeout || reached)
 	{
-		if (reached && soldier)
+		if (reached && !actions && soldier)
 		{
 			soldier->ClearMovePosition();
 		}

@@ -1,0 +1,49 @@
+﻿#ifndef __AGENT_ACTION_CONTEXT_H__
+#define __AGENT_ACTION_CONTEXT_H__
+
+#include <string>
+#include "OgreColourValue.h"
+#include "OgreVector3.h"
+
+class AgentObject;
+class AgentStateController;
+class SoldierObject;
+
+class AgentActionContext
+{
+public:
+	explicit AgentActionContext(AgentStateController& controller);
+
+	AgentObject* GetAgent() const;
+	SoldierObject* GetSoldier() const;
+	const std::string& GetNavMeshName() const;
+
+	void EnterIdle();
+	void EnterMove(bool forceUpdate = false);
+	void EnterShoot();
+	void EnterReload();
+
+	void SlowMovement(float rate = 1.0f);
+	void TickMovement(float deltaTimeInMillis, bool slowMode);
+	void FaceEnemy();
+	void DrawPath(const Ogre::ColourValue& color, const Ogre::Vector3& offset, float radius) const;
+
+	bool PlanPathTo(const Ogre::Vector3& target, bool updateMovePos = true);
+	bool PlanPathToEnemy();
+	Ogre::Vector3 RandomPoint() const;
+	bool SelectRandomDestination(int maxTries = 12);
+	bool SelectFleeDestination(int maxTries = 16, float minDistance = 16.0f);
+
+	bool HasEnemy() const;
+	bool IsTargetReached(float threshold, bool clearMovePosition) const;
+	bool IsShootAnimationReady() const;
+	bool HasPendingAnimation() const;
+
+	void ConsumeAmmo(int amount);
+	void RestoreAmmo();
+
+private:
+	AgentStateController* m_controller;
+};
+
+#endif  // __AGENT_ACTION_CONTEXT_H__

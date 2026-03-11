@@ -9,6 +9,8 @@
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "animation/AgentAnimStateMachine.h"
+#include "systems/physics/Collision.h"
+#include <algorithm>
 
 using namespace Ogre;
 
@@ -218,6 +220,30 @@ void AgentObject::SlowMoving(float rate /*= 1.0f*/)
 	horizontalVelocity.y = yMovement;
 
 	this->SetVelocity(horizontalVelocity);
+}
+
+void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& collision)
+{
+	(void)collision;
+	if (pCollideObj == nullptr || pCollideObj->GetObjType() != OBJ_TYPE_BULLET)
+	{
+		return;
+	}
+
+	BlockObject* pBullet = dynamic_cast<BlockObject*>(pCollideObj);
+	if (pBullet == nullptr)
+	{
+		return;
+	}
+
+	if (pBullet->GetOwner() == this || GetHealth() <= 0.0f)
+	{
+		return;
+	}
+
+	pBullet->SetNeedClear();
+	const Ogre::Real damage = 5.0f;
+	this->SetHealth(std::max<Ogre::Real>(0.0f, GetHealth() - damage));
 }
 
 void AgentObject::setPosition(const Ogre::Vector3& position)

@@ -1,5 +1,8 @@
 ﻿#include "IdleState.h"
+
 #include "GameDefine.h"
+#include "ai/fsm/AgentActionContext.h"
+#include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
 
 IdleState::IdleState(AgentObject* pAgent)
@@ -18,7 +21,12 @@ void IdleState::OnEnter()
 	SetTerminated(false);
 	m_elapsedMs = 0.0f;
 
-	if (m_pAgent)
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->EnterIdle();
+	}
+	else if (m_pAgent)
 	{
 		m_pAgent->RequestState(SSTATE_IDLE_AIM);
 	}
@@ -33,7 +41,12 @@ std::string IdleState::OnUpdate(float dt)
 	if (!m_pAgent)
 		return "";
 
-	if (m_pAgent->IsMoving())
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->SlowMovement(2.0f);
+	}
+	else if (m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving(2.0f);
 	}

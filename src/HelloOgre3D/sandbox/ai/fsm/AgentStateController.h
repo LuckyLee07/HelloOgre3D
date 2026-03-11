@@ -1,10 +1,11 @@
-#ifndef __AGENT_STATE_CONTROLLER_H__
+﻿#ifndef __AGENT_STATE_CONTROLLER_H__
 #define __AGENT_STATE_CONTROLLER_H__
 
 #include <functional>
 #include <string>
 #include "OgreVector3.h"
 
+class AgentActionContext;
 class AgentState;
 class AgentFSM;
 class AgentObject;
@@ -20,6 +21,7 @@ public:
 	void ChangeState(const std::string& stateName);
 
 	AgentState* GetCurrState() const;
+	AgentActionContext* GetActionContext() const { return m_actionContext; }
 
 	//tolua_begin
 	bool AddState(const std::string& name);
@@ -42,6 +44,7 @@ public:
 private:
 	AgentFSM* m_fsm;
 	AgentObject* m_agent;
+	AgentActionContext* m_actionContext;
 
 	std::string m_navMeshName;
 

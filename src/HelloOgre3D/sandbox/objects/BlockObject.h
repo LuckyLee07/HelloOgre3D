@@ -51,6 +51,8 @@ public:
 
 	void addParticleNode(Ogre::SceneNode* particleNode);
 	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
+	void SetOwner(BaseObject* owner) { m_ownerObject = owner; }
+	BaseObject* GetOwner() const { return m_ownerObject; }
 
 	void CollideWithObject(BaseObject* pCollideObj, const Collision& collision) override;
 
@@ -70,6 +72,7 @@ private:
 	RenderableObject* m_pEntity = nullptr;
 	PhysicsComponent* m_physicsComp = nullptr;
 	std::vector<Ogre::SceneNode*> m_particleNodes;
+	BaseObject* m_ownerObject = nullptr;
 
 }; //tolua_exports
 

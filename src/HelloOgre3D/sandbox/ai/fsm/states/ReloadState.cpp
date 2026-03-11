@@ -1,8 +1,9 @@
-#include "ReloadState.h"
+﻿#include "ReloadState.h"
 
-#include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "GameDefine.h"
+#include "ai/fsm/AgentActionContext.h"
+#include "ai/fsm/AgentStateController.h"
+#include "objects/AgentObject.h"
 
 ReloadState::ReloadState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -20,7 +21,12 @@ void ReloadState::OnEnter()
 	SetTerminated(false);
 	m_elapsedMs = 0.0f;
 
-	if (m_pAgent)
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->EnterReload();
+	}
+	else if (m_pAgent)
 	{
 		m_pAgent->RequestState(SSTATE_RELOAD, true);
 	}
@@ -45,12 +51,13 @@ std::string ReloadState::OnUpdate(float dt)
 	if (m_elapsedMs < 120.0f)
 		return "";
 
-	if (!m_pAgent->HasNextAnim())
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	const bool hasPendingAnim = actions ? actions->HasPendingAnimation() : m_pAgent->HasNextAnim();
+	if (!hasPendingAnim)
 	{
-		SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
-		if (soldier)
+		if (actions)
 		{
-			soldier->RestoreAmmo();
+			actions->RestoreAmmo();
 		}
 		SetTerminated(true);
 	}
