@@ -38,31 +38,6 @@ local function _DrawPaths()
     end
 end
 
-local function _UpdatePaths()
-    for index, agent in pairs(_agents) do
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
-        local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
-        local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
-        -- Determine if the agent is within the target radius to their
-        -- target position.
-        if (distanceSquared < targetRadiusSquared) then
-            local endPoint;
-            local path = std.vector_Ogre__Vector3_();
-            
-            -- Randomly try and pathfind to a new navmesh point, keep trying
-            -- until a valid path is found.
-            while path:size() == 0 do
-                endPoint = Sandbox:RandomPoint("default");
-                result = Sandbox:FindPath("default", agent:GetPosition(), endPoint, path);
-            end
-            -- Assign a new path and target position.
-            Agent_SetPath(agent, path)
-            --agent:SetPath(path, false)
-            agent:SetTarget(endPoint);
-        end
-    end
-end
-
 function EventHandle_Keyboard(keycode, pressed)
     -- OIS.KC_F2 Event 已处理
     GUI_HandleKeyEvent(keycode, pressed)
@@ -90,8 +65,8 @@ function Sandbox_Initialize()
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
-    camera:setPosition(Vector3(15, 65, 15));
-    camera:setOrientation(Quaternion(-90, 0, 180));
+    camera:setPosition(Vector3(-30, 18, -17));
+    camera:setOrientation(Quaternion(-146, -40, -157));
 
     -- Create The Sky.
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
@@ -118,7 +93,7 @@ function Sandbox_Initialize()
     local navMeshConfig = rcConfig();
     Sandbox:DefaultConfig(navMeshConfig)
     Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
-    navMeshConfig.minRegionArea = math.pow(100, 2)
+    navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
     local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
@@ -126,7 +101,7 @@ function Sandbox_Initialize()
 
     -- Create agents and randomly place them on the navmesh.
     local agentLuafile = _GetFilePath("DirectSoldierAgent.lua")
-    for i=1, 5 do
+    for i=1, 7 do
         local agent = Create_Soldier(agentLuafile)
         table.insert(_agents, agent);
 
@@ -147,7 +122,5 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
-    _UpdatePaths()
-
-    _DrawPaths()
+    --_DrawPaths()
 end

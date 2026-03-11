@@ -3,6 +3,10 @@
 #include "states/MoveState.h"
 #include "states/DeathState.h"
 #include "states/ShootState.h"
+#include "states/ReloadState.h"
+#include "states/PursueState.h"
+#include "states/FleeState.h"
+#include "states/RandomMoveState.h"
 #include "states/AgentLuaState.h"
 
 std::map<std::string, std::function<AgentState*(AgentObject* agent)>> AgentStateFactory::m_registers;
@@ -10,10 +14,13 @@ std::map<std::string, std::function<AgentState*(AgentObject* agent)>> AgentState
 bool AgentStateFactory::Init()
 {
 	RegisterCreator<IdleState>("IdleState");
-	//RegisterCreator<MoveState>("MoveState");
-	//RegisterCreator<FallState>("FallState");
+	RegisterCreator<MoveState>("MoveState");
 	RegisterCreator<DeathState>("DeathState");
 	RegisterCreator<ShootState>("ShootState");
+	RegisterCreator<ReloadState>("ReloadState");
+	RegisterCreator<PursueState>("PursueState");
+	RegisterCreator<FleeState>("FleeState");
+	RegisterCreator<RandomMoveState>("RandomMoveState");
 
 	RegisterCreator<AgentLuaState>("AgentLuaState");
 

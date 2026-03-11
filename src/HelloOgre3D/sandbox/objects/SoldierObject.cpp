@@ -2,6 +2,7 @@
 #include "RenderableObject.h"
 #include "GameManager.h"
 #include "systems/manager/SandboxMgr.h"
+#include "systems/manager/ObjectManager.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "ai/fsm/AgentStateController.h"
@@ -12,6 +13,9 @@
 #include "BlockObject.h"
 #include "systems/service/SceneFactory.h"
 #include "animation/AgentAnimState.h"
+#include <algorithm>
+#include <limits>
+#include <vector>
 
 using namespace Ogre;
 
@@ -24,9 +28,13 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_stateController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
+
+	m_maxHealth = std::max<Ogre::Real>(GetHealth(), 1.0f);
+	m_maxAmmo = std::max(1, m_maxAmmo);
+	m_ammo = std::min(std::max(0, m_ammo), m_maxAmmo);
 
 	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
 
@@ -245,6 +253,132 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Qua
 	bullet->applyImpulse(forward * 750);
 }
 
+void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
+{
+	m_maxHealth = std::max<Ogre::Real>(maxHealth, 1.0f);
+}
+
+void SoldierObject::SetAmmo(int ammo)
+{
+	m_ammo = std::min(std::max(0, ammo), m_maxAmmo);
+}
+
+void SoldierObject::SetMaxAmmo(int maxAmmo)
+{
+	m_maxAmmo = std::max(1, maxAmmo);
+	if (m_ammo > m_maxAmmo)
+	{
+		m_ammo = m_maxAmmo;
+	}
+}
+
+void SoldierObject::ConsumeAmmo(int amount)
+{
+	if (amount <= 0)
+	{
+		return;
+	}
+
+	SetAmmo(m_ammo - amount);
+}
+
+void SoldierObject::RestoreAmmo()
+{
+	m_ammo = m_maxAmmo;
+}
+
+
+AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
+{
+	if (!g_ObjectManager)
+	{
+		return nullptr;
+	}
+
+	const std::vector<AgentObject*>& agents = g_ObjectManager->getAllAgents();
+
+	AgentObject* nearestEnemy = nullptr;
+	float nearestDistance = std::numeric_limits<float>::max();
+
+	for (AgentObject* candidate : agents)
+	{
+		if (!candidate || candidate == this)
+			continue;
+		if (candidate->GetHealth() <= 0.0f)
+			continue;
+
+		const float distSquared = GetPosition().squaredDistance(candidate->GetPosition());
+		if (distSquared >= nearestDistance)
+			continue;
+
+		if (g_SandboxMgr)
+		{
+			std::vector<Ogre::Vector3> path;
+			if (!g_SandboxMgr->FindPath(navMeshName, GetPosition(), candidate->GetPosition(), path) || path.empty())
+				continue;
+		}
+
+		nearestEnemy = candidate;
+		nearestDistance = distSquared;
+	}
+
+	return nearestEnemy;
+}
+
+bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
+{
+	m_enemy = FindNearestEnemy(navMeshName);
+	return m_enemy != nullptr;
+}
+
+bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
+{
+	if (!HasEnemy(navMeshName))
+	{
+		return false;
+	}
+
+	const float distance = std::max(0.0f, shootDistance);
+	const float shootSquared = distance * distance;
+	const float distSquared = GetPosition().squaredDistance(m_enemy->GetPosition());
+	return distSquared < shootSquared;
+}
+
+bool SoldierObject::HasMovePosition(float reachDistance) const
+{
+	if (!m_hasMovePos)
+	{
+		return false;
+	}
+
+	const float distance = std::max(0.0f, reachDistance);
+	const float reachSquared = distance * distance;
+	return GetPosition().squaredDistance(m_movePos) > reachSquared;
+}
+
+void SoldierObject::SetMovePosition(const Ogre::Vector3& movePos)
+{
+	m_movePos = movePos;
+	m_hasMovePos = true;
+}
+
+void SoldierObject::ClearMovePosition()
+{
+	m_hasMovePos = false;
+	m_movePos = Ogre::Vector3::ZERO;
+}
+
+bool SoldierObject::IsTargetReached(float threshold) const
+{
+	if (!m_hasMovePos)
+	{
+		return false;
+	}
+
+	const float distance = std::max(0.0f, threshold);
+	const float thresholdSquared = distance * distance;
+	return GetPosition().squaredDistance(m_movePos) < thresholdSquared;
+}
 void SoldierObject::changeStanceType(int stanceType)
 {
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -351,7 +485,7 @@ void SoldierObject::TryApplyPendingStance()
 }
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
-	//播放死亡动画时不再接受新的状态
+	// Ignore new requests while death animation is playing.
 	if (m_onPlayDeathAnim) return;
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -364,7 +498,6 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 
 	pAsm->RequestState(requestState);
 }
-
 bool SoldierObject::HasNextAnim()
 {
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -400,3 +533,4 @@ bool SoldierObject::IsAnimReadyForShoot()
 	}
 	return false;
 }
+

@@ -1,0 +1,167 @@
+#include "AgentStateEvaluators.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+
+#include "AgentStateController.h"
+#include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
+
+namespace
+{
+	SoldierObject* GetSoldier(AgentStateController& controller)
+	{
+		return dynamic_cast<SoldierObject*>(controller.GetAgent());
+	}
+
+	bool EvalIsNotAlive(AgentStateController& controller)
+	{
+		AgentObject* agent = controller.GetAgent();
+		return !agent || agent->GetHealth() <= 0.0f;
+	}
+
+	bool EvalHasCriticalHealth(AgentStateController& controller)
+	{
+		SoldierObject* soldier = GetSoldier(controller);
+		if (!soldier)
+			return false;
+
+		const float maxHealth = std::max(1.0f, static_cast<float>(soldier->GetMaxHealth()));
+		return soldier->GetHealth() < (maxHealth * 0.2f);
+	}
+
+	bool EvalHasNoAmmo(AgentStateController& controller)
+	{
+		SoldierObject* soldier = GetSoldier(controller);
+		return soldier ? !soldier->HasAmmo() : false;
+	}
+
+	bool EvalCanShootEnemy(AgentStateController& controller)
+	{
+		SoldierObject* soldier = GetSoldier(controller);
+		return soldier ? soldier->CanShootEnemy(controller.GetNavMeshName(), 3.0f) : false;
+	}
+
+	bool EvalHasEnemy(AgentStateController& controller)
+	{
+		SoldierObject* soldier = GetSoldier(controller);
+		return soldier ? soldier->HasEnemy(controller.GetNavMeshName()) : false;
+	}
+
+	bool EvalHasMovePosition(AgentStateController& controller)
+	{
+		SoldierObject* soldier = GetSoldier(controller);
+		return soldier ? soldier->HasMovePosition(1.5f) : false;
+	}
+
+	bool EvalRandom(AgentStateController&)
+	{
+		static bool seeded = false;
+		if (!seeded)
+		{
+			std::srand(static_cast<unsigned int>(std::time(nullptr)));
+			seeded = true;
+		}
+
+		return (std::rand() % 1000) >= 500;
+	}
+
+	bool EvalTrue(AgentStateController&)
+	{
+		return true;
+	}
+}
+
+void AgentStateEvaluators::ConfigureSoldierTransitions(AgentStateController& controller)
+{
+	auto bind = [&controller](bool (*evaluator)(AgentStateController&)) {
+		return [&controller, evaluator]() {
+			return evaluator(controller);
+		};
+	};
+
+	controller.AddTransition("IdleState", "DeathState");
+	controller.AddTransition("IdleState", "FleeState");
+	controller.AddTransition("IdleState", "ReloadState");
+	controller.AddTransition("IdleState", "ShootState");
+	controller.AddTransition("IdleState", "PursueState");
+	controller.AddTransition("IdleState", "RandomMoveState");
+	controller.AddTransition("IdleState", "IdleState");
+
+	controller.AddTransition("MoveState", "DeathState");
+	controller.AddTransition("MoveState", "FleeState");
+	controller.AddTransition("MoveState", "ReloadState");
+	controller.AddTransition("MoveState", "ShootState");
+	controller.AddTransition("MoveState", "PursueState");
+	controller.AddTransition("MoveState", "MoveState");
+	controller.AddTransition("MoveState", "RandomMoveState");
+	controller.AddTransition("MoveState", "IdleState");
+
+	controller.AddTransition("RandomMoveState", "DeathState");
+	controller.AddTransition("RandomMoveState", "MoveState");
+
+	controller.AddTransition("ShootState", "DeathState");
+	controller.AddTransition("ShootState", "FleeState");
+	controller.AddTransition("ShootState", "ReloadState");
+	controller.AddTransition("ShootState", "ShootState");
+	controller.AddTransition("ShootState", "PursueState");
+	controller.AddTransition("ShootState", "RandomMoveState");
+	controller.AddTransition("ShootState", "IdleState");
+
+	controller.AddTransition("FleeState", "DeathState");
+	controller.AddTransition("FleeState", "MoveState");
+
+	controller.AddTransition("PursueState", "DeathState");
+	controller.AddTransition("PursueState", "FleeState");
+	controller.AddTransition("PursueState", "ShootState");
+	controller.AddTransition("PursueState", "IdleState");
+
+	controller.AddTransition("ReloadState", "DeathState");
+	controller.AddTransition("ReloadState", "ShootState");
+	controller.AddTransition("ReloadState", "PursueState");
+	controller.AddTransition("ReloadState", "RandomMoveState");
+	controller.AddTransition("ReloadState", "IdleState");
+
+	controller.AddTransitionByEvaluator("IdleState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("IdleState", "FleeState", bind(EvalHasCriticalHealth));
+	controller.AddTransitionByEvaluator("IdleState", "ReloadState", bind(EvalHasNoAmmo));
+	controller.AddTransitionByEvaluator("IdleState", "ShootState", bind(EvalCanShootEnemy));
+	controller.AddTransitionByEvaluator("IdleState", "PursueState", bind(EvalHasEnemy));
+	controller.AddTransitionByEvaluator("IdleState", "RandomMoveState", bind(EvalRandom));
+	controller.AddTransitionByEvaluator("IdleState", "IdleState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("MoveState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("MoveState", "FleeState", bind(EvalHasCriticalHealth));
+	controller.AddTransitionByEvaluator("MoveState", "ReloadState", bind(EvalHasNoAmmo));
+	controller.AddTransitionByEvaluator("MoveState", "ShootState", bind(EvalCanShootEnemy));
+	controller.AddTransitionByEvaluator("MoveState", "PursueState", bind(EvalHasEnemy));
+	controller.AddTransitionByEvaluator("MoveState", "MoveState", bind(EvalHasMovePosition));
+	controller.AddTransitionByEvaluator("MoveState", "RandomMoveState", bind(EvalRandom));
+	controller.AddTransitionByEvaluator("MoveState", "IdleState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("RandomMoveState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("RandomMoveState", "MoveState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("ShootState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("ShootState", "FleeState", bind(EvalHasCriticalHealth));
+	controller.AddTransitionByEvaluator("ShootState", "ReloadState", bind(EvalHasNoAmmo));
+	controller.AddTransitionByEvaluator("ShootState", "ShootState", bind(EvalCanShootEnemy));
+	controller.AddTransitionByEvaluator("ShootState", "PursueState", bind(EvalHasEnemy));
+	controller.AddTransitionByEvaluator("ShootState", "RandomMoveState", bind(EvalRandom));
+	controller.AddTransitionByEvaluator("ShootState", "IdleState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("FleeState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("FleeState", "MoveState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("PursueState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("PursueState", "FleeState", bind(EvalHasCriticalHealth));
+	controller.AddTransitionByEvaluator("PursueState", "ShootState", bind(EvalCanShootEnemy));
+	controller.AddTransitionByEvaluator("PursueState", "IdleState", bind(EvalTrue));
+
+	controller.AddTransitionByEvaluator("ReloadState", "DeathState", bind(EvalIsNotAlive));
+	controller.AddTransitionByEvaluator("ReloadState", "ShootState", bind(EvalCanShootEnemy));
+	controller.AddTransitionByEvaluator("ReloadState", "PursueState", bind(EvalHasEnemy));
+	controller.AddTransitionByEvaluator("ReloadState", "RandomMoveState", bind(EvalRandom));
+	controller.AddTransitionByEvaluator("ReloadState", "IdleState", bind(EvalTrue));
+}

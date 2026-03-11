@@ -1,51 +1,65 @@
 #include "MoveState.h"
-#include "objects/AgentObject.h"
-#include "GameDefine.h"
-#include "ScriptLuaVM.h"
 
-MoveState::MoveState(AgentObject* pAgent) : AgentState(pAgent)
+#include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
+#include "GameDefine.h"
+#include "ai/fsm/AgentStateController.h"
+
+MoveState::MoveState(AgentObject* pAgent)
+	: AgentState(pAgent)
+	, m_elapsedMs(0.0f)
 {
 	m_stateId = "MoveState";
 }
 
 MoveState::~MoveState()
 {
-
 }
 
 void MoveState::OnEnter()
 {
-	
+	SetTerminated(false);
+	m_elapsedMs = 0.0f;
+
+	if (m_pAgent)
+	{
+		m_pAgent->RequestState(SSTATE_RUN_FORWARD);
+	}
 }
 
 void MoveState::OnLeave()
 {
-
 }
 
 std::string MoveState::OnUpdate(float dt)
 {
-	GetScriptLuaVM()->callFunction("Agent_MovingState", "u[AgentObject]i", m_pAgent, (int)dt);
-	
-	if (!m_pAgent->IsAnimReadyForMove())
+	if (!m_pAgent)
+		return "";
+
+	if (m_pAgent->GetHealth() <= 0.0f)
 	{
+		SetTerminated(true);
 		return "";
 	}
 
-	auto pInput = m_pAgent->GetInput();
-	if (pInput->isKeyDown(OIS::KC_2))
+	m_elapsedMs += dt;
+
+	if (m_controller && m_pAgent->IsAnimReadyForMove())
 	{
-		return "toShoot";
+		m_controller->ApplySteering(dt * 0.001f, false);
 	}
-	else if (pInput->isKeyDown(OIS::KC_3))
+
+	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
+	const bool timeout = (m_elapsedMs >= 500.0f);
+	const bool reached = (soldier && soldier->IsTargetReached(1.5f));
+	if (timeout || reached)
 	{
-		return ""; // 继续Walk
-	}
-	else if (pInput->isKeyDown(OIS::KC_4))
-	{
-		return "toDeath";
+		if (soldier)
+		{
+			soldier->ClearMovePosition();
+		}
+		SetTerminated(true);
 	}
 
 	return "";
-	//return "toIdle";
 }

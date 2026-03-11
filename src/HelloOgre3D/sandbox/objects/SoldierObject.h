@@ -30,6 +30,25 @@ public:
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
 
+	void SetMaxHealth(Ogre::Real maxHealth);
+	Ogre::Real GetMaxHealth() const { return m_maxHealth; }
+
+	void SetAmmo(int ammo);
+	int GetAmmo() const { return m_ammo; }
+	void SetMaxAmmo(int maxAmmo);
+	int GetMaxAmmo() const { return m_maxAmmo; }
+	bool HasAmmo() const { return m_ammo > 0; }
+	void ConsumeAmmo(int amount);
+	void RestoreAmmo();
+
+	bool HasEnemy(const Ogre::String& navMeshName = "default");
+	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
+	AgentObject* GetEnemy() const { return m_enemy; }
+
+	bool HasMovePosition(float reachDistance = 1.5f) const;
+	void SetMovePosition(const Ogre::Vector3& movePos);
+	void ClearMovePosition();
+	bool IsTargetReached(float threshold) const;
 	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
@@ -38,17 +57,26 @@ private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
+	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
 
 protected:
 	void CreateEventDispatcher();
 	void RemoveEventDispatcher();
-	
+
 private:
 	RenderableObject* m_pWeapon;
 	Ogre::Vector3 m_weaponHandOffsetPos = Ogre::Vector3::ZERO;
 	Ogre::Quaternion m_weaponHandOffsetOrientation = Ogre::Quaternion::IDENTITY;
 	SOLDIER_STANCE_TYPE m_stanceType;
 	int m_pendingStanceType = -1;
+
+	Ogre::Real m_maxHealth = 100.0f;
+	int m_ammo = 10;
+	int m_maxAmmo = 10;
+
+	AgentObject* m_enemy = nullptr;
+	bool m_hasMovePos = false;
+	Ogre::Vector3 m_movePos = Ogre::Vector3::ZERO;
 
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
