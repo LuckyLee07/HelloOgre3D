@@ -1,4 +1,4 @@
-#ifndef __AGENT_FMS_H__
+﻿#ifndef __AGENT_FMS_H__
 #define __AGENT_FMS_H__
 
 #include <functional>
@@ -42,7 +42,6 @@ private:
 	bool ContainsState(const std::string& stateName);
 	bool ContainsTransition(const std::string& from, const std::string& to);
 
-	bool PerformTransition(const std::string& trans);
 	bool EvaluateTransitionRules();
 
 private:

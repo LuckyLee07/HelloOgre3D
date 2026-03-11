@@ -6,6 +6,7 @@
 #include "objects/SoldierObject.h"
 #include "GameDefine.h"
 #include "ai/fsm/AgentStateController.h"
+#include "debug/DebugDrawer.h"
 
 FleeState::FleeState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -46,6 +47,18 @@ std::string FleeState::OnUpdate(float dt)
 	if (m_controller && m_pAgent->IsAnimReadyForMove())
 	{
 		m_controller->ApplySteering(dt * 0.001f, false);
+	}
+
+	DebugDrawer* debugDrawer = DebugDrawer::GetInstance();
+	if (debugDrawer)
+	{
+		const std::vector<Ogre::Vector3>& path = m_pAgent->GetPath();
+		if (!path.empty())
+		{
+			const Ogre::ColourValue color(0.0f, 0.0f, 1.0f);
+			debugDrawer->drawPath(path, color, false, Ogre::Vector3::ZERO);
+			debugDrawer->drawCircle(path.back(), 1.5f, 20, color, false);
+		}
 	}
 
 	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);

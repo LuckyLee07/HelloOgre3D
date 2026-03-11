@@ -1,9 +1,10 @@
-#include "PursueState.h"
+﻿#include "PursueState.h"
 
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "GameDefine.h"
 #include "ai/fsm/AgentStateController.h"
+#include "debug/DebugDrawer.h"
 
 PursueState::PursueState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -64,6 +65,19 @@ std::string PursueState::OnUpdate(float dt)
 	if (m_pAgent->IsAnimReadyForMove())
 	{
 		m_controller->ApplySteering(dt * 0.001f, false);
+	}
+
+	DebugDrawer* debugDrawer = DebugDrawer::GetInstance();
+	if (debugDrawer)
+	{
+		const std::vector<Ogre::Vector3>& path = m_pAgent->GetPath();
+		if (!path.empty())
+		{
+			const Ogre::Vector3 offset(0.0f, 0.1f, 0.0f);
+			const Ogre::ColourValue color(1.0f, 0.0f, 0.0f);
+			debugDrawer->drawPath(path, color, false, offset);
+			debugDrawer->drawCircle(path.back() + offset, 3.0f, 20, color, false);
+		}
 	}
 
 	if (soldier->IsTargetReached(3.0f))

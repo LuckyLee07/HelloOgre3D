@@ -346,14 +346,21 @@ bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDi
 
 bool SoldierObject::HasMovePosition(float reachDistance) const
 {
-	if (!m_hasMovePos)
+	const float distance = std::max(0.0f, reachDistance);
+	const float reachSquared = distance * distance;
+
+	if (m_hasMovePos)
+	{
+		return GetPosition().squaredDistance(m_movePos) > reachSquared;
+	}
+
+	if (!HasPath())
 	{
 		return false;
 	}
 
-	const float distance = std::max(0.0f, reachDistance);
-	const float reachSquared = distance * distance;
-	return GetPosition().squaredDistance(m_movePos) > reachSquared;
+	const Ogre::Vector3 target = GetTarget();
+	return GetPosition().squaredDistance(target) > reachSquared;
 }
 
 void SoldierObject::SetMovePosition(const Ogre::Vector3& movePos)
@@ -370,14 +377,21 @@ void SoldierObject::ClearMovePosition()
 
 bool SoldierObject::IsTargetReached(float threshold) const
 {
-	if (!m_hasMovePos)
+	const float distance = std::max(0.0f, threshold);
+	const float thresholdSquared = distance * distance;
+
+	if (m_hasMovePos)
+	{
+		return GetPosition().squaredDistance(m_movePos) < thresholdSquared;
+	}
+
+	if (!HasPath())
 	{
 		return false;
 	}
 
-	const float distance = std::max(0.0f, threshold);
-	const float thresholdSquared = distance * distance;
-	return GetPosition().squaredDistance(m_movePos) < thresholdSquared;
+	const Ogre::Vector3 target = GetTarget();
+	return GetPosition().squaredDistance(target) < thresholdSquared;
 }
 void SoldierObject::changeStanceType(int stanceType)
 {
@@ -485,7 +499,7 @@ void SoldierObject::TryApplyPendingStance()
 }
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
-	// Ignore new requests while death animation is playing.
+	//播放死亡动画时不再接受新的状态
 	if (m_onPlayDeathAnim) return;
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -533,4 +547,3 @@ bool SoldierObject::IsAnimReadyForShoot()
 	}
 	return false;
 }
-

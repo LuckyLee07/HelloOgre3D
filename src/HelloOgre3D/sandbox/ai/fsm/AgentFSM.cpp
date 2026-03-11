@@ -21,11 +21,9 @@ void AgentFSM::Update(float dt)
 {
 	if (!m_currState) return;
 
-	const std::string nextState = m_currState->OnUpdate(dt);
-	if (!nextState.empty() && PerformTransition(nextState))
-	{
-		return;
-	}
+	// States only drive their own execution; once terminated, evaluators decide
+	// the next transition in a fixed priority order.
+	m_currState->OnUpdate(dt);
 
 	if (m_currState && m_currState->IsTerminated())
 	{
@@ -111,23 +109,6 @@ bool AgentFSM::ContainsTransition(const std::string& from, const std::string& to
 	return iter->second.find(to) != iter->second.end();
 }
 
-bool AgentFSM::PerformTransition(const std::string& trans)
-{
-	std::string nextState = trans;
-
-	if (trans.size() > 2 && trans[0] == 't' && trans[1] == 'o')
-	{
-		nextState = trans.substr(2) + "State";
-	}
-
-	if (ContainsTransition(m_currStateName, nextState))
-	{
-		SetCurrentState(nextState);
-		return true;
-	}
-
-	return false;
-}
 
 bool AgentFSM::EvaluateTransitionRules()
 {
