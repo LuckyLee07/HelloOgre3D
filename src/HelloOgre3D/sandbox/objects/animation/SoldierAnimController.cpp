@@ -2,6 +2,7 @@
 
 #include "AgentAnimStateMachine.h"
 #include "AgentAnimState.h"
+#include "SoldierAnimProfile.h"
 #include "objects/RenderableObject.h"
 #include "objects/SoldierObject.h"
 #include "GameFunction.h"
@@ -38,27 +39,26 @@ void SoldierAnimController::Update(float deltaTimeInMillis)
 	(void)deltaTimeInMillis;
 	EnsureBodyNotifiesRegistered();
 
-	const int actionStateId = ResolveBodyActionState();
+	const int actionStateId = SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), m_actionIntent);
 	if (actionStateId >= 0)
 	{
 		ApplyBodyState(actionStateId, m_forceActionRestart);
 	}
 	else
 	{
-		const int locomotionStateId = ResolveBodyLocomotionState();
-		ApplyBodyState(locomotionStateId, false);
+		ApplyBodyState(SoldierAnimProfile::ResolveBodyLocomotionState(m_owner->getStanceType(), m_locomotionIntent), false);
 	}
 
-	ApplyWeaponState(ResolveWeaponState(), m_forceActionRestart);
+	ApplyWeaponState(SoldierAnimProfile::ResolveWeaponState(m_actionIntent), m_forceActionRestart);
 	m_forceActionRestart = false;
 
 	AgentAnimStateMachine* bodyAsm = GetBodyAsm();
 	AgentAnimStateMachine* weaponAsm = GetWeaponAsm();
 	if (m_actionIntent == SoldierActionIntent::Reload)
 	{
-		const std::string reloadState = AgentAnimState::GetNameByID(ConvertAnimID(SSTATE_RELOAD, m_owner->getStanceType()));
+		const std::string reloadState = AgentAnimState::GetNameByID(SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), SoldierActionIntent::Reload));
 		const bool bodyReloadQueued = IsAsmStateQueued(bodyAsm, reloadState);
-		const bool weaponReloadQueued = IsAsmStateQueued(weaponAsm, "sniper_reload");
+		const bool weaponReloadQueued = IsAsmStateQueued(weaponAsm, SoldierAnimProfile::ResolveWeaponState(SoldierActionIntent::Reload));
 		if (bodyReloadQueued || weaponReloadQueued)
 		{
 			m_reloadPresentationStarted = true;
@@ -77,7 +77,7 @@ void SoldierAnimController::OnBodyStateChanged(int stateId)
 {
 	if (m_actionIntent == SoldierActionIntent::Reload)
 	{
-		const int reloadStateId = ConvertAnimID(SSTATE_RELOAD, m_owner->getStanceType());
+		const int reloadStateId = SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), SoldierActionIntent::Reload);
 		if (stateId == reloadStateId)
 		{
 			m_reloadPresentationStarted = true;
@@ -181,7 +181,9 @@ bool SoldierAnimController::HasPendingPresentation() const
 {
 	AgentAnimStateMachine* bodyAsm = GetBodyAsm();
 	AgentAnimStateMachine* weaponAsm = GetWeaponAsm();
-	return (bodyAsm && bodyAsm->IsTransitioning()) || (weaponAsm && weaponAsm->IsTransitioning());
+	const bool bodyPending = bodyAsm && (bodyAsm->IsTransitioning() || !bodyAsm->GetDesiredStateName().empty());
+	const bool weaponPending = weaponAsm && (weaponAsm->IsTransitioning() || !weaponAsm->GetDesiredStateName().empty());
+	return bodyPending || weaponPending;
 }
 
 AgentAnimStateMachine* SoldierAnimController::GetBodyAsm() const
@@ -194,51 +196,6 @@ AgentAnimStateMachine* SoldierAnimController::GetWeaponAsm() const
 {
 	RenderableObject* weapon = m_owner ? m_owner->getWeapon() : nullptr;
 	return weapon ? weapon->GetObjectASM() : nullptr;
-}
-
-int SoldierAnimController::ResolveBodyLocomotionState() const
-{
-	switch (m_locomotionIntent)
-	{
-	case SoldierLocomotionIntent::Move:
-		return ConvertAnimID(SSTATE_RUN_FORWARD, m_owner->getStanceType());
-	case SoldierLocomotionIntent::Fall:
-		return SSTATE_FALL_IDLE;
-	case SoldierLocomotionIntent::None:
-	case SoldierLocomotionIntent::Idle:
-	default:
-		return ConvertAnimID(SSTATE_IDLE_AIM, m_owner->getStanceType());
-	}
-}
-
-int SoldierAnimController::ResolveBodyActionState() const
-{
-	switch (m_actionIntent)
-	{
-	case SoldierActionIntent::Shoot:
-		return ConvertAnimID(SSTATE_FIRE, m_owner->getStanceType());
-	case SoldierActionIntent::Reload:
-		return ConvertAnimID(SSTATE_RELOAD, m_owner->getStanceType());
-	case SoldierActionIntent::Death:
-		return ConvertAnimID(SSTATE_DEAD, m_owner->getStanceType());
-	case SoldierActionIntent::None:
-	default:
-		return -1;
-	}
-}
-
-std::string SoldierAnimController::ResolveWeaponState() const
-{
-	switch (m_actionIntent)
-	{
-	case SoldierActionIntent::Reload:
-		return "sniper_reload";
-	case SoldierActionIntent::None:
-	case SoldierActionIntent::Shoot:
-	case SoldierActionIntent::Death:
-	default:
-		return "sniper_idle";
-	}
 }
 
 void SoldierAnimController::EnsureBodyNotifiesRegistered()
@@ -254,11 +211,7 @@ void SoldierAnimController::EnsureBodyNotifiesRegistered()
 		return;
 	}
 
-	bodyAsm->AddNotify("fire", "shoot_fire", 0.18f, true);
-	bodyAsm->AddNotify("fire", "shoot_complete", 0.90f, true);
-	bodyAsm->AddNotify("crouch_fire", "shoot_fire", 0.18f, true);
-	bodyAsm->AddNotify("crouch_fire", "shoot_complete", 0.90f, true);
-	bodyAsm->AddNotify("reload", "reload_complete", 0.92f, true);
+	SoldierAnimProfile::RegisterDefaultBodyNotifies(*bodyAsm);
 	m_bodyNotifiesRegistered = true;
 }
 

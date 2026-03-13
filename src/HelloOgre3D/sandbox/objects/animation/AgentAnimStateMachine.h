@@ -75,8 +75,8 @@ public:
     static void Animation_LinearBlendTo(AgentAnim* startAnim, AgentAnim* endAnim, float blendTime, float startTime, float currTime);
 
 private:
-    BaseObject* m_owner = nullptr;	//持有者
-    bool m_canFireEvent = false;	//可发送事件
+    BaseObject* m_owner = nullptr;
+    bool m_canFireEvent = false;
 
     std::unordered_map<std::string, AgentAnimState*> m_animStates;
     typedef std::unordered_map<std::string, AgentAnimTransition*> TransitionMap;

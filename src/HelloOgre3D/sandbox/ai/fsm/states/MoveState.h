@@ -1,7 +1,8 @@
-﻿#ifndef __MOVE_STATE_H__
+#ifndef __MOVE_STATE_H__
 #define __MOVE_STATE_H__
 
 #include "AgentState.h"
+#include "OgreVector3.h"
 
 class MoveState : public AgentState
 {
@@ -14,7 +15,8 @@ public:
 	std::string OnUpdate(float deltaTime) override;
 
 private:
-	float m_elapsedMs;
+	float m_stuckMs;
+	Ogre::Vector3 m_lastPosition;
 };
 
 #endif  // __MOVE_STATE_H__

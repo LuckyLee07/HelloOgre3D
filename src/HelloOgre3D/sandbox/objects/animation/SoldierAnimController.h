@@ -3,25 +3,10 @@
 
 #include <string>
 #include "GameDefine.h"
+#include "SoldierAnimTypes.h"
 
 class SoldierObject;
 class AgentAnimStateMachine;
-
-enum class SoldierLocomotionIntent
-{
-	None = 0,
-	Idle,
-	Move,
-	Fall,
-};
-
-enum class SoldierActionIntent
-{
-	None = 0,
-	Shoot,
-	Reload,
-	Death,
-};
 
 class SoldierAnimController
 {
@@ -51,10 +36,6 @@ private:
 	SoldierObject* GetOwner() const { return m_owner; }
 	AgentAnimStateMachine* GetBodyAsm() const;
 	AgentAnimStateMachine* GetWeaponAsm() const;
-
-	int ResolveBodyLocomotionState() const;
-	int ResolveBodyActionState() const;
-	std::string ResolveWeaponState() const;
 
 	void EnsureBodyNotifiesRegistered();
 	void ApplyBodyState(int stateId, bool forceRestart);
