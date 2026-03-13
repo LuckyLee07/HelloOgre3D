@@ -61,41 +61,53 @@ std::string ShootState::OnUpdate(float dt)
 	{
 		actions->SlowMovement();
 		actions->FaceEnemy();
+
+		if (!m_shotConsumed && actions->ConsumeShootExecution())
+		{
+			actions->ConsumeAmmo(1);
+			m_shotConsumed = true;
+		}
+
+		if (actions->IsShootPresentationFinished())
+		{
+			if (!m_shotConsumed)
+			{
+				actions->ConsumeAmmo(1);
+				m_shotConsumed = true;
+			}
+			SetTerminated(true);
+			return "";
+		}
+
+		if (m_elapsedMs >= 800.0f && !actions->HasPendingAnimation())
+		{
+			if (!m_shotConsumed)
+			{
+				actions->ConsumeAmmo(1);
+				m_shotConsumed = true;
+			}
+			SetTerminated(true);
+		}
+		return "";
 	}
 	else if (m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving();
 	}
 
-	const bool shootReady = actions ? actions->IsShootAnimationReady() : m_pAgent->IsAnimReadyForShoot();
-	const bool hasPendingAnim = actions ? actions->HasPendingAnimation() : m_pAgent->HasNextAnim();
+	const bool shootReady = m_pAgent->IsAnimReadyForShoot();
+	const bool hasPendingAnim = m_pAgent->HasNextAnim();
 	if (!shootReady)
 	{
 		if (!hasPendingAnim)
 		{
-			if (actions)
-			{
-				actions->EnterShoot();
-			}
-			else
-			{
-				m_pAgent->RequestState(SSTATE_FIRE, true);
-			}
+			m_pAgent->RequestState(SSTATE_FIRE, true);
 		}
 		return "";
 	}
 
 	if ((m_elapsedMs >= 120.0f && !hasPendingAnim) || m_elapsedMs >= 350.0f)
 	{
-		if (!m_shotConsumed)
-		{
-			if (actions)
-			{
-				actions->ConsumeAmmo(1);
-			}
-			m_shotConsumed = true;
-		}
-
 		SetTerminated(true);
 	}
 

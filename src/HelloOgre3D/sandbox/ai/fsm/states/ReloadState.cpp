@@ -4,6 +4,7 @@
 #include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
 
 ReloadState::ReloadState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -57,13 +58,18 @@ std::string ReloadState::OnUpdate(float dt)
 		return "";
 
 	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
-	const bool reloadFinished = actions ? actions->IsReloadPresentationFinished() : !m_pAgent->HasNextAnim();
-	if (reloadFinished)
+	if (actions)
 	{
-		if (actions)
+		if (actions->IsReloadPresentationFinished() || (m_elapsedMs >= 2000.0f && !actions->HasPendingAnimation()))
 		{
 			actions->RestoreAmmo();
+			SetTerminated(true);
 		}
+		return "";
+	}
+
+	if (!m_pAgent->HasNextAnim())
+	{
 		SetTerminated(true);
 	}
 

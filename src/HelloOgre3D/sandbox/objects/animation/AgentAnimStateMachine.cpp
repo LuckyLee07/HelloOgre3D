@@ -5,6 +5,7 @@
 #include "LogSystem.h"
 #include "GlobalFuncs.h"
 #include "object/BaseObject.h"
+#include "event/SandboxContext.h"
 #include "event/SandboxEventDispatcherManager.h"
 #include "GameDefine.h"
 #include "OgreMath.h"
@@ -14,7 +15,7 @@ AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner)
 {
 }
 
-AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner, bool canFireEvent) 
+AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner, bool canFireEvent)
 	: m_owner(owner), m_canFireEvent(canFireEvent)
 {
 }
@@ -28,6 +29,7 @@ AgentAnimStateMachine::~AgentAnimStateMachine()
 		delete stateIt->second;
 	}
 	m_animStates.clear();
+	m_animNotifies.clear();
 
 	auto transIt = m_animTransitions.begin();
 	for (; transIt != m_animTransitions.end(); transIt++)
@@ -45,7 +47,6 @@ AgentAnimStateMachine::~AgentAnimStateMachine()
 bool AgentAnimStateMachine::RequestState(int stateId)
 {
 	std::string stateName = AgentAnimState::GetNameByID(stateId);
-
 	return RequestState(stateName);
 }
 
@@ -152,7 +153,7 @@ void AgentAnimStateMachine::AddState(AgentAnimState* animState)
 	m_animStates[animState->GetName()] = animState;
 }
 
-void AgentAnimStateMachine::AddState(const std::string& name, AgentAnim* animation, bool looping/* = false*/, float rate/* = 1.0f*/)
+void AgentAnimStateMachine::AddState(const std::string& name, AgentAnim* animation, bool looping, float rate)
 {
 	auto pAnimState = new AgentAnimState(name, animation, looping, rate);
 	this->AddState(pAnimState);
@@ -163,7 +164,7 @@ void AgentAnimStateMachine::AddTransition(const std::string& fromState, const st
 	m_animTransitions[fromState][toState] = transition;
 }
 
-void AgentAnimStateMachine::AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow/* = 0.0f*/, float duration/* = 0.2f*/, float blendInWindow/* = 0.0f*/)
+void AgentAnimStateMachine::AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow, float duration, float blendInWindow)
 {
 	if (ContainsState(fromState) && ContainsState(toState))
 	{
@@ -183,6 +184,21 @@ void AgentAnimStateMachine::AddTransition(const std::string& fromState, const st
 	}
 }
 
+void AgentAnimStateMachine::AddNotify(const std::string& stateName, const std::string& eventName, float normalizedTime, bool fireOnce)
+{
+	if (!ContainsState(stateName) || eventName.empty())
+	{
+		return;
+	}
+
+	AnimNotify notify;
+	notify.eventName = eventName;
+	notify.normalizedTime = Ogre::Math::Clamp(normalizedTime, 0.0f, 1.0f);
+	notify.fireOnce = fireOnce;
+	notify.fired = false;
+	m_animNotifies[stateName].push_back(notify);
+}
+
 void AgentAnimStateMachine::SetCanFireEvent(bool canFireEvent)
 {
 	m_canFireEvent = canFireEvent;
@@ -191,13 +207,12 @@ void AgentAnimStateMachine::SetCanFireEvent(bool canFireEvent)
 void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState)
 {
 	if (!m_canFireEvent) return;
-
-	if (m_owner == nullptr || pNextState == nullptr) 
+	if (m_owner == nullptr || pNextState == nullptr)
 		return;
-		
+
 	SandboxContext context;
 	context.Set_Number("StateId", pNextState->GetID());
-	//context.Set_String("StateId", pNextState->GetName());
+	context.Set_String("StateName", pNextState->GetName());
 	m_owner->Event()->Emit("ASM_STATE_CHANGE", context);
 }
 
@@ -214,12 +229,112 @@ void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)
 		m_pCurrTransition = nullptr;
 		m_TransitionStartTime = 0.0f;
 		m_pCurrState = m_animStates[stateName];
+		ResetNotifies(stateName);
 		m_pCurrState->InitAnim();
 		if (m_pCurrState->GetName() == m_desiredStateName)
 		{
 			m_desiredStateName.clear();
 		}
 	}
+}
+
+void AgentAnimStateMachine::ResetNotifies(const std::string& stateName)
+{
+	auto notifyIt = m_animNotifies.find(stateName);
+	if (notifyIt == m_animNotifies.end())
+	{
+		return;
+	}
+
+	for (auto& notify : notifyIt->second)
+	{
+		notify.fired = false;
+	}
+}
+
+void AgentAnimStateMachine::FireNotifyEvent(AgentAnimState* state, const AnimNotify& notify)
+{
+	if (!m_canFireEvent || m_owner == nullptr || state == nullptr)
+	{
+		return;
+	}
+
+	SandboxContext context;
+	context.Set_Number("StateId", state->GetID());
+	context.Set_String("StateName", state->GetName());
+	context.Set_String("EventName", notify.eventName);
+	context.Set_Number("NormalizedTime", notify.normalizedTime);
+	m_owner->Event()->Emit("ASM_NOTIFY", context);
+}
+
+void AgentAnimStateMachine::EvaluateNotifies(AgentAnimState* state, float previousTime, float currentTime)
+{
+	if (state == nullptr || state->GetAnimation() == nullptr)
+	{
+		return;
+	}
+
+	auto notifyIt = m_animNotifies.find(state->GetName());
+	if (notifyIt == m_animNotifies.end())
+	{
+		return;
+	}
+
+	const float length = state->GetAnimation()->GetLength();
+	if (length <= 0.0f)
+	{
+		return;
+	}
+
+	const bool wrapped = state->IsLooping() && currentTime < previousTime;
+	const float prevProgress = Ogre::Math::Clamp(previousTime / length, 0.0f, 1.0f);
+	const float currProgress = Ogre::Math::Clamp(currentTime / length, 0.0f, 1.0f);
+
+	for (auto& notify : notifyIt->second)
+	{
+		if (notify.fireOnce && notify.fired)
+		{
+			continue;
+		}
+
+		const float threshold = Ogre::Math::Clamp(notify.normalizedTime, 0.0f, 1.0f);
+		bool crossed = false;
+		if (!wrapped)
+		{
+			crossed = prevProgress < threshold && currProgress >= threshold;
+		}
+		else
+		{
+			crossed = prevProgress < threshold || currProgress >= threshold;
+		}
+
+		if (crossed)
+		{
+			FireNotifyEvent(state, notify);
+			if (notify.fireOnce)
+			{
+				notify.fired = true;
+			}
+		}
+	}
+}
+
+void AgentAnimStateMachine::StepStateAnimation(AgentAnimState* state, float deltaTimeInMillis)
+{
+	if (state == nullptr || state->GetAnimation() == nullptr)
+	{
+		return;
+	}
+
+	const float previousTime = state->GetAnimation()->GetTime();
+	state->StepAnim(deltaTimeInMillis);
+	const float currentTime = state->GetAnimation()->GetTime();
+	if (state->IsLooping() && currentTime < previousTime)
+	{
+		this->FireStateChageEvent(state);
+		ResetNotifies(state->GetName());
+	}
+	EvaluateNotifies(state, previousTime, currentTime);
 }
 
 bool AgentAnimStateMachine::ContainsState(const std::string& stateName)
@@ -284,8 +399,8 @@ void AgentAnimStateMachine::StartTransition(AgentAnimTransition* transition, flo
 {
 	m_pCurrTransition = transition;
 	m_TransitionStartTime = currTimeInSeconds;
+	ResetNotifies(m_pNextState->GetName());
 	m_pNextState->InitAnim(transition->getBlendInWindow());
-
 	this->FireStateChageEvent(m_pNextState);
 }
 
@@ -294,10 +409,10 @@ void AgentAnimStateMachine::UpdateTransition(float deltaTimeInMillis, float curr
 	Animation_LinearBlendTo(m_pCurrState->GetAnimation(), m_pNextState->GetAnimation(),
 		m_pCurrTransition->getDuration(), m_TransitionStartTime, currTimeInSeconds);
 
-	m_pCurrState->StepAnim(deltaTimeInMillis);
-	m_pNextState->StepAnim(deltaTimeInMillis);
+	StepStateAnimation(m_pCurrState, deltaTimeInMillis);
+	StepStateAnimation(m_pNextState, deltaTimeInMillis);
 
-	const float epsilon = 0.0001f;  // 设定个较小的容差值
+	const float epsilon = 0.0001f;
 	if (m_pCurrState->GetAnimWeight() < epsilon)
 	{
 		m_pCurrState->ClearAnim();
@@ -305,12 +420,17 @@ void AgentAnimStateMachine::UpdateTransition(float deltaTimeInMillis, float curr
 		m_pNextState = nullptr;
 		m_pCurrTransition = nullptr;
 		m_TransitionStartTime = 0.0f;
+		if (m_pCurrState->GetName() == m_desiredStateName)
+		{
+			m_desiredStateName.clear();
+		}
 	}
 }
 
 void AgentAnimStateMachine::CompleteTransition()
 {
 	m_pCurrState->ClearAnim();
+	ResetNotifies(m_pNextState->GetName());
 	m_pNextState->InitAnim();
 	m_pCurrState = m_pNextState;
 	m_pNextState = nullptr;
@@ -324,21 +444,7 @@ void AgentAnimStateMachine::CompleteTransition()
 
 void AgentAnimStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
 {
-	AgentAnim* pAnimation = m_pCurrState->m_pAnim;
-
-	float currAnimTime = pAnimation->GetTime();
-	float currAnimLength = pAnimation->GetLength();
-	float stepRate = m_pCurrState->GetRate();
-
-	float deltaTime = (deltaTimeInMillis / 1000.0f) * stepRate;
-
-	float timeStepped = currAnimTime + deltaTime;
-	while (timeStepped >= currAnimLength)
-	{
-		timeStepped -= currAnimLength; // Looping
-		this->FireStateChageEvent(m_pCurrState);
-	}
-	pAnimation->AddTime(deltaTime);
+	StepStateAnimation(m_pCurrState, deltaTimeInMillis);
 }
 
 void AgentAnimStateMachine::Animation_LinearBlendIn(AgentAnim* animation, float blendTime, float startTime, float currTime)

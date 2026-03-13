@@ -20,6 +20,7 @@ public:
     void StepAnim(float deltaTimeInMillis, float rate = 0.0f);
 
 	float GetRate() const;
+	bool IsLooping() const { return m_looping; }
 
     const std::string& GetName() const;
     int GetID() const { return m_stateId; }

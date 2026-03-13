@@ -30,6 +30,7 @@ public:
 
 	void Update(float deltaTimeInMillis);
 	void OnBodyStateChanged(int stateId);
+	void OnBodyNotify(const std::string& eventName, int stateId, float normalizedTime);
 
 	void SetLocomotionIntent(SoldierLocomotionIntent intent);
 	SoldierLocomotionIntent GetLocomotionIntent() const { return m_locomotionIntent; }
@@ -39,8 +40,10 @@ public:
 	void ClearAllActions();
 	SoldierActionIntent GetActionIntent() const { return m_actionIntent; }
 
+	bool ConsumeShootExecution();
 	bool IsMovePresentationReady() const;
 	bool IsShootPresentationReady() const;
+	bool IsShootPresentationFinished() const;
 	bool IsReloadPresentationFinished() const;
 	bool HasPendingPresentation() const;
 
@@ -53,6 +56,7 @@ private:
 	int ResolveBodyActionState() const;
 	std::string ResolveWeaponState() const;
 
+	void EnsureBodyNotifiesRegistered();
 	void ApplyBodyState(int stateId, bool forceRestart);
 	void ApplyWeaponState(const std::string& stateName, bool forceRestart);
 	void ResetActionRuntime(SoldierActionIntent intent);
@@ -62,7 +66,10 @@ private:
 	SoldierLocomotionIntent m_locomotionIntent;
 	SoldierActionIntent m_actionIntent;
 	bool m_forceActionRestart;
+	bool m_bodyNotifiesRegistered;
 	bool m_shootPresentationReady;
+	bool m_shootExecutionTriggered;
+	bool m_shootPresentationFinished;
 	bool m_reloadPresentationStarted;
 	bool m_reloadPresentationFinished;
 };

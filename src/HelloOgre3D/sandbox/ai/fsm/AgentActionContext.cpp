@@ -297,6 +297,18 @@ bool AgentActionContext::IsShootAnimationReady() const
 	return agent ? agent->IsAnimReadyForShoot() : false;
 }
 
+bool AgentActionContext::ConsumeShootExecution()
+{
+	SoldierObject* soldier = GetSoldier();
+	return soldier && soldier->GetAnimController() ? soldier->GetAnimController()->ConsumeShootExecution() : false;
+}
+
+bool AgentActionContext::IsShootPresentationFinished() const
+{
+	SoldierObject* soldier = GetSoldier();
+	return soldier && soldier->GetAnimController() ? soldier->GetAnimController()->IsShootPresentationFinished() : false;
+}
+
 bool AgentActionContext::IsReloadPresentationFinished() const
 {
 	SoldierObject* soldier = GetSoldier();

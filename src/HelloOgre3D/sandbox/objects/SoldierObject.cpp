@@ -59,11 +59,12 @@ SoldierObject::~SoldierObject()
 void SoldierObject::CreateEventDispatcher()
 {
 	Event()->CreateDispatcher("ASM_STATE_CHANGE");
+	Event()->CreateDispatcher("ASM_NOTIFY");
 	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		int stateId = (int)context.Get_Number("StateId");
-		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
+		if (!GetUseCppFSM() && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
 		{
-			this->ShootBullet(); // 射击
+			this->ShootBullet();
 		}
 		if (m_animController)
 		{
@@ -71,17 +72,29 @@ void SoldierObject::CreateEventDispatcher()
 		}
 		if (!m_stateController) return;
 		
-		// 将事件传递到State那
 		AgentState* pState = m_stateController->GetCurrState();
-		SandboxContext context1;
-		context1.Set_Number("StateId", stateId);
+		if (!pState) return;
 		pState->Event()->Emit("FSM_STATE_CHANGE", context);
+	});
+	Event()->Subscribe("ASM_NOTIFY", [&](const SandboxContext& context) -> void {
+		const std::string eventName = context.Get_String("EventName");
+		const int stateId = (int)context.Get_Number("StateId");
+		const float normalizedTime = (float)context.Get_Number("NormalizedTime");
+		if (eventName == "shoot_fire")
+		{
+			this->ShootBullet();
+		}
+		if (m_animController)
+		{
+			m_animController->OnBodyNotify(eventName, stateId, normalizedTime);
+		}
 	});
 }
 
 void SoldierObject::RemoveEventDispatcher()
 {
 	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
+	Event()->RemoveDispatcher("ASM_NOTIFY");
 }
 
 void SoldierObject::Init()

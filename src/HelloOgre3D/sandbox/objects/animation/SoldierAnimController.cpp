@@ -24,7 +24,10 @@ SoldierAnimController::SoldierAnimController(SoldierObject& owner)
 	, m_locomotionIntent(SoldierLocomotionIntent::Idle)
 	, m_actionIntent(SoldierActionIntent::None)
 	, m_forceActionRestart(false)
+	, m_bodyNotifiesRegistered(false)
 	, m_shootPresentationReady(false)
+	, m_shootExecutionTriggered(false)
+	, m_shootPresentationFinished(false)
 	, m_reloadPresentationStarted(false)
 	, m_reloadPresentationFinished(false)
 {
@@ -33,6 +36,7 @@ SoldierAnimController::SoldierAnimController(SoldierObject& owner)
 void SoldierAnimController::Update(float deltaTimeInMillis)
 {
 	(void)deltaTimeInMillis;
+	EnsureBodyNotifiesRegistered();
 
 	const int actionStateId = ResolveBodyActionState();
 	if (actionStateId >= 0)
@@ -62,27 +66,42 @@ void SoldierAnimController::Update(float deltaTimeInMillis)
 
 		const bool bodyFinished = !bodyAsm || (bodyAsm->GetCurrStateProgress() >= 0.98f && !bodyAsm->HasNextState());
 		const bool weaponFinished = !weaponAsm || (weaponAsm->GetCurrStateProgress() >= 0.98f && !weaponAsm->HasNextState());
-		m_reloadPresentationFinished = m_reloadPresentationStarted && bodyFinished && weaponFinished;
+		if (m_reloadPresentationStarted && bodyFinished && weaponFinished)
+		{
+			m_reloadPresentationFinished = true;
+		}
 	}
 }
 
 void SoldierAnimController::OnBodyStateChanged(int stateId)
 {
-	if (m_actionIntent == SoldierActionIntent::Shoot)
-	{
-		const int shootStateId = ConvertAnimID(SSTATE_FIRE, m_owner->getStanceType());
-		if (stateId == shootStateId)
-		{
-			m_shootPresentationReady = true;
-		}
-	}
-	else if (m_actionIntent == SoldierActionIntent::Reload)
+	if (m_actionIntent == SoldierActionIntent::Reload)
 	{
 		const int reloadStateId = ConvertAnimID(SSTATE_RELOAD, m_owner->getStanceType());
 		if (stateId == reloadStateId)
 		{
 			m_reloadPresentationStarted = true;
 		}
+	}
+}
+
+void SoldierAnimController::OnBodyNotify(const std::string& eventName, int stateId, float normalizedTime)
+{
+	(void)stateId;
+	(void)normalizedTime;
+
+	if (eventName == "shoot_fire")
+	{
+		m_shootPresentationReady = true;
+		m_shootExecutionTriggered = true;
+	}
+	else if (eventName == "shoot_complete")
+	{
+		m_shootPresentationFinished = true;
+	}
+	else if (eventName == "reload_complete")
+	{
+		m_reloadPresentationFinished = true;
 	}
 }
 
@@ -120,6 +139,8 @@ void SoldierAnimController::ClearAction(SoldierActionIntent intent)
 	m_actionIntent = SoldierActionIntent::None;
 	m_forceActionRestart = false;
 	m_shootPresentationReady = false;
+	m_shootExecutionTriggered = false;
+	m_shootPresentationFinished = false;
 	m_reloadPresentationStarted = false;
 	m_reloadPresentationFinished = false;
 }
@@ -127,6 +148,13 @@ void SoldierAnimController::ClearAction(SoldierActionIntent intent)
 void SoldierAnimController::ClearAllActions()
 {
 	ClearAction(m_actionIntent);
+}
+
+bool SoldierAnimController::ConsumeShootExecution()
+{
+	const bool triggered = m_shootExecutionTriggered;
+	m_shootExecutionTriggered = false;
+	return triggered;
 }
 
 bool SoldierAnimController::IsMovePresentationReady() const
@@ -137,6 +165,11 @@ bool SoldierAnimController::IsMovePresentationReady() const
 bool SoldierAnimController::IsShootPresentationReady() const
 {
 	return m_shootPresentationReady;
+}
+
+bool SoldierAnimController::IsShootPresentationFinished() const
+{
+	return m_shootPresentationFinished;
 }
 
 bool SoldierAnimController::IsReloadPresentationFinished() const
@@ -208,6 +241,27 @@ std::string SoldierAnimController::ResolveWeaponState() const
 	}
 }
 
+void SoldierAnimController::EnsureBodyNotifiesRegistered()
+{
+	if (m_bodyNotifiesRegistered)
+	{
+		return;
+	}
+
+	AgentAnimStateMachine* bodyAsm = GetBodyAsm();
+	if (!bodyAsm)
+	{
+		return;
+	}
+
+	bodyAsm->AddNotify("fire", "shoot_fire", 0.18f, true);
+	bodyAsm->AddNotify("fire", "shoot_complete", 0.90f, true);
+	bodyAsm->AddNotify("crouch_fire", "shoot_fire", 0.18f, true);
+	bodyAsm->AddNotify("crouch_fire", "shoot_complete", 0.90f, true);
+	bodyAsm->AddNotify("reload", "reload_complete", 0.92f, true);
+	m_bodyNotifiesRegistered = true;
+}
+
 void SoldierAnimController::ApplyBodyState(int stateId, bool forceRestart)
 {
 	AgentAnimStateMachine* bodyAsm = GetBodyAsm();
@@ -244,10 +298,12 @@ void SoldierAnimController::ApplyWeaponState(const std::string& stateName, bool 
 void SoldierAnimController::ResetActionRuntime(SoldierActionIntent intent)
 {
 	m_shootPresentationReady = false;
+	m_shootExecutionTriggered = false;
+	m_shootPresentationFinished = false;
 	m_reloadPresentationStarted = false;
 	m_reloadPresentationFinished = false;
 
-	if (intent == SoldierActionIntent::Shoot)
+	if (intent == SoldierActionIntent::Reload)
 	{
 		m_reloadPresentationStarted = false;
 		m_reloadPresentationFinished = false;

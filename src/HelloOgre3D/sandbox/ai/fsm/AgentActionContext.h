@@ -39,6 +39,8 @@ public:
 	bool HasEnemy() const;
 	bool IsTargetReached(float threshold, bool clearMovePosition) const;
 	bool IsShootAnimationReady() const;
+	bool ConsumeShootExecution();
+	bool IsShootPresentationFinished() const;
 	bool IsReloadPresentationFinished() const;
 	bool HasPendingAnimation() const;
 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class BaseObject;
 class AgentAnim;
@@ -21,7 +22,7 @@ public:
     //tolua_begin
     bool RequestState(int stateId);
     bool RequestState(const std::string& stateName);
-    
+
     int GetCurrStateID();
     std::string GetCurrStateName();
     std::string GetNextStateName();
@@ -38,14 +39,27 @@ public:
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
     //tolua_end
 
+    void AddNotify(const std::string& stateName, const std::string& eventName, float normalizedTime, bool fireOnce = true);
     void SetCanFireEvent(bool canFireEvent);
     void FireStateChageEvent(AgentAnimState* pNextState);
 
 private:
+	struct AnimNotify
+	{
+		std::string eventName;
+		float normalizedTime = 0.0f;
+		bool fireOnce = true;
+		bool fired = false;
+	};
+
     void AddState(AgentAnimState* animState);
     void AddTransition(const std::string& fromState, const std::string& toState, AgentAnimTransition* transition);
 
     void SetCurrentState(const std::string& stateName);
+    void ResetNotifies(const std::string& stateName);
+    void FireNotifyEvent(AgentAnimState* state, const AnimNotify& notify);
+    void EvaluateNotifies(AgentAnimState* state, float previousTime, float currentTime);
+    void StepStateAnimation(AgentAnimState* state, float deltaTimeInMillis);
 
     bool ContainsState(const std::string& stateName);
     bool ContainsTransition(const std::string& fromState, const std::string& toState);
@@ -61,13 +75,13 @@ public:
     static void Animation_LinearBlendTo(AgentAnim* startAnim, AgentAnim* endAnim, float blendTime, float startTime, float currTime);
 
 private:
-    BaseObject* m_owner = nullptr;	//æŒæœ‰è€…
-    bool m_canFireEvent = false;	//å¯å‘é€äº‹ä»¶
+    BaseObject* m_owner = nullptr;	//³ÖÓĞÕß
+    bool m_canFireEvent = false;	//¿É·¢ËÍÊÂ¼ş
 
     std::unordered_map<std::string, AgentAnimState*> m_animStates;
-
     typedef std::unordered_map<std::string, AgentAnimTransition*> TransitionMap;
     std::unordered_map<std::string, TransitionMap> m_animTransitions;
+    std::unordered_map<std::string, std::vector<AnimNotify>> m_animNotifies;
 
 	AgentAnimState* m_pCurrState = nullptr;
 	AgentAnimState* m_pNextState = nullptr;
