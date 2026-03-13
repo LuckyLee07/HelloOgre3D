@@ -288,6 +288,32 @@ void SoldierObject::RestoreAmmo()
 	m_ammo = m_maxAmmo;
 }
 
+bool SoldierObject::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
+{
+	if (!enemy || enemy == this)
+	{
+		return false;
+	}
+
+	if (enemy->GetHealth() <= 0.0f)
+	{
+		return false;
+	}
+
+	unsigned int enemyTeamId = enemy->GetTeamId();
+	if (enemyTeamId == GetTeamId())
+	{
+		return false;
+	}
+
+	if (!requirePath || !g_SandboxMgr)
+	{
+		return true;
+	}
+
+	std::vector<Ogre::Vector3> path;
+	return g_SandboxMgr->FindPath(navMeshName, GetPosition(), enemy->GetPosition(), path) && !path.empty();
+}
 
 AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
 {
@@ -303,20 +329,15 @@ AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
 
 	for (AgentObject* candidate : agents)
 	{
-		if (!candidate || candidate == this)
+		if (!IsEnemyValid(candidate, navMeshName, true))
+		{
 			continue;
-		if (candidate->GetHealth() <= 0.0f)
-			continue;
+		}
 
 		const float distSquared = GetPosition().squaredDistance(candidate->GetPosition());
 		if (distSquared >= nearestDistance)
-			continue;
-
-		if (g_SandboxMgr)
 		{
-			std::vector<Ogre::Vector3> path;
-			if (!g_SandboxMgr->FindPath(navMeshName, GetPosition(), candidate->GetPosition(), path) || path.empty())
-				continue;
+			continue;
 		}
 
 		nearestEnemy = candidate;
@@ -328,13 +349,18 @@ AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
 
 bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
 {
+	if (IsEnemyValid(m_enemy, navMeshName, true))
+	{
+		return true;
+	}
+
 	m_enemy = FindNearestEnemy(navMeshName);
 	return m_enemy != nullptr;
 }
 
 bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
-	if (!HasEnemy(navMeshName))
+	if (!IsEnemyValid(m_enemy, navMeshName, false))
 	{
 		return false;
 	}

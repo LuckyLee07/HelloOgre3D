@@ -58,6 +58,7 @@ private:
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
 	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
+	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 
 protected:
 	void CreateEventDispatcher();

@@ -1,6 +1,6 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
-require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
+require("res.scripts.agent.IndirectSoldierAgent.lua")
 
 local textSize = {w = 300, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -26,7 +26,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 local _agents = {}
 
 local function _GetFilePath(luafile)
-    return "res/scripts/samples/chapter4/".. luafile;
+    return "res/scripts/agent/".. luafile;
 end
 
 local function _DrawPaths()
@@ -48,7 +48,6 @@ function EventHandle_Keyboard(keycode, pressed)
         camera:setPosition(Vector3(15, 65, 15));
         camera:setOrientation(Quaternion(-90, 0, -180));
     elseif (keycode == OIS.KC_F3) then
-        Create_LightSoldier("DirectSoldierAgent.lua")
     end
 end
 
@@ -100,9 +99,12 @@ function Sandbox_Initialize()
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     -- Create agents and randomly place them on the navmesh.
-    local agentLuafile = _GetFilePath("DirectSoldierAgent.lua")
+    local agentLuafile = _GetFilePath("IndirectSoldierAgent.lua")
     for i=1, 7 do
-        local agent = Create_Soldier(agentLuafile)
+        local teamId = i > 3 and 0 or 1
+        local agentType = Soldier.AppearanceTypes.LIGHT
+        if i > 3 then agentType = Soldier.AppearanceTypes.DARK end
+        local agent = Create_Soldier(agentLuafile, agentType, teamId)
         table.insert(_agents, agent);
 
         local randomPoint = Sandbox:RandomPoint("default");

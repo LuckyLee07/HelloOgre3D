@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sun Mar  8 21:53:34 2026.
+** Generated automatically by tolua++-1.0.92 on Thu Mar 12 19:03:10 2026.
 */
 
 #ifndef __cplusplus
@@ -1357,14 +1357,14 @@ static int tolua_SandboxToLua_BaseObject_GetObjId00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const BaseObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  const BaseObject* self = (const BaseObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjId'", NULL);
 #endif
@@ -1377,6 +1377,71 @@ static int tolua_SandboxToLua_BaseObject_GetObjId00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetObjId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetTeamId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_GetTeamId00
+static int tolua_SandboxToLua_BaseObject_GetTeamId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BaseObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BaseObject* self = (const BaseObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTeamId'", NULL);
+#endif
+  {
+   unsigned int tolua_ret = (unsigned int)  self->GetTeamId();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetTeamId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetTeamId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_SetTeamId00
+static int tolua_SandboxToLua_BaseObject_SetTeamId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  unsigned int teamId = ((unsigned int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTeamId'", NULL);
+#endif
+  {
+   self->SetTeamId(teamId);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetTeamId'.",&tolua_err);
  return 0;
 #endif
 }
@@ -4587,6 +4652,587 @@ static int tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00(lua_State* tol
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetMaxHealth of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetMaxHealth00
+static int tolua_SandboxToLua_SoldierObject_SetMaxHealth00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+   float maxHealth = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxHealth'", NULL);
+#endif
+  {
+   self->SetMaxHealth(maxHealth);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMaxHealth'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMaxHealth of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetMaxHealth00
+static int tolua_SandboxToLua_SoldierObject_GetMaxHealth00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxHealth'", NULL);
+#endif
+  {
+    float tolua_ret = (  float)  self->GetMaxHealth();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMaxHealth'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetAmmo00
+static int tolua_SandboxToLua_SoldierObject_SetAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  int ammo = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetAmmo'", NULL);
+#endif
+  {
+   self->SetAmmo(ammo);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetAmmo00
+static int tolua_SandboxToLua_SoldierObject_GetAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAmmo'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetAmmo();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMaxAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetMaxAmmo00
+static int tolua_SandboxToLua_SoldierObject_SetMaxAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  int maxAmmo = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMaxAmmo'", NULL);
+#endif
+  {
+   self->SetMaxAmmo(maxAmmo);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMaxAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMaxAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetMaxAmmo00
+static int tolua_SandboxToLua_SoldierObject_GetMaxAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetMaxAmmo'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetMaxAmmo();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetMaxAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_HasAmmo00
+static int tolua_SandboxToLua_SoldierObject_HasAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasAmmo'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasAmmo();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ConsumeAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_ConsumeAmmo00
+static int tolua_SandboxToLua_SoldierObject_ConsumeAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  int amount = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ConsumeAmmo'", NULL);
+#endif
+  {
+   self->ConsumeAmmo(amount);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ConsumeAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: RestoreAmmo of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_RestoreAmmo00
+static int tolua_SandboxToLua_SoldierObject_RestoreAmmo00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RestoreAmmo'", NULL);
+#endif
+  {
+   self->RestoreAmmo();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RestoreAmmo'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasEnemy of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_HasEnemy00
+static int tolua_SandboxToLua_SoldierObject_HasEnemy00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasEnemy'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasEnemy();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasEnemy'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasEnemy of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_HasEnemy01
+static int tolua_SandboxToLua_SoldierObject_HasEnemy01(lua_State* tolua_S)
+{
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string navMeshName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasEnemy'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasEnemy(navMeshName);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)navMeshName);
+  }
+ }
+ return 2;
+tolua_lerror:
+ return tolua_SandboxToLua_SoldierObject_HasEnemy00(tolua_S);
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: CanShootEnemy of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_CanShootEnemy00
+static int tolua_SandboxToLua_SoldierObject_CanShootEnemy00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CanShootEnemy'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->CanShootEnemy();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'CanShootEnemy'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: CanShootEnemy of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_CanShootEnemy01
+static int tolua_SandboxToLua_SoldierObject_CanShootEnemy01(lua_State* tolua_S)
+{
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string navMeshName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  float shootDistance = ((float)  tolua_tonumber(tolua_S,3,3.0f));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CanShootEnemy'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->CanShootEnemy(navMeshName,shootDistance);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)navMeshName);
+  }
+ }
+ return 2;
+tolua_lerror:
+ return tolua_SandboxToLua_SoldierObject_CanShootEnemy00(tolua_S);
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetEnemy of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetEnemy00
+static int tolua_SandboxToLua_SoldierObject_GetEnemy00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetEnemy'", NULL);
+#endif
+  {
+   AgentObject* tolua_ret = (AgentObject*)  self->GetEnemy();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AgentObject");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetEnemy'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: HasMovePosition of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_HasMovePosition00
+static int tolua_SandboxToLua_SoldierObject_HasMovePosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  float reachDistance = ((float)  tolua_tonumber(tolua_S,2,1.5f));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'HasMovePosition'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->HasMovePosition(reachDistance);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'HasMovePosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetMovePosition of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetMovePosition00
+static int tolua_SandboxToLua_SoldierObject_SetMovePosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* movePos = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetMovePosition'", NULL);
+#endif
+  {
+   self->SetMovePosition(*movePos);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetMovePosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearMovePosition of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_ClearMovePosition00
+static int tolua_SandboxToLua_SoldierObject_ClearMovePosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearMovePosition'", NULL);
+#endif
+  {
+   self->ClearMovePosition();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearMovePosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsTargetReached of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_IsTargetReached00
+static int tolua_SandboxToLua_SoldierObject_IsTargetReached00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  float threshold = ((float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsTargetReached'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsTargetReached(threshold);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsTargetReached'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetCamera of class  SandboxMgr */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_GetCamera00
 static int tolua_SandboxToLua_SandboxMgr_GetCamera00(lua_State* tolua_S)
@@ -6260,6 +6906,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"BaseObject","BaseObject","SandboxObject",NULL);
   tolua_beginmodule(tolua_S,"BaseObject");
    tolua_function(tolua_S,"GetObjId",tolua_SandboxToLua_BaseObject_GetObjId00);
+   tolua_function(tolua_S,"GetTeamId",tolua_SandboxToLua_BaseObject_GetTeamId00);
+   tolua_function(tolua_S,"SetTeamId",tolua_SandboxToLua_BaseObject_SetTeamId00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"RenderableObject","RenderableObject","",NULL);
   tolua_beginmodule(tolua_S,"RenderableObject");
@@ -6365,6 +7013,24 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"HasNextAnim",tolua_SandboxToLua_SoldierObject_HasNextAnim00);
    tolua_function(tolua_S,"IsAnimReadyForMove",tolua_SandboxToLua_SoldierObject_IsAnimReadyForMove00);
    tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00);
+   tolua_function(tolua_S,"SetMaxHealth",tolua_SandboxToLua_SoldierObject_SetMaxHealth00);
+   tolua_function(tolua_S,"GetMaxHealth",tolua_SandboxToLua_SoldierObject_GetMaxHealth00);
+   tolua_function(tolua_S,"SetAmmo",tolua_SandboxToLua_SoldierObject_SetAmmo00);
+   tolua_function(tolua_S,"GetAmmo",tolua_SandboxToLua_SoldierObject_GetAmmo00);
+   tolua_function(tolua_S,"SetMaxAmmo",tolua_SandboxToLua_SoldierObject_SetMaxAmmo00);
+   tolua_function(tolua_S,"GetMaxAmmo",tolua_SandboxToLua_SoldierObject_GetMaxAmmo00);
+   tolua_function(tolua_S,"HasAmmo",tolua_SandboxToLua_SoldierObject_HasAmmo00);
+   tolua_function(tolua_S,"ConsumeAmmo",tolua_SandboxToLua_SoldierObject_ConsumeAmmo00);
+   tolua_function(tolua_S,"RestoreAmmo",tolua_SandboxToLua_SoldierObject_RestoreAmmo00);
+   tolua_function(tolua_S,"HasEnemy",tolua_SandboxToLua_SoldierObject_HasEnemy00);
+   tolua_function(tolua_S,"HasEnemy",tolua_SandboxToLua_SoldierObject_HasEnemy01);
+   tolua_function(tolua_S,"CanShootEnemy",tolua_SandboxToLua_SoldierObject_CanShootEnemy00);
+   tolua_function(tolua_S,"CanShootEnemy",tolua_SandboxToLua_SoldierObject_CanShootEnemy01);
+   tolua_function(tolua_S,"GetEnemy",tolua_SandboxToLua_SoldierObject_GetEnemy00);
+   tolua_function(tolua_S,"HasMovePosition",tolua_SandboxToLua_SoldierObject_HasMovePosition00);
+   tolua_function(tolua_S,"SetMovePosition",tolua_SandboxToLua_SoldierObject_SetMovePosition00);
+   tolua_function(tolua_S,"ClearMovePosition",tolua_SandboxToLua_SoldierObject_ClearMovePosition00);
+   tolua_function(tolua_S,"IsTargetReached",tolua_SandboxToLua_SoldierObject_IsTargetReached00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

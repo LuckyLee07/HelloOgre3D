@@ -32,8 +32,11 @@ public:
 	virtual void OnDestroy();
 
 	//tolua_begin
-	unsigned int GetObjId();
+	unsigned int GetObjId() const;
+	unsigned int GetTeamId() const;
+	void SetTeamId(unsigned int teamId);
 	//tolua_end
+
 	void SetObjId(unsigned int objId);
 	
 	ObjectType GetObjType();
@@ -58,6 +61,7 @@ protected:
 
 private:
 	unsigned int m_objId;
+	unsigned int m_teamId;
 	int m_liveTicks = -1;
 	int m_needClearTicks = -1;
 	
