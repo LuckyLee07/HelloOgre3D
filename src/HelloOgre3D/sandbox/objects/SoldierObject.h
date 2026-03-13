@@ -5,6 +5,7 @@
 #include "ai/fsm/AgentStateController.h"
 
 class IPlayerInput;
+class SoldierAnimController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -29,6 +30,7 @@ public:
 	virtual bool HasNextAnim();
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
+	SoldierAnimController* GetAnimController() const { return m_animController; }
 
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const { return m_maxHealth; }
@@ -81,6 +83,7 @@ private:
 
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
+	SoldierAnimController* m_animController;
 
 }; //tolua_exports
 

@@ -1,4 +1,4 @@
-﻿#include "ShootState.h"
+#include "ShootState.h"
 
 #include "GameDefine.h"
 #include "ai/fsm/AgentActionContext.h"
@@ -36,6 +36,11 @@ void ShootState::OnEnter()
 
 void ShootState::OnLeave()
 {
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->ExitShoot();
+	}
 }
 
 std::string ShootState::OnUpdate(float dt)

@@ -1,4 +1,4 @@
-﻿#ifndef __AGENT_ACTION_CONTEXT_H__
+#ifndef __AGENT_ACTION_CONTEXT_H__
 #define __AGENT_ACTION_CONTEXT_H__
 
 #include <string>
@@ -22,6 +22,8 @@ public:
 	void EnterMove(bool forceUpdate = false);
 	void EnterShoot();
 	void EnterReload();
+	void ExitShoot();
+	void ExitReload();
 
 	void SlowMovement(float rate = 1.0f);
 	void TickMovement(float deltaTimeInMillis, bool slowMode);
@@ -37,6 +39,7 @@ public:
 	bool HasEnemy() const;
 	bool IsTargetReached(float threshold, bool clearMovePosition) const;
 	bool IsShootAnimationReady() const;
+	bool IsReloadPresentationFinished() const;
 	bool HasPendingAnimation() const;
 
 	void ConsumeAmmo(int amount);

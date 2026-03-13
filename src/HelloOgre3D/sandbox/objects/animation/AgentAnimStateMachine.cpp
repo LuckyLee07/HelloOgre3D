@@ -7,6 +7,7 @@
 #include "object/BaseObject.h"
 #include "event/SandboxEventDispatcherManager.h"
 #include "GameDefine.h"
+#include "OgreMath.h"
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner)
 	: m_owner(owner)
@@ -50,19 +51,23 @@ bool AgentAnimStateMachine::RequestState(int stateId)
 
 bool AgentAnimStateMachine::RequestState(const std::string& stateName)
 {
-	if (m_pNextState == nullptr && ContainsState(stateName))
+	if (!ContainsState(stateName))
 	{
-		if (m_pCurrState == nullptr)
-		{
-			this->SetCurrentState(stateName);
-		}
-		else
-		{
-			m_pNextState = m_animStates[stateName];
-		}
+		return false;
+	}
+
+	m_desiredStateName = stateName;
+	if (m_pCurrState == nullptr)
+	{
+		this->SetCurrentState(stateName);
 		return true;
 	}
-	return false;
+
+	if (m_pNextState == nullptr)
+	{
+		m_pNextState = m_animStates[stateName];
+	}
+	return true;
 }
 
 int AgentAnimStateMachine::GetCurrStateID()
@@ -83,6 +88,63 @@ std::string AgentAnimStateMachine::GetCurrStateName()
 		return m_pCurrState->GetName();
 	}
 	return empty_str;
+}
+
+std::string AgentAnimStateMachine::GetNextStateName()
+{
+	static std::string empty_str = "";
+
+	if (m_pNextState != nullptr)
+	{
+		return m_pNextState->GetName();
+	}
+	return empty_str;
+}
+
+std::string AgentAnimStateMachine::GetDesiredStateName()
+{
+	return m_desiredStateName;
+}
+
+bool AgentAnimStateMachine::IsCurrentState(const std::string& stateName)
+{
+	return m_pCurrState != nullptr && m_pCurrState->GetName() == stateName;
+}
+
+bool AgentAnimStateMachine::IsNextState(const std::string& stateName)
+{
+	return m_pNextState != nullptr && m_pNextState->GetName() == stateName;
+}
+
+float AgentAnimStateMachine::GetCurrStateTime()
+{
+	if (m_pCurrState == nullptr || m_pCurrState->GetAnimation() == nullptr)
+	{
+		return 0.0f;
+	}
+
+	return m_pCurrState->GetAnimation()->GetTime();
+}
+
+float AgentAnimStateMachine::GetCurrStateLength()
+{
+	if (m_pCurrState == nullptr || m_pCurrState->GetAnimation() == nullptr)
+	{
+		return 0.0f;
+	}
+
+	return m_pCurrState->GetAnimation()->GetLength();
+}
+
+float AgentAnimStateMachine::GetCurrStateProgress()
+{
+	const float length = GetCurrStateLength();
+	if (length <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	return Ogre::Math::Clamp(GetCurrStateTime() / length, 0.0f, 1.0f);
 }
 
 void AgentAnimStateMachine::AddState(AgentAnimState* animState)
@@ -153,6 +215,10 @@ void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)
 		m_TransitionStartTime = 0.0f;
 		m_pCurrState = m_animStates[stateName];
 		m_pCurrState->InitAnim();
+		if (m_pCurrState->GetName() == m_desiredStateName)
+		{
+			m_desiredStateName.clear();
+		}
 	}
 }
 
@@ -175,6 +241,11 @@ void AgentAnimStateMachine::Update(float deltaTimeInMillis, long long currTimeIn
 {
 	float deltaTimeInSeconds = deltaTimeInMillis / 1000.0f;
 	float currTimeInSeconds = currTimeInMillis / 1000.0f;
+
+	if (m_pCurrState != nullptr && m_pCurrTransition == nullptr && m_pNextState == nullptr && !m_desiredStateName.empty() && m_pCurrState->GetName() != m_desiredStateName)
+	{
+		m_pNextState = m_animStates[m_desiredStateName];
+	}
 
 	if (m_pCurrTransition == nullptr && m_pNextState != nullptr)
 	{
@@ -243,6 +314,10 @@ void AgentAnimStateMachine::CompleteTransition()
 	m_pNextState->InitAnim();
 	m_pCurrState = m_pNextState;
 	m_pNextState = nullptr;
+	if (m_pCurrState->GetName() == m_desiredStateName)
+	{
+		m_desiredStateName.clear();
+	}
 
 	this->FireStateChageEvent(m_pCurrState);
 }

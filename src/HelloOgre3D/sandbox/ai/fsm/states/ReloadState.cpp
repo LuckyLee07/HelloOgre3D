@@ -1,4 +1,4 @@
-﻿#include "ReloadState.h"
+#include "ReloadState.h"
 
 #include "GameDefine.h"
 #include "ai/fsm/AgentActionContext.h"
@@ -34,6 +34,11 @@ void ReloadState::OnEnter()
 
 void ReloadState::OnLeave()
 {
+	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
+	if (actions)
+	{
+		actions->ExitReload();
+	}
 }
 
 std::string ReloadState::OnUpdate(float dt)
@@ -52,8 +57,8 @@ std::string ReloadState::OnUpdate(float dt)
 		return "";
 
 	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
-	const bool hasPendingAnim = actions ? actions->HasPendingAnimation() : m_pAgent->HasNextAnim();
-	if (!hasPendingAnim)
+	const bool reloadFinished = actions ? actions->IsReloadPresentationFinished() : !m_pAgent->HasNextAnim();
+	if (reloadFinished)
 	{
 		if (actions)
 		{

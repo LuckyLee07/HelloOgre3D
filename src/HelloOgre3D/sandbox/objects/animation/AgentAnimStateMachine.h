@@ -24,7 +24,15 @@ public:
     
     int GetCurrStateID();
     std::string GetCurrStateName();
+    std::string GetNextStateName();
+    std::string GetDesiredStateName();
     bool HasNextState() { return m_pNextState != nullptr; }
+    bool IsTransitioning() { return m_pCurrTransition != nullptr || m_pNextState != nullptr; }
+    bool IsCurrentState(const std::string& stateName);
+    bool IsNextState(const std::string& stateName);
+    float GetCurrStateTime();
+    float GetCurrStateLength();
+    float GetCurrStateProgress();
 
     void AddState(const std::string& name, AgentAnim* animation, bool looping = false, float rate = 1.0f);
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
@@ -65,6 +73,7 @@ private:
 	AgentAnimState* m_pNextState = nullptr;
 	AgentAnimTransition* m_pCurrTransition = nullptr;
     float m_TransitionStartTime = 0.0f;
+    std::string m_desiredStateName;
 }; //tolua_exports
 
 #endif  // __AGENT_ANIM_STATE_MACHINE_H__

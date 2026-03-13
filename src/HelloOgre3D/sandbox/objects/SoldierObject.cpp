@@ -13,6 +13,7 @@
 #include "BlockObject.h"
 #include "systems/service/SceneFactory.h"
 #include "animation/AgentAnimState.h"
+#include "animation/SoldierAnimController.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -28,7 +29,7 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_stateController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_stateController(nullptr), m_animController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -43,6 +44,8 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 		m_stateController = new AgentStateController(this);
 		m_stateController->Init();
 	}
+
+	m_animController = new SoldierAnimController(*this);
 }
 
 SoldierObject::~SoldierObject()
@@ -50,6 +53,7 @@ SoldierObject::~SoldierObject()
 	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_stateController);
+	SAFE_DELETE(m_animController);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -60,6 +64,10 @@ void SoldierObject::CreateEventDispatcher()
 		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
 		{
 			this->ShootBullet(); // 射击
+		}
+		if (m_animController)
+		{
+			m_animController->OnBodyStateChanged(stateId);
 		}
 		if (!m_stateController) return;
 		
@@ -115,6 +123,8 @@ void SoldierObject::Update(int deltaMilisec)
 
 	if (m_stateController)
 		m_stateController->Update((float)deltaMilisec);
+	if (m_animController)
+		m_animController->Update((float)deltaMilisec);
 
 	m_pAgentBody->Update(deltaMilisec);
 	SyncWeaponToHandBone();
@@ -526,7 +536,7 @@ void SoldierObject::TryApplyPendingStance()
 }
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
-	//播放死亡动画时不再接受新的状态
+	//闁圭虎鍘介弬浣割潰鐠佹娊顎楅柛鏂诲妿閺侀箖寮張鐢电憹闁告劕绉电敮鎾矗濡や焦鐓€闁汇劌瀚慨鎼佸箑?
 	if (m_onPlayDeathAnim) return;
 
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -552,13 +562,8 @@ bool SoldierObject::IsAnimReadyForMove()
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return false;
 
-	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
-
-	if (animStateId == SSTATE_RUN_FORWARD || animStateId == CROUCH_SSTATE_FORWARD)
-	{
-		return true;
-	}
-	return false;
+	const std::string moveStateName = AgentAnimState::GetNameByID(ConvertAnimID(SSTATE_RUN_FORWARD, getStanceType()));
+	return pAsm->IsCurrentState(moveStateName) || pAsm->IsNextState(moveStateName);
 }
 
 bool SoldierObject::IsAnimReadyForShoot()
@@ -566,11 +571,6 @@ bool SoldierObject::IsAnimReadyForShoot()
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return false;
 
-	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
-
-	if (animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE)
-	{
-		return true;
-	}
-	return false;
+	const std::string shootStateName = AgentAnimState::GetNameByID(ConvertAnimID(SSTATE_FIRE, getStanceType()));
+	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
 }
