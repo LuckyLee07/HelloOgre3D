@@ -50,19 +50,45 @@ bool AgentAnimStateMachine::RequestState(int stateId)
 
 bool AgentAnimStateMachine::RequestState(const std::string& stateName)
 {
-	if (m_pNextState == nullptr && ContainsState(stateName))
+	if (!ContainsState(stateName))
+		return false;
+
+	if (m_pCurrState == nullptr)
 	{
-		if (m_pCurrState == nullptr)
-		{
-			this->SetCurrentState(stateName);
-		}
-		else
-		{
-			m_pNextState = m_animStates[stateName];
-		}
+		this->SetCurrentState(stateName);
 		return true;
 	}
-	return false;
+
+	if (m_pNextState != nullptr)
+		return false;
+
+	m_pNextState = m_animStates[stateName];
+	return true;
+}
+
+bool AgentAnimStateMachine::RequestStatePreferLatest(int stateId)
+{
+	std::string stateName = AgentAnimState::GetNameByID(stateId);
+	return RequestStatePreferLatest(stateName);
+}
+
+bool AgentAnimStateMachine::RequestStatePreferLatest(const std::string& stateName)
+{
+	if (!ContainsState(stateName))
+		return false;
+
+	if (m_pCurrState == nullptr)
+	{
+		this->SetCurrentState(stateName);
+		return true;
+	}
+
+	// Avoid mutating next state while the current transition is being blended.
+	if (m_pCurrTransition != nullptr)
+		return false;
+
+	m_pNextState = m_animStates[stateName];
+	return true;
 }
 
 int AgentAnimStateMachine::GetCurrStateID()
@@ -126,7 +152,7 @@ void AgentAnimStateMachine::SetCanFireEvent(bool canFireEvent)
 	m_canFireEvent = canFireEvent;
 }
 
-void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState)
+void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState, int eventType /*= ASM_EVENT_ENTER*/)
 {
 	if (!m_canFireEvent) return;
 
@@ -135,8 +161,17 @@ void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState)
 		
 	SandboxContext context;
 	context.Set_Number("StateId", pNextState->GetID());
+	context.Set_Number("EventType", eventType);
 	//context.Set_String("StateId", pNextState->GetName());
 	m_owner->Event()->Emit("ASM_STATE_CHANGE", context);
+	if (eventType == ASM_EVENT_ENTER)
+	{
+		m_owner->Event()->Emit("ASM_STATE_ENTER", context);
+	}
+	else if (eventType == ASM_EVENT_LOOP)
+	{
+		m_owner->Event()->Emit("ASM_STATE_LOOP", context);
+	}
 }
 
 void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)
@@ -215,7 +250,7 @@ void AgentAnimStateMachine::StartTransition(AgentAnimTransition* transition, flo
 	m_TransitionStartTime = currTimeInSeconds;
 	m_pNextState->InitAnim(transition->getBlendInWindow());
 
-	this->FireStateChageEvent(m_pNextState);
+	this->FireStateChageEvent(m_pNextState, ASM_EVENT_ENTER);
 }
 
 void AgentAnimStateMachine::UpdateTransition(float deltaTimeInMillis, float currTimeInSeconds)
@@ -244,7 +279,7 @@ void AgentAnimStateMachine::CompleteTransition()
 	m_pCurrState = m_pNextState;
 	m_pNextState = nullptr;
 
-	this->FireStateChageEvent(m_pCurrState);
+	this->FireStateChageEvent(m_pCurrState, ASM_EVENT_ENTER);
 }
 
 void AgentAnimStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
@@ -261,7 +296,7 @@ void AgentAnimStateMachine::StepCurrentAnimation(float deltaTimeInMillis)
 	while (timeStepped >= currAnimLength)
 	{
 		timeStepped -= currAnimLength; // Looping
-		this->FireStateChageEvent(m_pCurrState);
+		this->FireStateChageEvent(m_pCurrState, ASM_EVENT_LOOP);
 	}
 	pAnimation->AddTime(deltaTime);
 }

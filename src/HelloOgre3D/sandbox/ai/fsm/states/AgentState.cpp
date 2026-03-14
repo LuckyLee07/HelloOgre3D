@@ -15,6 +15,10 @@ AgentState::~AgentState()
 void AgentState::OnEnter()
 {
 	doBeforeEntering();
+	if (m_pAgent)
+	{
+		m_pAgent->RequestAnimByFsmState(m_stateId);
+	}
 }
 
 void AgentState::OnLeave()

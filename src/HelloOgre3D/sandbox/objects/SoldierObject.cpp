@@ -21,6 +21,31 @@ namespace
 	{
 		return stateId >= CROUCH_SSTATE_DEAD && stateId <= CROUCH_SSTATE_FORWARD;
 	}
+
+	bool TryGetAnimStateByFsmStateName(const std::string& fsmStateName, SOLDIER_STATE& outAnimState)
+	{
+		if (fsmStateName == "IdleState")
+		{
+			outAnimState = SSTATE_IDLE_AIM;
+			return true;
+		}
+		if (fsmStateName == "MoveState")
+		{
+			outAnimState = SSTATE_RUN_FORWARD;
+			return true;
+		}
+		if (fsmStateName == "ShootState")
+		{
+			outAnimState = SSTATE_FIRE;
+			return true;
+		}
+		if (fsmStateName == "DeathState")
+		{
+			outAnimState = SSTATE_DEAD;
+			return true;
+		}
+		return false;
+	}
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
@@ -47,25 +72,37 @@ SoldierObject::~SoldierObject()
 void SoldierObject::CreateEventDispatcher()
 {
 	Event()->CreateDispatcher("ASM_STATE_CHANGE");
+	Event()->CreateDispatcher("ASM_STATE_ENTER");
+	Event()->CreateDispatcher("ASM_STATE_LOOP");
 	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		int stateId = (int)context.Get_Number("StateId");
-		if (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE)
+		int eventType = (int)context.Get_Number("EventType");
+		bool isEnterOrLoop = (eventType == AgentAnimStateMachine::ASM_EVENT_ENTER ||
+			eventType == AgentAnimStateMachine::ASM_EVENT_LOOP ||
+			eventType == 0);
+		if (isEnterOrLoop && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
 		{
 			this->ShootBullet(); // 射击
 		}
 		if (!m_stateController) return;
+		if (eventType != AgentAnimStateMachine::ASM_EVENT_ENTER && eventType != 0) return;
 		
 		// 将事件传递到State那
 		AgentState* pState = m_stateController->GetCurrState();
+		if (!pState) return;
+
 		SandboxContext context1;
 		context1.Set_Number("StateId", stateId);
-		pState->Event()->Emit("FSM_STATE_CHANGE", context);
+		context1.Set_Number("EventType", eventType);
+		pState->Event()->Emit("FSM_STATE_CHANGE", context1);
 	});
 }
 
 void SoldierObject::RemoveEventDispatcher()
 {
 	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
+	Event()->RemoveDispatcher("ASM_STATE_ENTER");
+	Event()->RemoveDispatcher("ASM_STATE_LOOP");
 }
 
 void SoldierObject::Init()
@@ -245,6 +282,43 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Qua
 	bullet->applyImpulse(forward * 750);
 }
 
+bool SoldierObject::RequestAnimByFsmState(const std::string& fsmStateName, bool forceUpdate /*= false*/)
+{
+	SOLDIER_STATE requestState = SSTATE_MAXCOUNT;
+	if (!TryGetAnimStateByFsmStateName(fsmStateName, requestState))
+	{
+		return false;
+	}
+
+	RequestState((int)requestState, forceUpdate);
+	return true;
+}
+
+bool SoldierObject::IsAnimReadyByFsmState(const std::string& fsmStateName)
+{
+	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	if (pAsm == nullptr) return false;
+
+	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
+	if (fsmStateName == "MoveState")
+	{
+		return animStateId == SSTATE_RUN_FORWARD || animStateId == CROUCH_SSTATE_FORWARD;
+	}
+	if (fsmStateName == "ShootState")
+	{
+		return animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE;
+	}
+	if (fsmStateName == "IdleState")
+	{
+		return animStateId == SSTATE_IDLE_AIM || animStateId == CROUCH_SSTATE_IDLE_AIM;
+	}
+	if (fsmStateName == "DeathState")
+	{
+		return animStateId == SSTATE_DEAD || animStateId == CROUCH_SSTATE_DEAD;
+	}
+	return true;
+}
+
 void SoldierObject::changeStanceType(int stanceType)
 {
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
@@ -360,8 +434,12 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
 	
 	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(soldierState, getStanceType());
-	if (!forceUpdate && currState == requestState) return;
-
+	if (forceUpdate)
+	{
+		pAsm->RequestStatePreferLatest(requestState);
+		return;
+	}
+	if (currState == requestState) return;
 	pAsm->RequestState(requestState);
 }
 
@@ -375,28 +453,10 @@ bool SoldierObject::HasNextAnim()
 
 bool SoldierObject::IsAnimReadyForMove()
 {
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return false;
-
-	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
-
-	if (animStateId == SSTATE_RUN_FORWARD || animStateId == CROUCH_SSTATE_FORWARD)
-	{
-		return true;
-	}
-	return false;
+	return IsAnimReadyByFsmState("MoveState");
 }
 
 bool SoldierObject::IsAnimReadyForShoot()
 {
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return false;
-
-	SOLDIER_STATE animStateId = SOLDIER_STATE(pAsm->GetCurrStateID());
-
-	if (animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE)
-	{
-		return true;
-	}
-	return false;
+	return IsAnimReadyByFsmState("ShootState");
 }

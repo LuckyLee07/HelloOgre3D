@@ -13,12 +13,12 @@ IdleState::~IdleState()
 
 void IdleState::OnEnter()
 {
-	m_pAgent->RequestState(SSTATE_IDLE_AIM);
+	AgentState::OnEnter();
 }
 
 void IdleState::OnLeave()
 {
-	
+	AgentState::OnLeave();
 }
 
 std::string IdleState::OnUpdate(float dt)

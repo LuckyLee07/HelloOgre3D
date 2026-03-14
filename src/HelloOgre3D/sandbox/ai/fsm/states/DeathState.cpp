@@ -14,12 +14,12 @@ DeathState::~DeathState()
 
 void DeathState::OnEnter()
 {
-	m_pAgent->RequestState(SSTATE_DEAD);
+	AgentState::OnEnter();
 }
 
 void DeathState::OnLeave()
 {
-
+	AgentState::OnLeave();
 }
 
 std::string DeathState::OnUpdate(float dt)
@@ -30,9 +30,9 @@ std::string DeathState::OnUpdate(float dt)
 	}
 	else
 	{
-		if (m_pAgent->GetCurStateId() != SSTATE_DEAD)
+		if (!m_pAgent->IsAnimReadyByFsmState(m_stateId))
 		{
-			m_pAgent->RequestState(SSTATE_DEAD);
+			m_pAgent->RequestAnimByFsmState(m_stateId);
 		}
 		else
 		{

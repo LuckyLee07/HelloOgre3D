@@ -14,12 +14,12 @@ ShootState::~ShootState()
 
 void ShootState::OnEnter()
 {
-	m_pAgent->RequestState(SSTATE_FIRE);
+	AgentState::OnEnter();
 }
 
 void ShootState::OnLeave()
 {
-
+	AgentState::OnLeave();
 }
 
 std::string ShootState::OnUpdate(float dt)
@@ -28,11 +28,11 @@ std::string ShootState::OnUpdate(float dt)
 	{
 		m_pAgent->SlowMoving();
 	}
-	if (!m_pAgent->IsAnimReadyForShoot())
+	if (!m_pAgent->IsAnimReadyByFsmState(m_stateId))
 	{
 		if (!m_pAgent->HasNextAnim())
 		{
-			m_pAgent->RequestState(SSTATE_FIRE);
+			m_pAgent->RequestAnimByFsmState(m_stateId, true);
 		}
 		return ""; // 继续等待
 	}

@@ -12,6 +12,12 @@ class AgentAnimTransition;
 class AgentAnimStateMachine //tolua_exports
 { //tolua_exports
 public:
+	enum StateEventType
+	{
+		ASM_EVENT_ENTER = 1,
+		ASM_EVENT_LOOP = 2,
+	};
+
 	AgentAnimStateMachine(BaseObject* owner);
 	AgentAnimStateMachine(BaseObject* owner, bool canFireEvent);
     ~AgentAnimStateMachine();
@@ -30,8 +36,11 @@ public:
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
     //tolua_end
 
+    bool RequestStatePreferLatest(int stateId);
+    bool RequestStatePreferLatest(const std::string& stateName);
+
     void SetCanFireEvent(bool canFireEvent);
-    void FireStateChageEvent(AgentAnimState* pNextState);
+    void FireStateChageEvent(AgentAnimState* pNextState, int eventType = ASM_EVENT_ENTER);
 
 private:
     void AddState(AgentAnimState* animState);

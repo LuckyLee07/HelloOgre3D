@@ -15,19 +15,19 @@ MoveState::~MoveState()
 
 void MoveState::OnEnter()
 {
-	
+	AgentState::OnEnter();
 }
 
 void MoveState::OnLeave()
 {
-
+	AgentState::OnLeave();
 }
 
 std::string MoveState::OnUpdate(float dt)
 {
 	GetScriptLuaVM()->callFunction("Agent_MovingState", "u[AgentObject]i", m_pAgent, (int)dt);
 	
-	if (!m_pAgent->IsAnimReadyForMove())
+	if (!m_pAgent->IsAnimReadyByFsmState(m_stateId))
 	{
 		return "";
 	}

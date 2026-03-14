@@ -54,6 +54,8 @@ public:
 
 	virtual IPlayerInput* GetInput() { return nullptr; }
 	virtual void RequestState(int soldierState, bool forceUpdate = false) {}
+	virtual bool RequestAnimByFsmState(const std::string& fsmStateName, bool forceUpdate = false) { return false; }
+	virtual bool IsAnimReadyByFsmState(const std::string& fsmStateName) { return false; }
 
 	virtual bool HasNextAnim() { return false; }
 	virtual bool IsAnimReadyForMove() { return false; }

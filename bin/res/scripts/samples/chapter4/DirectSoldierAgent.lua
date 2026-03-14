@@ -31,7 +31,7 @@ function Agent_Initialize(agent)
     local position = agent:GetPosition()
     local randomVec = Vector3(math.random(-5, 5), 0, math.random(-5, 5))
     agent:setPosition(position + posoffset + randomVec)
-    agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
+    agent:SetMaxSpeed(SOLDIER_STAND_SPEED);
 
     Agent_SetPath(agent, SandboxUtilities_GetLevelPath(), true)
 

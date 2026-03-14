@@ -23,8 +23,6 @@ AgentState_OnUpdate = function(agent, deltaTime)
     local steeringForces = CalculateSteering(agent, deltaTimeInSec)
     Soldier_ApplySteering(agent, steeringForces, deltaTimeInSec)
 
-    agent:RequestState(SSTATE_RUN_FORWARD);
-    
     if not agent:IsAnimReadyForMove() then
         return "";
     end
