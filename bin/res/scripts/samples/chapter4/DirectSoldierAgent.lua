@@ -40,17 +40,17 @@ end
 
 
 function Agent_EventHandle(agent, keycode)
-    if keycode == OIS.KC_1 then
+    if IsNumKey(keycode, 1) then
         _soldierState = _soldierStates.IDLE
-    elseif keycode == OIS.KC_2 then
+    elseif IsNumKey(keycode, 2) then
         _soldierState = _soldierStates.SHOOTING
-    elseif keycode == OIS.KC_3 then
+    elseif IsNumKey(keycode, 3) then
         _soldierState = _soldierStates.MOVING
-    elseif keycode == OIS.KC_4 then
+    elseif IsNumKey(keycode, 4) then
         _soldierState = _soldierStates.DEATH
-    elseif keycode == OIS.KC_6 then
+    elseif IsNumKey(keycode, 6) then
         _soldierState = _soldierStates.FALLING
-    elseif keycode == OIS.KC_5 then
+    elseif IsNumKey(keycode, 5) then
         local stanceType = agent:getStanceType()
         if stanceType == SOLDIER_STAND then
             agent:changeStanceType(SOLDIER_CROUCH)

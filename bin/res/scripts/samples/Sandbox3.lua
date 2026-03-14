@@ -104,7 +104,7 @@ function Sandbox_Initialize(ctype)
     camera:setPosition(Vector3(0, 1, -3));
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
 
-    -- 使用lua端的fsm
+    -- 使用lua端的update驱动
     Sandbox:SetUseCppFsmFlag(false)
     
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"

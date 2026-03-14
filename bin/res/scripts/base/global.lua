@@ -310,3 +310,28 @@ function IsNumKey(keycode, num)
     end
     return false
 end
+
+function IsNumKeyDown(input, num)
+    if input == nil then return false end
+
+    if num == 1 then
+        return input:isKeyDown(OIS.KC_1) or input:isKeyDown(OIS.KC_NUMPAD1)
+    elseif num == 2 then
+        return input:isKeyDown(OIS.KC_2) or input:isKeyDown(OIS.KC_NUMPAD2)
+    elseif num == 3 then
+        return input:isKeyDown(OIS.KC_3) or input:isKeyDown(OIS.KC_NUMPAD3)
+    elseif num == 4 then
+        return input:isKeyDown(OIS.KC_4) or input:isKeyDown(OIS.KC_NUMPAD4)
+    elseif num == 5 then
+        return input:isKeyDown(OIS.KC_5) or input:isKeyDown(OIS.KC_NUMPAD5)
+    elseif num == 6 then
+        return input:isKeyDown(OIS.KC_6) or input:isKeyDown(OIS.KC_NUMPAD6)
+    elseif num == 7 then
+        return input:isKeyDown(OIS.KC_7) or input:isKeyDown(OIS.KC_NUMPAD7)
+    elseif num == 8 then
+        return input:isKeyDown(OIS.KC_8) or input:isKeyDown(OIS.KC_NUMPAD8)
+    elseif num == 9 then
+        return input:isKeyDown(OIS.KC_9) or input:isKeyDown(OIS.KC_NUMPAD9)
+    end
+    return false
+end

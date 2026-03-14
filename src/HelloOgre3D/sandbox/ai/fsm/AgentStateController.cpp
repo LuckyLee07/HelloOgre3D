@@ -39,20 +39,27 @@ AgentStateController::~AgentStateController()
 	m_fsm = nullptr;
 }
 
+#define USE_CPP_STATE 0
 void AgentStateController::Init()
 {
 	AgentStateFactory::Init();
 
+#if USE_CPP_STATE
 	AddState("IdleState");
 	AddState("ShootState");
 	AddState("DeathState");
 	AddState("MoveState");
+#else
+	AddStateExByLua("IdleState", "res/scripts/agent/states/IdleState.lua");
+	AddStateExByLua("ShootState", "res/scripts/agent/states/ShootState.lua");
+	AddStateExByLua("DeathState", "res/scripts/agent/states/DeathState.lua");
+	AddStateExByLua("MoveState", "res/scripts/agent/states/MoveState.lua");
+#endif // USE_CPP_STATE
+
 	AddState("ReloadState");
 	AddState("PursueState");
 	AddState("FleeState");
 	AddState("RandomMoveState");
-
-	AddStateExByLua("MoveState", "res/scripts/agent/states/MoveState.lua");
 
 	AgentStateEvaluators::ConfigureSoldierTransitions(*this);
 

@@ -11,11 +11,11 @@ end
 
 --local m_pAgent = owner;
 AgentState_OnEnter = function(agent)
-    --print("Info==========>>>OnEnter")
+    print("Info==========>>>MoveOnEnter")
 end
 
 AgentState_OnLeave = function(agent)
-    --print("Info==========>>>OnLeave")
+    print("Info==========>>>MoveOnLeave")
 end
 
 AgentState_OnUpdate = function(agent, deltaTime)
@@ -30,11 +30,11 @@ AgentState_OnUpdate = function(agent, deltaTime)
     end
     
     local pInput = agent:GetInput();
-    if (pInput:isKeyDown(OIS.KC_2)) then
+    if IsNumKeyDown(pInput, 2) then
         return "toShoot";
-    elseif pInput:isKeyDown(OIS.KC_3) then
+    elseif IsNumKeyDown(pInput, 3) then
         return ""; -- 继续Walk
-    elseif (pInput:isKeyDown(OIS.KC_4)) then
+    elseif IsNumKeyDown(pInput, 4) then
         return "toDeath";
     end
 

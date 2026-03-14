@@ -86,6 +86,7 @@ void AgentStateEvaluators::ConfigureSoldierTransitions(AgentStateController& con
 	controller.AddTransition("IdleState", "ReloadState");
 	controller.AddTransition("IdleState", "ShootState");
 	controller.AddTransition("IdleState", "PursueState");
+	controller.AddTransition("IdleState", "MoveState");
 	controller.AddTransition("IdleState", "RandomMoveState");
 	controller.AddTransition("IdleState", "IdleState");
 
@@ -106,6 +107,7 @@ void AgentStateEvaluators::ConfigureSoldierTransitions(AgentStateController& con
 	controller.AddTransition("ShootState", "ReloadState");
 	controller.AddTransition("ShootState", "ShootState");
 	controller.AddTransition("ShootState", "PursueState");
+	controller.AddTransition("ShootState", "MoveState");
 	controller.AddTransition("ShootState", "RandomMoveState");
 	controller.AddTransition("ShootState", "IdleState");
 
