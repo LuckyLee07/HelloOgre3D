@@ -26,14 +26,12 @@ public:
 
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
 	virtual void RequestState(int soldierState, bool forceUpdate = false);
-	virtual bool RequestAnimByFsmState(const std::string& fsmStateName, bool forceUpdate = false) override;
-	virtual bool IsAnimReadyByFsmState(const std::string& fsmStateName) override;
 
 	virtual bool HasNextAnim();
-	virtual bool IsAnimReadyForMove();
-	virtual bool IsAnimReadyForShoot();
 
 	//tolua_end
+
+	virtual bool RequestWeaponState(const std::string& weaponStateName, bool forceUpdate = false);
 
 	bool QueueCommand(AgentCommandType commandType, int priority = 0, int arg = 0, const std::string& source = "") override;
 	bool ImmediateCommand(AgentCommandType commandType, int priority = 100, int arg = 0, const std::string& source = "") override;

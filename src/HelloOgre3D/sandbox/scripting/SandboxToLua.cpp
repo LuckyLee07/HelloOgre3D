@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sun Mar  8 21:53:34 2026.
+** Generated automatically by tolua++-1.0.92 on Sat Mar 14 20:30:54 2026.
 */
 
 #ifndef __cplusplus
@@ -4198,70 +4198,6 @@ static int tolua_SandboxToLua_AgentObject_HasNextAnim00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: IsAnimReadyForMove of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentObject_IsAnimReadyForMove00
-static int tolua_SandboxToLua_AgentObject_IsAnimReadyForMove00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsAnimReadyForMove'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->IsAnimReadyForMove();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'IsAnimReadyForMove'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: IsAnimReadyForShoot of class  AgentObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentObject_IsAnimReadyForShoot00
-static int tolua_SandboxToLua_AgentObject_IsAnimReadyForShoot00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsAnimReadyForShoot'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->IsAnimReadyForShoot();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'IsAnimReadyForShoot'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: initWeapon of class  SoldierObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_initWeapon00
 static int tolua_SandboxToLua_SoldierObject_initWeapon00(lua_State* tolua_S)
@@ -4518,70 +4454,6 @@ static int tolua_SandboxToLua_SoldierObject_HasNextAnim00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'HasNextAnim'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: IsAnimReadyForMove of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_IsAnimReadyForMove00
-static int tolua_SandboxToLua_SoldierObject_IsAnimReadyForMove00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsAnimReadyForMove'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->IsAnimReadyForMove();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'IsAnimReadyForMove'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: IsAnimReadyForShoot of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00
-static int tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsAnimReadyForShoot'", NULL);
-#endif
-  {
-   bool tolua_ret = (bool)  self->IsAnimReadyForShoot();
-   tolua_pushboolean(tolua_S,(bool)tolua_ret);
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'IsAnimReadyForShoot'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6350,8 +6222,6 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetInput",tolua_SandboxToLua_AgentObject_GetInput00);
    tolua_function(tolua_S,"RequestState",tolua_SandboxToLua_AgentObject_RequestState00);
    tolua_function(tolua_S,"HasNextAnim",tolua_SandboxToLua_AgentObject_HasNextAnim00);
-   tolua_function(tolua_S,"IsAnimReadyForMove",tolua_SandboxToLua_AgentObject_IsAnimReadyForMove00);
-   tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_AgentObject_IsAnimReadyForShoot00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SoldierObject","SoldierObject","AgentObject",NULL);
   tolua_beginmodule(tolua_S,"SoldierObject");
@@ -6363,8 +6233,6 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetInput",tolua_SandboxToLua_SoldierObject_GetInput00);
    tolua_function(tolua_S,"RequestState",tolua_SandboxToLua_SoldierObject_RequestState00);
    tolua_function(tolua_S,"HasNextAnim",tolua_SandboxToLua_SoldierObject_HasNextAnim00);
-   tolua_function(tolua_S,"IsAnimReadyForMove",tolua_SandboxToLua_SoldierObject_IsAnimReadyForMove00);
-   tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);
   tolua_beginmodule(tolua_S,"SandboxMgr");

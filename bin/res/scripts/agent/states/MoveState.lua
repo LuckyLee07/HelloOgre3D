@@ -22,10 +22,6 @@ AgentState_OnUpdate = function(agent, deltaTime)
     local deltaTimeInSec = deltaTime / 1000
     local steeringForces = CalculateSteering(agent, deltaTimeInSec)
     Soldier_ApplySteering(agent, steeringForces, deltaTimeInSec)
-
-    if not agent:IsAnimReadyForMove() then
-        return "";
-    end
     
     local pInput = agent:GetInput();
     if (pInput:isKeyDown(OIS.KC_2)) then

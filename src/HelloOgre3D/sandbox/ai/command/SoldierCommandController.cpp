@@ -2,6 +2,7 @@
 
 #include <deque>
 #include "objects/SoldierObject.h"
+#include "objects/RenderableObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 
 namespace
@@ -166,7 +167,7 @@ SoldierCommandController::SoldierCommandController(SoldierObject& owner)
 
 SoldierCommandController::~SoldierCommandController() = default;
 
-bool SoldierCommandController::TryGetAnimStateByCommandType(AgentCommandType commandType, int& outAnimState)
+bool SoldierCommandController::TryGetBodyAnimStateByCommandType(AgentCommandType commandType, int& outAnimState)
 {
 	switch (commandType)
 	{
@@ -185,6 +186,39 @@ bool SoldierCommandController::TryGetAnimStateByCommandType(AgentCommandType com
 	default:
 		return false;
 	}
+}
+
+bool SoldierCommandController::TryResolveWeaponAnimStateByCommandType(SoldierObject& owner, AgentCommandType commandType, std::string& outWeaponStateName)
+{
+	if (commandType != AGENT_COMMAND_IDLE &&
+		commandType != AGENT_COMMAND_MOVE &&
+		commandType != AGENT_COMMAND_SHOOT)
+	{
+		return false;
+	}
+
+	RenderableObject* weapon = owner.getWeapon();
+	if (weapon == nullptr)
+	{
+		return false;
+	}
+
+	AgentAnimStateMachine* weaponAsm = weapon->GetObjectASM();
+	if (weaponAsm == nullptr)
+	{
+		return false;
+	}
+
+	const std::string currentState = weaponAsm->GetCurrStateName();
+	if (currentState == "smg_idle" || currentState == "smg_transform")
+	{
+		outWeaponStateName = "smg_idle";
+	}
+	else
+	{
+		outWeaponStateName = "sniper_idle";
+	}
+	return true;
 }
 
 bool SoldierCommandController::TryGetCommandTypeByAnimStateId(int animStateId, AgentCommandType& outCommandType)
@@ -211,6 +245,11 @@ bool SoldierCommandController::TryGetCommandTypeByAnimStateId(int animStateId, A
 	}
 
 	return false;
+}
+
+bool SoldierCommandController::IsShootAnimStateId(int animStateId)
+{
+	return animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE;
 }
 
 bool SoldierCommandController::QueueCommand(AgentCommandType commandType, int priority /*= 0*/, int arg /*= 0*/, const std::string& source /*= ""*/)
@@ -267,6 +306,15 @@ AgentCommandType SoldierCommandController::GetPreviousCommandType() const
 
 void SoldierCommandController::HandleAsmStateChange(int stateId, int eventType)
 {
+	const bool isEnterEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_ENTER || eventType == 0);
+	const bool isLoopEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_LOOP);
+
+	// Keep shoot side effects in command controller so SoldierObject stays a pure bridge.
+	if ((isEnterEvent || isLoopEvent) && IsShootAnimStateId(stateId))
+	{
+		m_owner.ShootBullet();
+	}
+
 	const CommandRequest* command = m_impl->scheduler.GetCurrentCommand();
 	if (command == nullptr)
 	{
@@ -283,9 +331,6 @@ void SoldierCommandController::HandleAsmStateChange(int stateId, int eventType)
 	{
 		return;
 	}
-
-	const bool isEnterEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_ENTER || eventType == 0);
-	const bool isLoopEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_LOOP);
 
 	if (command->type == AGENT_COMMAND_DIE)
 	{
@@ -379,7 +424,7 @@ void SoldierCommandController::Update(int deltaMs)
 	}
 
 	int requestState = SSTATE_MAXCOUNT;
-	if (!TryGetAnimStateByCommandType(command->type, requestState))
+	if (!TryGetBodyAnimStateByCommandType(command->type, requestState))
 	{
 		m_impl->scheduler.FinishCurrentCommand();
 		return;
@@ -392,6 +437,12 @@ void SoldierCommandController::Update(int deltaMs)
 	else
 	{
 		m_owner.RequestState(requestState, false);
+	}
+
+	std::string weaponStateName;
+	if (TryResolveWeaponAnimStateByCommandType(m_owner, command->type, weaponStateName))
+	{
+		m_owner.RequestWeaponState(weaponStateName, false);
 	}
 
 	// Keep terminal command executing forever, aligned with old DIE command semantics.

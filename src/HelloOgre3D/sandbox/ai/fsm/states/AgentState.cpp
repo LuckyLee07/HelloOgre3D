@@ -33,13 +33,11 @@ namespace
 
 AgentState::AgentState(AgentObject* pAgent) : m_pAgent(pAgent)
 {
-	Event()->CreateDispatcher("FSM_STATE_CHANGE");
 }
 
 AgentState::~AgentState()
 {
 	m_pAgent = nullptr;
-	Event()->RemoveDispatcher("FSM_STATE_CHANGE");
 }
 
 void AgentState::OnEnter()

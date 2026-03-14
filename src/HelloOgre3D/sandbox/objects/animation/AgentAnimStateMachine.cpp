@@ -164,14 +164,6 @@ void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState, int 
 	context.Set_Number("EventType", eventType);
 	//context.Set_String("StateId", pNextState->GetName());
 	m_owner->Event()->Emit("ASM_STATE_CHANGE", context);
-	if (eventType == ASM_EVENT_ENTER)
-	{
-		m_owner->Event()->Emit("ASM_STATE_ENTER", context);
-	}
-	else if (eventType == ASM_EVENT_LOOP)
-	{
-		m_owner->Event()->Emit("ASM_STATE_LOOP", context);
-	}
 }
 
 void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)
