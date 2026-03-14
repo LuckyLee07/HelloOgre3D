@@ -287,3 +287,26 @@ function Map_Platform_KC(key_code)
     
     return macOS_keycode
 end
+
+function IsNumKey(keycode, num)
+    if num == 1 then
+        return keycode == OIS.KC_1 or keycode == OIS.KC_NUMPAD1
+    elseif num == 2 then
+        return keycode == OIS.KC_2 or keycode == OIS.KC_NUMPAD2
+    elseif num == 3 then
+        return keycode == OIS.KC_3 or keycode == OIS.KC_NUMPAD3
+    elseif num == 4 then
+        return keycode == OIS.KC_4 or keycode == OIS.KC_NUMPAD4
+    elseif num == 5 then
+        return keycode == OIS.KC_5 or keycode == OIS.KC_NUMPAD5
+    elseif num == 6 then
+        return keycode == OIS.KC_6 or keycode == OIS.KC_NUMPAD6
+    elseif num == 7 then
+        return keycode == OIS.KC_7 or keycode == OIS.KC_NUMPAD7
+    elseif num == 8 then
+        return keycode == OIS.KC_8 or keycode == OIS.KC_NUMPAD8
+    elseif num == 9 then
+        return keycode == OIS.KC_9 or keycode == OIS.KC_NUMPAD9
+    end
+    return false
+end

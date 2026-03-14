@@ -136,7 +136,7 @@ void SoldierObject::Update(int deltaMilisec)
 
 	if (m_stateController)
 		m_stateController->Update((float)deltaMilisec);
-	if (m_animController)
+	if (m_animController && GetUseCppFSM())
 		m_animController->Update((float)deltaMilisec);
 
 	m_pAgentBody->Update(deltaMilisec);

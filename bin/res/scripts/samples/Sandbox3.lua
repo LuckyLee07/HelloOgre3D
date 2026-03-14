@@ -215,12 +215,13 @@ function Sandbox_Update(deltaTimeInMillis)
         soldierAsm:RequestState("idle_aim")
     end
 
+    local currStateName = weaponAsm:GetCurrStateName()
     if weaponState == "sniper" then
-        if weaponAsm:GetCurrStateName() ~= "sniper_idle" then
+        if currStateName ~= "sniper_idle" then
             weaponAsm:RequestState("sniper_idle")
         end
     elseif weaponState == "smg" then
-        if weaponAsm:GetCurrStateName() ~= "smg_idle" then
+        if currStateName ~= "smg_idle" then
             weaponAsm:RequestState("smg_idle")
         end
     end
