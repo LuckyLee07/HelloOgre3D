@@ -37,8 +37,18 @@ int gettimeofday(struct timeval* tv, struct timezone* tz)
 			_tzset();
 			tzflag++;
 		}
-		tz->tz_minuteswest = _timezone / 60;
-		tz->tz_dsttime = _daylight;
+
+		long timezoneSeconds = 0;
+		int daylight = 0;
+		if (_get_timezone(&timezoneSeconds) == 0)
+			tz->tz_minuteswest = static_cast<int>(timezoneSeconds / 60);
+		else
+			tz->tz_minuteswest = 0;
+
+		if (_get_daylight(&daylight) == 0)
+			tz->tz_dsttime = daylight;
+		else
+			tz->tz_dsttime = 0;
 	}
 	return 0;
 }

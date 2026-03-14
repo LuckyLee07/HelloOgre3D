@@ -106,12 +106,12 @@ function Soldier_InitSoldierAsm(agent)
     soldierAsm:AddTransition("crouch_idle_aim", "run_forward", crouchIdleAnimLength, 0.5);
     
     soldierAsm:AddTransition("crouch_fire", "crouch_dead", 0.2, 0.2, 0.5);
-    soldierAsm:AddTransition("crouch_fire", "crouch_forward", 0.5, 0.5);
+    soldierAsm:AddTransition("crouch_fire", "crouch_forward", 0.5, 0.15);
     soldierAsm:AddTransition("crouch_fire", "crouch_idle_aim", 0.1, 0.1);
     soldierAsm:AddTransition("crouch_fire", "fire", 0.3, 0.3);
     soldierAsm:AddTransition("crouch_fire", "idle_aim", 0.3, 0.3);
     soldierAsm:AddTransition("crouch_fire", "reload", 0.3, 0.3);
-    soldierAsm:AddTransition("crouch_fire", "run_forward", 0.5, 0.5);
+    soldierAsm:AddTransition("crouch_fire", "run_forward", 0.5, 0.15);
     
     soldierAsm:AddTransition("crouch_forward", "crouch_dead", crouchForwardLength, 0.2, 0.5);
     soldierAsm:AddTransition("crouch_forward", "crouch_fire", crouchForwardLength, 0.2);
@@ -135,11 +135,11 @@ function Soldier_InitSoldierAsm(agent)
     
     soldierAsm:AddTransition("fire", "idle_aim", 0.1, 0.1);
     soldierAsm:AddTransition("fire", "reload", 0.1, 0.1);
-    soldierAsm:AddTransition("fire", "run_forward", 0.5, 0.5);
-    soldierAsm:AddTransition("fire", "run_backward", 0.5, 0.5);
+    soldierAsm:AddTransition("fire", "run_forward", 0.5, 0.15);
+    soldierAsm:AddTransition("fire", "run_backward", 0.5, 0.15);
     soldierAsm:AddTransition("fire", "crouch_idle_aim", 0.5, 0.5);
     soldierAsm:AddTransition("fire", "crouch_fire", 0.3, 0.3);
-    soldierAsm:AddTransition("fire", "crouch_forward", 0.5, 0.5);
+    soldierAsm:AddTransition("fire", "crouch_forward", 0.5, 0.15);
     
     soldierAsm:AddTransition("melee", "idle_aim", 0.2, 0.2);
     soldierAsm:AddTransition("reload", "idle_aim", 0.2, 0.2);

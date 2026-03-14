@@ -288,6 +288,16 @@ bool SoldierCommandController::IsShootAnimStateId(int animStateId)
 	return animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE;
 }
 
+namespace
+{
+	bool CanUseRealtimeHandoff(AgentCommandType commandType)
+	{
+		return commandType == AGENT_COMMAND_IDLE ||
+			commandType == AGENT_COMMAND_MOVE ||
+			commandType == AGENT_COMMAND_SHOOT;
+	}
+}
+
 bool SoldierCommandController::QueueCommand(AgentCommandType commandType, int priority /*= 0*/, int arg /*= 0*/, const std::string& source /*= ""*/)
 {
 	CommandRequest request(commandType, priority, false, -1, arg, source);
@@ -429,11 +439,43 @@ void SoldierCommandController::Update(int deltaMs)
 		return;
 	}
 
+	// Old-controller style handoff: once current animation state is already serving
+	// a loopable command and a newer command is waiting, hand off immediately.
+	if (m_impl->scheduler.HasPendingCommands() && CanUseRealtimeHandoff(command->type))
+	{
+		AgentCommandType currentStateCommandType = AGENT_COMMAND_NONE;
+		const int currentBodyState = m_owner.GetCurStateId();
+		if (TryGetCommandTypeByAnimStateId(currentBodyState, currentStateCommandType) &&
+			currentStateCommandType == command->type)
+		{
+			m_impl->scheduler.FinishCurrentCommand();
+			m_impl->scheduler.TryStartNextCommand();
+			command = m_impl->scheduler.GetCurrentCommand();
+			if (command == nullptr)
+			{
+				return;
+			}
+		}
+	}
+
 	if (command->type == AGENT_COMMAND_IDLE)
 	{
 		if (m_owner.IsMoving())
 		{
 			m_owner.SlowMoving(2.0f);
+		}
+	}
+	else if (command->type == AGENT_COMMAND_MOVE)
+	{
+		// If body still stays on shoot pose during fire->run transition,
+		// keep damping residual velocity to avoid visible static sliding.
+		const int currentBodyState = m_owner.GetCurStateId();
+		const bool hasPendingAnimTransition = m_owner.HasNextAnim();
+		if (IsShootAnimStateId(currentBodyState) &&
+			!hasPendingAnimTransition &&
+			m_owner.IsMoving())
+		{
+			m_owner.SlowMoving(1.5f);
 		}
 	}
 	else if (command->type == AGENT_COMMAND_SHOOT)
