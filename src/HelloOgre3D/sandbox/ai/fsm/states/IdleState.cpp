@@ -23,11 +23,7 @@ void IdleState::OnLeave()
 
 std::string IdleState::OnUpdate(float dt)
 {
-	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
-	if (!useCommandScheduler && m_pAgent->IsMoving())
-	{
-		m_pAgent->SlowMoving(2.0f);
-	}
+	(void)dt;
 
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))

@@ -8,7 +8,7 @@
 #include "object/LuaEnvObject.h"
 #include "GameDefine.h"
 #include "systems/input/IPlayerInput.h"
-#include "ai/command/AgentCommandScheduler.h"
+#include "ai/command/AgentCommandTypes.h"
 
 namespace Ogre {
 	class SceneNode;

@@ -24,20 +24,7 @@ void ShootState::OnLeave()
 
 std::string ShootState::OnUpdate(float dt)
 {
-	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
-	if (!useCommandScheduler && m_pAgent->IsMoving())
-	{
-		m_pAgent->SlowMoving();
-	}
-
-	if (!useCommandScheduler && !m_pAgent->IsAnimReadyByFsmState(m_stateId))
-	{
-		if (!m_pAgent->HasNextAnim())
-		{
-			m_pAgent->RequestAnimByFsmState(m_stateId, true);
-		}
-		return ""; // 继续等待
-	}
+	(void)dt;
 
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))

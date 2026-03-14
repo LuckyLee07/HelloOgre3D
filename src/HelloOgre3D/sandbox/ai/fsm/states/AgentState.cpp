@@ -45,29 +45,26 @@ AgentState::~AgentState()
 void AgentState::OnEnter()
 {
 	doBeforeEntering();
-	if (m_pAgent)
+	if (!m_pAgent)
 	{
-		AgentCommandType commandType = AGENT_COMMAND_NONE;
-		bool preferImmediate = false;
-		bool hasCommandMapping = TryGetCommandTypeByStateId(m_stateId, commandType, preferImmediate);
-		bool queued = false;
-		if (hasCommandMapping)
-		{
-			if (preferImmediate)
-			{
-				queued = m_pAgent->ImmediateCommand(commandType, 1000, 0, "FSM_ON_ENTER");
-			}
-			else
-			{
-				queued = m_pAgent->QueueCommand(commandType, 0, 0, "FSM_ON_ENTER");
-			}
-		}
+		return;
+	}
 
-		if (!queued)
-		{
-			// Fallback path for agents that do not use command scheduling.
-			m_pAgent->RequestAnimByFsmState(m_stateId);
-		}
+	AgentCommandType commandType = AGENT_COMMAND_NONE;
+	bool preferImmediate = false;
+	bool hasCommandMapping = TryGetCommandTypeByStateId(m_stateId, commandType, preferImmediate);
+	if (!hasCommandMapping)
+	{
+		return;
+	}
+
+	if (preferImmediate)
+	{
+		m_pAgent->ImmediateCommand(commandType, 1000, 0, "FSM_ON_ENTER");
+	}
+	else
+	{
+		m_pAgent->QueueCommand(commandType, 0, 0, "FSM_ON_ENTER");
 	}
 }
 

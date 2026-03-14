@@ -2,10 +2,10 @@
 #define __SOLDIER_OBJECT__
 
 #include "AgentObject.h"
-#include "ai/command/AgentCommandScheduler.h"
 #include "ai/fsm/AgentStateController.h"
 
 class IPlayerInput;
+class SoldierCommandController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -50,8 +50,6 @@ private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
-	void UpdateCommandScheduler(int deltaMs);
-	void HandleAsmCommandEvent(int stateId, int eventType);
 
 protected:
 	void CreateEventDispatcher();
@@ -66,7 +64,7 @@ private:
 
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
-	AgentCommandScheduler* m_commandScheduler;
+	SoldierCommandController* m_commandController;
 
 }; //tolua_exports
 

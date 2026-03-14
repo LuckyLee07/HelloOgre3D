@@ -27,12 +27,6 @@ std::string MoveState::OnUpdate(float dt)
 {
 	GetScriptLuaVM()->callFunction("Agent_MovingState", "u[AgentObject]i", m_pAgent, (int)dt);
 
-	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
-	if (!useCommandScheduler && !m_pAgent->IsAnimReadyByFsmState(m_stateId))
-	{
-		return "";
-	}
-
 	auto pInput = m_pAgent->GetInput();
 	if (pInput->isKeyDown(OIS::KC_2))
 	{
