@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Thu Mar 12 19:03:10 2026.
+** Generated automatically by tolua++-1.0.92 on Sat Mar 14 10:11:09 2026.
 */
 
 #ifndef __cplusplus
@@ -75,13 +75,14 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
  tolua_usertype(tolua_S,"NavigationMesh");
- tolua_usertype(tolua_S,"btQuaternion");
  tolua_usertype(tolua_S,"SandboxObject");
+ tolua_usertype(tolua_S,"btQuaternion");
+ tolua_usertype(tolua_S,"SandboxMgr");
  tolua_usertype(tolua_S,"std::vector<EntityObject*>");
  tolua_usertype(tolua_S,"Ogre::Light");
  tolua_usertype(tolua_S,"UIFrame");
  tolua_usertype(tolua_S,"Ogre::Quaternion");
- tolua_usertype(tolua_S,"SandboxMgr");
+ tolua_usertype(tolua_S,"SoldierAnimController");
  tolua_usertype(tolua_S,"BlockObject");
  tolua_usertype(tolua_S,"Ogre::SceneNode");
  tolua_usertype(tolua_S,"SoldierObject");
@@ -1235,6 +1236,70 @@ static int tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateName00(lua_State
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetNextStateName of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_GetNextStateName00
+static int tolua_SandboxToLua_AgentAnimStateMachine_GetNextStateName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetNextStateName'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->GetNextStateName();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetNextStateName'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetDesiredStateName of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_GetDesiredStateName00
+static int tolua_SandboxToLua_AgentAnimStateMachine_GetDesiredStateName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDesiredStateName'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->GetDesiredStateName();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetDesiredStateName'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: HasNextState of class  AgentAnimStateMachine */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_HasNextState00
 static int tolua_SandboxToLua_AgentAnimStateMachine_HasNextState00(lua_State* tolua_S)
@@ -1262,6 +1327,204 @@ static int tolua_SandboxToLua_AgentAnimStateMachine_HasNextState00(lua_State* to
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'HasNextState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsTransitioning of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_IsTransitioning00
+static int tolua_SandboxToLua_AgentAnimStateMachine_IsTransitioning00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsTransitioning'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsTransitioning();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsTransitioning'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsCurrentState of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_IsCurrentState00
+static int tolua_SandboxToLua_AgentAnimStateMachine_IsCurrentState00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  const std::string stateName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsCurrentState'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsCurrentState(stateName);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)stateName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsCurrentState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsNextState of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_IsNextState00
+static int tolua_SandboxToLua_AgentAnimStateMachine_IsNextState00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+  const std::string stateName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsNextState'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsNextState(stateName);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)stateName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsNextState'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetCurrStateTime of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateTime00
+static int tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateTime00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurrStateTime'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetCurrStateTime();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCurrStateTime'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetCurrStateLength of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateLength00
+static int tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateLength00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurrStateLength'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetCurrStateLength();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCurrStateLength'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetCurrStateProgress of class  AgentAnimStateMachine */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateProgress00
+static int tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateProgress00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentAnimStateMachine",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentAnimStateMachine* self = (AgentAnimStateMachine*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetCurrStateProgress'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetCurrStateProgress();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetCurrStateProgress'.",&tolua_err);
  return 0;
 #endif
 }
@@ -4652,6 +4915,38 @@ static int tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00(lua_State* tol
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetAnimController of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetAnimController00
+static int tolua_SandboxToLua_SoldierObject_GetAnimController00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAnimController'", NULL);
+#endif
+  {
+   SoldierAnimController* tolua_ret = (SoldierAnimController*)  self->GetAnimController();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SoldierAnimController");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetAnimController'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: SetMaxHealth of class  SoldierObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetMaxHealth00
 static int tolua_SandboxToLua_SoldierObject_SetMaxHealth00(lua_State* tolua_S)
@@ -6107,6 +6402,39 @@ static int tolua_SandboxToLua_SandboxMgr_CreateSoldier00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetUseCppFsmFlag of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_SetUseCppFsmFlag00
+static int tolua_SandboxToLua_SandboxMgr_SetUseCppFsmFlag00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SandboxMgr",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SandboxMgr* self = (SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
+  bool value = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetUseCppFsmFlag'", NULL);
+#endif
+  {
+   self->SetUseCppFsmFlag(value);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetUseCppFsmFlag'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: UpdateSceneGraph of class  SandboxMgr */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00
 static int tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00(lua_State* tolua_S)
@@ -6899,7 +7227,15 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"RequestState",tolua_SandboxToLua_AgentAnimStateMachine_RequestState01);
    tolua_function(tolua_S,"GetCurrStateID",tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateID00);
    tolua_function(tolua_S,"GetCurrStateName",tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateName00);
+   tolua_function(tolua_S,"GetNextStateName",tolua_SandboxToLua_AgentAnimStateMachine_GetNextStateName00);
+   tolua_function(tolua_S,"GetDesiredStateName",tolua_SandboxToLua_AgentAnimStateMachine_GetDesiredStateName00);
    tolua_function(tolua_S,"HasNextState",tolua_SandboxToLua_AgentAnimStateMachine_HasNextState00);
+   tolua_function(tolua_S,"IsTransitioning",tolua_SandboxToLua_AgentAnimStateMachine_IsTransitioning00);
+   tolua_function(tolua_S,"IsCurrentState",tolua_SandboxToLua_AgentAnimStateMachine_IsCurrentState00);
+   tolua_function(tolua_S,"IsNextState",tolua_SandboxToLua_AgentAnimStateMachine_IsNextState00);
+   tolua_function(tolua_S,"GetCurrStateTime",tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateTime00);
+   tolua_function(tolua_S,"GetCurrStateLength",tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateLength00);
+   tolua_function(tolua_S,"GetCurrStateProgress",tolua_SandboxToLua_AgentAnimStateMachine_GetCurrStateProgress00);
    tolua_function(tolua_S,"AddState",tolua_SandboxToLua_AgentAnimStateMachine_AddState00);
    tolua_function(tolua_S,"AddTransition",tolua_SandboxToLua_AgentAnimStateMachine_AddTransition00);
   tolua_endmodule(tolua_S);
@@ -7013,6 +7349,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"HasNextAnim",tolua_SandboxToLua_SoldierObject_HasNextAnim00);
    tolua_function(tolua_S,"IsAnimReadyForMove",tolua_SandboxToLua_SoldierObject_IsAnimReadyForMove00);
    tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00);
+   tolua_function(tolua_S,"GetAnimController",tolua_SandboxToLua_SoldierObject_GetAnimController00);
    tolua_function(tolua_S,"SetMaxHealth",tolua_SandboxToLua_SoldierObject_SetMaxHealth00);
    tolua_function(tolua_S,"GetMaxHealth",tolua_SandboxToLua_SoldierObject_GetMaxHealth00);
    tolua_function(tolua_S,"SetAmmo",tolua_SandboxToLua_SoldierObject_SetAmmo00);
@@ -7058,6 +7395,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateBullet",tolua_SandboxToLua_SandboxMgr_CreateBullet00);
    tolua_function(tolua_S,"CreateAgent",tolua_SandboxToLua_SandboxMgr_CreateAgent00);
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_SandboxMgr_CreateSoldier00);
+   tolua_function(tolua_S,"SetUseCppFsmFlag",tolua_SandboxToLua_SandboxMgr_SetUseCppFsmFlag00);
    tolua_function(tolua_S,"UpdateSceneGraph",tolua_SandboxToLua_SandboxMgr_UpdateSceneGraph00);
    tolua_function(tolua_S,"DefaultConfig",tolua_SandboxToLua_SandboxMgr_DefaultConfig00);
    tolua_function(tolua_S,"ApplySettingConfig",tolua_SandboxToLua_SandboxMgr_ApplySettingConfig00);

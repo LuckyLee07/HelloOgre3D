@@ -128,6 +128,11 @@ SoldierObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const cha
 	return m_objectFactory.CreateSoldier(meshFile, filepath);
 }
 
+void SandboxMgr::SetUseCppFsmFlag(bool value)
+{
+    m_useCppFsmFlag = value;
+}
+
 void SandboxMgr::SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation)
 {
     const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);

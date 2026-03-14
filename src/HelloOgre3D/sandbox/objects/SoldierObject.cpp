@@ -37,9 +37,9 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 	m_maxAmmo = std::max(1, m_maxAmmo);
 	m_ammo = std::min(std::max(0, m_ammo), m_maxAmmo);
 
-	this->CreateEventDispatcher(); // 闁哄瀚伴埀顒傚Т閸ら亶寮导鏉戞濞达綀娉曢弫銈夋惞濮橆剙姣愰柡渚€顣︾槐鎵偓浣冨閸ぱ囧嫉椤忓嫮鏆板☉?
+	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
 
-	if (GetUseCppFSM()) // 濞达綀娉曢弫顥?+闁瑰瓨鐗為埀顒€宕箄a闁汇劌鍤擲M
+	if (GetUseCppFSM()) // 使用C++或者lua的FSM
 	{
 		m_stateController = new AgentStateController(this);
 		m_stateController->Init();

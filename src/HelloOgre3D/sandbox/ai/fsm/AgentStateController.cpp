@@ -52,6 +52,8 @@ void AgentStateController::Init()
 	AddState("FleeState");
 	AddState("RandomMoveState");
 
+	AddStateExByLua("MoveState", "res/scripts/agent/states/MoveState.lua");
+
 	AgentStateEvaluators::ConfigureSoldierTransitions(*this);
 
 	m_fsm->SetCurrentState("IdleState");

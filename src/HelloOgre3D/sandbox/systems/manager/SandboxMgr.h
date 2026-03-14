@@ -52,6 +52,7 @@ public:
 	//tolua_end
 	
 	Ogre::SceneManager* GetSceneCreator();
+	bool GetUseCppFsmFlag() { return m_useCppFsmFlag; }
 
 	//tolua_begin
 	void SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
@@ -73,6 +74,8 @@ public:
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 	
+	void SetUseCppFsmFlag(bool value); // 使用CppFSM标记
+
 	void UpdateSceneGraph(); // 强制刷新场景图
 	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
 	void ApplySettingConfig(rcConfig& config, float height, float radius, float climb);
@@ -84,6 +87,7 @@ public:
 	//tolua_end
 
 private:
+	bool m_useCppFsmFlag = true;
 	Ogre::SceneNode* m_pRootSceneNode = nullptr;
 
 	UIService m_uiService;

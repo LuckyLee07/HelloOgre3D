@@ -268,9 +268,12 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 #define USE_CPP_FSM 1
 bool AgentObject::GetUseCppFSM()
 {
+	/*
 #ifdef USE_CPP_FSM
 	return true;
 #else
 	return false;
 #endif // USE_CPP_FSM
+	*/
+	return g_SandboxMgr->GetUseCppFsmFlag();
 }

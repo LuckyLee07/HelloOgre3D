@@ -37,35 +37,35 @@ function EventHandle_Keyboard(keycode, pressed)
         Sandbox:CallFile("res/scripts/gui.lua")
         Sandbox:CallFile("res/scripts/agent.lua")
 
-    elseif (keycode == OIS.KC_1) then
+    elseif (IsNumKey(keycode, 1)) then
         soldierAsm:RequestState("melee")
-    elseif (keycode == OIS.KC_2) then
+    elseif (IsNumKey(keycode, 2)) then
         if weaponState == "sniper" and soldierAsm:RequestState("reload") then
             weaponAsm:RequestState("sniper_reload")
         end
-    elseif (keycode == OIS.KC_3) then
+    elseif (IsNumKey(keycode, 3)) then
         if weaponState == "sniper" then
             if soldierAsm:RequestState("smg_transform") then
                 weaponAsm:RequestState("smg_transform")
                 weaponState = "smg"
             end
         end
-    elseif (keycode == OIS.KC_4) then
+    elseif (IsNumKey(keycode, 4)) then
         if weaponState == "smg" then
             if soldierAsm:RequestState("sniper_transform") then
                 weaponAsm:RequestState("sniper_transform")
                 weaponState = "sniper"
             end
         end
-    elseif (keycode == OIS.KC_5) then
+    elseif (IsNumKey(keycode, 5)) then
         soldierAsm:RequestState("fire")
-    elseif (keycode == OIS.KC_6) then
+    elseif (IsNumKey(keycode, 6)) then
         soldierAsm:RequestState("run_forward")
-    elseif (keycode == OIS.KC_7) then
+    elseif (IsNumKey(keycode, 7)) then
         soldierAsm:RequestState("run_backward")
-    elseif (keycode == OIS.KC_8) then
+    elseif (IsNumKey(keycode, 8)) then
         soldierAsm:RequestState("dead")
-    elseif (keycode == OIS.KC_9) then
+    elseif (IsNumKey(keycode, 9)) then
         soldierAsm:RequestState("dead_headshot")
     elseif (keycode == OIS.KC_SPACE) then
     end
@@ -103,6 +103,9 @@ function Sandbox_Initialize(ctype)
     local camera = Sandbox:GetCamera();
     camera:setPosition(Vector3(0, 1, -3));
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
+
+    -- 使用lua端的fsm
+    Sandbox:SetUseCppFsmFlag(false)
     
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
     local soldierAgent = Sandbox:CreateSoldier(soldierPath)
@@ -221,6 +224,10 @@ function Sandbox_Update(deltaTimeInMillis)
             weaponAsm:RequestState("smg_idle")
         end
     end
+end
+
+
+function Agent_EventHandle(agent, keycode)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
