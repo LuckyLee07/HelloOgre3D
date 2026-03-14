@@ -183,20 +183,22 @@ bool SoldierCommandController::TryGetBodyAnimStateByCommandType(AgentCommandType
 	case AGENT_COMMAND_DIE:
 		outAnimState = SSTATE_DEAD;
 		return true;
+	case AGENT_COMMAND_RELOAD:
+		outAnimState = SSTATE_RELOAD;
+		return true;
+	case AGENT_COMMAND_WEAPON_TO_SMG:
+		outAnimState = SSTATE_SMG_TRANSFORM;
+		return true;
+	case AGENT_COMMAND_WEAPON_TO_SNIPER:
+		outAnimState = SSTATE_SNIPER_TRANSFORM;
+		return true;
 	default:
 		return false;
 	}
 }
 
-bool SoldierCommandController::TryResolveWeaponAnimStateByCommandType(SoldierObject& owner, AgentCommandType commandType, std::string& outWeaponStateName)
+bool SoldierCommandController::TryResolveWeaponAnimStateByCommandType(SoldierObject& owner, const AgentCommandType commandType, std::string& outWeaponStateName)
 {
-	if (commandType != AGENT_COMMAND_IDLE &&
-		commandType != AGENT_COMMAND_MOVE &&
-		commandType != AGENT_COMMAND_SHOOT)
-	{
-		return false;
-	}
-
 	RenderableObject* weapon = owner.getWeapon();
 	if (weapon == nullptr)
 	{
@@ -210,15 +212,29 @@ bool SoldierCommandController::TryResolveWeaponAnimStateByCommandType(SoldierObj
 	}
 
 	const std::string currentState = weaponAsm->GetCurrStateName();
-	if (currentState == "smg_idle" || currentState == "smg_transform")
+	const bool isSmgMode = (currentState == "smg_idle" || currentState == "smg_transform");
+	switch (commandType)
 	{
-		outWeaponStateName = "smg_idle";
+	case AGENT_COMMAND_IDLE:
+	case AGENT_COMMAND_MOVE:
+	case AGENT_COMMAND_SHOOT:
+	case AGENT_COMMAND_DIE:
+	case AGENT_COMMAND_FALLING:
+	case AGENT_COMMAND_CHANGE_STANCE:
+		outWeaponStateName = isSmgMode ? "smg_idle" : "sniper_idle";
+		return true;
+	case AGENT_COMMAND_RELOAD:
+		outWeaponStateName = isSmgMode ? "smg_idle" : "sniper_reload";
+		return true;
+	case AGENT_COMMAND_WEAPON_TO_SMG:
+		outWeaponStateName = isSmgMode ? "smg_idle" : "smg_transform";
+		return true;
+	case AGENT_COMMAND_WEAPON_TO_SNIPER:
+		outWeaponStateName = isSmgMode ? "sniper_transform" : "sniper_idle";
+		return true;
+	default:
+		return false;
 	}
-	else
-	{
-		outWeaponStateName = "sniper_idle";
-	}
-	return true;
 }
 
 bool SoldierCommandController::TryGetCommandTypeByAnimStateId(int animStateId, AgentCommandType& outCommandType)
@@ -241,6 +257,26 @@ bool SoldierCommandController::TryGetCommandTypeByAnimStateId(int animStateId, A
 	if (animStateId == SSTATE_DEAD || animStateId == CROUCH_SSTATE_DEAD)
 	{
 		outCommandType = AGENT_COMMAND_DIE;
+		return true;
+	}
+	if (animStateId == SSTATE_FALL_IDLE || animStateId == SSTATE_FALL_DEAD)
+	{
+		outCommandType = AGENT_COMMAND_FALLING;
+		return true;
+	}
+	if (animStateId == SSTATE_RELOAD)
+	{
+		outCommandType = AGENT_COMMAND_RELOAD;
+		return true;
+	}
+	if (animStateId == SSTATE_SMG_TRANSFORM)
+	{
+		outCommandType = AGENT_COMMAND_WEAPON_TO_SMG;
+		return true;
+	}
+	if (animStateId == SSTATE_SNIPER_TRANSFORM)
+	{
+		outCommandType = AGENT_COMMAND_WEAPON_TO_SNIPER;
 		return true;
 	}
 
@@ -340,6 +376,14 @@ void SoldierCommandController::HandleAsmStateChange(int stateId, int eventType)
 		}
 		return;
 	}
+	if (command->type == AGENT_COMMAND_FALLING)
+	{
+		if (isEnterEvent && stateId == SSTATE_FALL_DEAD && m_owner.GetHealth() > 0.0f)
+		{
+			m_owner.SetHealth(0.0f);
+		}
+		return;
+	}
 
 	bool canAdvance = false;
 	if (command->type == AGENT_COMMAND_SHOOT)
@@ -359,6 +403,18 @@ void SoldierCommandController::HandleAsmStateChange(int stateId, int eventType)
 
 void SoldierCommandController::Update(int deltaMs)
 {
+	const CommandRequest* currentBeforeUpdate = m_impl->scheduler.GetCurrentCommand();
+	const bool isDeadBeforeUpdate = (currentBeforeUpdate && currentBeforeUpdate->type == AGENT_COMMAND_DIE);
+	const bool isFallingBeforeUpdate = (currentBeforeUpdate && currentBeforeUpdate->type == AGENT_COMMAND_FALLING);
+	if (m_owner.GetHealth() > 0.0f &&
+		!isDeadBeforeUpdate &&
+		m_owner.IsFalling() &&
+		!isFallingBeforeUpdate)
+	{
+		CommandRequest request(AGENT_COMMAND_FALLING, 900, true, -1, 0, "AUTO_FALLING");
+		m_impl->scheduler.ImmediateCommand(request);
+	}
+
 	if (!m_impl->scheduler.HasCurrentOrPending())
 	{
 		return;
@@ -394,6 +450,15 @@ void SoldierCommandController::Update(int deltaMs)
 			m_owner.SlowMoving(2.0f);
 		}
 	}
+	else if (command->type == AGENT_COMMAND_RELOAD ||
+		command->type == AGENT_COMMAND_WEAPON_TO_SMG ||
+		command->type == AGENT_COMMAND_WEAPON_TO_SNIPER)
+	{
+		if (m_owner.IsMoving())
+		{
+			m_owner.SlowMoving(1.0f);
+		}
+	}
 
 	if (command->type == AGENT_COMMAND_CHANGE_STANCE)
 	{
@@ -419,6 +484,36 @@ void SoldierCommandController::Update(int deltaMs)
 		if (hasResumeRequest)
 		{
 			m_impl->scheduler.ImmediateCommand(resumeRequest);
+		}
+		return;
+	}
+	if (command->type == AGENT_COMMAND_FALLING)
+	{
+		const int currStateId = m_owner.GetCurStateId();
+		if (m_owner.IsFalling())
+		{
+			if (currStateId != SSTATE_FALL_IDLE && currStateId != SSTATE_FALL_DEAD)
+			{
+				m_owner.RequestState(SSTATE_FALL_IDLE, false);
+			}
+		}
+		else
+		{
+			if (currStateId != SSTATE_FALL_DEAD)
+			{
+				m_owner.RequestState(SSTATE_FALL_DEAD, false);
+			}
+			else if (m_owner.GetHealth() > 0.0f)
+			{
+				// Event-driven path is primary. This keeps behavior forward-progressing if events are lost.
+				m_owner.SetHealth(0.0f);
+			}
+		}
+
+		std::string weaponStateName;
+		if (TryResolveWeaponAnimStateByCommandType(m_owner, command->type, weaponStateName))
+		{
+			m_owner.RequestWeaponState(weaponStateName, false);
 		}
 		return;
 	}

@@ -28,7 +28,7 @@ public:
 
 private:
 	static bool TryGetBodyAnimStateByCommandType(AgentCommandType commandType, int& outAnimState);
-	static bool TryResolveWeaponAnimStateByCommandType(SoldierObject& owner, AgentCommandType commandType, std::string& outWeaponStateName);
+	static bool TryResolveWeaponAnimStateByCommandType(SoldierObject& owner, const AgentCommandType commandType, std::string& outWeaponStateName);
 	static bool TryGetCommandTypeByAnimStateId(int animStateId, AgentCommandType& outCommandType);
 	static bool IsShootAnimStateId(int animStateId);
 
