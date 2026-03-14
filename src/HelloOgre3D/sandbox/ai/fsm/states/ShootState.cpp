@@ -24,11 +24,13 @@ void ShootState::OnLeave()
 
 std::string ShootState::OnUpdate(float dt)
 {
-	if (m_pAgent->IsMoving())
+	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
+	if (!useCommandScheduler && m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving();
 	}
-	if (!m_pAgent->IsAnimReadyByFsmState(m_stateId))
+
+	if (!useCommandScheduler && !m_pAgent->IsAnimReadyByFsmState(m_stateId))
 	{
 		if (!m_pAgent->HasNextAnim())
 		{

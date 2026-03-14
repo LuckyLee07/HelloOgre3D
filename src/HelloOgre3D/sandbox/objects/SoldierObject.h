@@ -2,6 +2,7 @@
 #define __SOLDIER_OBJECT__
 
 #include "AgentObject.h"
+#include "ai/command/AgentCommandScheduler.h"
 #include "ai/fsm/AgentStateController.h"
 
 class IPlayerInput;
@@ -34,12 +35,23 @@ public:
 
 	//tolua_end
 
+	bool QueueCommand(AgentCommandType commandType, int priority = 0, int arg = 0, const std::string& source = "") override;
+	bool ImmediateCommand(AgentCommandType commandType, int priority = 100, int arg = 0, const std::string& source = "") override;
+	void ClearCommands() override;
+	bool HasPendingCommands() const override;
+	bool HasCurrentCommand() const override;
+	int GetPendingCommandCount() const override;
+	AgentCommandType GetCurrentCommandType() const override;
+	AgentCommandType GetPreviousCommandType() const override;
+
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 
 private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
+	void UpdateCommandScheduler(int deltaMs);
+	void HandleAsmCommandEvent(int stateId, int eventType);
 
 protected:
 	void CreateEventDispatcher();
@@ -54,6 +66,7 @@ private:
 
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
+	AgentCommandScheduler* m_commandScheduler;
 
 }; //tolua_exports
 

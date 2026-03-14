@@ -8,6 +8,7 @@
 #include "object/LuaEnvObject.h"
 #include "GameDefine.h"
 #include "systems/input/IPlayerInput.h"
+#include "ai/command/AgentCommandScheduler.h"
 
 namespace Ogre {
 	class SceneNode;
@@ -62,6 +63,15 @@ public:
 	virtual bool IsAnimReadyForShoot() { return false; }
 
 	//tolua_end
+
+	virtual bool QueueCommand(AgentCommandType commandType, int priority = 0, int arg = 0, const std::string& source = "") { return false; }
+	virtual bool ImmediateCommand(AgentCommandType commandType, int priority = 100, int arg = 0, const std::string& source = "") { return false; }
+	virtual void ClearCommands() {}
+	virtual bool HasPendingCommands() const { return false; }
+	virtual bool HasCurrentCommand() const { return false; }
+	virtual int GetPendingCommandCount() const { return 0; }
+	virtual AgentCommandType GetCurrentCommandType() const { return AGENT_COMMAND_NONE; }
+	virtual AgentCommandType GetPreviousCommandType() const { return AGENT_COMMAND_NONE; }
 	
 	virtual void OnDeath(float lastSec);
 	virtual void SlowMoving(float rate = 1.0f);

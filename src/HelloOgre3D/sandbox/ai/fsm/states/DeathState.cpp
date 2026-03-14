@@ -24,7 +24,8 @@ void DeathState::OnLeave()
 
 std::string DeathState::OnUpdate(float dt)
 {
-	if (m_pAgent->IsMoving())
+	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
+	if (!useCommandScheduler && m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving(2.0f);
 	}
@@ -32,7 +33,10 @@ std::string DeathState::OnUpdate(float dt)
 	{
 		if (!m_pAgent->IsAnimReadyByFsmState(m_stateId))
 		{
-			m_pAgent->RequestAnimByFsmState(m_stateId);
+			if (!useCommandScheduler)
+			{
+				m_pAgent->RequestAnimByFsmState(m_stateId);
+			}
 		}
 		else
 		{

@@ -5,6 +5,7 @@
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "ai/fsm/AgentStateController.h"
+#include "ai/command/AgentCommandScheduler.h"
 #include "systems/input/PlayerInput.h"
 #include "ai/fsm/states/AgentState.h"
 #include "GameFunction.h"
@@ -46,10 +47,57 @@ namespace
 		}
 		return false;
 	}
+
+	bool TryGetAnimStateByCommandType(AgentCommandType commandType, SOLDIER_STATE& outAnimState)
+	{
+		switch (commandType)
+		{
+		case AGENT_COMMAND_IDLE:
+			outAnimState = SSTATE_IDLE_AIM;
+			return true;
+		case AGENT_COMMAND_MOVE:
+			outAnimState = SSTATE_RUN_FORWARD;
+			return true;
+		case AGENT_COMMAND_SHOOT:
+			outAnimState = SSTATE_FIRE;
+			return true;
+		case AGENT_COMMAND_DIE:
+			outAnimState = SSTATE_DEAD;
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	bool TryGetCommandTypeByAnimStateId(int animStateId, AgentCommandType& outCommandType)
+	{
+		if (animStateId == SSTATE_IDLE_AIM || animStateId == CROUCH_SSTATE_IDLE_AIM)
+		{
+			outCommandType = AGENT_COMMAND_IDLE;
+			return true;
+		}
+		if (animStateId == SSTATE_RUN_FORWARD || animStateId == CROUCH_SSTATE_FORWARD)
+		{
+			outCommandType = AGENT_COMMAND_MOVE;
+			return true;
+		}
+		if (animStateId == SSTATE_FIRE || animStateId == CROUCH_SSTATE_FIRE)
+		{
+			outCommandType = AGENT_COMMAND_SHOOT;
+			return true;
+		}
+		if (animStateId == SSTATE_DEAD || animStateId == CROUCH_SSTATE_DEAD)
+		{
+			outCommandType = AGENT_COMMAND_DIE;
+			return true;
+		}
+
+		return false;
+	}
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_stateController(nullptr), m_commandScheduler(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -60,6 +108,8 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 		m_stateController = new AgentStateController(this);
 		m_stateController->Init();
 	}
+
+	m_commandScheduler = new AgentCommandScheduler();
 }
 
 SoldierObject::~SoldierObject()
@@ -67,6 +117,7 @@ SoldierObject::~SoldierObject()
 	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_stateController);
+	SAFE_DELETE(m_commandScheduler);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -77,6 +128,8 @@ void SoldierObject::CreateEventDispatcher()
 	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		int stateId = (int)context.Get_Number("StateId");
 		int eventType = (int)context.Get_Number("EventType");
+		HandleAsmCommandEvent(stateId, eventType);
+
 		bool isEnterOrLoop = (eventType == AgentAnimStateMachine::ASM_EVENT_ENTER ||
 			eventType == AgentAnimStateMachine::ASM_EVENT_LOOP ||
 			eventType == 0);
@@ -144,6 +197,8 @@ void SoldierObject::Update(int deltaMilisec)
 
 	if (m_stateController)
 		m_stateController->Update((float)deltaMilisec);
+
+	UpdateCommandScheduler(deltaMilisec);
 
 	m_pAgentBody->Update(deltaMilisec);
 	SyncWeaponToHandBone();
@@ -459,4 +514,270 @@ bool SoldierObject::IsAnimReadyForMove()
 bool SoldierObject::IsAnimReadyForShoot()
 {
 	return IsAnimReadyByFsmState("ShootState");
+}
+
+bool SoldierObject::QueueCommand(AgentCommandType commandType, int priority /*= 0*/, int arg /*= 0*/, const std::string& source /*= ""*/)
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return false;
+	}
+
+	AgentCommandRequest request(commandType, priority, false, -1, arg, source);
+	m_commandScheduler->QueueCommand(request);
+	return true;
+}
+
+bool SoldierObject::ImmediateCommand(AgentCommandType commandType, int priority /*= 100*/, int arg /*= 0*/, const std::string& source /*= ""*/)
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return false;
+	}
+
+	if (commandType == AGENT_COMMAND_DIE)
+	{
+		// Terminal command should preempt and discard queued intents.
+		m_commandScheduler->Clear();
+	}
+
+	AgentCommandRequest request(commandType, priority, true, -1, arg, source);
+	m_commandScheduler->ImmediateCommand(request);
+	return true;
+}
+
+void SoldierObject::ClearCommands()
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return;
+	}
+
+	m_commandScheduler->Clear();
+}
+
+bool SoldierObject::HasPendingCommands() const
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return false;
+	}
+
+	return m_commandScheduler->HasPendingCommands();
+}
+
+bool SoldierObject::HasCurrentCommand() const
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return false;
+	}
+
+	return m_commandScheduler->HasCurrentCommand();
+}
+
+int SoldierObject::GetPendingCommandCount() const
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return 0;
+	}
+
+	return m_commandScheduler->GetPendingCommandCount();
+}
+
+AgentCommandType SoldierObject::GetCurrentCommandType() const
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return AGENT_COMMAND_NONE;
+	}
+
+	const AgentCommandRequest* current = m_commandScheduler->GetCurrentCommand();
+	if (current == nullptr)
+	{
+		return AGENT_COMMAND_NONE;
+	}
+
+	return current->type;
+}
+
+AgentCommandType SoldierObject::GetPreviousCommandType() const
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return AGENT_COMMAND_NONE;
+	}
+
+	const AgentCommandRequest* previous = m_commandScheduler->GetPreviousCommand();
+	if (previous == nullptr)
+	{
+		return AGENT_COMMAND_NONE;
+	}
+
+	return previous->type;
+}
+
+void SoldierObject::HandleAsmCommandEvent(int stateId, int eventType)
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return;
+	}
+
+	const AgentCommandRequest* command = m_commandScheduler->GetCurrentCommand();
+	if (command == nullptr)
+	{
+		return;
+	}
+
+	AgentCommandType eventCommandType = AGENT_COMMAND_NONE;
+	if (!TryGetCommandTypeByAnimStateId(stateId, eventCommandType))
+	{
+		return;
+	}
+
+	if (eventCommandType != command->type)
+	{
+		return;
+	}
+
+	if (command->type == AGENT_COMMAND_DIE)
+	{
+		return;
+	}
+
+	bool isEnterEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_ENTER || eventType == 0);
+	bool isLoopEvent = (eventType == AgentAnimStateMachine::ASM_EVENT_LOOP);
+	bool canAdvance = false;
+
+	if (command->type == AGENT_COMMAND_SHOOT)
+	{
+		canAdvance = isEnterEvent || isLoopEvent;
+	}
+	else
+	{
+		canAdvance = isEnterEvent;
+	}
+
+	if (canAdvance && m_commandScheduler->HasPendingCommands())
+	{
+		m_commandScheduler->FinishCurrentCommand();
+	}
+}
+
+void SoldierObject::UpdateCommandScheduler(int deltaMs)
+{
+	if (m_commandScheduler == nullptr)
+	{
+		return;
+	}
+
+	if (!m_commandScheduler->HasCurrentOrPending())
+	{
+		return;
+	}
+
+	m_commandScheduler->Update(deltaMs);
+	m_commandScheduler->TryStartNextCommand();
+
+	const AgentCommandRequest* command = m_commandScheduler->GetCurrentCommand();
+	if (command == nullptr)
+	{
+		return;
+	}
+
+	if (command->type == AGENT_COMMAND_IDLE)
+	{
+		if (IsMoving())
+		{
+			SlowMoving(2.0f);
+		}
+	}
+	else if (command->type == AGENT_COMMAND_SHOOT)
+	{
+		if (IsMoving())
+		{
+			SlowMoving(1.0f);
+		}
+	}
+	else if (command->type == AGENT_COMMAND_DIE)
+	{
+		if (IsMoving())
+		{
+			SlowMoving(2.0f);
+		}
+	}
+
+	if (command->type == AGENT_COMMAND_CHANGE_STANCE)
+	{
+		AgentCommandRequest resumeRequest;
+		bool hasResumeRequest = false;
+		if (!m_commandScheduler->HasPendingCommands())
+		{
+			const AgentCommandRequest* previous = m_commandScheduler->GetPreviousCommand();
+			if (previous &&
+				previous->type != AGENT_COMMAND_CHANGE_STANCE &&
+				previous->type != AGENT_COMMAND_DIE &&
+				previous->type != AGENT_COMMAND_NONE)
+			{
+				resumeRequest = *previous;
+				resumeRequest.interrupt = true;
+				resumeRequest.ResetElapsed();
+				hasResumeRequest = true;
+			}
+		}
+
+		changeStanceType(command->arg);
+		m_commandScheduler->FinishCurrentCommand();
+		if (hasResumeRequest)
+		{
+			m_commandScheduler->ImmediateCommand(resumeRequest);
+		}
+		return;
+	}
+
+	SOLDIER_STATE requestState = SSTATE_MAXCOUNT;
+	if (!TryGetAnimStateByCommandType(command->type, requestState))
+	{
+		m_commandScheduler->FinishCurrentCommand();
+		return;
+	}
+
+	if (command->type == AGENT_COMMAND_SHOOT)
+	{
+		RequestState((int)requestState, true);
+	}
+	else
+	{
+		RequestState((int)requestState, false);
+	}
+
+	// Keep terminal command executing forever, aligned with old DIE command semantics.
+	if (command->type == AGENT_COMMAND_DIE)
+	{
+		return;
+	}
+
+	// Fallback: if we're already in target state and have pending commands,
+	// advance even when ASM events are not available.
+	if (m_commandScheduler->HasPendingCommands() && !HasNextAnim())
+	{
+		SOLDIER_STATE animState = SSTATE_MAXCOUNT;
+		if (TryGetAnimStateByCommandType(command->type, animState))
+		{
+			AgentAnimStateMachine* pAsm = getBody() ? getBody()->GetObjectASM() : nullptr;
+			if (pAsm == nullptr)
+			{
+				return;
+			}
+
+			SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
+			SOLDIER_STATE expectedState = (SOLDIER_STATE)ConvertAnimID((int)animState, getStanceType());
+			if (currState == expectedState)
+			{
+				m_commandScheduler->FinishCurrentCommand();
+			}
+		}
+	}
 }

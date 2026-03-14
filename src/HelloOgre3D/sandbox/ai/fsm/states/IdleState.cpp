@@ -23,7 +23,8 @@ void IdleState::OnLeave()
 
 std::string IdleState::OnUpdate(float dt)
 {
-	if (m_pAgent->IsMoving())
+	bool useCommandScheduler = m_pAgent->HasCurrentCommand() || m_pAgent->HasPendingCommands();
+	if (!useCommandScheduler && m_pAgent->IsMoving())
 	{
 		m_pAgent->SlowMoving(2.0f);
 	}
