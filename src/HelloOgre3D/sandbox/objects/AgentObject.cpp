@@ -10,11 +10,13 @@
 #include "systems/manager/ObjectManager.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "systems/physics/Collision.h"
+#include "BlockObject.h"
 #include <algorithm>
 
 using namespace Ogre;
 
 static std::string g_EmptyStr = "";
+
 
 AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
@@ -38,7 +40,7 @@ void AgentObject::CreateEventDispatcher()
 	Event()->CreateDispatcher("HEALTH_CHANGE");
 	Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
 		double health = context.Get_Number("health");
-		if (health <= 0.0) this->OnDeath(3.5f);
+		if (health <= 0.0 && !GetUseCppFSM()) this->OnDeath(3.5f);
 	});
 }
 
@@ -242,6 +244,7 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	}
 
 	pBullet->SetNeedClear();
+	BlockObject::SpawnBulletImpact(collision);
 	const Ogre::Real damage = 5.0f;
 	this->SetHealth(std::max<Ogre::Real>(0.0f, GetHealth() - damage));
 }

@@ -164,7 +164,7 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	if (objType == OBJ_TYPE_BULLET) // 子弹类型
 	{
 		pCollideObj->SetNeedClear(); // 标记为清理
-		this->setBulletCollideImpact(collision);
+		SpawnBulletImpact(collision);
 	}
 }
 
@@ -173,7 +173,7 @@ void BlockObject::addParticleNode(Ogre::SceneNode* particleNode)
 	m_particleNodes.push_back(particleNode);
 }
 
-void BlockObject::setBulletCollideImpact(const Collision& collision)
+void BlockObject::SpawnBulletImpact(const Collision& collision)
 {
 	// 创建射击碰撞效果
 	Ogre::SceneNode* pRootScene = GetGameManager()->getRootSceneNode();

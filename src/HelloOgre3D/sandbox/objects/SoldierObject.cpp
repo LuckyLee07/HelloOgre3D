@@ -370,30 +370,48 @@ AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
 	return nearestEnemy;
 }
 
+void SoldierObject::SetEnemy(AgentObject* enemy)
+{
+	m_enemy = enemy;
+	m_enemyId = enemy ? static_cast<int>(enemy->GetObjId()) : -1;
+}
+
+AgentObject* SoldierObject::GetEnemy() const
+{
+	if (m_enemy == nullptr || m_enemyId < 0 || !g_ObjectManager)
+	{
+		return m_enemy;
+	}
+
+	BaseObject* object = g_ObjectManager->getObjectById(m_enemyId);
+	return object == m_enemy ? dynamic_cast<AgentObject*>(object) : nullptr;
+}
+
 bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
 {
-	if (IsEnemyValid(m_enemy, navMeshName, true))
+	AgentObject* enemy = GetEnemy();
+	if (IsEnemyValid(enemy, navMeshName, true))
 	{
 		return true;
 	}
 
-	m_enemy = FindNearestEnemy(navMeshName);
-	return m_enemy != nullptr;
+	SetEnemy(FindNearestEnemy(navMeshName));
+	return GetEnemy() != nullptr;
 }
 
 bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
-	if (!IsEnemyValid(m_enemy, navMeshName, false))
+	AgentObject* enemy = GetEnemy();
+	if (!IsEnemyValid(enemy, navMeshName, false))
 	{
 		return false;
 	}
 
 	const float distance = std::max(0.0f, shootDistance);
 	const float shootSquared = distance * distance;
-	const float distSquared = GetPosition().squaredDistance(m_enemy->GetPosition());
+	const float distSquared = GetPosition().squaredDistance(enemy->GetPosition());
 	return distSquared < shootSquared;
 }
-
 bool SoldierObject::HasMovePosition(float reachDistance) const
 {
 	const float distance = std::max(0.0f, reachDistance);

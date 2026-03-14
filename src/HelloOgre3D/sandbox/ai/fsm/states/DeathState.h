@@ -9,10 +9,13 @@ public:
 	DeathState(AgentObject* pAgent);
 	virtual ~DeathState();
 
-	void OnEnter();
-	void OnLeave();
-	std::string OnUpdate(float deltaTime);
-};
+	void OnEnter() override;
+	void OnLeave() override;
+	std::string OnUpdate(float deltaTime) override;
 
+private:
+	float m_elapsedMs;
+	bool m_cleanupQueued;
+};
 
 #endif  // __DEATH_STATE_H__

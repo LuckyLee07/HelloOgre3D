@@ -1,4 +1,4 @@
-﻿#include "AgentStateController.h"
+#include "AgentStateController.h"
 
 #include <utility>
 #include <vector>
@@ -11,6 +11,7 @@
 #include "AgentFSM.h"
 #include "states/AgentLuaState.h"
 #include "LogSystem.h"
+#include "systems/manager/ObjectManager.h"
 #include "systems/manager/SandboxMgr.h"
 
 namespace
@@ -177,8 +178,18 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 	Ogre::Vector3 avoidObjectForce = m_agent->ForceToAvoidObjects(0.5f);
 	Ogre::Vector3 followForce = m_agent->ForceToFollowPath(0.5f);
 	Ogre::Vector3 stayForce = m_agent->ForceToStayOnPath(0.5f);
+	Ogre::Vector3 separationForce = Ogre::Vector3::ZERO;
+	if (g_ObjectManager)
+	{
+		separationForce = m_agent->ForceToSeparate(g_ObjectManager->getAllAgents(), 1.25f, 180.0f);
+	}
 
-	Ogre::Vector3 totalForces = followForce * 1.5f + stayForce * 0.4f + avoidForce + avoidObjectForce * 2.0f;
+	Ogre::Vector3 totalForces =
+		followForce * 1.5f +
+		stayForce * 0.4f +
+		avoidForce +
+		separationForce * 1.25f +
+		avoidObjectForce * 2.0f;
 
 	const Ogre::Real targetSpeed = m_agent->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
 	if (m_agent->GetSpeed() < targetSpeed)
@@ -202,21 +213,24 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 	m_agent->ApplyForce(totalForces);
 
 	const Ogre::Vector3 acceleration = totalForces / m_agent->GetMass();
-	Ogre::Vector3 velocity = m_agent->GetVelocity() + (acceleration * deltaTimeInSeconds);
-	velocity.y = 0.0f;
-
+	const Ogre::Vector3 currentVelocity = m_agent->GetVelocity();
+	Ogre::Vector3 velocity = currentVelocity + (acceleration * deltaTimeInSeconds);
 	m_agent->SetVelocity(velocity);
 
-	if (!velocity.isZeroLength())
+	Ogre::Vector3 horizontalVelocity = velocity;
+	horizontalVelocity.y = 0.0f;
+	if (!horizontalVelocity.isZeroLength())
 	{
-		m_agent->SetForward(velocity);
+		m_agent->SetForward(horizontalVelocity);
 	}
 
 	const Ogre::Real maxSpeed = m_agent->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
-	if (!velocity.isZeroLength() && velocity.squaredLength() > (maxSpeed * maxSpeed))
+	if (!horizontalVelocity.isZeroLength() && horizontalVelocity.squaredLength() > (maxSpeed * maxSpeed))
 	{
-		Ogre::Vector3 clamped = velocity.normalisedCopy() * maxSpeed;
-		clamped.y = 0.0f;
+		Ogre::Vector3 clampedHorizontal = horizontalVelocity.normalisedCopy() * maxSpeed;
+		Ogre::Vector3 clamped = velocity;
+		clamped.x = clampedHorizontal.x;
+		clamped.z = clampedHorizontal.z;
 		m_agent->SetVelocity(clamped);
 	}
 }

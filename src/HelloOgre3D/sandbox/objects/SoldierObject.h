@@ -45,7 +45,7 @@ public:
 
 	bool HasEnemy(const Ogre::String& navMeshName = "default");
 	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
-	AgentObject* GetEnemy() const { return m_enemy; }
+	AgentObject* GetEnemy() const;
 
 	bool HasMovePosition(float reachDistance = 1.5f) const;
 	void SetMovePosition(const Ogre::Vector3& movePos);
@@ -59,6 +59,7 @@ private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
+	void SetEnemy(AgentObject* enemy);
 	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 
@@ -78,6 +79,7 @@ private:
 	int m_maxAmmo = 10;
 
 	AgentObject* m_enemy = nullptr;
+	int m_enemyId = -1;
 	bool m_hasMovePos = false;
 	Ogre::Vector3 m_movePos = Ogre::Vector3::ZERO;
 

@@ -50,7 +50,6 @@ public:
 	//tolua_end
 
 	void addParticleNode(Ogre::SceneNode* particleNode);
-	void setBulletCollideImpact(const Collision& collision); //设置子弹碰撞后的效果
 	void SetOwner(BaseObject* owner) { m_ownerObject = owner; }
 	BaseObject* GetOwner() const { return m_ownerObject; }
 
@@ -58,6 +57,8 @@ public:
 
 	Ogre::Entity* GetEntity() const;
 	Ogre::SceneNode* GetSceneNode();
+
+	static void SpawnBulletImpact(const Collision& collision); //设置子弹碰撞后的效果
 
 public:
 	OpenSteer::Vec3 getPosition() const;
