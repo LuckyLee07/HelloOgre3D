@@ -10,7 +10,7 @@ namespace
 {
 	void StabilizeReloadMovement(AgentObject* agent)
 	{
-		if (!agent)
+		if (!agent || !agent->OnGround())
 		{
 			return;
 		}
@@ -21,8 +21,8 @@ namespace
 
 		if (!velocity.isZeroLength())
 		{
-			velocity *= 0.55f;
-			if (velocity.squaredLength() < 0.09f)
+			velocity *= 0.45f;
+			if (velocity.squaredLength() < (1.15f * 1.15f))
 			{
 				velocity = Ogre::Vector3::ZERO;
 			}

@@ -45,6 +45,7 @@ std::string IdleState::OnUpdate(float dt)
 	if (actions)
 	{
 		actions->SlowMovement(2.0f);
+		actions->StabilizeStationaryMovement(0.6f, 0.85f);
 	}
 	else if (m_pAgent->IsMoving())
 	{

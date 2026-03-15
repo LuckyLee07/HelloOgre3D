@@ -130,6 +130,33 @@ void AgentActionContext::SlowMovement(float rate)
 	}
 }
 
+void AgentActionContext::StabilizeStationaryMovement(float damping, float stopSpeed)
+{
+	AgentObject* agent = GetAgent();
+	if (!agent || !agent->OnGround())
+	{
+		return;
+	}
+
+	Ogre::Vector3 velocity = agent->GetVelocity();
+	const Ogre::Real yMovement = velocity.y;
+	velocity.y = 0.0f;
+
+	if (velocity.isZeroLength())
+	{
+		return;
+	}
+
+	velocity *= damping;
+	if (velocity.squaredLength() < (stopSpeed * stopSpeed))
+	{
+		velocity = Ogre::Vector3::ZERO;
+	}
+
+	velocity.y = yMovement;
+	agent->SetVelocity(velocity);
+}
+
 void AgentActionContext::TickMovement(float deltaTimeInMillis, bool slowMode)
 {
 	AgentObject* agent = GetAgent();

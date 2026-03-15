@@ -72,6 +72,7 @@ std::string ShootState::OnUpdate(float dt)
 		}
 
 		actions->SlowMovement();
+		actions->StabilizeStationaryMovement(0.65f, 0.95f);
 		actions->FaceEnemy();
 
 		if (!m_shotConsumed && actions->ConsumeShootExecution())
