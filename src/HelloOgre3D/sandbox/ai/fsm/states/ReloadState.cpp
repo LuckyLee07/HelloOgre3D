@@ -6,6 +6,33 @@
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 
+namespace
+{
+	void StabilizeReloadMovement(AgentObject* agent)
+	{
+		if (!agent)
+		{
+			return;
+		}
+
+		Ogre::Vector3 velocity = agent->GetVelocity();
+		const Ogre::Real yMovement = velocity.y;
+		velocity.y = 0.0f;
+
+		if (!velocity.isZeroLength())
+		{
+			velocity *= 0.55f;
+			if (velocity.squaredLength() < 0.09f)
+			{
+				velocity = Ogre::Vector3::ZERO;
+			}
+		}
+
+		velocity.y = yMovement;
+		agent->SetVelocity(velocity);
+	}
+}
+
 ReloadState::ReloadState(AgentObject* pAgent)
 	: AgentState(pAgent)
 	, m_elapsedMs(0.0f)
@@ -52,6 +79,8 @@ std::string ReloadState::OnUpdate(float dt)
 		SetTerminated(true);
 		return "";
 	}
+
+	StabilizeReloadMovement(m_pAgent);
 
 	m_elapsedMs += dt;
 	if (m_elapsedMs < 120.0f)
