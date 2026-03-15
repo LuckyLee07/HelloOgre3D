@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar 14 20:30:54 2026.
+** Generated automatically by tolua++-1.0.92 on Sun Mar 15 09:13:23 2026.
 */
 
 #ifndef __cplusplus
@@ -1357,14 +1357,14 @@ static int tolua_SandboxToLua_BaseObject_GetObjId00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const BaseObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  const BaseObject* self = (const BaseObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjId'", NULL);
 #endif
@@ -1377,6 +1377,71 @@ static int tolua_SandboxToLua_BaseObject_GetObjId00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetObjId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetTeamId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_GetTeamId00
+static int tolua_SandboxToLua_BaseObject_GetTeamId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BaseObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BaseObject* self = (const BaseObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetTeamId'", NULL);
+#endif
+  {
+   unsigned int tolua_ret = (unsigned int)  self->GetTeamId();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetTeamId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetTeamId of class  BaseObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BaseObject_SetTeamId00
+static int tolua_SandboxToLua_BaseObject_SetTeamId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BaseObject",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BaseObject* self = (BaseObject*)  tolua_tousertype(tolua_S,1,0);
+  unsigned int teamId = ((unsigned int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetTeamId'", NULL);
+#endif
+  {
+   self->SetTeamId(teamId);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetTeamId'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6132,6 +6197,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"BaseObject","BaseObject","SandboxObject",NULL);
   tolua_beginmodule(tolua_S,"BaseObject");
    tolua_function(tolua_S,"GetObjId",tolua_SandboxToLua_BaseObject_GetObjId00);
+   tolua_function(tolua_S,"GetTeamId",tolua_SandboxToLua_BaseObject_GetTeamId00);
+   tolua_function(tolua_S,"SetTeamId",tolua_SandboxToLua_BaseObject_SetTeamId00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"RenderableObject","RenderableObject","",NULL);
   tolua_beginmodule(tolua_S,"RenderableObject");

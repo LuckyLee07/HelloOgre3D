@@ -3,7 +3,7 @@
 #include "SandboxMacros.h"
 
 BaseObject::BaseObject()
-	: m_objId(0), m_liveTicks(0), m_needClearTicks(-1)
+	: m_objId(0), m_teamId(0), m_liveTicks(0), m_needClearTicks(-1)
 {
 	m_objType = OBJ_TYPE_NONE;
 	m_pGameObjet = new GameObject();
@@ -15,9 +15,19 @@ BaseObject::~BaseObject()
 	SAFE_DELETE(m_pGameObjet);
 }
 
-unsigned int BaseObject::GetObjId()
+unsigned int BaseObject::GetObjId() const
 {
 	return m_objId;
+}
+
+unsigned int BaseObject::GetTeamId() const
+{
+	return m_teamId;
+}
+
+void BaseObject::SetTeamId(unsigned int teamId)
+{
+	m_teamId = teamId;
 }
 
 BaseObject::ObjectType BaseObject::GetObjType()

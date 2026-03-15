@@ -1,6 +1,6 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
-require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
+require("res.scripts.agent.IndirectSoldierAgent.lua")
 
 local textSize = {w = 300, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -26,7 +26,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 local _agents = {}
 
 local function _GetFilePath(luafile)
-    return "res/scripts/samples/chapter4/".. luafile;
+    return "res/scripts/agent/".. luafile;
 end
 
 local function _DrawPaths()
@@ -35,31 +35,6 @@ local function _DrawPaths()
         -- geometry.
         DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
         DebugDrawer:drawSquare(agent:GetTarget(), 0.1, UtilColors.Red, true);
-    end
-end
-
-local function _UpdatePaths()
-    for index, agent in pairs(_agents) do
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
-        local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
-        local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
-        -- Determine if the agent is within the target radius to their
-        -- target position.
-        if (distanceSquared < targetRadiusSquared) then
-            local endPoint;
-            local path = std.vector_Ogre__Vector3_();
-            
-            -- Randomly try and pathfind to a new navmesh point, keep trying
-            -- until a valid path is found.
-            while path:size() == 0 do
-                endPoint = Sandbox:RandomPoint("default");
-                result = Sandbox:FindPath("default", agent:GetPosition(), endPoint, path);
-            end
-            -- Assign a new path and target position.
-            Agent_SetPath(agent, path)
-            --agent:SetPath(path, false)
-            agent:SetTarget(endPoint);
-        end
     end
 end
 
@@ -73,7 +48,6 @@ function EventHandle_Keyboard(keycode, pressed)
         camera:setPosition(Vector3(15, 65, 15));
         camera:setOrientation(Quaternion(-90, 0, -180));
     elseif (keycode == OIS.KC_F3) then
-        Create_LightSoldier("DirectSoldierAgent.lua")
     end
 end
 
@@ -90,8 +64,8 @@ function Sandbox_Initialize()
 
     -- Initialize the camera position to focus on the soldier.
     local camera = Sandbox:GetCamera();
-    camera:setPosition(Vector3(15, 65, 15));
-    camera:setOrientation(Quaternion(-90, 0, 180));
+    camera:setPosition(Vector3(-30, 18, -17));
+    camera:setOrientation(Quaternion(-146, -40, -157));
 
     -- Create The Sky.
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
@@ -118,19 +92,23 @@ function Sandbox_Initialize()
     local navMeshConfig = rcConfig();
     Sandbox:DefaultConfig(navMeshConfig)
     Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
-    navMeshConfig.minRegionArea = math.pow(100, 2)
+    navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
     local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     -- Create agents and randomly place them on the navmesh.
-    local agentLuafile = _GetFilePath("DirectSoldierAgent.lua")
-    for i=1, 5 do
-        local agent = Create_Soldier(agentLuafile)
+    local agentLuafile = _GetFilePath("IndirectSoldierAgent.lua")
+    for i=1, 7 do
+        local teamId = i > 3 and 0 or 1
+        local agentType = Soldier.AppearanceTypes.LIGHT
+        if i > 3 then agentType = Soldier.AppearanceTypes.DARK end
+        local agent = Create_Soldier(agentLuafile, agentType, teamId)
         table.insert(_agents, agent);
 
         local randomPoint = Sandbox:RandomPoint("default");
+        randomPoint.y = randomPoint.y + agent:GetHeight() / 2.0
         agent:setPosition(randomPoint);
         
         -- Use the Agent's closest point to the navmesh as their target position.
@@ -147,7 +125,5 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
-    _UpdatePaths()
-
-    _DrawPaths()
+    --_DrawPaths()
 end

@@ -176,16 +176,16 @@ function Soldier_InitWeaponAsm(agent)
 end
 
 
-function Create_Soldier(luafile, soldier1Type)
+function Create_Soldier(luafile, soldier1Type, teamId)
     -- default light soldier
     local soldierType = soldier1Type or Soldier.AppearanceTypes.LIGHT
 
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_anim.mesh"
-    if soldierType == Soldier.AppearanceTypes.DRAK then
+    if soldierType == Soldier.AppearanceTypes.DARK then
         soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
     end
-
     local soldierAgent = Sandbox:CreateSoldier(soldierPath, luafile)
+    soldierAgent:SetTeamId(teamId or 0)
     Soldier_InitSoldierAsm(soldierAgent)
 
     local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
