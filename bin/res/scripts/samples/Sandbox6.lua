@@ -109,7 +109,9 @@ function Sandbox_Initialize()
         local agent = Create_Soldier(agentLuafile, agentType, teamId)
         table.insert(_agents, agent);
 
+        local height = agent:GetHeight()
         local randomPoint = Sandbox:RandomPoint("default");
+        randomPoint.y = randomPoint.y + height * 0.5
         agent:setPosition(randomPoint);
         
         -- Use the Agent's closest point to the navmesh as their target position.

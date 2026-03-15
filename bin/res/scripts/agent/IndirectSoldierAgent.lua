@@ -26,7 +26,7 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
 end
 
 function Agent_Initialize(agent)
-    agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
+    agent:SetMaxSpeed(SOLDIER_STAND_SPEED);
 end
 
 
