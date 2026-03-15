@@ -20,6 +20,27 @@ namespace
 	{
 		return dynamic_cast<SoldierObject*>(agent);
 	}
+
+	void AlignAgentToPath(AgentObject* agent)
+	{
+		if (!agent || !agent->HasPath())
+			return;
+
+		const Ogre::Vector3 nearest = agent->GetNearestPointOnPath(agent->GetPosition());
+		const Ogre::Real distance = agent->GetDistanceAlongPath(nearest);
+		Ogre::Vector3 pointOnPath = agent->GetPointOnPath(distance + 2.0f);
+		Ogre::Vector3 forward = pointOnPath - agent->GetPosition();
+		forward.y = 0.0f;
+
+		if (forward.isZeroLength())
+			return;
+
+		if (forward.dotProduct(agent->GetForward()) < 0.0f)
+		{
+			agent->SetVelocity(forward * agent->GetSpeed());
+			agent->SetForward(forward);
+		}
+	}
 }
 
 AgentStateController::AgentStateController(AgentObject* soldier)
@@ -39,7 +60,7 @@ AgentStateController::~AgentStateController()
 	m_fsm = nullptr;
 }
 
-#define USE_CPP_STATE 0
+#define USE_CPP_STATE 1
 void AgentStateController::Init()
 {
 	AgentStateFactory::Init();
@@ -141,6 +162,7 @@ bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMo
 
 	m_agent->SetPath(path, false);
 	m_agent->SetTarget(target);
+	AlignAgentToPath(m_agent); // 切换目标时直接转向
 
 	if (updateMovePos)
 	{
