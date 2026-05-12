@@ -6,6 +6,8 @@
 
 class IPlayerInput;
 class SoldierAnimController;
+class DecisionTreeDriver;
+class IDecisionDriver;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -51,6 +53,21 @@ public:
 	void SetMovePosition(const Ogre::Vector3& movePos);
 	void ClearMovePosition();
 	bool IsTargetReached(float threshold) const;
+
+	// Decision tree wiring. When UseDecisionTreeDriver() is called, the existing
+	// FSM state controller is torn down and the soldier is driven by a DT instead.
+	// Lua then builds the tree and attaches it via GetDecisionTreeDriver()->SetTree(...).
+	void UseDecisionTreeDriver();
+	DecisionTreeDriver* GetDecisionTreeDriver() const { return m_decisionTreeDriver; }
+
+	// High-level anim intents for Lua actions. SoldierAnimController re-evaluates
+	// intent each frame, so using these (rather than RequestState(SSTATE_*)) is
+	// what actually makes run/idle/fire/reload/death animations stick.
+	void EnterIdleAnim();
+	void EnterMoveAnim();
+	void EnterShootAnim();
+	void EnterReloadAnim();
+	void EnterDeathAnim();
 	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
@@ -86,6 +103,9 @@ private:
 	IPlayerInput* m_inputInfo;
 	AgentStateController* m_stateController;
 	SoldierAnimController* m_animController;
+
+	// Optional DT driver. When non-null, Update() ticks this instead of m_stateController.
+	DecisionTreeDriver* m_decisionTreeDriver = nullptr;
 
 }; //tolua_exports
 

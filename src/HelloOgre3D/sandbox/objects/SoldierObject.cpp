@@ -15,6 +15,7 @@
 #include "animation/AgentAnimState.h"
 #include "animation/SoldierAnimController.h"
 #include "animation/SoldierAnimProfile.h"
+#include "ai/decision/DecisionTreeDriver.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -62,6 +63,7 @@ SoldierObject::~SoldierObject()
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_stateController);
 	SAFE_DELETE(m_animController);
+	SAFE_DELETE(m_decisionTreeDriver);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -146,8 +148,15 @@ void SoldierObject::Update(int deltaMilisec)
 		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
-	if (m_stateController)
+	// DT driver takes precedence when present; otherwise fall back to the FSM controller.
+	if (m_decisionTreeDriver)
+	{
+		m_decisionTreeDriver->Tick((float)deltaMilisec);
+	}
+	else if (m_stateController)
+	{
 		m_stateController->Update((float)deltaMilisec);
+	}
 	if (m_animController && GetUseCppFSM())
 		m_animController->Update((float)deltaMilisec);
 
@@ -616,4 +625,51 @@ bool SoldierObject::IsAnimReadyForShoot()
 
 	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, getStanceType()));
 	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
+}
+
+void SoldierObject::UseDecisionTreeDriver()
+{
+	// Swap out the FSM driver — DT-driven soldiers don't need the C++ FSM
+	// (their behavior is authored in the Lua tree).
+	SAFE_DELETE(m_stateController);
+
+	if (m_decisionTreeDriver == nullptr)
+	{
+		m_decisionTreeDriver = new DecisionTreeDriver(this);
+		m_decisionTreeDriver->Init();
+	}
+}
+
+void SoldierObject::EnterIdleAnim()
+{
+	if (!m_animController) return;
+	m_animController->ClearAllActions();
+	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+}
+
+void SoldierObject::EnterMoveAnim()
+{
+	if (!m_animController) return;
+	m_animController->ClearAllActions();
+	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Move);
+}
+
+void SoldierObject::EnterShootAnim()
+{
+	if (!m_animController) return;
+	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	m_animController->RequestAction(SoldierActionIntent::Shoot, true);
+}
+
+void SoldierObject::EnterReloadAnim()
+{
+	if (!m_animController) return;
+	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	m_animController->RequestAction(SoldierActionIntent::Reload, true);
+}
+
+void SoldierObject::EnterDeathAnim()
+{
+	if (!m_animController) return;
+	m_animController->RequestAction(SoldierActionIntent::Death, true);
 }
