@@ -5,19 +5,23 @@
 #include <string>
 #include "OgreVector3.h"
 
+#include "ai/common/IDecisionDriver.h"
+
 class AgentActionContext;
 class AgentState;
 class AgentFSM;
 class AgentObject;
 
-class AgentStateController //tolua_exports
+class AgentStateController : public IDecisionDriver //tolua_exports
 { //tolua_exports
 public:
 	AgentStateController(AgentObject* soldier);
-	~AgentStateController();
+	virtual ~AgentStateController();
 
-	void Init();
-	void Update(float dtime);
+	// IDecisionDriver impl
+	virtual void Init() override;
+	virtual void Tick(float deltaMs) override;
+
 	void ChangeState(const std::string& stateName);
 
 	AgentState* GetCurrState() const;

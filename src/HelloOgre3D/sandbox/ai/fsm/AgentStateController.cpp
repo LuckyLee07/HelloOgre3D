@@ -87,12 +87,12 @@ void AgentStateController::Init()
 	m_fsm->SetCurrentState("IdleState");
 }
 
-void AgentStateController::Update(float dtime)
+void AgentStateController::Tick(float deltaMs)
 {
 	if (!m_agent || !m_fsm)
 		return;
 
-	m_fsm->Update(dtime);
+	m_fsm->Update(deltaMs);
 }
 
 void AgentStateController::ChangeState(const std::string& stateName)
@@ -162,7 +162,7 @@ bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMo
 
 	m_agent->SetPath(path, false);
 	m_agent->SetTarget(target);
-	AlignAgentToPath(m_agent); // 切换目标时直接转向
+	AlignAgentToPath(m_agent); // 锟叫伙拷目锟斤拷时直锟斤拷转锟斤拷
 
 	if (updateMovePos)
 	{

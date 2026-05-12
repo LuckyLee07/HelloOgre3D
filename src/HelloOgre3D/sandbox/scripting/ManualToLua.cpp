@@ -4,6 +4,8 @@
 #include "ai/fsm/states/AgentLuaState.h"
 #include "ai/decision/DecisionBranch.h"
 #include "ai/decision/LuaDecisionAction.h"
+#include "ai/behavior/LuaBehaviorAction.h"
+#include "ai/behavior/LuaCondition.h"
 
 extern "C" {
 #include "lauxlib.h"
@@ -147,6 +149,72 @@ tolua_lerror:
 }
 #endif
 
+/* method: setPluginEnv of class LuaBehaviorAction (mirrors LuaDecisionAction pattern) */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaBehaviorAction_setPluginEnv00
+static int tolua_SandboxToLua_LuaBehaviorAction_setPluginEnv00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+	tolua_Error tolua_err;
+	if (!tolua_isusertype(tolua_S, 1, "LuaBehaviorAction", 0, &tolua_err) ||
+	    !tolua_istable(tolua_S, 2, 0, &tolua_err) ||
+	    !tolua_isnoobj(tolua_S, 3, &tolua_err))
+	{
+		goto tolua_lerror;
+	}
+	else
+#endif
+	{
+		LuaBehaviorAction* self = (LuaBehaviorAction*)tolua_tousertype(tolua_S, 1, 0);
+		lua_State* L = tolua_S;
+#ifndef TOLUA_RELEASE
+		if (!self) tolua_error(tolua_S, "invalid 'self' in function 'setPluginEnv'", NULL);
+#endif
+		self->setPluginEnv(L);
+	}
+	return 0;
+#ifndef TOLUA_RELEASE
+tolua_lerror:
+	tolua_error(tolua_S, "#ferror in function 'setPluginEnv'.", &tolua_err);
+	return 0;
+#endif
+}
+#endif
+
+/* method: SetEvaluator of class LuaCondition
+ * 同 DecisionBranch.SetEvaluator：捕获 Lua 闭包到 registry，存 ref。
+ * Usage: cond:SetEvaluator(function() return agent:HasEnemy() end)
+ */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_SetEvaluator00
+static int tolua_SandboxToLua_LuaCondition_SetEvaluator00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+	tolua_Error tolua_err;
+	if (!tolua_isusertype(tolua_S, 1, "LuaCondition", 0, &tolua_err) ||
+	    !lua_isfunction(tolua_S, 2) ||
+	    !tolua_isnoobj(tolua_S, 3, &tolua_err))
+	{
+		goto tolua_lerror;
+	}
+	else
+#endif
+	{
+		LuaCondition* self = (LuaCondition*)tolua_tousertype(tolua_S, 1, 0);
+#ifndef TOLUA_RELEASE
+		if (!self) tolua_error(tolua_S, "invalid 'self' in function 'SetEvaluator'", NULL);
+#endif
+		lua_pushvalue(tolua_S, 2);
+		int ref = luaL_ref(tolua_S, LUA_REGISTRYINDEX);
+		self->SetEvaluatorRef(ref);
+	}
+	return 0;
+#ifndef TOLUA_RELEASE
+tolua_lerror:
+	tolua_error(tolua_S, "#ferror in function 'SetEvaluator'.", &tolua_err);
+	return 0;
+#endif
+}
+#endif
+
 /* function to register type */
 static void tolua_reg_types(lua_State* tolua_S)
 {
@@ -156,6 +224,8 @@ static void tolua_reg_types(lua_State* tolua_S)
     tolua_usertype(tolua_S, "AgentLuaState");
     tolua_usertype(tolua_S, "DecisionBranch");
     tolua_usertype(tolua_S, "LuaDecisionAction");
+    tolua_usertype(tolua_S, "LuaBehaviorAction");
+    tolua_usertype(tolua_S, "LuaCondition");
 }
 
 /* open function */
@@ -180,6 +250,14 @@ TOLUA_API int tolua_SandboxToLua_Manual(lua_State* tolua_S)
   tolua_cclass(tolua_S, "LuaDecisionAction", "LuaDecisionAction", "", NULL);
    tolua_beginmodule(tolua_S, "LuaDecisionAction");
     tolua_function(tolua_S, "setPluginEnv", tolua_SandboxToLua_LuaDecisionAction_setPluginEnv00);
+   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S, "LuaBehaviorAction", "LuaBehaviorAction", "", NULL);
+   tolua_beginmodule(tolua_S, "LuaBehaviorAction");
+    tolua_function(tolua_S, "setPluginEnv", tolua_SandboxToLua_LuaBehaviorAction_setPluginEnv00);
+   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S, "LuaCondition", "LuaCondition", "", NULL);
+   tolua_beginmodule(tolua_S, "LuaCondition");
+    tolua_function(tolua_S, "SetEvaluator", tolua_SandboxToLua_LuaCondition_SetEvaluator00);
    tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

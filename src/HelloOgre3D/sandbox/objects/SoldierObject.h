@@ -2,12 +2,13 @@
 #define __SOLDIER_OBJECT__
 
 #include "AgentObject.h"
-#include "ai/fsm/AgentStateController.h"
 
 class IPlayerInput;
 class SoldierAnimController;
 class DecisionTreeDriver;
+class BehaviorTreeDriver;
 class IDecisionDriver;
+class AgentStateController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -58,7 +59,11 @@ public:
 	// FSM state controller is torn down and the soldier is driven by a DT instead.
 	// Lua then builds the tree and attaches it via GetDecisionTreeDriver()->SetTree(...).
 	void UseDecisionTreeDriver();
-	DecisionTreeDriver* GetDecisionTreeDriver() const { return m_decisionTreeDriver; }
+	DecisionTreeDriver* GetDecisionTreeDriver() const;
+
+	// Behavior tree wiring — mirror of UseDecisionTreeDriver。
+	void UseBehaviorTreeDriver();
+	BehaviorTreeDriver* GetBehaviorTreeDriver() const;
 
 	// High-level anim intents for Lua actions. SoldierAnimController re-evaluates
 	// intent each frame, so using these (rather than RequestState(SSTATE_*)) is
@@ -71,6 +76,10 @@ public:
 	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
+
+	// Typed accessor for the FSM driver, when soldier is FSM-driven.
+	// Returns nullptr when running under a DT (or future BT) driver.
+	AgentStateController* GetFsmController() const;
 
 private:
 	void ApplyStanceParams(int stanceType);
@@ -101,11 +110,11 @@ private:
 	Ogre::Vector3 m_movePos = Ogre::Vector3::ZERO;
 
 	IPlayerInput* m_inputInfo;
-	AgentStateController* m_stateController;
 	SoldierAnimController* m_animController;
 
-	// Optional DT driver. When non-null, Update() ticks this instead of m_stateController.
-	DecisionTreeDriver* m_decisionTreeDriver = nullptr;
+	// One driver to rule them all (FSM / DT / future BT). All implement IDecisionDriver
+	// so Update() just calls m_driver->Tick(); typed accessors above downcast on demand.
+	IDecisionDriver* m_driver = nullptr;
 
 }; //tolua_exports
 

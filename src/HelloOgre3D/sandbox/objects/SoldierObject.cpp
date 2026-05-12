@@ -16,6 +16,7 @@
 #include "animation/SoldierAnimController.h"
 #include "animation/SoldierAnimProfile.h"
 #include "ai/decision/DecisionTreeDriver.h"
+#include "ai/behavior/BehaviorTreeDriver.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -31,7 +32,7 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_stateController(nullptr), m_animController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_animController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -50,8 +51,9 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 
 	if (GetUseCppFSM()) // 使用C++或者lua的FSM
 	{
-		m_stateController = new AgentStateController(this);
-		m_stateController->Init();
+		AgentStateController* fsm = new AgentStateController(this);
+		fsm->Init();
+		m_driver = fsm;
 	}
 
 	m_animController = new SoldierAnimController(*this);
@@ -61,9 +63,8 @@ SoldierObject::~SoldierObject()
 {
 	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
-	SAFE_DELETE(m_stateController);
 	SAFE_DELETE(m_animController);
-	SAFE_DELETE(m_decisionTreeDriver);
+	SAFE_DELETE(m_driver);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -80,9 +81,10 @@ void SoldierObject::CreateEventDispatcher()
 		{
 			m_animController->OnBodyStateChanged(stateId);
 		}
-		if (!m_stateController) return;
-		
-		AgentState* pState = m_stateController->GetCurrState();
+		AgentStateController* fsm = GetFsmController();
+		if (!fsm) return;
+
+		AgentState* pState = fsm->GetCurrState();
 		if (!pState) return;
 		pState->Event()->Emit("FSM_STATE_CHANGE", context);
 	});
@@ -148,14 +150,10 @@ void SoldierObject::Update(int deltaMilisec)
 		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
-	// DT driver takes precedence when present; otherwise fall back to the FSM controller.
-	if (m_decisionTreeDriver)
+	// Single driver path — could be FSM, DT, or future BT (all IDecisionDriver).
+	if (m_driver)
 	{
-		m_decisionTreeDriver->Tick((float)deltaMilisec);
-	}
-	else if (m_stateController)
-	{
-		m_stateController->Update((float)deltaMilisec);
+		m_driver->Tick((float)deltaMilisec);
 	}
 	if (m_animController && GetUseCppFSM())
 		m_animController->Update((float)deltaMilisec);
@@ -629,15 +627,45 @@ bool SoldierObject::IsAnimReadyForShoot()
 
 void SoldierObject::UseDecisionTreeDriver()
 {
-	// Swap out the FSM driver — DT-driven soldiers don't need the C++ FSM
-	// (their behavior is authored in the Lua tree).
-	SAFE_DELETE(m_stateController);
-
-	if (m_decisionTreeDriver == nullptr)
+	// Swap out whatever driver is currently installed (typically the FSM
+	// controller created in the ctor) — DT-driven soldiers author behavior in Lua.
+	if (dynamic_cast<DecisionTreeDriver*>(m_driver) != nullptr)
 	{
-		m_decisionTreeDriver = new DecisionTreeDriver(this);
-		m_decisionTreeDriver->Init();
+		return;  // already DT-driven
 	}
+	SAFE_DELETE(m_driver);
+
+	DecisionTreeDriver* dt = new DecisionTreeDriver(this);
+	dt->Init();
+	m_driver = dt;
+}
+
+DecisionTreeDriver* SoldierObject::GetDecisionTreeDriver() const
+{
+	return dynamic_cast<DecisionTreeDriver*>(m_driver);
+}
+
+void SoldierObject::UseBehaviorTreeDriver()
+{
+	if (dynamic_cast<BehaviorTreeDriver*>(m_driver) != nullptr)
+	{
+		return;  // already BT-driven
+	}
+	SAFE_DELETE(m_driver);
+
+	BehaviorTreeDriver* bt = new BehaviorTreeDriver(this);
+	bt->Init();
+	m_driver = bt;
+}
+
+BehaviorTreeDriver* SoldierObject::GetBehaviorTreeDriver() const
+{
+	return dynamic_cast<BehaviorTreeDriver*>(m_driver);
+}
+
+AgentStateController* SoldierObject::GetFsmController() const
+{
+	return dynamic_cast<AgentStateController*>(m_driver);
 }
 
 void SoldierObject::EnterIdleAnim()
