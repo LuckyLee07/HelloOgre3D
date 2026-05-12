@@ -44,10 +44,33 @@ AgentAnimStateMachine::~AgentAnimStateMachine()
 	m_animTransitions.clear();
 }
 
+void AgentAnimStateMachine::SetStateIdResolver(StateIdResolver resolver)
+{
+	m_stateIdResolver = std::move(resolver);
+
+	// 若在 AddState 之后才注入 resolver，补刷一次已有 state 的 id。
+	if (!m_stateIdResolver) return;
+	for (auto& entry : m_animStates)
+	{
+		if (entry.second && entry.second->GetID() < 0)
+		{
+			entry.second->SetID(m_stateIdResolver(entry.first));
+		}
+	}
+}
+
 bool AgentAnimStateMachine::RequestState(int stateId)
 {
-	std::string stateName = AgentAnimState::GetNameByID(stateId);
-	return RequestState(stateName);
+	// 不再依赖全局 state 表：按实例自有 id 反查 state name。
+	// 大多数 ASM 只有十几个 state，线性查足够。
+	for (auto& entry : m_animStates)
+	{
+		if (entry.second && entry.second->GetID() == stateId)
+		{
+			return RequestState(entry.first);
+		}
+	}
+	return false;
 }
 
 bool AgentAnimStateMachine::RequestState(const std::string& stateName)
@@ -155,7 +178,8 @@ void AgentAnimStateMachine::AddState(AgentAnimState* animState)
 
 void AgentAnimStateMachine::AddState(const std::string& name, AgentAnim* animation, bool looping, float rate)
 {
-	auto pAnimState = new AgentAnimState(name, animation, looping, rate);
+	const int stateId = m_stateIdResolver ? m_stateIdResolver(name) : -1;
+	auto pAnimState = new AgentAnimState(name, animation, looping, rate, stateId);
 	this->AddState(pAnimState);
 }
 

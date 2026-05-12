@@ -14,6 +14,7 @@
 #include "systems/service/SceneFactory.h"
 #include "animation/AgentAnimState.h"
 #include "animation/SoldierAnimController.h"
+#include "animation/SoldierAnimProfile.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -38,6 +39,13 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 	m_ammo = std::min(std::max(0, m_ammo), m_maxAmmo);
 
 	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
+
+	// 将 soldier 专属的 state name -> id 映射注入 body ASM；以前这张表由通用 AgentAnimState 持有，
+	// 现在收敛到 SoldierAnimProfile，ASM 侧仅通过 resolver 访问。
+	if (getBody() && getBody()->GetObjectASM())
+	{
+		getBody()->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
+	}
 
 	if (GetUseCppFSM()) // 使用C++或者lua的FSM
 	{
@@ -113,6 +121,10 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	}
 	m_pWeapon = new RenderableObject(meshFile);
 	m_pWeapon->InitAsmWithOwner(this, false);
+	if (m_pWeapon->GetObjectASM())
+	{
+		m_pWeapon->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
+	}
 
 	m_weaponHandOffsetPos = Ogre::Vector3(0.04f, 0.05f, -0.01f);
 	m_weaponHandOffsetOrientation = QuaternionFromRotationDegrees(98.0f, 97.0f, 0.0f);
@@ -593,7 +605,7 @@ bool SoldierObject::IsAnimReadyForMove()
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return false;
 
-	const std::string moveStateName = AgentAnimState::GetNameByID(ConvertAnimID(SSTATE_RUN_FORWARD, getStanceType()));
+	const std::string moveStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_RUN_FORWARD, getStanceType()));
 	return pAsm->IsCurrentState(moveStateName) || pAsm->IsNextState(moveStateName);
 }
 
@@ -602,6 +614,6 @@ bool SoldierObject::IsAnimReadyForShoot()
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return false;
 
-	const std::string shootStateName = AgentAnimState::GetNameByID(ConvertAnimID(SSTATE_FIRE, getStanceType()));
+	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, getStanceType()));
 	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
 }

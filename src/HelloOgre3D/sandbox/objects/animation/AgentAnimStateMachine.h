@@ -1,6 +1,7 @@
 #ifndef __AGENT_ANIM_STATE_MACHINE_H__
 #define __AGENT_ANIM_STATE_MACHINE_H__
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,9 +14,15 @@ class AgentAnimTransition;
 class AgentAnimStateMachine //tolua_exports
 { //tolua_exports
 public:
+	// 由宿主（例如 SoldierObject）注入：把本地 state name 映射为业务侧 state id。
+	// 不注入时，AddState 进来的 state 全部 id = -1，但按 name 驱动的流程仍可正常工作。
+	using StateIdResolver = std::function<int(const std::string&)>;
+
 	AgentAnimStateMachine(BaseObject* owner);
 	AgentAnimStateMachine(BaseObject* owner, bool canFireEvent);
     ~AgentAnimStateMachine();
+
+    void SetStateIdResolver(StateIdResolver resolver);
 
     void Update(float deltaTimeInMillis, long long currentTimeInMillis);
 
@@ -77,6 +84,7 @@ public:
 private:
     BaseObject* m_owner = nullptr;
     bool m_canFireEvent = false;
+    StateIdResolver m_stateIdResolver;
 
     std::unordered_map<std::string, AgentAnimState*> m_animStates;
     typedef std::unordered_map<std::string, AgentAnimTransition*> TransitionMap;

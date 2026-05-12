@@ -7,11 +7,8 @@ class AgentAnim;
 class AgentAnimState
 {
 public:
-	AgentAnimState(const std::string& name, AgentAnim* animation, bool looping = false, float rate = 0.0f);
+	AgentAnimState(const std::string& name, AgentAnim* animation, bool looping = false, float rate = 0.0f, int stateId = -1);
     ~AgentAnimState();
-    
-    static std::string GetNameByID(int stateId);
-    static int GetIDByName(const std::string& stateName);
 
     void InitAnim(float startTime = 0.0f);
     void ClearAnim();
@@ -24,6 +21,7 @@ public:
 
     const std::string& GetName() const;
     int GetID() const { return m_stateId; }
+    void SetID(int stateId) { m_stateId = stateId; }
 
 public:
 	AgentAnim* m_pAnim;
