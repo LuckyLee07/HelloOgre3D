@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May  9 20:36:43 2026.
+** Generated automatically by tolua++-1.0.92 on Thu May 14 16:21:17 2026.
 */
 
 #ifndef __cplusplus
@@ -7706,6 +7706,78 @@ static int tolua_SandboxToLua_Blackboard_GetBool00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetString of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetString00
+static int tolua_SandboxToLua_Blackboard_SetString00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const std::string value = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetString'", NULL);
+#endif
+  {
+   self->SetString(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+   tolua_pushcppstring(tolua_S,(const char*)value);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetString'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetString of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetString00
+static int tolua_SandboxToLua_Blackboard_GetString00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetString'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->GetString(key);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetString'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: SetVec3 of class  Blackboard */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetVec300
 static int tolua_SandboxToLua_Blackboard_SetVec300(lua_State* tolua_S)
@@ -8377,6 +8449,72 @@ static int tolua_SandboxToLua_DecisionTreeDriver_GetTree00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetDebugName of class  BehaviorNode */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorNode_SetDebugName00
+static int tolua_SandboxToLua_BehaviorNode_SetDebugName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorNode",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorNode* self = (BehaviorNode*)  tolua_tousertype(tolua_S,1,0);
+  const std::string name = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetDebugName'", NULL);
+#endif
+  {
+   self->SetDebugName(name);
+   tolua_pushcppstring(tolua_S,(const char*)name);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetDebugName'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetDebugName of class  BehaviorNode */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorNode_GetDebugName00
+static int tolua_SandboxToLua_BehaviorNode_GetDebugName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorNode",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorNode* self = (const BehaviorNode*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDebugName'", NULL);
+#endif
+  {
+   const std::string tolua_ret = (const std::string)  self->GetDebugName();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetDebugName'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetName of class  BehaviorAction */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorAction_GetName00
 static int tolua_SandboxToLua_BehaviorAction_GetName00(lua_State* tolua_S)
@@ -8834,6 +8972,142 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_NewCondition00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: NewWait of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewWait00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewWait00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  float waitMs = ((float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewWait'", NULL);
+#endif
+  {
+   BehaviorNode* tolua_ret = (BehaviorNode*)  self->NewWait(waitMs);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorNode");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewWait'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: NewInverter of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewInverter00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewInverter00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BehaviorNode",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  BehaviorNode* child = ((BehaviorNode*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewInverter'", NULL);
+#endif
+  {
+   BehaviorNode* tolua_ret = (BehaviorNode*)  self->NewInverter(child);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorNode");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewInverter'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: NewForceSuccess of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewForceSuccess00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewForceSuccess00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BehaviorNode",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  BehaviorNode* child = ((BehaviorNode*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewForceSuccess'", NULL);
+#endif
+  {
+   BehaviorNode* tolua_ret = (BehaviorNode*)  self->NewForceSuccess(child);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorNode");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewForceSuccess'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: NewForceFailure of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewForceFailure00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewForceFailure00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BehaviorNode",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  BehaviorNode* child = ((BehaviorNode*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewForceFailure'", NULL);
+#endif
+  {
+   BehaviorNode* tolua_ret = (BehaviorNode*)  self->NewForceFailure(child);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorNode");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewForceFailure'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: SetTree of class  BehaviorTreeDriver */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetTree00
 static int tolua_SandboxToLua_BehaviorTreeDriver_SetTree00(lua_State* tolua_S)
@@ -8894,6 +9168,236 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_GetTree00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetTree'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetDebugTraceEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTraceEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTraceEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetDebugTraceEnabled'", NULL);
+#endif
+  {
+   self->SetDebugTraceEnabled(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetDebugTraceEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsDebugTraceEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTraceEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTraceEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsDebugTraceEnabled'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsDebugTraceEnabled();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsDebugTraceEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetDebugTracePrintEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTracePrintEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTracePrintEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetDebugTracePrintEnabled'", NULL);
+#endif
+  {
+   self->SetDebugTracePrintEnabled(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetDebugTracePrintEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsDebugTracePrintEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTracePrintEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTracePrintEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsDebugTracePrintEnabled'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsDebugTracePrintEnabled();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsDebugTracePrintEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetLastDebugTrace of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00
+static int tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetLastDebugTrace'", NULL);
+#endif
+  {
+   const std::string tolua_ret = (const std::string)  self->GetLastDebugTrace();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetLastDebugTrace'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetDebugTraceFrame of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceFrame00
+static int tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceFrame00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDebugTraceFrame'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetDebugTraceFrame();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetDebugTraceFrame'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetNodeDebugName of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetNodeDebugName00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetNodeDebugName00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"BehaviorNode",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  BehaviorNode* node = ((BehaviorNode*)  tolua_tousertype(tolua_S,2,0));
+  const std::string name = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetNodeDebugName'", NULL);
+#endif
+  {
+   self->SetNodeDebugName(node,name);
+   tolua_pushcppstring(tolua_S,(const char*)name);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetNodeDebugName'.",&tolua_err);
  return 0;
 #endif
 }
@@ -9271,6 +9775,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetInt",tolua_SandboxToLua_Blackboard_GetInt00);
    tolua_function(tolua_S,"SetBool",tolua_SandboxToLua_Blackboard_SetBool00);
    tolua_function(tolua_S,"GetBool",tolua_SandboxToLua_Blackboard_GetBool00);
+   tolua_function(tolua_S,"SetString",tolua_SandboxToLua_Blackboard_SetString00);
+   tolua_function(tolua_S,"GetString",tolua_SandboxToLua_Blackboard_GetString00);
    tolua_function(tolua_S,"SetVec3",tolua_SandboxToLua_Blackboard_SetVec300);
    tolua_function(tolua_S,"GetVec3",tolua_SandboxToLua_Blackboard_GetVec300);
    tolua_function(tolua_S,"Has",tolua_SandboxToLua_Blackboard_Has00);
@@ -9312,6 +9818,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BehaviorNode","BehaviorNode","",NULL);
   tolua_beginmodule(tolua_S,"BehaviorNode");
+   tolua_function(tolua_S,"SetDebugName",tolua_SandboxToLua_BehaviorNode_SetDebugName00);
+   tolua_function(tolua_S,"GetDebugName",tolua_SandboxToLua_BehaviorNode_GetDebugName00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BehaviorAction","BehaviorAction","BehaviorNode",NULL);
   tolua_beginmodule(tolua_S,"BehaviorAction");
@@ -9350,8 +9858,19 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"NewSelector",tolua_SandboxToLua_BehaviorTreeDriver_NewSelector00);
    tolua_function(tolua_S,"NewLuaAction",tolua_SandboxToLua_BehaviorTreeDriver_NewLuaAction00);
    tolua_function(tolua_S,"NewCondition",tolua_SandboxToLua_BehaviorTreeDriver_NewCondition00);
+   tolua_function(tolua_S,"NewWait",tolua_SandboxToLua_BehaviorTreeDriver_NewWait00);
+   tolua_function(tolua_S,"NewInverter",tolua_SandboxToLua_BehaviorTreeDriver_NewInverter00);
+   tolua_function(tolua_S,"NewForceSuccess",tolua_SandboxToLua_BehaviorTreeDriver_NewForceSuccess00);
+   tolua_function(tolua_S,"NewForceFailure",tolua_SandboxToLua_BehaviorTreeDriver_NewForceFailure00);
    tolua_function(tolua_S,"SetTree",tolua_SandboxToLua_BehaviorTreeDriver_SetTree00);
    tolua_function(tolua_S,"GetTree",tolua_SandboxToLua_BehaviorTreeDriver_GetTree00);
+   tolua_function(tolua_S,"SetDebugTraceEnabled",tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTraceEnabled00);
+   tolua_function(tolua_S,"IsDebugTraceEnabled",tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTraceEnabled00);
+   tolua_function(tolua_S,"SetDebugTracePrintEnabled",tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTracePrintEnabled00);
+   tolua_function(tolua_S,"IsDebugTracePrintEnabled",tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTracePrintEnabled00);
+   tolua_function(tolua_S,"GetLastDebugTrace",tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00);
+   tolua_function(tolua_S,"GetDebugTraceFrame",tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceFrame00);
+   tolua_function(tolua_S,"SetNodeDebugName",tolua_SandboxToLua_BehaviorTreeDriver_SetNodeDebugName00);
   tolua_endmodule(tolua_S);
  tolua_endmodule(tolua_S);
  return 1;

@@ -44,6 +44,7 @@ class BehaviorSequence : public BehaviorComposite //tolua_exports
 { //tolua_exports
 public:
 	virtual Status Tick(float deltaMs) override;
+	virtual const char* GetDebugType() const override { return "Sequence"; }
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(BehaviorSequence);
@@ -58,6 +59,7 @@ class BehaviorSelector : public BehaviorComposite //tolua_exports
 { //tolua_exports
 public:
 	virtual Status Tick(float deltaMs) override;
+	virtual const char* GetDebugType() const override { return "Selector"; }
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(BehaviorSelector);

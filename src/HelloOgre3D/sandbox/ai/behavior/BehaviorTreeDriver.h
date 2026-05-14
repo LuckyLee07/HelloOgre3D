@@ -6,6 +6,7 @@
 
 #include "ai/common/IDecisionDriver.h"
 #include "ai/common/Blackboard.h"
+#include "ai/behavior/BehaviorTrace.h"
 #include "script/LuaClassNameTraits.h"
 
 class SoldierObject;
@@ -38,9 +39,21 @@ public:
 	BehaviorSelector*   NewSelector();
 	LuaBehaviorAction*  NewLuaAction(const std::string& name);
 	LuaCondition*       NewCondition();
+	BehaviorNode*       NewWait(float waitMs);
+	BehaviorNode*       NewInverter(BehaviorNode* child);
+	BehaviorNode*       NewForceSuccess(BehaviorNode* child);
+	BehaviorNode*       NewForceFailure(BehaviorNode* child);
 
 	void          SetTree(BehaviorTree* tree);
 	BehaviorTree* GetTree() const { return m_tree; }
+
+	void SetDebugTraceEnabled(bool enabled);
+	bool IsDebugTraceEnabled() const { return m_debugTraceEnabled; }
+	void SetDebugTracePrintEnabled(bool enabled);
+	bool IsDebugTracePrintEnabled() const { return m_debugTracePrintEnabled; }
+	const std::string& GetLastDebugTrace() const { return m_lastDebugTrace; }
+	int GetDebugTraceFrame() const { return m_debugTraceFrameIndex; }
+	void SetNodeDebugName(BehaviorNode* node, const std::string& name);
 	//tolua_end
 
 	// IDecisionDriver impl
@@ -53,6 +66,11 @@ private:
 	BehaviorTree*                m_tree;            // 指向 m_ownedTrees 中的某棵
 	std::vector<BehaviorNode*>   m_ownedNodes;      // sequences + selectors + actions + conditions
 	std::vector<BehaviorTree*>   m_ownedTrees;
+	bool                         m_debugTraceEnabled;
+	bool                         m_debugTracePrintEnabled;
+	int                          m_debugTraceFrameIndex;
+	std::string                  m_lastDebugTrace;
+	BehaviorTraceFrame           m_traceFrame;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(BehaviorTreeDriver);

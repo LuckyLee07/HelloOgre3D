@@ -1,12 +1,22 @@
 ﻿#include "BehaviorTreeDriver.h"
 
+#include <cstdio>
+
 #include "BehaviorTree.h"
 #include "BehaviorComposite.h"
+#include "BehaviorDecorator.h"
+#include "BehaviorUtility.h"
 #include "LuaBehaviorAction.h"
 #include "LuaCondition.h"
+#include "profiling/Profile.h"
 
 BehaviorTreeDriver::BehaviorTreeDriver(SoldierObject* owner)
-	: m_owner(owner), m_blackboard(owner), m_tree(nullptr)
+	: m_owner(owner)
+	, m_blackboard(owner)
+	, m_tree(nullptr)
+	, m_debugTraceEnabled(false)
+	, m_debugTracePrintEnabled(false)
+	, m_debugTraceFrameIndex(0)
 {
 }
 
@@ -54,9 +64,59 @@ LuaCondition* BehaviorTreeDriver::NewCondition()
 	return c;
 }
 
+BehaviorNode* BehaviorTreeDriver::NewWait(float waitMs)
+{
+	BehaviorWait* node = new BehaviorWait(waitMs);
+	m_ownedNodes.push_back(node);
+	return node;
+}
+
+BehaviorNode* BehaviorTreeDriver::NewInverter(BehaviorNode* child)
+{
+	BehaviorInverter* node = new BehaviorInverter(child);
+	m_ownedNodes.push_back(node);
+	return node;
+}
+
+BehaviorNode* BehaviorTreeDriver::NewForceSuccess(BehaviorNode* child)
+{
+	BehaviorForceSuccess* node = new BehaviorForceSuccess(child);
+	m_ownedNodes.push_back(node);
+	return node;
+}
+
+BehaviorNode* BehaviorTreeDriver::NewForceFailure(BehaviorNode* child)
+{
+	BehaviorForceFailure* node = new BehaviorForceFailure(child);
+	m_ownedNodes.push_back(node);
+	return node;
+}
+
 void BehaviorTreeDriver::SetTree(BehaviorTree* tree)
 {
 	m_tree = tree;
+}
+
+void BehaviorTreeDriver::SetDebugTraceEnabled(bool enabled)
+{
+	m_debugTraceEnabled = enabled;
+	if (!enabled)
+	{
+		m_lastDebugTrace.clear();
+		m_blackboard.Remove("__bt.trace");
+		m_blackboard.Remove("__bt.traceFrame");
+		m_blackboard.Remove("__bt.traceEventCount");
+	}
+}
+
+void BehaviorTreeDriver::SetDebugTracePrintEnabled(bool enabled)
+{
+	m_debugTracePrintEnabled = enabled;
+}
+
+void BehaviorTreeDriver::SetNodeDebugName(BehaviorNode* node, const std::string& name)
+{
+	if (node) node->SetDebugName(name);
 }
 
 void BehaviorTreeDriver::Init()
@@ -65,6 +125,28 @@ void BehaviorTreeDriver::Init()
 
 void BehaviorTreeDriver::Tick(float deltaMs)
 {
+	H3D_PROFILE_SCOPE("BehaviorTreeDriver::Tick");
 	if (!m_tree) return;
+	if (!m_debugTraceEnabled)
+	{
+		m_tree->Tick(deltaMs);
+		return;
+	}
+
+	m_traceFrame.Begin(++m_debugTraceFrameIndex);
+
+	BehaviorTraceFrame* prevFrame = BehaviorTrace::GetCurrentFrame();
+	BehaviorTrace::SetCurrentFrame(&m_traceFrame);
 	m_tree->Tick(deltaMs);
+	BehaviorTrace::SetCurrentFrame(prevFrame);
+
+	m_lastDebugTrace = m_traceFrame.Format();
+	m_blackboard.SetString("__bt.trace", m_lastDebugTrace);
+	m_blackboard.SetInt("__bt.traceFrame", m_debugTraceFrameIndex);
+	m_blackboard.SetInt("__bt.traceEventCount", m_traceFrame.GetEventCount());
+
+	if (m_debugTracePrintEnabled)
+	{
+		printf("%s\n", m_lastDebugTrace.c_str());
+	}
 }

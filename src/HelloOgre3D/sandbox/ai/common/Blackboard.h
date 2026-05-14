@@ -36,6 +36,9 @@ public:
 	void SetBool(const std::string& key, bool value);
 	bool GetBool(const std::string& key, bool defaultValue = false) const;
 
+	void SetString(const std::string& key, const std::string& value);
+	std::string GetString(const std::string& key) const;
+
 	void SetVec3(const std::string& key, const Ogre::Vector3& value);
 	Ogre::Vector3 GetVec3(const std::string& key) const;
 
@@ -51,6 +54,7 @@ private:
 	std::unordered_map<std::string, float>          m_floats;
 	std::unordered_map<std::string, int>            m_ints;
 	std::unordered_map<std::string, bool>           m_bools;
+	std::unordered_map<std::string, std::string>    m_strings;
 	std::unordered_map<std::string, Ogre::Vector3>  m_vec3s;
 }; //tolua_exports
 

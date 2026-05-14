@@ -25,6 +25,7 @@ public:
 
 	virtual Status Tick(float deltaMs) override;
 	virtual void Reset() override;
+	virtual const char* GetDebugType() const override { return "Action"; }
 
 protected:
 	virtual void   OnInitialize() = 0;

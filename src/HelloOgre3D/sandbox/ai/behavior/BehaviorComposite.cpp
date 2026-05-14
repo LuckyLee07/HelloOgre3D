@@ -29,7 +29,7 @@ void BehaviorComposite::Reset()
 
 BehaviorNode::Status BehaviorSequence::Tick(float deltaMs)
 {
-	if (m_children.empty()) return STATUS_SUCCESS;
+	if (m_children.empty()) return TraceStatus(STATUS_SUCCESS);
 
 	// 从游标处恢复（首次或全新评估时 m_runningIdx == -1，从 0 开始）
 	int i = (m_runningIdx >= 0) ? m_runningIdx : 0;
@@ -42,23 +42,23 @@ BehaviorNode::Status BehaviorSequence::Tick(float deltaMs)
 		if (s == STATUS_RUNNING)
 		{
 			m_runningIdx = i;
-			return STATUS_RUNNING;
+			return TraceStatus(STATUS_RUNNING);
 		}
 		if (s == STATUS_FAILURE)
 		{
 			m_runningIdx = -1;
-			return STATUS_FAILURE;
+			return TraceStatus(STATUS_FAILURE);
 		}
 		// SUCCESS：继续下一个
 	}
 	m_runningIdx = -1;
-	return STATUS_SUCCESS;
+	return TraceStatus(STATUS_SUCCESS);
 }
 
 
 BehaviorNode::Status BehaviorSelector::Tick(float deltaMs)
 {
-	if (m_children.empty()) return STATUS_FAILURE;
+	if (m_children.empty()) return TraceStatus(STATUS_FAILURE);
 
 	int i = (m_runningIdx >= 0) ? m_runningIdx : 0;
 	for (; i < (int)m_children.size(); ++i)
@@ -70,15 +70,15 @@ BehaviorNode::Status BehaviorSelector::Tick(float deltaMs)
 		if (s == STATUS_RUNNING)
 		{
 			m_runningIdx = i;
-			return STATUS_RUNNING;
+			return TraceStatus(STATUS_RUNNING);
 		}
 		if (s == STATUS_SUCCESS)
 		{
 			m_runningIdx = -1;
-			return STATUS_SUCCESS;
+			return TraceStatus(STATUS_SUCCESS);
 		}
 		// FAILURE：尝试下一个
 	}
 	m_runningIdx = -1;
-	return STATUS_FAILURE;
+	return TraceStatus(STATUS_FAILURE);
 }

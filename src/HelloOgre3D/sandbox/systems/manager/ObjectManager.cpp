@@ -9,6 +9,7 @@
 #include "OgreSceneManager.h"
 #include "objects/components/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
+#include "profiling/Profile.h"
 
 ObjectManager* g_ObjectManager = nullptr;
 
@@ -40,6 +41,7 @@ ObjectManager* ObjectManager::GetInstance()
 
 void ObjectManager::Update(int deltaMilliseconds)
 {
+	H3D_PROFILE_SCOPE("ObjectManager::Update");
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;

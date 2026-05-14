@@ -20,6 +20,7 @@ public:
 	int  GetEvaluatorRef() const { return m_evalLuaRef; }
 
 	virtual Status Tick(float deltaMs) override;
+	virtual const char* GetDebugType() const override { return "Condition"; }
 
 private:
 	int m_evalLuaRef;  // LUA_REGISTRYINDEX 上的闭包引用；LUA_NOREF 表示未设置

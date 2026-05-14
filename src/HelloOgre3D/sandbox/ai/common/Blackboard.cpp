@@ -61,6 +61,18 @@ bool Blackboard::GetBool(const std::string& key, bool defaultValue) const
 	return iter->second;
 }
 
+void Blackboard::SetString(const std::string& key, const std::string& value)
+{
+	m_strings[key] = value;
+}
+
+std::string Blackboard::GetString(const std::string& key) const
+{
+	auto iter = m_strings.find(key);
+	if (iter == m_strings.end()) return "";
+	return iter->second;
+}
+
 void Blackboard::SetVec3(const std::string& key, const Ogre::Vector3& value)
 {
 	m_vec3s[key] = value;
@@ -79,6 +91,7 @@ bool Blackboard::Has(const std::string& key) const
 		|| m_floats.count(key) > 0
 		|| m_ints.count(key) > 0
 		|| m_bools.count(key) > 0
+		|| m_strings.count(key) > 0
 		|| m_vec3s.count(key) > 0;
 }
 
@@ -88,6 +101,7 @@ void Blackboard::Remove(const std::string& key)
 	m_floats.erase(key);
 	m_ints.erase(key);
 	m_bools.erase(key);
+	m_strings.erase(key);
 	m_vec3s.erase(key);
 }
 
@@ -97,5 +111,6 @@ void Blackboard::Clear()
 	m_floats.clear();
 	m_ints.clear();
 	m_bools.clear();
+	m_strings.clear();
 	m_vec3s.clear();
 }

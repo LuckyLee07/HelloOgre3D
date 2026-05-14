@@ -14,7 +14,7 @@ BehaviorNode::Status BehaviorAction::Tick(float deltaMs)
 		OnCleanUp();
 		m_initialized = false;
 	}
-	return s;
+	return TraceStatus(s);
 }
 
 void BehaviorAction::Reset()
