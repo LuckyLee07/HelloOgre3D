@@ -2,6 +2,7 @@
 set SCRIPT_DIRECTORY=%~dp0
 set CURRENT_DIRECTORY=%cd%
 set ARGUMENTS=%*
+set TRACY_ENABLE=1
 
 cd /d %SCRIPT_DIRECTORY%
 rem rmdir /S/Q build
