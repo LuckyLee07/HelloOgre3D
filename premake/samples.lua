@@ -34,6 +34,7 @@ function CreateGameProject( projectName )
       "opensteer",
       "recast",
       "detour",
+      "tracy",
     } )
     libdirs{ "../libs/" }
     configuration( { "windows" } )
@@ -48,6 +49,9 @@ function CreateGameProject( projectName )
         "dxguid",
         "d3dx9",
         "DxErr",
+        "advapi32",
+        "dbghelp",
+        "user32",
         "legacy_stdio_definitions.lib"
       } )
       -- static linking against ogre requires linking against ogre's resource file
@@ -68,6 +72,10 @@ function CreateGameProject( projectName )
         "-framework OpenGL"
       }
     configuration( { "linux" } )
+      links {
+        "pthread",
+        "dl"
+      }
     filter "system:macosx"
       linkoptions {
         "-framework Cocoa",
@@ -105,6 +113,13 @@ function CreateGameProject( projectName )
         "\"$(DXSDK_DIR)/Lib/x64\""
       } )
     configuration( "*" )
+    if HELLO_TRACY_ENABLED then
+      defines {
+        "HELLO_ENABLE_TRACY",
+        "TRACY_ENABLE",
+        "TRACY_ON_DEMAND"
+      }
+    end
     includedirs( {
       "../src/%{prj.name}/",
       "../src/%{prj.name}/common",
@@ -113,6 +128,7 @@ function CreateGameProject( projectName )
       "../src/%{prj.name}/sandbox",
       "../src/%{prj.name}/sandbox/core",
       "../src/external",
+      "../src/external/tracy/public",
       "../src/external/lua/lua",
       "../src/external/lua/tolua",
       "../src/external/lua/luasocket",

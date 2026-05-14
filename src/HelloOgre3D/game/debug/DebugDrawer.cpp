@@ -1,6 +1,7 @@
 #include "DebugDrawer.h"
 #include "Ogre.h"
 #include "ClientManager.h"
+#include "profiling/Profile.h"
 
 DebugDrawer::DebugDrawer() : m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_isEnable(true), m_linesIndex(0)
@@ -36,6 +37,7 @@ void DebugDrawer::Initialize()
 
 void DebugDrawer::build()
 {
+	H3D_PROFILE_SCOPE("DebugDrawer::build");
 	m_pManualObject->beginUpdate(0);
 	if (m_isEnable && !m_lineVertices.empty())
 	{

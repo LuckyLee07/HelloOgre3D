@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <unordered_set>
 #include "systems/manager/SandboxMgr.h"
+#include "profiling/Profile.h"
 
 namespace
 {
@@ -259,6 +260,7 @@ bool NavigationMesh::IsValid() const
 
 Ogre::Vector3 NavigationMesh::FindClosestPoint(const Ogre::Vector3& point) const
 {
+	H3D_PROFILE_SCOPE("NavigationMesh::FindClosestPoint");
 	if (!m_navQuery)
 		return point;
 
@@ -273,6 +275,7 @@ Ogre::Vector3 NavigationMesh::FindClosestPoint(const Ogre::Vector3& point) const
 bool NavigationMesh::FindPath(const Ogre::Vector3& start, const Ogre::Vector3& end,
 	std::vector<Ogre::Vector3>& outPath) const
 {
+	H3D_PROFILE_SCOPE("NavigationMesh::FindPath");
 	outPath.clear();
 	if (!m_navQuery)
 		return false;
@@ -342,6 +345,7 @@ bool NavigationMesh::FindPath(const Ogre::Vector3& start, const Ogre::Vector3& e
 
 Ogre::Vector3 NavigationMesh::RandomPoint() const
 {
+	H3D_PROFILE_SCOPE("NavigationMesh::RandomPoint");
 	if (!m_navQuery)
 		return Ogre::Vector3::ZERO;
 

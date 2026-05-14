@@ -18,6 +18,7 @@
 #include "debug/DebugDrawer.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "core/SandboxMacros.h"
+#include "profiling/Profile.h"
 
 using namespace Ogre;
 
@@ -102,17 +103,30 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
+	H3D_PROFILE_SCOPE("GameManager::UpdateStages");
 	//struct timeval stNow;
 	//gettimeofday(&stNow, NULL);
-	m_pScriptVM->callFunction("__tick__", "i", deltaMilliseconds);
+	{
+		H3D_PROFILE_SCOPE("Lua::__tick__");
+		m_pScriptVM->callFunction("__tick__", "i", deltaMilliseconds);
+	}
 
 	m_SimulationTime += deltaMilliseconds;
 
-	m_pObjectManager->Update(deltaMilliseconds);
+	{
+		H3D_PROFILE_SCOPE("ObjectManager::Update");
+		m_pObjectManager->Update(deltaMilliseconds);
+	}
 
-	m_pPhysicsWorld->stepWorld();
+	{
+		H3D_PROFILE_SCOPE("PhysicsWorld::Step");
+		m_pPhysicsWorld->stepWorld();
+	}
 
-	m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
+	{
+		H3D_PROFILE_SCOPE("Lua::Sandbox_Update");
+		m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
+	}
 }
 
 Ogre::Camera* GameManager::getCamera()

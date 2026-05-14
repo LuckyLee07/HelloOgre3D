@@ -138,6 +138,7 @@ if configuration == nil then
 end
 
 local macos_deployment_target = "15.6"
+HELLO_TRACY_ENABLED = os.getenv("TRACY_ENABLE") == "1"
 
 local _project = project
 project = function(...)
@@ -843,6 +844,28 @@ solution( "HelloOgre3D" )
 			files { "../src/external/lua/luasocket/usocket.c",
 					"../src/external/lua/luasocket/unix.c"
 			}
+		filter {}
+
+-- tracy profiler client v0.13.1 static library
+	project( "tracy" )
+		kind( "StaticLib" )
+		location( "../build/External/tracy" )
+		buildoptions( {
+			"/wd\"4100\"", "/wd\"4127\"", "/wd\"4324\"", "/wd\"4456\"",
+			"/wd\"4702\"", "/wd\"4996\""
+		} )
+		includedirs( { "../src/external/tracy/public" } )
+		files( {
+			"../src/external/tracy/public/TracyClient.cpp",
+			"../src/external/tracy/public/**.h",
+			"../src/external/tracy/public/**.hpp",
+			"../src/external/tracy/public/**.hmm"
+		} )
+		if HELLO_TRACY_ENABLED then
+			defines( { "TRACY_ENABLE", "TRACY_ON_DEMAND" } )
+		end
+		filter "system:not windows"
+			buildoptions { "-pthread" }
 		filter {}
 
 -- bullet collision v2.81 revision 2613

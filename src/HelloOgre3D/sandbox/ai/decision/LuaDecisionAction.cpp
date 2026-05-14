@@ -4,6 +4,7 @@
 #include "scripting/LuaPluginMgr.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
+#include "profiling/Profile.h"
 
 LuaDecisionAction::LuaDecisionAction(const std::string& name, SoldierObject* owner)
 	: DecisionAction(name), m_owner(owner)
@@ -28,6 +29,7 @@ static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
 
 void LuaDecisionAction::OnInitialize()
 {
+	H3D_PROFILE_SCOPE("LuaDecisionAction::OnInitialize");
 	// Lua signature: function OnInitialize(owner, blackboard) ... end
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
 	callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", m_owner, bb);
@@ -35,6 +37,7 @@ void LuaDecisionAction::OnInitialize()
 
 DecisionAction::Status LuaDecisionAction::OnUpdate(float deltaMs)
 {
+	H3D_PROFILE_SCOPE("LuaDecisionAction::OnUpdate");
 	// Lua signature: function OnUpdate(deltaMs, owner, blackboard) return status end
 	// Status: 1 = RUNNING, 2 = TERMINATED.
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
@@ -46,6 +49,7 @@ DecisionAction::Status LuaDecisionAction::OnUpdate(float deltaMs)
 
 void LuaDecisionAction::OnCleanUp()
 {
+	H3D_PROFILE_SCOPE("LuaDecisionAction::OnCleanUp");
 	// Lua signature: function OnCleanUp(owner, blackboard) ... end
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
 	callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", m_owner, bb);

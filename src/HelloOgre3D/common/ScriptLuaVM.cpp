@@ -11,6 +11,7 @@ extern "C" {
 #include <iostream>
 #include "tolua++.h"
 #include "LogSystem.h"
+#include "profiling/Profile.h"
 
 // LuaStack自动清理
 class LuaStackBackup
@@ -174,6 +175,11 @@ bool ScriptLuaVM::callFunction(const char* funcname, const char* format, ...)
 
 bool ScriptLuaVM::callFunctionV(const char* funcname, const char* format, va_list vl)
 {
+	H3D_PROFILE_SCOPE_NAMED(luaCallZone, "ScriptLuaVM::callFunctionV");
+	if (funcname && funcname[0])
+	{
+		H3D_PROFILE_TEXT(luaCallZone, funcname, strlen(funcname));
+	}
 	if (!m_pState || !funcname || !funcname[0])
 	{
 		return false;
@@ -339,6 +345,11 @@ void ScriptLuaVM::showLuaError(lua_State* L, const char* msg)
 
 bool ScriptLuaVM::callFunctionV1(const char* funcname, const char* format, bool needSelf, va_list vl)
 {
+	H3D_PROFILE_SCOPE_NAMED(luaCallZone, "ScriptLuaVM::callFunctionV1");
+	if (funcname && funcname[0])
+	{
+		H3D_PROFILE_TEXT(luaCallZone, funcname, strlen(funcname));
+	}
 	if (funcname == nullptr || funcname[0] == '\0')
 	{
 		return false;

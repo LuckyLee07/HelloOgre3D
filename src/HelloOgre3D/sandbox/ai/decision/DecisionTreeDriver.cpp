@@ -3,6 +3,7 @@
 #include "DecisionTree.h"
 #include "DecisionBranch.h"
 #include "LuaDecisionAction.h"
+#include "profiling/Profile.h"
 
 DecisionTreeDriver::DecisionTreeDriver(SoldierObject* owner)
 	: m_owner(owner), m_blackboard(owner), m_tree(nullptr)
@@ -50,6 +51,7 @@ void DecisionTreeDriver::Init()
 
 void DecisionTreeDriver::Tick(float deltaMs)
 {
+	H3D_PROFILE_SCOPE("DecisionTreeDriver::Tick");
 	if (!m_tree) return;
 	m_tree->Tick(deltaMs);
 }

@@ -17,6 +17,7 @@
 #include "animation/SoldierAnimProfile.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
+#include "profiling/Profile.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -137,6 +138,7 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 
 void SoldierObject::Update(int deltaMilisec)
 {
+	H3D_PROFILE_SCOPE("SoldierObject::Update");
 	// Keep body transform in sync with physics before animation/bone evaluation.
 	this->updateWorldTransform();
 
@@ -147,21 +149,32 @@ void SoldierObject::Update(int deltaMilisec)
 	if (forceUpdate || totalMilisec > 1000)
 	{
 		totalMilisec = 0;
+		H3D_PROFILE_SCOPE("Lua::Agent_Update");
 		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
 	}
 
 	// Single driver path — could be FSM, DT, or future BT (all IDecisionDriver).
 	if (m_driver)
 	{
+		H3D_PROFILE_SCOPE("IDecisionDriver::Tick");
 		m_driver->Tick((float)deltaMilisec);
 	}
 	if (m_animController && GetUseCppFSM())
+	{
+		H3D_PROFILE_SCOPE("SoldierAnimController::Update");
 		m_animController->Update((float)deltaMilisec);
+	}
 
-	m_pAgentBody->Update(deltaMilisec);
+	{
+		H3D_PROFILE_SCOPE("AgentBody::Update");
+		m_pAgentBody->Update(deltaMilisec);
+	}
 	SyncWeaponToHandBone();
 	if (m_pWeapon)
+	{
+		H3D_PROFILE_SCOPE("Weapon::Update");
 		m_pWeapon->Update(deltaMilisec);
+	}
 
 	TryApplyPendingStance();
 }

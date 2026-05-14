@@ -4,6 +4,7 @@
 #include "scripting/LuaPluginMgr.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/common/Blackboard.h"
+#include "profiling/Profile.h"
 
 LuaBehaviorAction::LuaBehaviorAction(const std::string& name, SoldierObject* owner)
 	: BehaviorAction(name), m_owner(owner)
@@ -28,6 +29,7 @@ static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
 
 void LuaBehaviorAction::OnInitialize()
 {
+	H3D_PROFILE_SCOPE("LuaBehaviorAction::OnInitialize");
 	// Lua: function OnInitialize(owner, blackboard) ... end
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
 	callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", m_owner, bb);
@@ -35,6 +37,7 @@ void LuaBehaviorAction::OnInitialize()
 
 BehaviorAction::Status LuaBehaviorAction::OnUpdate(float deltaMs)
 {
+	H3D_PROFILE_SCOPE("LuaBehaviorAction::OnUpdate");
 	// Lua: function OnUpdate(deltaMs, owner, blackboard) return status end
 	// 返回值: 1=RUNNING, 2=SUCCESS, 3=FAILURE
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
@@ -48,6 +51,7 @@ BehaviorAction::Status LuaBehaviorAction::OnUpdate(float deltaMs)
 
 void LuaBehaviorAction::OnCleanUp()
 {
+	H3D_PROFILE_SCOPE("LuaBehaviorAction::OnCleanUp");
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
 	callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", m_owner, bb);
 }

@@ -7,6 +7,7 @@
 #include "systems/input/InputManager.h"
 #include "core/SandboxMacros.h"
 #include "common/RenderConfigHelper.h"
+#include "profiling/Profile.h"
 #include "Ogre.h"
 #include "OgreDpiHelper.h"
 #if defined(_WIN32)
@@ -344,6 +345,8 @@ void ClientManager::Cleanup()
 
 void ClientManager::Initialize()
 {
+    H3D_PROFILE_THREAD("MainThread");
+
     const Ogre::ColourValue ambient(0.0f, 0.0f, 0.0f);
 
     m_pRenderWindow->getViewport(0)->setBackgroundColour(ambient);
@@ -420,19 +423,33 @@ void ClientManager::Update()
 
     if (m_pGameManager && timeDeltaInMicros >= updatePerSecondInMicros)
     {
+        H3D_PROFILE_FRAME();
+        H3D_PROFILE_SCOPE("ClientManager::Update");
         SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
 
-        m_pDebugDrawer->clear();
+        {
+            H3D_PROFILE_SCOPE("DebugDrawer::Clear");
+            m_pDebugDrawer->clear();
+        }
 
-        m_pGameManager->Update(deltaMilliseconds);
+        {
+            H3D_PROFILE_SCOPE("GameManager::Update");
+            m_pGameManager->Update(deltaMilliseconds);
+        }
         m_lastUpdateTimeInMicro = currTimeInMicros;
 
-        m_pDebugDrawer->build();
+        {
+            H3D_PROFILE_SCOPE("DebugDrawer::Build");
+            m_pDebugDrawer->build();
+        }
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
 
-        m_pInputManager->update(deltaMilliseconds);
+        {
+            H3D_PROFILE_SCOPE("InputManager::Update");
+            m_pInputManager->update(deltaMilliseconds);
+        }
     }
 }
 
