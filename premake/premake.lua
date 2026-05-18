@@ -138,7 +138,22 @@ if configuration == nil then
 end
 
 local macos_deployment_target = "15.6"
-HELLO_TRACY_ENABLED = os.getenv("TRACY_ENABLE") == "1"
+
+newoption {
+	trigger = "with-tracy",
+	description = "Enable Tracy profiler instrumentation"
+}
+
+local function is_truthy_env(name)
+	local value = os.getenv(name)
+	return value == "1" or value == "true" or value == "TRUE" or value == "on" or value == "ON"
+end
+
+function IsTracyEnabled()
+	return _OPTIONS["with-tracy"] ~= nil or is_truthy_env("TRACY_ENABLE") or is_truthy_env("ENABLE_TRACY")
+end
+
+HELLO_TRACY_ENABLED = IsTracyEnabled()
 
 local _project = project
 project = function(...)
@@ -862,7 +877,7 @@ solution( "HelloOgre3D" )
 			"../src/external/tracy/public/**.hmm"
 		} )
 		if HELLO_TRACY_ENABLED then
-			defines( { "TRACY_ENABLE", "TRACY_ON_DEMAND" } )
+			defines( { "TRACY_ENABLE", "TRACY_ON_DEMAND", "TRACY_ALLOW_SHADOW_WARNING" } )
 		end
 		filter "system:not windows"
 			buildoptions { "-pthread" }

@@ -390,6 +390,7 @@ void ClientManager::Run()
 
 void ClientManager::Draw()
 {
+    H3D_PROFILE_SCOPE("ClientManager::Draw");
     long long currTimeInMicro = m_Timer.getMicroseconds();
     SetProfileTime(P_RENDER_TIME, currTimeInMicro - m_lastDrawTimeInMicro);
 
@@ -423,9 +424,9 @@ void ClientManager::Update()
 
     if (m_pGameManager && timeDeltaInMicros >= updatePerSecondInMicros)
     {
-        H3D_PROFILE_FRAME();
         H3D_PROFILE_SCOPE("ClientManager::Update");
         SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
+        H3D_PROFILE_PLOT("SimulateDeltaMs", double(timeDeltaInMicros) / 1000.0);
 
         {
             H3D_PROFILE_SCOPE("DebugDrawer::Clear");
@@ -445,6 +446,7 @@ void ClientManager::Update()
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
+        H3D_PROFILE_PLOT("SimulateCostMs", double(newTimeInMicros) / 1000.0);
 
         {
             H3D_PROFILE_SCOPE("InputManager::Update");
@@ -455,23 +457,39 @@ void ClientManager::Update()
 
 void ClientManager::InputCapture()
 {
+    H3D_PROFILE_SCOPE("ClientManager::InputCapture");
     m_pInputManager->capture();
 }
 
 void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 {
-    m_pCameraController->frameRenderingQueued(event);
+    H3D_PROFILE_SCOPE("ClientManager::FrameRendering");
+
+    {
+        H3D_PROFILE_SCOPE("CameraController::frameRenderingQueued");
+        m_pCameraController->frameRenderingQueued(event);
+    }
 
     if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
     {
-        Ogre::Viewport* vp = m_pRenderWindow->getViewport(0);
+        Ogre::Viewport* vp = nullptr;
+        {
+            H3D_PROFILE_SCOPE("RenderWindow::getViewport");
+            vp = m_pRenderWindow->getViewport(0);
+        }
         if (vp)
         {
-            vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+            {
+                H3D_PROFILE_SCOPE("Viewport::setDimensions");
+                vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+            }
             const unsigned int vw = vp->getActualWidth();
             const unsigned int vh = vp->getActualHeight();
             if (m_pCamera && vh > 0)
+            {
+                H3D_PROFILE_SCOPE("Camera::setAspectRatio");
                 m_pCamera->setAspectRatio(Ogre::Real(vw) / Ogre::Real(vh));
+            }
         }
     }
 }

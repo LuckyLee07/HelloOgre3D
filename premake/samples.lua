@@ -117,7 +117,8 @@ function CreateGameProject( projectName )
       defines {
         "HELLO_ENABLE_TRACY",
         "TRACY_ENABLE",
-        "TRACY_ON_DEMAND"
+        "TRACY_ON_DEMAND",
+        "TRACY_ALLOW_SHADOW_WARNING"
       }
     end
     includedirs( {

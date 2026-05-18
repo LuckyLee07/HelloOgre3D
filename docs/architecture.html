@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>HelloOgre3D 架构流程图</title>
+	<script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+	<style>
+		:root {
+			--bg: #f5f7fa;
+			--panel: #ffffff;
+			--text: #1f2937;
+			--muted: #5b6675;
+			--line: #d8dee8;
+			--blue: #2563eb;
+			--green: #059669;
+			--orange: #d97706;
+			--red: #dc2626;
+			--purple: #7c3aed;
+		}
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+			line-height: 1.65;
+		}
+
+		.container {
+			max-width: 1240px;
+			margin: 0 auto;
+			padding: 28px 24px 48px;
+		}
+
+		.header {
+			padding: 28px 32px;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			margin-bottom: 20px;
+		}
+
+		h1 {
+			margin: 0 0 10px;
+			font-size: 32px;
+			line-height: 1.25;
+			letter-spacing: 0;
+		}
+
+		h2 {
+			margin: 30px 0 14px;
+			padding-left: 12px;
+			border-left: 4px solid var(--blue);
+			font-size: 24px;
+			line-height: 1.35;
+			letter-spacing: 0;
+		}
+
+		h3 {
+			margin: 0 0 10px;
+			font-size: 18px;
+			line-height: 1.4;
+			letter-spacing: 0;
+		}
+
+		p {
+			margin: 0 0 12px;
+		}
+
+		.summary {
+			color: var(--muted);
+			max-width: 980px;
+		}
+
+		.panel {
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			padding: 24px;
+			margin-bottom: 18px;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+			gap: 16px;
+		}
+
+		.card {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			padding: 18px;
+			background: #fbfcfe;
+		}
+
+		.card p,
+		.card li {
+			color: var(--muted);
+		}
+
+		ul {
+			margin: 8px 0 0;
+			padding-left: 20px;
+		}
+
+		li {
+			margin: 6px 0;
+		}
+
+		code {
+			padding: 2px 6px;
+			border-radius: 4px;
+			background: #eef2f7;
+			font-family: Consolas, "Courier New", monospace;
+			font-size: 0.94em;
+		}
+
+		pre code {
+			padding: 0;
+			background: transparent;
+			color: inherit;
+			font-size: inherit;
+		}
+
+		pre {
+			overflow-x: auto;
+			padding: 16px;
+			border-radius: 8px;
+			background: #101827;
+			color: #e5edf7;
+			line-height: 1.5;
+		}
+
+		.mermaid {
+			padding: 14px;
+			border-radius: 8px;
+			background: #ffffff;
+			overflow-x: auto;
+		}
+
+		.legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px 16px;
+			color: var(--muted);
+			font-size: 14px;
+			margin-top: 12px;
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			display: inline-block;
+		}
+
+		.blue { background: var(--blue); }
+		.green { background: var(--green); }
+		.orange { background: var(--orange); }
+		.red { background: var(--red); }
+		.purple { background: var(--purple); }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<h1>HelloOgre3D 架构流程图</h1>
+			<p class="summary">
+				这份文档面向新接手项目的人，用来快速理解 HelloOgre3D 的运行链路、目录职责、AI 框架、脚本桥接和构建流程。
+				项目当前仍是持续重构中的 C++ / Lua 游戏沙盒，因此图中重点标出了“应用编排、运行时适配、沙盒玩法、脚本扩展、资源加载”之间的边界。
+			</p>
+		</div>
+
+		<h2>一、总体架构</h2>
+		<div class="panel">
+			<div class="mermaid">
+graph TD
+    App["HelloOgre3D.exe<br/>程序入口"]
+    Client["client/Application<br/>Ogre FrameListener<br/>主帧回调"]
+    ClientMgr["game/ClientManager<br/>窗口、渲染、输入、场景编排"]
+    GameMgr["game/GameManager<br/>样例生命周期、对象系统入口"]
+    Runtime["runtime<br/>Ogre / Profiling 等运行时适配"]
+    Common["common<br/>Lua VM、日志、文件、基础工具"]
+    Sandbox["sandbox<br/>对象、AI、脚本桥、物理、组件、系统"]
+    Scripts["bin/res/scripts<br/>Lua 玩法脚本与样例"]
+    Media["media / bin/res<br/>模型、材质、shader、脚本资源"]
+    External["src/external<br/>Ogre、Bullet、Lua、Tracy 等第三方库"]
+    Build["premake<br/>VS / Xcode 工程生成"]
+
+    Build --> App
+    External --> Runtime
+    External --> Sandbox
+    App --> Client
+    Client --> ClientMgr
+    ClientMgr --> Runtime
+    ClientMgr --> Common
+    ClientMgr --> GameMgr
+    GameMgr --> Sandbox
+    Common <--> Scripts
+    Sandbox <--> Scripts
+    Runtime --> Media
+    Sandbox --> Media
+
+    style App fill:#e0f2fe,stroke:#2563eb,stroke-width:2px
+    style Client fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+    style ClientMgr fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+    style GameMgr fill:#dcfce7,stroke:#059669,stroke-width:2px
+    style Sandbox fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style Runtime fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+    style Common fill:#f3f4f6,stroke:#5b6675,stroke-width:2px
+    style Scripts fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style Media fill:#f3f4f6,stroke:#5b6675,stroke-width:2px
+    style External fill:#f3f4f6,stroke:#5b6675,stroke-width:2px
+    style Build fill:#f3f4f6,stroke:#5b6675,stroke-width:2px
+			</div>
+			<div class="legend">
+				<span class="badge"><span class="dot blue"></span>应用与客户端编排</span>
+				<span class="badge"><span class="dot green"></span>游戏生命周期</span>
+				<span class="badge"><span class="dot orange"></span>沙盒玩法与 AI</span>
+				<span class="badge"><span class="dot purple"></span>运行时适配</span>
+				<span class="badge"><span class="dot red"></span>Lua 脚本</span>
+			</div>
+		</div>
+
+		<h2>二、主循环流程</h2>
+		<div class="panel">
+			<div class="mermaid">
+sequenceDiagram
+    participant Ogre as Ogre Root
+    participant App as client/Application
+    participant ClientMgr as game/ClientManager
+    participant GameMgr as game/GameManager
+    participant ObjMgr as sandbox/ObjectManager
+    participant Soldier as sandbox/SoldierObject
+    participant Lua as common/ScriptLuaVM
+
+    Ogre->>App: frameStarted(evt)
+    App->>ClientMgr: Update(delta)
+    ClientMgr->>GameMgr: Update(fixedDelta)
+    GameMgr->>ObjMgr: Update(delta)
+    ObjMgr->>Soldier: Update(delta)
+    Soldier->>Lua: Agent_Update / 行为回调
+    Soldier->>Soldier: AI / 动画 / 物理 / 武器同步
+    Ogre->>App: frameRenderingQueued(evt)
+    App->>ClientMgr: frameRenderingQueued(evt)
+    ClientMgr->>ClientMgr: 输入采集、调试绘制、渲染前处理
+			</div>
+			<p>
+				当前主循环的关键点是：渲染帧由 Ogre 驱动，游戏逻辑从 <code>ClientManager</code> 进入，
+				再传递到 <code>GameManager</code> 和沙盒对象系统。对象数量增加时，最先需要关注的是对象线性更新、Lua 高频调用、AI tick、动画和渲染侧阴影成本。
+			</p>
+		</div>
+
+		<h2>三、AI 与脚本链路</h2>
+		<div class="panel">
+			<div class="mermaid">
+graph LR
+    LuaCfg["Lua AI 配置<br/>bin/res/scripts/ai"]
+    Loader["BehaviorTreeLoader<br/>配置转运行树"]
+    Driver["BehaviorTreeDriver<br/>tick 行为树"]
+    BTNode["BT 节点<br/>Selector / Sequence / Condition / Action"]
+    LuaAction["LuaBehaviorAction<br/>调用脚本行为"]
+    Blackboard["Blackboard<br/>运行时共享数据"]
+    Decision["DecisionTreeDriver<br/>决策树"]
+    FSM["FSM<br/>状态机"]
+    Object["SoldierObject / Agent<br/>对象执行层"]
+    Nav["Navigation<br/>Recast / Detour"]
+
+    LuaCfg --> Loader
+    Loader --> Driver
+    Driver --> BTNode
+    BTNode --> LuaAction
+    LuaAction --> Object
+    BTNode <--> Blackboard
+    Decision --> Object
+    FSM --> Object
+    Object --> Nav
+    Object --> Blackboard
+
+    style LuaCfg fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style Loader fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style Driver fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style BTNode fill:#fff7ed,stroke:#d97706,stroke-width:2px
+    style LuaAction fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style Blackboard fill:#e0f2fe,stroke:#2563eb,stroke-width:2px
+    style Object fill:#dcfce7,stroke:#059669,stroke-width:2px
+    style Nav fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+			</div>
+			<p>
+				AI 体系目前同时包含有限状态机、决策树和行为树。行为树结构已经开始向 Lua 配置迁移，
+				C++ 侧负责运行时节点、tick 调度和宿主对象桥接，Lua 侧负责样例规则和可扩展行为。
+			</p>
+		</div>
+
+		<h2>四、目录职责</h2>
+		<div class="grid">
+			<div class="card">
+				<h3><code>src/HelloOgre3D/client</code></h3>
+				<p>程序入口和 Ogre 帧回调层。主要负责启动应用、接收 frameStarted / frameRenderingQueued，并把控制权交给游戏侧 manager。</p>
+			</div>
+			<div class="card">
+				<h3><code>src/HelloOgre3D/game</code></h3>
+				<p>应用编排层。负责窗口、场景、输入、样例生命周期、Lua 绑定入口和主要 manager 的连接。</p>
+			</div>
+			<div class="card">
+				<h3><code>src/HelloOgre3D/runtime</code></h3>
+				<p>运行时适配层。承接 Ogre、Tracy 等和引擎或工具强相关，但又不属于纯玩法规则的能力。</p>
+			</div>
+			<div class="card">
+				<h3><code>src/HelloOgre3D/common</code></h3>
+				<p>通用基础设施。包含 Lua VM、日志、文件工具、基础类型等跨模块能力。</p>
+			</div>
+			<div class="card">
+				<h3><code>src/HelloOgre3D/sandbox</code></h3>
+				<p>沙盒玩法层。包含对象系统、AI、导航、脚本桥、物理、组件和系统，是当前重构与功能实验的主要区域。</p>
+			</div>
+			<div class="card">
+				<h3><code>bin/res/scripts</code></h3>
+				<p>Lua 运行脚本。包含基础库、manager、agent、AI 配置和 samples，是验证玩法行为的重要入口。</p>
+			</div>
+		</div>
+
+		<h2>五、构建与工具链</h2>
+		<div class="panel">
+			<div class="mermaid">
+graph TD
+    Premake["premake/premake.lua<br/>工程生成事实来源"]
+    VS2017["vs2017.bat<br/>生成 VS2017 工程"]
+    VS2019["vs2019.bat<br/>生成 VS2019 工程"]
+    VS2022["vs2022.bat<br/>生成 VS2022 工程"]
+    Xcode["xcode.sh<br/>生成 Xcode 工程"]
+    Tolua["src/HelloOgre3D/tolua.bat<br/>生成 Lua 绑定"]
+    BuildDir["build<br/>生成的 IDE 工程"]
+    Pkg["*.pkg<br/>绑定定义"]
+    Generated["GameToLua.cpp / SandboxToLua.cpp<br/>生成代码"]
+    Tracy["TRACY_ENABLE / ENABLE_TRACY / --with-tracy<br/>控制 Tracy 编译宏"]
+
+    Premake --> VS2017
+    Premake --> VS2019
+    Premake --> VS2022
+    Premake --> Xcode
+    VS2017 --> BuildDir
+    VS2019 --> BuildDir
+    VS2022 --> BuildDir
+    Xcode --> BuildDir
+    Pkg --> Tolua
+    Tolua --> Generated
+    Tracy --> Premake
+
+    style Premake fill:#e0f2fe,stroke:#2563eb,stroke-width:2px
+    style BuildDir fill:#dcfce7,stroke:#059669,stroke-width:2px
+    style Tolua fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style Tracy fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+			</div>
+			<p>
+				工程生成以 <code>premake/premake.lua</code> 为准。修改绑定定义时，应通过 <code>tolua.bat</code> 重新生成绑定代码；
+				修改 Tracy 开关时，应重新执行对应 VS 工程生成脚本。
+			</p>
+		</div>
+
+		<h2>六、接手时优先阅读</h2>
+		<div class="panel">
+			<pre><code>HelloOgre3D
+├─ README.md                         项目演进记录和阶段目标
+├─ premake/premake.lua               工程生成和第三方库配置
+├─ src/HelloOgre3D/client/Application.cpp
+│                                      Ogre 主循环入口
+├─ src/HelloOgre3D/game/ClientManager.cpp
+│                                      渲染、输入、场景、主更新编排
+├─ src/HelloOgre3D/game/GameManager.cpp
+│                                      样例生命周期和对象系统入口
+├─ src/HelloOgre3D/common/ScriptLuaVM.cpp
+│                                      Lua 调用桥接
+├─ src/HelloOgre3D/sandbox/objects
+│                                      游戏对象实现
+├─ src/HelloOgre3D/sandbox/ai
+│                                      FSM、决策树、行为树、导航
+├─ src/HelloOgre3D/runtime
+│                                      Ogre / profiling 运行时适配
+└─ bin/res/scripts
+                                       Lua 玩法脚本和 samples</code></pre>
+		</div>
+
+		<h2>七、当前演进重点</h2>
+		<div class="grid">
+			<div class="card">
+				<h3>对象系统降耦</h3>
+				<ul>
+					<li>缩短对象继承链。</li>
+					<li>把动画、AI、物理、武器挂接逐步拆成组件。</li>
+					<li>减少 manager 和对象之间的隐式全局依赖。</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>AI 可配置化</h3>
+				<ul>
+					<li>行为树结构从 C++ / Lua builder 迁移到 Lua 配置。</li>
+					<li>保留 C++ 节点执行效率，同时让 Lua 承接玩法规则。</li>
+					<li>后续补黑板、触发器和节点级调试统计。</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>性能可观测</h3>
+				<ul>
+					<li>Tracy 已接入，用于查看帧、Lua、AI、对象更新热点。</li>
+					<li>下一步应补对象数、Lua 调用数、BT tick 数、渲染统计等 counters。</li>
+					<li>对象增多后的瓶颈要同时看逻辑侧和渲染侧。</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>跨平台整理</h3>
+				<ul>
+					<li>Windows 仍是主要路径，同时已开始补 macOS / Xcode 支持。</li>
+					<li>新增路径和 include 需要注意大小写敏感。</li>
+					<li>引擎耦合逻辑优先收口到 <code>runtime</code>。</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		mermaid.initialize({
+			startOnLoad: true,
+			theme: "default",
+			securityLevel: "loose",
+			flowchart: {
+				htmlLabels: true,
+				curve: "basis"
+			}
+		});
+	</script>
+</body>
+</html>
