@@ -8,6 +8,9 @@
 #include "core/SandboxMacros.h"
 #include "common/RenderConfigHelper.h"
 #include "profiling/Profile.h"
+#if defined(HELLO_ENABLE_FGUI)
+#include "ui/fairygui/FairyGuiSystem.h"
+#endif
 #include "Ogre.h"
 #include "OgreDpiHelper.h"
 #if defined(_WIN32)
@@ -44,9 +47,13 @@ ClientManager* GetClientMgr()
 }
 
 ClientManager::ClientManager()
-    : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr), 
-    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraController(nullptr), 
-    m_pDebugDrawer(nullptr), m_pGameManager(nullptr), m_shutdown(false)
+    : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr),
+    m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraController(nullptr),
+    m_pDebugDrawer(nullptr), m_pGameManager(nullptr),
+#if defined(HELLO_ENABLE_FGUI)
+    m_pFairyGuiSystem(nullptr),
+#endif
+    m_shutdown(false)
 {
     m_Timer.reset();
 
@@ -57,6 +64,9 @@ ClientManager::ClientManager()
 
 ClientManager::~ClientManager()
 {
+#if defined(HELLO_ENABLE_FGUI)
+    SAFE_DELETE(m_pFairyGuiSystem);
+#endif
     SAFE_DELETE(m_pGameManager);
     g_GameManager = nullptr;
     SAFE_DELETE(m_pDebugDrawer);
@@ -371,6 +381,11 @@ void ClientManager::Initialize()
     m_pInputManager = new InputManager();
     m_pInputManager->Initialize();
 
+#if defined(HELLO_ENABLE_FGUI)
+    m_pFairyGuiSystem = new FairyGuiSystem();
+    m_pFairyGuiSystem->Initialize(m_pRenderWindow, m_pSceneManager);
+#endif
+
     m_pDebugDrawer = new DebugDrawer();
     m_pDebugDrawer->Initialize();
 
@@ -393,6 +408,11 @@ void ClientManager::Draw()
     H3D_PROFILE_SCOPE("ClientManager::Draw");
     long long currTimeInMicro = m_Timer.getMicroseconds();
     SetProfileTime(P_RENDER_TIME, currTimeInMicro - m_lastDrawTimeInMicro);
+
+#if defined(HELLO_ENABLE_FGUI)
+    if (m_pFairyGuiSystem)
+        m_pFairyGuiSystem->Render();
+#endif
 
     m_lastDrawTimeInMicro = currTimeInMicro;
 }
@@ -470,6 +490,11 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
         m_pCameraController->frameRenderingQueued(event);
     }
 
+#if defined(HELLO_ENABLE_FGUI)
+    if (m_pFairyGuiSystem)
+        m_pFairyGuiSystem->Update(event.timeSinceLastFrame);
+#endif
+
     if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
     {
         Ogre::Viewport* vp = nullptr;
@@ -531,6 +556,11 @@ void ClientManager::WindowResized(unsigned int width, unsigned int height)
         }
     }
     m_pGameManager->HandleWindowResized(uiWidth, uiHeight);
+
+#if defined(HELLO_ENABLE_FGUI)
+    if (m_pFairyGuiSystem)
+        m_pFairyGuiSystem->HandleWindowResized(uiWidth, uiHeight);
+#endif
 
     if (vp)
     {

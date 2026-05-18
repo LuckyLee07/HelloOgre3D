@@ -20,6 +20,9 @@ class DebugDrawer;
 class InputManager;
 class GameManager;
 class ObfuscatedZipFactory;
+#if defined(HELLO_ENABLE_FGUI)
+class FairyGuiSystem;
+#endif
 
 class ClientManager : public Fancy::Singleton<ClientManager>
 {
@@ -100,8 +103,11 @@ private:
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;
 	OgreCameraController* m_pCameraController;
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* m_pFairyGuiSystem;
+#endif
 
-	bool m_shutdown; //game exit  
+	bool m_shutdown; //game exit
 };
 
 ClientManager* GetClientMgr();

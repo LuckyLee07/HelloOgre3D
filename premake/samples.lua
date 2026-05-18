@@ -1,3 +1,19 @@
+local function AddDebugSuffix(libraries)
+  local debugLibraries = {}
+  for _, library in ipairs(libraries) do
+    table.insert(debugLibraries, library .. "_d")
+  end
+  return debugLibraries
+end
+
+local function LinkProjectLibraries(libraries)
+  filter "configurations:Debug"
+    links(AddDebugSuffix(libraries))
+  filter "configurations:Release"
+    links(libraries)
+  filter {}
+end
+
 function CreateGameProject( projectName )
   project( projectName )
     kind( "ConsoleApp" )
@@ -5,10 +21,10 @@ function CreateGameProject( projectName )
     debugdir( "$(OutDir)" )
     -- increase precompiled header allocation limit
     buildoptions( { "/Zm256" } )
-    -- link against all other libraries
-    links( {
-      "freeimage",
-      "freetype",
+	    -- link against all other libraries
+	    LinkProjectLibraries( {
+	      "freeimage",
+	      "freetype",
       "libjpeg",
       "libopenjpeg",
       "libpng",
@@ -34,11 +50,19 @@ function CreateGameProject( projectName )
       "opensteer",
       "recast",
       "detour",
-      "tracy",
-    } )
-    libdirs{ "../libs/" }
+	      "tracy",
+	    } )
+	    if HELLO_FAIRYGUI_ENABLED then
+	      dependson { "fairygui" }
+	      LinkProjectLibraries( { "fairygui" } )
+	    end
+	    libdirs{ "../libs/" }
     configuration( { "windows" } )
+    configuration( { "windows", "Debug" } )
+      links { "ogre3d_direct3d9_d" }
+    configuration( { "windows", "Release" } )
       links { "ogre3d_direct3d9" }
+    configuration( { "windows" } )
       -- add the directx include directory
       buildoptions( { "/I \"$(DXSDK_DIR)/Include/\"" } )
       -- link against directx libraries
@@ -121,12 +145,17 @@ function CreateGameProject( projectName )
         "TRACY_ALLOW_SHADOW_WARNING"
       }
     end
-    includedirs( {
-      "../src/%{prj.name}/",
-      "../src/%{prj.name}/common",
-      "../src/%{prj.name}/game",
-      "../src/%{prj.name}/runtime",
-      "../src/%{prj.name}/sandbox",
+    if HELLO_FAIRYGUI_ENABLED then
+      defines {
+        "HELLO_ENABLE_FGUI"
+      }
+    end
+	    includedirs( {
+	      "../src/%{prj.name}/",
+	      "../src/%{prj.name}/common",
+	      "../src/%{prj.name}/game",
+	      "../src/%{prj.name}/runtime",
+	      "../src/%{prj.name}/sandbox",
       "../src/%{prj.name}/sandbox/core",
       "../src/external",
       "../src/external/tracy/public",
@@ -145,8 +174,14 @@ function CreateGameProject( projectName )
       "../src/external/bullet_collision/include/",
       "../src/external/bullet_dynamics/include/",
       "../src/external/bullet_linearmath/include/",
-      "../src/external/ois/includes/",
-    } )
+	      "../src/external/ois/includes/",
+	    } )
+    if HELLO_FAIRYGUI_ENABLED then
+      includedirs( {
+        "../src/%{prj.name}/runtime/ui/fairygui/cocoslite",
+        "../src/external/fairygui_cocos2dx/libfairygui/Classes",
+      } )
+    end
     configuration( { "windows" } )
       includedirs { "../src/Engine/ogre3d_direct3d9/include/" }
     configuration( "*" )
@@ -170,6 +205,15 @@ function CreateGameProject( projectName )
       "../src/" .. projectName .. "/runtime/**.h",
       "../src/" .. projectName .. "/runtime/**.cpp",
     } )
+    if HELLO_FAIRYGUI_ENABLED then
+      excludes( {
+        "../src/" .. projectName .. "/runtime/ui/fairygui/cocoslite/**.cpp",
+      } )
+    else
+      excludes( {
+        "../src/" .. projectName .. "/runtime/ui/fairygui/**.cpp",
+      } )
+    end
     filter "system:windows"
       postbuildcommands {}
     filter "system:macosx"
@@ -196,7 +240,7 @@ function CreateToluaProject( projectName )
     -- increase precompiled header allocation limit
     buildoptions( { "/Zm256" } )
     -- link against all other libraries
-    links( {
+    LinkProjectLibraries( {
       "lua",
       "luasocket",
     } )

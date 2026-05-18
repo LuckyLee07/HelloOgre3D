@@ -144,6 +144,11 @@ newoption {
 	description = "Enable Tracy profiler instrumentation"
 }
 
+newoption {
+	trigger = "with-fairygui",
+	description = "Enable FairyGUI runtime integration scaffold"
+}
+
 local function is_truthy_env(name)
 	local value = os.getenv(name)
 	return value == "1" or value == "true" or value == "TRUE" or value == "on" or value == "ON"
@@ -153,7 +158,12 @@ function IsTracyEnabled()
 	return _OPTIONS["with-tracy"] ~= nil or is_truthy_env("TRACY_ENABLE") or is_truthy_env("ENABLE_TRACY")
 end
 
+function IsFairyGuiEnabled()
+	return _OPTIONS["with-fairygui"] ~= nil or is_truthy_env("HELLO_ENABLE_FGUI") or is_truthy_env("ENABLE_FGUI") or is_truthy_env("FGUI_ENABLE")
+end
+
 HELLO_TRACY_ENABLED = IsTracyEnabled()
+HELLO_FAIRYGUI_ENABLED = IsFairyGuiEnabled()
 
 local _project = project
 project = function(...)
@@ -183,6 +193,10 @@ solution( "HelloOgre3D" )
 	minimalrebuild "Off"
 	editandcontinue "Off"
 	staticruntime  "On"
+
+	filter { "kind:StaticLib", "configurations:Debug" }
+		targetsuffix "_d"
+	filter {}
 
 	filter "system:windows"
 		characterset ("MBCS")
@@ -216,14 +230,8 @@ solution( "HelloOgre3D" )
 		vectorextensions( "SSE" )
 		vectorextensions( "SSE2" )
 -- build for x86-32bit machines
-		filter "system:windows"
-			linkoptions( "/MACHINE:X86" )
-		filter {}
 	configuration( "x64" )
 -- build for x86-64bit machine
-		filter "system:windows"
-			linkoptions( "/MACHINE:X64" )
-		filter {}
 	configuration( "*" )
 
 -- configurations for executables
@@ -1008,9 +1016,9 @@ solution( "HelloOgre3D" )
 		} )
 		defines( { "WIN32", "HAVE_NO_GLUT" } )
 
--- ogre3d gorilla ui snapshot (2013-12-26) static library
-	project( "ogre3d_gorilla" )
-		kind( "StaticLib" )
+	-- ogre3d gorilla ui snapshot (2013-12-26) static library
+		project( "ogre3d_gorilla" )
+			kind( "StaticLib" )
 		location( "../build/External/ogre3d_gorilla" )
 		includedirs( { 
 			"../src/Engine/ogre3d/include/",
@@ -1023,11 +1031,36 @@ solution( "HelloOgre3D" )
 		files( {
 			"../src/external/ogre3d_gorilla/include/**.h",
 			"../src/external/ogre3d_gorilla/src/**.cpp"
-		} )
-		defines( { "WIN32" } )
+			} )
+			defines( { "WIN32" } )
 
--- recast v1.4 static library
-	project( "recast" )
+	if HELLO_FAIRYGUI_ENABLED then
+	-- official FairyGUI Cocos2d-x SDK with HelloOgre3D cocos-lite adapter
+		project( "fairygui" )
+			kind( "StaticLib" )
+			location( "../build/External/fairygui" )
+			includedirs( {
+				"../src/HelloOgre3D/runtime/ui/fairygui/cocoslite",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes"
+			} )
+			buildoptions( {
+				"/wd\"4100\"", "/wd\"4244\"", "/wd\"4251\"", "/wd\"4267\"",
+				"/wd\"4305\"", "/wd\"4456\"", "/wd\"4996\""
+			} )
+			files( {
+				"../src/HelloOgre3D/runtime/ui/fairygui/cocoslite/**.h",
+				"../src/HelloOgre3D/runtime/ui/fairygui/cocoslite/**.cpp",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes/**.h",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes/**.hpp",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes/**.c",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes/**.cc",
+				"../src/external/fairygui_cocos2dx/libfairygui/Classes/**.cpp"
+			} )
+			defines( { "WIN32", "HELLO_ENABLE_FGUI", "CC_PLATFORM_PC" } )
+	end
+
+	-- recast v1.4 static library
+		project( "recast" )
 		kind( "StaticLib" )
 		location( "../build/External/recast" )
 		includedirs( {"../src/external/recast/include/" } )

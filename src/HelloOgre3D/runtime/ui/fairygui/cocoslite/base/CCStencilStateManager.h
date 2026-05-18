@@ -1,0 +1,6 @@
+#ifndef HELLO_FAIRYGUI_CC_STENCIL_STATE_MANAGER_H
+#define HELLO_FAIRYGUI_CC_STENCIL_STATE_MANAGER_H
+
+#include "cocos2d.h"
+
+#endif
