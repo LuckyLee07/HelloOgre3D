@@ -29,6 +29,60 @@ namespace cocos2d
 	const char* Director::EVENT_RESET = "director_reset";
 	const char* GLViewImpl::EVENT_WINDOW_RESIZED = "glview_window_resized";
 
+	static Mat4 MultiplyMat4(const Mat4& lhs, const Mat4& rhs)
+	{
+		Mat4 result;
+		for (int column = 0; column < 4; ++column)
+		{
+			for (int row = 0; row < 4; ++row)
+			{
+				result.m[column * 4 + row] =
+					lhs.m[0 * 4 + row] * rhs.m[column * 4 + 0] +
+					lhs.m[1 * 4 + row] * rhs.m[column * 4 + 1] +
+					lhs.m[2 * 4 + row] * rhs.m[column * 4 + 2] +
+					lhs.m[3 * 4 + row] * rhs.m[column * 4 + 3];
+			}
+		}
+		return result;
+	}
+
+	static Mat4 BuildNodeTransform(float x, float y, float scaleX, float scaleY, float rotation, const Vec2& anchorPoint, const Size& contentSize)
+	{
+		const float radians = MATH_DEG_TO_RAD(rotation);
+		const float sinValue = std::sin(radians);
+		const float cosValue = std::cos(radians);
+		const float anchorX = anchorPoint.x * contentSize.width;
+		const float anchorY = anchorPoint.y * contentSize.height;
+
+		Mat4 transform;
+		transform.m[0] = cosValue * scaleX;
+		transform.m[1] = sinValue * scaleX;
+		transform.m[4] = -sinValue * scaleY;
+		transform.m[5] = cosValue * scaleY;
+		transform.m[12] = x - anchorX * transform.m[0] - anchorY * transform.m[4];
+		transform.m[13] = y - anchorX * transform.m[1] - anchorY * transform.m[5];
+		return transform;
+	}
+
+	static unsigned int ReadBigEndianUInt(const unsigned char* data)
+	{
+		return (static_cast<unsigned int>(data[0]) << 24) |
+			(static_cast<unsigned int>(data[1]) << 16) |
+			(static_cast<unsigned int>(data[2]) << 8) |
+			static_cast<unsigned int>(data[3]);
+	}
+
+	static bool ReadPngSize(const unsigned char* data, ssize_t size, int& width, int& height)
+	{
+		static const unsigned char pngSignature[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+		if (data == nullptr || size < 24 || std::memcmp(data, pngSignature, sizeof(pngSignature)) != 0)
+			return false;
+
+		width = static_cast<int>(ReadBigEndianUInt(data + 16));
+		height = static_cast<int>(ReadBigEndianUInt(data + 20));
+		return width > 0 && height > 0;
+	}
+
 	Vec2::Vec2() : x(0), y(0)
 	{
 	}
@@ -604,14 +658,20 @@ namespace cocos2d
 	{
 	}
 
-	Texture2D::Texture2D() : _width(0), _height(0)
+	Texture2D::Texture2D() : _width(0), _height(0), _filePath(), _imageData()
 	{
 	}
 
-	bool Texture2D::initWithData(const void*, ssize_t, PixelFormat, int width, int height, const Size&)
+	bool Texture2D::initWithData(const void* data, ssize_t size, PixelFormat, int width, int height, const Size&)
 	{
 		_width = width;
 		_height = height;
+		_filePath.clear();
+		if (data != nullptr && size > 0)
+		{
+			const unsigned char* bytes = static_cast<const unsigned char*>(data);
+			_imageData.assign(bytes, bytes + size);
+		}
 		return true;
 	}
 
@@ -621,6 +681,9 @@ namespace cocos2d
 		{
 			_width = image->getWidth();
 			_height = image->getHeight();
+			_filePath = image->getFilePath();
+			if (image->getData() != nullptr && image->getDataLen() > 0)
+				_imageData.assign(image->getData(), image->getData() + image->getDataLen());
 		}
 		return true;
 	}
@@ -631,6 +694,9 @@ namespace cocos2d
 		{
 			_width = image->getWidth();
 			_height = image->getHeight();
+			_filePath = image->getFilePath();
+			if (image->getData() != nullptr && image->getDataLen() > 0)
+				_imageData.assign(image->getData(), image->getData() + image->getDataLen());
 		}
 	}
 
@@ -671,7 +737,7 @@ namespace cocos2d
 		return true;
 	}
 
-	Image::Image() : _width(0), _height(0), _format(Format::UNKNOWN)
+	Image::Image() : _width(0), _height(0), _format(Format::UNKNOWN), _filePath()
 	{
 	}
 
@@ -680,6 +746,7 @@ namespace cocos2d
 		Data data = FileUtils::getInstance()->getDataFromFile(filename);
 		if (data.isNull())
 			return false;
+		_filePath = filename;
 		return initWithImageData(data.getBytes(), data.getSize());
 	}
 
@@ -694,6 +761,8 @@ namespace cocos2d
 	{
 		if (data && size > 0)
 			_data.assign(data, data + size);
+		if (_width == 0 || _height == 0)
+			ReadPngSize(data, size, _width, _height);
 		_width = _width == 0 ? 1 : _width;
 		_height = _height == 0 ? 1 : _height;
 		_format = Format::PNG;
@@ -946,6 +1015,41 @@ namespace cocos2d
 		return sequence;
 	}
 
+	Renderer::Renderer() : _commandSink(nullptr), _triangleCommandCount(0), _submittedTriangleCount(0)
+	{
+	}
+
+	void Renderer::beginFrame()
+	{
+		_triangleCommandCount = 0;
+		_submittedTriangleCount = 0;
+	}
+
+	void Renderer::addCommand(RenderCommand* command)
+	{
+		if (command == nullptr)
+			return;
+
+		CustomCommand* customCommand = dynamic_cast<CustomCommand*>(command);
+		if (customCommand != nullptr)
+		{
+			if (customCommand->func)
+				customCommand->func();
+			if (_commandSink != nullptr)
+				_commandSink->handleCustomCommand(*customCommand);
+			return;
+		}
+
+		TrianglesCommand* trianglesCommand = dynamic_cast<TrianglesCommand*>(command);
+		if (trianglesCommand != nullptr)
+		{
+			++_triangleCommandCount;
+			_submittedTriangleCount += trianglesCommand->getTriangleCount();
+			if (_commandSink != nullptr)
+				_commandSink->handleTrianglesCommand(*trianglesCommand);
+		}
+	}
+
 	GroupCommand::GroupCommand() : _renderQueueId(0)
 	{
 	}
@@ -957,6 +1061,33 @@ namespace cocos2d
 
 	TrianglesCommand::Triangles::Triangles() : verts(nullptr), vertCount(0), indices(nullptr), indexCount(0)
 	{
+	}
+
+	TrianglesCommand::TrianglesCommand() :
+		_globalOrder(0),
+		_texture(nullptr),
+		_programState(nullptr),
+		_blendFunc(),
+		_triangles(),
+		_transform(),
+		_flags(0)
+	{
+	}
+
+	void TrianglesCommand::init(float globalOrder, Texture2D* texture, GLProgramState* programState, const BlendFunc& blendFunc, const Triangles& triangles, const Mat4& transform, uint32_t flags)
+	{
+		_globalOrder = globalOrder;
+		_texture = texture;
+		_programState = programState;
+		_blendFunc = blendFunc;
+		_triangles = triangles;
+		_transform = transform;
+		_flags = flags;
+	}
+
+	void TrianglesCommand::init(float globalOrder, Texture2D* texture, const BlendFunc& blendFunc, const Triangles& triangles, const Mat4& transform, uint32_t flags)
+	{
+		init(globalOrder, texture, nullptr, blendFunc, triangles, transform, flags);
 	}
 
 	void GLView::setScissorInPoints(float x, float y, float width, float height)
@@ -1042,12 +1173,34 @@ namespace cocos2d
 
 	void Node::visit(Renderer* renderer, const Mat4& parentTransform, uint32_t parentFlags)
 	{
-		draw(renderer, parentTransform, parentFlags);
-		for (auto child : _children)
+		if (!_visible)
+			return;
+
+		uint32_t flags = processParentFlags(parentTransform, parentFlags);
+		int index = 0;
+
+		if (!_children.empty())
 		{
-			if (child)
-				child->visit(renderer, parentTransform, parentFlags);
+			sortAllChildren();
+			for (int size = static_cast<int>(_children.size()); index < size; ++index)
+			{
+				Node* child = _children[index];
+				if (child != nullptr && child->getLocalZOrder() < 0)
+					child->visit(renderer, _modelViewTransform, flags);
+				else
+					break;
+			}
+
+			draw(renderer, _modelViewTransform, flags);
+
+			for (std::vector<Node*>::const_iterator it = _children.begin() + index; it != _children.end(); ++it)
+			{
+				if (*it != nullptr)
+					(*it)->visit(renderer, _modelViewTransform, flags);
+			}
 		}
+		else
+			draw(renderer, _modelViewTransform, flags);
 	}
 
 	void Node::draw(Renderer*, const Mat4&, uint32_t)
@@ -1187,9 +1340,13 @@ namespace cocos2d
 		return transform;
 	}
 
-	uint32_t Node::processParentFlags(const Mat4&, uint32_t parentFlags)
+	uint32_t Node::processParentFlags(const Mat4& parentTransform, uint32_t parentFlags)
 	{
-		return parentFlags;
+		Mat4 localTransform = BuildNodeTransform(_position.x, _position.y, _scaleX, _scaleY, _rotationZ, _anchorPoint, _contentSize);
+		_modelViewTransform = MultiplyMat4(parentTransform, localTransform);
+		_transformUpdated = false;
+		_contentSizeDirty = false;
+		return parentFlags | FLAGS_TRANSFORM_DIRTY;
 	}
 
 	Action* Node::runAction(Action* action)
@@ -1232,8 +1389,21 @@ namespace cocos2d
 		_flippedX(false),
 		_flippedY(false),
 		_blendFunc(),
-		_trianglesCommand()
+		_trianglesCommand(),
+		_quadVerts(),
+		_quadIndices(),
+		_quadTriangles()
 	{
+		_quadIndices[0] = 0;
+		_quadIndices[1] = 1;
+		_quadIndices[2] = 2;
+		_quadIndices[3] = 2;
+		_quadIndices[4] = 1;
+		_quadIndices[5] = 3;
+		_quadTriangles.verts = _quadVerts;
+		_quadTriangles.vertCount = 4;
+		_quadTriangles.indices = _quadIndices;
+		_quadTriangles.indexCount = 6;
 	}
 
 	Sprite::~Sprite()
@@ -1283,6 +1453,8 @@ namespace cocos2d
 		{
 			_originalContentSize = Size(static_cast<float>(texture->getPixelsWide()), static_cast<float>(texture->getPixelsHigh()));
 			_contentSize = _originalContentSize;
+			_rect = Rect(0, 0, _originalContentSize.width, _originalContentSize.height);
+			_rectRotated = false;
 		}
 	}
 
@@ -1327,15 +1499,61 @@ namespace cocos2d
 		quad.br.colors = color;
 		quad.tl.colors = color;
 		quad.tr.colors = color;
-		quad.bl.texCoords = Tex2F(0, 1);
-		quad.br.texCoords = Tex2F(1, 1);
-		quad.tl.texCoords = Tex2F(0, 0);
-		quad.tr.texCoords = Tex2F(1, 0);
+		float left = 0;
+		float right = 1;
+		float top = 0;
+		float bottom = 1;
+		if (_texture != nullptr && _texture->getPixelsWide() > 0 && _texture->getPixelsHigh() > 0 && _rect.size.width > 0 && _rect.size.height > 0)
+		{
+			const float textureWidth = static_cast<float>(_texture->getPixelsWide());
+			const float textureHeight = static_cast<float>(_texture->getPixelsHigh());
+			left = _rect.origin.x / textureWidth;
+			right = (_rect.origin.x + _rect.size.width) / textureWidth;
+			top = _rect.origin.y / textureHeight;
+			bottom = (_rect.origin.y + _rect.size.height) / textureHeight;
+		}
+		if (_flippedX)
+			std::swap(left, right);
+		if (_flippedY)
+			std::swap(top, bottom);
+		if (_rectRotated)
+		{
+			quad.bl.texCoords = Tex2F(left, top);
+			quad.br.texCoords = Tex2F(left, bottom);
+			quad.tl.texCoords = Tex2F(right, top);
+			quad.tr.texCoords = Tex2F(right, bottom);
+		}
+		else
+		{
+			quad.bl.texCoords = Tex2F(left, bottom);
+			quad.br.texCoords = Tex2F(right, bottom);
+			quad.tl.texCoords = Tex2F(left, top);
+			quad.tr.texCoords = Tex2F(right, top);
+		}
 		return quad;
 	}
 
 	void Sprite::updateColor()
 	{
+	}
+
+	void Sprite::draw(Renderer* renderer, const Mat4& transform, uint32_t flags)
+	{
+		if (renderer == nullptr || _texture == nullptr || _contentSize.width <= 0 || _contentSize.height <= 0)
+			return;
+
+		V3F_C4B_T2F_Quad quad = getQuad();
+		_quadVerts[0] = quad.bl;
+		_quadVerts[1] = quad.br;
+		_quadVerts[2] = quad.tl;
+		_quadVerts[3] = quad.tr;
+		_quadTriangles.verts = _quadVerts;
+		_quadTriangles.vertCount = 4;
+		_quadTriangles.indices = _quadIndices;
+		_quadTriangles.indexCount = 6;
+
+		_trianglesCommand.init(_globalZOrder, _texture, getGLProgramState(), _blendFunc, _quadTriangles, transform, flags);
+		renderer->addCommand(&_trianglesCommand);
 	}
 
 	int* Font::getHorizontalKerningForTextUTF32(const std::u32string&, int& outNumLetters) const

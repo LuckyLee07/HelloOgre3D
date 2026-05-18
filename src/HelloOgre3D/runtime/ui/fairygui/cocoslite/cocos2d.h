@@ -487,6 +487,10 @@ namespace cocos2d
 
 	class Event;
 	class Renderer;
+	class RenderCommand;
+	class RenderCommandSink;
+	class CustomCommand;
+	class TrianglesCommand;
 	class GLProgram;
 	class GLProgramState;
 	class Texture2D;
@@ -590,12 +594,16 @@ namespace cocos2d
 		int getPixelsWide() const { return _width; }
 		int getPixelsHigh() const { return _height; }
 		Size getContentSize() const { return Size(static_cast<float>(_width), static_cast<float>(_height)); }
+		const std::string& getFilePath() const { return _filePath; }
+		const std::vector<unsigned char>& getImageData() const { return _imageData; }
 		bool getAlphaTextureName() const { return false; }
 		static PixelFormat getDefaultAlphaPixelFormat() { return PixelFormat::RGBA8888; }
 
 	private:
 		int _width;
 		int _height;
+		std::string _filePath;
+		std::vector<unsigned char> _imageData;
 	};
 
 	class SpriteFrame : public Ref
@@ -640,6 +648,7 @@ namespace cocos2d
 		ssize_t getDataLen() const { return static_cast<ssize_t>(_data.size()); }
 		int getWidth() const { return _width; }
 		int getHeight() const { return _height; }
+		const std::string& getFilePath() const { return _filePath; }
 		Format getFileType() const { return _format; }
 		static void setPNGPremultipliedAlphaEnabled(bool) {}
 
@@ -648,6 +657,7 @@ namespace cocos2d
 		int _width;
 		int _height;
 		Format _format;
+		std::string _filePath;
 	};
 
 	class TextureCache
@@ -914,11 +924,22 @@ namespace cocos2d
 	class Renderer
 	{
 	public:
-		void addCommand(void*) {}
+		Renderer();
+
+		void beginFrame();
+		void addCommand(RenderCommand* command);
 		void pushGroup(int) {}
 		void popGroup() {}
 		void setScissorTest(bool) {}
 		bool checkVisibility(const Mat4&, const Size&) const { return true; }
+		void setCommandSink(RenderCommandSink* sink) { _commandSink = sink; }
+		int getTriangleCommandCount() const { return _triangleCommandCount; }
+		int getSubmittedTriangleCount() const { return _submittedTriangleCount; }
+
+	private:
+		RenderCommandSink* _commandSink;
+		int _triangleCommandCount;
+		int _submittedTriangleCount;
 	};
 
 	class RenderCommand
@@ -949,6 +970,14 @@ namespace cocos2d
 	{
 	};
 
+	class RenderCommandSink
+	{
+	public:
+		virtual ~RenderCommandSink() {}
+		virtual void handleTrianglesCommand(const TrianglesCommand& command) = 0;
+		virtual void handleCustomCommand(const CustomCommand& command) { (void)command; }
+	};
+
 	class TrianglesCommand : public RenderCommand
 	{
 	public:
@@ -962,8 +991,26 @@ namespace cocos2d
 			Triangles();
 		};
 
-		void init(float, Texture2D*, GLProgramState*, const BlendFunc&, const Triangles&, const Mat4&, uint32_t) {}
-		void init(float, Texture2D*, const BlendFunc&, const Triangles&, const Mat4&, uint32_t) {}
+		TrianglesCommand();
+		void init(float globalOrder, Texture2D* texture, GLProgramState* programState, const BlendFunc& blendFunc, const Triangles& triangles, const Mat4& transform, uint32_t flags);
+		void init(float globalOrder, Texture2D* texture, const BlendFunc& blendFunc, const Triangles& triangles, const Mat4& transform, uint32_t flags);
+		float getGlobalOrder() const { return _globalOrder; }
+		Texture2D* getTexture() const { return _texture; }
+		GLProgramState* getGLProgramState() const { return _programState; }
+		const BlendFunc& getBlendFunc() const { return _blendFunc; }
+		const Triangles& getTriangles() const { return _triangles; }
+		const Mat4& getTransform() const { return _transform; }
+		uint32_t getFlags() const { return _flags; }
+		int getTriangleCount() const { return _triangles.indexCount / 3; }
+
+	private:
+		float _globalOrder;
+		Texture2D* _texture;
+		GLProgramState* _programState;
+		BlendFunc _blendFunc;
+		Triangles _triangles;
+		Mat4 _transform;
+		uint32_t _flags;
 	};
 
 	class GLView
@@ -1163,6 +1210,8 @@ namespace cocos2d
 		virtual void updateColor();
 
 	protected:
+		virtual void draw(Renderer* renderer, const Mat4& transform, uint32_t flags) override;
+
 		Texture2D* _texture;
 		SpriteFrame* _spriteFrame;
 		Rect _rect;
@@ -1175,6 +1224,9 @@ namespace cocos2d
 		bool _flippedY;
 		BlendFunc _blendFunc;
 		TrianglesCommand _trianglesCommand;
+		V3F_C4B_T2F _quadVerts[4];
+		unsigned short _quadIndices[6];
+		TrianglesCommand::Triangles _quadTriangles;
 	};
 
 	struct FontDefinition

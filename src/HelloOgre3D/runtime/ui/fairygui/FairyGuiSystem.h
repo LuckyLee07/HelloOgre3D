@@ -1,12 +1,17 @@
 #ifndef __HELLO_FAIRY_GUI_SYSTEM_H__
 #define __HELLO_FAIRY_GUI_SYSTEM_H__
 
+#include "cocos2d.h"
+
+#include <map>
 #include <string>
 
 namespace Ogre
 {
 	class RenderWindow;
 	class SceneManager;
+	class SceneNode;
+	class ManualObject;
 }
 
 namespace cocos2d
@@ -20,7 +25,7 @@ namespace fairygui
 	class GRoot;
 }
 
-class FairyGuiSystem
+class FairyGuiSystem : public cocos2d::RenderCommandSink
 {
 public:
 	FairyGuiSystem();
@@ -39,15 +44,32 @@ public:
 
 	bool IsInitialized() const { return m_initialized; }
 	fairygui::GRoot* GetRoot() const { return m_pRoot; }
+	int GetLastRenderCommandCount() const { return m_lastRenderCommandCount; }
+	int GetLastTriangleCount() const { return m_lastTriangleCount; }
 
 private:
+	virtual void handleTrianglesCommand(const cocos2d::TrianglesCommand& command) override;
+	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
+	void BeginOgreRender();
+	void EndOgreRender();
+	const std::string& GetMaterialName(cocos2d::Texture2D* texture);
+	std::string CreateOgreTexture(cocos2d::Texture2D* texture);
+	void DestroyOgreResources();
+
 	Ogre::RenderWindow* m_pRenderWindow;
 	Ogre::SceneManager* m_pSceneManager;
+	Ogre::SceneNode* m_pManualNode;
+	Ogre::ManualObject* m_pManualObject;
 	cocos2d::Scene* m_pScene;
 	fairygui::GRoot* m_pRoot;
 	bool m_initialized;
 	unsigned int m_screenWidth;
 	unsigned int m_screenHeight;
+	int m_lastRenderCommandCount;
+	int m_lastTriangleCount;
+	unsigned int m_materialCounter;
+	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
+	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
 };
 
 #endif // __HELLO_FAIRY_GUI_SYSTEM_H__
