@@ -12,6 +12,9 @@ cd bin
 del /S/Q *.log *.pdb *.exe *.idb
 cd ..
 
+set ENABLE_FGUI=1
+rem set ENABLE_TRACY=1
+
 echo on
 tools\premake\premake5 --os=windows --file=premake/premake.lua vs2022 %ARGUMENTS%
 

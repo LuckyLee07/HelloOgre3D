@@ -72,6 +72,9 @@ public:
 	Ogre::RenderWindow* getRenderWindow();
 	Ogre::SceneNode* getRootSceneNode();
 	OgreCameraController* getCameraController();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* getFairyGuiSystem() { return m_pFairyGuiSystem; }
+#endif
 
 	InputManager* getInputManager() { return m_pInputManager; }
 
@@ -107,7 +110,7 @@ private:
 	FairyGuiSystem* m_pFairyGuiSystem;
 #endif
 
-	bool m_shutdown; //game exit
+	bool m_shutdown; //game exit  
 };
 
 ClientManager* GetClientMgr();

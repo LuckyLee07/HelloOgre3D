@@ -12,6 +12,9 @@
 #include <sys/time.h>
 #endif
 #include "ClientManager.h"
+#if defined(HELLO_ENABLE_FGUI)
+#include "ui/fairygui/FairyGuiSystem.h"
+#endif
 #include "systems/ui/UIManager.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -34,7 +37,8 @@ GameManager* GetGameManager()
 
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
-	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr)
+	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
+	m_fairyGuiLastPackageName()
 {
 	
 }
@@ -54,6 +58,117 @@ GameManager::~GameManager()
 GameManager* GameManager::GetInstance()
 {
 	return g_GameManager;
+}
+
+bool GameManager::isFairyGuiAvailable()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->IsInitialized();
+#else
+	return false;
+#endif
+}
+
+const char* GameManager::loadFairyGuiPackage(const char* packagePath)
+{
+	m_fairyGuiLastPackageName.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	if (packagePath == nullptr)
+		return "";
+
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return "";
+
+	m_fairyGuiLastPackageName = system->LoadPackageAndGetName(packagePath);
+#endif
+	return m_fairyGuiLastPackageName.c_str();
+}
+
+int GameManager::createFairyGuiObject(const char* packageName, const char* objectName)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	if (packageName == nullptr || objectName == nullptr)
+		return 0;
+
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateObjectHandle(packageName, objectName);
+#else
+	return 0;
+#endif
+}
+
+bool GameManager::addFairyGuiObjectToRoot(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->AddObjectHandleToRoot(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandlePosition(objectHandle, x, y);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleSize(objectHandle, width, height);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectVisible(int objectHandle, bool visible)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleVisible(objectHandle, visible);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::centerFairyGuiObject(int objectHandle, bool restraint)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->CenterObjectHandle(objectHandle, restraint);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::removeFairyGuiObject(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->RemoveObjectHandle(objectHandle);
+#else
+	return false;
+#endif
+}
+
+void GameManager::clearFairyGuiObjects()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		system->ClearObjectHandles();
+#endif
 }
 
 void GameManager::Initialize()

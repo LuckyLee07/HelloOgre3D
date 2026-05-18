@@ -83,6 +83,12 @@ namespace cocos2d
 		return width > 0 && height > 0;
 	}
 
+	static bool FileExists(const std::string& filename)
+	{
+		std::ifstream file(filename.c_str(), std::ios::binary);
+		return file.good();
+	}
+
 	Vec2::Vec2() : x(0), y(0)
 	{
 	}
@@ -802,23 +808,38 @@ namespace cocos2d
 
 	bool FileUtils::isFileExist(const std::string& filename) const
 	{
-		std::ifstream file(filename.c_str(), std::ios::binary);
-		return file.good();
+		return FileExists(fullPathForFilename(filename));
 	}
 
 	bool FileUtils::isAbsolutePath(const std::string& path) const
 	{
-		return path.size() > 2 && path[1] == ':';
+		return (path.size() > 2 && path[1] == ':') || (!path.empty() && (path[0] == '/' || path[0] == '\\'));
 	}
 
 	std::string FileUtils::fullPathForFilename(const std::string& filename) const
 	{
+		if (filename.empty() || isAbsolutePath(filename) || FileExists(filename))
+			return filename;
+
+		const char* searchRoots[] =
+		{
+			"../",
+			"../../",
+			"../../../"
+		};
+		for (size_t index = 0; index < sizeof(searchRoots) / sizeof(searchRoots[0]); ++index)
+		{
+			const std::string candidate = std::string(searchRoots[index]) + filename;
+			if (FileExists(candidate))
+				return candidate;
+		}
 		return filename;
 	}
 
 	std::string FileUtils::getStringFromFile(const std::string& filename) const
 	{
-		std::ifstream file(filename.c_str(), std::ios::binary);
+		const std::string fullPath = fullPathForFilename(filename);
+		std::ifstream file(fullPath.c_str(), std::ios::binary);
 		if (!file.good())
 			return "";
 		std::ostringstream stream;
@@ -829,7 +850,8 @@ namespace cocos2d
 	Data FileUtils::getDataFromFile(const std::string& filename) const
 	{
 		Data data;
-		std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
+		const std::string fullPath = fullPathForFilename(filename);
+		std::ifstream file(fullPath.c_str(), std::ios::binary | std::ios::ate);
 		if (!file.good())
 			return data;
 

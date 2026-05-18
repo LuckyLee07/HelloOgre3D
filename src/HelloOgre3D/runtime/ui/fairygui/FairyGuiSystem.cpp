@@ -1,12 +1,16 @@
 #include "ui/fairygui/FairyGuiSystem.h"
 
 #include "cocos2d.h"
+#include "GLoader.h"
 #include "GObject.h"
 #include "GRoot.h"
 #include "UIPackage.h"
 
 #include "Ogre.h"
 #include "OgreRenderWindow.h"
+
+#include <cstdlib>
+#include <fstream>
 
 namespace
 {
@@ -38,12 +42,80 @@ namespace
 			return std::string();
 		return filePath.substr(pos + 1);
 	}
+
+	std::string GetEnvironmentString(const char* name)
+	{
+		const char* value = std::getenv(name);
+		return value != nullptr ? value : std::string();
+	}
+
+	bool IsEnvironmentEnabled(const char* name)
+	{
+		const std::string value = GetEnvironmentString(name);
+		return value == "1" || value == "true" || value == "TRUE" || value == "True";
+	}
+
+	float GetEnvironmentFloat(const char* name, float fallback)
+	{
+		const std::string value = GetEnvironmentString(name);
+		return value.empty() ? fallback : static_cast<float>(std::atof(value.c_str()));
+	}
+
+	bool EndsWith(const std::string& value, const std::string& suffix)
+	{
+		if (value.size() < suffix.size())
+			return false;
+		return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+	}
+
+	std::string NormalizePackagePath(const std::string& packagePath)
+	{
+		std::string normalized = packagePath;
+		for (size_t index = 0; index < normalized.size(); ++index)
+		{
+			if (normalized[index] == '\\')
+				normalized[index] = '/';
+		}
+		if (EndsWith(normalized, ".fui"))
+			normalized = normalized.substr(0, normalized.size() - 4);
+		return normalized;
+	}
+
+	bool ContainsDirectorySeparator(const std::string& packagePath)
+	{
+		return packagePath.find('/') != std::string::npos || packagePath.find(':') != std::string::npos;
+	}
+
+	bool FileExists(const std::string& filePath)
+	{
+		std::ifstream file(filePath.c_str(), std::ios::binary);
+		return file.good();
+	}
+
+	std::string ResolvePackagePath(const std::string& packagePath)
+	{
+		const std::string normalized = NormalizePackagePath(packagePath);
+		if (FileExists(normalized + ".fui"))
+			return normalized;
+		if (!ContainsDirectorySeparator(normalized))
+		{
+			const std::string runtimePath = "res/fuires/" + normalized;
+			if (FileExists(runtimePath + ".fui"))
+				return runtimePath;
+		}
+		return normalized;
+	}
+
+	fairygui::UIPackage* AddPackage(const std::string& packagePath)
+	{
+		return fairygui::UIPackage::addPackage(ResolvePackagePath(packagePath));
+	}
 }
 
 FairyGuiSystem::FairyGuiSystem()
 	: m_pRenderWindow(nullptr), m_pSceneManager(nullptr), m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_pScene(nullptr), m_pRoot(nullptr), m_initialized(false), m_screenWidth(0), m_screenHeight(0),
-	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_materialNames(), m_textureNames()
+	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_objectHandles(), m_materialNames(), m_textureNames()
 {
 }
 
@@ -84,12 +156,16 @@ bool FairyGuiSystem::Initialize(Ogre::RenderWindow* renderWindow, Ogre::SceneMan
 		m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pManualNode->attachObject(m_pManualObject);
 		m_pManualNode->_updateBounds();
+		if (!CreateConfiguredPackageObject() && IsEnvironmentEnabled("HELLO_FGUI_SMOKE_TEST"))
+			CreateSmokeTestImage("media/fonts/dejavu/dejavu.png");
 	}
 	return m_initialized;
 }
 
 void FairyGuiSystem::Shutdown()
 {
+	ClearObjectHandles();
+
 	if (m_pScene != nullptr)
 		m_pScene->removeAllChildren();
 
@@ -107,6 +183,7 @@ void FairyGuiSystem::Shutdown()
 	m_screenHeight = 0;
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
+	m_nextObjectHandle = 1;
 }
 
 void FairyGuiSystem::Update(float deltaSeconds)
@@ -148,7 +225,16 @@ bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 	if (!m_initialized || packagePath.empty())
 		return false;
 
-	return fairygui::UIPackage::addPackage(packagePath) != nullptr;
+	return AddPackage(packagePath) != nullptr;
+}
+
+std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath)
+{
+	if (!m_initialized || packagePath.empty())
+		return std::string();
+
+	fairygui::UIPackage* package = AddPackage(packagePath);
+	return package != nullptr ? package->getName() : std::string();
 }
 
 fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, const std::string& objectName)
@@ -165,6 +251,105 @@ bool FairyGuiSystem::AddToRoot(fairygui::GObject* object)
 		return false;
 
 	m_pRoot->addChild(object);
+	return true;
+}
+
+int FairyGuiSystem::CreateObjectHandle(const std::string& packageName, const std::string& objectName)
+{
+	fairygui::GObject* object = CreateObject(packageName, objectName);
+	if (object == nullptr)
+		return 0;
+
+	const int objectHandle = m_nextObjectHandle++;
+	object->retain();
+	m_objectHandles[objectHandle] = object;
+	return objectHandle;
+}
+
+bool FairyGuiSystem::AddObjectHandleToRoot(int objectHandle)
+{
+	return AddToRoot(FindObjectHandle(objectHandle));
+}
+
+bool FairyGuiSystem::SetObjectHandlePosition(int objectHandle, float x, float y)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setPosition(x, y);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleSize(int objectHandle, float width, float height)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setSize(width, height);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleVisible(int objectHandle, bool visible)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setVisible(visible);
+	return true;
+}
+
+bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->center(restraint);
+	return true;
+}
+
+bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
+{
+	std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.find(objectHandle);
+	if (it == m_objectHandles.end() || it->second == nullptr)
+		return false;
+
+	it->second->removeFromParent();
+	it->second->release();
+	m_objectHandles.erase(it);
+	return true;
+}
+
+void FairyGuiSystem::ClearObjectHandles()
+{
+	for (std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	{
+		if (it->second != nullptr)
+		{
+			it->second->removeFromParent();
+			it->second->release();
+		}
+	}
+	m_objectHandles.clear();
+}
+
+bool FairyGuiSystem::CreateSmokeTestImage(const std::string& imagePath)
+{
+	if (!m_initialized || m_pRoot == nullptr || imagePath.empty())
+		return false;
+
+	fairygui::GLoader* loader = fairygui::GLoader::create();
+	if (loader == nullptr)
+		return false;
+
+	loader->setPosition(16.0f, 16.0f);
+	loader->setSize(256.0f, 64.0f);
+	loader->setFill(fairygui::LoaderFillType::SCALE);
+	loader->setURL(imagePath);
+	m_pRoot->addChild(loader);
 	return true;
 }
 
@@ -188,7 +373,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 		const float x = TransformX(command.getTransform(), vertex.vertices);
 		const float y = TransformY(command.getTransform(), vertex.vertices);
 		const float ndcX = x / static_cast<float>(m_screenWidth) * 2.0f - 1.0f;
-		const float ndcY = 1.0f - y / static_cast<float>(m_screenHeight) * 2.0f;
+		const float ndcY = y / static_cast<float>(m_screenHeight) * 2.0f - 1.0f;
 		m_pManualObject->position(ndcX, ndcY, 0.0f);
 		m_pManualObject->textureCoord(vertex.texCoords.u, vertex.texCoords.v);
 		m_pManualObject->colour(ToOgreColor(vertex.colors));
@@ -205,6 +390,12 @@ void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
 	(void)command;
 }
 
+fairygui::GObject* FairyGuiSystem::FindObjectHandle(int objectHandle) const
+{
+	std::map<int, fairygui::GObject*>::const_iterator it = m_objectHandles.find(objectHandle);
+	return it != m_objectHandles.end() ? it->second : nullptr;
+}
+
 void FairyGuiSystem::BeginOgreRender()
 {
 	if (m_pManualObject != nullptr)
@@ -218,6 +409,35 @@ void FairyGuiSystem::EndOgreRender()
 		m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pManualNode->_updateBounds();
 	}
+}
+
+bool FairyGuiSystem::CreateConfiguredPackageObject()
+{
+	if (!m_initialized || m_pRoot == nullptr)
+		return false;
+
+	const std::string packagePath = GetEnvironmentString("HELLO_FGUI_PACKAGE_PATH");
+	const std::string objectName = GetEnvironmentString("HELLO_FGUI_OBJECT_NAME");
+	if (packagePath.empty() || objectName.empty())
+		return false;
+
+	fairygui::UIPackage* package = AddPackage(packagePath);
+	if (package == nullptr)
+		return false;
+
+	std::string packageName = GetEnvironmentString("HELLO_FGUI_PACKAGE_NAME");
+	if (packageName.empty())
+		packageName = package->getName();
+
+	fairygui::GObject* object = fairygui::UIPackage::createObject(packageName, objectName);
+	if (object == nullptr)
+		return false;
+
+	object->setPosition(
+		GetEnvironmentFloat("HELLO_FGUI_OBJECT_X", 16.0f),
+		GetEnvironmentFloat("HELLO_FGUI_OBJECT_Y", 16.0f));
+	m_pRoot->addChild(object);
+	return true;
 }
 
 const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)

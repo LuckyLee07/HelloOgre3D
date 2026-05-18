@@ -39,8 +39,18 @@ public:
 	void HandleWindowResized(unsigned int width, unsigned int height);
 
 	bool LoadPackage(const std::string& packagePath);
+	std::string LoadPackageAndGetName(const std::string& packagePath);
 	fairygui::GObject* CreateObject(const std::string& packageName, const std::string& objectName);
 	bool AddToRoot(fairygui::GObject* object);
+	int CreateObjectHandle(const std::string& packageName, const std::string& objectName);
+	bool AddObjectHandleToRoot(int objectHandle);
+	bool SetObjectHandlePosition(int objectHandle, float x, float y);
+	bool SetObjectHandleSize(int objectHandle, float width, float height);
+	bool SetObjectHandleVisible(int objectHandle, bool visible);
+	bool CenterObjectHandle(int objectHandle, bool restraint);
+	bool RemoveObjectHandle(int objectHandle);
+	void ClearObjectHandles();
+	bool CreateSmokeTestImage(const std::string& imagePath);
 
 	bool IsInitialized() const { return m_initialized; }
 	fairygui::GRoot* GetRoot() const { return m_pRoot; }
@@ -50,8 +60,10 @@ public:
 private:
 	virtual void handleTrianglesCommand(const cocos2d::TrianglesCommand& command) override;
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
+	fairygui::GObject* FindObjectHandle(int objectHandle) const;
 	void BeginOgreRender();
 	void EndOgreRender();
+	bool CreateConfiguredPackageObject();
 	const std::string& GetMaterialName(cocos2d::Texture2D* texture);
 	std::string CreateOgreTexture(cocos2d::Texture2D* texture);
 	void DestroyOgreResources();
@@ -68,6 +80,8 @@ private:
 	int m_lastRenderCommandCount;
 	int m_lastTriangleCount;
 	unsigned int m_materialCounter;
+	int m_nextObjectHandle;
+	std::map<int, fairygui::GObject*> m_objectHandles;
 	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
 };

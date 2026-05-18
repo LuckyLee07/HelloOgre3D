@@ -2,6 +2,7 @@
 #define __GAME_MANAGER_H__
 
 #include <map>
+#include <string>
 #include <vector>
 #include "OgrePrerequisites.h"
 #include "systems/input/IInputHandler.h"
@@ -34,6 +35,17 @@ public:
 
 	long long getTimeInMillis();
 	Ogre::Real getTimeInSeconds();
+
+	bool isFairyGuiAvailable();
+	const char* loadFairyGuiPackage(const char* packagePath);
+	int createFairyGuiObject(const char* packageName, const char* objectName);
+	bool addFairyGuiObjectToRoot(int objectHandle);
+	bool setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y);
+	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
+	bool setFairyGuiObjectVisible(int objectHandle, bool visible);
+	bool centerFairyGuiObject(int objectHandle, bool restraint);
+	bool removeFairyGuiObject(int objectHandle);
+	void clearFairyGuiObjects();
 	//tolua_end
 
 	Ogre::Camera* getCamera();
@@ -65,6 +77,8 @@ private:
 	ObjectManager* m_pObjectManager;
 
 	long long m_SimulationTime; // 运行时间
+
+	std::string m_fairyGuiLastPackageName;
 
 }; //tolua_exports
 

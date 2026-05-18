@@ -8,6 +8,25 @@
 require("res.scripts.samples.Sandbox8")
 
 _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
+_G.FairyGuiManager = ClassList.FairyGuiManager:GetInst()
+
+local function tryOpenFairyGuiSample()
+	local file = io.open("res/fuires/act_37_test.fui", "rb")
+	if file == nil then
+		return
+	end
+	file:close()
+
+	threadpool:delay(1, function()
+		local handle = FairyGuiManager:OpenUI(
+			"main_pifushoumai",
+			"act_37_test",
+			"main_pifushoumai",
+			{ x = 0, y = 0, key = "act37" }
+		)
+		print("[FGUI] open act_37_test:", handle)
+	end)
+end
 
 _G.__init__ = function(sec, msec)
 	math.randomseed(os.time())
@@ -20,6 +39,8 @@ _G.__init__ = function(sec, msec)
 	threadpool:delay(5, function()
 		_G.__gc__()
 	end)
+
+	tryOpenFairyGuiSample()
 end
 
 _G.__tick__ = function(detalMsec)

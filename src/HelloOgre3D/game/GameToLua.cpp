@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Sat Mar 14 10:11:09 2026.
+** Generated automatically by tolua++-1.0.92 on Mon May 18 21:01:39 2026.
 */
 
 #ifndef __cplusplus
@@ -3574,6 +3574,355 @@ static int tolua_GameToLua_GameManager_getTimeInSeconds00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: isFairyGuiAvailable of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_isFairyGuiAvailable00
+static int tolua_GameToLua_GameManager_isFairyGuiAvailable00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isFairyGuiAvailable'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isFairyGuiAvailable();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isFairyGuiAvailable'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: loadFairyGuiPackage of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_loadFairyGuiPackage00
+static int tolua_GameToLua_GameManager_loadFairyGuiPackage00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const char* packagePath = ((const char*)  tolua_tostring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'loadFairyGuiPackage'", NULL);
+#endif
+  {
+   const char* tolua_ret = (const char*)  self->loadFairyGuiPackage(packagePath);
+   tolua_pushstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'loadFairyGuiPackage'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: createFairyGuiObject of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_createFairyGuiObject00
+static int tolua_GameToLua_GameManager_createFairyGuiObject00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const char* packageName = ((const char*)  tolua_tostring(tolua_S,2,0));
+  const char* objectName = ((const char*)  tolua_tostring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'createFairyGuiObject'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->createFairyGuiObject(packageName,objectName);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'createFairyGuiObject'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: addFairyGuiObjectToRoot of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_addFairyGuiObjectToRoot00
+static int tolua_GameToLua_GameManager_addFairyGuiObjectToRoot00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'addFairyGuiObjectToRoot'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->addFairyGuiObjectToRoot(objectHandle);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'addFairyGuiObjectToRoot'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setFairyGuiObjectPosition of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_setFairyGuiObjectPosition00
+static int tolua_GameToLua_GameManager_setFairyGuiObjectPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+   float x = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float y = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setFairyGuiObjectPosition'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->setFairyGuiObjectPosition(objectHandle,x,y);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setFairyGuiObjectPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setFairyGuiObjectSize of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_setFairyGuiObjectSize00
+static int tolua_GameToLua_GameManager_setFairyGuiObjectSize00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+   float width = ((  float)  tolua_tonumber(tolua_S,3,0));
+   float height = ((  float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setFairyGuiObjectSize'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->setFairyGuiObjectSize(objectHandle,width,height);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setFairyGuiObjectSize'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setFairyGuiObjectVisible of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_setFairyGuiObjectVisible00
+static int tolua_GameToLua_GameManager_setFairyGuiObjectVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+  bool visible = ((bool)  tolua_toboolean(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setFairyGuiObjectVisible'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->setFairyGuiObjectVisible(objectHandle,visible);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setFairyGuiObjectVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: centerFairyGuiObject of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_centerFairyGuiObject00
+static int tolua_GameToLua_GameManager_centerFairyGuiObject00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+  bool restraint = ((bool)  tolua_toboolean(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'centerFairyGuiObject'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->centerFairyGuiObject(objectHandle,restraint);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'centerFairyGuiObject'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: removeFairyGuiObject of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_removeFairyGuiObject00
+static int tolua_GameToLua_GameManager_removeFairyGuiObject00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'removeFairyGuiObject'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->removeFairyGuiObject(objectHandle);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'removeFairyGuiObject'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearFairyGuiObjects of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_clearFairyGuiObjects00
+static int tolua_GameToLua_GameManager_clearFairyGuiObjects00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearFairyGuiObjects'", NULL);
+#endif
+  {
+   self->clearFairyGuiObjects();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearFairyGuiObjects'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getIsEnable of class  DebugDrawer */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_DebugDrawer_getIsEnable00
 static int tolua_GameToLua_DebugDrawer_getIsEnable00(lua_State* tolua_S)
@@ -4168,6 +4517,16 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getScreenHeight",tolua_GameToLua_GameManager_getScreenHeight00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_GameToLua_GameManager_getTimeInMillis00);
    tolua_function(tolua_S,"getTimeInSeconds",tolua_GameToLua_GameManager_getTimeInSeconds00);
+   tolua_function(tolua_S,"isFairyGuiAvailable",tolua_GameToLua_GameManager_isFairyGuiAvailable00);
+   tolua_function(tolua_S,"loadFairyGuiPackage",tolua_GameToLua_GameManager_loadFairyGuiPackage00);
+   tolua_function(tolua_S,"createFairyGuiObject",tolua_GameToLua_GameManager_createFairyGuiObject00);
+   tolua_function(tolua_S,"addFairyGuiObjectToRoot",tolua_GameToLua_GameManager_addFairyGuiObjectToRoot00);
+   tolua_function(tolua_S,"setFairyGuiObjectPosition",tolua_GameToLua_GameManager_setFairyGuiObjectPosition00);
+   tolua_function(tolua_S,"setFairyGuiObjectSize",tolua_GameToLua_GameManager_setFairyGuiObjectSize00);
+   tolua_function(tolua_S,"setFairyGuiObjectVisible",tolua_GameToLua_GameManager_setFairyGuiObjectVisible00);
+   tolua_function(tolua_S,"centerFairyGuiObject",tolua_GameToLua_GameManager_centerFairyGuiObject00);
+   tolua_function(tolua_S,"removeFairyGuiObject",tolua_GameToLua_GameManager_removeFairyGuiObject00);
+   tolua_function(tolua_S,"clearFairyGuiObjects",tolua_GameToLua_GameManager_clearFairyGuiObjects00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"DebugDrawer","DebugDrawer","",NULL);
   tolua_beginmodule(tolua_S,"DebugDrawer");

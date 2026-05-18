@@ -8,5 +8,6 @@ require("res.scripts.base.threadpool")
 require("res.scripts.base.global")
 require("res.scripts.base.uicomps")
 require("res.scripts.manager.LuaPluginMgr")
+require("res.scripts.manager.FairyGuiManager")
 
 require("res.scripts.samples.game_init")
