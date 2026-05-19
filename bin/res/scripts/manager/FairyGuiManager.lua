@@ -1314,6 +1314,43 @@ function FairyGuiManager:CloseAll(layerName, forceDestroy)
 	end
 end
 
+function FairyGuiManager:DumpOpenUIs()
+	print("[FGUI] DumpOpenUIs begin")
+	for key, objectInfo in pairs(self.objects) do
+		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
+	end
+	print("[FGUI] DumpOpenUIs end")
+end
+
+function FairyGuiManager:DumpPackages()
+	print("[FGUI] DumpPackages begin")
+	local printed = {}
+	for _, packageInfo in pairs(self.packagesByName) do
+		if packageInfo ~= nil and printed[packageInfo.packageName] ~= true then
+			print("[FGUI] Package", packageInfo.packageName, "path=", packageInfo.packagePath, "refCount=", packageInfo.refCount or 0)
+			printed[packageInfo.packageName] = true
+		end
+	end
+	print("[FGUI] DumpPackages end")
+end
+
+function FairyGuiManager:DumpBindings()
+	local count = 0
+	for _, _ in pairs(self.bindings) do
+		count = count + 1
+	end
+	print("[FGUI] DumpBindings count=", count)
+	for bindingId, binding in pairs(self.bindings) do
+		print("[FGUI] Binding", bindingId, "handle=", binding.handle, "child=", binding.childPath, "eventType=", binding.eventType)
+	end
+end
+
+function FairyGuiManager:Dump()
+	self:DumpOpenUIs()
+	self:DumpPackages()
+	self:DumpBindings()
+end
+
 function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId)
 	if _G.FairyGuiManager == nil then
 		return false

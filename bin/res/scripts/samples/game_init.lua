@@ -19,17 +19,44 @@ local function tryOpenFairyGuiSample()
 	file:close()
 
 	threadpool:delay(1, function()
-		local view = FairyGuiManager:Open("Act37TestView")
-		local handle = view and view:GetHandle() or nil
-		print("[FGUI] open act_37_test:", handle)
-
 		local mvcCtrl = FairyGuiManager:Open("Act37TestMvc", {
 			roleId = 1001,
-			source = "Registry"
+			source = "InitialOpen",
+			showRed = true,
 		})
 		local mvcHandle = mvcCtrl and mvcCtrl:GetHandle() or nil
 		print("[FGUI] open act_37_test mvc:", mvcHandle)
+
+		threadpool:delay(2, function()
+			local reopenCtrl = FairyGuiManager:Open("Act37TestMvc", {
+				roleId = 1002,
+				source = "ReopenSample",
+				showRed = false,
+			})
+			local reopenHandle = reopenCtrl and reopenCtrl:GetHandle() or nil
+			print("[FGUI] reopen act_37_test mvc:", reopenHandle)
+		end)
 	end)
+end
+
+function FGUI_ReopenAct37Sample()
+	return FairyGuiManager:Open("Act37TestMvc", {
+		roleId = 2001,
+		source = "ManualReopen",
+		showRed = true,
+	})
+end
+
+function FGUI_CloseAct37Sample()
+	return FairyGuiManager:Close("Act37TestMvc")
+end
+
+function FGUI_DestroyAct37Sample()
+	return FairyGuiManager:Destroy("Act37TestMvc")
+end
+
+function FGUI_Dump()
+	return FairyGuiManager:Dump()
 end
 
 _G.__init__ = function(sec, msec)

@@ -96,4 +96,6 @@ if __name__ == "__main__":
     # 只处理常见代码文件（避免改资源文件）
     exts = ['.cpp', '.h', '.bat', '.c', '.pkg', '.lua', '.py']
     process_directory_lf2crlf(project_path, exts)
-    #process_directory_asc2utf(project_path, exts)
+
+    project_path = r"../../bin/res/scripts"
+    process_directory_lf2crlf(project_path, ['.lua'])

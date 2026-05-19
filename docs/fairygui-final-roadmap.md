@@ -100,6 +100,7 @@ runtime/ui/fairygui/FairyGuiSystem
   - `Act37TestMvcCtrl.lua`
   - `Act37TestMvcModel.lua`
   - `Act37TestMvcView.lua`
+  - 覆盖 `Popup/cache/modal/fullScreen/reopen/resize/complex events`
 - 已增加基础控件操作桥：
   - child handle 查询和缓存
   - `SetText / SetVisible / SetPosition / SetSize`
@@ -253,6 +254,7 @@ MiniUIManager 中值得借鉴的能力：
    - 业务代码只写 Ctrl/Model/View。
    - 生成文件和手写文件分离，避免后续覆盖业务代码。
    - 当前已提供 `tools/fairygui_autogen.py` 作为第一版生成入口，支持通过 manifest 或 `--control` 列表生成 MVC 四件套。
+   - 当前已提供 `tools/fairygui_manifests/act_37_test.json` 作为真实 fui 样例 manifest。
 
 8. 调试和观测
    - `FairyGuiManager:Dump()`
@@ -408,12 +410,7 @@ self:PlayTransition("show")
 
 ```bash
 python tools/fairygui_autogen.py ^
-	--ui-name Act37TestMvc ^
-	--package act_37_test ^
-	--component main_pifushoumai ^
-	--control txt_name ^
-	--control btn_close ^
-	--control list_items:content.list_items
+	--manifest tools/fairygui_manifests/act_37_test.json
 ```
 
 生成内容：
