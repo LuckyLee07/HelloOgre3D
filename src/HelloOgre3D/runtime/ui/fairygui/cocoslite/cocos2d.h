@@ -708,6 +708,7 @@ namespace cocos2d
 		int getID() const { return _id; }
 		const Vec2& getLocation() const { return _location; }
 		const Vec2& getPreviousLocation() const { return _previousLocation; }
+		void setTouchInfo(int id, float x, float y, float previousX, float previousY);
 
 	private:
 		int _id;

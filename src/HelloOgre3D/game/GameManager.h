@@ -64,9 +64,9 @@ public:
 	virtual void OnKeyPressed(OIS::KeyCode keycode, unsigned int key);
 	virtual void OnKeyReleased(OIS::KeyCode keycode, unsigned int key);
 
-	virtual void OnMouseMoved(const OIS::MouseEvent& evt);
-	virtual void OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
-	virtual void OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
+	virtual bool OnMouseMoved(const OIS::MouseEvent& evt);
+	virtual bool OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
+	virtual bool OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
 
 private:
 	ClientManager* m_pClientManager;

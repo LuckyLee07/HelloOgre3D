@@ -120,6 +120,7 @@ namespace
 FairyGuiSystem::FairyGuiSystem()
 	: m_pRenderWindow(nullptr), m_pSceneManager(nullptr), m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_pScene(nullptr), m_pRoot(nullptr), m_initialized(false), m_screenWidth(0), m_screenHeight(0),
+	m_lastMouseX(0.0f), m_lastMouseY(0.0f), m_hasLastMousePosition(false), m_leftMouseDownOnUi(false),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
 	m_objectHandles(), m_listenerBindings(), m_materialNames(), m_textureNames()
 {
@@ -187,6 +188,10 @@ void FairyGuiSystem::Shutdown()
 	m_pSceneManager = nullptr;
 	m_screenWidth = 0;
 	m_screenHeight = 0;
+	m_lastMouseX = 0.0f;
+	m_lastMouseY = 0.0f;
+	m_hasLastMousePosition = false;
+	m_leftMouseDownOnUi = false;
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
 	m_nextObjectHandle = 1;
@@ -225,6 +230,71 @@ void FairyGuiSystem::HandleWindowResized(unsigned int width, unsigned int height
 	cocos2d::Director::getInstance()->getOpenGLView()->setFrameSize((float)width, (float)height);
 	if (m_pRoot != nullptr)
 		m_pRoot->setSize((float)width, (float)height);
+}
+
+bool FairyGuiSystem::InjectMouseMove(int x, int y)
+{
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
+		return false;
+
+	float mouseX = 0.0f;
+	float mouseY = 0.0f;
+	ConvertMousePosition(x, y, mouseX, mouseY);
+	const float previousX = m_hasLastMousePosition ? m_lastMouseX : mouseX;
+	const float previousY = m_hasLastMousePosition ? m_lastMouseY : mouseY;
+
+	cocos2d::Touch touch;
+	touch.setTouchInfo(0, mouseX, mouseY, previousX, previousY);
+	m_pRoot->getInputProcessor()->touchMove(&touch, nullptr);
+
+	m_lastMouseX = mouseX;
+	m_lastMouseY = mouseY;
+	m_hasLastMousePosition = true;
+	return IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
+}
+
+bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
+{
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || button != 0)
+		return false;
+
+	float mouseX = 0.0f;
+	float mouseY = 0.0f;
+	ConvertMousePosition(x, y, mouseX, mouseY);
+	const bool mouseOnUi = IsMouseOnUi(mouseX, mouseY);
+
+	cocos2d::Touch touch;
+	touch.setTouchInfo(0, mouseX, mouseY, mouseX, mouseY);
+	m_pRoot->getInputProcessor()->touchDown(&touch, nullptr);
+
+	m_lastMouseX = mouseX;
+	m_lastMouseY = mouseY;
+	m_hasLastMousePosition = true;
+	m_leftMouseDownOnUi = mouseOnUi;
+	return mouseOnUi;
+}
+
+bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
+{
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || button != 0)
+		return false;
+
+	float mouseX = 0.0f;
+	float mouseY = 0.0f;
+	ConvertMousePosition(x, y, mouseX, mouseY);
+	const float previousX = m_hasLastMousePosition ? m_lastMouseX : mouseX;
+	const float previousY = m_hasLastMousePosition ? m_lastMouseY : mouseY;
+	const bool consumed = IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
+
+	cocos2d::Touch touch;
+	touch.setTouchInfo(0, mouseX, mouseY, previousX, previousY);
+	m_pRoot->getInputProcessor()->touchUp(&touch, nullptr);
+
+	m_lastMouseX = mouseX;
+	m_lastMouseY = mouseY;
+	m_hasLastMousePosition = true;
+	m_leftMouseDownOnUi = false;
+	return consumed;
 }
 
 bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
@@ -471,6 +541,30 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 		return;
 
 	luaVM->callFunction("FairyGuiManager_DispatchEvent", "iiii", callbackId, objectHandle, eventType, bindingId);
+}
+
+void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const
+{
+	float scale = 1.0f;
+	if (m_pRenderWindow != nullptr)
+	{
+		const float pointToPixelScale = m_pRenderWindow->getViewPointToPixelScale();
+		if (pointToPixelScale > 1.0f)
+			scale = pointToPixelScale;
+	}
+
+	outX = static_cast<float>(x) / scale;
+	const float logicalY = static_cast<float>(y) / scale;
+	outY = m_screenHeight > 0 ? static_cast<float>(m_screenHeight) - logicalY : logicalY;
+}
+
+bool FairyGuiSystem::IsMouseOnUi(float x, float y) const
+{
+	if (m_pRoot == nullptr)
+		return false;
+
+	fairygui::GObject* target = m_pRoot->hitTest(cocos2d::Vec2(x, y), cocos2d::Camera::getVisitingCamera());
+	return target != nullptr && target != m_pRoot;
 }
 
 void FairyGuiSystem::BeginOgreRender()

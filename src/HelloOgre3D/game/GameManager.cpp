@@ -359,19 +359,34 @@ void GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	m_pObjectManager->HandleKeyEvent(keycode, key);
 }
 
-void GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
+bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
-
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr && system->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
+		return true;
+#endif
+	return false;
 }
 
-void GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
+bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr && system->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+		return true;
+#endif
+	return false;
 }
 
-void GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
+bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr && system->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+		return true;
+#endif
+	return false;
 }
 
 long long GameManager::getTimeInMillis()

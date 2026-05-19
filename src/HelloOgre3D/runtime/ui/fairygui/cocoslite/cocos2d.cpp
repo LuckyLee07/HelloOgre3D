@@ -884,6 +884,13 @@ namespace cocos2d
 	{
 	}
 
+	void Touch::setTouchInfo(int id, float x, float y, float previousX, float previousY)
+	{
+		_id = id;
+		_location.set(x, y);
+		_previousLocation.set(previousX, previousY);
+	}
+
 	EventMouse::EventMouse() : _button(MouseButton::BUTTON_UNSET), _x(0), _y(0), _scrollX(0), _scrollY(0)
 	{
 	}

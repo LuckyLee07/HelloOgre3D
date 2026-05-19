@@ -127,33 +127,38 @@ bool InputManager::keyReleased(const OIS::KeyEvent& event)
 
 bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 {
-	if (event.state.buttonDown(OIS::MB_Right))
+	bool consumed = false;
+	for (auto* handler : m_inputHandlers)
+		consumed = handler->OnMouseMoved(event) || consumed;
+
+	if (!consumed && event.state.buttonDown(OIS::MB_Right))
 		GetClientMgr()->getCameraController()->injectMouseMove(event);
 
 	GetClientMgr()->SetWindowActive(true);
-
-	for (auto* handler : m_inputHandlers)
-		handler->OnMouseMoved(event);
 
 	return true;
 }
 
 bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
-	GetClientMgr()->getCameraController()->injectMouseDown(event, btnId);
-	
+	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		handler->OnMousePressed(event, btnId);
+		consumed = handler->OnMousePressed(event, btnId) || consumed;
+
+	if (!consumed)
+		GetClientMgr()->getCameraController()->injectMouseDown(event, btnId);
 	
 	return true;
 }
 
 bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
-	GetClientMgr()->getCameraController()->injectMouseUp(event, btnId);
-
+	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		handler->OnMouseReleased(event, btnId);
+		consumed = handler->OnMouseReleased(event, btnId) || consumed;
+
+	if (!consumed)
+		GetClientMgr()->getCameraController()->injectMouseUp(event, btnId);
 	
 	return true;
 }

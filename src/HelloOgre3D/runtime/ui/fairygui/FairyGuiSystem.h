@@ -37,6 +37,9 @@ public:
 	void Update(float deltaSeconds);
 	void Render();
 	void HandleWindowResized(unsigned int width, unsigned int height);
+	bool InjectMouseMove(int x, int y);
+	bool InjectMouseDown(int x, int y, int button);
+	bool InjectMouseUp(int x, int y, int button);
 
 	bool LoadPackage(const std::string& packagePath);
 	std::string LoadPackageAndGetName(const std::string& packagePath);
@@ -74,6 +77,8 @@ private:
 	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
 	void RemoveObjectHandleListeners(int objectHandle);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId);
+	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
+	bool IsMouseOnUi(float x, float y) const;
 	void BeginOgreRender();
 	void EndOgreRender();
 	bool CreateConfiguredPackageObject();
@@ -90,6 +95,10 @@ private:
 	bool m_initialized;
 	unsigned int m_screenWidth;
 	unsigned int m_screenHeight;
+	float m_lastMouseX;
+	float m_lastMouseY;
+	bool m_hasLastMousePosition;
+	bool m_leftMouseDownOnUi;
 	int m_lastRenderCommandCount;
 	int m_lastTriangleCount;
 	unsigned int m_materialCounter;

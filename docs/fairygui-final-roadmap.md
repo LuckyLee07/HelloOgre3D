@@ -85,10 +85,14 @@ runtime/ui/fairygui/FairyGuiSystem
   - `FairyGuiManager:AddClick(...)`
   - `GameManager:addFairyGuiClickListener(...)`
   - `FairyGuiSystem::AddObjectHandleClickListener(...)`
+- 已增加最小鼠标输入桥：
+  - OIS mouse move/down/up 转发到 `FairyGuiSystem`
+  - `FairyGuiSystem` 通过 FairyGUI `InputProcessor::touchDown/touchMove/touchUp` 驱动点击
+  - UI 命中时阻断相机鼠标输入
 
 当前仍缺失：
 
-- 完整输入转发。
+- 完整输入转发，包括键盘、滚轮、拖拽和更严格的焦点处理。
 - `Changed / ClickItem / RightClick` 等更多事件类型。
 - UI 注册表。
 - UI layer。
