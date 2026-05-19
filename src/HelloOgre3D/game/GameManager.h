@@ -44,6 +44,8 @@ public:
 	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
 	bool setFairyGuiObjectVisible(int objectHandle, bool visible);
 	bool centerFairyGuiObject(int objectHandle, bool restraint);
+	int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
+	bool removeFairyGuiListener(int bindingId);
 	bool removeFairyGuiObject(int objectHandle);
 	void clearFairyGuiObjects();
 	//tolua_end

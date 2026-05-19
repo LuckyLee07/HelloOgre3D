@@ -7,6 +7,7 @@ require("res.scripts.base.threadpool")
 
 require("res.scripts.base.global")
 require("res.scripts.base.uicomps")
+require("res.scripts.ui.BaseFairyGuiView")
 require("res.scripts.manager.LuaPluginMgr")
 require("res.scripts.manager.FairyGuiManager")
 

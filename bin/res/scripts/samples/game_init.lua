@@ -18,12 +18,14 @@ local function tryOpenFairyGuiSample()
 	file:close()
 
 	threadpool:delay(1, function()
-		local handle = FairyGuiManager:OpenUI(
-			"main_pifushoumai",
-			"act_37_test",
-			"main_pifushoumai",
-			{ x = 0, y = 0, key = "act37" }
-		)
+		local view = FairyGuiManager:OpenView("res.scripts.ui.views.Act37TestView", {
+			package = "act_37_test",
+			component = "main_pifushoumai",
+			x = 0,
+			y = 0,
+			key = "act37"
+		})
+		local handle = view and view:GetHandle() or nil
 		print("[FGUI] open act_37_test:", handle)
 	end)
 end

@@ -152,6 +152,29 @@ bool GameManager::centerFairyGuiObject(int objectHandle, bool restraint)
 #endif
 }
 
+int GameManager::addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->AddObjectHandleClickListener(objectHandle, childPath != nullptr ? childPath : "", callbackId);
+#else
+	return 0;
+#endif
+}
+
+bool GameManager::removeFairyGuiListener(int bindingId)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->RemoveObjectHandleListener(bindingId);
+#else
+	return false;
+#endif
+}
+
 bool GameManager::removeFairyGuiObject(int objectHandle)
 {
 #if defined(HELLO_ENABLE_FGUI)

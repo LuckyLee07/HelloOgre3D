@@ -1,16 +1,21 @@
 #include "ui/fairygui/FairyGuiSystem.h"
 
 #include "cocos2d.h"
+#include "GComponent.h"
 #include "GLoader.h"
 #include "GObject.h"
 #include "GRoot.h"
 #include "UIPackage.h"
+#include "event/EventContext.h"
+#include "event/UIEventType.h"
 
 #include "Ogre.h"
 #include "OgreRenderWindow.h"
+#include "ScriptLuaVM.h"
 
 #include <cstdlib>
 #include <fstream>
+#include <vector>
 
 namespace
 {
@@ -115,7 +120,8 @@ namespace
 FairyGuiSystem::FairyGuiSystem()
 	: m_pRenderWindow(nullptr), m_pSceneManager(nullptr), m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_pScene(nullptr), m_pRoot(nullptr), m_initialized(false), m_screenWidth(0), m_screenHeight(0),
-	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_objectHandles(), m_materialNames(), m_textureNames()
+	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
+	m_objectHandles(), m_listenerBindings(), m_materialNames(), m_textureNames()
 {
 }
 
@@ -184,6 +190,7 @@ void FairyGuiSystem::Shutdown()
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
 	m_nextObjectHandle = 1;
+	m_nextListenerBindingId = 1;
 }
 
 void FairyGuiSystem::Update(float deltaSeconds)
@@ -311,12 +318,46 @@ bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 	return true;
 }
 
+int FairyGuiSystem::AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId)
+{
+	fairygui::GObject* target = FindEventTarget(objectHandle, childPath);
+	if (target == nullptr || callbackId <= 0)
+		return 0;
+
+	const int bindingId = m_nextListenerBindingId++;
+	ListenerBinding binding;
+	binding.rootHandle = objectHandle;
+	binding.callbackId = callbackId;
+	binding.eventType = fairygui::UIEventType::Click;
+	binding.target = target;
+	m_listenerBindings[bindingId] = binding;
+
+	target->addEventListener(fairygui::UIEventType::Click, [this, callbackId, objectHandle, bindingId](fairygui::EventContext* context) {
+		(void)context;
+		DispatchObjectHandleEvent(callbackId, objectHandle, fairygui::UIEventType::Click, bindingId);
+	}, fairygui::EventTag(bindingId));
+	return bindingId;
+}
+
+bool FairyGuiSystem::RemoveObjectHandleListener(int bindingId)
+{
+	std::map<int, ListenerBinding>::iterator it = m_listenerBindings.find(bindingId);
+	if (it == m_listenerBindings.end())
+		return false;
+
+	if (it->second.target != nullptr)
+		it->second.target->removeEventListener(it->second.eventType, fairygui::EventTag(bindingId));
+	m_listenerBindings.erase(it);
+	return true;
+}
+
 bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 {
 	std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.find(objectHandle);
 	if (it == m_objectHandles.end() || it->second == nullptr)
 		return false;
 
+	RemoveObjectHandleListeners(objectHandle);
 	it->second->removeFromParent();
 	it->second->release();
 	m_objectHandles.erase(it);
@@ -325,6 +366,7 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 
 void FairyGuiSystem::ClearObjectHandles()
 {
+	m_listenerBindings.clear();
 	for (std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
 	{
 		if (it->second != nullptr)
@@ -394,6 +436,41 @@ fairygui::GObject* FairyGuiSystem::FindObjectHandle(int objectHandle) const
 {
 	std::map<int, fairygui::GObject*>::const_iterator it = m_objectHandles.find(objectHandle);
 	return it != m_objectHandles.end() ? it->second : nullptr;
+}
+
+fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::string& childPath) const
+{
+	fairygui::GObject* root = FindObjectHandle(objectHandle);
+	if (root == nullptr || childPath.empty())
+		return root;
+
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(root);
+	if (component == nullptr)
+		return nullptr;
+
+	return component->getChildByPath(childPath);
+}
+
+void FairyGuiSystem::RemoveObjectHandleListeners(int objectHandle)
+{
+	std::vector<int> bindingIds;
+	for (std::map<int, ListenerBinding>::const_iterator it = m_listenerBindings.begin(); it != m_listenerBindings.end(); ++it)
+	{
+		if (it->second.rootHandle == objectHandle)
+			bindingIds.push_back(it->first);
+	}
+
+	for (std::vector<int>::const_iterator it = bindingIds.begin(); it != bindingIds.end(); ++it)
+		RemoveObjectHandleListener(*it);
+}
+
+void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId)
+{
+	ScriptLuaVM* luaVM = GetScriptLuaVM();
+	if (luaVM == nullptr)
+		return;
+
+	luaVM->callFunction("FairyGuiManager_DispatchEvent", "iiii", callbackId, objectHandle, eventType, bindingId);
 }
 
 void FairyGuiSystem::BeginOgreRender()

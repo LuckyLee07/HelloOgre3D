@@ -48,6 +48,8 @@ public:
 	bool SetObjectHandleSize(int objectHandle, float width, float height);
 	bool SetObjectHandleVisible(int objectHandle, bool visible);
 	bool CenterObjectHandle(int objectHandle, bool restraint);
+	int AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId);
+	bool RemoveObjectHandleListener(int bindingId);
 	bool RemoveObjectHandle(int objectHandle);
 	void ClearObjectHandles();
 	bool CreateSmokeTestImage(const std::string& imagePath);
@@ -58,9 +60,20 @@ public:
 	int GetLastTriangleCount() const { return m_lastTriangleCount; }
 
 private:
+	struct ListenerBinding
+	{
+		int rootHandle;
+		int callbackId;
+		int eventType;
+		fairygui::GObject* target;
+	};
+
 	virtual void handleTrianglesCommand(const cocos2d::TrianglesCommand& command) override;
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
+	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
+	void RemoveObjectHandleListeners(int objectHandle);
+	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId);
 	void BeginOgreRender();
 	void EndOgreRender();
 	bool CreateConfiguredPackageObject();
@@ -81,7 +94,9 @@ private:
 	int m_lastTriangleCount;
 	unsigned int m_materialCounter;
 	int m_nextObjectHandle;
+	int m_nextListenerBindingId;
 	std::map<int, fairygui::GObject*> m_objectHandles;
+	std::map<int, ListenerBinding> m_listenerBindings;
 	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
 };
