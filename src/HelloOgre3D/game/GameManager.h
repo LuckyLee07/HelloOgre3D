@@ -38,12 +38,21 @@ public:
 
 	bool isFairyGuiAvailable();
 	const char* loadFairyGuiPackage(const char* packagePath);
+	bool removeFairyGuiPackage(const char* packageName);
 	int createFairyGuiObject(const char* packageName, const char* objectName);
+	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
+	int getFairyGuiChild(int objectHandle, const char* childPath);
 	bool addFairyGuiObjectToRoot(int objectHandle);
 	bool setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y);
 	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
 	bool setFairyGuiObjectVisible(int objectHandle, bool visible);
+	bool setFairyGuiObjectSortingOrder(int objectHandle, int sortingOrder);
+	bool setFairyGuiObjectText(int objectHandle, const char* text);
+	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
+	bool setFairyGuiObjectLoaderUrl(int objectHandle, const char* url);
+	bool setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex);
 	bool centerFairyGuiObject(int objectHandle, bool restraint);
+	int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
 	int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
 	bool removeFairyGuiListener(int bindingId);
 	bool removeFairyGuiObject(int objectHandle);

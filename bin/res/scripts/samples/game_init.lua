@@ -9,6 +9,7 @@ require("res.scripts.samples.Sandbox8")
 
 _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 _G.FairyGuiManager = ClassList.FairyGuiManager:GetInst()
+FairyGuiManager:RegisterUIRegistry(require("res.scripts.ui.UIRegistry"))
 
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
@@ -18,15 +19,16 @@ local function tryOpenFairyGuiSample()
 	file:close()
 
 	threadpool:delay(1, function()
-		local view = FairyGuiManager:OpenView("res.scripts.ui.views.Act37TestView", {
-			package = "act_37_test",
-			component = "main_pifushoumai",
-			x = 0,
-			y = 0,
-			key = "act37"
-		})
+		local view = FairyGuiManager:Open("Act37TestView")
 		local handle = view and view:GetHandle() or nil
 		print("[FGUI] open act_37_test:", handle)
+
+		local mvcCtrl = FairyGuiManager:Open("Act37TestMvc", {
+			roleId = 1001,
+			source = "Registry"
+		})
+		local mvcHandle = mvcCtrl and mvcCtrl:GetHandle() or nil
+		print("[FGUI] open act_37_test mvc:", mvcHandle)
 	end)
 end
 

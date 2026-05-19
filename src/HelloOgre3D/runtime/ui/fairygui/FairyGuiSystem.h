@@ -43,14 +43,23 @@ public:
 
 	bool LoadPackage(const std::string& packagePath);
 	std::string LoadPackageAndGetName(const std::string& packagePath);
+	bool RemovePackage(const std::string& packageName);
 	fairygui::GObject* CreateObject(const std::string& packageName, const std::string& objectName);
 	bool AddToRoot(fairygui::GObject* object);
 	int CreateObjectHandle(const std::string& packageName, const std::string& objectName);
+	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
+	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
 	bool AddObjectHandleToRoot(int objectHandle);
 	bool SetObjectHandlePosition(int objectHandle, float x, float y);
 	bool SetObjectHandleSize(int objectHandle, float width, float height);
 	bool SetObjectHandleVisible(int objectHandle, bool visible);
+	bool SetObjectHandleSortingOrder(int objectHandle, int sortingOrder);
+	bool SetObjectHandleText(int objectHandle, const std::string& text);
+	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
+	bool SetObjectHandleLoaderUrl(int objectHandle, const std::string& url);
+	bool SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex);
 	bool CenterObjectHandle(int objectHandle, bool restraint);
+	int AddObjectHandleEventListener(int objectHandle, const std::string& childPath, int eventType, int callbackId);
 	int AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId);
 	bool RemoveObjectHandleListener(int bindingId);
 	bool RemoveObjectHandle(int objectHandle);
@@ -71,10 +80,19 @@ private:
 		fairygui::GObject* target;
 	};
 
+	struct ObjectHandleInfo
+	{
+		fairygui::GObject* object;
+		int ownerHandle;
+		bool retained;
+	};
+
 	virtual void handleTrianglesCommand(const cocos2d::TrianglesCommand& command) override;
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
 	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
+	int GetObjectHandleOwner(int objectHandle) const;
+	void RemoveObjectHandleAliases(int objectHandle);
 	void RemoveObjectHandleListeners(int objectHandle);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
@@ -104,7 +122,7 @@ private:
 	unsigned int m_materialCounter;
 	int m_nextObjectHandle;
 	int m_nextListenerBindingId;
-	std::map<int, fairygui::GObject*> m_objectHandles;
+	std::map<int, ObjectHandleInfo> m_objectHandles;
 	std::map<int, ListenerBinding> m_listenerBindings;
 	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;

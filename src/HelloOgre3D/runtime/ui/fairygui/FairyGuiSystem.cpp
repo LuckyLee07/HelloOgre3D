@@ -1,7 +1,9 @@
 #include "ui/fairygui/FairyGuiSystem.h"
 
+#include "Controller.h"
 #include "cocos2d.h"
 #include "GComponent.h"
+#include "GGraph.h"
 #include "GLoader.h"
 #include "GObject.h"
 #include "GRoot.h"
@@ -255,13 +257,22 @@ bool FairyGuiSystem::InjectMouseMove(int x, int y)
 
 bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
 {
-	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || button != 0)
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
 		return false;
 
 	float mouseX = 0.0f;
 	float mouseY = 0.0f;
 	ConvertMousePosition(x, y, mouseX, mouseY);
 	const bool mouseOnUi = IsMouseOnUi(mouseX, mouseY);
+
+	if (button != 0)
+	{
+		m_lastMouseX = mouseX;
+		m_lastMouseY = mouseY;
+		m_hasLastMousePosition = true;
+		m_leftMouseDownOnUi = mouseOnUi;
+		return mouseOnUi;
+	}
 
 	cocos2d::Touch touch;
 	touch.setTouchInfo(0, mouseX, mouseY, mouseX, mouseY);
@@ -276,7 +287,7 @@ bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
 
 bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 {
-	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || button != 0)
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
 		return false;
 
 	float mouseX = 0.0f;
@@ -285,6 +296,18 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	const float previousX = m_hasLastMousePosition ? m_lastMouseX : mouseX;
 	const float previousY = m_hasLastMousePosition ? m_lastMouseY : mouseY;
 	const bool consumed = IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
+
+	if (button != 0)
+	{
+		fairygui::GObject* target = m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera());
+		if (consumed && target != nullptr && target != m_pRoot)
+			target->bubbleEvent(button == 2 ? fairygui::UIEventType::MiddleClick : fairygui::UIEventType::RightClick);
+		m_lastMouseX = mouseX;
+		m_lastMouseY = mouseY;
+		m_hasLastMousePosition = true;
+		m_leftMouseDownOnUi = false;
+		return consumed;
+	}
 
 	cocos2d::Touch touch;
 	touch.setTouchInfo(0, mouseX, mouseY, previousX, previousY);
@@ -314,6 +337,15 @@ std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath
 	return package != nullptr ? package->getName() : std::string();
 }
 
+bool FairyGuiSystem::RemovePackage(const std::string& packageName)
+{
+	if (!m_initialized || packageName.empty())
+		return false;
+
+	fairygui::UIPackage::removePackage(packageName);
+	return true;
+}
+
 fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, const std::string& objectName)
 {
 	if (!m_initialized || packageName.empty() || objectName.empty())
@@ -339,8 +371,58 @@ int FairyGuiSystem::CreateObjectHandle(const std::string& packageName, const std
 
 	const int objectHandle = m_nextObjectHandle++;
 	object->retain();
-	m_objectHandles[objectHandle] = object;
+
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = object;
+	handleInfo.ownerHandle = 0;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
 	return objectHandle;
+}
+
+int FairyGuiSystem::CreateModalMaskHandle(float red, float green, float blue, float alpha)
+{
+	if (!m_initialized || m_screenWidth == 0 || m_screenHeight == 0)
+		return 0;
+
+	fairygui::GGraph* graph = fairygui::GGraph::create();
+	if (graph == nullptr)
+		return 0;
+
+	graph->drawRect(
+		static_cast<float>(m_screenWidth),
+		static_cast<float>(m_screenHeight),
+		0,
+		cocos2d::Color4F(red, green, blue, alpha),
+		cocos2d::Color4F(red, green, blue, alpha));
+	graph->setTouchable(true);
+	graph->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = graph;
+	handleInfo.ownerHandle = 0;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::GetObjectHandleChild(int objectHandle, const std::string& childPath)
+{
+	if (childPath.empty())
+		return objectHandle;
+
+	fairygui::GObject* child = FindEventTarget(objectHandle, childPath);
+	if (child == nullptr)
+		return 0;
+
+	const int childHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = child;
+	handleInfo.ownerHandle = GetObjectHandleOwner(objectHandle);
+	handleInfo.retained = false;
+	m_objectHandles[childHandle] = handleInfo;
+	return childHandle;
 }
 
 bool FairyGuiSystem::AddObjectHandleToRoot(int objectHandle)
@@ -378,6 +460,62 @@ bool FairyGuiSystem::SetObjectHandleVisible(int objectHandle, bool visible)
 	return true;
 }
 
+bool FairyGuiSystem::SetObjectHandleSortingOrder(int objectHandle, int sortingOrder)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setSortingOrder(sortingOrder);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleText(int objectHandle, const std::string& text)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setText(text);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleIcon(int objectHandle, const std::string& icon)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setIcon(icon);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleLoaderUrl(int objectHandle, const std::string& url)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	fairygui::GLoader* loader = dynamic_cast<fairygui::GLoader*>(object);
+	if (loader == nullptr)
+		return false;
+
+	loader->setURL(url);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(object);
+	if (component == nullptr || controllerName.empty())
+		return false;
+
+	fairygui::GController* controller = component->getController(controllerName);
+	if (controller == nullptr)
+		return false;
+
+	controller->setSelectedIndex(selectedIndex);
+	return true;
+}
+
 bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
@@ -388,7 +526,7 @@ bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 	return true;
 }
 
-int FairyGuiSystem::AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId)
+int FairyGuiSystem::AddObjectHandleEventListener(int objectHandle, const std::string& childPath, int eventType, int callbackId)
 {
 	fairygui::GObject* target = FindEventTarget(objectHandle, childPath);
 	if (target == nullptr || callbackId <= 0)
@@ -398,15 +536,20 @@ int FairyGuiSystem::AddObjectHandleClickListener(int objectHandle, const std::st
 	ListenerBinding binding;
 	binding.rootHandle = objectHandle;
 	binding.callbackId = callbackId;
-	binding.eventType = fairygui::UIEventType::Click;
+	binding.eventType = eventType;
 	binding.target = target;
 	m_listenerBindings[bindingId] = binding;
 
-	target->addEventListener(fairygui::UIEventType::Click, [this, callbackId, objectHandle, bindingId](fairygui::EventContext* context) {
+	target->addEventListener(eventType, [this, callbackId, objectHandle, eventType, bindingId](fairygui::EventContext* context) {
 		(void)context;
-		DispatchObjectHandleEvent(callbackId, objectHandle, fairygui::UIEventType::Click, bindingId);
+		DispatchObjectHandleEvent(callbackId, objectHandle, eventType, bindingId);
 	}, fairygui::EventTag(bindingId));
 	return bindingId;
+}
+
+int FairyGuiSystem::AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId)
+{
+	return AddObjectHandleEventListener(objectHandle, childPath, fairygui::UIEventType::Click, callbackId);
 }
 
 bool FairyGuiSystem::RemoveObjectHandleListener(int bindingId)
@@ -423,13 +566,17 @@ bool FairyGuiSystem::RemoveObjectHandleListener(int bindingId)
 
 bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 {
-	std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.find(objectHandle);
-	if (it == m_objectHandles.end() || it->second == nullptr)
+	std::map<int, ObjectHandleInfo>::iterator it = m_objectHandles.find(objectHandle);
+	if (it == m_objectHandles.end() || it->second.object == nullptr)
 		return false;
 
+	RemoveObjectHandleAliases(objectHandle);
 	RemoveObjectHandleListeners(objectHandle);
-	it->second->removeFromParent();
-	it->second->release();
+	if (it->second.retained)
+	{
+		it->second.object->removeFromParent();
+		it->second.object->release();
+	}
 	m_objectHandles.erase(it);
 	return true;
 }
@@ -437,12 +584,12 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 void FairyGuiSystem::ClearObjectHandles()
 {
 	m_listenerBindings.clear();
-	for (std::map<int, fairygui::GObject*>::iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	for (std::map<int, ObjectHandleInfo>::iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
 	{
-		if (it->second != nullptr)
+		if (it->second.object != nullptr && it->second.retained)
 		{
-			it->second->removeFromParent();
-			it->second->release();
+			it->second.object->removeFromParent();
+			it->second.object->release();
 		}
 	}
 	m_objectHandles.clear();
@@ -504,8 +651,8 @@ void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
 
 fairygui::GObject* FairyGuiSystem::FindObjectHandle(int objectHandle) const
 {
-	std::map<int, fairygui::GObject*>::const_iterator it = m_objectHandles.find(objectHandle);
-	return it != m_objectHandles.end() ? it->second : nullptr;
+	std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.find(objectHandle);
+	return it != m_objectHandles.end() ? it->second.object : nullptr;
 }
 
 fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::string& childPath) const
@@ -519,6 +666,27 @@ fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::
 		return nullptr;
 
 	return component->getChildByPath(childPath);
+}
+
+int FairyGuiSystem::GetObjectHandleOwner(int objectHandle) const
+{
+	std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.find(objectHandle);
+	if (it == m_objectHandles.end())
+		return objectHandle;
+	return it->second.ownerHandle != 0 ? it->second.ownerHandle : objectHandle;
+}
+
+void FairyGuiSystem::RemoveObjectHandleAliases(int objectHandle)
+{
+	std::vector<int> aliasHandles;
+	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	{
+		if (it->first != objectHandle && it->second.ownerHandle == objectHandle)
+			aliasHandles.push_back(it->first);
+	}
+
+	for (std::vector<int>::const_iterator it = aliasHandles.begin(); it != aliasHandles.end(); ++it)
+		RemoveObjectHandle(*it);
 }
 
 void FairyGuiSystem::RemoveObjectHandleListeners(int objectHandle)
