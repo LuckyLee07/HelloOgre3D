@@ -11,6 +11,28 @@ _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 _G.FairyGuiManager = ClassList.FairyGuiManager:GetInst()
 FairyGuiManager:RegisterUIRegistry(require("res.scripts.ui.UIRegistry"))
 
+local function isEnvEnabled(name)
+	local value = os.getenv and os.getenv(name) or nil
+	return value == "1" or value == "true" or value == "TRUE" or value == "True"
+end
+
+local function tryRunFairyGuiInputSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_INPUT_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(4, function()
+		print("[FGUI] input self test begin")
+		print("[FGUI] input self test click buy:", FairyGuiManager:DebugInjectClick(503, 616, 0))
+		threadpool:delay(1, function()
+			print("[FGUI] input self test click reward:", FairyGuiManager:DebugInjectClick(745, 485, 0))
+		end)
+		threadpool:delay(2, function()
+			print("[FGUI] input self test click close:", FairyGuiManager:DebugInjectClick(1154, 202, 0))
+		end)
+	end)
+end
+
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
@@ -36,6 +58,8 @@ local function tryOpenFairyGuiSample()
 			local reopenHandle = reopenCtrl and reopenCtrl:GetHandle() or nil
 			print("[FGUI] reopen act_37_test mvc:", reopenHandle)
 		end)
+
+		tryRunFairyGuiInputSelfTest()
 	end)
 end
 
@@ -57,6 +81,10 @@ end
 
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
+end
+
+function FGUI_DebugInjectClick(x, y, button)
+	return FairyGuiManager:DebugInjectClick(x, y, button or 0)
 end
 
 _G.__init__ = function(sec, msec)

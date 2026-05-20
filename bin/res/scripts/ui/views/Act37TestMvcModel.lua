@@ -10,6 +10,11 @@ function Act37TestMvcModel:Init(param)
 	self.data.clickCount = 0
 	self.data.lastRoleId = nil
 	self.data.lastSource = nil
+	self.data.rewards = {
+		{ name = "Gold", count = 120, icon = "" },
+		{ name = "Diamond", count = 20, icon = "" },
+		{ name = "Ticket", count = 3, icon = "" },
+	}
 end
 
 function Act37TestMvcModel:SetIncomingParam(param)
@@ -29,6 +34,14 @@ end
 function Act37TestMvcModel:IncreaseClickCount()
 	self.data.clickCount = (self.data.clickCount or 0) + 1
 	return self.data.clickCount
+end
+
+function Act37TestMvcModel:GetRewards()
+	return self.data.rewards
+end
+
+function Act37TestMvcModel:GetReward(index)
+	return self.data.rewards and self.data.rewards[index] or nil
 end
 
 return Act37TestMvcModel

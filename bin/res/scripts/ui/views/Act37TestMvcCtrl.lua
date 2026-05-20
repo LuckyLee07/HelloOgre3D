@@ -50,7 +50,21 @@ function Act37TestMvcCtrl:Refresh()
 	self:SetText("txt_time", string.format("role=%s source=%s", tostring(param and param.roleId), tostring(param and param.source)))
 	self:SetText("txt_desc", string.format("openCount=%s clickCount=%s", tostring(self.model:GetByKey("openCount")), tostring(self.model:GetByKey("clickCount"))))
 	self:SetVisible("redTag", param and param.showRed == true)
+	self:RefreshRewardList()
 	print("[FGUI] Act37TestMvcCtrl Refresh:", param and param.roleId, param and param.source)
+end
+
+function Act37TestMvcCtrl:RefreshRewardList()
+	local rewards = self.model:GetRewards()
+	self:SetListData("reward_list", rewards, function(item, data, index)
+		item:SetText("num", tostring(data.count))
+		item:SetText("text", tostring(data.name))
+		if data.icon ~= nil and data.icon ~= "" then
+			item:SetIcon("icon", data.icon)
+		end
+		item:SetVisible("redTag", index == 1)
+	end)
+	self:SetListSelectedIndex("reward_list", 1)
 end
 
 function Act37TestMvcCtrl:OnReopen(param)
@@ -90,11 +104,14 @@ function Act37TestMvcCtrl:OnActionClick(actionName, evt)
 end
 
 function Act37TestMvcCtrl:OnTabChanged(evt)
-	print("[FGUI] Act37TestMvcCtrl tab changed:", evt.eventType, evt.bindingId)
+	local selectedIndex = self:GetListSelectedIndex("tab_list")
+	print("[FGUI] Act37TestMvcCtrl tab changed:", evt.eventType, evt.bindingId, selectedIndex)
 end
 
 function Act37TestMvcCtrl:OnRewardItemClick(evt)
-	print("[FGUI] Act37TestMvcCtrl reward item click:", evt.eventType, evt.bindingId)
+	local reward = evt.itemData or self.model:GetReward(evt.itemIndex or 0) or {}
+	self:SetText("txt_desc", string.format("reward[%s]=%s x%s", tostring(evt.itemIndex), tostring(reward.name), tostring(reward.count)))
+	print("[FGUI] Act37TestMvcCtrl reward item click:", evt.eventType, evt.bindingId, evt.itemIndex, reward.name, reward.count)
 end
 
 function Act37TestMvcCtrl:OnRootRightClick(evt)

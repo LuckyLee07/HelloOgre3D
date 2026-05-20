@@ -378,6 +378,21 @@ Toast
 - UI 命中时相机和游戏输入不响应。
 - UI 外点击仍保留原有游戏输入行为。
 
+### Phase 4.5: FGUI 真实交互验证待办
+
+当前 VS2017 `Release|x64` 已确认可以编译通过，`bin/HelloOgre3D.exe` 可以从 `bin` 目录正常启动，并能加载 `act_37_test.fui`、打开 `Act37TestMvc`、触发 `OnReopen`。
+
+本轮暂缓真实点击验收，后续需要回头补一轮手动或可控注入验证：
+
+- 手动点击 `Act37TestMvc` 的 `btn_buy / btn_detail / reward_list / btn_close`。
+- 预期 `bin/Sandbox.log` 出现 `action click`、`reward item click`、`close click`、`OnClose / OnRemove` 等日志。
+- 重点确认 `reward_list` 的 `ClickItem` 能透传 `itemIndex / itemData / itemHandle`。
+- 当前脚本自动化点击不可靠：OIS/DirectInput 读取到的 `evt.state.X.abs / Y.abs` 可能停在固定值，例如 `50,50`，不能作为真实交互结论。
+- 已补 Debug/Test 专用输入注入入口，Lua 可通过 `FairyGuiManager:DebugInjectClick(x, y, button)` 或全局 `FGUI_DebugInjectClick(x, y, button)` 直接按客户端坐标注入点击。
+- 可设置 `HELLO_FGUI_INPUT_SELF_TEST=1` 启动自测；自测会依次注入 `btn_buy`、`reward_list`、`btn_close`，用于验证 `action click`、`reward item click`、`close click` 链路。
+- 可设置 `HELLO_FGUI_INPUT_DEBUG=1` 输出命中对象日志，便于定位坐标和 FairyGUI `hitTest` 结果。
+- 若后续继续改 `cocos-lite` 坐标系统，需要重点复查 `Node::convertToNodeSpace / convertToWorldSpace` 与 FairyGUI `hitTest` 的一致性。
+
 ### Phase 5: 常用 UI 能力
 
 优先级：

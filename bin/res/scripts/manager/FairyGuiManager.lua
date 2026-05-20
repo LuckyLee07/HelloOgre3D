@@ -116,6 +116,58 @@ local DEFAULT_LAYER_ORDER = {
 	Toast = 6000,
 }
 
+local LIST_ITEM_METHODS = {}
+
+local function getCurrentManager()
+	if _G.FairyGuiManager ~= nil then
+		return _G.FairyGuiManager
+	end
+	if ClassList ~= nil and ClassList.FairyGuiManager ~= nil then
+		return ClassList.FairyGuiManager:GetInst()
+	end
+	return nil
+end
+
+function LIST_ITEM_METHODS:GetHandle()
+	return self.handle
+end
+
+function LIST_ITEM_METHODS:SetText(childPath, text)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetText(self.handle, childPath, text) or false
+end
+
+function LIST_ITEM_METHODS:SetIcon(childPath, icon)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetIcon(self.handle, childPath, icon) or false
+end
+
+function LIST_ITEM_METHODS:SetLoaderUrl(childPath, url)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetLoaderUrl(self.handle, childPath, url) or false
+end
+
+function LIST_ITEM_METHODS:SetVisible(childPathOrVisible, visible)
+	local manager = getCurrentManager()
+	if manager == nil then
+		return false
+	end
+	if visible == nil then
+		return manager:SetVisible(self.handle, childPathOrVisible == true)
+	end
+	return manager:SetChildVisible(self.handle, childPathOrVisible, visible == true)
+end
+
+function LIST_ITEM_METHODS:SetPosition(childPath, x, y)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetChildPosition(self.handle, childPath, x, y) or false
+end
+
+function LIST_ITEM_METHODS:SetSize(childPath, width, height)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetChildSize(self.handle, childPath, width, height) or false
+end
+
 local function getEventType(eventType)
 	if type(eventType) == "number" then
 		return eventType
@@ -184,6 +236,8 @@ function FairyGuiManager:Init()
 	self.uiNameToKey = {}
 	self.hiddenObjects = {}
 	self.childrenByHandle = {}
+	self.listItemHandlesByHandle = {}
+	self.listDataByHandle = {}
 	self.views = {}
 	self.viewsByHandle = {}
 	self.controllers = {}
@@ -955,6 +1009,198 @@ function FairyGuiManager:GetTargetHandle(handle, childPath)
 	return self:GetChild(handle, childPath)
 end
 
+function FairyGuiManager:ClearListCacheByListHandle(listHandle)
+	if listHandle == nil then
+		return
+	end
+
+	local itemHandles = self.listItemHandlesByHandle[listHandle]
+	if itemHandles ~= nil then
+		for _, itemHandle in pairs(itemHandles) do
+			self.childrenByHandle[itemHandle] = nil
+		end
+	end
+	self.listItemHandlesByHandle[listHandle] = nil
+	self.listDataByHandle[listHandle] = nil
+end
+
+function FairyGuiManager:ClearListCacheForHandle(handle)
+	if handle == nil then
+		return
+	end
+
+	self:ClearListCacheByListHandle(handle)
+	local childHandles = self.childrenByHandle[handle]
+	if childHandles ~= nil then
+		for _, childHandle in pairs(childHandles) do
+			self:ClearListCacheByListHandle(childHandle)
+		end
+	end
+end
+
+function FairyGuiManager:CreateListItemAdapter(listHandle, itemHandle, index, data)
+	if itemHandle == nil or itemHandle <= 0 then
+		return nil
+	end
+	return setmetatable({
+		listHandle = listHandle,
+		handle = itemHandle,
+		index = index,
+		data = data,
+	}, { __index = LIST_ITEM_METHODS })
+end
+
+function FairyGuiManager:GetListItemByHandle(listHandle, index, data)
+	if GameManager == nil or listHandle == nil or index == nil then
+		return nil
+	end
+
+	local itemHandles = self.listItemHandlesByHandle[listHandle]
+	if itemHandles == nil then
+		itemHandles = {}
+		self.listItemHandlesByHandle[listHandle] = itemHandles
+	end
+
+	local itemHandle = itemHandles[index]
+	if itemHandle == nil then
+		itemHandle = GameManager:getFairyGuiListItem(listHandle, index - 1)
+		if itemHandle == nil or itemHandle <= 0 then
+			return nil
+		end
+		itemHandles[index] = itemHandle
+	end
+	return self:CreateListItemAdapter(listHandle, itemHandle, index, data)
+end
+
+function FairyGuiManager:GetListHandle(handle, childPath)
+	return self:GetTargetHandle(handle, childPath)
+end
+
+function FairyGuiManager:SetListItemCount(handle, childPath, itemCount)
+	if GameManager == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	self.listItemHandlesByHandle[listHandle] = nil
+	return GameManager:setFairyGuiListItemCount(listHandle, itemCount or 0)
+end
+
+function FairyGuiManager:GetListItemCount(handle, childPath)
+	if GameManager == nil then
+		return 0
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return 0
+	end
+	return GameManager:getFairyGuiListItemCount(listHandle)
+end
+
+function FairyGuiManager:GetListItem(handle, childPath, index)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return nil
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	local data = dataList ~= nil and dataList[index] or nil
+	return self:GetListItemByHandle(listHandle, index, data)
+end
+
+function FairyGuiManager:SetListData(handle, childPath, dataList, renderer)
+	if type(dataList) ~= "table" then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or not self:SetListItemCount(handle, childPath, #dataList) then
+		return false
+	end
+
+	self.listDataByHandle[listHandle] = dataList
+	for index, data in ipairs(dataList) do
+		local item = self:GetListItemByHandle(listHandle, index, data)
+		if item ~= nil and type(renderer) == "function" then
+			renderer(item, data, index)
+		elseif item ~= nil then
+			item:SetText("", tostring(data))
+		end
+	end
+	return true
+end
+
+function FairyGuiManager:SetListSelectedIndex(handle, childPath, selectedIndex)
+	if GameManager == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+	return GameManager:setFairyGuiListSelectedIndex(listHandle, (selectedIndex or 1) - 1)
+end
+
+function FairyGuiManager:GetListSelectedIndex(handle, childPath)
+	if GameManager == nil then
+		return 0
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return 0
+	end
+
+	local selectedIndex = GameManager:getFairyGuiListSelectedIndex(listHandle)
+	return selectedIndex >= 0 and selectedIndex + 1 or 0
+end
+
+function FairyGuiManager:ScrollListToView(handle, childPath, index)
+	if GameManager == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+	return GameManager:scrollFairyGuiListToView(listHandle, (index or 1) - 1)
+end
+
+function FairyGuiManager:DebugInjectMouseMove(x, y)
+	if GameManager == nil or GameManager.injectFairyGuiMouseMove == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiMouseMove(tonumber(x) or 0, tonumber(y) or 0)
+end
+
+function FairyGuiManager:DebugInjectMouseDown(x, y, button)
+	if GameManager == nil or GameManager.injectFairyGuiMouseDown == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiMouseDown(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+end
+
+function FairyGuiManager:DebugInjectMouseUp(x, y, button)
+	if GameManager == nil or GameManager.injectFairyGuiMouseUp == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiMouseUp(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+end
+
+function FairyGuiManager:DebugInjectClick(x, y, button)
+	if GameManager == nil or GameManager.injectFairyGuiClick == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiClick(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+end
+
 function FairyGuiManager:SetText(handle, childPath, text)
 	if GameManager == nil then
 		return false
@@ -1135,15 +1381,33 @@ function FairyGuiManager:ClearBindingsForHandle(handle)
 	self.bindingsByHandle[handle] = nil
 end
 
-function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId)
+function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
 	local callback = self.callbacks[callbackId]
 	if callback == nil then
 		return false
 	end
 
+	local binding = self.bindings[bindingId]
+	local itemIndex = rawItemIndex ~= nil and rawItemIndex >= 0 and rawItemIndex + 1 or nil
+	local eventData = nil
+	if binding ~= nil and itemIndex ~= nil then
+		local listHandle = self:GetTargetHandle(binding.handle, binding.childPath)
+		local listData = listHandle ~= nil and self.listDataByHandle[listHandle] or nil
+		eventData = listData ~= nil and listData[itemIndex] or nil
+	end
+
 	local ok, err = pcall(callback, {
 		callbackId = callbackId,
 		rootHandle = rootHandle,
+		senderHandle = senderHandle,
+		itemHandle = itemHandle,
+		itemIndex = itemIndex,
+		rawItemIndex = rawItemIndex,
+		itemData = eventData,
+		x = x,
+		y = y,
+		button = button,
+		touchId = touchId,
 		eventType = EVENT_NAMES[eventType] or eventType,
 		eventTypeId = eventType,
 		bindingId = bindingId,
@@ -1207,19 +1471,20 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
 		GameManager:removeFairyGuiObject(objectInfo.modalMaskHandle)
 	end
 	local removed = GameManager:removeFairyGuiObject(handle)
-	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
-		self.uiNameToKey[objectInfo.uiName] = nil
+		if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
+			self.uiNameToKey[objectInfo.uiName] = nil
+		end
+		self:ClearListCacheForHandle(handle)
+		self.childrenByHandle[handle] = nil
+		if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
+			self.layerObjects[objectInfo.layer][handle] = nil
+		end
+		self.objects[objectInfo.key] = nil
+		self.objectsByHandle[handle] = nil
+		self.hiddenObjects[objectInfo.key] = nil
+		self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
+		return removed
 	end
-	self.childrenByHandle[handle] = nil
-	if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
-		self.layerObjects[objectInfo.layer][handle] = nil
-	end
-	self.objects[objectInfo.key] = nil
-	self.objectsByHandle[handle] = nil
-	self.hiddenObjects[objectInfo.key] = nil
-	self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
-	return removed
-end
 
 function FairyGuiManager:CloseView(viewOrKeyOrHandle, forceDestroy)
 	if type(viewOrKeyOrHandle) == "table" then
@@ -1287,6 +1552,8 @@ function FairyGuiManager:CloseAll(layerName, forceDestroy)
 		self.uiNameToKey = {}
 		self.hiddenObjects = {}
 		self.childrenByHandle = {}
+		self.listItemHandlesByHandle = {}
+		self.listDataByHandle = {}
 		self.views = {}
 		self.viewsByHandle = {}
 		self.controllers = {}
@@ -1302,13 +1569,14 @@ function FairyGuiManager:CloseAll(layerName, forceDestroy)
 		for _, handle in ipairs(handles) do
 			local objectInfo = self.objectsByHandle[handle]
 			if objectInfo ~= nil then
-				self.objects[objectInfo.key] = nil
-				self.objectsByHandle[handle] = nil
-				self.hiddenObjects[objectInfo.key] = nil
-				self.childrenByHandle[handle] = nil
-				if self.layerObjects[objectInfo.layer] ~= nil then
-					self.layerObjects[objectInfo.layer][handle] = nil
-				end
+					self.objects[objectInfo.key] = nil
+					self.objectsByHandle[handle] = nil
+					self.hiddenObjects[objectInfo.key] = nil
+					self:ClearListCacheForHandle(handle)
+					self.childrenByHandle[handle] = nil
+					if self.layerObjects[objectInfo.layer] ~= nil then
+						self.layerObjects[objectInfo.layer][handle] = nil
+					end
 			end
 		end
 	end
@@ -1351,11 +1619,11 @@ function FairyGuiManager:Dump()
 	self:DumpBindings()
 end
 
-function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId)
+function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
 	if _G.FairyGuiManager == nil then
 		return false
 	end
-	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId)
+	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
 end
 
 function FairyGuiManager_HandleWindowResized(width, height)

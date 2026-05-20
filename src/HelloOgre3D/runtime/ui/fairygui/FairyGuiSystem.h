@@ -21,6 +21,7 @@ namespace cocos2d
 
 namespace fairygui
 {
+	class EventContext;
 	class GObject;
 	class GRoot;
 }
@@ -49,6 +50,8 @@ public:
 	int CreateObjectHandle(const std::string& packageName, const std::string& objectName);
 	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
 	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
+	int GetObjectHandleListItem(int objectHandle, int itemIndex);
+	int GetObjectHandleListItemCount(int objectHandle);
 	bool AddObjectHandleToRoot(int objectHandle);
 	bool SetObjectHandlePosition(int objectHandle, float x, float y);
 	bool SetObjectHandleSize(int objectHandle, float width, float height);
@@ -58,6 +61,10 @@ public:
 	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
 	bool SetObjectHandleLoaderUrl(int objectHandle, const std::string& url);
 	bool SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex);
+	bool SetObjectHandleListItemCount(int objectHandle, int itemCount);
+	bool SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex);
+	int GetObjectHandleListSelectedIndex(int objectHandle);
+	bool ScrollObjectHandleListToView(int objectHandle, int itemIndex);
 	bool CenterObjectHandle(int objectHandle, bool restraint);
 	int AddObjectHandleEventListener(int objectHandle, const std::string& childPath, int eventType, int callbackId);
 	int AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId);
@@ -91,10 +98,11 @@ private:
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
 	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
+	int GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object);
 	int GetObjectHandleOwner(int objectHandle) const;
 	void RemoveObjectHandleAliases(int objectHandle);
 	void RemoveObjectHandleListeners(int objectHandle);
-	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId);
+	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
 	bool IsMouseOnUi(float x, float y) const;
 	void BeginOgreRender();

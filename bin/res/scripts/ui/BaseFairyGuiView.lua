@@ -91,6 +91,55 @@ function BaseFairyGuiView:SetControllerIndex(controllerName, selectedIndex)
 	return FairyGuiManager:SetControllerIndex(self.handle, controllerName, selectedIndex)
 end
 
+function BaseFairyGuiView:SetListData(childPath, dataList, renderer)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetListData(self.handle, childPath, dataList, renderer)
+end
+
+function BaseFairyGuiView:GetListItem(childPath, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetListItem(self.handle, childPath, index)
+end
+
+function BaseFairyGuiView:SetListItemCount(childPath, itemCount)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetListItemCount(self.handle, childPath, itemCount)
+end
+
+function BaseFairyGuiView:GetListItemCount(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetListItemCount(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetListSelectedIndex(childPath, selectedIndex)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetListSelectedIndex(self.handle, childPath, selectedIndex)
+end
+
+function BaseFairyGuiView:GetListSelectedIndex(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetListSelectedIndex(self.handle, childPath)
+end
+
+function BaseFairyGuiView:ScrollListToView(childPath, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:ScrollListToView(self.handle, childPath, index)
+end
+
 function BaseFairyGuiView:Close(forceDestroy)
 	if FairyGuiManager == nil then
 		return false

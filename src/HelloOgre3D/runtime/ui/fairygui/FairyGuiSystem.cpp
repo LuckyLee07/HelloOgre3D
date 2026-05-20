@@ -4,11 +4,13 @@
 #include "cocos2d.h"
 #include "GComponent.h"
 #include "GGraph.h"
+#include "GList.h"
 #include "GLoader.h"
 #include "GObject.h"
 #include "GRoot.h"
 #include "UIPackage.h"
 #include "event/EventContext.h"
+#include "event/InputEvent.h"
 #include "event/UIEventType.h"
 
 #include "Ogre.h"
@@ -17,6 +19,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <vector>
 
 namespace
@@ -66,6 +69,33 @@ namespace
 	{
 		const std::string value = GetEnvironmentString(name);
 		return value.empty() ? fallback : static_cast<float>(std::atof(value.c_str()));
+	}
+
+	std::string DescribeObject(fairygui::GObject* object)
+	{
+		if (object == nullptr)
+			return "null";
+
+		std::ostringstream stream;
+		stream << "name=" << object->name
+			<< " id=" << object->id
+			<< " pos=" << object->getX() << "," << object->getY()
+			<< " size=" << object->getWidth() << "x" << object->getHeight()
+			<< " touchable=" << (object->isTouchable() ? "true" : "false");
+		return stream.str();
+	}
+
+	void LogInputHit(const char* phase, int rawX, int rawY, float x, float y, fairygui::GObject* target)
+	{
+		if (!IsEnvironmentEnabled("HELLO_FGUI_INPUT_DEBUG"))
+			return;
+
+		std::ostringstream stream;
+		stream << "[FGUI] input " << phase
+			<< " raw=" << rawX << "," << rawY
+			<< " ui=" << x << "," << y
+			<< " target=" << DescribeObject(target);
+		Ogre::LogManager::getSingleton().logMessage(stream.str());
 	}
 
 	bool EndsWith(const std::string& value, const std::string& suffix)
@@ -264,6 +294,7 @@ bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
 	float mouseY = 0.0f;
 	ConvertMousePosition(x, y, mouseX, mouseY);
 	const bool mouseOnUi = IsMouseOnUi(mouseX, mouseY);
+	LogInputHit("down", x, y, mouseX, mouseY, m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera()));
 
 	if (button != 0)
 	{
@@ -296,6 +327,7 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	const float previousX = m_hasLastMousePosition ? m_lastMouseX : mouseX;
 	const float previousY = m_hasLastMousePosition ? m_lastMouseY : mouseY;
 	const bool consumed = IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
+	LogInputHit("up", x, y, mouseX, mouseY, m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera()));
 
 	if (button != 0)
 	{
@@ -416,13 +448,30 @@ int FairyGuiSystem::GetObjectHandleChild(int objectHandle, const std::string& ch
 	if (child == nullptr)
 		return 0;
 
-	const int childHandle = m_nextObjectHandle++;
-	ObjectHandleInfo handleInfo;
-	handleInfo.object = child;
-	handleInfo.ownerHandle = GetObjectHandleOwner(objectHandle);
-	handleInfo.retained = false;
-	m_objectHandles[childHandle] = handleInfo;
-	return childHandle;
+	return GetOrCreateObjectAlias(GetObjectHandleOwner(objectHandle), child);
+}
+
+int FairyGuiSystem::GetObjectHandleListItem(int objectHandle, int itemIndex)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr || itemIndex < 0 || itemIndex >= list->getNumItems())
+		return 0;
+
+	const int childIndex = list->itemIndexToChildIndex(itemIndex);
+	if (childIndex < 0 || childIndex >= list->numChildren())
+		return 0;
+
+	fairygui::GObject* item = list->getChildAt(childIndex);
+	return GetOrCreateObjectAlias(GetObjectHandleOwner(objectHandle), item);
+}
+
+int FairyGuiSystem::GetObjectHandleListItemCount(int objectHandle)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr)
+		return 0;
+
+	return list->getNumItems();
 }
 
 bool FairyGuiSystem::AddObjectHandleToRoot(int objectHandle)
@@ -516,6 +565,45 @@ bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std:
 	return true;
 }
 
+bool FairyGuiSystem::SetObjectHandleListItemCount(int objectHandle, int itemCount)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr || itemCount < 0)
+		return false;
+
+	list->setNumItems(itemCount);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr)
+		return false;
+
+	list->setSelectedIndex(selectedIndex);
+	return true;
+}
+
+int FairyGuiSystem::GetObjectHandleListSelectedIndex(int objectHandle)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr)
+		return -1;
+
+	return list->getSelectedIndex();
+}
+
+bool FairyGuiSystem::ScrollObjectHandleListToView(int objectHandle, int itemIndex)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr || itemIndex < 0 || itemIndex >= list->getNumItems())
+		return false;
+
+	list->scrollToView(itemIndex);
+	return true;
+}
+
 bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
@@ -541,8 +629,7 @@ int FairyGuiSystem::AddObjectHandleEventListener(int objectHandle, const std::st
 	m_listenerBindings[bindingId] = binding;
 
 	target->addEventListener(eventType, [this, callbackId, objectHandle, eventType, bindingId](fairygui::EventContext* context) {
-		(void)context;
-		DispatchObjectHandleEvent(callbackId, objectHandle, eventType, bindingId);
+		DispatchObjectHandleEvent(callbackId, objectHandle, eventType, bindingId, context);
 	}, fairygui::EventTag(bindingId));
 	return bindingId;
 }
@@ -668,6 +755,27 @@ fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::
 	return component->getChildByPath(childPath);
 }
 
+int FairyGuiSystem::GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object)
+{
+	if (object == nullptr)
+		return 0;
+
+	ownerHandle = GetObjectHandleOwner(ownerHandle);
+	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	{
+		if (it->second.object == object && (it->first == ownerHandle || it->second.ownerHandle == ownerHandle))
+			return it->first;
+	}
+
+	const int aliasHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = object;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = false;
+	m_objectHandles[aliasHandle] = handleInfo;
+	return aliasHandle;
+}
+
 int FairyGuiSystem::GetObjectHandleOwner(int objectHandle) const
 {
 	std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.find(objectHandle);
@@ -702,13 +810,68 @@ void FairyGuiSystem::RemoveObjectHandleListeners(int objectHandle)
 		RemoveObjectHandleListener(*it);
 }
 
-void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId)
+void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context)
 {
 	ScriptLuaVM* luaVM = GetScriptLuaVM();
 	if (luaVM == nullptr)
 		return;
 
-	luaVM->callFunction("FairyGuiManager_DispatchEvent", "iiii", callbackId, objectHandle, eventType, bindingId);
+	int senderHandle = 0;
+	int itemHandle = 0;
+	int itemIndex = -1;
+	int x = 0;
+	int y = 0;
+	int button = -1;
+	int touchId = -1;
+
+	if (context != nullptr)
+	{
+		fairygui::GObject* sender = dynamic_cast<fairygui::GObject*>(context->getSender());
+		if (sender != nullptr)
+			senderHandle = GetOrCreateObjectAlias(objectHandle, sender);
+
+		if (eventType == fairygui::UIEventType::ClickItem || eventType == fairygui::UIEventType::RightClickItem)
+		{
+			fairygui::GObject* item = static_cast<fairygui::GObject*>(context->getData());
+			if (item != nullptr)
+			{
+				itemHandle = GetOrCreateObjectAlias(objectHandle, item);
+
+				std::map<int, ListenerBinding>::const_iterator bindingIt = m_listenerBindings.find(bindingId);
+				fairygui::GList* list = bindingIt != m_listenerBindings.end() ? dynamic_cast<fairygui::GList*>(bindingIt->second.target) : nullptr;
+				if (list != nullptr)
+				{
+					const int childIndex = list->getChildIndex(item);
+					if (childIndex >= 0)
+						itemIndex = list->childIndexToItemIndex(childIndex);
+				}
+			}
+		}
+
+		fairygui::InputEvent* input = context->getInput();
+		if (input != nullptr)
+		{
+			x = input->getX();
+			y = input->getY();
+			button = static_cast<int>(input->getButton());
+			touchId = input->getTouchId();
+		}
+	}
+
+	luaVM->callFunction(
+		"FairyGuiManager_DispatchEvent",
+		"iiiiiiiiiii",
+		callbackId,
+		objectHandle,
+		eventType,
+		bindingId,
+		senderHandle,
+		itemHandle,
+		itemIndex,
+		x,
+		y,
+		button,
+		touchId);
 }
 
 void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const

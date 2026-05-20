@@ -141,6 +141,32 @@ int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
 #endif
 }
 
+int GameManager::getFairyGuiListItem(int objectHandle, int itemIndex)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->GetObjectHandleListItem(objectHandle, itemIndex);
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiListItemCount(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->GetObjectHandleListItemCount(objectHandle);
+#else
+	return 0;
+#endif
+}
+
 bool GameManager::addFairyGuiObjectToRoot(int objectHandle)
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -231,11 +257,97 @@ bool GameManager::setFairyGuiObjectControllerIndex(int objectHandle, const char*
 #endif
 }
 
+bool GameManager::setFairyGuiListItemCount(int objectHandle, int itemCount)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleListItemCount(objectHandle, itemCount);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleListSelectedIndex(objectHandle, selectedIndex);
+#else
+	return false;
+#endif
+}
+
+int GameManager::getFairyGuiListSelectedIndex(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleListSelectedIndex(objectHandle) : -1;
+#else
+	return -1;
+#endif
+}
+
+bool GameManager::scrollFairyGuiListToView(int objectHandle, int itemIndex)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->ScrollObjectHandleListToView(objectHandle, itemIndex);
+#else
+	return false;
+#endif
+}
+
 bool GameManager::centerFairyGuiObject(int objectHandle, bool restraint)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
 	return system != nullptr && system->CenterObjectHandle(objectHandle, restraint);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiMouseMove(int x, int y)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectMouseMove(x, y);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiMouseDown(int x, int y, int button)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectMouseDown(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiMouseUp(int x, int y, int button)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectMouseUp(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiClick(int x, int y, int button)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return false;
+
+	system->InjectMouseMove(x, y);
+	const bool downConsumed = system->InjectMouseDown(x, y, button);
+	const bool upConsumed = system->InjectMouseUp(x, y, button);
+	return downConsumed || upConsumed;
 #else
 	return false;
 #endif

@@ -42,6 +42,8 @@ public:
 	int createFairyGuiObject(const char* packageName, const char* objectName);
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int getFairyGuiChild(int objectHandle, const char* childPath);
+	int getFairyGuiListItem(int objectHandle, int itemIndex);
+	int getFairyGuiListItemCount(int objectHandle);
 	bool addFairyGuiObjectToRoot(int objectHandle);
 	bool setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y);
 	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
@@ -51,10 +53,18 @@ public:
 	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
 	bool setFairyGuiObjectLoaderUrl(int objectHandle, const char* url);
 	bool setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex);
-	bool centerFairyGuiObject(int objectHandle, bool restraint);
-	int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
-	int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
-	bool removeFairyGuiListener(int bindingId);
+	bool setFairyGuiListItemCount(int objectHandle, int itemCount);
+	bool setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex);
+	int getFairyGuiListSelectedIndex(int objectHandle);
+		bool scrollFairyGuiListToView(int objectHandle, int itemIndex);
+		bool centerFairyGuiObject(int objectHandle, bool restraint);
+		bool injectFairyGuiMouseMove(int x, int y);
+		bool injectFairyGuiMouseDown(int x, int y, int button);
+		bool injectFairyGuiMouseUp(int x, int y, int button);
+		bool injectFairyGuiClick(int x, int y, int button);
+		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
+		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
+		bool removeFairyGuiListener(int bindingId);
 	bool removeFairyGuiObject(int objectHandle);
 	void clearFairyGuiObjects();
 	//tolua_end

@@ -92,6 +92,34 @@ function FairyGuiBaseCtrl:SetControllerIndex(controllerName, selectedIndex)
 	return self.view ~= nil and self.view:SetControllerIndex(controllerName, selectedIndex) or false
 end
 
+function FairyGuiBaseCtrl:SetListData(childPath, dataList, renderer)
+	return self.view ~= nil and self.view:SetListData(childPath, dataList, renderer) or false
+end
+
+function FairyGuiBaseCtrl:GetListItem(childPath, index)
+	return self.view ~= nil and self.view:GetListItem(childPath, index) or nil
+end
+
+function FairyGuiBaseCtrl:SetListItemCount(childPath, itemCount)
+	return self.view ~= nil and self.view:SetListItemCount(childPath, itemCount) or false
+end
+
+function FairyGuiBaseCtrl:GetListItemCount(childPath)
+	return self.view ~= nil and self.view:GetListItemCount(childPath) or 0
+end
+
+function FairyGuiBaseCtrl:SetListSelectedIndex(childPath, selectedIndex)
+	return self.view ~= nil and self.view:SetListSelectedIndex(childPath, selectedIndex) or false
+end
+
+function FairyGuiBaseCtrl:GetListSelectedIndex(childPath)
+	return self.view ~= nil and self.view:GetListSelectedIndex(childPath) or 0
+end
+
+function FairyGuiBaseCtrl:ScrollListToView(childPath, index)
+	return self.view ~= nil and self.view:ScrollListToView(childPath, index) or false
+end
+
 function FairyGuiBaseCtrl:AddClick(childPath, callback)
 	return self.view ~= nil and self.view:AddClick(childPath, callback) or nil
 end

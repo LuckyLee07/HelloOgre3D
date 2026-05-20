@@ -46,10 +46,10 @@ namespace cocos2d
 		return result;
 	}
 
-	static Mat4 BuildNodeTransform(float x, float y, float scaleX, float scaleY, float rotation, const Vec2& anchorPoint, const Size& contentSize)
-	{
-		const float radians = MATH_DEG_TO_RAD(rotation);
-		const float sinValue = std::sin(radians);
+		static Mat4 BuildNodeTransform(float x, float y, float scaleX, float scaleY, float rotation, const Vec2& anchorPoint, const Size& contentSize)
+		{
+			const float radians = MATH_DEG_TO_RAD(rotation);
+			const float sinValue = std::sin(radians);
 		const float cosValue = std::cos(radians);
 		const float anchorX = anchorPoint.x * contentSize.width;
 		const float anchorY = anchorPoint.y * contentSize.height;
@@ -60,9 +60,34 @@ namespace cocos2d
 		transform.m[4] = -sinValue * scaleY;
 		transform.m[5] = cosValue * scaleY;
 		transform.m[12] = x - anchorX * transform.m[0] - anchorY * transform.m[4];
-		transform.m[13] = y - anchorX * transform.m[1] - anchorY * transform.m[5];
-		return transform;
-	}
+			transform.m[13] = y - anchorX * transform.m[1] - anchorY * transform.m[5];
+			return transform;
+		}
+
+		static Vec2 TransformPoint(const Mat4& transform, const Vec2& point)
+		{
+			return Vec2(
+				point.x * transform.m[0] + point.y * transform.m[4] + transform.m[12],
+				point.x * transform.m[1] + point.y * transform.m[5] + transform.m[13]);
+		}
+
+		static Vec2 InverseTransformPoint(const Mat4& transform, const Vec2& point)
+		{
+			const float a = transform.m[0];
+			const float b = transform.m[1];
+			const float c = transform.m[4];
+			const float d = transform.m[5];
+			const float det = a * d - b * c;
+			if (std::fabs(det) <= 0.00001f)
+				return point;
+
+			const float px = point.x - transform.m[12];
+			const float py = point.y - transform.m[13];
+			const float invDet = 1.0f / det;
+			return Vec2(
+				(d * px - c * py) * invDet,
+				(-b * px + a * py) * invDet);
+		}
 
 	static unsigned int ReadBigEndianUInt(const unsigned char* data)
 	{
@@ -1339,20 +1364,27 @@ namespace cocos2d
 		_transformUpdated = true;
 	}
 
-	Vec2 Node::convertToNodeSpace(const Vec2& worldPoint) const
-	{
-		return worldPoint - _position;
-	}
+		Vec2 Node::convertToNodeSpace(const Vec2& worldPoint) const
+		{
+			Vec2 parentPoint = worldPoint;
+			if (_parent != nullptr)
+				parentPoint = _parent->convertToNodeSpace(worldPoint);
+
+			const Mat4 localTransform = BuildNodeTransform(_position.x, _position.y, _scaleX, _scaleY, _rotationZ, _anchorPoint, _contentSize);
+			return InverseTransformPoint(localTransform, parentPoint);
+		}
 
 	Vec2 Node::convertToNodeSpaceAR(const Vec2& worldPoint) const
 	{
 		return convertToNodeSpace(worldPoint) + Vec2(_anchorPoint.x * _contentSize.width, _anchorPoint.y * _contentSize.height);
 	}
 
-	Vec2 Node::convertToWorldSpace(const Vec2& nodePoint) const
-	{
-		return nodePoint + _position;
-	}
+		Vec2 Node::convertToWorldSpace(const Vec2& nodePoint) const
+		{
+			const Mat4 localTransform = BuildNodeTransform(_position.x, _position.y, _scaleX, _scaleY, _rotationZ, _anchorPoint, _contentSize);
+			Vec2 parentPoint = TransformPoint(localTransform, nodePoint);
+			return _parent != nullptr ? _parent->convertToWorldSpace(parentPoint) : parentPoint;
+		}
 
 	Vec2 Node::convertToWorldSpaceAR(const Vec2& nodePoint) const
 	{
