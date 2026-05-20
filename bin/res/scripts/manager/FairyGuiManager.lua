@@ -594,7 +594,8 @@ function FairyGuiManager:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
 	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
 	if verbose == true then
-		self:DumpPackages()
+		self:DumpResourceRefs()
+		self:DumpResourceWarnings()
 		self:DumpStacks()
 		self:DumpLayerRoots()
 	end
@@ -3077,6 +3078,151 @@ function FairyGuiManager:DumpPackages()
 	print("[FGUI] DumpPackages end")
 end
 
+function FairyGuiManager:GetPackageRefs()
+	local refsByPackage = {}
+	local printed = {}
+	for _, packageInfo in pairs(self.packagesByName) do
+		local packageKey = packageInfo ~= nil and (packageInfo.packageName or packageInfo.packagePath) or nil
+		if packageInfo ~= nil and packageKey ~= nil and printed[packageKey] ~= true then
+			refsByPackage[packageKey] = {
+				packageName = packageInfo.packageName,
+				packagePath = packageInfo.packagePath,
+				refCount = packageInfo.refCount or 0,
+				openCount = 0,
+				hiddenCount = 0,
+				cacheCount = 0,
+				stackCount = 0,
+				stackedKeys = {},
+				objects = {},
+			}
+			printed[packageKey] = true
+		end
+	end
+
+	local function getRef(objectInfo)
+		local packageName = objectInfo.packageName
+		local packagePath = objectInfo.packagePath
+		local packageInfo = packagePath ~= nil and self.packages[packagePath] or nil
+		if packageInfo == nil and packageName ~= nil then
+			packageInfo = self.packagesByName[packageName] or self.packages[packageName]
+		end
+		local packageKey = packageInfo ~= nil and (packageInfo.packageName or packageInfo.packagePath) or (packageName or packagePath or "<dynamic>")
+		local ref = refsByPackage[packageKey]
+		if ref == nil then
+			ref = {
+				packageName = packageInfo ~= nil and packageInfo.packageName or packageName,
+				packagePath = packageInfo ~= nil and packageInfo.packagePath or packagePath,
+				refCount = packageInfo ~= nil and (packageInfo.refCount or 0) or 0,
+				openCount = 0,
+				hiddenCount = 0,
+				cacheCount = 0,
+				stackCount = 0,
+				stackedKeys = {},
+				objects = {},
+			}
+			refsByPackage[packageKey] = ref
+		end
+		return ref
+	end
+
+	for key, objectInfo in pairs(self.objects) do
+		local ref = getRef(objectInfo)
+		ref.openCount = ref.openCount + 1
+		if self.hiddenObjects[key] ~= nil then
+			ref.hiddenCount = ref.hiddenCount + 1
+		end
+		if objectInfo.cache == true then
+			ref.cacheCount = ref.cacheCount + 1
+		end
+		table.insert(ref.objects, objectInfo)
+	end
+
+	for _, entry in ipairs(self.uiStack) do
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil then
+			local ref = getRef(objectInfo)
+			ref.stackCount = ref.stackCount + 1
+			ref.stackedKeys[objectInfo.key] = true
+		end
+	end
+	for _, entry in ipairs(self.popupStack) do
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil then
+			local ref = getRef(objectInfo)
+			ref.stackCount = ref.stackCount + 1
+			ref.stackedKeys[objectInfo.key] = true
+		end
+	end
+	return refsByPackage
+end
+
+function FairyGuiManager:DumpResourceRefs()
+	print("[FGUI] DumpResourceRefs begin")
+	local refsByPackage = self:GetPackageRefs()
+	for packageKey, ref in pairs(refsByPackage) do
+		print("[FGUI] ResourcePackage", packageKey, "path=", ref.packagePath, "refCount=", ref.refCount, "open=", ref.openCount, "hidden=", ref.hiddenCount, "cache=", ref.cacheCount, "stackRefs=", ref.stackCount)
+		for _, objectInfo in ipairs(ref.objects) do
+			print("[FGUI] ResourceUI", packageKey, "key=", objectInfo.key, "handle=", objectInfo.handle, "uiName=", objectInfo.uiName, "object=", objectInfo.objectName, "layer=", objectInfo.layer, "group=", objectInfo.uiGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[objectInfo.key] ~= nil)
+		end
+	end
+	print("[FGUI] DumpResourceRefs end")
+end
+
+function FairyGuiManager:GetResourceWarnings()
+	local warnings = {}
+	local refsByPackage = self:GetPackageRefs()
+	for packageKey, ref in pairs(refsByPackage) do
+		local isPackageRef = ref.packageName ~= nil or ref.packagePath ~= nil
+		if isPackageRef and ref.openCount > 0 and ref.refCount < ref.openCount then
+			table.insert(warnings, {
+				kind = "refCountTooLow",
+				packageKey = packageKey,
+				detail = "refCount=" .. tostring(ref.refCount) .. " open=" .. tostring(ref.openCount),
+			})
+		end
+		if isPackageRef and ref.refCount > ref.openCount and ref.openCount > 0 then
+			table.insert(warnings, {
+				kind = "refCountTooHigh",
+				packageKey = packageKey,
+				detail = "refCount=" .. tostring(ref.refCount) .. " open=" .. tostring(ref.openCount),
+			})
+		end
+		if isPackageRef and ref.openCount <= 0 and ref.refCount > 0 then
+			table.insert(warnings, {
+				kind = "retainedWithoutOpen",
+				packageKey = packageKey,
+				detail = "refCount=" .. tostring(ref.refCount),
+			})
+		end
+		if isPackageRef and ref.hiddenCount > 0 and ref.refCount <= 0 then
+			table.insert(warnings, {
+				kind = "hiddenWithoutRef",
+				packageKey = packageKey,
+				detail = "hidden=" .. tostring(ref.hiddenCount),
+			})
+		end
+		for _, objectInfo in ipairs(ref.objects) do
+			if self.hiddenObjects[objectInfo.key] == nil and ref.stackedKeys[objectInfo.key] ~= true and self:GetStackMode(objectInfo) ~= "None" then
+				table.insert(warnings, {
+					kind = "visibleWithoutStack",
+					packageKey = packageKey,
+					detail = "key=" .. tostring(objectInfo.key),
+				})
+			end
+		end
+	end
+	return warnings
+end
+
+function FairyGuiManager:DumpResourceWarnings()
+	local warnings = self:GetResourceWarnings()
+	print("[FGUI] DumpResourceWarnings count=", #warnings)
+	for _, warning in ipairs(warnings) do
+		print("[FGUI] ResourceWarning", warning.kind, "package=", warning.packageKey, warning.detail or "")
+	end
+	return #warnings == 0, warnings
+end
+
 function FairyGuiManager:DumpBindings()
 	local count = 0
 	for _, _ in pairs(self.bindings) do
@@ -3106,6 +3252,8 @@ function FairyGuiManager:Dump()
 	self:DumpDebugStats()
 	self:DumpOpenUIs()
 	self:DumpPackages()
+	self:DumpResourceRefs()
+	self:DumpResourceWarnings()
 	self:DumpBindings()
 	self:DumpStacks()
 	self:DumpLayerRoots()

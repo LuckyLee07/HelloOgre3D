@@ -18,7 +18,7 @@
 - [ ] UI 重复打开、隐藏缓存、强制销毁、场景切换清理都有明确规则和日志可查。
 - [ ] Click、Changed、ClickItem、RightClick、Drag、Touch、Wheel、Key、TextInput 事件能稳定桥接到 Lua，并在 UI 关闭后自动解绑。
 - [ ] fullscreen/adapt/margin/safe area 在窗口尺寸变化后统一重算，页面只关注自身布局策略。
-- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth` 已具备，资源引用细节仍需继续补。
+- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump 和第一版资源告警已具备，长期循环泄漏判定仍需继续补。
 - [ ] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
 - [ ] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测。
 
@@ -47,6 +47,8 @@
 - [x] MaskProbe 真实 mask 可视化样例。
 - [x] MaskProbe 打开后关闭清理自测。
 - [x] Lua Dump 增加渲染命令数、三角形数、材质数、纹理数和 runtime handle/binding 数。
+- [x] Lua Dump 增加 package -> UI 引用关系，能看到 refCount、open/hidden/cache 数和当前引用 UI。
+- [x] Lua Dump 增加资源引用告警，能标出 refCount 异常、包空挂引用、隐藏 UI 缺引用和可见 UI 脱离打开栈等问题。
 - [x] Dump 增加打开 UI 数、隐藏 UI 数、layer root 数、binding 数的汇总行。
 - [x] Dump 增加对象 handle 数和 child handle 缓存数。
 - [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
@@ -88,7 +90,7 @@
 - [x] `closeOnSceneChange`、`destroyOnSceneChange` 已具备 registry 声明。
 - [ ] 增加场景级 preload 配置和统一预加载入口。
 - [ ] 增加 package 按 group/tag 批量卸载。
-- [ ] 增加资源泄漏 Dump，输出 package refCount、UI 引用、打开栈引用。
+- [~] 增加资源泄漏 Dump，输出 package refCount、UI 引用、打开栈引用；当前已有第一版引用关系输出和资源告警规则，后续继续补长循环后的泄漏断言。
 - [ ] 增加纹理尺寸、材质数量、render command 数的统计入口。
 - [ ] 明确缓存 UI 的资源保留策略，避免隐藏 UI 长期占用大贴图。
 - [ ] 增加资源缺失时的 fallback 日志，记录 package/object/childPath。

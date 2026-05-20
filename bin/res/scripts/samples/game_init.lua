@@ -356,6 +356,14 @@ function FGUI_DumpHealth(verbose)
 	return FairyGuiManager:DumpHealth(verbose == true)
 end
 
+function FGUI_DumpResourceRefs()
+	return FairyGuiManager:DumpResourceRefs()
+end
+
+function FGUI_DumpResourceWarnings()
+	return FairyGuiManager:DumpResourceWarnings()
+end
+
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
 end
@@ -446,7 +454,8 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:Close("MaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
 		local stats = FairyGuiManager:DumpHealth(true)
-		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0, "openUI=" .. tostring(stats.openUI)
+		local resourceWarnings = FairyGuiManager:GetResourceWarnings()
+		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0 and #resourceWarnings == 0, "openUI=" .. tostring(stats.openUI)
 	end)
 	threadpool:delay(delay + 0.6, function()
 		local passCount = 0
