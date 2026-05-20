@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Wed May 20 17:34:32 2026.
+** Generated automatically by tolua++-1.0.92 on Wed May 20 18:57:22 2026.
 */
 
 #ifndef __cplusplus
@@ -3864,6 +3864,52 @@ static int tolua_GameToLua_GameManager_createFairyGuiText00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: createFairyGuiTextInput of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_createFairyGuiTextInput00
+static int tolua_GameToLua_GameManager_createFairyGuiTextInput00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,9,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int ownerHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+  const char* name = ((const char*)  tolua_tostring(tolua_S,3,0));
+  const char* text = ((const char*)  tolua_tostring(tolua_S,4,0));
+   float fontSize = ((  float)  tolua_tonumber(tolua_S,5,0));
+   float red = ((  float)  tolua_tonumber(tolua_S,6,0));
+   float green = ((  float)  tolua_tonumber(tolua_S,7,0));
+   float blue = ((  float)  tolua_tonumber(tolua_S,8,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'createFairyGuiTextInput'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->createFairyGuiTextInput(ownerHandle,name,text,fontSize,red,green,blue);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'createFairyGuiTextInput'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: createFairyGuiModalMask of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_createFairyGuiModalMask00
 static int tolua_GameToLua_GameManager_createFairyGuiModalMask00(lua_State* tolua_S)
@@ -4438,6 +4484,40 @@ static int tolua_GameToLua_GameManager_setFairyGuiObjectText00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getFairyGuiObjectText of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiObjectText00
+static int tolua_GameToLua_GameManager_getFairyGuiObjectText00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiObjectText'", NULL);
+#endif
+  {
+   const char* tolua_ret = (const char*)  self->getFairyGuiObjectText(objectHandle);
+   tolua_pushstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiObjectText'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setFairyGuiObjectIcon of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_setFairyGuiObjectIcon00
 static int tolua_GameToLua_GameManager_setFairyGuiObjectIcon00(lua_State* tolua_S)
@@ -4543,6 +4623,104 @@ static int tolua_GameToLua_GameManager_setFairyGuiObjectControllerIndex00(lua_St
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'setFairyGuiObjectControllerIndex'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: focusFairyGuiObject of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_focusFairyGuiObject00
+static int tolua_GameToLua_GameManager_focusFairyGuiObject00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'focusFairyGuiObject'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->focusFairyGuiObject(objectHandle);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'focusFairyGuiObject'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearFairyGuiFocus of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_clearFairyGuiFocus00
+static int tolua_GameToLua_GameManager_clearFairyGuiFocus00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearFairyGuiFocus'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->clearFairyGuiFocus();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearFairyGuiFocus'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiFocusedObject of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiFocusedObject00
+static int tolua_GameToLua_GameManager_getFairyGuiFocusedObject00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiFocusedObject'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiFocusedObject();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiFocusedObject'.",&tolua_err);
  return 0;
 #endif
 }
@@ -4909,6 +5087,78 @@ static int tolua_GameToLua_GameManager_injectFairyGuiClick00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'injectFairyGuiClick'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: injectFairyGuiKeyPressed of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_injectFairyGuiKeyPressed00
+static int tolua_GameToLua_GameManager_injectFairyGuiKeyPressed00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int keyCode = ((int)  tolua_tonumber(tolua_S,2,0));
+  int keyText = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'injectFairyGuiKeyPressed'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->injectFairyGuiKeyPressed(keyCode,keyText);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'injectFairyGuiKeyPressed'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: injectFairyGuiKeyReleased of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_injectFairyGuiKeyReleased00
+static int tolua_GameToLua_GameManager_injectFairyGuiKeyReleased00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int keyCode = ((int)  tolua_tonumber(tolua_S,2,0));
+  int keyText = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'injectFairyGuiKeyReleased'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->injectFairyGuiKeyReleased(keyCode,keyText);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'injectFairyGuiKeyReleased'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5693,6 +5943,7 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"createFairyGuiChildContainer",tolua_GameToLua_GameManager_createFairyGuiChildContainer00);
    tolua_function(tolua_S,"createFairyGuiLoader",tolua_GameToLua_GameManager_createFairyGuiLoader00);
    tolua_function(tolua_S,"createFairyGuiText",tolua_GameToLua_GameManager_createFairyGuiText00);
+   tolua_function(tolua_S,"createFairyGuiTextInput",tolua_GameToLua_GameManager_createFairyGuiTextInput00);
    tolua_function(tolua_S,"createFairyGuiModalMask",tolua_GameToLua_GameManager_createFairyGuiModalMask00);
    tolua_function(tolua_S,"getFairyGuiLastRenderCommandCount",tolua_GameToLua_GameManager_getFairyGuiLastRenderCommandCount00);
    tolua_function(tolua_S,"getFairyGuiLastTriangleCount",tolua_GameToLua_GameManager_getFairyGuiLastTriangleCount00);
@@ -5709,9 +5960,13 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"setFairyGuiObjectMask",tolua_GameToLua_GameManager_setFairyGuiObjectMask00);
    tolua_function(tolua_S,"setFairyGuiObjectSortingOrder",tolua_GameToLua_GameManager_setFairyGuiObjectSortingOrder00);
    tolua_function(tolua_S,"setFairyGuiObjectText",tolua_GameToLua_GameManager_setFairyGuiObjectText00);
+   tolua_function(tolua_S,"getFairyGuiObjectText",tolua_GameToLua_GameManager_getFairyGuiObjectText00);
    tolua_function(tolua_S,"setFairyGuiObjectIcon",tolua_GameToLua_GameManager_setFairyGuiObjectIcon00);
    tolua_function(tolua_S,"setFairyGuiObjectLoaderUrl",tolua_GameToLua_GameManager_setFairyGuiObjectLoaderUrl00);
    tolua_function(tolua_S,"setFairyGuiObjectControllerIndex",tolua_GameToLua_GameManager_setFairyGuiObjectControllerIndex00);
+   tolua_function(tolua_S,"focusFairyGuiObject",tolua_GameToLua_GameManager_focusFairyGuiObject00);
+   tolua_function(tolua_S,"clearFairyGuiFocus",tolua_GameToLua_GameManager_clearFairyGuiFocus00);
+   tolua_function(tolua_S,"getFairyGuiFocusedObject",tolua_GameToLua_GameManager_getFairyGuiFocusedObject00);
    tolua_function(tolua_S,"setFairyGuiListItemCount",tolua_GameToLua_GameManager_setFairyGuiListItemCount00);
    tolua_function(tolua_S,"setFairyGuiListSelectedIndex",tolua_GameToLua_GameManager_setFairyGuiListSelectedIndex00);
    tolua_function(tolua_S,"getFairyGuiListSelectedIndex",tolua_GameToLua_GameManager_getFairyGuiListSelectedIndex00);
@@ -5722,6 +5977,8 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"injectFairyGuiMouseUp",tolua_GameToLua_GameManager_injectFairyGuiMouseUp00);
    tolua_function(tolua_S,"injectFairyGuiMouseWheel",tolua_GameToLua_GameManager_injectFairyGuiMouseWheel00);
    tolua_function(tolua_S,"injectFairyGuiClick",tolua_GameToLua_GameManager_injectFairyGuiClick00);
+   tolua_function(tolua_S,"injectFairyGuiKeyPressed",tolua_GameToLua_GameManager_injectFairyGuiKeyPressed00);
+   tolua_function(tolua_S,"injectFairyGuiKeyReleased",tolua_GameToLua_GameManager_injectFairyGuiKeyReleased00);
    tolua_function(tolua_S,"addFairyGuiEventListener",tolua_GameToLua_GameManager_addFairyGuiEventListener00);
    tolua_function(tolua_S,"addFairyGuiClickListener",tolua_GameToLua_GameManager_addFairyGuiClickListener00);
    tolua_function(tolua_S,"removeFairyGuiListener",tolua_GameToLua_GameManager_removeFairyGuiListener00);

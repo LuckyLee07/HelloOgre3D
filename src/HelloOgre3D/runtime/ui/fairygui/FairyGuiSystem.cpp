@@ -9,6 +9,7 @@
 #include "GObject.h"
 #include "GRoot.h"
 #include "GTextField.h"
+#include "GTextInput.h"
 #include "UIPackage.h"
 #include "event/EventContext.h"
 #include "event/InputEvent.h"
@@ -27,6 +28,11 @@
 namespace
 {
 	const std::string FAIRYGUI_FALLBACK_MATERIAL = "Hello/FairyGUI/Fallback";
+	const int OIS_KC_ESCAPE = 0x01;
+	const int OIS_KC_BACK = 0x0E;
+	const int OIS_KC_RETURN = 0x1C;
+	const int OIS_KC_NUMPADENTER = 0x9C;
+	const int OIS_KC_DELETE = 0xD3;
 
 	float TransformX(const cocos2d::Mat4& transform, const cocos2d::Vec3& value)
 	{
@@ -231,6 +237,48 @@ namespace
 		return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
 	}
 
+	bool IsPrintableKeyText(int keyText)
+	{
+		return keyText >= 32 && keyText != 127;
+	}
+
+	void AppendUtf8Codepoint(std::string& text, unsigned int codepoint)
+	{
+		if (codepoint <= 0x7F)
+		{
+			text.push_back(static_cast<char>(codepoint));
+		}
+		else if (codepoint <= 0x7FF)
+		{
+			text.push_back(static_cast<char>(0xC0 | ((codepoint >> 6) & 0x1F)));
+			text.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+		}
+		else if (codepoint <= 0xFFFF)
+		{
+			text.push_back(static_cast<char>(0xE0 | ((codepoint >> 12) & 0x0F)));
+			text.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+			text.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+		}
+		else if (codepoint <= 0x10FFFF)
+		{
+			text.push_back(static_cast<char>(0xF0 | ((codepoint >> 18) & 0x07)));
+			text.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+			text.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+			text.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+		}
+	}
+
+	void RemoveLastUtf8Codepoint(std::string& text)
+	{
+		if (text.empty())
+			return;
+
+		size_t erasePos = text.size() - 1;
+		while (erasePos > 0 && (static_cast<unsigned char>(text[erasePos]) & 0xC0) == 0x80)
+			--erasePos;
+		text.erase(erasePos);
+	}
+
 	std::string NormalizePackagePath(const std::string& packagePath)
 	{
 		std::string normalized = packagePath;
@@ -279,6 +327,7 @@ FairyGuiSystem::FairyGuiSystem()
 	: m_pRenderWindow(nullptr), m_pSceneManager(nullptr), m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_pScene(nullptr), m_pRoot(nullptr), m_initialized(false), m_screenWidth(0), m_screenHeight(0),
 	m_lastMouseX(0.0f), m_lastMouseY(0.0f), m_hasLastMousePosition(false), m_leftMouseDownOnUi(false),
+	m_focusedObjectHandle(0),
 	m_scissorEnabled(false), m_scissorRect(cocos2d::Rect::ZERO),
 	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
 	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
@@ -353,6 +402,7 @@ void FairyGuiSystem::Shutdown()
 	m_lastMouseY = 0.0f;
 	m_hasLastMousePosition = false;
 	m_leftMouseDownOnUi = false;
+	m_focusedObjectHandle = 0;
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
 	m_nextObjectHandle = 1;
@@ -456,13 +506,13 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	const float previousX = m_hasLastMousePosition ? m_lastMouseX : mouseX;
 	const float previousY = m_hasLastMousePosition ? m_lastMouseY : mouseY;
 	const bool consumed = IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
-	LogInputHit("up", x, y, mouseX, mouseY, m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera()));
+	fairygui::GObject* hitTarget = m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera());
+	LogInputHit("up", x, y, mouseX, mouseY, hitTarget);
 
 	if (button != 0)
 	{
-		fairygui::GObject* target = m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera());
-		if (consumed && target != nullptr && target != m_pRoot)
-			target->bubbleEvent(button == 2 ? fairygui::UIEventType::MiddleClick : fairygui::UIEventType::RightClick);
+		if (consumed && hitTarget != nullptr && hitTarget != m_pRoot)
+			hitTarget->bubbleEvent(button == 2 ? fairygui::UIEventType::MiddleClick : fairygui::UIEventType::RightClick);
 		m_lastMouseX = mouseX;
 		m_lastMouseY = mouseY;
 		m_hasLastMousePosition = true;
@@ -473,6 +523,10 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	cocos2d::Touch touch;
 	touch.setTouchInfo(0, mouseX, mouseY, previousX, previousY);
 	m_pRoot->getInputProcessor()->touchUp(&touch, nullptr);
+	if (consumed)
+		FocusTextInput(FindTextInputTarget(hitTarget));
+	else
+		ClearObjectHandleFocus();
 
 	m_lastMouseX = mouseX;
 	m_lastMouseY = mouseY;
@@ -505,6 +559,38 @@ bool FairyGuiSystem::InjectMouseWheel(int x, int y, int wheelDelta)
 	m_lastMouseY = mouseY;
 	m_hasLastMousePosition = true;
 	return mouseOnUi;
+}
+
+bool FairyGuiSystem::InjectKeyPressed(int keyCode, int keyText)
+{
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input == nullptr)
+	{
+		m_focusedObjectHandle = 0;
+		return false;
+	}
+
+	input->dispatchEvent(fairygui::UIEventType::KeyDown, nullptr, cocos2d::Value(keyCode));
+	if (keyCode == OIS_KC_ESCAPE)
+	{
+		ClearObjectHandleFocus();
+		return true;
+	}
+	return ApplyTextInputKey(input, keyCode, keyText);
+}
+
+bool FairyGuiSystem::InjectKeyReleased(int keyCode, int keyText)
+{
+	(void)keyText;
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input == nullptr)
+	{
+		m_focusedObjectHandle = 0;
+		return false;
+	}
+
+	input->dispatchEvent(fairygui::UIEventType::KeyUp, nullptr, cocos2d::Value(keyCode));
+	return true;
 }
 
 bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
@@ -658,6 +744,34 @@ int FairyGuiSystem::CreateTextHandle(int ownerHandle, const std::string& name, c
 	const int objectHandle = m_nextObjectHandle++;
 	ObjectHandleInfo handleInfo;
 	handleInfo.object = label;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::CreateTextInputHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
+{
+	if (!m_initialized)
+		return 0;
+
+	fairygui::GTextInput* input = fairygui::GTextInput::create();
+	if (input == nullptr)
+		return 0;
+
+	input->name = name;
+	input->setText(text);
+	input->setFontSize(fontSize);
+	input->setColor(cocos2d::Color3B(
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, red))),
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, green))),
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, blue)))));
+	input->setTouchable(true);
+	input->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = input;
 	handleInfo.ownerHandle = ownerHandle;
 	handleInfo.retained = true;
 	m_objectHandles[objectHandle] = handleInfo;
@@ -826,6 +940,12 @@ bool FairyGuiSystem::SetObjectHandleText(int objectHandle, const std::string& te
 	return true;
 }
 
+std::string FairyGuiSystem::GetObjectHandleText(int objectHandle) const
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	return object != nullptr ? object->getText() : std::string();
+}
+
 bool FairyGuiSystem::SetObjectHandleIcon(int objectHandle, const std::string& icon)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
@@ -859,6 +979,21 @@ bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std:
 		return false;
 
 	controller->setSelectedIndex(selectedIndex);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleFocus(int objectHandle)
+{
+	fairygui::GTextInput* input = FindTextInput(objectHandle);
+	return FocusTextInput(input);
+}
+
+bool FairyGuiSystem::ClearObjectHandleFocus()
+{
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input != nullptr)
+		input->dispatchEvent(fairygui::UIEventType::Exit);
+	m_focusedObjectHandle = 0;
 	return true;
 }
 
@@ -954,6 +1089,8 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 	if (it == m_objectHandles.end() || it->second.object == nullptr)
 		return false;
 
+	if (objectHandle == m_focusedObjectHandle || GetObjectHandleOwner(m_focusedObjectHandle) == objectHandle)
+		m_focusedObjectHandle = 0;
 	RemoveObjectHandleAliases(objectHandle);
 	RemoveObjectHandleListeners(objectHandle);
 	if (it->second.retained)
@@ -1133,6 +1270,45 @@ fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::
 	return component->getChildByPath(childPath);
 }
 
+fairygui::GTextInput* FairyGuiSystem::FindTextInput(int objectHandle) const
+{
+	return dynamic_cast<fairygui::GTextInput*>(FindObjectHandle(objectHandle));
+}
+
+fairygui::GTextInput* FairyGuiSystem::FindTextInputTarget(fairygui::GObject* target) const
+{
+	while (target != nullptr && target != m_pRoot)
+	{
+		fairygui::GTextInput* input = dynamic_cast<fairygui::GTextInput*>(target);
+		if (input != nullptr)
+			return input;
+		target = target->findParent();
+	}
+	return nullptr;
+}
+
+int FairyGuiSystem::FindOwnerHandleForObject(fairygui::GObject* object) const
+{
+	if (object == nullptr)
+		return 0;
+
+	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	{
+		if (it->second.object == object)
+			return GetObjectHandleOwner(it->first);
+	}
+
+	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+	{
+		if (it->second.ownerHandle != 0)
+			continue;
+		fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(it->second.object);
+		if (component != nullptr && component->isAncestorOf(object))
+			return it->first;
+	}
+	return 0;
+}
+
 int FairyGuiSystem::GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object)
 {
 	if (object == nullptr)
@@ -1186,6 +1362,62 @@ void FairyGuiSystem::RemoveObjectHandleListeners(int objectHandle)
 
 	for (std::vector<int>::const_iterator it = bindingIds.begin(); it != bindingIds.end(); ++it)
 		RemoveObjectHandleListener(*it);
+}
+
+bool FairyGuiSystem::FocusTextInput(fairygui::GTextInput* input)
+{
+	if (input == nullptr)
+	{
+		ClearObjectHandleFocus();
+		return false;
+	}
+
+	const int ownerHandle = FindOwnerHandleForObject(input);
+	const int inputHandle = GetOrCreateObjectAlias(ownerHandle, input);
+	if (inputHandle <= 0)
+		return false;
+
+	if (m_focusedObjectHandle != inputHandle)
+	{
+		ClearObjectHandleFocus();
+		m_focusedObjectHandle = inputHandle;
+		input->dispatchEvent(fairygui::UIEventType::Enter);
+	}
+	return true;
+}
+
+bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText)
+{
+	if (input == nullptr)
+		return false;
+
+	std::string text = input->getText();
+	bool changed = false;
+	if (keyCode == OIS_KC_BACK || keyCode == OIS_KC_DELETE)
+	{
+		if (!text.empty())
+		{
+			RemoveLastUtf8Codepoint(text);
+			changed = true;
+		}
+	}
+	else if (keyCode == OIS_KC_RETURN || keyCode == OIS_KC_NUMPADENTER)
+	{
+		input->dispatchEvent(fairygui::UIEventType::Submit);
+		return true;
+	}
+	else if (IsPrintableKeyText(keyText))
+	{
+		AppendUtf8Codepoint(text, static_cast<unsigned int>(keyText));
+		changed = true;
+	}
+
+	if (changed)
+	{
+		input->setText(text);
+		input->dispatchEvent(fairygui::UIEventType::Changed);
+	}
+	return true;
 }
 
 void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context)

@@ -25,6 +25,7 @@ namespace fairygui
 	class EventContext;
 	class GObject;
 	class GRoot;
+	class GTextInput;
 }
 
 class FairyGuiSystem : public cocos2d::RenderCommandSink
@@ -43,6 +44,8 @@ public:
 	bool InjectMouseDown(int x, int y, int button);
 	bool InjectMouseUp(int x, int y, int button);
 	bool InjectMouseWheel(int x, int y, int wheelDelta);
+	bool InjectKeyPressed(int keyCode, int keyText);
+	bool InjectKeyReleased(int keyCode, int keyText);
 
 	bool LoadPackage(const std::string& packagePath);
 	std::string LoadPackageAndGetName(const std::string& packagePath);
@@ -54,6 +57,7 @@ public:
 	int CreateChildContainerHandle(int ownerHandle, const std::string& name);
 	int CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url);
 	int CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue);
+	int CreateTextInputHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue);
 	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
 	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
 	int GetObjectHandleListItem(int objectHandle, int itemIndex);
@@ -68,9 +72,13 @@ public:
 	bool SetObjectHandleMask(int objectHandle, int maskHandle, bool inverted);
 	bool SetObjectHandleSortingOrder(int objectHandle, int sortingOrder);
 	bool SetObjectHandleText(int objectHandle, const std::string& text);
+	std::string GetObjectHandleText(int objectHandle) const;
 	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
 	bool SetObjectHandleLoaderUrl(int objectHandle, const std::string& url);
 	bool SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex);
+	bool SetObjectHandleFocus(int objectHandle);
+	bool ClearObjectHandleFocus();
+	int GetFocusedObjectHandle() const { return m_focusedObjectHandle; }
 	bool SetObjectHandleListItemCount(int objectHandle, int itemCount);
 	bool SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex);
 	int GetObjectHandleListSelectedIndex(int objectHandle);
@@ -115,10 +123,15 @@ private:
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
 	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
+	fairygui::GTextInput* FindTextInput(int objectHandle) const;
+	fairygui::GTextInput* FindTextInputTarget(fairygui::GObject* target) const;
+	int FindOwnerHandleForObject(fairygui::GObject* object) const;
 	int GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object);
 	int GetObjectHandleOwner(int objectHandle) const;
 	void RemoveObjectHandleAliases(int objectHandle);
 	void RemoveObjectHandleListeners(int objectHandle);
+	bool FocusTextInput(fairygui::GTextInput* input);
+	bool ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
 	bool IsMouseOnUi(float x, float y) const;
@@ -149,6 +162,7 @@ private:
 	float m_lastMouseY;
 	bool m_hasLastMousePosition;
 	bool m_leftMouseDownOnUi;
+	int m_focusedObjectHandle;
 	bool m_scissorEnabled;
 	cocos2d::Rect m_scissorRect;
 	cocos2d::StencilStage m_stencilStage;

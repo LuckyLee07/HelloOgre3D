@@ -38,7 +38,7 @@ GameManager* GetGameManager()
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
-	m_fairyGuiLastPackageName()
+	m_fairyGuiLastPackageName(), m_fairyGuiLastObjectText()
 {
 	
 }
@@ -162,6 +162,19 @@ int GameManager::createFairyGuiText(int ownerHandle, const char* name, const cha
 		return 0;
 
 	return system->CreateTextHandle(ownerHandle, name != nullptr ? name : "", text != nullptr ? text : "", fontSize, red, green, blue);
+#else
+	return 0;
+#endif
+}
+
+int GameManager::createFairyGuiTextInput(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateTextInputHandle(ownerHandle, name != nullptr ? name : "", text != nullptr ? text : "", fontSize, red, green, blue);
 #else
 	return 0;
 #endif
@@ -339,6 +352,17 @@ bool GameManager::setFairyGuiObjectText(int objectHandle, const char* text)
 #endif
 }
 
+const char* GameManager::getFairyGuiObjectText(int objectHandle)
+{
+	m_fairyGuiLastObjectText.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastObjectText = system->GetObjectHandleText(objectHandle);
+#endif
+	return m_fairyGuiLastObjectText.c_str();
+}
+
 bool GameManager::setFairyGuiObjectIcon(int objectHandle, const char* icon)
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -366,6 +390,36 @@ bool GameManager::setFairyGuiObjectControllerIndex(int objectHandle, const char*
 	return system != nullptr && system->SetObjectHandleControllerIndex(objectHandle, controllerName != nullptr ? controllerName : "", selectedIndex);
 #else
 	return false;
+#endif
+}
+
+bool GameManager::focusFairyGuiObject(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleFocus(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::clearFairyGuiFocus()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->ClearObjectHandleFocus();
+#else
+	return false;
+#endif
+}
+
+int GameManager::getFairyGuiFocusedObject()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetFocusedObjectHandle() : 0;
+#else
+	return 0;
 #endif
 }
 
@@ -470,6 +524,26 @@ bool GameManager::injectFairyGuiClick(int x, int y, int button)
 	const bool downConsumed = system->InjectMouseDown(x, y, button);
 	const bool upConsumed = system->InjectMouseUp(x, y, button);
 	return downConsumed || upConsumed;
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiKeyPressed(int keyCode, int keyText)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectKeyPressed(keyCode, keyText);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiKeyReleased(int keyCode, int keyText)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectKeyReleased(keyCode, keyText);
 #else
 	return false;
 #endif
@@ -686,6 +760,12 @@ void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 
 bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr && system->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
+		return true;
+#endif
+
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyPressed", "ii>b", keycode, static_cast<int>(key), &consumed);
 	if (consumed)
@@ -697,6 +777,12 @@ bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 {
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr && system->InjectKeyReleased(static_cast<int>(keycode), static_cast<int>(key)))
+		return true;
+#endif
+
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyReleased", "ii>b", keycode, static_cast<int>(key), &consumed);
 	if (consumed)

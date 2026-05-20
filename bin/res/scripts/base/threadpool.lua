@@ -190,6 +190,24 @@ threadpool.delay = function (self, timeout, func)
     return threadpool:timer(timeout, timeout, nil, func)
 end
 
+threadpool.cancel_timer = function (self, seq)
+    if not seq then
+        return false
+    end
+    for i = #env.timer_list, 1, -1 do
+        local v = env.timer_list[i]
+        if v and v.seq == seq then
+            table.remove(env.timer_list, i)
+            return true
+        end
+    end
+    return false
+end
+
+threadpool.get_timer_count = function(self)
+    return #env.timer_list
+end
+
 threadpool.check_timeout = function(self)
     local second = env.msec/1000
     local thread

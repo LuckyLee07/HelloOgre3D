@@ -44,6 +44,7 @@ public:
 	int createFairyGuiChildContainer(int ownerHandle, const char* name);
 	int createFairyGuiLoader(int ownerHandle, const char* name, const char* url);
 	int createFairyGuiText(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue);
+	int createFairyGuiTextInput(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue);
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int getFairyGuiLastRenderCommandCount();
 	int getFairyGuiLastTriangleCount();
@@ -60,9 +61,13 @@ public:
 	bool setFairyGuiObjectMask(int objectHandle, int maskHandle, bool inverted);
 	bool setFairyGuiObjectSortingOrder(int objectHandle, int sortingOrder);
 	bool setFairyGuiObjectText(int objectHandle, const char* text);
+	const char* getFairyGuiObjectText(int objectHandle);
 	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
 	bool setFairyGuiObjectLoaderUrl(int objectHandle, const char* url);
 	bool setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex);
+	bool focusFairyGuiObject(int objectHandle);
+	bool clearFairyGuiFocus();
+	int getFairyGuiFocusedObject();
 	bool setFairyGuiListItemCount(int objectHandle, int itemCount);
 	bool setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex);
 	int getFairyGuiListSelectedIndex(int objectHandle);
@@ -73,6 +78,8 @@ public:
 		bool injectFairyGuiMouseUp(int x, int y, int button);
 		bool injectFairyGuiMouseWheel(int x, int y, int wheelDelta);
 		bool injectFairyGuiClick(int x, int y, int button);
+		bool injectFairyGuiKeyPressed(int keyCode, int keyText);
+		bool injectFairyGuiKeyReleased(int keyCode, int keyText);
 		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
 		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
 		bool removeFairyGuiListener(int bindingId);
@@ -111,6 +118,7 @@ private:
 	long long m_SimulationTime; // 运行时间
 
 	std::string m_fairyGuiLastPackageName;
+	std::string m_fairyGuiLastObjectText;
 
 }; //tolua_exports
 

@@ -1,11 +1,19 @@
 local BaseFairyGuiView = Class("BaseFairyGuiView")
 
+-- Lifecycle order:
+-- create: _Attach -> OnCreate -> OnOpen -> OnShow
+-- reopen cache: _Attach -> OnReopen -> OnOpen -> OnShow
+-- hide cache: OnClose -> OnHide
+-- destroy: OnClose -> OnHide -> OnRemove -> OnDestroy -> _Detach
+
 function BaseFairyGuiView:Init(param)
 	self.handle = nil
 	self.uiKey = nil
 	self.viewName = nil
 	self.param = param or {}
 	self.bindings = {}
+	self.timers = {}
+	self.lifecycleState = "Init"
 end
 
 function BaseFairyGuiView:_Attach(handle, uiKey, viewName, param)
@@ -13,14 +21,17 @@ function BaseFairyGuiView:_Attach(handle, uiKey, viewName, param)
 	self.uiKey = uiKey
 	self.viewName = viewName
 	self.param = param or {}
+	self.lifecycleState = "Attached"
 end
 
 function BaseFairyGuiView:_Detach()
+	self:ClearTimers()
 	self:ClearBindings()
 	self.handle = nil
 	self.uiKey = nil
 	self.viewName = nil
 	self.param = nil
+	self.lifecycleState = "Detached"
 end
 
 function BaseFairyGuiView:GetHandle()
@@ -29,6 +40,22 @@ end
 
 function BaseFairyGuiView:GetKey()
 	return self.uiKey
+end
+
+function BaseFairyGuiView:IsAlive()
+	return self.handle ~= nil and self.lifecycleState ~= "Detached"
+end
+
+function BaseFairyGuiView:AssertAlive(apiName)
+	if self:IsAlive() then
+		return true
+	end
+	local message = string.format("[FGUI] view api called after detach: %s %s", tostring(self.viewName), tostring(apiName or ""))
+	if FairyGuiManager ~= nil and FairyGuiManager.IsStrictLifecycleEnabled ~= nil and FairyGuiManager:IsStrictLifecycleEnabled() then
+		error(message)
+	end
+	print(message)
+	return false
 end
 
 function BaseFairyGuiView:GetChild(childPath)
@@ -54,6 +81,20 @@ function BaseFairyGuiView:SetText(childPath, text)
 		return false
 	end
 	return FairyGuiManager:SetText(self.handle, childPath, text)
+end
+
+function BaseFairyGuiView:GetText(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetText(self.handle, childPath)
+end
+
+function BaseFairyGuiView:Focus(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:Focus(self.handle, childPath)
 end
 
 function BaseFairyGuiView:SetIcon(childPath, icon)
@@ -212,6 +253,81 @@ function BaseFairyGuiView:ClearBindings()
 	self.bindings = {}
 end
 
+function BaseFairyGuiView:TrackTimer(timerId)
+	if timerId ~= nil then
+		self.timers[timerId] = true
+	end
+	return timerId
+end
+
+function BaseFairyGuiView:RemoveTimer(timerId)
+	if timerId == nil then
+		return false
+	end
+	self.timers[timerId] = nil
+	if FairyGuiManager ~= nil then
+		return FairyGuiManager:CancelTimer(timerId)
+	end
+	return false
+end
+
+function BaseFairyGuiView:CancelTimer(timerId)
+	return self:RemoveTimer(timerId)
+end
+
+function BaseFairyGuiView:ClearTimers()
+	if FairyGuiManager ~= nil then
+		for timerId, _ in pairs(self.timers) do
+			FairyGuiManager:CancelTimer(timerId)
+		end
+	end
+	self.timers = {}
+end
+
+function BaseFairyGuiView:GetTimerCount()
+	local count = 0
+	for _, _ in pairs(self.timers) do
+		count = count + 1
+	end
+	return count
+end
+
+function BaseFairyGuiView:Timer(duration, interval, tickFunc, finishFunc)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	if not self:AssertAlive("Timer") then
+		return nil
+	end
+
+	local view = self
+	local timerId = nil
+	local wrappedTick = nil
+	if type(tickFunc) == "function" then
+		wrappedTick = function(...)
+			if not view:IsAlive() then
+				return
+			end
+			return tickFunc(...)
+		end
+	end
+	local wrappedFinish = function(...)
+		view.timers[timerId] = nil
+		if not view:IsAlive() then
+			return
+		end
+		if type(finishFunc) == "function" then
+			return finishFunc(...)
+		end
+	end
+	timerId = FairyGuiManager:AddTimer(self.handle, duration, interval, wrappedTick, wrappedFinish)
+	return self:TrackTimer(timerId)
+end
+
+function BaseFairyGuiView:Delay(timeout, func)
+	return self:Timer(timeout, timeout, nil, func)
+end
+
 function BaseFairyGuiView:AddClick(childPath, callback)
 	if FairyGuiManager == nil or self.handle == nil then
 		return nil
@@ -221,6 +337,9 @@ end
 
 function BaseFairyGuiView:AddEvent(childPath, eventType, callback)
 	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	if not self:AssertAlive("AddEvent") then
 		return nil
 	end
 	return self:AddBinding(FairyGuiManager:AddEvent(self.handle, childPath, eventType, callback))
@@ -240,6 +359,18 @@ end
 
 function BaseFairyGuiView:AddMouseWheel(childPath, callback)
 	return self:AddEvent(childPath, "MouseWheel", callback)
+end
+
+function BaseFairyGuiView:AddKeyDown(childPath, callback)
+	return self:AddEvent(childPath, "KeyDown", callback)
+end
+
+function BaseFairyGuiView:AddKeyUp(childPath, callback)
+	return self:AddEvent(childPath, "KeyUp", callback)
+end
+
+function BaseFairyGuiView:AddSubmit(childPath, callback)
+	return self:AddEvent(childPath, "Submit", callback)
 end
 
 function BaseFairyGuiView:AddTouchBegin(childPath, callback)

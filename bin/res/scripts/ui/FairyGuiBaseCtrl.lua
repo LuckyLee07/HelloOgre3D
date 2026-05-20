@@ -57,6 +57,32 @@ function FairyGuiBaseCtrl:Close(forceDestroy)
 	return false
 end
 
+function FairyGuiBaseCtrl:IsAlive()
+	return self.view ~= nil and self.view.IsAlive ~= nil and self.view:IsAlive()
+end
+
+function FairyGuiBaseCtrl:Timer(duration, interval, tickFunc, finishFunc)
+	return self.view ~= nil and self.view.Timer ~= nil and self.view:Timer(duration, interval, tickFunc, finishFunc) or nil
+end
+
+function FairyGuiBaseCtrl:Delay(timeout, func)
+	return self.view ~= nil and self.view.Delay ~= nil and self.view:Delay(timeout, func) or nil
+end
+
+function FairyGuiBaseCtrl:CancelTimer(timerId)
+	return self.view ~= nil and self.view.CancelTimer ~= nil and self.view:CancelTimer(timerId) or false
+end
+
+function FairyGuiBaseCtrl:ClearTimers()
+	if self.view ~= nil and self.view.ClearTimers ~= nil then
+		self.view:ClearTimers()
+	end
+end
+
+function FairyGuiBaseCtrl:GetTimerCount()
+	return self.view ~= nil and self.view.GetTimerCount ~= nil and self.view:GetTimerCount() or 0
+end
+
 function FairyGuiBaseCtrl:GetHandle()
 	if self.view ~= nil and self.view.GetRootHandle ~= nil then
 		return self.view:GetRootHandle()
@@ -69,6 +95,14 @@ end
 
 function FairyGuiBaseCtrl:SetText(childPath, text)
 	return self.view ~= nil and self.view:SetText(childPath, text) or false
+end
+
+function FairyGuiBaseCtrl:GetText(childPath)
+	return self.view ~= nil and self.view:GetText(childPath) or ""
+end
+
+function FairyGuiBaseCtrl:Focus(childPath)
+	return self.view ~= nil and self.view:Focus(childPath) or false
 end
 
 function FairyGuiBaseCtrl:SetVisible(childPathOrVisible, visible)
@@ -173,6 +207,18 @@ end
 
 function FairyGuiBaseCtrl:AddMouseWheel(childPath, callback)
 	return self.view ~= nil and self.view:AddMouseWheel(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddKeyDown(childPath, callback)
+	return self.view ~= nil and self.view:AddKeyDown(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddKeyUp(childPath, callback)
+	return self.view ~= nil and self.view:AddKeyUp(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddSubmit(childPath, callback)
+	return self.view ~= nil and self.view:AddSubmit(childPath, callback) or nil
 end
 
 function FairyGuiBaseCtrl:AddTouchBegin(childPath, callback)

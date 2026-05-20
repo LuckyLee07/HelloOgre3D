@@ -34,7 +34,8 @@
 - [x] Act37 MVC、Act38 列表、LayerProbe、MaskProbe 已作为样例或自测入口。
 - [~] 渲染裁剪与遮罩已有矩形 scissor/stencil 状态桥接和 MaskProbe 样例，但还不是完整 GPU 像素级 stencil。
 - [~] AutoGen 已能生成 Act38 MVC 基础代码和 registry，但批量化、CI 化、更多控件覆盖还没完成。
-- [~] 输入已覆盖鼠标、滚轮和 ESC 关闭，但键盘焦点、文本输入、IME 还没补齐。
+- [~] 输入已覆盖鼠标、滚轮、ESC 关闭、键盘焦点和 `GTextInput` 最小文本输入，但 Tab 焦点切换、复杂编辑行为和 IME 还没补齐。
+- [x] 关闭销毁路径已有生命周期残留检测，覆盖 binding、timer、child/list cache、focus、stack、layer、view/controller map。
 
 ## Phase 0: 可观测性与自测闭环
 
@@ -48,6 +49,7 @@
 - [x] Lua Dump 增加渲染命令数和三角形数。
 - [x] Dump 增加打开 UI 数、隐藏 UI 数、layer root 数、binding 数的汇总行。
 - [x] Dump 增加对象 handle 数和 child handle 缓存数。
+- [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
 - [ ] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口。
 - [ ] Tracy 增加 UI Open/Close/Event/Render zones 和计数器。
 - [ ] 增加一键 FGUI 自测脚本，集中跑 Act37、Act38、Layer、Mask、Input、Cleanup。
@@ -59,9 +61,11 @@
 - [x] 定义并接入 `OnShow/OnHide`，可见性变化时回调。
 - [x] 定义并接入 `OnClose/OnRemove/OnDestroy`，关闭、移除、销毁分层处理。
 - [x] 增加 `OnOpen`，作为每次打开都会执行的统一入口，避免业务误用 `OnShow`。
-- [ ] 明确 Ctrl/View/Model 生命周期职责，并在基类里加默认调用顺序说明和断言。
+- [x] 明确 Ctrl/View/Model 生命周期职责，并在基类里加默认调用顺序说明和断言。
 - [ ] 对 reopen/cache/destroy 三种路径补完整样例和自测。
-- [ ] UI 关闭后检测残留 binding、timer、child cache，并输出警告。
+- [x] UI 关闭后检测残留 binding、child/list cache、focus、stack/layer/map，并输出警告。
+- [x] UI 关闭后检测残留 timer/delay 回调，避免异步回调命中已销毁 Ctrl/View。
+- [ ] 补缓存隐藏路径的 timer 策略：隐藏时继续运行、暂停或由业务 OnHide 主动清理。
 - [ ] 支持界面级 `Close(reason)`，让业务知道关闭原因。
 
 ## Phase 2: UI 层级与栈系统
@@ -97,10 +101,11 @@
 - [x] ESC 关闭顶层弹窗已具备。
 - [ ] 事件 payload 补齐：item handle、item index、坐标、button、touch id、drag delta。
 - [x] 鼠标滚轮桥接到 FairyGUI ScrollPane/List，正负 delta 已通过 `event.wheelDelta` 传到 Lua。
-- [ ] 键盘焦点和 tab 切换规则。
-- [ ] `GTextInput` 文本输入桥接。
+- [x] 键盘焦点最小桥接：点击或 Lua `Focus` 到 `GTextInput` 后，键盘输入优先进入 FairyGUI。
+- [x] `GTextInput` 最小文本输入桥接：普通字符、Backspace、Enter/Submit、Changed 事件。
+- [ ] Tab 焦点切换规则。
 - [ ] Windows IME 输入链路评估和最小可用实现。
-- [ ] UI 关闭后事件解绑自测，确保不会回调已销毁 Ctrl/View。
+- [x] UI 关闭后事件解绑自测，确保 root/child handle 绑定不会回调已销毁 Ctrl/View。
 - [ ] 事件统计 Dump，输出每类事件分发次数和最近一次命中对象。
 
 ## Phase 5: 通用 UI 服务
@@ -193,9 +198,11 @@
 ### Iteration 2: 输入补齐
 
 - [x] 鼠标滚轮桥接，负向/正向 delta 可到达 Lua `event.wheelDelta`。
-- [ ] 键盘按键桥接到 FairyGUI 焦点对象。
-- [ ] `GTextInput` 最小输入闭环。
-- [ ] 输入自测覆盖按钮、列表、滚轮、ESC、文本输入。
+- [x] 键盘按键桥接到 FairyGUI 焦点对象。
+- [x] `GTextInput` 最小输入闭环。
+- [x] 输入自测覆盖按钮、列表、滚轮、ESC、文本输入。
+- [x] 生命周期关闭残留检测和自测，覆盖直接子控件事件绑定、timer、焦点清理和 Manager map 清理。
+- [ ] Tab 焦点顺序和 IME 输入链路。
 
 ### Iteration 3: 通用 UI 服务
 

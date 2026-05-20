@@ -48,6 +48,47 @@ local function tryRunFairyGuiKeySelfTest()
 	end)
 end
 
+local function tryRunFairyGuiTextInputSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_TEXT_INPUT_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local keyA = FairyGuiManager:DebugInjectKeyPressed(30, 65)
+		local keyB = FairyGuiManager:DebugInjectKeyPressed(48, 66)
+		local backspace = FairyGuiManager:DebugInjectKeyPressed(14, 0)
+		local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
+		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		local focusHandle = FairyGuiManager:GetFocusedHandle()
+		print("[FGUI] text input self test result:", handle ~= nil, inputHandle, focused, keyA, keyB, backspace, submit, text, focusHandle)
+		FairyGuiManager:Close("TextInputProbe", true)
+	end)
+end
+
+local function tryRunFairyGuiLifecycleSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_LIFECYCLE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(10, function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		local directBinding = inputHandle ~= nil and FairyGuiManager:AddChanged(inputHandle, "", function()
+			print("[FGUI] lifecycle direct child changed")
+		end) or nil
+		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local timerId = handle ~= nil and FairyGuiManager:Delay("TextInputProbe", 30, function()
+			print("[FGUI] lifecycle stale timer fired")
+		end) or nil
+		local snapshot = FairyGuiManager:CaptureCloseSnapshot("TextInputProbe")
+		local closed = FairyGuiManager:Close("TextInputProbe", true)
+		local clean = FairyGuiManager:ValidateClosedObject(snapshot, nil, "TextInputProbeLifecycleSelfTest", true)
+		local stats = FairyGuiManager:GetDebugStats()
+		print("[FGUI] lifecycle residue self test result:", handle ~= nil, inputHandle, directBinding, timerId, focused, closed, clean, stats.openUI, stats.binding, stats.timer, stats.childCache, stats.objectHandle, stats.view, stats.controller)
+	end)
+end
+
 local function tryRunFairyGuiCleanupSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_CLEANUP_SELF_TEST") then
 		return
@@ -199,6 +240,8 @@ local function tryOpenFairyGuiSample()
 
 		tryRunFairyGuiInputSelfTest()
 		tryRunFairyGuiKeySelfTest()
+		tryRunFairyGuiTextInputSelfTest()
+		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
 		tryRunFairyGuiLayerCloseSelfTest()
@@ -271,6 +314,20 @@ function FGUI_CloseMaskProbe()
 	return FairyGuiManager:Close("MaskProbe", true)
 end
 
+function FGUI_OpenTextInputProbe()
+	return FairyGuiManager:OpenTextInputProbe({
+		key = "TextInputProbe",
+		layer = "Top",
+		group = "Sample",
+		scene = "Default",
+		popupMode = "stack",
+	})
+end
+
+function FGUI_CloseTextInputProbe()
+	return FairyGuiManager:Close("TextInputProbe", true)
+end
+
 function FGUI_DumpAct38Sample()
 	local objectInfo = FairyGuiManager:GetObjectInfo("Act38Test")
 	if objectInfo == nil then
@@ -339,6 +396,10 @@ end
 
 function FGUI_DebugInjectClick(x, y, button)
 	return FairyGuiManager:DebugInjectClick(x, y, button or 0)
+end
+
+function FGUI_DebugInjectKeyPressed(keyCode, keyText)
+	return FairyGuiManager:DebugInjectKeyPressed(keyCode, keyText or 0)
 end
 
 function FGUI_DebugKeyPressed(keyCode, keyText)
