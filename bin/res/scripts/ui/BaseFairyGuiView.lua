@@ -3,8 +3,8 @@ local BaseFairyGuiView = Class("BaseFairyGuiView")
 -- Lifecycle order:
 -- create: _Attach -> OnCreate -> OnOpen -> OnShow
 -- reopen cache: _Attach -> OnReopen -> OnOpen -> OnShow
--- hide cache: OnClose -> OnHide
--- destroy: OnClose -> OnHide -> OnRemove -> OnDestroy -> _Detach
+-- hide cache: OnClose(reason) -> OnHide(reason)
+-- destroy: OnClose(reason) -> OnHide(reason) -> OnRemove(reason) -> OnDestroy(reason) -> _Detach
 
 function BaseFairyGuiView:Init(param)
 	self.handle = nil
@@ -230,11 +230,11 @@ function BaseFairyGuiView:ScrollListToView(childPath, index)
 	return FairyGuiManager:ScrollListToView(self.handle, childPath, index)
 end
 
-function BaseFairyGuiView:Close(forceDestroy)
+function BaseFairyGuiView:Close(forceDestroy, reason)
 	if FairyGuiManager == nil then
 		return false
 	end
-	return FairyGuiManager:CloseView(self, forceDestroy)
+	return FairyGuiManager:CloseView(self, forceDestroy, reason)
 end
 
 function BaseFairyGuiView:AddBinding(bindingId)

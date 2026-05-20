@@ -6,6 +6,8 @@ function FairyGuiAutoGen:Init(param)
 	self.viewName = nil
 	self.param = param or {}
 	self.bindings = {}
+	self.timers = {}
+	self.lifecycleState = "Init"
 	self.ctrl = nil
 end
 
@@ -56,31 +58,34 @@ function FairyGuiAutoGen:OnReopen(param)
 	end
 end
 
-function FairyGuiAutoGen:OnHide()
+function FairyGuiAutoGen:OnHide(reason)
+	if self.ctrl ~= nil and self.ctrl.ClearTimers ~= nil then
+		self.ctrl:ClearTimers()
+	end
 	if self.ctrl ~= nil and self.ctrl.Reset ~= nil then
 		self.ctrl:Reset()
 	end
 end
 
-function FairyGuiAutoGen:OnClose()
+function FairyGuiAutoGen:OnClose(reason)
 	if self.ctrl ~= nil and self.ctrl.OnClose ~= nil then
-		self.ctrl:OnClose()
+		self.ctrl:OnClose(reason)
 	end
 end
 
-function FairyGuiAutoGen:OnDestroy()
+function FairyGuiAutoGen:OnDestroy(reason)
 	if self.ctrl ~= nil then
 		if self.ctrl.Dispose ~= nil then
-			self.ctrl:Dispose()
+			self.ctrl:Dispose(reason)
 		end
 		FairyGuiManager:UnInstMVC(self.ctrl)
 		self.ctrl = nil
 	end
 end
 
-function FairyGuiAutoGen:OnRemove()
+function FairyGuiAutoGen:OnRemove(reason)
 	if self.ctrl ~= nil and self.ctrl.OnRemove ~= nil then
-		self.ctrl:OnRemove()
+		self.ctrl:OnRemove(reason)
 	end
 end
 

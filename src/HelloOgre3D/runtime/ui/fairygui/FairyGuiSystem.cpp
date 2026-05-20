@@ -19,6 +19,7 @@
 #include "OgreDpiHelper.h"
 #include "OgreRenderWindow.h"
 #include "ScriptLuaVM.h"
+#include "profiling/Profile.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -450,14 +451,18 @@ void FairyGuiSystem::Shutdown()
 
 void FairyGuiSystem::Update(float deltaSeconds)
 {
+	H3D_PROFILE_SCOPE("FairyGuiSystem::Update");
 	if (!m_initialized)
 		return;
 
 	cocos2d::Director::getInstance()->mainLoop(deltaSeconds);
+	H3D_PROFILE_PLOT("FGUIObjectHandles", static_cast<double>(m_objectHandles.size()));
+	H3D_PROFILE_PLOT("FGUIListenerBindings", static_cast<double>(m_listenerBindings.size()));
 }
 
 void FairyGuiSystem::Render()
 {
+	H3D_PROFILE_SCOPE("FairyGuiSystem::Render");
 	if (!m_initialized)
 		return;
 
@@ -471,6 +476,8 @@ void FairyGuiSystem::Render()
 	renderer->setCommandSink(nullptr);
 	m_lastRenderCommandCount = renderer->getTriangleCommandCount();
 	m_lastTriangleCount = renderer->getSubmittedTriangleCount();
+	H3D_PROFILE_PLOT("FGUIRenderCommands", static_cast<double>(m_lastRenderCommandCount));
+	H3D_PROFILE_PLOT("FGUITriangles", static_cast<double>(m_lastTriangleCount));
 }
 
 void FairyGuiSystem::HandleWindowResized(unsigned int width, unsigned int height)
@@ -654,6 +661,9 @@ bool FairyGuiSystem::InjectKeyReleased(int keyCode, int keyText)
 
 bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 {
+	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackage");
+	if (!packagePath.empty())
+		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
 	if (!m_initialized || packagePath.empty())
 		return false;
 
@@ -662,6 +672,9 @@ bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 
 std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath)
 {
+	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackageAndGetName");
+	if (!packagePath.empty())
+		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
 	if (!m_initialized || packagePath.empty())
 		return std::string();
 
@@ -671,6 +684,9 @@ std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath
 
 bool FairyGuiSystem::RemovePackage(const std::string& packageName)
 {
+	H3D_PROFILE_SCOPE_NAMED(removePackageZone, "FairyGuiSystem::RemovePackage");
+	if (!packageName.empty())
+		H3D_PROFILE_TEXT(removePackageZone, packageName.c_str(), packageName.size());
 	if (!m_initialized || packageName.empty())
 		return false;
 
@@ -680,6 +696,9 @@ bool FairyGuiSystem::RemovePackage(const std::string& packageName)
 
 fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, const std::string& objectName)
 {
+	H3D_PROFILE_SCOPE_NAMED(createObjectZone, "FairyGuiSystem::CreateObject");
+	if (!objectName.empty())
+		H3D_PROFILE_TEXT(createObjectZone, objectName.c_str(), objectName.size());
 	if (!m_initialized || packageName.empty() || objectName.empty())
 		return nullptr;
 
@@ -1481,6 +1500,7 @@ bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode,
 
 void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context)
 {
+	H3D_PROFILE_SCOPE("FairyGuiSystem::DispatchEvent");
 	ScriptLuaVM* luaVM = GetScriptLuaVM();
 	if (luaVM == nullptr)
 		return;

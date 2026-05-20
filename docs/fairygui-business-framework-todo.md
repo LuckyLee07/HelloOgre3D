@@ -32,6 +32,7 @@
 - [x] 基础资源策略已具备：package 缓存、refCount、`cache` 隐藏复用、关闭时可卸载 package。
 - [x] 基础事件已具备：Click、Changed、ClickItem、RightClick、TouchBegin/End、DragStart/Move/End。
 - [x] Act37 MVC、Act38 列表、LayerProbe、MaskProbe 已作为样例或自测入口。
+- [x] 通用 UI 服务已有第一版动态实现：Toast、Tip、Loading、GuideMask、MessageBox/Dialog、PopupMenu。
 - [~] 渲染裁剪与遮罩已有矩形 scissor/stencil 状态桥接和 MaskProbe 样例，但还不是完整 GPU 像素级 stencil。
 - [~] AutoGen 已能生成 Act38 MVC 基础代码和 registry，但批量化、CI 化、更多控件覆盖还没完成。
 - [~] 输入已覆盖鼠标、滚轮、ESC 关闭、键盘焦点和 `GTextInput` 最小文本输入，但 Tab 焦点切换、复杂编辑行为和 IME 还没补齐。
@@ -51,9 +52,12 @@
 - [x] Lua Dump 增加资源引用告警，能标出 refCount 异常、包空挂引用、隐藏 UI 缺引用和可见 UI 脱离打开栈等问题。
 - [x] Dump 增加打开 UI 数、隐藏 UI 数、layer root 数、binding 数的汇总行。
 - [x] Dump 增加对象 handle 数和 child handle 缓存数。
+- [x] Dump 增加事件分发总数、分类型计数和最近一次事件命中信息。
 - [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
+- [x] 增加 `HELLO_FGUI_CACHE_SELF_TEST=1` 自测，覆盖 cache hide、timer 暂停、reopen 复用和强制 destroy 回零。
+- [x] 增加 `HELLO_FGUI_COMMON_SERVICE_SELF_TEST=1` 自测，覆盖 Toast、Tip、Loading、GuideMask、MessageBox、PopupMenu 创建和清理。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
-- [ ] Tracy 增加 UI Open/Close/Event/Render zones 和计数器。
+- [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua Open/Close 耗时仍待补。
 - [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
 - [x] 增加 `HELLO_FGUI_LONG_LOOP_SELF_TEST=1` 长循环自测入口，循环打开关闭 Act37、Act38、Layer、Mask、TextInput 并检查资源/生命周期回零。
 
@@ -65,11 +69,11 @@
 - [x] 定义并接入 `OnClose/OnRemove/OnDestroy`，关闭、移除、销毁分层处理。
 - [x] 增加 `OnOpen`，作为每次打开都会执行的统一入口，避免业务误用 `OnShow`。
 - [x] 明确 Ctrl/View/Model 生命周期职责，并在基类里加默认调用顺序说明和断言。
-- [ ] 对 reopen/cache/destroy 三种路径补完整样例和自测。
+- [x] 对 reopen/cache/destroy 三种路径补样例和自测。
 - [x] UI 关闭后检测残留 binding、child/list cache、focus、stack/layer/map，并输出警告。
 - [x] UI 关闭后检测残留 timer/delay 回调，避免异步回调命中已销毁 Ctrl/View。
-- [ ] 补缓存隐藏路径的 timer 策略：隐藏时继续运行、暂停或由业务 OnHide 主动清理。
-- [ ] 支持界面级 `Close(reason)`，让业务知道关闭原因。
+- [x] 补缓存隐藏路径的 timer 策略：默认隐藏时清理 UI timer，可通过 `pauseTimersOnHide = false` 保留。
+- [x] 支持界面级 `Close(reason)`，让业务知道关闭原因。
 
 ## Phase 2: UI 层级与栈系统
 
@@ -109,17 +113,17 @@
 - [ ] Tab 焦点切换规则。
 - [ ] Windows IME 输入链路评估和最小可用实现。
 - [x] UI 关闭后事件解绑自测，确保 root/child handle 绑定不会回调已销毁 Ctrl/View。
-- [ ] 事件统计 Dump，输出每类事件分发次数和最近一次命中对象。
+- [x] 事件统计 Dump，输出每类事件分发次数和最近一次命中对象。
 
 ## Phase 5: 通用 UI 服务
 
-- [ ] `Toast` 服务：短提示、排队、去重、自动关闭。
-- [ ] `Loading` 服务：引用计数、超时、场景切换清理。
-- [ ] `MessageBox/Dialog` 服务：确认、取消、参数化文案、按钮回调。
-- [ ] `PopupMenu` 服务：列表项、点击外部关闭、跟随鼠标或控件定位。
-- [ ] `Tip` 服务：控件 hover 提示、延迟显示、离开隐藏。
-- [ ] `GuideMask` 服务：遮罩、高亮区域、引导点击穿透。
-- [ ] 通用服务全部接入 layer、modal、资源、生命周期和 Dump。
+- [~] `Toast` 服务：已有第一版短提示和自动关闭，排队/去重待补。
+- [~] `Loading` 服务：已有第一版 modal loading，引用计数和超时待补。
+- [~] `MessageBox/Dialog` 服务：已有第一版确认/取消按钮和回调，视觉样式待资源化。
+- [~] `PopupMenu` 服务：已有第一版列表项和外部关闭，控件跟随定位待补。
+- [~] `Tip` 服务：已有第一版指定坐标提示，hover 延迟/离开隐藏待补。
+- [~] `GuideMask` 服务：已有第一版遮罩和文案，高亮区域/点击穿透待补。
+- [x] 通用服务全部接入 layer、modal、生命周期和 Dump。
 
 ## Phase 6: 控件能力与复杂 UI
 
@@ -176,7 +180,7 @@
 - [ ] 事件分发耗时统计。
 - [ ] render command、triangle、texture/material 切换统计。
 - [ ] UI 数量压力样例，覆盖 1/5/20/50 个弹窗或列表项规模。
-- [ ] Tracy zones 和 frame counters 接入 UI 子系统。
+- [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event 已接入，Lua open/close 和服务层统计待补。
 - [x] 长时间打开关闭循环自测，检测 handle、binding、timer、view/controller、package refCount 和资源告警是否回零。
 - [ ] Release|x64、Debug|x64、Win32 的最小构建验证清单。
 
@@ -210,11 +214,12 @@
 
 ### Iteration 3: 通用 UI 服务
 
-- [ ] Toast。
-- [ ] Loading。
-- [ ] Dialog/MessageBox。
-- [ ] PopupMenu。
-- [ ] GuideMask。
+- [x] Toast 第一版。
+- [x] Loading 第一版。
+- [x] Dialog/MessageBox 第一版。
+- [x] PopupMenu 第一版。
+- [x] Tip 第一版。
+- [x] GuideMask 第一版。
 
 ### Iteration 4: AutoGen 工程化
 

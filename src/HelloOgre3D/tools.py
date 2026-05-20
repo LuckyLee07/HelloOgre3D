@@ -97,5 +97,8 @@ if __name__ == "__main__":
     exts = ['.cpp', '.h', '.bat', '.c', '.pkg', '.lua', '.py']
     process_directory_lf2crlf(project_path, exts)
 
+    project_path = r"../../docs"
+    process_directory_lf2crlf(project_path, ['.md'])
+
     project_path = r"../../bin/res/scripts"
     process_directory_lf2crlf(project_path, ['.lua'])

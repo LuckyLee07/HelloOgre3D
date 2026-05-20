@@ -238,15 +238,25 @@ local function callLifecycle(view, functionName, ...)
 	return nil
 end
 
-local function detachView(manager, objectInfo)
+local function normalizeCloseArgs(forceDestroy, reason)
+	if type(forceDestroy) == "table" then
+		return forceDestroy.forceDestroy == true, forceDestroy.reason or reason or "close"
+	end
+	if type(forceDestroy) == "string" and reason == nil then
+		return false, forceDestroy
+	end
+	return forceDestroy == true, reason or (forceDestroy == true and "destroy" or "close")
+end
+
+local function detachView(manager, objectInfo, reason)
 	if objectInfo == nil or objectInfo.view == nil then
 		return
 	end
 
 	local view = objectInfo.view
-	callLifecycle(view, "OnHide")
-	callLifecycle(view, "OnRemove")
-	callLifecycle(view, "OnDestroy")
+	callLifecycle(view, "OnHide", reason)
+	callLifecycle(view, "OnRemove", reason)
+	callLifecycle(view, "OnDestroy", reason)
 	if view._Detach ~= nil then
 		view:_Detach()
 	else
@@ -311,6 +321,9 @@ function FairyGuiManager:Init()
 		self.bindingsByHandle = {}
 		self.timers = {}
 		self.timersByKey = {}
+		self.eventStats = {}
+		self.eventDispatchTotal = 0
+		self.lastEvent = nil
 	self.nextCallbackId = 1
 end
 
@@ -587,12 +600,13 @@ function FairyGuiManager:GetHealthStats()
 		textureCount = renderStats.textureCount,
 		runtimeObjectHandle = renderStats.runtimeObjectHandle,
 		runtimeBinding = renderStats.runtimeBinding,
+		eventDispatchTotal = self.eventDispatchTotal or 0,
 	}
 end
 
 function FairyGuiManager:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
 	if verbose == true then
 		self:DumpResourceRefs()
 		self:DumpResourceWarnings()
@@ -1043,6 +1057,7 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"stackMode",
 			"closeOnMaskClick",
 			"closeOnEscape",
+			"pauseTimersOnHide",
 			"popupMode",
 			"popupGroup",
 			"group",
@@ -1916,6 +1931,350 @@ function FairyGuiManager:OpenTextInputProbe(param)
 		print("[FGUI] text input submit:", self:GetText(handle, "probe_input"), evt.senderHandle)
 	end)
 	return handle, inputHandle
+end
+
+function FairyGuiManager:AddOwnedHandle(objectInfo, handle)
+	if objectInfo == nil or handle == nil or handle <= 0 then
+		return handle
+	end
+	if objectInfo.ownedHandles == nil then
+		objectInfo.ownedHandles = {}
+	end
+	table.insert(objectInfo.ownedHandles, handle)
+	return handle
+end
+
+function FairyGuiManager:AddObjectHandleToParent(childHandle, parentHandle)
+	if childHandle == nil or childHandle <= 0 or parentHandle == nil or parentHandle <= 0 then
+		return false
+	end
+	if GameManager == nil or GameManager.addFairyGuiObjectToParent == nil then
+		return false
+	end
+	return GameManager:addFairyGuiObjectToParent(childHandle, parentHandle)
+end
+
+function FairyGuiManager:OpenServiceContainer(key, param)
+	param = param or {}
+	key = param.key or key
+	if isBlank(key) then
+		return nil
+	end
+
+	self:CloseUI(key, true, "serviceReplace")
+	param.key = key
+	param.serviceType = param.serviceType or key
+	param.layer = param.layer or "Top"
+	param.scene = param.scene or param.sceneName or self.currentSceneName
+	param.closeOnSceneChange = param.closeOnSceneChange ~= false
+
+	local handle = self:CreateContainer(param.name or key)
+	if handle == nil or handle <= 0 then
+		return nil
+	end
+	if not self:AttachToLayer(handle, param.layer) then
+		GameManager:removeFairyGuiObject(handle)
+		return nil
+	end
+
+	if param.width ~= nil and param.height ~= nil then
+		self:SetSize(handle, param.width, param.height)
+	elseif param.fullScreen == true or param.adaptScreen == true then
+		self:SetSize(handle, self:GetScreenWidth(), self:GetScreenHeight())
+	end
+	if param.x ~= nil and param.y ~= nil then
+		self:SetPosition(handle, param.x, param.y)
+	end
+	self:SetTouchable(handle, param.touchable == true)
+
+	local objectInfo = {
+		handle = handle,
+		key = key,
+		name = key,
+		objectName = param.serviceType,
+		param = param,
+		uiName = key,
+		cache = false,
+		layer = param.layer,
+		popupGroup = self:GetPopupGroup(param),
+		popupMode = param.popupMode or "stack",
+		uiGroup = self:GetUIGroup(param),
+		sceneName = self:GetSceneName(param),
+		closeOnSceneChange = param.closeOnSceneChange ~= false,
+		destroyOnSceneChange = param.destroyOnSceneChange == true,
+		ownedHandles = {},
+		serviceType = param.serviceType,
+	}
+	self.objects[key] = objectInfo
+	self.objectsByHandle[handle] = objectInfo
+	self.uiNameToKey[key] = key
+	self.hiddenObjects[key] = nil
+	self:AssignLayer(objectInfo, objectInfo.layer)
+	self:CreateModalMask(objectInfo, param)
+	self:ApplyScreenAdapt(objectInfo)
+	self:PushStack(objectInfo)
+	return objectInfo
+end
+
+function FairyGuiManager:AddServiceText(objectInfo, name, text, x, y, width, height, fontSize, red, green, blue)
+	if objectInfo == nil then
+		return nil
+	end
+
+	local textHandle = self:CreateText(objectInfo.handle, name or "", tostring(text or ""), fontSize or 22, red or 255, green or 255, blue or 255)
+	if textHandle == nil or textHandle <= 0 then
+		return nil
+	end
+	self:SetPosition(textHandle, x or 0, y or 0)
+	self:SetSize(textHandle, width or 120, height or 32)
+	if not self:AddObjectHandleToParent(textHandle, objectInfo.handle) then
+		GameManager:removeFairyGuiObject(textHandle)
+		return nil
+	end
+	return self:AddOwnedHandle(objectInfo, textHandle)
+end
+
+function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, height, callback)
+	if objectInfo == nil then
+		return nil
+	end
+
+	local buttonHandle = self:CreateContainer(name or "", objectInfo.handle)
+	if buttonHandle == nil or buttonHandle <= 0 then
+		return nil
+	end
+	self:SetPosition(buttonHandle, x or 0, y or 0)
+	self:SetSize(buttonHandle, width or 120, height or 44)
+	self:SetTouchable(buttonHandle, true)
+	if not self:AddObjectHandleToParent(buttonHandle, objectInfo.handle) then
+		GameManager:removeFairyGuiObject(buttonHandle)
+		return nil
+	end
+	self:AddOwnedHandle(objectInfo, buttonHandle)
+	self:AddServiceText(objectInfo, (name or "") .. "_text", text or "", x or 0, y or 0, width or 120, height or 44, 22, 255, 255, 255)
+	if type(callback) == "function" then
+		self:AddClick(buttonHandle, "", callback)
+	end
+	return buttonHandle
+end
+
+function FairyGuiManager:ShowToast(text, duration, param)
+	param = copyTable(param)
+	param.key = param.key or "__Toast"
+	param.layer = param.layer or "Toast"
+	param.stackMode = param.stackMode or "None"
+	param.fullScreen = true
+	param.touchable = false
+	param.serviceType = "Toast"
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	local width = param.width or math.min(math.max(string.len(tostring(text or "")) * 14 + 80, 240), math.max(screenWidth - 80, 240))
+	local height = param.height or 44
+	local x = param.x or math.max((screenWidth - width) * 0.5, 0)
+	local y = param.y or math.max(screenHeight - (param.bottom or 120), 0)
+	self:AddServiceText(objectInfo, "toast_text", text or "", x, y, width, height, param.fontSize or 22, 255, 244, 200)
+
+	local timeout = tonumber(duration or param.duration) or 2
+	if timeout > 0 then
+		self:Delay(objectInfo.key, timeout, function()
+			self:CloseUI(objectInfo.key, true, "toastTimeout")
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:ShowTip(text, x, y, duration, param)
+	param = copyTable(param)
+	param.key = param.key or "__Tip"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "None"
+	param.fullScreen = true
+	param.touchable = false
+	param.serviceType = "Tip"
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+	self:AddServiceText(objectInfo, "tip_text", text or "", x or 20, y or 20, param.width or 320, param.height or 36, param.fontSize or 20, 180, 230, 255)
+
+	local timeout = tonumber(duration or param.duration) or 2
+	if timeout > 0 then
+		self:Delay(objectInfo.key, timeout, function()
+			self:CloseUI(objectInfo.key, true, "tipTimeout")
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:ShowLoading(text, param)
+	param = copyTable(param)
+	param.key = param.key or "__Loading"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "Loading"
+	param.popupMode = param.popupMode or "replace"
+	param.fullScreen = true
+	param.modal = param.modal ~= false
+	param.closeOnMaskClick = false
+	param.touchable = false
+	param.serviceType = "Loading"
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	self:AddServiceText(objectInfo, "loading_text", text or "Loading...", math.max(screenWidth * 0.5 - 140, 0), math.max(screenHeight * 0.5 - 18, 0), 280, 36, param.fontSize or 24, 255, 255, 255)
+	return objectInfo.handle
+end
+
+function FairyGuiManager:HideLoading(reason)
+	return self:Close("__Loading", true, reason or "hideLoading")
+end
+
+function FairyGuiManager:ShowGuideMask(param)
+	param = copyTable(param)
+	param.key = param.key or "__GuideMask"
+	param.layer = param.layer or "Guide"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "GuideMask"
+	param.popupMode = param.popupMode or "replace"
+	param.fullScreen = true
+	param.modal = true
+	param.modalAlpha = param.modalAlpha or 0.55
+	param.closeOnMaskClick = param.closeOnMaskClick == true
+	param.touchable = false
+	param.serviceType = "GuideMask"
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+	if not isBlank(param.text) then
+		self:AddServiceText(objectInfo, "guide_text", param.text, param.textX or 80, param.textY or 80, param.textWidth or 520, param.textHeight or 48, param.fontSize or 24, 255, 255, 255)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:HideGuideMask(reason)
+	return self:Close("__GuideMask", true, reason or "hideGuideMask")
+end
+
+function FairyGuiManager:ShowMessageBox(title, message, buttons, callback, param)
+	param = copyTable(param)
+	param.key = param.key or "__MessageBox"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "MessageBox"
+	param.popupMode = param.popupMode or "replace"
+	param.width = param.width or 460
+	param.height = param.height or 240
+	param.modal = param.modal ~= false
+	param.modalAlpha = param.modalAlpha or 0.45
+	param.closeOnMaskClick = param.closeOnMaskClick == true
+	param.closeOnEscape = param.closeOnEscape ~= false
+	param.touchable = true
+	param.serviceType = "MessageBox"
+
+	buttons = type(buttons) == "table" and buttons or { "OK" }
+	param.x = param.x or math.max((self:GetScreenWidth() - param.width) * 0.5, 0)
+	param.y = param.y or math.max((self:GetScreenHeight() - param.height) * 0.5, 0)
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+	self:AddServiceText(objectInfo, "message_title", title or "", 24, 24, param.width - 48, 34, 24, 255, 236, 180)
+	self:AddServiceText(objectInfo, "message_body", message or "", 24, 72, param.width - 48, 80, 20, 230, 230, 230)
+
+	local buttonWidth = param.buttonWidth or 110
+	local buttonGap = param.buttonGap or 16
+	local totalWidth = #buttons * buttonWidth + math.max(#buttons - 1, 0) * buttonGap
+	local startX = math.max((param.width - totalWidth) * 0.5, 0)
+	for index, buttonText in ipairs(buttons) do
+		local label = type(buttonText) == "table" and (buttonText.text or buttonText.label or tostring(index)) or tostring(buttonText)
+		self:AddServiceButton(objectInfo, "message_button_" .. tostring(index), label, startX + (index - 1) * (buttonWidth + buttonGap), param.height - 68, buttonWidth, 44, function()
+			if type(callback) == "function" then
+				callback(index, label)
+			end
+			self:CloseUI(objectInfo.key, true, "messageBoxButton")
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:ShowDialog(title, message, buttons, callback, param)
+	return self:ShowMessageBox(title, message, buttons, callback, param)
+end
+
+function FairyGuiManager:ShowPopupMenu(items, x, y, callback, param)
+	param = copyTable(param)
+	param.key = param.key or "__PopupMenu"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "PopupMenu"
+	param.popupMode = param.popupMode or "replace"
+	param.modal = param.modal ~= false
+	param.modalAlpha = param.modalAlpha or 0.05
+	param.closeOnMaskClick = param.closeOnMaskClick ~= false
+	param.touchable = true
+	param.serviceType = "PopupMenu"
+
+	items = type(items) == "table" and items or {}
+	local itemHeight = param.itemHeight or 34
+	param.width = param.width or 220
+	param.height = param.height or math.max(#items * itemHeight, itemHeight)
+	param.x = x or param.x or 0
+	param.y = y or param.y or 0
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+	for index, item in ipairs(items) do
+		local label = type(item) == "table" and (item.text or item.label or tostring(index)) or tostring(item)
+		self:AddServiceButton(objectInfo, "popup_item_" .. tostring(index), label, 0, (index - 1) * itemHeight, param.width, itemHeight, function()
+			if type(callback) == "function" then
+				callback(index, item)
+			end
+			self:CloseUI(objectInfo.key, true, "popupMenuSelect")
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:GetServiceStats()
+	local stats = {}
+	for key, objectInfo in pairs(self.objects) do
+		if objectInfo.serviceType ~= nil then
+			local serviceType = objectInfo.serviceType
+			local stat = stats[serviceType] or { open = 0, hidden = 0, keys = {} }
+			stat.open = stat.open + 1
+			if self.hiddenObjects[key] ~= nil then
+				stat.hidden = stat.hidden + 1
+			end
+			table.insert(stat.keys, key)
+			stats[serviceType] = stat
+		end
+	end
+	return stats
+end
+
+function FairyGuiManager:DumpServices()
+	print("[FGUI] DumpServices begin")
+	local stats = self:GetServiceStats()
+	for serviceType, stat in pairs(stats) do
+		print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "keys=", table.concat(stat.keys, ","))
+	end
+	print("[FGUI] DumpServices end")
 end
 
 function FairyGuiManager:OpenUI(name, packagePath, classluaOrObjectName, param)
@@ -2803,6 +3162,25 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		eventData = listData ~= nil and listData[itemIndex] or nil
 	end
 
+	local eventName = EVENT_NAMES[eventType] or eventType
+	self.eventDispatchTotal = (self.eventDispatchTotal or 0) + 1
+	self.eventStats[eventName] = (self.eventStats[eventName] or 0) + 1
+	self.lastEvent = {
+		callbackId = callbackId,
+		rootHandle = rootHandle,
+		senderHandle = senderHandle,
+		itemHandle = itemHandle,
+		itemIndex = itemIndex,
+		x = x,
+		y = y,
+		button = button,
+		touchId = touchId,
+		wheelDelta = wheelDelta or 0,
+		eventType = eventName,
+		eventTypeId = eventType,
+		bindingId = bindingId,
+	}
+
 	local ok, err = pcall(callback, {
 		callbackId = callbackId,
 		rootHandle = rootHandle,
@@ -2816,7 +3194,7 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		button = button,
 		touchId = touchId,
 		wheelDelta = wheelDelta or 0,
-		eventType = EVENT_NAMES[eventType] or eventType,
+		eventType = eventName,
 		eventTypeId = eventType,
 		bindingId = bindingId,
 	})
@@ -2869,7 +3247,9 @@ function FairyGuiManager:SetMask(handle, maskHandle, inverted)
 	return GameManager:setFairyGuiObjectMask(handle, maskHandle, inverted == true)
 end
 
-function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
+function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
+	forceDestroy, reason = normalizeCloseArgs(forceDestroy, reason)
+
 	local objectInfo = nil
 	if type(keyOrHandle) == "number" then
 		objectInfo = self.objectsByHandle[keyOrHandle]
@@ -2882,12 +3262,19 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
 	end
 
 	local handle = objectInfo.handle
+	local param = objectInfo.param or {}
 	local ownedHandles = self:CollectOwnedHandles(objectInfo)
 	local closeSnapshot = self:CreateCloseSnapshot(objectInfo, ownedHandles)
-	callView(objectInfo.view, "OnClose")
+	objectInfo.lastCloseReason = reason
+	callView(objectInfo.view, "OnClose", reason, closeSnapshot)
 
-	if objectInfo.cache == true and forceDestroy ~= true and objectInfo.param.destroyOnClose ~= true then
-		callView(objectInfo.view, "OnHide")
+	if objectInfo.cache == true and forceDestroy ~= true and param.destroyOnClose ~= true then
+		self:ClearFocusForHandles(ownedHandles)
+		if param.pauseTimersOnHide ~= false then
+			callView(objectInfo.view, "ClearTimers")
+			self:ClearTimersForKey(objectInfo.key)
+		end
+		callView(objectInfo.view, "OnHide", reason)
 		self:SetVisible(handle, false)
 		if objectInfo.modalMaskHandle ~= nil then
 			self:SetVisible(objectInfo.modalMaskHandle, false)
@@ -2898,7 +3285,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
 	end
 
 	self:ClearFocusForHandles(ownedHandles)
-	detachView(self, objectInfo)
+	detachView(self, objectInfo, reason)
 	self:RemoveStackEntry(objectInfo.key)
 	self:ClearTimersForKey(objectInfo.key)
 	for _, ownedHandle in ipairs(ownedHandles) do
@@ -2927,22 +3314,22 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
 		return removed
 	end
 
-function FairyGuiManager:CloseView(viewOrKeyOrHandle, forceDestroy)
+function FairyGuiManager:CloseView(viewOrKeyOrHandle, forceDestroy, reason)
 	if type(viewOrKeyOrHandle) == "table" then
-		return self:CloseUI(viewOrKeyOrHandle.handle, forceDestroy)
+		return self:CloseUI(viewOrKeyOrHandle.handle, forceDestroy, reason)
 	end
-	return self:CloseUI(viewOrKeyOrHandle, forceDestroy)
+	return self:CloseUI(viewOrKeyOrHandle, forceDestroy, reason)
 end
 
-function FairyGuiManager:Close(nameOrKeyOrHandle, forceDestroy)
+function FairyGuiManager:Close(nameOrKeyOrHandle, forceDestroy, reason)
 	if type(nameOrKeyOrHandle) == "number" then
-		return self:CloseUI(nameOrKeyOrHandle, forceDestroy)
+		return self:CloseUI(nameOrKeyOrHandle, forceDestroy, reason)
 	end
-	return self:CloseUI(self:GetRegisteredUIKey(nameOrKeyOrHandle), forceDestroy)
+	return self:CloseUI(self:GetRegisteredUIKey(nameOrKeyOrHandle), forceDestroy, reason)
 end
 
-function FairyGuiManager:Destroy(nameOrKeyOrHandle)
-	return self:Close(nameOrKeyOrHandle, true)
+function FairyGuiManager:Destroy(nameOrKeyOrHandle, reason)
+	return self:Close(nameOrKeyOrHandle, true, reason or "destroy")
 end
 
 function FairyGuiManager:Get(nameOrKeyOrHandle)
@@ -3260,6 +3647,25 @@ function FairyGuiManager:DumpBindings()
 	end
 end
 
+function FairyGuiManager:GetEventStats()
+	return {
+		total = self.eventDispatchTotal or 0,
+		events = self.eventStats or {},
+		lastEvent = self.lastEvent,
+	}
+end
+
+function FairyGuiManager:DumpEventStats()
+	local stats = self:GetEventStats()
+	print("[FGUI] DumpEventStats total=", stats.total)
+	for eventType, count in pairs(stats.events) do
+		print("[FGUI] EventStat", eventType, count)
+	end
+	if stats.lastEvent ~= nil then
+		print("[FGUI] LastEvent", stats.lastEvent.eventType, "root=", stats.lastEvent.rootHandle, "sender=", stats.lastEvent.senderHandle, "item=", stats.lastEvent.itemHandle, "itemIndex=", stats.lastEvent.itemIndex, "x=", stats.lastEvent.x, "y=", stats.lastEvent.y, "button=", stats.lastEvent.button, "wheel=", stats.lastEvent.wheelDelta)
+	end
+end
+
 function FairyGuiManager:DumpStacks()
 	print("[FGUI] DumpStacks ui count=", #self.uiStack)
 	for index, entry in ipairs(self.uiStack) do
@@ -3281,9 +3687,11 @@ function FairyGuiManager:Dump()
 	self:DumpResourceRefs()
 	self:DumpResourceWarnings()
 	self:DumpBindings()
+	self:DumpEventStats()
 	self:DumpStacks()
 	self:DumpLayerRoots()
 	self:DumpScenes()
+	self:DumpServices()
 	self:DumpRenderStats()
 end
 

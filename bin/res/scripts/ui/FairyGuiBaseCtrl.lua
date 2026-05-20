@@ -50,9 +50,9 @@ end
 function FairyGuiBaseCtrl:Dispose()
 end
 
-function FairyGuiBaseCtrl:Close(forceDestroy)
+function FairyGuiBaseCtrl:Close(forceDestroy, reason)
 	if self.autoGen ~= nil and self.autoGen.Close ~= nil then
-		return self.autoGen:Close(forceDestroy)
+		return self.autoGen:Close(forceDestroy, reason)
 	end
 	return false
 end

@@ -89,6 +89,29 @@ local function tryRunFairyGuiLifecycleSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiCacheSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_CACHE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(11, function()
+		print("[FGUI] cache self test result:", FGUI_RunCacheSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiCommonServiceSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_COMMON_SERVICE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(12, function()
+		print("[FGUI] common service self test result:", FGUI_RunCommonServiceSelfTest())
+		FairyGuiManager:DumpServices()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiCleanupSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_CLEANUP_SELF_TEST") then
 		return
@@ -266,6 +289,8 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiKeySelfTest()
 		tryRunFairyGuiTextInputSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
+		tryRunFairyGuiCacheSelfTest()
+		tryRunFairyGuiCommonServiceSelfTest()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
 		tryRunFairyGuiLayerCloseSelfTest()
@@ -383,6 +408,99 @@ function FGUI_Dump()
 	return FairyGuiManager:Dump()
 end
 
+function FGUI_ShowToast(text, duration)
+	return FairyGuiManager:ShowToast(text, duration)
+end
+
+function FGUI_ShowLoading(text)
+	return FairyGuiManager:ShowLoading(text)
+end
+
+function FGUI_HideLoading()
+	return FairyGuiManager:HideLoading()
+end
+
+function FGUI_ShowMessageBox(title, message)
+	return FairyGuiManager:ShowMessageBox(title, message, { "OK", "Cancel" }, function(index, label)
+		print("[FGUI] message box select:", index, label)
+	end)
+end
+
+function FGUI_ShowDialog(title, message)
+	return FGUI_ShowMessageBox(title, message)
+end
+
+function FGUI_ShowTip(text, x, y, duration)
+	return FairyGuiManager:ShowTip(text, x, y, duration)
+end
+
+function FGUI_ShowGuideMask(text)
+	return FairyGuiManager:ShowGuideMask({
+		text = text or "GuideMask",
+		closeOnMaskClick = true,
+	})
+end
+
+function FGUI_HideGuideMask()
+	return FairyGuiManager:HideGuideMask()
+end
+
+function FGUI_ShowPopupMenu()
+	return FairyGuiManager:ShowPopupMenu({ "Inspect", "Close", "Cancel" }, 80, 120, function(index, item)
+		print("[FGUI] popup menu select:", index, item)
+	end)
+end
+
+function FGUI_RunCommonServiceSelfTest()
+	FairyGuiManager:Close("__Toast", true, "serviceSelfTestReset")
+	FairyGuiManager:Close("__Tip", true, "serviceSelfTestReset")
+	FairyGuiManager:Close("__Loading", true, "serviceSelfTestReset")
+	FairyGuiManager:Close("__GuideMask", true, "serviceSelfTestReset")
+	FairyGuiManager:Close("__MessageBox", true, "serviceSelfTestReset")
+	FairyGuiManager:Close("__PopupMenu", true, "serviceSelfTestReset")
+
+	local toastHandle = FairyGuiManager:ShowToast("Toast service", 0)
+	local tipHandle = FairyGuiManager:ShowTip("Tip service", 40, 80, 0)
+	local loadingHandle = FairyGuiManager:ShowLoading("Loading service")
+	local guideHandle = FairyGuiManager:ShowGuideMask({ text = "Guide service" })
+	local messageHandle = FairyGuiManager:ShowMessageBox("Message", "Common service probe", { "OK", "Cancel" })
+	local popupHandle = FairyGuiManager:ShowPopupMenu({ "One", "Two" }, 100, 120)
+	local serviceStats = FairyGuiManager:GetServiceStats()
+	local opened = toastHandle ~= nil
+		and tipHandle ~= nil
+		and loadingHandle ~= nil
+		and guideHandle ~= nil
+		and messageHandle ~= nil
+		and popupHandle ~= nil
+		and serviceStats.Toast ~= nil
+		and serviceStats.Tip ~= nil
+		and serviceStats.Loading ~= nil
+		and serviceStats.GuideMask ~= nil
+		and serviceStats.MessageBox ~= nil
+		and serviceStats.PopupMenu ~= nil
+
+	FairyGuiManager:Close("__Toast", true, "serviceSelfTestCleanup")
+	FairyGuiManager:Close("__Tip", true, "serviceSelfTestCleanup")
+	FairyGuiManager:Close("__Loading", true, "serviceSelfTestCleanup")
+	FairyGuiManager:Close("__GuideMask", true, "serviceSelfTestCleanup")
+	FairyGuiManager:Close("__MessageBox", true, "serviceSelfTestCleanup")
+	FairyGuiManager:Close("__PopupMenu", true, "serviceSelfTestCleanup")
+	local cleanupStats = FairyGuiManager:GetServiceStats()
+	local cleaned = next(cleanupStats) == nil
+
+	print(
+		"[FGUI] common service self test detail:",
+		"toast=", toastHandle,
+		"tip=", tipHandle,
+		"loading=", loadingHandle,
+		"guide=", guideHandle,
+		"message=", messageHandle,
+		"popup=", popupHandle,
+		"opened=", opened,
+		"cleaned=", cleaned)
+	return opened == true and cleaned == true
+end
+
 function FGUI_RunSelfTestSuite()
 	if threadpool == nil or threadpool.delay == nil then
 		print("[FGUI] self test suite failed: threadpool unavailable")
@@ -461,6 +579,12 @@ function FGUI_RunSelfTestSuite()
 		local closed = FairyGuiManager:Close("TextInputProbe", true)
 		local clean = FairyGuiManager:ValidateClosedObject(snapshot, nil, "SelfTestSuite", true)
 		return closed == true and clean == true
+	end)
+	schedule(0.6, "CacheHideReopen", function()
+		return FGUI_RunCacheSelfTest()
+	end)
+	schedule(0.6, "CommonServices", function()
+		return FGUI_RunCommonServiceSelfTest()
 	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
@@ -672,6 +796,49 @@ function FGUI_DumpLayerSample()
 	FairyGuiManager:DumpOpenUIs()
 	FairyGuiManager:DumpStacks()
 	return true
+end
+
+function FGUI_RunCacheSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "cacheSelfTestReset")
+	local ctrl = FGUI_ReopenAct37Sample()
+	local handle = ctrl and ctrl:GetHandle() or nil
+	if handle == nil then
+		return false
+	end
+
+	local timerId = FairyGuiManager:Delay("Act37TestMvc", 30, function()
+		print("[FGUI] cache self test stale timer fired")
+	end)
+	local hidden = FairyGuiManager:Close("Act37TestMvc", false, "cacheSelfTestHide")
+	local hiddenStats = FairyGuiManager:GetDebugStats()
+	local reopenedCtrl = FGUI_ReopenAct37Sample()
+	local reopenedHandle = reopenedCtrl and reopenedCtrl:GetHandle() or nil
+	local reopenedStats = FairyGuiManager:GetDebugStats()
+	local destroyed = FairyGuiManager:Close("Act37TestMvc", true, "cacheSelfTestDestroy")
+	local finalStats = FairyGuiManager:GetDebugStats()
+
+	print(
+		"[FGUI] cache self test detail:",
+		"handle=", handle,
+		"timer=", timerId,
+		"hidden=", hidden,
+		"hiddenUI=", hiddenStats.hiddenUI,
+		"timerAfterHide=", hiddenStats.timer,
+		"reopenedHandle=", reopenedHandle,
+		"openAfterReopen=", reopenedStats.openUI,
+		"hiddenAfterReopen=", reopenedStats.hiddenUI,
+		"destroyed=", destroyed,
+		"finalOpen=", finalStats.openUI,
+		"finalTimer=", finalStats.timer)
+
+	return hidden == true
+		and hiddenStats.hiddenUI == 1
+		and hiddenStats.timer == 0
+		and reopenedHandle == handle
+		and reopenedStats.hiddenUI == 0
+		and destroyed == true
+		and finalStats.openUI == 0
+		and finalStats.timer == 0
 end
 
 function FGUI_RunLayerCloseSelfTest()
