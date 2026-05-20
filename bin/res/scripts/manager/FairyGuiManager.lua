@@ -489,21 +489,41 @@ end
 function FairyGuiManager:GetRenderStats()
 	local commandCount = 0
 	local triangleCount = 0
+	local materialCount = 0
+	local textureCount = 0
+	local runtimeObjectHandle = 0
+	local runtimeBinding = 0
 	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
 		commandCount = GameManager:getFairyGuiLastRenderCommandCount()
 	end
 	if GameManager ~= nil and GameManager.getFairyGuiLastTriangleCount ~= nil then
 		triangleCount = GameManager:getFairyGuiLastTriangleCount()
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiMaterialCount ~= nil then
+		materialCount = GameManager:getFairyGuiMaterialCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiTextureCount ~= nil then
+		textureCount = GameManager:getFairyGuiTextureCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiRuntimeObjectHandleCount ~= nil then
+		runtimeObjectHandle = GameManager:getFairyGuiRuntimeObjectHandleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiRuntimeListenerBindingCount ~= nil then
+		runtimeBinding = GameManager:getFairyGuiRuntimeListenerBindingCount()
+	end
 	return {
 		commandCount = commandCount or 0,
 		triangleCount = triangleCount or 0,
+		materialCount = materialCount or 0,
+		textureCount = textureCount or 0,
+		runtimeObjectHandle = runtimeObjectHandle or 0,
+		runtimeBinding = runtimeBinding or 0,
 	}
 end
 
 function FairyGuiManager:DumpRenderStats()
 	local stats = self:GetRenderStats()
-	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
 end
 
 function FairyGuiManager:GetDebugStats()
@@ -538,6 +558,47 @@ end
 function FairyGuiManager:DumpDebugStats()
 	local stats = self:GetDebugStats()
 	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
+end
+
+function FairyGuiManager:GetHealthStats()
+	local debugStats = self:GetDebugStats()
+	local renderStats = self:GetRenderStats()
+	local threadTimerCount = 0
+	if threadpool ~= nil and threadpool.get_timer_count ~= nil then
+		threadTimerCount = threadpool:get_timer_count()
+	end
+
+	return {
+		openUI = debugStats.openUI,
+		hiddenUI = debugStats.hiddenUI,
+		package = debugStats.package,
+		layerRoot = debugStats.layerRoot,
+		binding = debugStats.binding,
+		timer = debugStats.timer,
+		threadTimer = threadTimerCount,
+		objectHandle = debugStats.objectHandle,
+		childCache = debugStats.childCache,
+		view = debugStats.view,
+		controller = debugStats.controller,
+		focusedHandle = self:GetFocusedHandle(),
+		commandCount = renderStats.commandCount,
+		triangleCount = renderStats.triangleCount,
+		materialCount = renderStats.materialCount,
+		textureCount = renderStats.textureCount,
+		runtimeObjectHandle = renderStats.runtimeObjectHandle,
+		runtimeBinding = renderStats.runtimeBinding,
+	}
+end
+
+function FairyGuiManager:DumpHealth(verbose)
+	local stats = self:GetHealthStats()
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+	if verbose == true then
+		self:DumpPackages()
+		self:DumpStacks()
+		self:DumpLayerRoots()
+	end
+	return stats
 end
 
 function FairyGuiManager:SetStrictLifecycle(enabled)
@@ -3041,6 +3102,7 @@ function FairyGuiManager:DumpStacks()
 end
 
 function FairyGuiManager:Dump()
+	self:DumpHealth()
 	self:DumpDebugStats()
 	self:DumpOpenUIs()
 	self:DumpPackages()

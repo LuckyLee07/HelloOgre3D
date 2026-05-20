@@ -95,6 +95,10 @@ public:
 	fairygui::GRoot* GetRoot() const { return m_pRoot; }
 	int GetLastRenderCommandCount() const { return m_lastRenderCommandCount; }
 	int GetLastTriangleCount() const { return m_lastTriangleCount; }
+	int GetObjectHandleCount() const { return static_cast<int>(m_objectHandles.size()); }
+	int GetListenerBindingCount() const { return static_cast<int>(m_listenerBindings.size()); }
+	int GetMaterialCount() const { return static_cast<int>(m_materialNames.size()); }
+	int GetTextureCount() const { return static_cast<int>(m_textureNames.size()); }
 
 private:
 	struct ListenerBinding

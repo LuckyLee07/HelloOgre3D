@@ -213,6 +213,46 @@ int GameManager::getFairyGuiLastTriangleCount()
 #endif
 }
 
+int GameManager::getFairyGuiRuntimeObjectHandleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiRuntimeListenerBindingCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetListenerBindingCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiMaterialCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetMaterialCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiTextureCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetTextureCount() : 0;
+#else
+	return 0;
+#endif
+}
+
 int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
 {
 #if defined(HELLO_ENABLE_FGUI)

@@ -18,7 +18,7 @@
 - [ ] UI 重复打开、隐藏缓存、强制销毁、场景切换清理都有明确规则和日志可查。
 - [ ] Click、Changed、ClickItem、RightClick、Drag、Touch、Wheel、Key、TextInput 事件能稳定桥接到 Lua，并在 UI 关闭后自动解绑。
 - [ ] fullscreen/adapt/margin/safe area 在窗口尺寸变化后统一重算，页面只关注自身布局策略。
-- [ ] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump。
+- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth` 已具备，资源引用细节仍需继续补。
 - [ ] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
 - [ ] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测。
 
@@ -46,13 +46,13 @@
 - [x] LayerProbe 真实 layer 打开和关闭自测。
 - [x] MaskProbe 真实 mask 可视化样例。
 - [x] MaskProbe 打开后关闭清理自测。
-- [x] Lua Dump 增加渲染命令数和三角形数。
+- [x] Lua Dump 增加渲染命令数、三角形数、材质数、纹理数和 runtime handle/binding 数。
 - [x] Dump 增加打开 UI 数、隐藏 UI 数、layer root 数、binding 数的汇总行。
 - [x] Dump 增加对象 handle 数和 child handle 缓存数。
 - [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
-- [ ] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口。
+- [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
 - [ ] Tracy 增加 UI Open/Close/Event/Render zones 和计数器。
-- [ ] 增加一键 FGUI 自测脚本，集中跑 Act37、Act38、Layer、Mask、Input、Cleanup。
+- [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
 
 ## Phase 1: 生命周期标准化
 
@@ -190,7 +190,7 @@
 
 - [x] MaskProbe 打开后自动关闭，并 dump UI stack/package/render stats。
 - [x] Lua 增加 `GetRenderStats/DumpRenderStats`。
-- [x] C++ 将 `FairyGuiSystem::GetLastRenderCommandCount/GetLastTriangleCount` 暴露给 Lua。
+- [x] C++ 将 `FairyGuiSystem::GetLastRenderCommandCount/GetLastTriangleCount` 和基础 material/texture/handle/binding 计数暴露给 Lua。
 - [x] MaskProbe 样例资源从 runtime 硬编码迁出，改由 Lua sample 明确传入。
 - [x] VS2017 Release|x64 编译通过。
 - [x] 运行 `HELLO_FGUI_MASK_SELF_TEST=1`，确认打开和关闭日志正常。

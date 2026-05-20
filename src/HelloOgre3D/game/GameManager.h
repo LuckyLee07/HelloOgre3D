@@ -48,6 +48,10 @@ public:
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int getFairyGuiLastRenderCommandCount();
 	int getFairyGuiLastTriangleCount();
+	int getFairyGuiRuntimeObjectHandleCount();
+	int getFairyGuiRuntimeListenerBindingCount();
+	int getFairyGuiMaterialCount();
+	int getFairyGuiTextureCount();
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
 	int getFairyGuiListItemCount(int objectHandle);

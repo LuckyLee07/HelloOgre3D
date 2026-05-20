@@ -212,6 +212,16 @@ local function tryRunFairyGuiMaskSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiSelfTestSuite()
+	if not isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") then
+		return
+	end
+
+	threadpool:delay(4, function()
+		FGUI_RunSelfTestSuite()
+	end)
+end
+
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
@@ -248,6 +258,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiAct38SelfTest()
 		tryRunFairyGuiWheelSelfTest()
 		tryRunFairyGuiMaskSelfTest()
+		tryRunFairyGuiSelfTestSuite()
 	end)
 end
 
@@ -341,8 +352,112 @@ function FGUI_DumpAct38Sample()
 	return true
 end
 
+function FGUI_DumpHealth(verbose)
+	return FairyGuiManager:DumpHealth(verbose == true)
+end
+
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
+end
+
+function FGUI_RunSelfTestSuite()
+	if threadpool == nil or threadpool.delay == nil then
+		print("[FGUI] self test suite failed: threadpool unavailable")
+		return false
+	end
+
+	local results = {}
+	local delay = 0
+	local function record(name, ok, detail)
+		results[#results + 1] = {
+			name = name,
+			ok = ok == true,
+			detail = detail,
+		}
+		print("[FGUI] self test case:", name, ok == true and "PASS" or "FAIL", detail or "")
+	end
+	local function schedule(stepDelay, name, func)
+		delay = delay + stepDelay
+		threadpool:delay(delay, function()
+			local ok, result, detail = pcall(func)
+			if not ok then
+				record(name, false, result)
+			else
+				record(name, result == true, detail)
+			end
+		end)
+	end
+
+	print("[FGUI] self test suite begin")
+	schedule(0.2, "Act37Open", function()
+		local ctrl = FGUI_ReopenAct37Sample()
+		return ctrl ~= nil, ctrl and ctrl:GetHandle() or nil
+	end)
+	schedule(0.6, "Act38ListApi", function()
+		local ctrl = FGUI_OpenAct38Sample()
+		local ok = ctrl ~= nil and ctrl.RunListApiSelfTest ~= nil and ctrl:RunListApiSelfTest() or false
+		return ok, ctrl and ctrl:GetHandle() or nil
+	end)
+	schedule(0.6, "MouseWheel", function()
+		local scrollDown = FairyGuiManager:DebugInjectMouseWheel(745, 485, -120)
+		local scrollUp = FairyGuiManager:DebugInjectMouseWheel(745, 485, 120)
+		return scrollDown and scrollUp, tostring(scrollDown) .. "," .. tostring(scrollUp)
+	end)
+	schedule(0.6, "TextInput", function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local keyA = FairyGuiManager:DebugInjectKeyPressed(30, 65)
+		local keyB = FairyGuiManager:DebugInjectKeyPressed(48, 66)
+		local backspace = FairyGuiManager:DebugInjectKeyPressed(14, 0)
+		local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
+		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		FairyGuiManager:Close("TextInputProbe", true)
+		return handle ~= nil and focused and keyA and keyB and backspace and submit and text == "A", text
+	end)
+	schedule(0.6, "LayerClose", function()
+		return FGUI_RunLayerCloseSelfTest()
+	end)
+	schedule(0.6, "MaskProbe", function()
+		local handle = FGUI_OpenMaskProbe()
+		local closed = FGUI_CloseMaskProbe()
+		return handle ~= nil and closed == true, handle
+	end)
+	schedule(0.6, "LifecycleResidue", function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		if handle == nil or inputHandle == nil then
+			return false
+		end
+		FairyGuiManager:AddChanged(inputHandle, "", function()
+			print("[FGUI] self test direct child changed")
+		end)
+		FairyGuiManager:Focus(inputHandle)
+		FairyGuiManager:Delay("TextInputProbe", 30, function()
+			print("[FGUI] self test stale timer fired")
+		end)
+		local snapshot = FairyGuiManager:CaptureCloseSnapshot("TextInputProbe")
+		local closed = FairyGuiManager:Close("TextInputProbe", true)
+		local clean = FairyGuiManager:ValidateClosedObject(snapshot, nil, "SelfTestSuite", true)
+		return closed == true and clean == true
+	end)
+	schedule(0.6, "Cleanup", function()
+		FairyGuiManager:Close("Act37TestMvc", true)
+		FairyGuiManager:Close("Act38Test", true)
+		FairyGuiManager:CloseGroup("LayerProbe", true)
+		FairyGuiManager:Close("MaskProbe", true)
+		FairyGuiManager:Close("TextInputProbe", true)
+		local stats = FairyGuiManager:DumpHealth(true)
+		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0, "openUI=" .. tostring(stats.openUI)
+	end)
+	threadpool:delay(delay + 0.6, function()
+		local passCount = 0
+		for _, result in ipairs(results) do
+			if result.ok then
+				passCount = passCount + 1
+			end
+		end
+		print("[FGUI] self test suite end:", passCount, "/", #results)
+	end)
+	return true
 end
 
 function FGUI_OpenLayerSample()
