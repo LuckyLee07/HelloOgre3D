@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="185,68" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <image id="n1_jx3v" name="n1" src="jx3v2r" fileName="img/img_btn_notchoose.png" xy="0,0">
+      <gearDisplay controller="button" pages="0,2"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n3_jx3v" name="n3" src="jx3v2q" fileName="img/img_btn_choose.png" xy="0,0">
+      <gearDisplay controller="button" pages="1,3"/>
+    </image>
+    <text id="n2_jx3v" name="n2" xy="42,21" size="100,34" fontSize="24" color="#eef4fe" autoSize="none" singleLine="true" text="三丽鸥">
+      <gearDisplay controller="button" pages="0,2"/>
+    </text>
+    <component id="n4_jx3v" name="n4" src="nsio3s" fileName="scroll_text.xml" xy="42,21">
+      <gearDisplay controller="button" pages="1,3"/>
+    </component>
+    <image id="n6_nsio" name="redTag" src="ib82p" fileName="common0/img_dot_tips.png" pkg="wxmku8b8" xy="2,0"/>
+  </displayList>
+  <Button mode="Radio"/>
+</component>

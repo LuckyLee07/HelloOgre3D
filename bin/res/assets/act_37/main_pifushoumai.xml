@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1560,720">
+  <displayList>
+    <image id="n38_niqu" name="img_mask" src="niqu3r" fileName="img/img_mask.png" xy="-1373,-1600" size="4000,4000"/>
+    <list id="n35_d3mz" name="tab_list" xy="279,217" size="200,300" group="n39_m6jo" overflow="scroll" lineGap="10" defaultItem="ui://m2tob9z9jx3v3j">
+      <item/>
+      <item/>
+      <item/>
+      <item/>
+    </list>
+    <loader id="n47_nsio" name="loader_img_bg_04" xy="412,145" size="850,478" group="n39_m6jo" url="ui://m2tob9z9nsio3z"/>
+    <image id="n44_nsio" name="n44" src="nsio3w" fileName="img/bg_04.png" xy="393,505" group="n39_m6jo"/>
+    <image id="n45_nsio" name="n45" src="nsio3x" fileName="img/bg_05.png" xy="1167,175" group="n39_m6jo"/>
+    <image id="n10_jx3v" name="n10" src="jx3v2t" fileName="img/img_icon_bag.png" xy="468,118" group="n39_m6jo"/>
+    <image id="n11_jx3v" name="n11" src="jx3v2v" fileName="img/img_icon_star.png" xy="389,108" group="n39_m6jo"/>
+    <list id="n36_d3mz" name="reward_list" xy="807,368" size="419,150" group="n39_m6jo" layout="row" overflow="hidden" colGap="3" defaultItem="ui://m2tob9z9d3mz3q" align="center">
+      <item/>
+      <item/>
+    </list>
+    <loader3D id="n37_d3mz" name="avatarLoader" xy="417,161" size="429,411" group="n39_m6jo" animation="" skin="" loop="true"/>
+    <component id="n19_jx3v" name="btn_get" src="jx3v3m" fileName="btn_lingqu.xml" xy="935,541" group="n39_m6jo"/>
+    <component id="n20_jx3v" name="btn_buy" src="jx3v3l" fileName="btn_number.xml" xy="527,544" group="n39_m6jo"/>
+    <component id="n21_jx3v" name="btn_rule" src="jx3v3n" fileName="btn_help02.xml" xy="1062,216" group="n39_m6jo"/>
+    <component id="n22_jx3v" name="btn_detail" src="jx3v3o" fileName="btn_list.xml" xy="456,548" group="n39_m6jo"/>
+    <component id="n32_jx3v" name="btn_close" src="jx3v3p" fileName="btn_close06.xml" xy="1267,145" group="n39_m6jo"/>
+    <text id="n13_jx3v" name="txt_title" xy="545,132" size="401,64" group="n39_m6jo" fontSize="48" color="#feffeb" strokeColor="#dba011" strokeSize="2" text="夏日皮肤 限时领取"/>
+    <text id="n23_jx3v" name="txt_rule" xy="1104,220" size="100,34" group="n39_m6jo" fontSize="24" color="#ae7b58" strokeColor="#fffeef" strokeSize="2" text="规则说明"/>
+    <text id="n24_jx3v" name="txt_desc" xy="838,269" size="364,34" group="n39_m6jo" fontSize="24" color="#ae7b58" align="center" autoSize="height" strokeColor="#fffeef" strokeSize="2" text=" "/>
+    <text id="n40_fsdb" name="txt_time" xy="810,220" pivot="1,0" size="243,34" group="n39_m6jo" fontSize="24" color="#fafdea" text="2022.10.10-2022.12.12"/>
+    <group id="n39_m6jo" name="n39" xy="279,108" size="1024,521" advanced="true">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </group>
+  </displayList>
+</component>

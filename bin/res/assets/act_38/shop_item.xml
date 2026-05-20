@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="473,92">
+  <controller name="c1" pages="3,可兑换,2,已拥有,4,兑换次数不足" selected="0"/>
+  <displayList>
+    <image id="n103_ohf6" name="bgimg" src="ij281a" fileName="_imgs/board_task.png" xy="0,0"/>
+    <image id="n104_ohf6" name="itembg1" src="ij2818" fileName="_imgs/board_prop.png" xy="22,6" group="n108_ohf6"/>
+    <loader id="n118_c5p6" name="itemicon1" xy="41,18" pivot="0.5,0.5" size="47,58" group="n108_ohf6" url="ui://6wyxp7beij281g" align="center" vAlign="middle" fill="scaleFree">
+      <relation target="n104_ohf6" sidePair="center-center"/>
+    </loader>
+    <image id="n106_ohf6" name="itemmsk1" src="ij281i" fileName="_imgs/item_msk.png" xy="30,58" group="n108_ohf6"/>
+    <richtext id="n107_ohf6" name="num1" xy="38,57" size="47,22" group="n108_ohf6" fontSize="14" color="#feffc5" align="center" vAlign="middle" ubb="true" singleLine="true" autoClearText="true" text="100/[color=#FF7246]20[/color]">
+      <relation target="n106_ohf6" sidePair="center-center"/>
+    </richtext>
+    <group id="n108_ohf6" name="item1" xy="22,6" size="77,76"/>
+    <image id="n109_ohf6" name="itembg2" src="ij283l" fileName="_imgs/board_prop_exchange.png" xy="172,7" group="n113_ohf6"/>
+    <loader id="n119_c5p6" name="itemicon2" xy="190,18" pivot="0.5,0.5" size="47,58" group="n113_ohf6" url="ui://6wyxp7beij281g" align="center" vAlign="middle" fill="scaleFree">
+      <relation target="n109_ohf6" sidePair="center-center"/>
+    </loader>
+    <image id="n111_ohf6" name="itemmsk2" src="ij281i" fileName="_imgs/item_msk.png" xy="180,59" group="n113_ohf6"/>
+    <text id="n112_ohf6" name="num2" xy="196,58" size="32,22" group="n113_ohf6" fontSize="14" color="#feffc5" align="center" vAlign="middle" singleLine="true" autoClearText="true" text="x100">
+      <relation target="n111_ohf6" sidePair="center-center"/>
+    </text>
+    <graph id="n120_c5p6" name="itembtn" xy="172,6" size="77,77" group="n113_ohf6" alpha="0" type="eclipse" lineSize="0"/>
+    <group id="n113_ohf6" name="item2" xy="172,6" size="77,77"/>
+    <image id="n114_ohf6" name="n114" src="ij283m" fileName="_imgs/icon_arrowhead.png" xy="104,29"/>
+    <richtext id="n115_ohf6" name="desc" xy="290,8" pivot="1,0.5" size="155,29" fontSize="20" color="#545a61" align="right" vAlign="middle" ubb="true" singleLine="true" text="兑换次数[color=#438184]（3/3）[/color]"/>
+    <component id="n116_ohf6" name="btn_exchange" src="ij283d" fileName="btn_task2.xml" xy="354,41">
+      <gearDisplay controller="c1" pages="3"/>
+      <Button title="兑换"/>
+    </component>
+    <component id="n121_ytbz" name="btn_alrowned" src="ij283f" fileName="btn_task3.xml" xy="354,41">
+      <gearDisplay controller="c1" pages="2"/>
+      <Button title="已拥有" titleFontSize="21"/>
+    </component>
+    <component id="n117_ohf6" name="btn_alrfinish" src="ij283f" fileName="btn_task3.xml" xy="354,41">
+      <gearDisplay controller="c1" pages="4"/>
+      <Button title="已兑完" titleFontSize="21"/>
+    </component>
+  </displayList>
+</component>

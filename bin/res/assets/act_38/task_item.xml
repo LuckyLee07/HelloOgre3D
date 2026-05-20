@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="473,92">
+  <controller name="c1" pages="1,前往,2,领取,3,已领取" selected="0"/>
+  <displayList>
+    <image id="n85_ohf6" name="n85" src="ij281a" fileName="_imgs/board_task.png" xy="0,0"/>
+    <image id="n86_ohf6" name="n86" src="ij2818" fileName="_imgs/board_prop.png" xy="22,6"/>
+    <loader id="n94_c5p6" name="icon" xy="41,18" pivot="0.5,0.5" size="47,58" url="ui://6wyxp7beij281g" align="center" vAlign="middle" fill="scaleFree">
+      <relation target="n86_ohf6" sidePair="center-center"/>
+    </loader>
+    <image id="n88_ohf6" name="n88" src="ij281i" fileName="_imgs/item_msk.png" xy="31,58"/>
+    <text id="n89_ohf6" name="num" xy="45,58" size="32,22" fontSize="14" color="#feffc5" align="center" vAlign="middle" autoClearText="true" text="x100">
+      <relation target="n88_ohf6" sidePair="center-center"/>
+    </text>
+    <richtext id="n90_ohf6" name="desc" xy="138,8" size="306,29" fontSize="20" color="#545a61" align="right" ubb="true" autoSize="none" singleLine="true" text="进入xxx地图次数[color=#438184]（3/3）[/color]"/>
+    <component id="n91_ohf6" name="btn_go" src="ij283b" fileName="btn_task1.xml" xy="356,41">
+      <gearDisplay controller="c1" pages="1"/>
+      <Button title="前往$200109"/>
+    </component>
+    <component id="n92_ohf6" name="btn_get" src="ij283d" fileName="btn_task2.xml" xy="356,41">
+      <gearDisplay controller="c1" pages="2"/>
+      <Button title="领取$492"/>
+    </component>
+    <component id="n93_ohf6" name="btn_alrget" src="ij283f" fileName="btn_task3.xml" xy="356,41">
+      <gearDisplay controller="c1" pages="3"/>
+      <Button title="已领取$200230"/>
+    </component>
+  </displayList>
+</component>

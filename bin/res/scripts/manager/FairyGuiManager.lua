@@ -170,6 +170,11 @@ function LIST_ITEM_METHODS:SetSize(childPath, width, height)
 	return manager ~= nil and manager:SetChildSize(self.handle, childPath, width, height) or false
 end
 
+function LIST_ITEM_METHODS:SetControllerIndex(controllerName, selectedIndex)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetControllerIndex(self.handle, controllerName, selectedIndex) or false
+end
+
 local function getEventType(eventType)
 	if type(eventType) == "number" then
 		return eventType
@@ -240,6 +245,7 @@ function FairyGuiManager:Init()
 	self.childrenByHandle = {}
 	self.listItemHandlesByHandle = {}
 	self.listDataByHandle = {}
+	self.listRenderersByHandle = {}
 	self.views = {}
 	self.viewsByHandle = {}
 	self.controllers = {}
@@ -248,6 +254,7 @@ function FairyGuiManager:Init()
 	self.layers = copyTable(DEFAULT_LAYER_ORDER)
 		self.layerNextOrder = {}
 		self.layerObjects = {}
+		self.layerRoots = {}
 		for layerName, _ in pairs(self.layers) do
 			self.layerNextOrder[layerName] = 0
 			self.layerObjects[layerName] = {}
@@ -523,6 +530,72 @@ function FairyGuiManager:GetLayerBaseOrder(layerName)
 		self.layerObjects[layerName] = {}
 	end
 	return self.layers[layerName]
+end
+
+function FairyGuiManager:GetLayerRoot(layerName)
+	layerName = layerName or "Normal"
+	return self.layerRoots ~= nil and self.layerRoots[layerName] or nil
+end
+
+function FairyGuiManager:EnsureLayerRoot(layerName)
+	layerName = layerName or "Normal"
+	if self.layerRoots == nil then
+		self.layerRoots = {}
+	end
+
+	local rootHandle = self.layerRoots[layerName]
+	if rootHandle ~= nil then
+		return rootHandle
+	end
+	if GameManager == nil or GameManager.createFairyGuiContainer == nil then
+		return nil
+	end
+
+	rootHandle = GameManager:createFairyGuiContainer("Layer_" .. layerName)
+	if rootHandle == nil or rootHandle <= 0 then
+		return nil
+	end
+	if GameManager.addFairyGuiObjectToRoot == nil or not GameManager:addFairyGuiObjectToRoot(rootHandle) then
+		if GameManager.removeFairyGuiObject ~= nil then
+			GameManager:removeFairyGuiObject(rootHandle)
+		end
+		return nil
+	end
+
+	self.layerRoots[layerName] = rootHandle
+	self:SetPosition(rootHandle, 0, 0)
+	self:SetSize(rootHandle, self:GetScreenWidth(), self:GetScreenHeight())
+	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
+		GameManager:setFairyGuiObjectSortingOrder(rootHandle, self:GetLayerBaseOrder(layerName))
+	end
+	return rootHandle
+end
+
+function FairyGuiManager:AttachToLayer(handle, layerName)
+	local rootHandle = self:EnsureLayerRoot(layerName)
+	if rootHandle ~= nil and GameManager.addFairyGuiObjectToParent ~= nil then
+		return GameManager:addFairyGuiObjectToParent(handle, rootHandle)
+	end
+	if GameManager ~= nil and GameManager.addFairyGuiObjectToRoot ~= nil then
+		return GameManager:addFairyGuiObjectToRoot(handle)
+	end
+	return false
+end
+
+function FairyGuiManager:ResizeLayerRoots()
+	if self.layerRoots == nil then
+		return
+	end
+
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	for layerName, handle in pairs(self.layerRoots) do
+		self:SetPosition(handle, 0, 0)
+		self:SetSize(handle, screenWidth, screenHeight)
+		if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
+			GameManager:setFairyGuiObjectSortingOrder(handle, self:GetLayerBaseOrder(layerName))
+		end
+	end
 end
 
 function FairyGuiManager:NextLayerSortingOrder(layerName)
@@ -875,8 +948,9 @@ function FairyGuiManager:CreateModalMask(objectInfo, param)
 		return nil
 	end
 
-	if GameManager.addFairyGuiObjectToRoot ~= nil then
-		GameManager:addFairyGuiObjectToRoot(maskHandle)
+	if not self:AttachToLayer(maskHandle, objectInfo.layer) then
+		GameManager:removeFairyGuiObject(maskHandle)
+		return nil
 	end
 	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
 		GameManager:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
@@ -937,6 +1011,7 @@ function FairyGuiManager:ApplyScreenAdapt(objectInfo)
 end
 
 function FairyGuiManager:HandleWindowResized(width, height)
+	self:ResizeLayerRoots()
 	for _, objectInfo in pairs(self.objects) do
 		self:ApplyScreenAdapt(objectInfo)
 		if objectInfo.view ~= nil then
@@ -1000,7 +1075,7 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		return nil
 	end
 
-	if not GameManager:addFairyGuiObjectToRoot(handle) then
+	if not self:AttachToLayer(handle, param.layer or "Normal") then
 		GameManager:removeFairyGuiObject(handle)
 		return nil
 	end
@@ -1356,6 +1431,7 @@ function FairyGuiManager:ClearListCacheByListHandle(listHandle)
 	end
 	self.listItemHandlesByHandle[listHandle] = nil
 	self.listDataByHandle[listHandle] = nil
+	self.listRenderersByHandle[listHandle] = nil
 end
 
 function FairyGuiManager:ClearListCacheForHandle(handle)
@@ -1404,6 +1480,23 @@ function FairyGuiManager:GetListItemByHandle(listHandle, index, data)
 		itemHandles[index] = itemHandle
 	end
 	return self:CreateListItemAdapter(listHandle, itemHandle, index, data)
+end
+
+function FairyGuiManager:RenderListItemByHandle(listHandle, index)
+	local dataList = self.listDataByHandle[listHandle]
+	local data = dataList ~= nil and dataList[index] or nil
+	local item = self:GetListItemByHandle(listHandle, index, data)
+	if item == nil then
+		return false
+	end
+
+	local renderer = self.listRenderersByHandle[listHandle]
+	if type(renderer) == "function" then
+		renderer(item, data, index)
+	else
+		item:SetText("", tostring(data or ""))
+	end
+	return true
 end
 
 function FairyGuiManager:GetListHandle(handle, childPath)
@@ -1458,15 +1551,109 @@ function FairyGuiManager:SetListData(handle, childPath, dataList, renderer)
 	end
 
 	self.listDataByHandle[listHandle] = dataList
-	for index, data in ipairs(dataList) do
-		local item = self:GetListItemByHandle(listHandle, index, data)
-		if item ~= nil and type(renderer) == "function" then
-			renderer(item, data, index)
-		elseif item ~= nil then
-			item:SetText("", tostring(data))
-		end
+	if type(renderer) == "function" then
+		self.listRenderersByHandle[listHandle] = renderer
+	else
+		self.listRenderersByHandle[listHandle] = nil
+	end
+	for index, _ in ipairs(dataList) do
+		self:RenderListItemByHandle(listHandle, index)
 	end
 	return true
+end
+
+function FairyGuiManager:GetListData(handle, childPath, index)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return nil
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	if index == nil then
+		return dataList
+	end
+	return dataList ~= nil and dataList[index] or nil
+end
+
+function FairyGuiManager:RefreshListItem(handle, childPath, index)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or index == nil then
+		return false
+	end
+	return self:RenderListItemByHandle(listHandle, index)
+end
+
+function FairyGuiManager:RefreshList(handle, childPath)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	local itemCount = dataList ~= nil and #dataList or self:GetListItemCount(handle, childPath)
+	for index = 1, itemCount do
+		self:RenderListItemByHandle(listHandle, index)
+	end
+	return true
+end
+
+function FairyGuiManager:UpdateListItem(handle, childPath, index, data)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or index == nil or index < 1 then
+		return false
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	if dataList == nil then
+		return false
+	end
+	dataList[index] = data
+	return self:RenderListItemByHandle(listHandle, index)
+end
+
+function FairyGuiManager:AppendListItem(handle, childPath, data)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	if dataList == nil then
+		dataList = {}
+		self.listDataByHandle[listHandle] = dataList
+	end
+	table.insert(dataList, data)
+	if not self:SetListItemCount(handle, childPath, #dataList) then
+		return false
+	end
+	return self:RenderListItemByHandle(listHandle, #dataList)
+end
+
+function FairyGuiManager:RemoveListItem(handle, childPath, index)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or index == nil or index < 1 then
+		return false
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	if dataList == nil or index > #dataList then
+		return false
+	end
+	table.remove(dataList, index)
+	if not self:SetListItemCount(handle, childPath, #dataList) then
+		return false
+	end
+	return self:RefreshList(handle, childPath)
+end
+
+function FairyGuiManager:ClearList(handle, childPath)
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	local renderer = self.listRenderersByHandle[listHandle]
+	return self:SetListData(handle, childPath, {}, renderer)
 end
 
 function FairyGuiManager:SetListSelectedIndex(handle, childPath, selectedIndex)
@@ -1953,9 +2140,19 @@ end
 function FairyGuiManager:DumpOpenUIs()
 	print("[FGUI] DumpOpenUIs begin")
 	for key, objectInfo in pairs(self.objects) do
-		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "group=", objectInfo.uiGroup, "popupGroup=", objectInfo.popupGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
+		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "layerRoot=", self:GetLayerRoot(objectInfo.layer), "group=", objectInfo.uiGroup, "popupGroup=", objectInfo.popupGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
 	end
 	print("[FGUI] DumpOpenUIs end")
+end
+
+function FairyGuiManager:DumpLayerRoots()
+	print("[FGUI] DumpLayerRoots begin")
+	if self.layerRoots ~= nil then
+		for layerName, handle in pairs(self.layerRoots) do
+			print("[FGUI] LayerRoot", layerName, "handle=", handle, "baseOrder=", self:GetLayerBaseOrder(layerName))
+		end
+	end
+	print("[FGUI] DumpLayerRoots end")
 end
 
 function FairyGuiManager:DumpScenes()
@@ -2019,6 +2216,7 @@ function FairyGuiManager:Dump()
 	self:DumpPackages()
 	self:DumpBindings()
 	self:DumpStacks()
+	self:DumpLayerRoots()
 	self:DumpScenes()
 end
 

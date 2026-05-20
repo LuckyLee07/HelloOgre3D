@@ -412,6 +412,29 @@ int FairyGuiSystem::CreateObjectHandle(const std::string& packageName, const std
 	return objectHandle;
 }
 
+int FairyGuiSystem::CreateContainerHandle(const std::string& name)
+{
+	if (!m_initialized)
+		return 0;
+
+	fairygui::GComponent* container = fairygui::GComponent::create();
+	if (container == nullptr)
+		return 0;
+
+	container->name = name;
+	container->setSize(static_cast<float>(m_screenWidth), static_cast<float>(m_screenHeight));
+	container->setOpaque(false);
+	container->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = container;
+	handleInfo.ownerHandle = 0;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
 int FairyGuiSystem::CreateModalMaskHandle(float red, float green, float blue, float alpha)
 {
 	if (!m_initialized || m_screenWidth == 0 || m_screenHeight == 0)
@@ -477,6 +500,20 @@ int FairyGuiSystem::GetObjectHandleListItemCount(int objectHandle)
 bool FairyGuiSystem::AddObjectHandleToRoot(int objectHandle)
 {
 	return AddToRoot(FindObjectHandle(objectHandle));
+}
+
+bool FairyGuiSystem::AddObjectHandleToParent(int objectHandle, int parentHandle)
+{
+	if (parentHandle <= 0)
+		return AddObjectHandleToRoot(objectHandle);
+
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	fairygui::GComponent* parent = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(parentHandle));
+	if (object == nullptr || parent == nullptr)
+		return false;
+
+	parent->addChild(object);
+	return true;
 }
 
 bool FairyGuiSystem::SetObjectHandlePosition(int objectHandle, float x, float y)

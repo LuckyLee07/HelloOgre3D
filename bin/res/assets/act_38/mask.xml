@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1560,720">
+  <displayList>
+    <image id="n98_pqty" name="img_mask" src="ij282" fileName="_comimgs/img_mask.png" xy="0,0" size="1560,720">
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+  </displayList>
+</component>

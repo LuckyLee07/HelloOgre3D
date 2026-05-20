@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="116,46" pivot="0.5,0.5" extention="Button">
+  <controller name="c1" pages="3,可兑换,1,已拥有,2,兑换次数不足" selected="0"/>
+  <displayList>
+    <image id="n87_p52l" name="n87" src="ij283e" fileName="main_nationdayHall/_imgs/new/btn_green.png" xy="0,0" size="116,46">
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n85_kwtf" name="n85" src="ij283a" fileName="main_nationdayHall/_imgs/new/icon_star.png" xy="20,8" size="30,30"/>
+    <text id="n84_kwtf" name="title" xy="55,8" size="34,29" fontSize="20" color="#ebffd9" text="100">
+      <relation target="n85_kwtf" sidePair="middle-middle"/>
+    </text>
+  </displayList>
+  <Button downEffect="scale" downEffectValue=".8"/>
+</component>

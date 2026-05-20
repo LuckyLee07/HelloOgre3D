@@ -59,6 +59,80 @@ local function tryRunFairyGuiCleanupSelfTest()
 	end)
 end
 
+local LAYER_SAMPLE_UIS = {
+	{ name = "LayerProbeNormal", layer = "Normal", title = "Layer Normal" },
+	{ name = "LayerProbePopup", layer = "Popup", title = "Layer Popup + Modal" },
+	{ name = "LayerProbeTop", layer = "Top", title = "Layer Top" },
+	{ name = "LayerProbeToast", layer = "Toast", title = "Layer Toast" },
+}
+
+local function setLayerProbeText(handle, item)
+	if handle == nil then
+		return
+	end
+
+	local layerRoot = FairyGuiManager:GetLayerRoot(item.layer)
+	FairyGuiManager:SetText(handle, "txt_title", item.title)
+	FairyGuiManager:SetText(handle, "txt_time", string.format("handle=%s layerRoot=%s", tostring(handle), tostring(layerRoot)))
+	FairyGuiManager:SetText(handle, "txt_desc", "LayerProbe: Close with FGUI_CloseLayerSample()")
+end
+
+local function getLayerProbeOpenCount()
+	local count = 0
+	for _, item in ipairs(LAYER_SAMPLE_UIS) do
+		if FairyGuiManager:GetObjectInfo(item.name) ~= nil then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+local function dumpLayerProbeCloseState(label)
+	print("[FGUI] layer close state:", label, "probeCount=", getLayerProbeOpenCount())
+	FairyGuiManager:DumpOpenUIs()
+	FairyGuiManager:DumpStacks()
+end
+
+local function tryRunFairyGuiLayerSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_LAYER_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(4, function()
+		FGUI_OpenLayerSample()
+		threadpool:delay(1, function()
+			FGUI_DumpLayerSample()
+		end)
+	end)
+end
+
+local function tryRunFairyGuiLayerCloseSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_LAYER_CLOSE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(7, function()
+		FGUI_RunLayerCloseSelfTest()
+	end)
+end
+
+local function tryRunFairyGuiAct38SelfTest()
+	if not isEnvEnabled("HELLO_FGUI_ACT38_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(5, function()
+		local ctrl = FGUI_OpenAct38Sample()
+		local handle = ctrl and ctrl:GetHandle() or nil
+		print("[FGUI] act38 self test result:", ctrl ~= nil, handle)
+		local listApiOk = ctrl ~= nil and ctrl.RunListApiSelfTest ~= nil and ctrl:RunListApiSelfTest() or false
+		print("[FGUI] act38 list api self test result:", listApiOk)
+		threadpool:delay(1, function()
+			FGUI_DumpAct38Sample()
+		end)
+	end)
+end
+
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
@@ -88,6 +162,9 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiInputSelfTest()
 		tryRunFairyGuiKeySelfTest()
 		tryRunFairyGuiCleanupSelfTest()
+		tryRunFairyGuiLayerSelfTest()
+		tryRunFairyGuiLayerCloseSelfTest()
+		tryRunFairyGuiAct38SelfTest()
 	end)
 end
 
@@ -107,8 +184,95 @@ function FGUI_DestroyAct37Sample()
 	return FairyGuiManager:Destroy("Act37TestMvc")
 end
 
+function FGUI_OpenAct38Sample()
+	FairyGuiManager:Close("Act38Test", true)
+	local ctrl = FairyGuiManager:Open("Act38Test", {
+		selectedTab = 0,
+		dateText = "Act38 MVC Sample",
+	})
+	if ctrl == nil then
+		print("[FGUI] open act_38_test failed")
+		return nil
+	end
+
+	local handle = ctrl:GetHandle()
+	print(
+		"[FGUI] open act_38_test:",
+		handle,
+		"dayCount=", ctrl:GetListItemCount("m2_dayTaskList"),
+		"spcCount=", ctrl:GetListItemCount("m2_spcTaskList"),
+		"shopCount=", ctrl:GetListItemCount("m2_excShopList"))
+	return ctrl
+end
+
+function FGUI_CloseAct38Sample()
+	return FairyGuiManager:Close("Act38Test", true)
+end
+
+function FGUI_DumpAct38Sample()
+	local objectInfo = FairyGuiManager:GetObjectInfo("Act38Test")
+	if objectInfo == nil then
+		print("[FGUI] act38 dump: closed")
+		return false
+	end
+	print("[FGUI] act38 dump:", objectInfo.handle, objectInfo.packageName, objectInfo.objectName, objectInfo.layer, objectInfo.sortingOrder)
+	print("[FGUI] act38 day count:", FairyGuiManager:GetListItemCount(objectInfo.handle, "m2_dayTaskList"))
+	print("[FGUI] act38 spc count:", FairyGuiManager:GetListItemCount(objectInfo.handle, "m2_spcTaskList"))
+	print("[FGUI] act38 shop count:", FairyGuiManager:GetListItemCount(objectInfo.handle, "m2_excShopList"))
+	return true
+end
+
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
+end
+
+function FGUI_OpenLayerSample()
+	local results = {}
+	FairyGuiManager:CloseGroup("LayerProbe", true)
+	for _, item in ipairs(LAYER_SAMPLE_UIS) do
+		local handle = FairyGuiManager:Open(item.name)
+		results[item.name] = handle
+		setLayerProbeText(handle, item)
+
+		local objectInfo = handle ~= nil and FairyGuiManager:GetObjectInfo(handle) or nil
+		print(
+			"[FGUI] layer sample open:",
+			item.name,
+			"handle=", handle,
+			"layer=", item.layer,
+			"layerRoot=", FairyGuiManager:GetLayerRoot(item.layer),
+			"sorting=", objectInfo and objectInfo.sortingOrder)
+	end
+	FairyGuiManager:DumpLayerRoots()
+	FairyGuiManager:DumpOpenUIs()
+	FairyGuiManager:DumpStacks()
+	return results
+end
+
+function FGUI_CloseLayerSample()
+	return FairyGuiManager:CloseGroup("LayerProbe", true)
+end
+
+function FGUI_DumpLayerSample()
+	FairyGuiManager:DumpLayerRoots()
+	FairyGuiManager:DumpOpenUIs()
+	FairyGuiManager:DumpStacks()
+	return true
+end
+
+function FGUI_RunLayerCloseSelfTest()
+	if getLayerProbeOpenCount() == 0 then
+		FGUI_OpenLayerSample()
+	end
+
+	dumpLayerProbeCloseState("before")
+	print("[FGUI] layer close top popup:", FairyGuiManager:CloseTopPopup(true))
+	dumpLayerProbeCloseState("after CloseTopPopup")
+	print("[FGUI] layer close Top:", FairyGuiManager:CloseLayer("Top", true))
+	dumpLayerProbeCloseState("after CloseLayer Top")
+	print("[FGUI] layer close group:", FairyGuiManager:CloseGroup("LayerProbe", true))
+	dumpLayerProbeCloseState("after CloseGroup")
+	return getLayerProbeOpenCount() == 0
 end
 
 function FGUI_DebugInjectClick(x, y, button)

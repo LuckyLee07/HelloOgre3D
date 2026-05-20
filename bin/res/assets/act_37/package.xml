@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="m2tob9z9">
+  <resources>
+    <image id="ufq5h" name="img_btn_yellow.png" path="/img/"/>
+    <component id="jx3v2m" name="main_pifushoumai.xml" path="/" exported="true"/>
+    <image id="jx3v2q" name="img_btn_choose.png" path="/img/"/>
+    <image id="jx3v2r" name="img_btn_notchoose.png" path="/img/"/>
+    <image id="jx3v2s" name="img_btn_rule.png" path="/img/"/>
+    <image id="jx3v2t" name="img_icon_bag.png" path="/img/"/>
+    <image id="jx3v2u" name="img_icon_details.png" path="/img/"/>
+    <image id="jx3v2v" name="img_icon_star.png" path="/img/"/>
+    <image id="jx3v2x" name="img_btn_yellow02.png" path="/img/"/>
+    <image id="jx3v2y" name="img_card.png" path="/img/"/>
+    <component id="jx3v3j" name="btn_sanliou.xml" path="/"/>
+    <component id="jx3v3l" name="btn_number.xml" path="/"/>
+    <component id="jx3v3m" name="btn_lingqu.xml" path="/"/>
+    <component id="jx3v3n" name="btn_help02.xml" path="/"/>
+    <component id="jx3v3o" name="btn_list.xml" path="/"/>
+    <component id="jx3v3p" name="btn_close06.xml" path="/"/>
+    <component id="d3mz3q" name="item_reward.xml" path="/"/>
+    <image id="niqu3r" name="img_mask.png" path="/img/" scale="9grid" scale9grid="6,6,4,5"/>
+    <component id="nsio3s" name="scroll_text.xml" path="/"/>
+    <image id="nsio3w" name="bg_04.png" path="/img/"/>
+    <image id="nsio3x" name="bg_05.png" path="/img/"/>
+    <image id="nsio3y" name="loader_img_bg_04.png" path="/"/>
+    <image id="nsio3z" name="act_37_img_bg_04.png" path="/图片加载器/"/>
+    <image id="tsma40" name="btn_close_banner.png" path="/img/" exported="true"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

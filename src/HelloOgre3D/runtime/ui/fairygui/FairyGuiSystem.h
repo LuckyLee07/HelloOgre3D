@@ -48,11 +48,13 @@ public:
 	fairygui::GObject* CreateObject(const std::string& packageName, const std::string& objectName);
 	bool AddToRoot(fairygui::GObject* object);
 	int CreateObjectHandle(const std::string& packageName, const std::string& objectName);
+	int CreateContainerHandle(const std::string& name);
 	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
 	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
 	int GetObjectHandleListItem(int objectHandle, int itemIndex);
 	int GetObjectHandleListItemCount(int objectHandle);
 	bool AddObjectHandleToRoot(int objectHandle);
+	bool AddObjectHandleToParent(int objectHandle, int parentHandle);
 	bool SetObjectHandlePosition(int objectHandle, float x, float y);
 	bool SetObjectHandleSize(int objectHandle, float width, float height);
 	bool SetObjectHandleVisible(int objectHandle, bool visible);

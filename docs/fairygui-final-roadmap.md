@@ -110,6 +110,8 @@ runtime/ui/fairygui/FairyGuiSystem
   - `OnClose / OnRemove / OnDestroy / OnResize`
 - 已增加基础 layer / sorting order：
   - `Background / Normal / Popup / Guide / Top / Toast`
+  - 每个 layer 会按需创建 FairyGUI root 子容器
+  - `createFairyGuiContainer / addFairyGuiObjectToParent` 支持 Lua 按父容器挂载
   - `BringToFront`
   - modal mask handle
 - 已增加第一版 UI 栈 / Popup 栈：
@@ -151,7 +153,7 @@ runtime/ui/fairygui/FairyGuiSystem
 
 - 完整输入转发，包括键盘、滚轮、输入框/IME 和更严格的焦点处理。
 - 复杂事件的事件数据透传，例如 item 对象、drag 坐标、touch 坐标。
-- UI 栈、弹窗栈已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理；仍需补更严格的置顶规则和更多真实弹窗样例。
+- UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理；仍需补更严格的置顶规则和更多真实弹窗样例。
 - reopen / cache / hide / destroy 的项目级使用规范和更多样例覆盖。
 - Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力。
 - package 预加载、场景级清理、资源泄漏 Dump 和调试面板。
@@ -378,8 +380,15 @@ Toast
 
 每个 layer 在 FairyGUI root 下对应一个容器，`Open` 时按 registry 配置加入对应层。
 
-当前第一版先用 sorting order 和 Lua 栈维护复杂 UI 顺序：
+当前第一版使用真实 layer root 容器、sorting order 和 Lua 栈共同维护复杂 UI 顺序：
 
+- `FairyGuiManager:EnsureLayerRoot(layer)` 会按需创建 `Layer_Normal / Layer_Popup ...` 容器。
+- `Open` 和 modal mask 会挂载到对应 layer root，而不是全部直接挂到 FairyGUI root。
+- layer root 会在窗口 resize 后同步刷新尺寸，并保持各层基础 sorting order。
+- `FGUI_OpenLayerSample()` 可打开 `Normal / Popup / Top / Toast` 四层验证样例，`FGUI_CloseLayerSample()` 可清理样例。
+- 也可设置 `HELLO_FGUI_LAYER_SELF_TEST=1` 在启动后自动打开 layer 验证样例并输出 dump。
+- `FGUI_RunLayerCloseSelfTest()` 会按 `CloseTopPopup -> CloseLayer("Top") -> CloseGroup("LayerProbe")` 验证真实 layer root 下的关闭和栈清理；也可设置 `HELLO_FGUI_LAYER_CLOSE_SELF_TEST=1` 自动执行。
+- `docs/fairygui-assets.md` 记录 `bin/res/assets` XML 源数据、`bin/res/fuires` 运行时 package 和 manifest 的对应关系。
 - `uiStack` 记录所有可入栈 UI 的打开顺序。
 - `popupStack` 记录 `Popup / Guide / Top / Toast` 等弹窗层 UI。
 - `BringToFront` 会同步刷新 sorting order 和栈顶。
@@ -407,7 +416,7 @@ Act37TestMvc = {
 
 后续仍需补：
 
-- 真实 layer root 容器，而不是只依赖 sorting order。
+- layer root 已有 `LayerProbe` 验证样例，后续还需要补更真实的业务页面组合，例如主界面 + 多弹窗 + 顶层 Toast。
 - 弹窗策略的更多真实样例覆盖，例如多组弹窗、强制销毁 replace、关闭动画后移除。
 - modal mask 点击关闭的更多样例覆盖。
 - 场景切换时和玩法主流程的正式接入点，例如章节切换、sample 切换、重载脚本。
@@ -460,6 +469,14 @@ self:SetVisible("btn_close", true)
 self:SetProgress("bar_hp", 0.75)
 self:PlayTransition("show")
 ```
+
+当前已落地的 List 基础能力：
+
+- `SetListData / GetListData`
+- `RefreshList / RefreshListItem`
+- `AppendListItem / UpdateListItem / RemoveListItem / ClearList`
+- item renderer 支持 `SetText / SetIcon / SetLoaderUrl / SetVisible / SetPosition / SetSize / SetControllerIndex`
+- `Act38Test` 已作为 List + Controller + MVC 标准样例，`HELLO_FGUI_ACT38_SELF_TEST=1` 会覆盖打开、追加 item、刷新 item、dump count。
 
 ### Phase 5.5: AutoGen 生成链
 

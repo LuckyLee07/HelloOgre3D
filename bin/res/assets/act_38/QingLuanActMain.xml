@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1560,720" designImageLayer="1">
+  <controller name="m2_menuCtrl" pages="0,每日任务,1,特殊任务,2,活动商城" selected="0"/>
+  <displayList>
+    <component id="n121_l24a" name="mask" src="ij281" fileName="mask.xml" xy="-1382,-1586" size="4000,4000" touchable="false"/>
+    <loader id="n54_ttxy" name="loader_img_bg" xy="258,50" pivot="0.5,0.5" size="1062,574" aspect="true" touchable="false" url="ui://6wyxp7benve93o" align="center" vAlign="middle" autoSize="true" clearOnPublish="true"/>
+    <text id="n180_xm0f" name="t_date" xy="929,195" size="183,29" fontSize="20" color="#efe8da" vAlign="middle" singleLine="true" autoClearText="true" text="活动时间：10.8~11.2"/>
+    <component id="n178_ij28" name="btn_help" src="ij283n" fileName="btn_help.xml" xy="1060,162"/>
+    <component id="n175_ij28" name="btn_close" src="ij283j" fileName="btn_close.xml" xy="1222,115"/>
+    <image id="n176_ij28" name="menu_bgimg" src="ij281j" fileName="_imgs/menu_bg.png" xy="666,225"/>
+    <list id="n168_ij28" name="MenuTab" xy="708,222" size="520,50" layout="pagination" overflow="hidden" colGap="-16" defaultItem="ui://6wyxp7beij2835" align="center" vAlign="middle" selectionController="m2_menuCtrl">
+      <item title="每日任务"/>
+      <item title="特殊任务"/>
+      <item title="活动商城"/>
+    </list>
+    <list id="n169_ij28" name="m2_dayTaskList" xy="700,280" size="476,266" overflow="scroll" lineGap="10" defaultItem="ui://6wyxp7beij2838" align="center" autoClearItems="true">
+      <gearDisplay controller="m2_menuCtrl" pages="0"/>
+      <item/>
+      <item/>
+      <item/>
+      <item/>
+    </list>
+    <list id="n177_ij28" name="m2_spcTaskList" xy="700,280" size="476,266" overflow="scroll" lineGap="10" defaultItem="ui://6wyxp7beij2838" align="center" autoClearItems="true">
+      <gearDisplay controller="m2_menuCtrl" pages="1"/>
+      <item/>
+      <item/>
+    </list>
+    <list id="n170_ij28" name="m2_excShopList" xy="700,280" size="476,266" overflow="scroll" lineGap="10" defaultItem="ui://6wyxp7beij283h" align="center" autoClearItems="true">
+      <gearDisplay controller="m2_menuCtrl" pages="2"/>
+      <item/>
+      <item/>
+      <item/>
+      <item/>
+    </list>
+  </displayList>
+</component>

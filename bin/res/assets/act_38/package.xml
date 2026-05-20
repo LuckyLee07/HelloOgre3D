@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="6wyxp7be">
+  <resources>
+    <component id="ij280" name="QingLuanActMain.xml" path="/" exported="true"/>
+    <component id="ij281" name="mask.xml" path="/"/>
+    <image id="ij282" name="img_mask.png" path="/_imgs/" scale="9grid" scale9grid="6,6,4,5"/>
+    <image id="ij2817" name="青鸾宫地图-每日任务.png" path="/_exBg/"/>
+    <image id="ij2818" name="board_prop.png" path="/_imgs/"/>
+    <image id="ij2819" name="board_tab_handoff.png" path="/_imgs/"/>
+    <image id="ij281a" name="board_task.png" path="/_imgs/"/>
+    <image id="ij281b" name="btn_Claimed.png" path="/_imgs/"/>
+    <image id="ij281c" name="btn_green.png" path="/_imgs/"/>
+    <image id="ij281d" name="btn_head_for.png" path="/_imgs/"/>
+    <image id="ij281e" name="button_close.png" path="/_imgs/"/>
+    <image id="ij281f" name="icon_？.png" path="/_imgs/"/>
+    <image id="ij281g" name="icon_prop.png" path="/_imgs/"/>
+    <image id="ij281i" name="item_msk.png" path="/_imgs/"/>
+    <image id="ij281j" name="menu_bg.png" path="/_imgs/"/>
+    <component id="ij2835" name="tab_btn.xml" path="/"/>
+    <component id="ij2838" name="task_item.xml" path="/"/>
+    <component id="ij283b" name="btn_task1.xml" path="/"/>
+    <component id="ij283d" name="btn_task2.xml" path="/"/>
+    <component id="ij283f" name="btn_task3.xml" path="/"/>
+    <component id="ij283h" name="shop_item.xml" path="/"/>
+    <component id="ij283i" name="btn_exchange.xml" path="/"/>
+    <component id="ij283j" name="btn_close.xml" path="/"/>
+    <image id="ij283l" name="board_prop_exchange.png" path="/_imgs/"/>
+    <image id="ij283m" name="icon_arrowhead.png" path="/_imgs/"/>
+    <component id="ij283n" name="btn_help.xml" path="/"/>
+    <image id="nve93o" name="act_42_img_bg.png" path="/_loaderimgs/"/>
+    <image id="ohf63p" name="青鸾宫地图-活动商店.png" path="/_exBg/"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

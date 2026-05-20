@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Tue May 19 17:20:28 2026.
+** Generated automatically by tolua++-1.0.92 on Tue May 19 20:15:46 2026.
 */
 
 #ifndef __cplusplus
@@ -3710,6 +3710,40 @@ static int tolua_GameToLua_GameManager_createFairyGuiObject00(lua_State* tolua_S
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: createFairyGuiContainer of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_createFairyGuiContainer00
+static int tolua_GameToLua_GameManager_createFairyGuiContainer00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  const char* name = ((const char*)  tolua_tostring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'createFairyGuiContainer'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->createFairyGuiContainer(name);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'createFairyGuiContainer'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: createFairyGuiModalMask of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_createFairyGuiModalMask00
 static int tolua_GameToLua_GameManager_createFairyGuiModalMask00(lua_State* tolua_S)
@@ -3885,6 +3919,42 @@ static int tolua_GameToLua_GameManager_addFairyGuiObjectToRoot00(lua_State* tolu
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'addFairyGuiObjectToRoot'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: addFairyGuiObjectToParent of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_addFairyGuiObjectToParent00
+static int tolua_GameToLua_GameManager_addFairyGuiObjectToParent00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int objectHandle = ((int)  tolua_tonumber(tolua_S,2,0));
+  int parentHandle = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'addFairyGuiObjectToParent'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->addFairyGuiObjectToParent(objectHandle,parentHandle);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'addFairyGuiObjectToParent'.",&tolua_err);
  return 0;
 #endif
 }
@@ -5287,11 +5357,13 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"loadFairyGuiPackage",tolua_GameToLua_GameManager_loadFairyGuiPackage00);
    tolua_function(tolua_S,"removeFairyGuiPackage",tolua_GameToLua_GameManager_removeFairyGuiPackage00);
    tolua_function(tolua_S,"createFairyGuiObject",tolua_GameToLua_GameManager_createFairyGuiObject00);
+   tolua_function(tolua_S,"createFairyGuiContainer",tolua_GameToLua_GameManager_createFairyGuiContainer00);
    tolua_function(tolua_S,"createFairyGuiModalMask",tolua_GameToLua_GameManager_createFairyGuiModalMask00);
    tolua_function(tolua_S,"getFairyGuiChild",tolua_GameToLua_GameManager_getFairyGuiChild00);
    tolua_function(tolua_S,"getFairyGuiListItem",tolua_GameToLua_GameManager_getFairyGuiListItem00);
    tolua_function(tolua_S,"getFairyGuiListItemCount",tolua_GameToLua_GameManager_getFairyGuiListItemCount00);
    tolua_function(tolua_S,"addFairyGuiObjectToRoot",tolua_GameToLua_GameManager_addFairyGuiObjectToRoot00);
+   tolua_function(tolua_S,"addFairyGuiObjectToParent",tolua_GameToLua_GameManager_addFairyGuiObjectToParent00);
    tolua_function(tolua_S,"setFairyGuiObjectPosition",tolua_GameToLua_GameManager_setFairyGuiObjectPosition00);
    tolua_function(tolua_S,"setFairyGuiObjectSize",tolua_GameToLua_GameManager_setFairyGuiObjectSize00);
    tolua_function(tolua_S,"setFairyGuiObjectVisible",tolua_GameToLua_GameManager_setFairyGuiObjectVisible00);

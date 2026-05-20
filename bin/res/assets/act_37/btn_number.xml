@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="221,70" pivot="0.5,0.5" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <controller name="c1" pages="0,购买,1,已拥有" selected="1"/>
+  <displayList>
+    <image id="n0_jx3v" name="n0" src="jx3v2x" fileName="img/img_btn_yellow02.png" xy="0,0">
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <loader id="n6_zvm2" name="icon" xy="60,12" pivot="0.5,0.5" size="40,40" url="ui://wxmku8b8efqjf6" fill="scale">
+      <gearDisplay controller="c1" pages="0"/>
+    </loader>
+    <text id="n3_jx3v" name="price" xy="101,18" size="45,34" fontSize="24" color="#bc7e07" text="368">
+      <gearDisplay controller="c1" pages="0"/>
+    </text>
+    <text id="n4_zvm2" name="buyTips" xy="33,15" pivot="0.5,0" size="156,34" fontSize="24" color="#bc7e07" text="已拥有$171410">
+      <gearDisplay controller="c1" pages="1"/>
+    </text>
+  </displayList>
+  <Button downEffect="scale" downEffectValue=".9"/>
+</component>

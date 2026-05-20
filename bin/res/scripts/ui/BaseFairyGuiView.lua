@@ -98,11 +98,60 @@ function BaseFairyGuiView:SetListData(childPath, dataList, renderer)
 	return FairyGuiManager:SetListData(self.handle, childPath, dataList, renderer)
 end
 
+function BaseFairyGuiView:GetListData(childPath, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetListData(self.handle, childPath, index)
+end
+
 function BaseFairyGuiView:GetListItem(childPath, index)
 	if FairyGuiManager == nil or self.handle == nil then
 		return nil
 	end
 	return FairyGuiManager:GetListItem(self.handle, childPath, index)
+end
+
+function BaseFairyGuiView:RefreshListItem(childPath, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:RefreshListItem(self.handle, childPath, index)
+end
+
+function BaseFairyGuiView:RefreshList(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:RefreshList(self.handle, childPath)
+end
+
+function BaseFairyGuiView:UpdateListItem(childPath, index, data)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:UpdateListItem(self.handle, childPath, index, data)
+end
+
+function BaseFairyGuiView:AppendListItem(childPath, data)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:AppendListItem(self.handle, childPath, data)
+end
+
+function BaseFairyGuiView:RemoveListItem(childPath, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:RemoveListItem(self.handle, childPath, index)
+end
+
+function BaseFairyGuiView:ClearList(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:ClearList(self.handle, childPath)
 end
 
 function BaseFairyGuiView:SetListItemCount(childPath, itemCount)

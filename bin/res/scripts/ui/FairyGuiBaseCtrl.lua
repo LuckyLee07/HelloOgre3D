@@ -96,8 +96,36 @@ function FairyGuiBaseCtrl:SetListData(childPath, dataList, renderer)
 	return self.view ~= nil and self.view:SetListData(childPath, dataList, renderer) or false
 end
 
+function FairyGuiBaseCtrl:GetListData(childPath, index)
+	return self.view ~= nil and self.view:GetListData(childPath, index) or nil
+end
+
 function FairyGuiBaseCtrl:GetListItem(childPath, index)
 	return self.view ~= nil and self.view:GetListItem(childPath, index) or nil
+end
+
+function FairyGuiBaseCtrl:RefreshListItem(childPath, index)
+	return self.view ~= nil and self.view:RefreshListItem(childPath, index) or false
+end
+
+function FairyGuiBaseCtrl:RefreshList(childPath)
+	return self.view ~= nil and self.view:RefreshList(childPath) or false
+end
+
+function FairyGuiBaseCtrl:UpdateListItem(childPath, index, data)
+	return self.view ~= nil and self.view:UpdateListItem(childPath, index, data) or false
+end
+
+function FairyGuiBaseCtrl:AppendListItem(childPath, data)
+	return self.view ~= nil and self.view:AppendListItem(childPath, data) or false
+end
+
+function FairyGuiBaseCtrl:RemoveListItem(childPath, index)
+	return self.view ~= nil and self.view:RemoveListItem(childPath, index) or false
+end
+
+function FairyGuiBaseCtrl:ClearList(childPath)
+	return self.view ~= nil and self.view:ClearList(childPath) or false
 end
 
 function FairyGuiBaseCtrl:SetListItemCount(childPath, itemCount)

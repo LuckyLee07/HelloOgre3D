@@ -40,11 +40,13 @@ public:
 	const char* loadFairyGuiPackage(const char* packagePath);
 	bool removeFairyGuiPackage(const char* packageName);
 	int createFairyGuiObject(const char* packageName, const char* objectName);
+	int createFairyGuiContainer(const char* name);
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
 	int getFairyGuiListItemCount(int objectHandle);
 	bool addFairyGuiObjectToRoot(int objectHandle);
+	bool addFairyGuiObjectToParent(int objectHandle, int parentHandle);
 	bool setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y);
 	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
 	bool setFairyGuiObjectVisible(int objectHandle, bool visible);

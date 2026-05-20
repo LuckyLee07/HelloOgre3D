@@ -115,6 +115,19 @@ int GameManager::createFairyGuiObject(const char* packageName, const char* objec
 #endif
 }
 
+int GameManager::createFairyGuiContainer(const char* name)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateContainerHandle(name != nullptr ? name : "");
+#else
+	return 0;
+#endif
+}
+
 int GameManager::createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -172,6 +185,16 @@ bool GameManager::addFairyGuiObjectToRoot(int objectHandle)
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
 	return system != nullptr && system->AddObjectHandleToRoot(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::addFairyGuiObjectToParent(int objectHandle, int parentHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->AddObjectHandleToParent(objectHandle, parentHandle);
 #else
 	return false;
 #endif
