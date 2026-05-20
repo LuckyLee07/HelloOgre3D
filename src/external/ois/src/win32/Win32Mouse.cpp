@@ -117,6 +117,18 @@ void Win32Mouse::capture()
 	mState.X.rel = mouseState.lX;
 	mState.Y.rel = mouseState.lY;
 	mState.Z.rel = mouseState.lZ;
+
+	if(coopSetting & DISCL_NONEXCLUSIVE)
+	{
+		// Keep button events on the current cursor position. DirectInput reports
+		// button changes before we dispatch mouseMoved below.
+		POINT point;
+		GetCursorPos(&point);
+		ScreenToClient(mHwnd, &point);
+		mState.X.abs = point.x;
+		mState.Y.abs = point.y;
+	}
+
 	for(unsigned int i = 0; i < 8; i++)
 		if(!_doMouseClick(i, mouseState.rgbButtons[i])) return;
 
@@ -124,16 +136,7 @@ void Win32Mouse::capture()
 
 	if(axesMoved)
 	{
-		if(coopSetting & DISCL_NONEXCLUSIVE)
-		{
-			//DirectInput provides us with meaningless values, so correct that
-			POINT point;
-			GetCursorPos(&point);
-			ScreenToClient(mHwnd, &point);
-			mState.X.abs = point.x;
-			mState.Y.abs = point.y;
-		}
-		else
+		if(!(coopSetting & DISCL_NONEXCLUSIVE))
 		{
 			mState.X.abs += mState.X.rel;
 			mState.Y.abs += mState.Y.rel;

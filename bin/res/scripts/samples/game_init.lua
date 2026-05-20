@@ -222,6 +222,20 @@ local function tryRunFairyGuiSelfTestSuite()
 	end)
 end
 
+local function tryRunFairyGuiLongLoopSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_LONG_LOOP_SELF_TEST") and not isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") then
+		return
+	end
+
+	local startDelay = isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 12 or 6
+	threadpool:delay(startDelay, function()
+		local count = tonumber(os.getenv and os.getenv("HELLO_FGUI_LONG_LOOP_COUNT") or nil)
+		FGUI_RunLongLoopSelfTest({
+			iterations = count or (isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 5 or 12),
+		})
+	end)
+end
+
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
@@ -259,6 +273,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiWheelSelfTest()
 		tryRunFairyGuiMaskSelfTest()
 		tryRunFairyGuiSelfTestSuite()
+		tryRunFairyGuiLongLoopSelfTest()
 	end)
 end
 
@@ -465,6 +480,162 @@ function FGUI_RunSelfTestSuite()
 			end
 		end
 		print("[FGUI] self test suite end:", passCount, "/", #results)
+	end)
+	return true
+end
+
+local function closeFairyGuiLongLoopObjects()
+	FairyGuiManager:Close("Act37TestMvc", true)
+	FairyGuiManager:Close("Act38Test", true)
+	FairyGuiManager:CloseGroup("LayerProbe", true)
+	FairyGuiManager:Close("MaskProbe", true)
+	FairyGuiManager:Close("TextInputProbe", true)
+end
+
+local function getFairyGuiPackageRefCount()
+	local refCount = 0
+	local details = {}
+	local refsByPackage = FairyGuiManager:GetPackageRefs()
+	for packageKey, ref in pairs(refsByPackage) do
+		local packageRefCount = ref.refCount or 0
+		refCount = refCount + packageRefCount
+		if packageRefCount > 0 or (ref.openCount or 0) > 0 then
+			details[#details + 1] = tostring(packageKey) .. ":ref=" .. tostring(packageRefCount) .. ",open=" .. tostring(ref.openCount or 0)
+		end
+	end
+	return refCount, table.concat(details, "|")
+end
+
+local function checkFairyGuiLongLoopClean(label)
+	local stats = FairyGuiManager:GetHealthStats()
+	local warnings = FairyGuiManager:GetResourceWarnings()
+	local packageRefCount, packageDetail = getFairyGuiPackageRefCount()
+	local clean = stats.openUI == 0
+		and stats.hiddenUI == 0
+		and stats.binding == 0
+		and stats.timer == 0
+		and stats.objectHandle == 0
+		and stats.childCache == 0
+		and stats.view == 0
+		and stats.controller == 0
+		and packageRefCount == 0
+		and #warnings == 0
+	local detail = "openUI=" .. tostring(stats.openUI)
+		.. " hiddenUI=" .. tostring(stats.hiddenUI)
+		.. " binding=" .. tostring(stats.binding)
+		.. " timer=" .. tostring(stats.timer)
+		.. " objectHandle=" .. tostring(stats.objectHandle)
+		.. " childCache=" .. tostring(stats.childCache)
+		.. " view=" .. tostring(stats.view)
+		.. " controller=" .. tostring(stats.controller)
+		.. " packageRef=" .. tostring(packageRefCount)
+		.. " warnings=" .. tostring(#warnings)
+	if packageDetail ~= "" then
+		detail = detail .. " packages=" .. packageDetail
+	end
+	if not clean then
+		print("[FGUI] long loop dirty:", label or "", detail)
+		for _, warning in ipairs(warnings) do
+			print("[FGUI] long loop warning:", warning.kind, "package=", warning.packageKey, warning.detail or "")
+		end
+		FairyGuiManager:DumpHealth(true)
+	end
+	return clean, detail
+end
+
+function FGUI_RunLongLoopSelfTest(config)
+	if threadpool == nil or threadpool.delay == nil then
+		print("[FGUI] long loop self test failed: threadpool unavailable")
+		return false
+	end
+
+	config = config or {}
+	local iterations = tonumber(config.iterations) or 12
+	local interval = tonumber(config.interval) or 0.2
+	local results = {
+		pass = 0,
+		fail = 0,
+	}
+
+	if iterations < 1 then
+		iterations = 1
+	end
+	if interval < 0 then
+		interval = 0
+	end
+
+	local function record(iteration, ok, detail)
+		if ok == true then
+			results.pass = results.pass + 1
+		else
+			results.fail = results.fail + 1
+		end
+		print("[FGUI] long loop iteration:", iteration, ok == true and "PASS" or "FAIL", detail or "")
+	end
+
+	local function runIteration(iteration)
+		local ok, result, detail = pcall(function()
+			closeFairyGuiLongLoopObjects()
+
+			local ctrl37 = FGUI_ReopenAct37Sample()
+			if ctrl37 == nil then
+				return false, "Act37 open failed"
+			end
+			FairyGuiManager:Close("Act37TestMvc", true)
+
+			local ctrl38 = FGUI_OpenAct38Sample()
+			if ctrl38 == nil then
+				return false, "Act38 open failed"
+			end
+			local listOk = ctrl38.RunListApiSelfTest ~= nil and ctrl38:RunListApiSelfTest() or false
+			FairyGuiManager:Close("Act38Test", true)
+			if listOk ~= true then
+				return false, "Act38 list api failed"
+			end
+
+			if FGUI_RunLayerCloseSelfTest() ~= true then
+				return false, "Layer close failed"
+			end
+
+			local maskHandle = FGUI_OpenMaskProbe()
+			local maskClosed = FGUI_CloseMaskProbe()
+			if maskHandle == nil or maskClosed ~= true then
+				return false, "Mask probe failed"
+			end
+
+			local textHandle, inputHandle = FGUI_OpenTextInputProbe()
+			local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+			local textClosed = FGUI_CloseTextInputProbe()
+			if textHandle == nil or inputHandle == nil or focused ~= true or textClosed ~= true then
+				return false, "TextInput probe failed"
+			end
+
+			closeFairyGuiLongLoopObjects()
+			return checkFairyGuiLongLoopClean("iteration " .. tostring(iteration))
+		end)
+
+		if not ok then
+			record(iteration, false, result)
+		else
+			record(iteration, result == true, detail)
+		end
+
+		if iteration >= iterations or results.fail > 0 then
+			closeFairyGuiLongLoopObjects()
+			local finalClean, finalDetail = checkFairyGuiLongLoopClean("final")
+			print("[FGUI] long loop self test end:", results.pass, "/", iterations, "fail=", results.fail, "finalClean=", finalClean, finalDetail)
+			return
+		end
+
+		threadpool:delay(interval, function()
+			runIteration(iteration + 1)
+		end)
+	end
+
+	print("[FGUI] long loop self test begin:", iterations, "interval=", interval)
+	closeFairyGuiLongLoopObjects()
+	threadpool:delay(interval, function()
+		runIteration(1)
 	end)
 	return true
 end

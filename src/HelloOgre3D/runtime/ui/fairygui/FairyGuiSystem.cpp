@@ -16,6 +16,7 @@
 #include "event/UIEventType.h"
 
 #include "Ogre.h"
+#include "OgreDpiHelper.h"
 #include "OgreRenderWindow.h"
 #include "ScriptLuaVM.h"
 
@@ -203,6 +204,44 @@ namespace
 		return value.empty() ? fallback : static_cast<float>(std::atof(value.c_str()));
 	}
 
+	unsigned int ToLogicalWindowPixels(Ogre::RenderWindow* renderWindow, unsigned int physicalPixels)
+	{
+		if (physicalPixels == 0)
+			return 0;
+
+		if (renderWindow != nullptr)
+		{
+			const float pointToPixelScale = renderWindow->getViewPointToPixelScale();
+			if (pointToPixelScale > 1.0f)
+				return static_cast<unsigned int>(static_cast<float>(physicalPixels) / pointToPixelScale + 0.5f);
+		}
+		return Ogre::DpiHelper::toLogicalPixels(physicalPixels);
+	}
+
+	float GetWindowInputScale(Ogre::RenderWindow* renderWindow, unsigned int logicalPixels, bool horizontal)
+	{
+		if (renderWindow == nullptr || logicalPixels == 0)
+			return 1.0f;
+
+		unsigned int width = 0;
+		unsigned int height = 0;
+		unsigned int colourDepth = 0;
+		int left = 0;
+		int top = 0;
+		renderWindow->getMetrics(width, height, colourDepth, left, top);
+		const unsigned int physicalPixels = horizontal ? width : height;
+		if (physicalPixels > logicalPixels)
+			return static_cast<float>(physicalPixels) / static_cast<float>(logicalPixels);
+
+		const float pointToPixelScale = renderWindow->getViewPointToPixelScale();
+		return pointToPixelScale > 1.0f ? pointToPixelScale : 1.0f;
+	}
+
+	int ToRawInputCoordinate(int value, float scale)
+	{
+		return scale > 1.0f ? static_cast<int>(static_cast<float>(value) * scale + 0.5f) : value;
+	}
+
 	std::string DescribeObject(fairygui::GObject* object)
 	{
 		if (object == nullptr)
@@ -354,7 +393,7 @@ bool FairyGuiSystem::Initialize(Ogre::RenderWindow* renderWindow, Ogre::SceneMan
 	int left = 0;
 	int top = 0;
 	m_pRenderWindow->getMetrics(width, height, colourDepth, left, top);
-	HandleWindowResized(width, height);
+	HandleWindowResized(ToLogicalWindowPixels(m_pRenderWindow, width), ToLogicalWindowPixels(m_pRenderWindow, height));
 
 	m_pScene = cocos2d::Scene::create();
 	m_pRoot = fairygui::GRoot::create(m_pScene);
@@ -559,6 +598,26 @@ bool FairyGuiSystem::InjectMouseWheel(int x, int y, int wheelDelta)
 	m_lastMouseY = mouseY;
 	m_hasLastMousePosition = true;
 	return mouseOnUi;
+}
+
+bool FairyGuiSystem::InjectLogicalMouseMove(int x, int y)
+{
+	return InjectMouseMove(ToRawInputX(x), ToRawInputY(y));
+}
+
+bool FairyGuiSystem::InjectLogicalMouseDown(int x, int y, int button)
+{
+	return InjectMouseDown(ToRawInputX(x), ToRawInputY(y), button);
+}
+
+bool FairyGuiSystem::InjectLogicalMouseUp(int x, int y, int button)
+{
+	return InjectMouseUp(ToRawInputX(x), ToRawInputY(y), button);
+}
+
+bool FairyGuiSystem::InjectLogicalMouseWheel(int x, int y, int wheelDelta)
+{
+	return InjectMouseWheel(ToRawInputX(x), ToRawInputY(y), wheelDelta);
 }
 
 bool FairyGuiSystem::InjectKeyPressed(int keyCode, int keyText)
@@ -1489,17 +1548,31 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 
 void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const
 {
-	float scale = 1.0f;
-	if (m_pRenderWindow != nullptr)
-	{
-		const float pointToPixelScale = m_pRenderWindow->getViewPointToPixelScale();
-		if (pointToPixelScale > 1.0f)
-			scale = pointToPixelScale;
-	}
-
-	outX = static_cast<float>(x) / scale;
-	const float logicalY = static_cast<float>(y) / scale;
+	const float scaleX = GetInputScaleX();
+	const float scaleY = GetInputScaleY();
+	outX = static_cast<float>(x) / scaleX;
+	const float logicalY = static_cast<float>(y) / scaleY;
 	outY = m_screenHeight > 0 ? static_cast<float>(m_screenHeight) - logicalY : logicalY;
+}
+
+float FairyGuiSystem::GetInputScaleX() const
+{
+	return GetWindowInputScale(m_pRenderWindow, m_screenWidth, true);
+}
+
+float FairyGuiSystem::GetInputScaleY() const
+{
+	return GetWindowInputScale(m_pRenderWindow, m_screenHeight, false);
+}
+
+int FairyGuiSystem::ToRawInputX(int x) const
+{
+	return ToRawInputCoordinate(x, GetInputScaleX());
+}
+
+int FairyGuiSystem::ToRawInputY(int y) const
+{
+	return ToRawInputCoordinate(y, GetInputScaleY());
 }
 
 bool FairyGuiSystem::IsMouseOnUi(float x, float y) const

@@ -44,6 +44,10 @@ public:
 	bool InjectMouseDown(int x, int y, int button);
 	bool InjectMouseUp(int x, int y, int button);
 	bool InjectMouseWheel(int x, int y, int wheelDelta);
+	bool InjectLogicalMouseMove(int x, int y);
+	bool InjectLogicalMouseDown(int x, int y, int button);
+	bool InjectLogicalMouseUp(int x, int y, int button);
+	bool InjectLogicalMouseWheel(int x, int y, int wheelDelta);
 	bool InjectKeyPressed(int keyCode, int keyText);
 	bool InjectKeyReleased(int keyCode, int keyText);
 
@@ -95,6 +99,8 @@ public:
 	fairygui::GRoot* GetRoot() const { return m_pRoot; }
 	int GetLastRenderCommandCount() const { return m_lastRenderCommandCount; }
 	int GetLastTriangleCount() const { return m_lastTriangleCount; }
+	int GetScreenWidth() const { return static_cast<int>(m_screenWidth); }
+	int GetScreenHeight() const { return static_cast<int>(m_screenHeight); }
 	int GetObjectHandleCount() const { return static_cast<int>(m_objectHandles.size()); }
 	int GetListenerBindingCount() const { return static_cast<int>(m_listenerBindings.size()); }
 	int GetMaterialCount() const { return static_cast<int>(m_materialNames.size()); }
@@ -138,6 +144,10 @@ private:
 	bool ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
+	float GetInputScaleX() const;
+	float GetInputScaleY() const;
+	int ToRawInputX(int x) const;
+	int ToRawInputY(int y) const;
 	bool IsMouseOnUi(float x, float y) const;
 	void BeginOgreRender();
 	void EndOgreRender();

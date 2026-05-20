@@ -18,7 +18,7 @@
 - [ ] UI 重复打开、隐藏缓存、强制销毁、场景切换清理都有明确规则和日志可查。
 - [ ] Click、Changed、ClickItem、RightClick、Drag、Touch、Wheel、Key、TextInput 事件能稳定桥接到 Lua，并在 UI 关闭后自动解绑。
 - [ ] fullscreen/adapt/margin/safe area 在窗口尺寸变化后统一重算，页面只关注自身布局策略。
-- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump 和第一版资源告警已具备，长期循环泄漏判定仍需继续补。
+- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump、第一版资源告警和长循环回零自测已具备，renderer/material/texture 明细仍需继续补。
 - [ ] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
 - [ ] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测。
 
@@ -55,6 +55,7 @@
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
 - [ ] Tracy 增加 UI Open/Close/Event/Render zones 和计数器。
 - [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
+- [x] 增加 `HELLO_FGUI_LONG_LOOP_SELF_TEST=1` 长循环自测入口，循环打开关闭 Act37、Act38、Layer、Mask、TextInput 并检查资源/生命周期回零。
 
 ## Phase 1: 生命周期标准化
 
@@ -90,7 +91,7 @@
 - [x] `closeOnSceneChange`、`destroyOnSceneChange` 已具备 registry 声明。
 - [ ] 增加场景级 preload 配置和统一预加载入口。
 - [ ] 增加 package 按 group/tag 批量卸载。
-- [~] 增加资源泄漏 Dump，输出 package refCount、UI 引用、打开栈引用；当前已有第一版引用关系输出和资源告警规则，后续继续补长循环后的泄漏断言。
+- [x] 增加资源泄漏 Dump，输出 package refCount、UI 引用、打开栈引用；当前已有第一版引用关系输出、资源告警规则和长循环回零断言。
 - [ ] 增加纹理尺寸、材质数量、render command 数的统计入口。
 - [ ] 明确缓存 UI 的资源保留策略，避免隐藏 UI 长期占用大贴图。
 - [ ] 增加资源缺失时的 fallback 日志，记录 package/object/childPath。
@@ -138,6 +139,7 @@
 
 - [x] `fullScreen/adaptScreen/margin` 已具备第一版。
 - [x] resize 后统一回调 `OnResize` 已具备。
+- [x] Windows 高 DPI 下 FairyGUI 初始化、渲染、输入和 Lua 适配统一使用 logical screen size。
 - [ ] 对齐 MiniUIManager 的 fullscreen/adapt 规则，明确设计分辨率、缩放模式和边缘策略。
 - [ ] 增加 safe area 或异形屏预留字段，先在配置层占位。
 - [ ] 增加 layer root resize 后的统一布局重算。
@@ -175,7 +177,7 @@
 - [ ] render command、triangle、texture/material 切换统计。
 - [ ] UI 数量压力样例，覆盖 1/5/20/50 个弹窗或列表项规模。
 - [ ] Tracy zones 和 frame counters 接入 UI 子系统。
-- [ ] 长时间打开关闭循环自测，检测 handle、binding、package refCount 是否回零。
+- [x] 长时间打开关闭循环自测，检测 handle、binding、timer、view/controller、package refCount 和资源告警是否回零。
 - [ ] Release|x64、Debug|x64、Win32 的最小构建验证清单。
 
 ## 合主干前风险收敛

@@ -213,6 +213,26 @@ int GameManager::getFairyGuiLastTriangleCount()
 #endif
 }
 
+int GameManager::getFairyGuiScreenWidth()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetScreenWidth() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiScreenHeight()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetScreenHeight() : 0;
+#else
+	return 0;
+#endif
+}
+
 int GameManager::getFairyGuiRuntimeObjectHandleCount()
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -517,7 +537,7 @@ bool GameManager::injectFairyGuiMouseMove(int x, int y)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectMouseMove(x, y);
+	return system != nullptr && system->InjectLogicalMouseMove(x, y);
 #else
 	return false;
 #endif
@@ -527,7 +547,7 @@ bool GameManager::injectFairyGuiMouseDown(int x, int y, int button)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectMouseDown(x, y, button);
+	return system != nullptr && system->InjectLogicalMouseDown(x, y, button);
 #else
 	return false;
 #endif
@@ -537,7 +557,7 @@ bool GameManager::injectFairyGuiMouseUp(int x, int y, int button)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectMouseUp(x, y, button);
+	return system != nullptr && system->InjectLogicalMouseUp(x, y, button);
 #else
 	return false;
 #endif
@@ -547,7 +567,7 @@ bool GameManager::injectFairyGuiMouseWheel(int x, int y, int wheelDelta)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectMouseWheel(x, y, wheelDelta);
+	return system != nullptr && system->InjectLogicalMouseWheel(x, y, wheelDelta);
 #else
 	return false;
 #endif
@@ -560,9 +580,9 @@ bool GameManager::injectFairyGuiClick(int x, int y, int button)
 	if (system == nullptr)
 		return false;
 
-	system->InjectMouseMove(x, y);
-	const bool downConsumed = system->InjectMouseDown(x, y, button);
-	const bool upConsumed = system->InjectMouseUp(x, y, button);
+	system->InjectLogicalMouseMove(x, y);
+	const bool downConsumed = system->InjectLogicalMouseDown(x, y, button);
+	const bool upConsumed = system->InjectLogicalMouseUp(x, y, button);
 	return downConsumed || upConsumed;
 #else
 	return false;

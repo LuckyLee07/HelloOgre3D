@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Wed May 20 23:41:13 2026.
+** Generated automatically by tolua++-1.0.92 on Thu May 21 00:24:23 2026.
 */
 
 #ifndef __cplusplus
@@ -4014,6 +4014,70 @@ static int tolua_GameToLua_GameManager_getFairyGuiLastTriangleCount00(lua_State*
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getFairyGuiScreenWidth of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiScreenWidth00
+static int tolua_GameToLua_GameManager_getFairyGuiScreenWidth00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiScreenWidth'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiScreenWidth();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiScreenWidth'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiScreenHeight of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiScreenHeight00
+static int tolua_GameToLua_GameManager_getFairyGuiScreenHeight00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiScreenHeight'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiScreenHeight();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiScreenHeight'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getFairyGuiRuntimeObjectHandleCount of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiRuntimeObjectHandleCount00
 static int tolua_GameToLua_GameManager_getFairyGuiRuntimeObjectHandleCount00(lua_State* tolua_S)
@@ -6075,6 +6139,8 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"createFairyGuiModalMask",tolua_GameToLua_GameManager_createFairyGuiModalMask00);
    tolua_function(tolua_S,"getFairyGuiLastRenderCommandCount",tolua_GameToLua_GameManager_getFairyGuiLastRenderCommandCount00);
    tolua_function(tolua_S,"getFairyGuiLastTriangleCount",tolua_GameToLua_GameManager_getFairyGuiLastTriangleCount00);
+   tolua_function(tolua_S,"getFairyGuiScreenWidth",tolua_GameToLua_GameManager_getFairyGuiScreenWidth00);
+   tolua_function(tolua_S,"getFairyGuiScreenHeight",tolua_GameToLua_GameManager_getFairyGuiScreenHeight00);
    tolua_function(tolua_S,"getFairyGuiRuntimeObjectHandleCount",tolua_GameToLua_GameManager_getFairyGuiRuntimeObjectHandleCount00);
    tolua_function(tolua_S,"getFairyGuiRuntimeListenerBindingCount",tolua_GameToLua_GameManager_getFairyGuiRuntimeListenerBindingCount00);
    tolua_function(tolua_S,"getFairyGuiMaterialCount",tolua_GameToLua_GameManager_getFairyGuiMaterialCount00);

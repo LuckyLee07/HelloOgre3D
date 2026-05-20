@@ -1538,6 +1538,12 @@ function FairyGuiManager:CreateModalMask(objectInfo, param)
 end
 
 function FairyGuiManager:GetScreenWidth()
+	if GameManager ~= nil and GameManager.getFairyGuiScreenWidth ~= nil then
+		local width = GameManager:getFairyGuiScreenWidth()
+		if width ~= nil and width > 0 then
+			return width
+		end
+	end
 	if GameManager ~= nil and GameManager.getScreenWidth ~= nil then
 		return GameManager:getScreenWidth()
 	end
@@ -1545,6 +1551,12 @@ function FairyGuiManager:GetScreenWidth()
 end
 
 function FairyGuiManager:GetScreenHeight()
+	if GameManager ~= nil and GameManager.getFairyGuiScreenHeight ~= nil then
+		local height = GameManager:getFairyGuiScreenHeight()
+		if height ~= nil and height > 0 then
+			return height
+		end
+	end
 	if GameManager ~= nil and GameManager.getScreenHeight ~= nil then
 		return GameManager:getScreenHeight()
 	end
@@ -2219,6 +2231,20 @@ function FairyGuiManager:ClearListCacheByListHandle(listHandle)
 	self.listRenderersByHandle[listHandle] = nil
 end
 
+function FairyGuiManager:ClearListItemHandleCache(listHandle)
+	if listHandle == nil then
+		return
+	end
+
+	local itemHandles = self.listItemHandlesByHandle[listHandle]
+	if itemHandles ~= nil then
+		for _, itemHandle in pairs(itemHandles) do
+			self.childrenByHandle[itemHandle] = nil
+		end
+	end
+	self.listItemHandlesByHandle[listHandle] = nil
+end
+
 function FairyGuiManager:ClearListCacheForHandle(handle)
 	if handle == nil then
 		return
@@ -2298,7 +2324,7 @@ function FairyGuiManager:SetListItemCount(handle, childPath, itemCount)
 		return false
 	end
 
-	self.listItemHandlesByHandle[listHandle] = nil
+	self:ClearListItemHandleCache(listHandle)
 	return GameManager:setFairyGuiListItemCount(listHandle, itemCount or 0)
 end
 
