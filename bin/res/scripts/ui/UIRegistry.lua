@@ -116,4 +116,13 @@ local UIRegistry = {
 	},
 }
 
+local ok, generatedRegistry = pcall(require, "res.scripts.ui.GeneratedUIRegistry")
+if ok and type(generatedRegistry) == "table" then
+	for name, config in pairs(generatedRegistry) do
+		if UIRegistry[name] == nil then
+			UIRegistry[name] = config
+		end
+	end
+end
+
 return UIRegistry

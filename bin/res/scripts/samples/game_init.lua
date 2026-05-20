@@ -133,6 +133,44 @@ local function tryRunFairyGuiAct38SelfTest()
 	end)
 end
 
+local function tryRunFairyGuiWheelSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_WHEEL_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(8, function()
+		local ctrl = FairyGuiManager:GetController("Act38Test") or FGUI_OpenAct38Sample()
+		local handle = ctrl and ctrl:GetHandle() or nil
+		print("[FGUI] wheel self test open:", ctrl ~= nil, handle)
+		threadpool:delay(1, function()
+			local scrollDown = FairyGuiManager:DebugInjectMouseWheel(745, 485, -120)
+			local scrollUp = FairyGuiManager:DebugInjectMouseWheel(745, 485, 120)
+			print("[FGUI] wheel self test inject:", scrollDown, scrollUp)
+			FairyGuiManager:DumpDebugStats()
+		end)
+	end)
+end
+
+local function tryRunFairyGuiMaskSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_MASK_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(6, function()
+		local handle = FGUI_OpenMaskProbe()
+		print("[FGUI] mask probe self test result:", handle ~= nil, handle)
+		FairyGuiManager:DumpRenderStats()
+		threadpool:delay(1, function()
+			local closed = FGUI_CloseMaskProbe()
+			print("[FGUI] mask probe close self test:", closed)
+			FairyGuiManager:DumpOpenUIs()
+			FairyGuiManager:DumpStacks()
+			FairyGuiManager:DumpDebugStats()
+			FairyGuiManager:DumpRenderStats()
+		end)
+	end)
+end
+
 local function tryOpenFairyGuiSample()
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
@@ -165,6 +203,8 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiLayerSelfTest()
 		tryRunFairyGuiLayerCloseSelfTest()
 		tryRunFairyGuiAct38SelfTest()
+		tryRunFairyGuiWheelSelfTest()
+		tryRunFairyGuiMaskSelfTest()
 	end)
 end
 
@@ -207,6 +247,28 @@ end
 
 function FGUI_CloseAct38Sample()
 	return FairyGuiManager:Close("Act38Test", true)
+end
+
+function FGUI_OpenMaskProbe()
+	return FairyGuiManager:OpenMaskProbe({
+		key = "MaskProbe",
+		layer = "Top",
+		group = "Sample",
+		scene = "Default",
+		popupMode = "stack",
+		assets = {
+			background = "res/assets/act_38/_imgs/board_task.png",
+			content = "res/assets/act_38/_imgs/board_task.png",
+			stripA = "res/assets/act_38/_imgs/board_prop_exchange.png",
+			stripB = "res/assets/act_38/_imgs/btn_green.png",
+			stripC = "res/assets/act_38/_imgs/button_close.png",
+			mask = "res/assets/act_38/_imgs/img_mask.png",
+		},
+	})
+end
+
+function FGUI_CloseMaskProbe()
+	return FairyGuiManager:Close("MaskProbe", true)
 end
 
 function FGUI_DumpAct38Sample()

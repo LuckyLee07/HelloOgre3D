@@ -32,6 +32,9 @@ end
 function FairyGuiBaseCtrl:Reset()
 end
 
+function FairyGuiBaseCtrl:OnOpen(param)
+end
+
 function FairyGuiBaseCtrl:OnReopen(param)
 end
 
@@ -166,6 +169,10 @@ end
 
 function FairyGuiBaseCtrl:AddRightClick(childPath, callback)
 	return self.view ~= nil and self.view:AddRightClick(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddMouseWheel(childPath, callback)
+	return self.view ~= nil and self.view:AddMouseWheel(childPath, callback) or nil
 end
 
 function FairyGuiBaseCtrl:AddTouchBegin(childPath, callback)

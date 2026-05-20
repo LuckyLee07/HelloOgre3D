@@ -41,7 +41,12 @@ public:
 	bool removeFairyGuiPackage(const char* packageName);
 	int createFairyGuiObject(const char* packageName, const char* objectName);
 	int createFairyGuiContainer(const char* name);
+	int createFairyGuiChildContainer(int ownerHandle, const char* name);
+	int createFairyGuiLoader(int ownerHandle, const char* name, const char* url);
+	int createFairyGuiText(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue);
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
+	int getFairyGuiLastRenderCommandCount();
+	int getFairyGuiLastTriangleCount();
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
 	int getFairyGuiListItemCount(int objectHandle);
@@ -50,6 +55,9 @@ public:
 	bool setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y);
 	bool setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height);
 	bool setFairyGuiObjectVisible(int objectHandle, bool visible);
+	bool setFairyGuiObjectAlpha(int objectHandle, Ogre::Real alpha);
+	bool setFairyGuiObjectTouchable(int objectHandle, bool touchable);
+	bool setFairyGuiObjectMask(int objectHandle, int maskHandle, bool inverted);
 	bool setFairyGuiObjectSortingOrder(int objectHandle, int sortingOrder);
 	bool setFairyGuiObjectText(int objectHandle, const char* text);
 	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
@@ -63,6 +71,7 @@ public:
 		bool injectFairyGuiMouseMove(int x, int y);
 		bool injectFairyGuiMouseDown(int x, int y, int button);
 		bool injectFairyGuiMouseUp(int x, int y, int button);
+		bool injectFairyGuiMouseWheel(int x, int y, int wheelDelta);
 		bool injectFairyGuiClick(int x, int y, int button);
 		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
 		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);

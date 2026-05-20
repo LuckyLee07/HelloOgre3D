@@ -8,6 +8,7 @@
 #include "GLoader.h"
 #include "GObject.h"
 #include "GRoot.h"
+#include "GTextField.h"
 #include "UIPackage.h"
 #include "event/EventContext.h"
 #include "event/InputEvent.h"
@@ -17,6 +18,7 @@
 #include "OgreRenderWindow.h"
 #include "ScriptLuaVM.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -43,6 +45,130 @@ namespace
 			color.g / 255.0f,
 			color.b / 255.0f,
 			color.a / 255.0f);
+	}
+
+	struct ClipVertex
+	{
+		float x;
+		float y;
+		float u;
+		float v;
+		Ogre::ColourValue color;
+	};
+
+	enum ClipEdge
+	{
+		CLIP_LEFT,
+		CLIP_RIGHT,
+		CLIP_BOTTOM,
+		CLIP_TOP
+	};
+
+	float GetClipAxisValue(const ClipVertex& vertex, ClipEdge edge)
+	{
+		return edge == CLIP_LEFT || edge == CLIP_RIGHT ? vertex.x : vertex.y;
+	}
+
+	bool IsClipVertexInside(const ClipVertex& vertex, ClipEdge edge, float value)
+	{
+		if (edge == CLIP_LEFT || edge == CLIP_BOTTOM)
+			return GetClipAxisValue(vertex, edge) >= value;
+		return GetClipAxisValue(vertex, edge) <= value;
+	}
+
+	ClipVertex InterpolateClipVertex(const ClipVertex& from, const ClipVertex& to, float t)
+	{
+		ClipVertex result;
+		result.x = from.x + (to.x - from.x) * t;
+		result.y = from.y + (to.y - from.y) * t;
+		result.u = from.u + (to.u - from.u) * t;
+		result.v = from.v + (to.v - from.v) * t;
+		result.color.r = from.color.r + (to.color.r - from.color.r) * t;
+		result.color.g = from.color.g + (to.color.g - from.color.g) * t;
+		result.color.b = from.color.b + (to.color.b - from.color.b) * t;
+		result.color.a = from.color.a + (to.color.a - from.color.a) * t;
+		return result;
+	}
+
+	ClipVertex IntersectClipEdge(const ClipVertex& from, const ClipVertex& to, ClipEdge edge, float value)
+	{
+		const float fromValue = GetClipAxisValue(from, edge);
+		const float toValue = GetClipAxisValue(to, edge);
+		const float delta = toValue - fromValue;
+		const float t = delta != 0.0f ? (value - fromValue) / delta : 0.0f;
+		return InterpolateClipVertex(from, to, std::max(0.0f, std::min(1.0f, t)));
+	}
+
+	void ClipPolygonByEdge(const std::vector<ClipVertex>& input, std::vector<ClipVertex>& output, ClipEdge edge, float value)
+	{
+		output.clear();
+		if (input.empty())
+			return;
+
+		ClipVertex previous = input.back();
+		bool previousInside = IsClipVertexInside(previous, edge, value);
+		for (std::vector<ClipVertex>::const_iterator it = input.begin(); it != input.end(); ++it)
+		{
+			const ClipVertex& current = *it;
+			const bool currentInside = IsClipVertexInside(current, edge, value);
+			if (currentInside != previousInside)
+				output.push_back(IntersectClipEdge(previous, current, edge, value));
+			if (currentInside)
+				output.push_back(current);
+			previous = current;
+			previousInside = currentInside;
+		}
+	}
+
+	void ClipTriangleToRect(const ClipVertex* triangle, const cocos2d::Rect& rect, std::vector<ClipVertex>& output, std::vector<ClipVertex>& scratch)
+	{
+		scratch.clear();
+		output.clear();
+		scratch.push_back(triangle[0]);
+		scratch.push_back(triangle[1]);
+		scratch.push_back(triangle[2]);
+
+		ClipPolygonByEdge(scratch, output, CLIP_LEFT, rect.getMinX());
+		ClipPolygonByEdge(output, scratch, CLIP_RIGHT, rect.getMaxX());
+		ClipPolygonByEdge(scratch, output, CLIP_BOTTOM, rect.getMinY());
+		ClipPolygonByEdge(output, scratch, CLIP_TOP, rect.getMaxY());
+		output.swap(scratch);
+	}
+
+	bool IntersectRect(const cocos2d::Rect& lhs, const cocos2d::Rect& rhs, cocos2d::Rect& output)
+	{
+		const float minX = std::max(lhs.getMinX(), rhs.getMinX());
+		const float minY = std::max(lhs.getMinY(), rhs.getMinY());
+		const float maxX = std::min(lhs.getMaxX(), rhs.getMaxX());
+		const float maxY = std::min(lhs.getMaxY(), rhs.getMaxY());
+		if (maxX <= minX || maxY <= minY)
+			return false;
+
+		output.setRect(minX, minY, maxX - minX, maxY - minY);
+		return true;
+	}
+
+	void AppendRectIfValid(std::vector<cocos2d::Rect>& rects, float x, float y, float width, float height)
+	{
+		if (width <= 0.0f || height <= 0.0f)
+			return;
+
+		rects.push_back(cocos2d::Rect(x, y, width, height));
+	}
+
+	void SubtractRect(const cocos2d::Rect& source, const cocos2d::Rect& cut, std::vector<cocos2d::Rect>& output)
+	{
+		cocos2d::Rect intersection;
+		if (!IntersectRect(source, cut, intersection))
+		{
+			output.push_back(source);
+			return;
+		}
+
+		AppendRectIfValid(output, source.getMinX(), source.getMinY(), intersection.getMinX() - source.getMinX(), source.size.height);
+		AppendRectIfValid(output, intersection.getMaxX(), source.getMinY(), source.getMaxX() - intersection.getMaxX(), source.size.height);
+		AppendRectIfValid(output, intersection.getMinX(), source.getMinY(), intersection.size.width, intersection.getMinY() - source.getMinY());
+		AppendRectIfValid(output, intersection.getMinX(), intersection.getMaxY(), intersection.size.width, source.getMaxY() - intersection.getMaxY());
 	}
 
 	std::string GetFileExtension(const std::string& filePath)
@@ -153,6 +279,9 @@ FairyGuiSystem::FairyGuiSystem()
 	: m_pRenderWindow(nullptr), m_pSceneManager(nullptr), m_pManualNode(nullptr), m_pManualObject(nullptr),
 	m_pScene(nullptr), m_pRoot(nullptr), m_initialized(false), m_screenWidth(0), m_screenHeight(0),
 	m_lastMouseX(0.0f), m_lastMouseY(0.0f), m_hasLastMousePosition(false), m_leftMouseDownOnUi(false),
+	m_scissorEnabled(false), m_scissorRect(cocos2d::Rect::ZERO),
+	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
+	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
 	m_objectHandles(), m_listenerBindings(), m_materialNames(), m_textureNames()
 {
@@ -352,6 +481,32 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	return consumed;
 }
 
+bool FairyGuiSystem::InjectMouseWheel(int x, int y, int wheelDelta)
+{
+	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || wheelDelta == 0)
+		return false;
+
+	float mouseX = 0.0f;
+	float mouseY = 0.0f;
+	ConvertMousePosition(x, y, mouseX, mouseY);
+	fairygui::GObject* target = m_pRoot->hitTest(cocos2d::Vec2(mouseX, mouseY), cocos2d::Camera::getVisitingCamera());
+	const bool mouseOnUi = target != nullptr && target != m_pRoot;
+	LogInputHit("wheel", x, y, mouseX, mouseY, target);
+
+	if (mouseOnUi)
+	{
+		cocos2d::EventMouse event;
+		event.setCursorPosition(mouseX, mouseY);
+		event.setScrollData(0.0f, static_cast<float>(wheelDelta));
+		m_pRoot->getInputProcessor()->mouseWheel(&event);
+	}
+
+	m_lastMouseX = mouseX;
+	m_lastMouseY = mouseY;
+	m_hasLastMousePosition = true;
+	return mouseOnUi;
+}
+
 bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 {
 	if (!m_initialized || packagePath.empty())
@@ -430,6 +585,80 @@ int FairyGuiSystem::CreateContainerHandle(const std::string& name)
 	ObjectHandleInfo handleInfo;
 	handleInfo.object = container;
 	handleInfo.ownerHandle = 0;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::CreateChildContainerHandle(int ownerHandle, const std::string& name)
+{
+	if (!m_initialized)
+		return 0;
+
+	fairygui::GComponent* container = fairygui::GComponent::create();
+	if (container == nullptr)
+		return 0;
+
+	container->name = name;
+	container->setOpaque(false);
+	container->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = container;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url)
+{
+	if (!m_initialized)
+		return 0;
+
+	fairygui::GLoader* loader = fairygui::GLoader::create();
+	if (loader == nullptr)
+		return 0;
+
+	loader->name = name;
+	loader->setURL(url);
+	loader->setFill(fairygui::LoaderFillType::SCALE_FREE);
+	loader->setTouchable(false);
+	loader->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = loader;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
+{
+	if (!m_initialized)
+		return 0;
+
+	fairygui::GBasicTextField* label = fairygui::GBasicTextField::create();
+	if (label == nullptr)
+		return 0;
+
+	label->name = name;
+	label->setText(text);
+	label->setFontSize(fontSize);
+	label->setColor(cocos2d::Color3B(
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, red))),
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, green))),
+		static_cast<unsigned char>(std::max(0.0f, std::min(255.0f, blue)))));
+	label->setTouchable(false);
+	label->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = label;
+	handleInfo.ownerHandle = ownerHandle;
 	handleInfo.retained = true;
 	m_objectHandles[objectHandle] = handleInfo;
 	return objectHandle;
@@ -543,6 +772,37 @@ bool FairyGuiSystem::SetObjectHandleVisible(int objectHandle, bool visible)
 		return false;
 
 	object->setVisible(visible);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleAlpha(int objectHandle, float alpha)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setAlpha(alpha);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleTouchable(int objectHandle, bool touchable)
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	if (object == nullptr)
+		return false;
+
+	object->setTouchable(touchable);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleMask(int objectHandle, int maskHandle, bool inverted)
+{
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
+	fairygui::GObject* mask = FindObjectHandle(maskHandle);
+	if (component == nullptr || mask == nullptr)
+		return false;
+
+	component->setMask(mask->displayObject(), inverted);
 	return true;
 }
 
@@ -708,15 +968,19 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 void FairyGuiSystem::ClearObjectHandles()
 {
 	m_listenerBindings.clear();
-	for (std::map<int, ObjectHandleInfo>::iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
+
+	std::vector<int> rootHandles;
+	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
 	{
-		if (it->second.object != nullptr && it->second.retained)
-		{
-			it->second.object->removeFromParent();
-			it->second.object->release();
-		}
+		if (it->second.ownerHandle == 0)
+			rootHandles.push_back(it->first);
 	}
-	m_objectHandles.clear();
+
+	for (std::vector<int>::const_iterator it = rootHandles.begin(); it != rootHandles.end(); ++it)
+		RemoveObjectHandle(*it);
+
+	while (!m_objectHandles.empty())
+		RemoveObjectHandle(m_objectHandles.begin()->first);
 }
 
 bool FairyGuiSystem::CreateSmokeTestImage(const std::string& imagePath)
@@ -745,7 +1009,82 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 	if (triangles.verts == nullptr || triangles.indices == nullptr || triangles.vertCount <= 0 || triangles.indexCount <= 0)
 		return;
 
+	if (m_stencilStage == cocos2d::STENCIL_STAGE_WRITE)
+	{
+		CollectStencilTriangle(command);
+		return;
+	}
+
 	const std::string& materialName = GetMaterialName(command.getTexture());
+	std::vector<cocos2d::Rect> clipRects;
+	BuildActiveClipRects(clipRects);
+	if (!clipRects.empty())
+	{
+		std::vector<ClipVertex> outputVertices;
+		std::vector<ClipVertex> clippedPolygon;
+		std::vector<ClipVertex> clipScratch;
+		outputVertices.reserve(static_cast<size_t>(triangles.indexCount) * clipRects.size());
+		clippedPolygon.reserve(8);
+		clipScratch.reserve(8);
+		for (int index = 0; index + 2 < triangles.indexCount; index += 3)
+		{
+			ClipVertex triangle[3];
+			bool validTriangle = true;
+			for (int vertexIndex = 0; vertexIndex < 3; ++vertexIndex)
+			{
+				const int sourceIndex = triangles.indices[index + vertexIndex];
+				if (sourceIndex < 0 || sourceIndex >= triangles.vertCount)
+				{
+					validTriangle = false;
+					break;
+				}
+
+				const cocos2d::V3F_C4B_T2F& vertex = triangles.verts[sourceIndex];
+				triangle[vertexIndex].x = TransformX(command.getTransform(), vertex.vertices);
+				triangle[vertexIndex].y = TransformY(command.getTransform(), vertex.vertices);
+				triangle[vertexIndex].u = vertex.texCoords.u;
+				triangle[vertexIndex].v = vertex.texCoords.v;
+				triangle[vertexIndex].color = ToOgreColor(vertex.colors);
+			}
+
+			if (!validTriangle)
+				continue;
+
+			for (std::vector<cocos2d::Rect>::const_iterator clipIt = clipRects.begin(); clipIt != clipRects.end(); ++clipIt)
+			{
+				ClipTriangleToRect(triangle, *clipIt, clippedPolygon, clipScratch);
+				if (clippedPolygon.size() < 3)
+					continue;
+
+				for (size_t polygonIndex = 1; polygonIndex + 1 < clippedPolygon.size(); ++polygonIndex)
+				{
+					outputVertices.push_back(clippedPolygon[0]);
+					outputVertices.push_back(clippedPolygon[polygonIndex]);
+					outputVertices.push_back(clippedPolygon[polygonIndex + 1]);
+				}
+			}
+		}
+
+		if (outputVertices.empty())
+			return;
+
+		m_pManualObject->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		m_pManualObject->estimateVertexCount(outputVertices.size());
+		m_pManualObject->estimateIndexCount(outputVertices.size());
+		for (size_t index = 0; index < outputVertices.size(); ++index)
+		{
+			const ClipVertex& vertex = outputVertices[index];
+			const float ndcX = vertex.x / static_cast<float>(m_screenWidth) * 2.0f - 1.0f;
+			const float ndcY = vertex.y / static_cast<float>(m_screenHeight) * 2.0f - 1.0f;
+			m_pManualObject->position(ndcX, ndcY, 0.0f);
+			m_pManualObject->textureCoord(vertex.u, vertex.v);
+			m_pManualObject->colour(vertex.color);
+			m_pManualObject->index(static_cast<Ogre::uint32>(index));
+		}
+		m_pManualObject->end();
+		return;
+	}
+
 	m_pManualObject->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 	m_pManualObject->estimateVertexCount(static_cast<size_t>(triangles.vertCount));
 	m_pManualObject->estimateIndexCount(static_cast<size_t>(triangles.indexCount));
@@ -771,6 +1110,8 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
 {
 	(void)command;
+	SyncScissorState();
+	SyncStencilState();
 }
 
 fairygui::GObject* FairyGuiSystem::FindObjectHandle(int objectHandle) const
@@ -860,6 +1201,7 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 	int y = 0;
 	int button = -1;
 	int touchId = -1;
+	int wheelDelta = 0;
 
 	if (context != nullptr)
 	{
@@ -892,12 +1234,13 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 			y = input->getY();
 			button = static_cast<int>(input->getButton());
 			touchId = input->getTouchId();
+			wheelDelta = input->getMouseWheelDelta();
 		}
 	}
 
 	luaVM->callFunction(
 		"FairyGuiManager_DispatchEvent",
-		"iiiiiiiiiii",
+		"iiiiiiiiiiii",
 		callbackId,
 		objectHandle,
 		eventType,
@@ -908,7 +1251,8 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 		x,
 		y,
 		button,
-		touchId);
+		touchId,
+		wheelDelta);
 }
 
 void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const
@@ -937,6 +1281,11 @@ bool FairyGuiSystem::IsMouseOnUi(float x, float y) const
 
 void FairyGuiSystem::BeginOgreRender()
 {
+	m_stencilScopes.clear();
+	m_pendingStencilValid = false;
+	m_pendingStencilDepth = 0;
+	SyncScissorState();
+	SyncStencilState();
 	if (m_pManualObject != nullptr)
 		m_pManualObject->clear();
 }
@@ -947,6 +1296,144 @@ void FairyGuiSystem::EndOgreRender()
 	{
 		m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pManualNode->_updateBounds();
+	}
+}
+
+void FairyGuiSystem::SyncScissorState()
+{
+	cocos2d::GLView* view = cocos2d::Director::getInstance()->getOpenGLView();
+	m_scissorEnabled = view != nullptr && view->isScissorEnabled();
+	m_scissorRect = view != nullptr ? view->getScissorRect() : cocos2d::Rect::ZERO;
+}
+
+void FairyGuiSystem::SyncStencilState()
+{
+	cocos2d::Renderer* renderer = cocos2d::Director::getInstance()->getRenderer();
+	if (renderer == nullptr)
+		return;
+
+	const unsigned int revision = renderer->getStencilRevision();
+	if (revision == m_stencilRevision)
+		return;
+
+	const cocos2d::StencilStage previousStage = m_stencilStage;
+	const int previousDepth = m_stencilDepth;
+	const cocos2d::StencilStage nextStage = renderer->getStencilStage();
+	const int nextDepth = renderer->getStencilDepth();
+	const bool nextInverted = renderer->isStencilInverted();
+
+	if (previousStage == cocos2d::STENCIL_STAGE_WRITE && nextStage == cocos2d::STENCIL_STAGE_TEST && m_pendingStencilDepth == nextDepth)
+		FinalizeStencilScope(nextDepth);
+
+	TrimStencilScopes(nextDepth);
+
+	if (nextStage == cocos2d::STENCIL_STAGE_WRITE && (previousStage != cocos2d::STENCIL_STAGE_WRITE || previousDepth != nextDepth))
+		BeginStencilWrite(nextDepth, nextInverted);
+
+	m_stencilStage = nextStage;
+	m_stencilDepth = nextDepth;
+	m_stencilRevision = revision;
+}
+
+void FairyGuiSystem::BeginStencilWrite(int depth, bool inverted)
+{
+	m_pendingStencilDepth = depth;
+	m_pendingStencilInverted = inverted;
+	m_pendingStencilValid = false;
+	m_pendingStencilRect = cocos2d::Rect::ZERO;
+}
+
+void FairyGuiSystem::CollectStencilTriangle(const cocos2d::TrianglesCommand& command)
+{
+	const cocos2d::TrianglesCommand::Triangles& triangles = command.getTriangles();
+	for (int index = 0; index < triangles.indexCount; ++index)
+	{
+		const int sourceIndex = triangles.indices[index];
+		if (sourceIndex < 0 || sourceIndex >= triangles.vertCount)
+			continue;
+
+		const cocos2d::V3F_C4B_T2F& vertex = triangles.verts[sourceIndex];
+		const float x = TransformX(command.getTransform(), vertex.vertices);
+		const float y = TransformY(command.getTransform(), vertex.vertices);
+		if (!m_pendingStencilValid)
+		{
+			m_pendingStencilRect.setRect(x, y, 0.0f, 0.0f);
+			m_pendingStencilValid = true;
+			continue;
+		}
+
+		const float minX = std::min(m_pendingStencilRect.getMinX(), x);
+		const float minY = std::min(m_pendingStencilRect.getMinY(), y);
+		const float maxX = std::max(m_pendingStencilRect.getMaxX(), x);
+		const float maxY = std::max(m_pendingStencilRect.getMaxY(), y);
+		m_pendingStencilRect.setRect(minX, minY, maxX - minX, maxY - minY);
+	}
+}
+
+void FairyGuiSystem::FinalizeStencilScope(int depth)
+{
+	TrimStencilScopes(depth - 1);
+
+	StencilClipInfo clipInfo;
+	clipInfo.rect = m_pendingStencilRect;
+	clipInfo.inverted = m_pendingStencilInverted;
+	clipInfo.valid = m_pendingStencilValid && m_pendingStencilRect.size.width > 0.0f && m_pendingStencilRect.size.height > 0.0f;
+	m_stencilScopes.push_back(clipInfo);
+	m_pendingStencilValid = false;
+}
+
+void FairyGuiSystem::TrimStencilScopes(int depth)
+{
+	if (depth < 0)
+		depth = 0;
+	while (static_cast<int>(m_stencilScopes.size()) > depth)
+		m_stencilScopes.pop_back();
+}
+
+void FairyGuiSystem::BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const
+{
+	if (m_stencilScopes.empty())
+	{
+		if (m_scissorEnabled && m_scissorRect.size.width > 0.0f && m_scissorRect.size.height > 0.0f)
+			clipRects.push_back(m_scissorRect);
+		return;
+	}
+
+	cocos2d::Rect baseRect;
+	if (m_scissorEnabled && m_scissorRect.size.width > 0.0f && m_scissorRect.size.height > 0.0f)
+		baseRect = m_scissorRect;
+	else
+		baseRect.setRect(0.0f, 0.0f, static_cast<float>(m_screenWidth), static_cast<float>(m_screenHeight));
+
+	if (baseRect.size.width <= 0.0f || baseRect.size.height <= 0.0f)
+		return;
+
+	clipRects.push_back(baseRect);
+	for (std::vector<StencilClipInfo>::const_iterator it = m_stencilScopes.begin(); it != m_stencilScopes.end(); ++it)
+	{
+		if (!it->valid)
+		{
+			if (it->inverted)
+				continue;
+			clipRects.clear();
+			return;
+		}
+
+		std::vector<cocos2d::Rect> nextRects;
+		for (std::vector<cocos2d::Rect>::const_iterator rectIt = clipRects.begin(); rectIt != clipRects.end(); ++rectIt)
+		{
+			if (it->inverted)
+				SubtractRect(*rectIt, it->rect, nextRects);
+			else
+			{
+				cocos2d::Rect intersection;
+				if (IntersectRect(*rectIt, it->rect, intersection))
+					nextRects.push_back(intersection);
+			}
+		}
+		clipRects.swap(nextRects);
+		if (clipRects.empty())
+			return;
 	}
 }
 

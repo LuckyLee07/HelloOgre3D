@@ -63,8 +63,8 @@ typedef intptr_t ssize_t;
 typedef unsigned char GLubyte;
 typedef int GLint;
 
-inline void glEnable(unsigned int) {}
-inline void glDisable(unsigned int) {}
+void glEnable(unsigned int capability);
+void glDisable(unsigned int capability);
 inline GLint glGetUniformLocation(unsigned int, const char*) { return 0; }
 
 #define CREATE_FUNC(__TYPE__) \
@@ -118,6 +118,13 @@ namespace cocos2d
 	enum class MATRIX_STACK_TYPE
 	{
 		MATRIX_STACK_MODELVIEW
+	};
+
+	enum StencilStage
+	{
+		STENCIL_STAGE_DISABLED,
+		STENCIL_STAGE_WRITE,
+		STENCIL_STAGE_TEST
 	};
 
 	struct Vec2
@@ -733,6 +740,8 @@ namespace cocos2d
 		float getCursorY() const { return _y; }
 		float getScrollX() const { return _scrollX; }
 		float getScrollY() const { return _scrollY; }
+		void setCursorPosition(float x, float y) { _x = x; _y = y; }
+		void setScrollData(float scrollX, float scrollY) { _scrollX = scrollX; _scrollY = scrollY; }
 
 	private:
 		MouseButton _button;
@@ -931,16 +940,25 @@ namespace cocos2d
 		void addCommand(RenderCommand* command);
 		void pushGroup(int) {}
 		void popGroup() {}
-		void setScissorTest(bool) {}
+		void setScissorTest(bool enabled);
+		void setStencilState(StencilStage stage, bool inverted, int depth);
 		bool checkVisibility(const Mat4&, const Size&) const { return true; }
 		void setCommandSink(RenderCommandSink* sink) { _commandSink = sink; }
 		int getTriangleCommandCount() const { return _triangleCommandCount; }
 		int getSubmittedTriangleCount() const { return _submittedTriangleCount; }
+		StencilStage getStencilStage() const { return _stencilStage; }
+		bool isStencilInverted() const { return _stencilInverted; }
+		int getStencilDepth() const { return _stencilDepth; }
+		unsigned int getStencilRevision() const { return _stencilRevision; }
 
 	private:
 		RenderCommandSink* _commandSink;
 		int _triangleCommandCount;
 		int _submittedTriangleCount;
+		StencilStage _stencilStage;
+		bool _stencilInverted;
+		int _stencilDepth;
+		unsigned int _stencilRevision;
 	};
 
 	class RenderCommand
@@ -1017,8 +1035,10 @@ namespace cocos2d
 	class GLView
 	{
 	public:
+		GLView();
 		bool isScissorEnabled() const { return _scissorEnabled; }
 		Rect getScissorRect() const { return _scissorRect; }
+		void setScissorTestEnabled(bool enabled);
 		void setScissorInPoints(float x, float y, float width, float height);
 		const Size& getFrameSize() const { return _frameSize; }
 		const Size& getDesignResolutionSize() const { return _frameSize; }
@@ -1379,13 +1399,17 @@ namespace cocos2d
 		void setAlphaThreshold(float value) { _alphaThreshold = value; }
 		bool isInverted() const { return _inverted; }
 		void setInverted(bool value) { _inverted = value; }
-		void onBeforeVisit() {}
-		void onAfterDrawStencil() {}
-		void onAfterVisit() {}
+		void onBeforeVisit();
+		void onAfterDrawStencil();
+		void onAfterVisit();
 
 	private:
 		float _alphaThreshold;
 		bool _inverted;
+		StencilStage _previousStage;
+		bool _previousInverted;
+		int _previousDepth;
+		bool _hasPreviousState;
 	};
 
 	class Director

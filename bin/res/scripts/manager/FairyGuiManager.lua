@@ -84,12 +84,24 @@ local function copyTable(source, target)
 	return target
 end
 
+local function tableCount(source)
+	local count = 0
+	if type(source) ~= "table" then
+		return count
+	end
+	for _, _ in pairs(source) do
+		count = count + 1
+	end
+	return count
+end
+
 local EVENT_TYPES = {
 	Changed = 2,
 	TouchBegin = 10,
 	TouchMove = 11,
 	TouchEnd = 12,
 	Click = 13,
+	MouseWheel = 16,
 	RightClick = 17,
 	ClickItem = 50,
 	RightClickItem = 53,
@@ -405,6 +417,86 @@ function FairyGuiManager:CreateObject(packageName, objectName)
 		return 0
 	end
 	return GameManager:createFairyGuiObject(packageName, objectName)
+end
+
+function FairyGuiManager:CreateContainer(name, ownerHandle)
+	if not self:IsAvailable() then
+		return 0
+	end
+	if ownerHandle ~= nil and GameManager.createFairyGuiChildContainer ~= nil then
+		return GameManager:createFairyGuiChildContainer(ownerHandle, name or "")
+	end
+	if GameManager.createFairyGuiContainer == nil then
+		return 0
+	end
+	return GameManager:createFairyGuiContainer(name or "")
+end
+
+function FairyGuiManager:CreateLoader(ownerHandle, name, url)
+	if not self:IsAvailable() or GameManager.createFairyGuiLoader == nil then
+		return 0
+	end
+	return GameManager:createFairyGuiLoader(ownerHandle or 0, name or "", url or "")
+end
+
+function FairyGuiManager:CreateText(ownerHandle, name, text, fontSize, red, green, blue)
+	if not self:IsAvailable() or GameManager.createFairyGuiText == nil then
+		return 0
+	end
+	return GameManager:createFairyGuiText(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
+end
+
+function FairyGuiManager:GetRenderStats()
+	local commandCount = 0
+	local triangleCount = 0
+	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
+		commandCount = GameManager:getFairyGuiLastRenderCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastTriangleCount ~= nil then
+		triangleCount = GameManager:getFairyGuiLastTriangleCount()
+	end
+	return {
+		commandCount = commandCount or 0,
+		triangleCount = triangleCount or 0,
+	}
+end
+
+function FairyGuiManager:DumpRenderStats()
+	local stats = self:GetRenderStats()
+	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+end
+
+function FairyGuiManager:GetDebugStats()
+	local childCacheCount = 0
+	for _, children in pairs(self.childrenByHandle) do
+		childCacheCount = childCacheCount + tableCount(children)
+	end
+
+	local packageCount = 0
+	local printed = {}
+	for _, packageInfo in pairs(self.packagesByName) do
+		if packageInfo ~= nil and printed[packageInfo.packageName] ~= true then
+			packageCount = packageCount + 1
+			printed[packageInfo.packageName] = true
+		end
+	end
+
+	return {
+		openUI = tableCount(self.objects),
+		hiddenUI = tableCount(self.hiddenObjects),
+		package = packageCount,
+		layerRoot = tableCount(self.layerRoots),
+		binding = tableCount(self.bindings),
+		objectHandle = tableCount(self.objectsByHandle),
+		childCache = childCacheCount,
+		view = tableCount(self.views),
+		controller = tableCount(self.controllers),
+	}
+end
+
+function FairyGuiManager:DumpDebugStats()
+	local stats = self:GetDebugStats()
+	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
 end
 
 function FairyGuiManager:RegisterUI(name, config)
@@ -1125,6 +1217,138 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		return handle
 	end
 
+function FairyGuiManager:OpenMaskProbe(param)
+	param = param or {}
+	local key = param.key or "MaskProbe"
+	self:CloseUI(key, true)
+
+	local assets = param.assets or {}
+	local backgroundPath = param.backgroundImage or assets.background
+	local contentPath = param.contentImage or assets.content
+	local stripAPath = param.stripAImage or assets.stripA
+	local stripBPath = param.stripBImage or assets.stripB
+	local stripCPath = param.stripCImage or assets.stripC
+	local maskPath = param.maskImage or assets.mask
+	if isBlank(backgroundPath) or isBlank(contentPath) or isBlank(stripAPath) or isBlank(stripBPath) or isBlank(stripCPath) or isBlank(maskPath) then
+		print("[FGUI] open mask probe failed, missing image asset")
+		return nil
+	end
+
+	local function addImage(parentHandle, name, path, x, y, width, height, alpha)
+		local childHandle = self:CreateLoader(parentHandle, name, path)
+		if childHandle == nil or childHandle <= 0 then
+			return nil
+		end
+		self:SetPosition(childHandle, x, y)
+		self:SetSize(childHandle, width, height)
+		self:SetTouchable(childHandle, false)
+		if alpha ~= nil then
+			self:SetAlpha(childHandle, alpha)
+		end
+		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			GameManager:removeFairyGuiObject(childHandle)
+			return nil
+		end
+		return childHandle
+	end
+
+	local function addText(parentHandle, name, text, x, y, width, height, red, green, blue)
+		local childHandle = self:CreateText(parentHandle, name, text, 18, red, green, blue)
+		if childHandle == nil or childHandle <= 0 then
+			return nil
+		end
+		self:SetPosition(childHandle, x, y)
+		self:SetSize(childHandle, width, height)
+		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			GameManager:removeFairyGuiObject(childHandle)
+			return nil
+		end
+		return childHandle
+	end
+
+	local function createPanel(parentHandle, name, x, y, inverted)
+		local panelHandle = self:CreateContainer(name, parentHandle)
+		if panelHandle == nil or panelHandle <= 0 then
+			return nil
+		end
+		self:SetPosition(panelHandle, x, y)
+		self:SetSize(panelHandle, 320, 210)
+		self:SetTouchable(panelHandle, false)
+		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(panelHandle, parentHandle) then
+			GameManager:removeFairyGuiObject(panelHandle)
+			return nil
+		end
+
+		local background = addImage(panelHandle, "content_bg", contentPath, -70, 28, 460, 150)
+		local stripA = addImage(panelHandle, "content_strip_a", stripAPath, -20, 50, 180, 72)
+		local stripB = addImage(panelHandle, "content_strip_b", stripBPath, 130, 82, 160, 52)
+		local stripC = addImage(panelHandle, "content_strip_c", stripCPath, 245, 20, 64, 64)
+		local mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
+		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
+			GameManager:removeFairyGuiObject(panelHandle)
+			return nil
+		end
+		return panelHandle
+	end
+
+	local handle = self:CreateContainer("FairyGuiMaskProbe")
+	if handle == nil or handle <= 0 then
+		return nil
+	end
+	self:SetSize(handle, 760, 330)
+	self:SetTouchable(handle, true)
+
+	local background = addImage(handle, "probe_bg", backgroundPath, 0, 24, 760, 286, 0.7)
+	local title = addText(handle, "probe_title", "FairyGUI Mask Probe", 12, 0, 320, 24, 255, 244, 210)
+	local normalLabel = addText(handle, "normal_label", "normal mask: only inside area is visible", 28, 42, 320, 24, 210, 255, 220)
+	local invertedLabel = addText(handle, "inverted_label", "inverted mask: center area is cut out", 404, 42, 320, 24, 255, 220, 210)
+	local normalPanel = createPanel(handle, "normal_panel", 28, 70, false)
+	local invertedPanel = createPanel(handle, "inverted_panel", 404, 70, true)
+	local normalOverlay = addImage(handle, "normal_mask_overlay", maskPath, 100, 116, 176, 118, 0.35)
+	local invertedOverlay = addImage(handle, "inverted_mask_overlay", maskPath, 476, 116, 176, 118, 0.35)
+	if background == nil or title == nil or normalLabel == nil or invertedLabel == nil or normalPanel == nil or invertedPanel == nil or normalOverlay == nil or invertedOverlay == nil then
+		GameManager:removeFairyGuiObject(handle)
+		return nil
+	end
+
+	local layerName = param.layer or "Top"
+	if not self:AttachToLayer(handle, layerName) then
+		GameManager:removeFairyGuiObject(handle)
+		return nil
+	end
+
+	if param.x ~= nil and param.y ~= nil then
+		self:SetPosition(handle, param.x, param.y)
+	elseif param.center ~= false then
+		GameManager:centerFairyGuiObject(handle, param.restraint == true)
+	end
+
+	local objectInfo = {
+		handle = handle,
+		key = key,
+		name = "MaskProbe",
+		objectName = "FairyGuiMaskProbe",
+		param = param,
+		uiName = "MaskProbe",
+		cache = false,
+		layer = layerName,
+		popupGroup = self:GetPopupGroup(param),
+		popupMode = param.popupMode or "stack",
+		uiGroup = self:GetUIGroup(param),
+		sceneName = self:GetSceneName(param),
+		closeOnSceneChange = param.closeOnSceneChange ~= false,
+		destroyOnSceneChange = param.destroyOnSceneChange == true,
+	}
+	self.objects[key] = objectInfo
+	self.objectsByHandle[handle] = objectInfo
+	self.uiNameToKey.MaskProbe = key
+	self.hiddenObjects[key] = nil
+	self:AssignLayer(objectInfo, objectInfo.layer)
+	self:ApplyScreenAdapt(objectInfo)
+	self:PushStack(objectInfo)
+	return handle
+end
+
 function FairyGuiManager:OpenUI(name, packagePath, classluaOrObjectName, param)
 	if isAutoGenClass(classluaOrObjectName) or (param and param.mvc == true) then
 		return self:OpenMvcUI(name, packagePath, classluaOrObjectName, param)
@@ -1237,6 +1461,7 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 				objectInfo.view:_Attach(objectInfo.handle, key, className, param)
 			end
 			callView(objectInfo.view, "OnReopen", param)
+			callView(objectInfo.view, "OnOpen", param)
 			callView(objectInfo.view, "OnShow", param)
 		end
 		return objectInfo.ctrl or objectInfo.view or objectInfo.handle
@@ -1285,6 +1510,7 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 		self.controllers[key] = autoGen.ctrl
 		self.controllersByHandle[handle] = autoGen.ctrl
 	end
+	callView(autoGen, "OnOpen", param)
 	callView(autoGen, "OnShow", param)
 	return autoGen.ctrl or autoGen
 end
@@ -1329,6 +1555,7 @@ function FairyGuiManager:OpenView(viewClass, param)
 				objectInfo.view:_Attach(objectInfo.handle, key, viewClassInfo.className, param)
 			end
 			callView(objectInfo.view, "OnReopen", param)
+			callView(objectInfo.view, "OnOpen", param)
 			callView(objectInfo.view, "OnShow", param)
 		end
 		return objectInfo.view or objectInfo.handle
@@ -1356,6 +1583,7 @@ function FairyGuiManager:OpenView(viewClass, param)
 	self.viewsByHandle[handle] = view
 
 	callView(view, "OnCreate", handle, param)
+	callView(view, "OnOpen", param)
 	callView(view, "OnShow", param)
 	return view
 end
@@ -1715,6 +1943,13 @@ function FairyGuiManager:DebugInjectMouseUp(x, y, button)
 	return GameManager:injectFairyGuiMouseUp(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
 end
 
+function FairyGuiManager:DebugInjectMouseWheel(x, y, wheelDelta)
+	if GameManager == nil or GameManager.injectFairyGuiMouseWheel == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiMouseWheel(tonumber(x) or 0, tonumber(y) or 0, tonumber(wheelDelta) or 0)
+end
+
 function FairyGuiManager:DebugInjectClick(x, y, button)
 	if GameManager == nil or GameManager.injectFairyGuiClick == nil then
 		return false
@@ -1847,6 +2082,10 @@ function FairyGuiManager:AddRightClick(handle, childPath, callback)
 	return self:AddEvent(handle, childPath, "RightClick", callback)
 end
 
+function FairyGuiManager:AddMouseWheel(handle, childPath, callback)
+	return self:AddEvent(handle, childPath, "MouseWheel", callback)
+end
+
 function FairyGuiManager:AddTouchBegin(handle, childPath, callback)
 	return self:AddEvent(handle, childPath, "TouchBegin", callback)
 end
@@ -1902,7 +2141,7 @@ function FairyGuiManager:ClearBindingsForHandle(handle)
 	self.bindingsByHandle[handle] = nil
 end
 
-function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
+function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
 	local callback = self.callbacks[callbackId]
 	if callback == nil then
 		return false
@@ -1929,6 +2168,7 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		y = y,
 		button = button,
 		touchId = touchId,
+		wheelDelta = wheelDelta or 0,
 		eventType = EVENT_NAMES[eventType] or eventType,
 		eventTypeId = eventType,
 		bindingId = bindingId,
@@ -1959,6 +2199,27 @@ function FairyGuiManager:SetVisible(handle, visible)
 		return false
 	end
 	return GameManager:setFairyGuiObjectVisible(handle, visible == true)
+end
+
+function FairyGuiManager:SetAlpha(handle, alpha)
+	if handle == nil or GameManager == nil or GameManager.setFairyGuiObjectAlpha == nil then
+		return false
+	end
+	return GameManager:setFairyGuiObjectAlpha(handle, alpha or 1)
+end
+
+function FairyGuiManager:SetTouchable(handle, touchable)
+	if handle == nil or GameManager == nil or GameManager.setFairyGuiObjectTouchable == nil then
+		return false
+	end
+	return GameManager:setFairyGuiObjectTouchable(handle, touchable == true)
+end
+
+function FairyGuiManager:SetMask(handle, maskHandle, inverted)
+	if handle == nil or maskHandle == nil or GameManager == nil or GameManager.setFairyGuiObjectMask == nil then
+		return false
+	end
+	return GameManager:setFairyGuiObjectMask(handle, maskHandle, inverted == true)
 end
 
 function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
@@ -2212,19 +2473,21 @@ function FairyGuiManager:DumpStacks()
 end
 
 function FairyGuiManager:Dump()
+	self:DumpDebugStats()
 	self:DumpOpenUIs()
 	self:DumpPackages()
 	self:DumpBindings()
 	self:DumpStacks()
 	self:DumpLayerRoots()
 	self:DumpScenes()
+	self:DumpRenderStats()
 end
 
-function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
+function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
 	if _G.FairyGuiManager == nil then
 		return false
 	end
-	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
+	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
 end
 
 function FairyGuiManager_HandleKeyPressed(keyCode, keyText)

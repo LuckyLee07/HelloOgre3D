@@ -5,6 +5,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace Ogre
 {
@@ -41,6 +42,7 @@ public:
 	bool InjectMouseMove(int x, int y);
 	bool InjectMouseDown(int x, int y, int button);
 	bool InjectMouseUp(int x, int y, int button);
+	bool InjectMouseWheel(int x, int y, int wheelDelta);
 
 	bool LoadPackage(const std::string& packagePath);
 	std::string LoadPackageAndGetName(const std::string& packagePath);
@@ -49,6 +51,9 @@ public:
 	bool AddToRoot(fairygui::GObject* object);
 	int CreateObjectHandle(const std::string& packageName, const std::string& objectName);
 	int CreateContainerHandle(const std::string& name);
+	int CreateChildContainerHandle(int ownerHandle, const std::string& name);
+	int CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url);
+	int CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue);
 	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
 	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
 	int GetObjectHandleListItem(int objectHandle, int itemIndex);
@@ -58,6 +63,9 @@ public:
 	bool SetObjectHandlePosition(int objectHandle, float x, float y);
 	bool SetObjectHandleSize(int objectHandle, float width, float height);
 	bool SetObjectHandleVisible(int objectHandle, bool visible);
+	bool SetObjectHandleAlpha(int objectHandle, float alpha);
+	bool SetObjectHandleTouchable(int objectHandle, bool touchable);
+	bool SetObjectHandleMask(int objectHandle, int maskHandle, bool inverted);
 	bool SetObjectHandleSortingOrder(int objectHandle, int sortingOrder);
 	bool SetObjectHandleText(int objectHandle, const std::string& text);
 	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
@@ -96,6 +104,13 @@ private:
 		bool retained;
 	};
 
+	struct StencilClipInfo
+	{
+		cocos2d::Rect rect;
+		bool inverted;
+		bool valid;
+	};
+
 	virtual void handleTrianglesCommand(const cocos2d::TrianglesCommand& command) override;
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
@@ -109,6 +124,13 @@ private:
 	bool IsMouseOnUi(float x, float y) const;
 	void BeginOgreRender();
 	void EndOgreRender();
+	void SyncScissorState();
+	void SyncStencilState();
+	void BeginStencilWrite(int depth, bool inverted);
+	void CollectStencilTriangle(const cocos2d::TrianglesCommand& command);
+	void FinalizeStencilScope(int depth);
+	void TrimStencilScopes(int depth);
+	void BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const;
 	bool CreateConfiguredPackageObject();
 	const std::string& GetMaterialName(cocos2d::Texture2D* texture);
 	std::string CreateOgreTexture(cocos2d::Texture2D* texture);
@@ -127,6 +149,16 @@ private:
 	float m_lastMouseY;
 	bool m_hasLastMousePosition;
 	bool m_leftMouseDownOnUi;
+	bool m_scissorEnabled;
+	cocos2d::Rect m_scissorRect;
+	cocos2d::StencilStage m_stencilStage;
+	int m_stencilDepth;
+	unsigned int m_stencilRevision;
+	int m_pendingStencilDepth;
+	bool m_pendingStencilInverted;
+	bool m_pendingStencilValid;
+	cocos2d::Rect m_pendingStencilRect;
+	std::vector<StencilClipInfo> m_stencilScopes;
 	int m_lastRenderCommandCount;
 	int m_lastTriangleCount;
 	unsigned int m_materialCounter;

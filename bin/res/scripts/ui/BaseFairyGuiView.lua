@@ -238,6 +238,10 @@ function BaseFairyGuiView:AddRightClick(childPath, callback)
 	return self:AddEvent(childPath, "RightClick", callback)
 end
 
+function BaseFairyGuiView:AddMouseWheel(childPath, callback)
+	return self:AddEvent(childPath, "MouseWheel", callback)
+end
+
 function BaseFairyGuiView:AddTouchBegin(childPath, callback)
 	return self:AddEvent(childPath, "TouchBegin", callback)
 end
@@ -259,6 +263,9 @@ function BaseFairyGuiView:AddDragEnd(childPath, callback)
 end
 
 function BaseFairyGuiView:OnCreate(handle, param)
+end
+
+function BaseFairyGuiView:OnOpen(param)
 end
 
 function BaseFairyGuiView:OnReopen(param)

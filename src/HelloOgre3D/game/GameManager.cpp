@@ -128,6 +128,45 @@ int GameManager::createFairyGuiContainer(const char* name)
 #endif
 }
 
+int GameManager::createFairyGuiChildContainer(int ownerHandle, const char* name)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateChildContainerHandle(ownerHandle, name != nullptr ? name : "");
+#else
+	return 0;
+#endif
+}
+
+int GameManager::createFairyGuiLoader(int ownerHandle, const char* name, const char* url)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateLoaderHandle(ownerHandle, name != nullptr ? name : "", url != nullptr ? url : "");
+#else
+	return 0;
+#endif
+}
+
+int GameManager::createFairyGuiText(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateTextHandle(ownerHandle, name != nullptr ? name : "", text != nullptr ? text : "", fontSize, red, green, blue);
+#else
+	return 0;
+#endif
+}
+
 int GameManager::createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -136,6 +175,26 @@ int GameManager::createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre:
 		return 0;
 
 	return system->CreateModalMaskHandle(red, green, blue, alpha);
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastRenderCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastRenderCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastTriangleCount() : 0;
 #else
 	return 0;
 #endif
@@ -225,6 +284,36 @@ bool GameManager::setFairyGuiObjectVisible(int objectHandle, bool visible)
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
 	return system != nullptr && system->SetObjectHandleVisible(objectHandle, visible);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectAlpha(int objectHandle, Ogre::Real alpha)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleAlpha(objectHandle, alpha);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectTouchable(int objectHandle, bool touchable)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleTouchable(objectHandle, touchable);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectMask(int objectHandle, int maskHandle, bool inverted)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleMask(objectHandle, maskHandle, inverted);
 #else
 	return false;
 #endif
@@ -355,6 +444,16 @@ bool GameManager::injectFairyGuiMouseUp(int x, int y, int button)
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
 	return system != nullptr && system->InjectMouseUp(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::injectFairyGuiMouseWheel(int x, int y, int wheelDelta)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectMouseWheel(x, y, wheelDelta);
 #else
 	return false;
 #endif
@@ -613,8 +712,13 @@ bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr && system->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
-		return true;
+	if (system != nullptr)
+	{
+		if (evt.state.Z.rel != 0 && system->InjectMouseWheel(evt.state.X.abs, evt.state.Y.abs, evt.state.Z.rel))
+			return true;
+		if (system->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
+			return true;
+	}
 #endif
 	return false;
 }

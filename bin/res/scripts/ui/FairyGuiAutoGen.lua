@@ -29,6 +29,15 @@ function FairyGuiAutoGen:OnCreate(handle, param)
 	end
 end
 
+function FairyGuiAutoGen:OnOpen(param)
+	if self.ctrl ~= nil and self.ctrl.model ~= nil and self.ctrl.model.SetIncomingParam ~= nil then
+		self.ctrl.model:SetIncomingParam(param)
+	end
+	if self.ctrl ~= nil and self.ctrl.OnOpen ~= nil then
+		self.ctrl:OnOpen(param)
+	end
+end
+
 function FairyGuiAutoGen:OnShow(param)
 	if self.ctrl ~= nil and self.ctrl.model ~= nil and self.ctrl.model.SetIncomingParam ~= nil then
 		self.ctrl.model:SetIncomingParam(param)

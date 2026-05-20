@@ -1069,7 +1069,14 @@ namespace cocos2d
 		return sequence;
 	}
 
-	Renderer::Renderer() : _commandSink(nullptr), _triangleCommandCount(0), _submittedTriangleCount(0)
+	Renderer::Renderer() :
+		_commandSink(nullptr),
+		_triangleCommandCount(0),
+		_submittedTriangleCount(0),
+		_stencilStage(STENCIL_STAGE_DISABLED),
+		_stencilInverted(false),
+		_stencilDepth(0),
+		_stencilRevision(0)
 	{
 	}
 
@@ -1077,6 +1084,22 @@ namespace cocos2d
 	{
 		_triangleCommandCount = 0;
 		_submittedTriangleCount = 0;
+		if (_stencilStage != STENCIL_STAGE_DISABLED || _stencilDepth != 0 || _stencilInverted)
+			setStencilState(STENCIL_STAGE_DISABLED, false, 0);
+		Director::getInstance()->getOpenGLView()->setScissorTestEnabled(false);
+	}
+
+	void Renderer::setScissorTest(bool enabled)
+	{
+		Director::getInstance()->getOpenGLView()->setScissorTestEnabled(enabled);
+	}
+
+	void Renderer::setStencilState(StencilStage stage, bool inverted, int depth)
+	{
+		_stencilStage = stage;
+		_stencilInverted = inverted;
+		_stencilDepth = depth;
+		++_stencilRevision;
 	}
 
 	void Renderer::addCommand(RenderCommand* command)
@@ -1144,9 +1167,20 @@ namespace cocos2d
 		init(globalOrder, texture, nullptr, blendFunc, triangles, transform, flags);
 	}
 
+	GLView::GLView() :
+		_scissorEnabled(false),
+		_scissorRect(Rect::ZERO),
+		_frameSize(Size::ZERO)
+	{
+	}
+
+	void GLView::setScissorTestEnabled(bool enabled)
+	{
+		_scissorEnabled = enabled;
+	}
+
 	void GLView::setScissorInPoints(float x, float y, float width, float height)
 	{
-		_scissorEnabled = true;
 		_scissorRect = Rect(x, y, width, height);
 	}
 
@@ -1689,8 +1723,39 @@ namespace cocos2d
 		_bmfontScale = 1.0f;
 	}
 
-	StencilStateManager::StencilStateManager() : _alphaThreshold(1), _inverted(false)
+	StencilStateManager::StencilStateManager() :
+		_alphaThreshold(1),
+		_inverted(false),
+		_previousStage(STENCIL_STAGE_DISABLED),
+		_previousInverted(false),
+		_previousDepth(0),
+		_hasPreviousState(false)
 	{
+	}
+
+	void StencilStateManager::onBeforeVisit()
+	{
+		Renderer* renderer = Director::getInstance()->getRenderer();
+		_previousStage = renderer->getStencilStage();
+		_previousInverted = renderer->isStencilInverted();
+		_previousDepth = renderer->getStencilDepth();
+		_hasPreviousState = true;
+		renderer->setStencilState(STENCIL_STAGE_WRITE, _inverted, _previousDepth + 1);
+	}
+
+	void StencilStateManager::onAfterDrawStencil()
+	{
+		Renderer* renderer = Director::getInstance()->getRenderer();
+		renderer->setStencilState(STENCIL_STAGE_TEST, _inverted, renderer->getStencilDepth());
+	}
+
+	void StencilStateManager::onAfterVisit()
+	{
+		if (!_hasPreviousState)
+			return;
+
+		Director::getInstance()->getRenderer()->setStencilState(_previousStage, _previousInverted, _previousDepth);
+		_hasPreviousState = false;
 	}
 
 	Director::Director() : _totalFrames(0), _deltaTime(0)
@@ -1734,4 +1799,16 @@ namespace cocos2d
 			return nullptr;
 		}
 	}
+}
+
+void glEnable(unsigned int capability)
+{
+	if (capability == GL_SCISSOR_TEST)
+		cocos2d::Director::getInstance()->getOpenGLView()->setScissorTestEnabled(true);
+}
+
+void glDisable(unsigned int capability)
+{
+	if (capability == GL_SCISSOR_TEST)
+		cocos2d::Director::getInstance()->getOpenGLView()->setScissorTestEnabled(false);
 }

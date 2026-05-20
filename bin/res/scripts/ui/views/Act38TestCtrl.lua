@@ -17,6 +17,9 @@ function Act38TestCtrl:RegisterUIEvents()
 	self:AddClickItem("m2_dayTaskList", function(evt)
 		self:OnTaskItemClick("day", evt)
 	end)
+	self:AddMouseWheel("m2_dayTaskList", function(evt)
+		self:OnTaskListMouseWheel("day", evt)
+	end)
 	self:AddClickItem("m2_spcTaskList", function(evt)
 		self:OnTaskItemClick("special", evt)
 	end)
@@ -139,6 +142,10 @@ function Act38TestCtrl:OnShopItemClick(evt)
 		self:UpdateListItem("m2_excShopList", itemIndex, item)
 	end
 	print("[FGUI] Act38TestCtrl shop item click:", itemIndex, item and item.cost, item and item.reward, item and item.state)
+end
+
+function Act38TestCtrl:OnTaskListMouseWheel(taskType, evt)
+	print("[FGUI] Act38TestCtrl list mouse wheel:", taskType, evt.wheelDelta, evt.x, evt.y)
 end
 
 function Act38TestCtrl:RunListApiSelfTest()

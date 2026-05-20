@@ -130,7 +130,7 @@ void InputProcessor::updateRecentInput(TouchInfo* ti, GObject* target)
     _recentInput._touch = ti->touch;
     _recentInput._touchId = ti->touch ? ti->touchId : -1;
 
-    int curFrame = Director::getInstance()->getTotalFrames();
+    unsigned int curFrame = static_cast<unsigned int>(Director::getInstance()->getTotalFrames());
     bool flag = target != _owner;
     if (curFrame != _touchOnUIFlagFrameId)
         _touchOnUI = flag;
@@ -328,6 +328,11 @@ void InputProcessor::touchMove(cocos2d::Touch *touch, cocos2d::Event *event)
 void InputProcessor::touchUp(cocos2d::Touch *touch, cocos2d::Event *event)
 {
     onTouchEnded(touch, event);
+}
+
+void InputProcessor::mouseWheel(cocos2d::EventMouse* event)
+{
+    onMouseScroll(event);
 }
 
 bool InputProcessor::onTouchBegan(Touch *touch, Event* /*unusedEvent*/)
@@ -677,7 +682,7 @@ void InputProcessor::onMouseScroll(cocos2d::EventMouse * event)
     TouchInfo* ti = getTouch(0);
     ti->pos = UIRoot->worldToRoot(pt);
     ti->touch = nullptr;
-    ti->mouseWheelDelta = MAX(event->getScrollX(), event->getScrollY());
+    ti->mouseWheelDelta = event->getScrollY() != 0 ? event->getScrollY() : event->getScrollX();
 
     updateRecentInput(ti, target);
     _activeProcessor = this;
