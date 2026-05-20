@@ -116,6 +116,8 @@ local DEFAULT_LAYER_ORDER = {
 	Toast = 6000,
 }
 
+local KEY_ESCAPE = 1
+
 local LIST_ITEM_METHODS = {}
 
 local function getCurrentManager()
@@ -242,16 +244,21 @@ function FairyGuiManager:Init()
 	self.viewsByHandle = {}
 	self.controllers = {}
 	self.controllersByHandle = {}
+	self.currentSceneName = "Default"
 	self.layers = copyTable(DEFAULT_LAYER_ORDER)
-	self.layerNextOrder = {}
-	self.layerObjects = {}
-	for layerName, _ in pairs(self.layers) do
-		self.layerNextOrder[layerName] = 0
-		self.layerObjects[layerName] = {}
-	end
-	self.callbacks = {}
-	self.bindings = {}
-	self.bindingsByHandle = {}
+		self.layerNextOrder = {}
+		self.layerObjects = {}
+		for layerName, _ in pairs(self.layers) do
+			self.layerNextOrder[layerName] = 0
+			self.layerObjects[layerName] = {}
+		end
+		self.uiStack = {}
+		self.popupStack = {}
+		self.stackEntriesByKey = {}
+		self.nextStackSerial = 0
+		self.callbacks = {}
+		self.bindings = {}
+		self.bindingsByHandle = {}
 	self.nextCallbackId = 1
 end
 
@@ -454,11 +461,23 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 		"modal",
 		"modalAlpha",
 		"unloadPackageOnClose",
-		"clearPackage",
-		"destroyOnClose",
-		"fullScreen",
-		"adaptScreen",
-		"marginLeft",
+			"clearPackage",
+			"destroyOnClose",
+			"stack",
+			"stackMode",
+			"closeOnMaskClick",
+			"closeOnEscape",
+			"popupMode",
+			"popupGroup",
+			"group",
+			"uiGroup",
+			"scene",
+			"sceneName",
+			"closeOnSceneChange",
+			"destroyOnSceneChange",
+			"fullScreen",
+			"adaptScreen",
+			"marginLeft",
 		"marginRight",
 		"marginTop",
 		"marginBottom",
@@ -513,6 +532,299 @@ function FairyGuiManager:NextLayerSortingOrder(layerName)
 	return self:GetLayerBaseOrder(layerName) + nextOrder
 end
 
+function FairyGuiManager:IsPopupLayer(layerName)
+	return layerName == "Popup" or layerName == "Guide" or layerName == "Top" or layerName == "Toast"
+end
+
+function FairyGuiManager:GetStackMode(objectInfo)
+	if objectInfo == nil then
+		return "None"
+	end
+
+	local param = objectInfo.param or {}
+	if param.stack == false or param.stackMode == "None" then
+		return "None"
+	end
+	if param.stackMode ~= nil then
+		return param.stackMode
+	end
+	if self:IsPopupLayer(objectInfo.layer) then
+		return "Popup"
+	end
+	return "Normal"
+end
+
+function FairyGuiManager:RemoveStackEntry(key)
+	if key == nil or self.stackEntriesByKey[key] == nil then
+		return false
+	end
+
+	local entry = self.stackEntriesByKey[key]
+	self.stackEntriesByKey[key] = nil
+	for index = #self.uiStack, 1, -1 do
+		if self.uiStack[index].key == key then
+			table.remove(self.uiStack, index)
+		end
+	end
+	for index = #self.popupStack, 1, -1 do
+		if self.popupStack[index].key == key then
+			table.remove(self.popupStack, index)
+		end
+	end
+	return entry ~= nil
+end
+
+function FairyGuiManager:PushStack(objectInfo)
+	if objectInfo == nil or objectInfo.key == nil then
+		return false
+	end
+
+	local stackMode = self:GetStackMode(objectInfo)
+	self:RemoveStackEntry(objectInfo.key)
+	if stackMode == "None" then
+		objectInfo.stackMode = stackMode
+		return false
+	end
+
+	self.nextStackSerial = (self.nextStackSerial or 0) + 1
+	local entry = {
+		key = objectInfo.key,
+		handle = objectInfo.handle,
+		layer = objectInfo.layer,
+		mode = stackMode,
+		popupGroup = objectInfo.popupGroup,
+		popupMode = objectInfo.popupMode,
+		serial = self.nextStackSerial,
+	}
+	self.stackEntriesByKey[objectInfo.key] = entry
+	table.insert(self.uiStack, entry)
+	if stackMode == "Popup" or self:IsPopupLayer(objectInfo.layer) then
+		table.insert(self.popupStack, entry)
+	end
+	objectInfo.stackMode = stackMode
+	objectInfo.stackSerial = entry.serial
+	return true
+end
+
+function FairyGuiManager:GetTopStackObject(stack, layerName)
+	for index = #stack, 1, -1 do
+		local entry = stack[index]
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil and (layerName == nil or objectInfo.layer == layerName) then
+			return objectInfo, entry
+		end
+	end
+	return nil, nil
+end
+
+function FairyGuiManager:GetObjectResult(objectInfo)
+	if objectInfo == nil then
+		return nil
+	end
+	return objectInfo.ctrl or objectInfo.view or objectInfo.handle
+end
+
+function FairyGuiManager:GetTopUI(layerName)
+	local objectInfo = self:GetTopStackObject(self.uiStack, layerName)
+	return self:GetObjectResult(objectInfo)
+end
+
+function FairyGuiManager:GetTopPopup()
+	local objectInfo = self:GetTopStackObject(self.popupStack)
+	return self:GetObjectResult(objectInfo)
+end
+
+function FairyGuiManager:CloseTop(layerName, forceDestroy)
+	local objectInfo = self:GetTopStackObject(self.uiStack, layerName)
+	if objectInfo == nil then
+		return false
+	end
+	return self:CloseUI(objectInfo.key, forceDestroy)
+end
+
+function FairyGuiManager:CloseTopPopup(forceDestroy)
+	local objectInfo = self:GetTopStackObject(self.popupStack)
+	if objectInfo == nil then
+		return false
+	end
+	return self:CloseUI(objectInfo.key, forceDestroy)
+end
+
+function FairyGuiManager:IsPopupOpenParam(param)
+	if param == nil then
+		return false
+	end
+	if param.stackMode == "Popup" then
+		return true
+	end
+	return self:IsPopupLayer(param.layer)
+end
+
+function FairyGuiManager:GetPopupGroup(param, objectInfo)
+	local group = param ~= nil and param.popupGroup or nil
+	if isBlank(group) and objectInfo ~= nil then
+		group = objectInfo.popupGroup
+	end
+	if isBlank(group) and param ~= nil then
+		group = param.key or param.uiName
+	end
+	if isBlank(group) and objectInfo ~= nil then
+		group = objectInfo.key or objectInfo.uiName
+	end
+	return group or "Popup"
+end
+
+function FairyGuiManager:GetUIGroup(param, objectInfo)
+	local group = param ~= nil and (param.uiGroup or param.group) or nil
+	if isBlank(group) and objectInfo ~= nil then
+		group = objectInfo.uiGroup
+	end
+	if isBlank(group) and param ~= nil then
+		group = param.popupGroup
+	end
+	if isBlank(group) and objectInfo ~= nil then
+		group = objectInfo.popupGroup
+	end
+	return group
+end
+
+function FairyGuiManager:GetSceneName(param, objectInfo)
+	local sceneName = param ~= nil and (param.sceneName or param.scene) or nil
+	if isBlank(sceneName) and objectInfo ~= nil then
+		sceneName = objectInfo.sceneName
+	end
+	if isBlank(sceneName) then
+		sceneName = self.currentSceneName
+	end
+	return sceneName or "Default"
+end
+
+function FairyGuiManager:GetTopPopupObjectByGroup(popupGroup)
+	if isBlank(popupGroup) then
+		return nil
+	end
+
+	for index = #self.popupStack, 1, -1 do
+		local entry = self.popupStack[index]
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil and objectInfo.popupGroup == popupGroup then
+			return objectInfo, entry
+		end
+	end
+	return nil, nil
+end
+
+function FairyGuiManager:ReopenObjectInfo(objectInfo, param)
+	if objectInfo == nil then
+		return nil
+	end
+
+	objectInfo.param = param or objectInfo.param
+	objectInfo.cache = objectInfo.param.cache == true or objectInfo.cache == true
+	objectInfo.popupGroup = self:GetPopupGroup(objectInfo.param, objectInfo)
+	objectInfo.popupMode = objectInfo.param.popupMode or objectInfo.popupMode or "stack"
+	objectInfo.uiGroup = self:GetUIGroup(objectInfo.param, objectInfo)
+	objectInfo.sceneName = self:GetSceneName(objectInfo.param, objectInfo)
+	objectInfo.closeOnSceneChange = objectInfo.param.closeOnSceneChange ~= false
+	self.hiddenObjects[objectInfo.key] = nil
+	self:SetVisible(objectInfo.handle, true)
+	if objectInfo.modalMaskHandle ~= nil then
+		self:SetVisible(objectInfo.modalMaskHandle, true)
+	end
+	self:BringToFront(objectInfo.handle)
+	self:ApplyScreenAdapt(objectInfo)
+	if objectInfo.view ~= nil then
+		if objectInfo.view._Attach ~= nil then
+			local viewName = objectInfo.autoGenClass or objectInfo.name
+			objectInfo.view:_Attach(objectInfo.handle, objectInfo.key, viewName, objectInfo.param)
+		end
+		callView(objectInfo.view, "OnReopen", objectInfo.param)
+		callView(objectInfo.view, "OnShow", objectInfo.param)
+	end
+	return self:GetObjectResult(objectInfo)
+end
+
+function FairyGuiManager:ClosePopupGroup(popupGroup, exceptKey, forceDestroy)
+	if isBlank(popupGroup) then
+		return 0
+	end
+
+	local closeKeys = {}
+	for index = #self.popupStack, 1, -1 do
+		local entry = self.popupStack[index]
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil and objectInfo.key ~= exceptKey and objectInfo.popupGroup == popupGroup then
+			table.insert(closeKeys, objectInfo.key)
+		end
+	end
+
+	local closeCount = 0
+	for _, key in ipairs(closeKeys) do
+		if self:CloseUI(key, forceDestroy) then
+			closeCount = closeCount + 1
+		end
+	end
+	return closeCount
+end
+
+function FairyGuiManager:ApplyPopupOpenPolicy(param)
+	if param == nil or param.__popupPolicyApplied == true then
+		return nil
+	end
+	param.__popupPolicyApplied = true
+
+	if not self:IsPopupOpenParam(param) then
+		return nil
+	end
+
+	local popupMode = string.lower(tostring(param.popupMode or "stack"))
+	param.popupGroup = self:GetPopupGroup(param)
+	if popupMode == "single" then
+		local objectInfo = self:GetTopPopupObjectByGroup(param.popupGroup)
+		if objectInfo ~= nil then
+			return self:ReopenObjectInfo(objectInfo, param)
+		end
+	elseif popupMode == "replace" then
+		self:ClosePopupGroup(param.popupGroup, param.key, param.forceDestroyOnReplace == true)
+	end
+	return nil
+end
+
+function FairyGuiManager:CanClosePopupByEscape(objectInfo)
+	if objectInfo == nil then
+		return false
+	end
+	local param = objectInfo.param or {}
+	return param.closeOnEscape ~= false
+end
+
+function FairyGuiManager:HandleKeyPressed(keyCode, keyText)
+	if tonumber(keyCode) == KEY_ESCAPE then
+		local objectInfo = self:GetTopStackObject(self.popupStack)
+		if self:CanClosePopupByEscape(objectInfo) then
+			return self:CloseUI(objectInfo.key)
+		end
+	end
+	return false
+end
+
+function FairyGuiManager:HandleKeyReleased(keyCode, keyText)
+	return false
+end
+
+function FairyGuiManager:UpdateModalMaskSorting(objectInfo)
+	if objectInfo == nil or objectInfo.modalMaskHandle == nil then
+		return false
+	end
+	if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
+		GameManager:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+	end
+	if self.hiddenObjects[objectInfo.key] == nil then
+		self:SetVisible(objectInfo.modalMaskHandle, true)
+	end
+	return true
+end
+
 function FairyGuiManager:AssignLayer(objectInfo, layerName)
 	if objectInfo == nil or objectInfo.handle == nil then
 		return false
@@ -531,8 +843,11 @@ function FairyGuiManager:AssignLayer(objectInfo, layerName)
 	self.layerObjects[layerName][objectInfo.handle] = true
 
 	if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		return GameManager:setFairyGuiObjectSortingOrder(objectInfo.handle, objectInfo.sortingOrder)
+		local result = GameManager:setFairyGuiObjectSortingOrder(objectInfo.handle, objectInfo.sortingOrder)
+		self:UpdateModalMaskSorting(objectInfo)
+		return result
 	end
+	self:UpdateModalMaskSorting(objectInfo)
 	return true
 end
 
@@ -541,7 +856,9 @@ function FairyGuiManager:BringToFront(keyOrHandle)
 	if objectInfo == nil then
 		return false
 	end
-	return self:AssignLayer(objectInfo, objectInfo.layer)
+	local result = self:AssignLayer(objectInfo, objectInfo.layer)
+	self:PushStack(objectInfo)
+	return result
 end
 
 function FairyGuiManager:CreateModalMask(objectInfo, param)
@@ -567,6 +884,12 @@ function FairyGuiManager:CreateModalMask(objectInfo, param)
 	self:SetSize(maskHandle, self:GetScreenWidth(), self:GetScreenHeight())
 	self:SetPosition(maskHandle, 0, 0)
 	objectInfo.modalMaskHandle = maskHandle
+	if param.closeOnMaskClick == true then
+		local closeKey = objectInfo.key
+		objectInfo.modalMaskBindingId = self:AddClick(maskHandle, "", function()
+			self:CloseUI(closeKey)
+		end)
+	end
 	return maskHandle
 end
 
@@ -636,6 +959,10 @@ function FairyGuiManager:Open(name, param)
 	local openParam = self:BuildOpenParam(name, config, param)
 	openParam.uiName = name
 	self.uiNameToKey[name] = openParam.key
+	local policyResult = self:ApplyPopupOpenPolicy(openParam)
+	if policyResult ~= nil then
+		return policyResult
+	end
 
 	local packagePath = config.packagePath or config.package
 	local component = openParam.objectName or openParam.component or config.objectName or config.component or name
@@ -706,15 +1033,22 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		cache = param.cache == true,
 		unloadPackageOnClose = param.unloadPackageOnClose == true or param.clearPackage == true,
 		layer = param.layer or "Normal",
+		popupGroup = self:GetPopupGroup(param),
+		popupMode = param.popupMode or "stack",
+		uiGroup = self:GetUIGroup(param),
+		sceneName = self:GetSceneName(param),
+		closeOnSceneChange = param.closeOnSceneChange ~= false,
+		destroyOnSceneChange = param.destroyOnSceneChange == true,
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
 	self.hiddenObjects[key] = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:CreateModalMask(objectInfo, param)
-	self:ApplyScreenAdapt(objectInfo)
-	return handle
-end
+		self:AssignLayer(objectInfo, objectInfo.layer)
+		self:CreateModalMask(objectInfo, param)
+		self:ApplyScreenAdapt(objectInfo)
+		self:PushStack(objectInfo)
+		return handle
+	end
 
 function FairyGuiManager:OpenUI(name, packagePath, classluaOrObjectName, param)
 	if isAutoGenClass(classluaOrObjectName) or (param and param.mvc == true) then
@@ -1461,13 +1795,16 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy)
 		if objectInfo.modalMaskHandle ~= nil then
 			self:SetVisible(objectInfo.modalMaskHandle, false)
 		end
+		self:RemoveStackEntry(objectInfo.key)
 		self.hiddenObjects[objectInfo.key] = objectInfo
 		return true
 	end
 
 	detachView(self, objectInfo)
+	self:RemoveStackEntry(objectInfo.key)
 	self:ClearBindingsForHandle(handle)
 	if objectInfo.modalMaskHandle ~= nil then
+		self:ClearBindingsForHandle(objectInfo.modalMaskHandle)
 		GameManager:removeFairyGuiObject(objectInfo.modalMaskHandle)
 	end
 	local removed = GameManager:removeFairyGuiObject(handle)
@@ -1512,82 +1849,133 @@ function FairyGuiManager:Get(nameOrKeyOrHandle)
 	return objectInfo.ctrl or objectInfo.view or objectInfo.handle
 end
 
-function FairyGuiManager:CloseAll(layerName, forceDestroy)
+function FairyGuiManager:MatchCloseFilter(objectInfo, filter)
+	if objectInfo == nil then
+		return false
+	end
+	filter = filter or {}
+	if filter.exceptKey ~= nil and objectInfo.key == filter.exceptKey then
+		return false
+	end
+	if filter.layerName ~= nil and objectInfo.layer ~= filter.layerName then
+		return false
+	end
+	if filter.groupName ~= nil and objectInfo.uiGroup ~= filter.groupName and objectInfo.popupGroup ~= filter.groupName then
+		return false
+	end
+	if filter.popupGroup ~= nil and objectInfo.popupGroup ~= filter.popupGroup then
+		return false
+	end
+	if filter.sceneName ~= nil and objectInfo.sceneName ~= filter.sceneName then
+		return false
+	end
+	if filter.sceneCleanup == true and objectInfo.closeOnSceneChange == false then
+		return false
+	end
+	return true
+end
+
+function FairyGuiManager:CollectCloseHandles(filter)
 	local handles = {}
-	for handle, objectInfo in pairs(self.objectsByHandle) do
-		if layerName == nil or objectInfo.layer == layerName then
-			table.insert(handles, handle)
+	local handleSet = {}
+
+	for index = #self.uiStack, 1, -1 do
+		local entry = self.uiStack[index]
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil and self:MatchCloseFilter(objectInfo, filter) then
+			table.insert(handles, objectInfo.handle)
+			handleSet[objectInfo.handle] = true
 		end
 	end
 
-	if forceDestroy == false then
-		for _, handle in ipairs(handles) do
-			self:CloseUI(handle, false)
+	for handle, objectInfo in pairs(self.objectsByHandle) do
+		if handleSet[handle] ~= true and self:MatchCloseFilter(objectInfo, filter) then
+			table.insert(handles, handle)
+			handleSet[handle] = true
 		end
-		return
 	end
+	return handles
+end
+
+function FairyGuiManager:CloseByFilter(filter, forceDestroy)
+	local handles = self:CollectCloseHandles(filter)
+	local closeForceDestroy = forceDestroy ~= false
+	local closedCount = 0
 
 	for _, handle in ipairs(handles) do
 		local objectInfo = self.objectsByHandle[handle]
-		if objectInfo ~= nil then
-			callView(objectInfo.view, "OnClose")
-			detachView(self, objectInfo)
-			if objectInfo.modalMaskHandle ~= nil then
-				GameManager:removeFairyGuiObject(objectInfo.modalMaskHandle)
-			end
-			if GameManager ~= nil then
-				GameManager:removeFairyGuiObject(handle)
-			end
-			self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
+		local objectForceDestroy = closeForceDestroy
+		if filter ~= nil and filter.sceneCleanup == true and objectInfo ~= nil and objectInfo.destroyOnSceneChange == true then
+			objectForceDestroy = true
 		end
-		self:ClearBindingsForHandle(handle)
+		if objectInfo ~= nil and self:CloseUI(handle, objectForceDestroy) then
+			closedCount = closedCount + 1
+		end
 	end
+	return closedCount
+end
 
-	if GameManager ~= nil and layerName == nil then
-		GameManager:clearFairyGuiObjects()
+function FairyGuiManager:CloseAll(layerName, forceDestroy)
+	return self:CloseByFilter({ layerName = layerName }, forceDestroy)
+end
+
+function FairyGuiManager:CloseLayer(layerName, forceDestroy)
+	return self:CloseAll(layerName, forceDestroy)
+end
+
+function FairyGuiManager:CloseGroup(groupName, forceDestroy)
+	return self:CloseByFilter({ groupName = groupName }, forceDestroy)
+end
+
+function FairyGuiManager:CloseScene(sceneName, forceDestroy)
+	local targetSceneName = sceneName or self.currentSceneName or "Default"
+	return self:CloseByFilter({ sceneName = targetSceneName, sceneCleanup = true }, forceDestroy)
+end
+
+function FairyGuiManager:CleanupScene(sceneName, forceDestroy)
+	return self:CloseScene(sceneName, forceDestroy)
+end
+
+function FairyGuiManager:SetCurrentScene(sceneName, cleanupPrevious, forceDestroy)
+	local nextSceneName = sceneName or "Default"
+	local previousSceneName = self.currentSceneName or "Default"
+	if cleanupPrevious == true and previousSceneName ~= nextSceneName then
+		self:CloseScene(previousSceneName, forceDestroy)
 	end
-	if layerName == nil then
-		self.objects = {}
-		self.objectsByHandle = {}
-		self.uiNameToKey = {}
-		self.hiddenObjects = {}
-		self.childrenByHandle = {}
-		self.listItemHandlesByHandle = {}
-		self.listDataByHandle = {}
-		self.views = {}
-		self.viewsByHandle = {}
-		self.controllers = {}
-		self.controllersByHandle = {}
-		self.callbacks = {}
-		self.bindings = {}
-		self.bindingsByHandle = {}
-		self.layerObjects = {}
-		for currentLayerName, _ in pairs(self.layers) do
-			self.layerObjects[currentLayerName] = {}
-		end
-	else
-		for _, handle in ipairs(handles) do
-			local objectInfo = self.objectsByHandle[handle]
-			if objectInfo ~= nil then
-					self.objects[objectInfo.key] = nil
-					self.objectsByHandle[handle] = nil
-					self.hiddenObjects[objectInfo.key] = nil
-					self:ClearListCacheForHandle(handle)
-					self.childrenByHandle[handle] = nil
-					if self.layerObjects[objectInfo.layer] ~= nil then
-						self.layerObjects[objectInfo.layer][handle] = nil
-					end
-			end
-		end
-	end
+	self.currentSceneName = nextSceneName
+	return true
+end
+
+function FairyGuiManager:ChangeScene(sceneName, forceDestroy)
+	return self:SetCurrentScene(sceneName, true, forceDestroy)
 end
 
 function FairyGuiManager:DumpOpenUIs()
 	print("[FGUI] DumpOpenUIs begin")
 	for key, objectInfo in pairs(self.objects) do
-		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
+		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "group=", objectInfo.uiGroup, "popupGroup=", objectInfo.popupGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
 	end
 	print("[FGUI] DumpOpenUIs end")
+end
+
+function FairyGuiManager:DumpScenes()
+	local sceneStats = {}
+	for key, objectInfo in pairs(self.objects) do
+		local sceneName = objectInfo.sceneName or "Default"
+		local stat = sceneStats[sceneName]
+		if stat == nil then
+			stat = { total = 0, hidden = 0 }
+			sceneStats[sceneName] = stat
+		end
+		stat.total = stat.total + 1
+		if self.hiddenObjects[key] ~= nil then
+			stat.hidden = stat.hidden + 1
+		end
+	end
+	print("[FGUI] DumpScenes current=", self.currentSceneName)
+	for sceneName, stat in pairs(sceneStats) do
+		print("[FGUI] Scene", sceneName, "total=", stat.total, "hidden=", stat.hidden)
+	end
 end
 
 function FairyGuiManager:DumpPackages()
@@ -1613,10 +2001,25 @@ function FairyGuiManager:DumpBindings()
 	end
 end
 
+function FairyGuiManager:DumpStacks()
+	print("[FGUI] DumpStacks ui count=", #self.uiStack)
+	for index, entry in ipairs(self.uiStack) do
+		local objectInfo = self.objects[entry.key]
+		print("[FGUI] UIStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self.hiddenObjects[entry.key] ~= nil)
+	end
+	print("[FGUI] DumpStacks popup count=", #self.popupStack)
+	for index, entry in ipairs(self.popupStack) do
+		local objectInfo = self.objects[entry.key]
+		print("[FGUI] PopupStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self.hiddenObjects[entry.key] ~= nil)
+	end
+end
+
 function FairyGuiManager:Dump()
 	self:DumpOpenUIs()
 	self:DumpPackages()
 	self:DumpBindings()
+	self:DumpStacks()
+	self:DumpScenes()
 end
 
 function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
@@ -1624,6 +2027,20 @@ function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		return false
 	end
 	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId)
+end
+
+function FairyGuiManager_HandleKeyPressed(keyCode, keyText)
+	if _G.FairyGuiManager == nil then
+		return false
+	end
+	return _G.FairyGuiManager:HandleKeyPressed(keyCode, keyText)
+end
+
+function FairyGuiManager_HandleKeyReleased(keyCode, keyText)
+	if _G.FairyGuiManager == nil then
+		return false
+	end
+	return _G.FairyGuiManager:HandleKeyReleased(keyCode, keyText)
 end
 
 function FairyGuiManager_HandleWindowResized(width, height)

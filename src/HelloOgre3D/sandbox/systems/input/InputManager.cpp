@@ -98,13 +98,15 @@ void InputManager::unregisterHandler(IInputHandler* handler)
 
 bool InputManager::keyPressed(const OIS::KeyEvent& event)
 {
-	if (event.key == OIS::KC_ESCAPE)
+	bool consumed = false;
+	for (auto* handler : m_inputHandlers)
+		consumed = handler->OnKeyPressed(event.key, event.text) || consumed;
+
+	if (!consumed && event.key == OIS::KC_ESCAPE)
 		GetClientMgr()->SetShutdown(true);
 
-	GetClientMgr()->getCameraController()->injectKeyDown(event);
-
-	for (auto* handler : m_inputHandlers)
-		handler->OnKeyPressed(event.key, event.text);
+	if (!consumed)
+		GetClientMgr()->getCameraController()->injectKeyDown(event);
 
 	m_KeyMap[event.key] = true;
 	m_KeyDownMap[event.key] = true;
@@ -114,10 +116,12 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 
 bool InputManager::keyReleased(const OIS::KeyEvent& event)
 {
-	GetClientMgr()->getCameraController()->injectKeyUp(event);
-
+	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		handler->OnKeyReleased(event.key, event.text);
+		consumed = handler->OnKeyReleased(event.key, event.text) || consumed;
+
+	if (!consumed)
+		GetClientMgr()->getCameraController()->injectKeyUp(event);
 
 	m_KeyMap[event.key] = false;
 	m_KeyUpMap[event.key] = true;

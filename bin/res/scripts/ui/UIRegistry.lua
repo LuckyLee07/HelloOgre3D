@@ -6,6 +6,8 @@ local UIRegistry = {
 		x = 0,
 		y = 0,
 		layer = "Normal",
+		group = "Sample",
+		scene = "Default",
 		cache = false,
 	},
 
@@ -16,9 +18,14 @@ local UIRegistry = {
 		x = 0,
 		y = 0,
 		layer = "Popup",
+		group = "Sample",
+		scene = "Default",
 		cache = true,
 		modal = true,
 		modalAlpha = 0.35,
+		closeOnMaskClick = true,
+		closeOnEscape = true,
+		popupMode = "single",
 		fullScreen = true,
 		requires = {
 			"res.scripts.ui.views.Act37TestMvcCtrl",

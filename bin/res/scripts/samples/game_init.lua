@@ -21,7 +21,7 @@ local function tryRunFairyGuiInputSelfTest()
 		return
 	end
 
-	threadpool:delay(4, function()
+	threadpool:delay(3, function()
 		print("[FGUI] input self test begin")
 		print("[FGUI] input self test click buy:", FairyGuiManager:DebugInjectClick(503, 616, 0))
 		threadpool:delay(1, function()
@@ -30,6 +30,32 @@ local function tryRunFairyGuiInputSelfTest()
 		threadpool:delay(2, function()
 			print("[FGUI] input self test click close:", FairyGuiManager:DebugInjectClick(1154, 202, 0))
 		end)
+		threadpool:delay(3, function()
+			print("[FGUI] input self test close top popup:", FairyGuiManager:CloseTopPopup())
+			FairyGuiManager:DumpStacks()
+		end)
+	end)
+end
+
+local function tryRunFairyGuiKeySelfTest()
+	if not isEnvEnabled("HELLO_FGUI_KEY_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(4, function()
+		print("[FGUI] key self test escape:", FairyGuiManager:HandleKeyPressed(1, 0))
+		FairyGuiManager:DumpStacks()
+	end)
+end
+
+local function tryRunFairyGuiCleanupSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_CLEANUP_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(5, function()
+		print("[FGUI] cleanup self test close scene:", FairyGuiManager:CloseScene("Default", true))
+		FairyGuiManager:Dump()
 	end)
 end
 
@@ -60,6 +86,8 @@ local function tryOpenFairyGuiSample()
 		end)
 
 		tryRunFairyGuiInputSelfTest()
+		tryRunFairyGuiKeySelfTest()
+		tryRunFairyGuiCleanupSelfTest()
 	end)
 end
 
@@ -85,6 +113,26 @@ end
 
 function FGUI_DebugInjectClick(x, y, button)
 	return FairyGuiManager:DebugInjectClick(x, y, button or 0)
+end
+
+function FGUI_DebugKeyPressed(keyCode, keyText)
+	return FairyGuiManager:HandleKeyPressed(keyCode, keyText or 0)
+end
+
+function FGUI_CloseLayer(layerName, forceDestroy)
+	return FairyGuiManager:CloseLayer(layerName, forceDestroy)
+end
+
+function FGUI_CloseGroup(groupName, forceDestroy)
+	return FairyGuiManager:CloseGroup(groupName, forceDestroy)
+end
+
+function FGUI_CloseScene(sceneName, forceDestroy)
+	return FairyGuiManager:CloseScene(sceneName, forceDestroy)
+end
+
+function FGUI_ChangeScene(sceneName, forceDestroy)
+	return FairyGuiManager:ChangeScene(sceneName, forceDestroy)
 end
 
 _G.__init__ = function(sec, msec)

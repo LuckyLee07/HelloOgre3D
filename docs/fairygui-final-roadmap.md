@@ -112,6 +112,16 @@ runtime/ui/fairygui/FairyGuiSystem
   - `Background / Normal / Popup / Guide / Top / Toast`
   - `BringToFront`
   - modal mask handle
+- 已增加第一版 UI 栈 / Popup 栈：
+  - `uiStack / popupStack`
+  - `GetTopUI / GetTopPopup`
+  - `CloseTop / CloseTopPopup`
+  - `DumpStacks`
+  - 打开、重开、置顶、关闭、缓存隐藏时维护栈状态
+  - `popupMode = stack / single / replace` 和 `popupGroup` 第一版打开策略
+  - `closeOnEscape` 与 `FairyGuiManager_HandleKeyPressed`，支持 ESC 关闭顶层弹窗
+  - `CloseLayer / CloseGroup / CloseScene / ChangeScene` 第一版统一清理入口
+  - registry 支持 `group / uiGroup / scene / sceneName / closeOnSceneChange / destroyOnSceneChange`
 - 已增加基础资源策略：
   - package 加载缓存
   - package 引用计数
@@ -139,11 +149,11 @@ runtime/ui/fairygui/FairyGuiSystem
 
 当前仍需继续完善：
 
-- 完整输入转发，包括键盘、滚轮和更严格的焦点处理。
+- 完整输入转发，包括键盘、滚轮、输入框/IME 和更严格的焦点处理。
 - 复杂事件的事件数据透传，例如 item 对象、drag 坐标、touch 坐标。
-- UI 栈、弹窗栈、modal 遮罩点击关闭和更严格的置顶规则。
+- UI 栈、弹窗栈已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理；仍需补更严格的置顶规则和更多真实弹窗样例。
 - reopen / cache / hide / destroy 的项目级使用规范和更多样例覆盖。
-- Dialog / Toast / Loading 等通用 UI 能力。
+- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力。
 - package 预加载、场景级清理、资源泄漏 Dump 和调试面板。
 - AutoGen 仍需接真实 FairyGUI 导出元数据，当前第一版依赖 manifest 或命令行控件列表。
 
@@ -246,7 +256,7 @@ MiniUIManager 中值得借鉴的能力：
    - `SetGrayed / SetTouchable`
    - `SetTitle / SetValue`
    - `PlayTransition / StopTransition`
-   - `List` 数据绑定和 itemRenderer。
+   - `List` 数据绑定、itemRenderer、虚拟列表、item 复用和大数据刷新性能。
 
 7. AutoGen 生成链
    - 从 FairyGUI 导出数据生成 `*AutoGen.lua`。
@@ -368,6 +378,40 @@ Toast
 
 每个 layer 在 FairyGUI root 下对应一个容器，`Open` 时按 registry 配置加入对应层。
 
+当前第一版先用 sorting order 和 Lua 栈维护复杂 UI 顺序：
+
+- `uiStack` 记录所有可入栈 UI 的打开顺序。
+- `popupStack` 记录 `Popup / Guide / Top / Toast` 等弹窗层 UI。
+- `BringToFront` 会同步刷新 sorting order 和栈顶。
+- `CloseTop(layer)` 可关闭指定层或全局栈顶 UI。
+- `CloseTopPopup()` 可关闭当前最上层弹窗。
+- `DumpStacks()` 用于调试当前栈状态。
+- `popupMode` 支持 `stack / single / replace`，`popupGroup` 用于同组弹窗互斥。
+- `closeOnEscape` 默认允许 ESC 关闭顶层弹窗，设置为 `false` 可禁止。
+- `CloseLayer(layerName, forceDestroy)` 按层关闭。
+- `CloseGroup(groupName, forceDestroy)` 按 `group / uiGroup / popupGroup` 关闭。
+- `CloseScene(sceneName, forceDestroy)` 按场景关闭，默认跳过 `closeOnSceneChange = false` 的常驻 UI。
+- `ChangeScene(sceneName, forceDestroy)` 会先清理旧场景，再切换当前 UI 场景名。
+
+registry 可补充：
+
+```lua
+Act37TestMvc = {
+	layer = "Popup",
+	group = "Sample",
+	scene = "Default",
+	closeOnSceneChange = true,
+	destroyOnSceneChange = false,
+}
+```
+
+后续仍需补：
+
+- 真实 layer root 容器，而不是只依赖 sorting order。
+- 弹窗策略的更多真实样例覆盖，例如多组弹窗、强制销毁 replace、关闭动画后移除。
+- modal mask 点击关闭的更多样例覆盖。
+- 场景切换时和玩法主流程的正式接入点，例如章节切换、sample 切换、重载脚本。
+
 ### Phase 4: 输入转发与命中处理
 
 目标：将 OIS 鼠标、键盘事件转成 FairyGUI 可消费的输入事件。
@@ -401,12 +445,12 @@ Toast
 2. Text 设置。
 3. Visible / Position / Size。
 4. Loader 图片。
-5. List itemRenderer / clickItem。
+5. List itemRenderer / clickItem / virtual list / item reuse。
 6. Slider / ProgressBar changed。
 7. Transition 播放。
 8. Popup / Dialog。
-9. Toast / Tip。
-10. Loading。
+9. Toast / Tip / MessageBox。
+10. Loading / GuideMask。
 
 目标接口示例：
 
@@ -465,6 +509,10 @@ python tools/fairygui_autogen.py ^
   - `FairyGuiSystem::LoadPackage`
   - `FairyGuiSystem::CreateObject`
   - `FairyGuiSystem::DispatchEvent`
+- 渲染统计：
+  - draw call / triangle / material / texture 数量。
+  - List 刷新耗时和 item renderer 次数。
+  - package / atlas / material 泄漏计数。
 
 ## 5. 近期完成定义
 

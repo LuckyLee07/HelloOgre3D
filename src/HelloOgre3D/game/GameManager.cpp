@@ -562,16 +562,28 @@ void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 	m_pScriptVM->callFunction("FairyGuiManager_HandleWindowResized", "ii", width, height);
 }
 
-void GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
+bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
+	bool consumed = false;
+	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyPressed", "ii>b", keycode, static_cast<int>(key), &consumed);
+	if (consumed)
+		return true;
+
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
+	return false;
 }
 
-void GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
+bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 {
+	bool consumed = false;
+	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyReleased", "ii>b", keycode, static_cast<int>(key), &consumed);
+	if (consumed)
+		return true;
+
 	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
 
 	m_pObjectManager->HandleKeyEvent(keycode, key);
+	return false;
 }
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)

@@ -80,8 +80,8 @@ public:
 	void HandleWindowClosed();
 	void HandleWindowResized(unsigned int width, unsigned int height);
 
-	virtual void OnKeyPressed(OIS::KeyCode keycode, unsigned int key);
-	virtual void OnKeyReleased(OIS::KeyCode keycode, unsigned int key);
+	virtual bool OnKeyPressed(OIS::KeyCode keycode, unsigned int key);
+	virtual bool OnKeyReleased(OIS::KeyCode keycode, unsigned int key);
 
 	virtual bool OnMouseMoved(const OIS::MouseEvent& evt);
 	virtual bool OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
