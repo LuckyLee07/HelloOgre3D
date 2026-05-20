@@ -324,6 +324,12 @@ function FairyGuiManager:Init()
 		self.eventStats = {}
 		self.eventDispatchTotal = 0
 		self.lastEvent = nil
+		self.toastQueue = {}
+		self.toastActive = nil
+		self.toastSerial = 0
+		self.toastDedupe = {}
+		self.loadingRefs = {}
+		self.loadingRefTotal = 0
 	self.nextCallbackId = 1
 end
 
@@ -2058,8 +2064,97 @@ function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, h
 	return buttonHandle
 end
 
-function FairyGuiManager:ShowToast(text, duration, param)
+function FairyGuiManager:GetServiceObject(serviceKey)
+	return self:GetObjectInfo(serviceKey)
+end
+
+function FairyGuiManager:CloseService(serviceKey, reason)
+	return self:Close(serviceKey, true, reason or "closeService")
+end
+
+function FairyGuiManager:CloseServices(serviceType, reason)
+	local keys = {}
+	for key, objectInfo in pairs(self.objects) do
+		if objectInfo.serviceType ~= nil and (serviceType == nil or objectInfo.serviceType == serviceType) then
+			table.insert(keys, key)
+		end
+	end
+
+	local closeCount = 0
+	for _, key in ipairs(keys) do
+		if self:CloseService(key, reason or "closeServices") then
+			closeCount = closeCount + 1
+		end
+	end
+	return closeCount
+end
+
+function FairyGuiManager:HandleServiceClosed(objectInfo, reason)
+	if objectInfo == nil or objectInfo.serviceType == nil then
+		return
+	end
+
+	if objectInfo.serviceType == "Toast" then
+		local active = self.toastActive
+		if active ~= nil and active.key == objectInfo.key then
+			if active.dedupeKey ~= nil then
+				self.toastDedupe[active.dedupeKey] = nil
+			end
+			self.toastActive = nil
+		end
+		if reason == "toastTimeout" then
+			self:ShowNextToast()
+		elseif reason ~= "toastReplace" then
+			self:ClearToastQueue()
+		end
+	elseif objectInfo.serviceType == "Loading" then
+		self.loadingRefs = {}
+		self.loadingRefTotal = 0
+	end
+end
+
+function FairyGuiManager:ClearToastQueue()
+	self.toastQueue = {}
+	self.toastDedupe = {}
+	if self.toastActive ~= nil and self.toastActive.dedupeKey ~= nil then
+		self.toastDedupe[self.toastActive.dedupeKey] = true
+	end
+end
+
+function FairyGuiManager:GetToastQueueCount()
+	return #self.toastQueue
+end
+
+function FairyGuiManager:CreateToastRequest(text, duration, param)
 	param = copyTable(param)
+	local dedupeKey = nil
+	if param.dedupe ~= false then
+		dedupeKey = param.dedupeKey or tostring(text or "")
+		if not isBlank(dedupeKey) and self.toastDedupe[dedupeKey] == true then
+			return nil, "dedupe"
+		end
+	end
+
+	self.toastSerial = (self.toastSerial or 0) + 1
+	local request = {
+		id = self.toastSerial,
+		text = text or "",
+		duration = tonumber(duration or param.duration) or 2,
+		param = param,
+		dedupeKey = dedupeKey,
+	}
+	if dedupeKey ~= nil then
+		self.toastDedupe[dedupeKey] = true
+	end
+	return request, nil
+end
+
+function FairyGuiManager:OpenToastRequest(request)
+	if request == nil then
+		return nil
+	end
+
+	local param = copyTable(request.param)
 	param.key = param.key or "__Toast"
 	param.layer = param.layer or "Toast"
 	param.stackMode = param.stackMode or "None"
@@ -2069,24 +2164,70 @@ function FairyGuiManager:ShowToast(text, duration, param)
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
+		if request.dedupeKey ~= nil then
+			self.toastDedupe[request.dedupeKey] = nil
+		end
 		return nil
 	end
 
+	objectInfo.toastRequestId = request.id
 	local screenWidth = self:GetScreenWidth()
 	local screenHeight = self:GetScreenHeight()
-	local width = param.width or math.min(math.max(string.len(tostring(text or "")) * 14 + 80, 240), math.max(screenWidth - 80, 240))
+	local width = param.width or math.min(math.max(string.len(tostring(request.text or "")) * 14 + 80, 240), math.max(screenWidth - 80, 240))
 	local height = param.height or 44
 	local x = param.x or math.max((screenWidth - width) * 0.5, 0)
 	local y = param.y or math.max(screenHeight - (param.bottom or 120), 0)
-	self:AddServiceText(objectInfo, "toast_text", text or "", x, y, width, height, param.fontSize or 22, 255, 244, 200)
+	self:AddServiceText(objectInfo, "toast_text", request.text or "", x, y, width, height, param.fontSize or 22, 255, 244, 200)
 
-	local timeout = tonumber(duration or param.duration) or 2
-	if timeout > 0 then
-		self:Delay(objectInfo.key, timeout, function()
+	self.toastActive = {
+		id = request.id,
+		key = objectInfo.key,
+		handle = objectInfo.handle,
+		dedupeKey = request.dedupeKey,
+	}
+	if request.duration > 0 then
+		self:Delay(objectInfo.key, request.duration, function()
 			self:CloseUI(objectInfo.key, true, "toastTimeout")
 		end)
 	end
 	return objectInfo.handle
+end
+
+function FairyGuiManager:ShowNextToast()
+	if self.toastActive ~= nil or #self.toastQueue <= 0 then
+		return nil
+	end
+	local request = table.remove(self.toastQueue, 1)
+	return self:OpenToastRequest(request)
+end
+
+function FairyGuiManager:ShowToast(text, duration, param)
+	local request = nil
+	local ignored = nil
+	request, ignored = self:CreateToastRequest(text, duration, param)
+	if request == nil then
+		return self.toastActive and self.toastActive.handle or true
+	end
+
+	local requestParam = request.param or {}
+	if requestParam.queue == false and self.toastActive ~= nil then
+		self.toastQueue = {}
+		self:CloseUI(self.toastActive.key, true, "toastReplace")
+	end
+	if self.toastActive ~= nil then
+		table.insert(self.toastQueue, request)
+		return request.id
+	end
+	return self:OpenToastRequest(request)
+end
+
+function FairyGuiManager:CloseToast(reason)
+	local active = self.toastActive
+	if active == nil then
+		self:ClearToastQueue()
+		return false
+	end
+	return self:CloseUI(active.key, true, reason or "closeToast")
 end
 
 function FairyGuiManager:ShowTip(text, x, y, duration, param)
@@ -2115,6 +2256,19 @@ end
 
 function FairyGuiManager:ShowLoading(text, param)
 	param = copyTable(param)
+	local refKey = param.refKey or "Default"
+	self.loadingRefs[refKey] = (self.loadingRefs[refKey] or 0) + 1
+	self.loadingRefTotal = (self.loadingRefTotal or 0) + 1
+
+	local existing = self:GetObjectInfo("__Loading")
+	if existing ~= nil then
+		existing.loadingText = text or existing.loadingText
+		if not isBlank(text) then
+			self:SetText(existing.handle, "loading_text", text)
+		end
+		return existing.handle
+	end
+
 	param.key = param.key or "__Loading"
 	param.layer = param.layer or "Top"
 	param.stackMode = param.stackMode or "Popup"
@@ -2128,16 +2282,50 @@ function FairyGuiManager:ShowLoading(text, param)
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
+		self.loadingRefs[refKey] = math.max((self.loadingRefs[refKey] or 1) - 1, 0)
+		self.loadingRefTotal = math.max((self.loadingRefTotal or 1) - 1, 0)
 		return nil
 	end
+	objectInfo.loadingText = text or "Loading..."
 	local screenWidth = self:GetScreenWidth()
 	local screenHeight = self:GetScreenHeight()
 	self:AddServiceText(objectInfo, "loading_text", text or "Loading...", math.max(screenWidth * 0.5 - 140, 0), math.max(screenHeight * 0.5 - 18, 0), 280, 36, param.fontSize or 24, 255, 255, 255)
+	local timeout = tonumber(param.timeout)
+	if timeout ~= nil and timeout > 0 then
+		self:Delay(objectInfo.key, timeout, function()
+			self:HideLoading({ force = true, reason = "loadingTimeout" })
+		end)
+	end
 	return objectInfo.handle
 end
 
-function FairyGuiManager:HideLoading(reason)
-	return self:Close("__Loading", true, reason or "hideLoading")
+function FairyGuiManager:GetLoadingRefCount()
+	return self.loadingRefTotal or 0
+end
+
+function FairyGuiManager:HideLoading(paramOrReason)
+	local param = type(paramOrReason) == "table" and paramOrReason or { reason = paramOrReason }
+	local refKey = param.refKey or "Default"
+	local force = param.force == true
+	local reason = param.reason or "hideLoading"
+
+	if not force then
+		local refCount = self.loadingRefs[refKey] or 0
+		if refCount > 0 then
+			self.loadingRefs[refKey] = refCount - 1
+			self.loadingRefTotal = math.max((self.loadingRefTotal or 1) - 1, 0)
+			if self.loadingRefs[refKey] <= 0 then
+				self.loadingRefs[refKey] = nil
+			end
+		end
+		if (self.loadingRefTotal or 0) > 0 then
+			return true
+		end
+	end
+
+	self.loadingRefs = {}
+	self.loadingRefTotal = 0
+	return self:Close("__Loading", true, reason)
 end
 
 function FairyGuiManager:ShowGuideMask(param)
@@ -2252,7 +2440,13 @@ function FairyGuiManager:ShowPopupMenu(items, x, y, callback, param)
 end
 
 function FairyGuiManager:GetServiceStats()
-	local stats = {}
+	local stats = {
+		__meta = {
+			toastQueue = self:GetToastQueueCount(),
+			toastActive = self.toastActive ~= nil and self.toastActive.key or nil,
+			loadingRefTotal = self:GetLoadingRefCount(),
+		},
+	}
 	for key, objectInfo in pairs(self.objects) do
 		if objectInfo.serviceType ~= nil then
 			local serviceType = objectInfo.serviceType
@@ -2272,8 +2466,11 @@ function FairyGuiManager:DumpServices()
 	print("[FGUI] DumpServices begin")
 	local stats = self:GetServiceStats()
 	for serviceType, stat in pairs(stats) do
-		print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "keys=", table.concat(stat.keys, ","))
+		if serviceType ~= "__meta" then
+			print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "keys=", table.concat(stat.keys, ","))
+		end
 	end
+	print("[FGUI] ServiceMeta toastActive=", stats.__meta.toastActive, "toastQueue=", stats.__meta.toastQueue, "loadingRefs=", stats.__meta.loadingRefTotal)
 	print("[FGUI] DumpServices end")
 end
 
@@ -3311,6 +3508,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		self.hiddenObjects[objectInfo.key] = nil
 		self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
 		self:ValidateClosedObject(closeSnapshot, closeSnapshot and closeSnapshot.ownedHandles or ownedHandles, "CloseUI")
+		self:HandleServiceClosed(objectInfo, reason)
 		return removed
 	end
 

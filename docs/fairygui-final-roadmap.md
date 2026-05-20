@@ -150,8 +150,10 @@ runtime/ui/fairygui/FairyGuiSystem
   - UI 命中时阻断相机鼠标输入
 - 2026-05-20 已完成一轮 VS2017 `Release|x64` 运行时验收：
   - `HELLO_FGUI_ACT38_SELF_TEST=1`：`Act37TestMvc` 打开和 `OnReopen` 正常，`Act38Test` 能加载 `act_38_test.fui`，List API 自测通过。
-  - `HELLO_FGUI_INPUT_SELF_TEST=1`：调试点击能触发 `TouchBegin / TouchEnd`、按钮 `Click`、列表 `ClickItem`、关闭按钮和 `CloseTopPopup`，关闭后 UI 栈与 Popup 栈归零。
-  - `HELLO_FGUI_LAYER_SELF_TEST=1` 与 `HELLO_FGUI_LAYER_CLOSE_SELF_TEST=1`：`Normal / Popup / Top / Toast` layer root 可创建，`CloseTopPopup -> CloseLayer("Top") -> CloseGroup("LayerProbe")` 可按预期清理样例 UI。
+- `HELLO_FGUI_INPUT_SELF_TEST=1`：调试点击能触发 `TouchBegin / TouchEnd`、按钮 `Click`、列表 `ClickItem`、关闭按钮和 `CloseTopPopup`，关闭后 UI 栈与 Popup 栈归零。
+- `HELLO_FGUI_LAYER_SELF_TEST=1` 与 `HELLO_FGUI_LAYER_CLOSE_SELF_TEST=1`：`Normal / Popup / Top / Toast` layer root 可创建，`CloseTopPopup -> CloseLayer("Top") -> CloseGroup("LayerProbe")` 可按预期清理样例 UI。
+- `HELLO_FGUI_COMMON_SERVICE_DEMO=1`：启动后可按节奏展示 Toast 队列、Loading 引用计数、Tip、MessageBox、PopupMenu 和 GuideMask，方便肉眼检查通用 UI 服务效果。
+- FGUI 样例、自测和 demo 入口集中在 `bin/res/scripts/samples/fgui_init.lua`，主 `game_init.lua` 只负责通用启动流程。
 
 当前仍需继续完善：
 
@@ -159,7 +161,7 @@ runtime/ui/fairygui/FairyGuiSystem
 - 复杂事件的事件数据透传，例如 item 对象、drag 坐标、touch 坐标；事件类型已接通，payload 仍要继续补齐。
 - UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理；真实点击关闭已验收，仍需补更严格的置顶规则和更多真实弹窗样例。
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
-- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版，后续补资源化样式、排队/引用计数和高亮区域。
+- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，后续补资源化样式和 GuideMask 高亮区域。
 - package 预加载、场景级清理、资源泄漏 Dump 和调试面板仍需继续补。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。
 

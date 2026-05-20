@@ -56,6 +56,8 @@
 - [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
 - [x] 增加 `HELLO_FGUI_CACHE_SELF_TEST=1` 自测，覆盖 cache hide、timer 暂停、reopen 复用和强制 destroy 回零。
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_SELF_TEST=1` 自测，覆盖 Toast、Tip、Loading、GuideMask、MessageBox、PopupMenu 创建和清理。
+- [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
+- [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
 - [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua Open/Close 耗时仍待补。
 - [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
@@ -117,8 +119,8 @@
 
 ## Phase 5: 通用 UI 服务
 
-- [~] `Toast` 服务：已有第一版短提示和自动关闭，排队/去重待补。
-- [~] `Loading` 服务：已有第一版 modal loading，引用计数和超时待补。
+- [~] `Toast` 服务：已有短提示、自动关闭、排队和去重，样式资源化待补。
+- [~] `Loading` 服务：已有 modal loading、引用计数和超时清理，样式资源化待补。
 - [~] `MessageBox/Dialog` 服务：已有第一版确认/取消按钮和回调，视觉样式待资源化。
 - [~] `PopupMenu` 服务：已有第一版列表项和外部关闭，控件跟随定位待补。
 - [~] `Tip` 服务：已有第一版指定坐标提示，hover 延迟/离开隐藏待补。
