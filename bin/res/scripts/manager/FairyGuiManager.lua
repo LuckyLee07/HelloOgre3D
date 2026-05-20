@@ -95,6 +95,26 @@ local function tableCount(source)
 	return count
 end
 
+local function normalizeRect(rect)
+	if type(rect) ~= "table" then
+		return nil
+	end
+
+	local x = tonumber(rect.x or rect.left or rect[1]) or 0
+	local y = tonumber(rect.y or rect.top or rect[2]) or 0
+	local width = tonumber(rect.width or rect.w or rect[3]) or 0
+	local height = tonumber(rect.height or rect.h or rect[4]) or 0
+	if width <= 0 or height <= 0 then
+		return nil
+	end
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+	}
+end
+
 local function isEnvEnabled(name)
 	local value = os.getenv and os.getenv(name) or nil
 	return value == "1" or value == "true" or value == "TRUE" or value == "True"
@@ -159,6 +179,7 @@ local DEFAULT_LAYER_ORDER = {
 	Toast = 6000,
 }
 
+local SORTING_PRIORITY_STEP = 100
 local KEY_ESCAPE = 1
 
 local LIST_ITEM_METHODS = {}
@@ -649,6 +670,10 @@ function FairyGuiManager:CollectOwnedHandles(objectInfo)
 	for fieldName, value in pairs(objectInfo) do
 		if type(fieldName) == "string" and type(value) == "number" and string.match(fieldName, "Handle$") ~= nil then
 			pushUniqueHandle(handles, handleSet, value)
+		elseif type(fieldName) == "string" and type(value) == "table" and string.match(fieldName, "Handles$") ~= nil then
+			for _, ownedHandle in pairs(value) do
+				pushUniqueHandle(handles, handleSet, ownedHandle)
+			end
 		end
 	end
 
@@ -1066,6 +1091,9 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"pauseTimersOnHide",
 			"popupMode",
 			"popupGroup",
+			"priority",
+			"sortingPriority",
+			"sortingOrder",
 			"group",
 			"uiGroup",
 			"scene",
@@ -1188,11 +1216,11 @@ function FairyGuiManager:ResizeLayerRoots()
 	end
 end
 
-function FairyGuiManager:NextLayerSortingOrder(layerName)
+function FairyGuiManager:NextLayerSortingOrder(layerName, priority)
 	layerName = layerName or "Normal"
 	local nextOrder = (self.layerNextOrder[layerName] or 0) + 1
 	self.layerNextOrder[layerName] = nextOrder
-	return self:GetLayerBaseOrder(layerName) + nextOrder
+	return self:GetLayerBaseOrder(layerName) + (tonumber(priority) or 0) * SORTING_PRIORITY_STEP + nextOrder
 end
 
 function FairyGuiManager:IsPopupLayer(layerName)
@@ -1257,6 +1285,8 @@ function FairyGuiManager:PushStack(objectInfo)
 		mode = stackMode,
 		popupGroup = objectInfo.popupGroup,
 		popupMode = objectInfo.popupMode,
+		priority = objectInfo.priority or 0,
+		sortingOrder = objectInfo.sortingOrder or 0,
 		serial = self.nextStackSerial,
 	}
 	self.stackEntriesByKey[objectInfo.key] = entry
@@ -1270,14 +1300,21 @@ function FairyGuiManager:PushStack(objectInfo)
 end
 
 function FairyGuiManager:GetTopStackObject(stack, layerName)
+	local bestObject = nil
+	local bestEntry = nil
 	for index = #stack, 1, -1 do
 		local entry = stack[index]
 		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
 		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil and (layerName == nil or objectInfo.layer == layerName) then
-			return objectInfo, entry
+			if bestObject == nil
+				or (objectInfo.sortingOrder or 0) > (bestObject.sortingOrder or 0)
+				or ((objectInfo.sortingOrder or 0) == (bestObject.sortingOrder or 0) and (entry.serial or 0) > (bestEntry.serial or 0)) then
+				bestObject = objectInfo
+				bestEntry = entry
+			end
 		end
 	end
-	return nil, nil
+	return bestObject, bestEntry
 end
 
 function FairyGuiManager:GetObjectResult(objectInfo)
@@ -1386,6 +1423,7 @@ function FairyGuiManager:ReopenObjectInfo(objectInfo, param)
 	objectInfo.cache = objectInfo.param.cache == true or objectInfo.cache == true
 	objectInfo.popupGroup = self:GetPopupGroup(objectInfo.param, objectInfo)
 	objectInfo.popupMode = objectInfo.param.popupMode or objectInfo.popupMode or "stack"
+	objectInfo.priority = tonumber(objectInfo.param.priority or objectInfo.param.sortingPriority) or objectInfo.priority or 0
 	objectInfo.uiGroup = self:GetUIGroup(objectInfo.param, objectInfo)
 	objectInfo.sceneName = self:GetSceneName(objectInfo.param, objectInfo)
 	objectInfo.closeOnSceneChange = objectInfo.param.closeOnSceneChange ~= false
@@ -1477,19 +1515,23 @@ function FairyGuiManager:HandleKeyReleased(keyCode, keyText)
 end
 
 function FairyGuiManager:UpdateModalMaskSorting(objectInfo)
-	if objectInfo == nil or objectInfo.modalMaskHandle == nil then
+	if objectInfo == nil then
 		return false
 	end
-	if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		GameManager:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+	local updated = false
+	if objectInfo.modalMaskHandle ~= nil then
+		if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
+			GameManager:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+		end
+		if self.hiddenObjects[objectInfo.key] == nil then
+			self:SetVisible(objectInfo.modalMaskHandle, true)
+		end
+		updated = true
 	end
-	if self.hiddenObjects[objectInfo.key] == nil then
-		self:SetVisible(objectInfo.modalMaskHandle, true)
-	end
-	return true
+	return self:UpdateGuideMaskSorting(objectInfo) or updated
 end
 
-function FairyGuiManager:AssignLayer(objectInfo, layerName)
+function FairyGuiManager:AssignLayer(objectInfo, layerName, forceNextOrder)
 	if objectInfo == nil or objectInfo.handle == nil then
 		return false
 	end
@@ -1500,7 +1542,12 @@ function FairyGuiManager:AssignLayer(objectInfo, layerName)
 	end
 
 	objectInfo.layer = layerName
-	objectInfo.sortingOrder = self:NextLayerSortingOrder(layerName)
+	objectInfo.priority = tonumber(objectInfo.priority or (objectInfo.param and (objectInfo.param.priority or objectInfo.param.sortingPriority))) or 0
+	if forceNextOrder ~= true and objectInfo.param ~= nil and objectInfo.param.sortingOrder ~= nil then
+		objectInfo.sortingOrder = tonumber(objectInfo.param.sortingOrder) or self:NextLayerSortingOrder(layerName, objectInfo.priority)
+	else
+		objectInfo.sortingOrder = self:NextLayerSortingOrder(layerName, objectInfo.priority)
+	end
 	if self.layerObjects[layerName] == nil then
 		self.layerObjects[layerName] = {}
 	end
@@ -1515,14 +1562,184 @@ function FairyGuiManager:AssignLayer(objectInfo, layerName)
 	return true
 end
 
-function FairyGuiManager:BringToFront(keyOrHandle)
+function FairyGuiManager:BringToFront(keyOrHandle, priority)
 	local objectInfo = self:GetObjectInfo(keyOrHandle)
 	if objectInfo == nil then
 		return false
 	end
-	local result = self:AssignLayer(objectInfo, objectInfo.layer)
+	if priority ~= nil then
+		objectInfo.priority = tonumber(priority) or objectInfo.priority or 0
+	end
+	local result = self:AssignLayer(objectInfo, objectInfo.layer, true)
 	self:PushStack(objectInfo)
 	return result
+end
+
+function FairyGuiManager:SetSortingPriority(keyOrHandle, priority, bringToFront)
+	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	if objectInfo == nil then
+		return false
+	end
+	objectInfo.priority = tonumber(priority) or 0
+	if objectInfo.param ~= nil then
+		objectInfo.param.priority = objectInfo.priority
+		objectInfo.param.sortingOrder = nil
+	end
+	return bringToFront ~= false and self:BringToFront(objectInfo.handle) or self:AssignLayer(objectInfo, objectInfo.layer, true)
+end
+
+function FairyGuiManager:HandleModalMaskClick(key, reason)
+	local objectInfo = self.objects[key]
+	if objectInfo == nil then
+		return false
+	end
+
+	local param = objectInfo.param or {}
+	if param.modalCloseOnlyWhenTop ~= false then
+		local topPopup = self:GetTopStackObject(self.popupStack)
+		if topPopup ~= nil and topPopup.key ~= objectInfo.key then
+			return false
+		end
+	end
+	return self:CloseUI(objectInfo.key, param.forceDestroyOnMaskClick == true, reason or "modalMaskClick")
+end
+
+function FairyGuiManager:GetGuideMaskRect(param)
+	param = param or {}
+	local rect = normalizeRect(param.clickThroughRect or param.highlightRect or param.highlight or param.rect)
+	if rect == nil then
+		return nil
+	end
+
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	if screenWidth <= 0 or screenHeight <= 0 then
+		return nil
+	end
+
+	local x = math.max(math.min(rect.x, screenWidth), 0)
+	local y = math.max(math.min(rect.y, screenHeight), 0)
+	local width = math.max(math.min(rect.width, screenWidth - x), 0)
+	local height = math.max(math.min(rect.height, screenHeight - y), 0)
+	if width <= 0 or height <= 0 then
+		return nil
+	end
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+	}
+end
+
+function FairyGuiManager:SetGuideMaskVisible(objectInfo, visible)
+	if objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+		return false
+	end
+	for _, handle in ipairs(objectInfo.guideMaskHandles) do
+		self:SetVisible(handle, visible == true)
+	end
+	return true
+end
+
+function FairyGuiManager:ClearGuideMaskHandles(objectInfo)
+	if objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+		return false
+	end
+
+	for _, handle in ipairs(objectInfo.guideMaskHandles) do
+		self:ClearBindingsForHandle(handle)
+		if GameManager ~= nil and GameManager.removeFairyGuiObject ~= nil then
+			GameManager:removeFairyGuiObject(handle)
+		end
+	end
+	objectInfo.guideMaskHandles = nil
+	objectInfo.guideMaskRect = nil
+	return true
+end
+
+function FairyGuiManager:UpdateGuideMaskSorting(objectInfo)
+	if objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+		return false
+	end
+	if GameManager == nil or GameManager.setFairyGuiObjectSortingOrder == nil then
+		return false
+	end
+
+	local sortingOrder = (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1
+	for _, handle in ipairs(objectInfo.guideMaskHandles) do
+		GameManager:setFairyGuiObjectSortingOrder(handle, sortingOrder)
+	end
+	return true
+end
+
+function FairyGuiManager:AddGuideMaskSegment(objectInfo, x, y, width, height, alpha, closeOnClick)
+	if objectInfo == nil or width <= 0 or height <= 0 then
+		return nil
+	end
+	if GameManager == nil or GameManager.createFairyGuiModalMask == nil then
+		return nil
+	end
+
+	local maskHandle = GameManager:createFairyGuiModalMask(0, 0, 0, alpha or 0.55)
+	if maskHandle == nil or maskHandle <= 0 then
+		return nil
+	end
+	if not self:AttachToLayer(maskHandle, objectInfo.layer) then
+		GameManager:removeFairyGuiObject(maskHandle)
+		return nil
+	end
+
+	self:SetPosition(maskHandle, x, y)
+	self:SetSize(maskHandle, width, height)
+	self:SetTouchable(maskHandle, true)
+	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
+		GameManager:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+	end
+	if closeOnClick == true then
+		local closeKey = objectInfo.key
+		self:AddClick(maskHandle, "", function()
+			self:HandleModalMaskClick(closeKey, "guideMaskClick")
+		end)
+	end
+
+	objectInfo.guideMaskHandles = objectInfo.guideMaskHandles or {}
+	table.insert(objectInfo.guideMaskHandles, maskHandle)
+	return maskHandle
+end
+
+function FairyGuiManager:CreateGuideMaskSegments(objectInfo, param)
+	if objectInfo == nil then
+		return false
+	end
+	self:ClearGuideMaskHandles(objectInfo)
+
+	local rect = self:GetGuideMaskRect(param or objectInfo.param)
+	if rect == nil then
+		return false
+	end
+
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	local alpha = (param or objectInfo.param or {}).modalAlpha or 0.55
+	local closeOnClick = (param or objectInfo.param or {}).closeOnMaskClick == true
+	local right = rect.x + rect.width
+	local bottom = rect.y + rect.height
+
+	objectInfo.guideMaskRect = rect
+	self:AddGuideMaskSegment(objectInfo, 0, 0, screenWidth, rect.y, alpha, closeOnClick)
+	self:AddGuideMaskSegment(objectInfo, 0, bottom, screenWidth, math.max(screenHeight - bottom, 0), alpha, closeOnClick)
+	self:AddGuideMaskSegment(objectInfo, 0, rect.y, rect.x, rect.height, alpha, closeOnClick)
+	self:AddGuideMaskSegment(objectInfo, right, rect.y, math.max(screenWidth - right, 0), rect.height, alpha, closeOnClick)
+	self:UpdateGuideMaskSorting(objectInfo)
+	return type(objectInfo.guideMaskHandles) == "table" and #objectInfo.guideMaskHandles > 0
+end
+
+function FairyGuiManager:UpdateGuideMaskLayout(objectInfo)
+	if objectInfo == nil or objectInfo.guideMaskRect == nil then
+		return false
+	end
+	return self:CreateGuideMaskSegments(objectInfo, objectInfo.param)
 end
 
 function FairyGuiManager:CreateModalMask(objectInfo, param)
@@ -1552,7 +1769,7 @@ function FairyGuiManager:CreateModalMask(objectInfo, param)
 	if param.closeOnMaskClick == true then
 		local closeKey = objectInfo.key
 		objectInfo.modalMaskBindingId = self:AddClick(maskHandle, "", function()
-			self:CloseUI(closeKey)
+			self:HandleModalMaskClick(closeKey, "modalMaskClick")
 		end)
 	end
 	return maskHandle
@@ -1610,6 +1827,7 @@ function FairyGuiManager:ApplyScreenAdapt(objectInfo)
 		self:SetPosition(objectInfo.modalMaskHandle, 0, 0)
 		self:SetSize(objectInfo.modalMaskHandle, screenWidth, screenHeight)
 	end
+	self:UpdateGuideMaskLayout(objectInfo)
 	return true
 end
 
@@ -1711,6 +1929,7 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		cache = param.cache == true,
 		unloadPackageOnClose = param.unloadPackageOnClose == true or param.clearPackage == true,
 		layer = param.layer or "Normal",
+		priority = tonumber(param.priority or param.sortingPriority) or 0,
 		popupGroup = self:GetPopupGroup(param),
 		popupMode = param.popupMode or "stack",
 		uiGroup = self:GetUIGroup(param),
@@ -1721,12 +1940,12 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
 	self.hiddenObjects[key] = nil
-		self:AssignLayer(objectInfo, objectInfo.layer)
-		self:CreateModalMask(objectInfo, param)
-		self:ApplyScreenAdapt(objectInfo)
-		self:PushStack(objectInfo)
-		return handle
-	end
+	self:AssignLayer(objectInfo, objectInfo.layer)
+	self:CreateModalMask(objectInfo, param)
+	self:ApplyScreenAdapt(objectInfo)
+	self:PushStack(objectInfo)
+	return handle
+end
 
 function FairyGuiManager:OpenMaskProbe(param)
 	param = param or {}
@@ -2002,6 +2221,7 @@ function FairyGuiManager:OpenServiceContainer(key, param)
 		uiName = key,
 		cache = false,
 		layer = param.layer,
+		priority = tonumber(param.priority or param.sortingPriority) or 0,
 		popupGroup = self:GetPopupGroup(param),
 		popupMode = param.popupMode or "stack",
 		uiGroup = self:GetUIGroup(param),
@@ -2330,21 +2550,28 @@ end
 
 function FairyGuiManager:ShowGuideMask(param)
 	param = copyTable(param)
+	local highlightRect = self:GetGuideMaskRect(param)
 	param.key = param.key or "__GuideMask"
 	param.layer = param.layer or "Guide"
 	param.stackMode = param.stackMode or "Popup"
 	param.popupGroup = param.popupGroup or "GuideMask"
 	param.popupMode = param.popupMode or "replace"
 	param.fullScreen = true
-	param.modal = true
+	param.modal = highlightRect == nil
 	param.modalAlpha = param.modalAlpha or 0.55
 	param.closeOnMaskClick = param.closeOnMaskClick == true
 	param.touchable = false
 	param.serviceType = "GuideMask"
+	if highlightRect ~= nil then
+		param.highlightRect = highlightRect
+	end
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
 		return nil
+	end
+	if highlightRect ~= nil then
+		self:CreateGuideMaskSegments(objectInfo, param)
 	end
 	if not isBlank(param.text) then
 		self:AddServiceText(objectInfo, "guide_text", param.text, param.textX or 80, param.textY or 80, param.textWidth or 520, param.textHeight or 48, param.fontSize or 24, 255, 255, 255)
@@ -2574,6 +2801,7 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 	if objectInfo ~= nil then
 		objectInfo.param = param
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
+		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
 		self.hiddenObjects[key] = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
@@ -2668,6 +2896,7 @@ function FairyGuiManager:OpenView(viewClass, param)
 	if objectInfo ~= nil then
 		objectInfo.param = param
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
+		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
 		self.hiddenObjects[key] = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
@@ -3344,7 +3573,7 @@ function FairyGuiManager:ClearBindingsForHandle(handle)
 	self.bindingsByHandle[handle] = nil
 end
 
-function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
+function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta, dragDeltaX, dragDeltaY)
 	local callback = self.callbacks[callbackId]
 	if callback == nil then
 		return false
@@ -3373,6 +3602,8 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		button = button,
 		touchId = touchId,
 		wheelDelta = wheelDelta or 0,
+		dragDeltaX = dragDeltaX or 0,
+		dragDeltaY = dragDeltaY or 0,
 		eventType = eventName,
 		eventTypeId = eventType,
 		bindingId = bindingId,
@@ -3391,6 +3622,8 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		button = button,
 		touchId = touchId,
 		wheelDelta = wheelDelta or 0,
+		dragDeltaX = dragDeltaX or 0,
+		dragDeltaY = dragDeltaY or 0,
 		eventType = eventName,
 		eventTypeId = eventType,
 		bindingId = bindingId,
@@ -3476,6 +3709,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		if objectInfo.modalMaskHandle ~= nil then
 			self:SetVisible(objectInfo.modalMaskHandle, false)
 		end
+		self:SetGuideMaskVisible(objectInfo, false)
 		self:RemoveStackEntry(objectInfo.key)
 		self.hiddenObjects[objectInfo.key] = objectInfo
 		return true
@@ -3488,29 +3722,30 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	for _, ownedHandle in ipairs(ownedHandles) do
 		self:ClearBindingsForHandle(ownedHandle)
 	end
+	self:ClearGuideMaskHandles(objectInfo)
 	if objectInfo.modalMaskHandle ~= nil then
 		GameManager:removeFairyGuiObject(objectInfo.modalMaskHandle)
 	end
 	local removed = GameManager:removeFairyGuiObject(handle)
-		if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
-			self.uiNameToKey[objectInfo.uiName] = nil
-		end
-		self:ClearListCacheForHandle(handle)
-		for _, ownedHandle in ipairs(ownedHandles) do
-			self:ClearListCacheByListHandle(ownedHandle)
-			self.childrenByHandle[ownedHandle] = nil
-		end
-		if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
-			self.layerObjects[objectInfo.layer][handle] = nil
-		end
-		self.objects[objectInfo.key] = nil
-		self.objectsByHandle[handle] = nil
-		self.hiddenObjects[objectInfo.key] = nil
-		self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
-		self:ValidateClosedObject(closeSnapshot, closeSnapshot and closeSnapshot.ownedHandles or ownedHandles, "CloseUI")
-		self:HandleServiceClosed(objectInfo, reason)
-		return removed
+	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
+		self.uiNameToKey[objectInfo.uiName] = nil
 	end
+	self:ClearListCacheForHandle(handle)
+	for _, ownedHandle in ipairs(ownedHandles) do
+		self:ClearListCacheByListHandle(ownedHandle)
+		self.childrenByHandle[ownedHandle] = nil
+	end
+	if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
+		self.layerObjects[objectInfo.layer][handle] = nil
+	end
+	self.objects[objectInfo.key] = nil
+	self.objectsByHandle[handle] = nil
+	self.hiddenObjects[objectInfo.key] = nil
+	self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
+	self:ValidateClosedObject(closeSnapshot, closeSnapshot and closeSnapshot.ownedHandles or ownedHandles, "CloseUI")
+	self:HandleServiceClosed(objectInfo, reason)
+	return removed
+end
 
 function FairyGuiManager:CloseView(viewOrKeyOrHandle, forceDestroy, reason)
 	if type(viewOrKeyOrHandle) == "table" then
@@ -3860,7 +4095,7 @@ function FairyGuiManager:DumpEventStats()
 		print("[FGUI] EventStat", eventType, count)
 	end
 	if stats.lastEvent ~= nil then
-		print("[FGUI] LastEvent", stats.lastEvent.eventType, "root=", stats.lastEvent.rootHandle, "sender=", stats.lastEvent.senderHandle, "item=", stats.lastEvent.itemHandle, "itemIndex=", stats.lastEvent.itemIndex, "x=", stats.lastEvent.x, "y=", stats.lastEvent.y, "button=", stats.lastEvent.button, "wheel=", stats.lastEvent.wheelDelta)
+		print("[FGUI] LastEvent", stats.lastEvent.eventType, "root=", stats.lastEvent.rootHandle, "sender=", stats.lastEvent.senderHandle, "item=", stats.lastEvent.itemHandle, "itemIndex=", stats.lastEvent.itemIndex, "x=", stats.lastEvent.x, "y=", stats.lastEvent.y, "button=", stats.lastEvent.button, "wheel=", stats.lastEvent.wheelDelta, "dragDelta=", stats.lastEvent.dragDeltaX, stats.lastEvent.dragDeltaY)
 	end
 end
 
@@ -3893,11 +4128,11 @@ function FairyGuiManager:Dump()
 	self:DumpRenderStats()
 end
 
-function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
+function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta, dragDeltaX, dragDeltaY)
 	if _G.FairyGuiManager == nil then
 		return false
 	end
-	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta)
+	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta, dragDeltaX, dragDeltaY)
 end
 
 function FairyGuiManager_HandleKeyPressed(keyCode, keyText)

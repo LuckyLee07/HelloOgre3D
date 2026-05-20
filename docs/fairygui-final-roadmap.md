@@ -121,6 +121,7 @@ runtime/ui/fairygui/FairyGuiSystem
   - `DumpStacks`
   - 打开、重开、置顶、关闭、缓存隐藏时维护栈状态
   - `popupMode = stack / single / replace` 和 `popupGroup` 第一版打开策略
+  - 支持 `priority / sortingPriority / sortingOrder`、`BringToFront` 稳定置顶和 modal mask 绑定顶层弹窗关闭
   - `closeOnEscape` 与 `FairyGuiManager_HandleKeyPressed`，支持 ESC 关闭顶层弹窗
   - `CloseLayer / CloseGroup / CloseScene / ChangeScene` 第一版统一清理入口
   - registry 支持 `group / uiGroup / scene / sceneName / closeOnSceneChange / destroyOnSceneChange`
@@ -158,10 +159,10 @@ runtime/ui/fairygui/FairyGuiSystem
 当前仍需继续完善：
 
 - 完整输入转发，包括键盘、滚轮、输入框/IME 和更严格的焦点处理；鼠标点击链路已通过调试注入验证。
-- 复杂事件的事件数据透传，例如 item 对象、drag 坐标、touch 坐标；事件类型已接通，payload 仍要继续补齐。
-- UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理；真实点击关闭已验收，仍需补更严格的置顶规则和更多真实弹窗样例。
+- 复杂事件的事件数据透传已补第一版，当前 `itemHandle / itemIndex / x / y / button / touchId / wheelDelta / dragDeltaX / dragDeltaY` 可到 Lua；后续继续补更复杂的 item 数据与焦点场景。
+- UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理、priority 置顶和 modal 空白关闭；后续仍需更多真实弹窗样例。
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
-- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，后续补资源化样式和 GuideMask 高亮区域。
+- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补矩形高亮和点击穿透，后续补资源化样式。
 - package 预加载、场景级清理、资源泄漏 Dump 和调试面板仍需继续补。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。
 
@@ -409,6 +410,8 @@ Toast
 - `CloseTopPopup()` 可关闭当前最上层弹窗。
 - `DumpStacks()` 用于调试当前栈状态。
 - `popupMode` 支持 `stack / single / replace`，`popupGroup` 用于同组弹窗互斥。
+- `priority / sortingPriority / sortingOrder` 支持同层稳定置顶，modal mask 点击只关闭当前顶层绑定弹窗。
+- `GuideMask` 支持矩形高亮区域，遮罩外区域可关闭，空洞区域可点击穿透。
 - `closeOnEscape` 默认允许 ESC 关闭顶层弹窗，设置为 `false` 可禁止。
 - `CloseLayer(layerName, forceDestroy)` 按层关闭。
 - `CloseGroup(groupName, forceDestroy)` 按 `group / uiGroup / popupGroup` 关闭。

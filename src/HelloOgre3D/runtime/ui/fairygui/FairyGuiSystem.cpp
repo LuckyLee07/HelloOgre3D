@@ -1513,6 +1513,8 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 	int button = -1;
 	int touchId = -1;
 	int wheelDelta = 0;
+	int dragDeltaX = 0;
+	int dragDeltaY = 0;
 
 	if (context != nullptr)
 	{
@@ -1546,12 +1548,20 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 			button = static_cast<int>(input->getButton());
 			touchId = input->getTouchId();
 			wheelDelta = input->getMouseWheelDelta();
+			cocos2d::Touch* touch = input->getTouch();
+			if (touch != nullptr)
+			{
+				const cocos2d::Vec2& location = touch->getLocation();
+				const cocos2d::Vec2& previousLocation = touch->getPreviousLocation();
+				dragDeltaX = static_cast<int>(location.x - previousLocation.x);
+				dragDeltaY = static_cast<int>(location.y - previousLocation.y);
+			}
 		}
 	}
 
 	luaVM->callFunction(
 		"FairyGuiManager_DispatchEvent",
-		"iiiiiiiiiiii",
+		"iiiiiiiiiiiiii",
 		callbackId,
 		objectHandle,
 		eventType,
@@ -1563,7 +1573,9 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 		y,
 		button,
 		touchId,
-		wheelDelta);
+		wheelDelta,
+		dragDeltaX,
+		dragDeltaY);
 }
 
 void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const

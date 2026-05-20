@@ -56,6 +56,9 @@
 - [x] 增加 `HELLO_FGUI_LIFECYCLE_SELF_TEST=1` 自测，覆盖关闭后残留 binding/timer/cache/focus 检测。
 - [x] 增加 `HELLO_FGUI_CACHE_SELF_TEST=1` 自测，覆盖 cache hide、timer 暂停、reopen 复用和强制 destroy 回零。
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_SELF_TEST=1` 自测，覆盖 Toast、Tip、Loading、GuideMask、MessageBox、PopupMenu 创建和清理。
+- [x] 增加 `HELLO_FGUI_POPUP_RULE_SELF_TEST=1` 自测，覆盖 popup priority、modal 空白关闭和低优先级弹窗保留。
+- [x] 增加 `HELLO_FGUI_GUIDE_MASK_SELF_TEST=1` 自测，覆盖 GuideMask 矩形高亮区域和遮罩外点击关闭。
+- [x] 增加 `HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST=1` 自测，覆盖事件坐标、button、touch id 和 drag delta payload。
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
 - [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
@@ -84,10 +87,10 @@
 - [x] `popupMode = stack/single/replace` 和 `popupGroup` 已具备第一版。
 - [x] `CloseLayer/CloseGroup/CloseScene/ChangeScene` 已具备第一版。
 - [ ] 明确每个 layer 的默认 sorting order、输入穿透规则、是否参与返回键关闭。
-- [ ] 支持 modal 点击空白关闭、modal 点击穿透禁止、modal 与 popup 绑定销毁。
-- [ ] 支持同 layer 内按打开时间、priority、手动 `BringToFront` 的稳定排序。
+- [x] 支持 modal 点击空白关闭、modal 点击穿透禁止、modal 与 popup 绑定销毁。
+- [x] 支持同 layer 内按打开时间、priority、手动 `BringToFront` 的稳定排序。
 - [ ] 支持 UI 打开时指定 parent/root，承接 MiniUIManager 的 `rootNode` 思路。
-- [ ] 支持引导层高亮区域和可点击穿透区域。
+- [x] 支持引导层高亮区域和可点击穿透区域。
 - [ ] 增加真实业务 layer 场景样例，覆盖页面、弹窗、引导、toast 同屏。
 
 ## Phase 3: 资源策略
@@ -108,7 +111,7 @@
 - [x] DragStart、DragMove、DragEnd 已具备。
 - [x] UI 命中后阻断相机鼠标输入已具备。
 - [x] ESC 关闭顶层弹窗已具备。
-- [ ] 事件 payload 补齐：item handle、item index、坐标、button、touch id、drag delta。
+- [x] 事件 payload 补齐：item handle、item index、坐标、button、touch id、drag delta。
 - [x] 鼠标滚轮桥接到 FairyGUI ScrollPane/List，正负 delta 已通过 `event.wheelDelta` 传到 Lua。
 - [x] 键盘焦点最小桥接：点击或 Lua `Focus` 到 `GTextInput` 后，键盘输入优先进入 FairyGUI。
 - [x] `GTextInput` 最小文本输入桥接：普通字符、Backspace、Enter/Submit、Changed 事件。
@@ -124,7 +127,7 @@
 - [~] `MessageBox/Dialog` 服务：已有第一版确认/取消按钮和回调，视觉样式待资源化。
 - [~] `PopupMenu` 服务：已有第一版列表项和外部关闭，控件跟随定位待补。
 - [~] `Tip` 服务：已有第一版指定坐标提示，hover 延迟/离开隐藏待补。
-- [~] `GuideMask` 服务：已有第一版遮罩和文案，高亮区域/点击穿透待补。
+- [~] `GuideMask` 服务：已有第一版遮罩、文案、矩形高亮和点击穿透，资源化样式与多形状高亮待补。
 - [x] 通用服务全部接入 layer、modal、生命周期和 Dump。
 
 ## Phase 6: 控件能力与复杂 UI

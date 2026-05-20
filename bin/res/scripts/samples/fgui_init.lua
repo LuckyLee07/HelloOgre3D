@@ -102,6 +102,41 @@ local function tryRunFairyGuiCommonServiceSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiPopupRuleSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_POPUP_RULE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(13, function()
+		print("[FGUI] popup rule self test result:", FGUI_RunPopupRuleSelfTest())
+		FairyGuiManager:DumpStacks()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiGuideMaskSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_GUIDE_MASK_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(14, function()
+		print("[FGUI] guide mask self test result:", FGUI_RunGuideMaskSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiEventPayloadSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(15, function()
+		print("[FGUI] event payload self test result:", FGUI_RunEventPayloadSelfTest())
+		FairyGuiManager:DumpEventStats()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiCommonServiceDemo()
 	if not isEnvEnabled("HELLO_FGUI_COMMON_SERVICE_DEMO") then
 		return
@@ -291,6 +326,9 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCacheSelfTest()
 		tryRunFairyGuiCommonServiceSelfTest()
+		tryRunFairyGuiPopupRuleSelfTest()
+		tryRunFairyGuiGuideMaskSelfTest()
+		tryRunFairyGuiEventPayloadSelfTest()
 		tryRunFairyGuiCommonServiceDemo()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
@@ -521,6 +559,7 @@ function FGUI_RunCommonServiceDemo()
 			text = "GuideMask demo: click mask or wait",
 			textX = 80,
 			textY = 120,
+			highlightRect = { x = 420, y = 240, width = 260, height = 140 },
 			closeOnMaskClick = true,
 		})
 	end)
@@ -610,6 +649,91 @@ function FGUI_RunCommonServiceSelfTest()
 	return opened == true and loadingHideOnce == true and loadingStillOpen == true and loadingHideTwice == true and loadingClosed == true and cleaned == true
 end
 
+function FGUI_RunPopupRuleSelfTest()
+	FairyGuiManager:Close("PopupRuleHigh", true, "popupRuleSelfTestReset")
+	FairyGuiManager:Close("PopupRuleLow", true, "popupRuleSelfTestReset")
+
+	local highHandle = FairyGuiManager:ShowMessageBox("Priority High", "High priority popup should stay on top.", { "OK" }, nil, {
+		key = "PopupRuleHigh",
+		popupGroup = "PopupRule",
+		popupMode = "stack",
+		priority = 5,
+		closeOnMaskClick = true,
+	})
+	local lowHandle = FairyGuiManager:ShowMessageBox("Priority Low", "Low priority popup opens later but stays below.", { "OK" }, nil, {
+		key = "PopupRuleLow",
+		popupGroup = "PopupRule",
+		popupMode = "stack",
+		priority = 0,
+		closeOnMaskClick = true,
+	})
+	local topPopup = FairyGuiManager:GetTopStackObject(FairyGuiManager.popupStack)
+	local priorityOk = topPopup ~= nil and topPopup.key == "PopupRuleHigh"
+	local maskClick = FairyGuiManager:DebugInjectClick(20, 20, 0)
+	local highClosed = FairyGuiManager:GetObjectInfo("PopupRuleHigh") == nil
+	local lowAlive = FairyGuiManager:GetObjectInfo("PopupRuleLow") ~= nil
+	FairyGuiManager:Close("PopupRuleLow", true, "popupRuleSelfTestCleanup")
+	print("[FGUI] popup rule self test detail:", highHandle, lowHandle, "top=", topPopup and topPopup.key or nil, "maskClick=", maskClick, "highClosed=", highClosed, "lowAlive=", lowAlive)
+	return highHandle ~= nil and lowHandle ~= nil and priorityOk == true and maskClick == true and highClosed == true and lowAlive == true
+end
+
+function FGUI_RunGuideMaskSelfTest()
+	FairyGuiManager:HideGuideMask("guideMaskSelfTestReset")
+	local handle = FairyGuiManager:ShowGuideMask({
+		text = "GuideMask self test",
+		textX = 80,
+		textY = 120,
+		highlightRect = { x = 160, y = 160, width = 240, height = 150 },
+		closeOnMaskClick = true,
+	})
+	local objectInfo = FairyGuiManager:GetObjectInfo("__GuideMask")
+	local maskCount = objectInfo ~= nil and type(objectInfo.guideMaskHandles) == "table" and #objectInfo.guideMaskHandles or 0
+	local insideClick = FairyGuiManager:DebugInjectClick(220, 220, 0)
+	local stillOpen = FairyGuiManager:GetObjectInfo("__GuideMask") ~= nil
+	local outsideClick = FairyGuiManager:DebugInjectClick(20, 20, 0)
+	local closed = FairyGuiManager:GetObjectInfo("__GuideMask") == nil
+	FairyGuiManager:HideGuideMask("guideMaskSelfTestCleanup")
+	print("[FGUI] guide mask self test detail:", handle, "maskCount=", maskCount, "insideClick=", insideClick, "stillOpen=", stillOpen, "outsideClick=", outsideClick, "closed=", closed)
+	return handle ~= nil and maskCount > 0 and stillOpen == true and outsideClick == true and closed == true
+end
+
+function FGUI_RunEventPayloadSelfTest()
+	FairyGuiManager:Close("__EventPayloadProbe", true, "eventPayloadSelfTestReset")
+	local objectInfo = FairyGuiManager:OpenServiceContainer("__EventPayloadProbe", {
+		layer = "Top",
+		fullScreen = true,
+		modal = false,
+		touchable = true,
+		stackMode = "None",
+		priority = 20,
+		serviceType = "EventPayloadProbe",
+	})
+	if objectInfo == nil then
+		return false
+	end
+
+	local payload = nil
+	local bindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchMove", function(event)
+		payload = event
+	end)
+	local down = FairyGuiManager:DebugInjectMouseDown(64, 64, 0)
+	local move = FairyGuiManager:DebugInjectMouseMove(96, 112)
+	local up = FairyGuiManager:DebugInjectMouseUp(96, 112, 0)
+	FairyGuiManager:Close("__EventPayloadProbe", true, "eventPayloadSelfTestCleanup")
+	local payloadOk = payload ~= nil
+		and payload.rootHandle == objectInfo.handle
+		and payload.senderHandle ~= nil
+		and payload.x ~= nil
+		and payload.y ~= nil
+		and payload.button ~= nil
+		and payload.touchId ~= nil
+		and payload.dragDeltaX ~= nil
+		and payload.dragDeltaY ~= nil
+		and (payload.dragDeltaX ~= 0 or payload.dragDeltaY ~= 0)
+	print("[FGUI] event payload self test detail:", "binding=", bindingId, "inject=", down, move, up, "payloadOk=", payloadOk, "delta=", payload and payload.dragDeltaX or nil, payload and payload.dragDeltaY or nil)
+	return bindingId ~= nil and down == true and move == true and up == true and payloadOk == true
+end
+
 function FGUI_RunSelfTestSuite()
 	if threadpool == nil or threadpool.delay == nil then
 		print("[FGUI] self test suite failed: threadpool unavailable")
@@ -653,6 +777,9 @@ function FGUI_RunSelfTestSuite()
 		local scrollUp = FairyGuiManager:DebugInjectMouseWheel(745, 485, 120)
 		return scrollDown and scrollUp, tostring(scrollDown) .. "," .. tostring(scrollUp)
 	end)
+	schedule(0.6, "EventPayload", function()
+		return FGUI_RunEventPayloadSelfTest()
+	end)
 	schedule(0.6, "TextInput", function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
@@ -695,12 +822,19 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "CommonServices", function()
 		return FGUI_RunCommonServiceSelfTest()
 	end)
+	schedule(0.6, "PopupRules", function()
+		return FGUI_RunPopupRuleSelfTest()
+	end)
+	schedule(0.6, "GuideMask", function()
+		return FGUI_RunGuideMaskSelfTest()
+	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
 		FairyGuiManager:Close("Act38Test", true)
 		FairyGuiManager:CloseGroup("LayerProbe", true)
 		FairyGuiManager:Close("MaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
+		FairyGuiManager:Close("__EventPayloadProbe", true)
 		local stats = FairyGuiManager:DumpHealth(true)
 		local resourceWarnings = FairyGuiManager:GetResourceWarnings()
 		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0 and #resourceWarnings == 0, "openUI=" .. tostring(stats.openUI)
@@ -723,6 +857,7 @@ local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:CloseGroup("LayerProbe", true)
 	FairyGuiManager:Close("MaskProbe", true)
 	FairyGuiManager:Close("TextInputProbe", true)
+	FairyGuiManager:Close("__EventPayloadProbe", true)
 end
 
 local function getFairyGuiPackageRefCount()
