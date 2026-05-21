@@ -168,6 +168,22 @@ local function tryRunFairyGuiCommonServiceDemo()
 	end)
 end
 
+local function tryRunFairyGuiDebugPanelDemo()
+	if not isEnvEnabled("HELLO_FGUI_DEBUG_PANEL_DEMO") then
+		return
+	end
+
+	threadpool:delay(5, function()
+		local handle = FGUI_ShowDebugPanel({
+			key = "__DebugPanelDemo",
+			title = "FGUI Debug Demo",
+			duration = 20,
+		})
+		print("[FGUI] debug panel demo open:", handle)
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiCleanupSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_CLEANUP_SELF_TEST") then
 		return
@@ -353,6 +369,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiScreenAdaptSelfTest()
 		tryRunFairyGuiScreenAdaptDemo()
 		tryRunFairyGuiCommonServiceDemo()
+		tryRunFairyGuiDebugPanelDemo()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
 		tryRunFairyGuiLayerCloseSelfTest()
@@ -468,6 +485,18 @@ end
 
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
+end
+
+function FGUI_ShowDebugPanel(param)
+	return FairyGuiManager:ShowDebugPanel(param)
+end
+
+function FGUI_HideDebugPanel(key)
+	return FairyGuiManager:HideDebugPanel(key)
+end
+
+function FGUI_RefreshDebugPanel(key)
+	return FairyGuiManager:RefreshDebugPanel(key)
 end
 
 function FGUI_ShowToast(text, duration)

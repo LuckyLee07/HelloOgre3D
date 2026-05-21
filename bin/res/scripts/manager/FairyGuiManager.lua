@@ -2548,6 +2548,28 @@ function FairyGuiManager:AddServiceText(objectInfo, name, text, x, y, width, hei
 	return self:AddOwnedHandle(objectInfo, textHandle)
 end
 
+function FairyGuiManager:AddServiceImage(objectInfo, name, url, x, y, width, height, alpha)
+	if objectInfo == nil or isBlank(url) then
+		return nil
+	end
+
+	local imageHandle = self:CreateLoader(objectInfo.handle, name or "", url or "")
+	if imageHandle == nil or imageHandle <= 0 then
+		return nil
+	end
+	self:SetPosition(imageHandle, x or 0, y or 0)
+	self:SetSize(imageHandle, width or 120, height or 60)
+	self:SetTouchable(imageHandle, false)
+	if alpha ~= nil then
+		self:SetAlpha(imageHandle, alpha)
+	end
+	if not self:AddObjectHandleToParent(imageHandle, objectInfo.handle) then
+		GameManager:removeFairyGuiObject(imageHandle)
+		return nil
+	end
+	return self:AddOwnedHandle(objectInfo, imageHandle)
+end
+
 function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, height, callback)
 	if objectInfo == nil then
 		return nil
@@ -2582,6 +2604,25 @@ function FairyGuiManager:ApplyServiceLayout(objectInfo)
 	local screenHeight = self:GetScreenHeight()
 	if screenWidth <= 0 or screenHeight <= 0 then
 		return false
+	end
+
+	if objectInfo.serviceType == "DebugPanel" then
+		local width = param.width or 460
+		local height = param.height or 236
+		local rect = {
+			x = param.x or math.max(screenWidth - width - (param.right or 24), 0),
+			y = param.y or (param.top or 24),
+			width = width,
+			height = height,
+		}
+		self:ClampLayoutRect(rect, screenWidth, screenHeight)
+		self:SetPosition(objectInfo.handle, rect.x, rect.y)
+		self:SetSize(objectInfo.handle, rect.width, rect.height)
+		if objectInfo.debugPanelBackgroundHandle ~= nil then
+			self:SetPosition(objectInfo.debugPanelBackgroundHandle, 0, 0)
+			self:SetSize(objectInfo.debugPanelBackgroundHandle, rect.width, rect.height)
+		end
+		return true
 	end
 
 	if objectInfo.serviceType == "Toast" and objectInfo.toastTextHandle ~= nil then
@@ -3034,6 +3075,93 @@ function FairyGuiManager:DumpServices()
 	end
 	print("[FGUI] ServiceMeta toastActive=", stats.__meta.toastActive, "toastQueue=", stats.__meta.toastQueue, "loadingRefs=", stats.__meta.loadingRefTotal)
 	print("[FGUI] DumpServices end")
+end
+
+function FairyGuiManager:BuildDebugPanelLines()
+	local health = self:GetHealthStats()
+	local perf = self:GetPerfStats()
+	local services = self:GetServiceStats()
+	local serviceCount = 0
+	for serviceType, _ in pairs(services) do
+		if serviceType ~= "__meta" then
+			serviceCount = serviceCount + 1
+		end
+	end
+
+	return {
+		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
+		string.format("Life binding=%s timer=%s thread=%s child=%s focus=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.focusedHandle)),
+		string.format("Render cmd=%s tri=%s mat=%s tex=%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.textureCount)),
+		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
+		string.format("Perf close %s avg/max=%s/%s", tostring(perf.close.count), formatMs(perf.close.avgMs), formatMs(perf.close.maxMs)),
+		string.format("Perf event %s avg/max=%s/%s", tostring(perf.event.count), formatMs(perf.event.avgMs), formatMs(perf.event.maxMs)),
+		string.format("Load pkg %s avg/max=%s/%s create %s avg/max=%s/%s", tostring(perf.loadPackage.count), formatMs(perf.loadPackage.avgMs), formatMs(perf.loadPackage.maxMs), tostring(perf.createObject.count), formatMs(perf.createObject.avgMs), formatMs(perf.createObject.maxMs)),
+		string.format("Services kind=%s toastQueue=%s loadingRefs=%s", tostring(serviceCount), tostring(services.__meta.toastQueue), tostring(services.__meta.loadingRefTotal)),
+	}
+end
+
+function FairyGuiManager:RefreshDebugPanel(key)
+	local objectInfo = self:GetObjectInfo(key or "__DebugPanel")
+	if objectInfo == nil then
+		return false
+	end
+
+	if objectInfo.debugPanelTitleHandle ~= nil then
+		self:SetText(objectInfo.debugPanelTitleHandle, nil, string.format("%s  %s", tostring(objectInfo.param.title or "FGUI Debug"), os.date and os.date("%H:%M:%S") or ""))
+	end
+
+	local lines = self:BuildDebugPanelLines()
+	local lineHandles = objectInfo.debugPanelLineHandles or {}
+	for index, handle in ipairs(lineHandles) do
+		self:SetText(handle, nil, lines[index] or "")
+	end
+	return true
+end
+
+function FairyGuiManager:ShowDebugPanel(param)
+	param = copyTable(param)
+	param.key = param.key or "__DebugPanel"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "DebugPanel"
+	param.popupMode = param.popupMode or "replace"
+	param.width = param.width or 460
+	param.height = param.height or 236
+	param.top = param.top or 24
+	param.right = param.right or 24
+	param.modal = false
+	param.touchable = param.touchable ~= false
+	param.closeOnEscape = false
+	param.closeOnSceneChange = param.closeOnSceneChange == true
+	param.serviceType = "DebugPanel"
+
+	local objectInfo = self:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+
+	objectInfo.debugPanelBackgroundHandle = self:AddServiceImage(objectInfo, "debug_panel_bg", param.background or "res/assets/act_38/_imgs/board_task.png", 0, 0, param.width, param.height, param.alpha or 0.92)
+	objectInfo.debugPanelTitleHandle = self:AddServiceText(objectInfo, "debug_panel_title", param.title or "FGUI Debug", 18, 12, param.width - 88, 28, 20, 255, 236, 180)
+	objectInfo.debugPanelLineHandles = {}
+	for index = 1, 8 do
+		objectInfo.debugPanelLineHandles[index] = self:AddServiceText(objectInfo, "debug_panel_line_" .. tostring(index), "", 18, 42 + (index - 1) * 22, param.width - 36, 22, 16, 210, 235, 255)
+	end
+	self:AddServiceButton(objectInfo, "debug_panel_close", "X", param.width - 60, 10, 42, 30, function()
+		self:HideDebugPanel(param.key)
+	end)
+	self:ApplyServiceLayout(objectInfo)
+	self:RefreshDebugPanel(param.key)
+
+	if param.autoRefresh ~= false then
+		objectInfo.debugPanelTimer = self:AddTimer(param.key, param.duration or 3600, param.refreshInterval or 1, function()
+			self:RefreshDebugPanel(param.key)
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiManager:HideDebugPanel(key)
+	return self:Close(key or "__DebugPanel", true, "hideDebugPanel")
 end
 
 function FairyGuiManager:OpenUI(name, packagePath, classluaOrObjectName, param)

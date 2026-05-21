@@ -166,14 +166,14 @@ runtime/ui/fairygui/FairyGuiSystem
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
 - Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补矩形高亮和点击穿透，后续补资源化样式。
 - 屏幕适配已有第一版统一布局规则：居中弹窗、贴边 popup、Toast/Loading 文案区域和设计坐标 GuideMask 会在 resize 后重算；可用 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 与 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 验证。
-- package 预加载、场景级清理、资源泄漏 Dump 和调试面板仍需继续补。
+- package 预加载、场景级清理和资源泄漏 Dump 仍需继续补；调试面板已有第一版 Health/Perf 可视化。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。
 
 下一轮优先级建议：
 
 1. 渲染裁剪与遮罩：当前已完成第一版矩形 scissor 裁剪和 stencil 状态桥接。`cocos-lite` 会维护 scissor enabled/rect，且每帧会重置 renderer 的裁剪状态；`StencilStateManager` 会把 `write/test/restore`、嵌套深度和倒置标记透传给 `Renderer`；`FairyGuiSystem` 会在 `CustomCommand` 后同步状态，并在写入 Ogre `ManualObject` 前对三角形做 CPU 裁剪。复杂 UI 的 `ScrollPane / List` 已具备基础越界裁剪能力；普通/倒置 mask 当前按 stencil 图形实际索引顶点的包围矩形裁剪。已新增 `FGUI_OpenMaskProbe()` / `HELLO_FGUI_MASK_SELF_TEST=1`，用于打开真实 `GComponent::setMask()` 的普通与倒置 mask 可视化样例。后续仍需补像素级非矩形 GPU stencil 和更低成本的渲染队列状态切换方案。
 2. 输入补齐：鼠标点击链路已验证，下一步补滚轮、键盘、文本输入/IME 和焦点状态，保证 `GTextInput`、滚动列表、快捷键关闭等交互可用。
-3. 资源与性能观测：package refCount、material/texture 数量、render command 数、triangle 数和事件分发次数已接入 Dump，C++ FGUI update/render/load/create/event 已接入 Tracy，Lua Open/Close/Event/LoadPackage/CreateObject 轻量耗时已接入 Dump；后续补调试面板和 Tracy 计数器。
+3. 资源与性能观测：package refCount、material/texture 数量、render command 数、triangle 数和事件分发次数已接入 Dump，C++ FGUI update/render/load/create/event 已接入 Tracy，Lua Open/Close/Event/LoadPackage/CreateObject 轻量耗时已接入 Dump，调试面板已有第一版；后续补 Tracy 计数器。
 4. 通用控件能力：补 `Progress / Slider / ComboBox / Transition` 等常用接口，再用一个更接近业务的页面组合做验收。
 
 ## 3. MiniUIManager 参考清单与当前缺口
@@ -221,7 +221,7 @@ MiniUIManager 中值得借鉴的能力：
 
 8. 显示统计
    - MiniUIManager 在 UI show/end 时有统计入口。
-   - 当前框架已把 UI 打开、关闭、事件、加载、创建和渲染基础批次数接入日志/Dump 或 Tracy，后续补调试面板统一展示。
+   - 当前框架已把 UI 打开、关闭、事件、加载、创建和渲染基础批次数接入日志/Dump、Tracy 或调试面板。
 
 9. 通用页面创建
    - `UniversalCratePage` 这类接口说明项目里存在动态创建子页面、挂到背景控件、按层级打开的需求。
@@ -290,7 +290,7 @@ MiniUIManager 中值得借鉴的能力：
    - `DumpOpenUIs / DumpPackages / DumpBindings`
    - UI 打开关闭日志开关。
    - Tracy zone 覆盖 `Open / Close / LoadPackage / CreateObject / DispatchEvent / Render`。
-   - 可选调试面板显示当前打开 UI、layer、绑定事件数、package 引用数。
+   - 可选调试面板显示当前打开 UI、layer、绑定事件数、package 引用数。（已接第一版 Health/Perf 面板）
 
 9. 屏幕适配
    - root resize 后自动通知打开的 UI。
@@ -547,6 +547,7 @@ python tools/fgui_autogen/fairygui_autogen.py ^
 - `FairyGuiManager:DumpViews()`
 - `FairyGuiManager:DumpPackages()`
 - `FairyGuiManager:SetDebugEventLogEnabled(enabled)`
+- `FairyGuiManager:ShowDebugPanel()` / `HideDebugPanel()`（已接第一版，可用 `HELLO_FGUI_DEBUG_PANEL_DEMO=1` 预览）
 - Tracy zone：
   - `FairyGuiSystem::Update`（已接）
   - `FairyGuiSystem::Render`（已接）
