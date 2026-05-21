@@ -282,8 +282,8 @@ MiniUIManager 中值得借鉴的能力：
    - AutoGen 只维护控件路径和强类型访问。
    - 业务代码只写 Ctrl/Model/View。
    - 生成文件和手写文件分离，避免后续覆盖业务代码。
-   - 当前已提供 `tools/fairygui_autogen.py` 作为第一版生成入口，支持通过 manifest 或 `--control` 列表生成 MVC 四件套。
-   - 当前已提供 `tools/fairygui_manifests/act_37_test.json` 作为真实 fui 样例 manifest。
+   - 当前已提供 `tools/fgui_autogen/fairygui_autogen.py` 作为第一版生成入口，支持通过 manifest 或 `--control` 列表生成 MVC 四件套。
+   - 当前已提供 `tools/fgui_autogen/fairygui_manifests/act_37_test.json` 作为真实 fui 样例 manifest。
 
 8. 调试和观测
    - `FairyGuiManager:Dump()`
@@ -512,8 +512,8 @@ self:PlayTransition("show")
 命令示例：
 
 ```bash
-python tools/fairygui_autogen.py ^
-	--manifest tools/fairygui_manifests/act_37_test.json
+python tools/fgui_autogen/fairygui_autogen.py ^
+	--manifest tools/fgui_autogen/fairygui_manifests/act_37_test.json
 ```
 
 生成内容：

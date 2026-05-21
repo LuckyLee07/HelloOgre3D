@@ -1,0 +1,17 @@
+{
+	"uiName": "Act37TestMvc",
+	"package": "act_37_test",
+	"component": "main_pifushoumai",
+	"controls": [
+		{ "name": "btnClose", "path": "btn_close", "type": "GButton" },
+		{ "name": "btnBuy", "path": "btn_buy", "type": "GButton" },
+		{ "name": "btnRule", "path": "btn_rule", "type": "GButton" },
+		{ "name": "btnDetail", "path": "btn_detail", "type": "GButton" },
+		{ "name": "tabList", "path": "tab_list", "type": "GList" },
+		{ "name": "rewardList", "path": "reward_list", "type": "GList" },
+		{ "name": "txtTitle", "path": "txt_title", "type": "GTextField" },
+		{ "name": "txtTime", "path": "txt_time", "type": "GTextField" },
+		{ "name": "txtDesc", "path": "txt_desc", "type": "GTextField" },
+		{ "name": "redTag", "path": "redTag", "type": "GObject" }
+	]
+}

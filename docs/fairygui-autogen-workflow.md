@@ -10,7 +10,7 @@
 
 FairyGUI UI 接入脚本的最终目标：
 
-- 一个正式入口：`tools/fairygui_generate_ui.py`。
+- 一个正式入口：`tools/fgui_autogen/fairygui_generate_ui.py`。
 - 一条命令完成 manifest、MVC 骨架、registry 片段、`GeneratedUIRegistry.lua`。
 - 默认只覆盖 `*AutoGen.lua` 和生成 registry，不覆盖手写 `View / Model / Ctrl`。
 - 写入前可用 `--dry-run` 查看计划，用 `--check` 做 CI/本地预检。
@@ -38,7 +38,7 @@ FairyGUI UI 接入脚本的最终目标：
 Recommended one-shot command:
 
 ```powershell
-python tools\fairygui_generate_ui.py `
+python tools\fgui_autogen\fairygui_generate_ui.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `
@@ -55,7 +55,7 @@ This command generates the manifest, MVC stubs, standalone registry snippet, and
 Useful safety modes:
 
 ```powershell
-python tools\fairygui_generate_ui.py `
+python tools\fgui_autogen\fairygui_generate_ui.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `
@@ -69,7 +69,7 @@ python tools\fairygui_generate_ui.py `
 ```
 
 ```powershell
-python tools\fairygui_generate_ui.py `
+python tools\fgui_autogen\fairygui_generate_ui.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `
@@ -87,12 +87,12 @@ python tools\fairygui_generate_ui.py `
 Advanced manifest-only command:
 
 ```powershell
-python tools\fairygui_asset_manifest.py `
+python tools\fgui_autogen\fairygui_asset_manifest.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `
 	--ui-name Act38Test `
-	--output tools\fairygui_manifests\act_38_test.json
+	--output tools\fgui_autogen\fairygui_manifests\act_38_test.json
 ```
 
 manifest 会记录：
@@ -108,10 +108,10 @@ manifest 会记录：
 Advanced Lua-only command:
 
 ```powershell
-python tools\fairygui_autogen.py `
-	--manifest tools\fairygui_manifests\act_38_test.json `
+python tools\fgui_autogen\fairygui_autogen.py `
+	--manifest tools\fgui_autogen\fairygui_manifests\act_38_test.json `
 	--output-dir bin\res\scripts\ui\views `
-	--registry-output tools\fairygui_manifests\act_38_test.registry.lua `
+	--registry-output tools\fgui_autogen\fairygui_manifests\act_38_test.registry.lua `
 	--registry-aggregate-output bin\res\scripts\ui\GeneratedUIRegistry.lua `
 	--layer Popup `
 	--group Sample `
@@ -133,7 +133,7 @@ python tools\fairygui_autogen.py `
 - `bin/res/scripts/ui/views/<UIName>View.lua`
 - `bin/res/scripts/ui/views/<UIName>Model.lua`
 - `bin/res/scripts/ui/views/<UIName>Ctrl.lua`
-- `tools/fairygui_manifests/<package>.registry.lua`
+- `tools/fgui_autogen/fairygui_manifests/<package>.registry.lua`
 - `bin/res/scripts/ui/GeneratedUIRegistry.lua`
 
 生成的 Ctrl 会根据 manifest 识别 `GList`，创建基础 `Refresh*List` 和 `Render*Item` stub，并在注释里标出 item 组件和 item 控件。
@@ -142,13 +142,13 @@ python tools\fairygui_autogen.py `
 
 Current generated registry mode:
 
-- `--registry-output` writes a standalone review file under `tools/fairygui_manifests`.
+- `--registry-output` writes a standalone review file under `tools/fgui_autogen/fairygui_manifests`.
 - `--registry-aggregate-output` updates `bin/res/scripts/ui/GeneratedUIRegistry.lua`.
 - `UIRegistry.lua` loads `GeneratedUIRegistry.lua` automatically.
 - Hand-written entries in `UIRegistry.lua` win over generated entries with the same UI name.
 - Once a UI becomes a formal page, copy the reviewed generated entry into `UIRegistry.lua` and keep business edits in Ctrl / Model / View.
 
-把 `tools/fairygui_manifests/<package>.registry.lua` 中的 UI 配置复制到：
+把 `tools/fgui_autogen/fairygui_manifests/<package>.registry.lua` 中的 UI 配置复制到：
 
 ```text
 bin/res/scripts/ui/UIRegistry.lua
@@ -182,19 +182,19 @@ luac -p bin\res\scripts\ui\views\<UIName>AutoGen.lua `
 	bin\res\scripts\ui\views\<UIName>View.lua `
 	bin\res\scripts\ui\views\<UIName>Model.lua `
 	bin\res\scripts\ui\views\<UIName>Ctrl.lua `
-	tools\fairygui_manifests\<package>.registry.lua
+	tools\fgui_autogen\fairygui_manifests\<package>.registry.lua
 ```
 
 工具链检查：
 
 ```powershell
-python -B -m py_compile tools\fairygui_asset_manifest.py `
-	tools\fairygui_autogen.py `
-	tools\fairygui_generate_ui.py
+python -B -m py_compile tools\fgui_autogen\fairygui_asset_manifest.py `
+	tools\fgui_autogen\fairygui_autogen.py `
+	tools\fgui_autogen\fairygui_generate_ui.py
 ```
 
 ```powershell
-python tools\fairygui_generate_ui.py `
+python tools\fgui_autogen\fairygui_generate_ui.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `

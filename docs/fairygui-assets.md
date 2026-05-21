@@ -46,8 +46,8 @@
 
 XML 源数据已整理为：
 
-- `tools/fairygui_manifests/act_37_test.json`
-- `tools/fairygui_manifests/act_38_test.json`
+- `tools/fgui_autogen/fairygui_manifests/act_37_test.json`
+- `tools/fgui_autogen/fairygui_manifests/act_38_test.json`
 
 `act_38_test.json` 由工具生成，包含：
 
@@ -59,12 +59,12 @@ XML 源数据已整理为：
 重新生成命令：
 
 ```powershell
-python tools\fairygui_asset_manifest.py `
+python tools\fgui_autogen\fairygui_asset_manifest.py `
 	--asset-dir bin\res\assets\act_38 `
 	--package act_38_test `
 	--component QingLuanActMain `
 	--ui-name Act38Test `
-	--output tools\fairygui_manifests\act_38_test.json
+	--output tools\fgui_autogen\fairygui_manifests\act_38_test.json
 ```
 
 ## 验证入口
