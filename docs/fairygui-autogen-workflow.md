@@ -92,7 +92,7 @@ python tools\fgui_autogen\fairygui_asset_manifest.py `
 	--package act_38_test `
 	--component QingLuanActMain `
 	--ui-name Act38Test `
-	--output tools\fgui_autogen\fairygui_manifests\act_38_test.json
+	--output bin\res\assets\fairygui_manifests\act_38_test.json
 ```
 
 manifest 会记录：
@@ -109,9 +109,9 @@ Advanced Lua-only command:
 
 ```powershell
 python tools\fgui_autogen\fairygui_autogen.py `
-	--manifest tools\fgui_autogen\fairygui_manifests\act_38_test.json `
+	--manifest bin\res\assets\fairygui_manifests\act_38_test.json `
 	--output-dir bin\res\scripts\ui\views `
-	--registry-output tools\fgui_autogen\fairygui_manifests\act_38_test.registry.lua `
+	--registry-output bin\res\assets\fairygui_manifests\act_38_test.registry.lua `
 	--registry-aggregate-output bin\res\scripts\ui\GeneratedUIRegistry.lua `
 	--layer Popup `
 	--group Sample `
@@ -133,7 +133,7 @@ python tools\fgui_autogen\fairygui_autogen.py `
 - `bin/res/scripts/ui/views/<UIName>View.lua`
 - `bin/res/scripts/ui/views/<UIName>Model.lua`
 - `bin/res/scripts/ui/views/<UIName>Ctrl.lua`
-- `tools/fgui_autogen/fairygui_manifests/<package>.registry.lua`
+- `bin/res/assets/fairygui_manifests/<package>.registry.lua`
 - `bin/res/scripts/ui/GeneratedUIRegistry.lua`
 
 生成的 Ctrl 会根据 manifest 识别 `GList`，创建基础 `Refresh*List` 和 `Render*Item` stub，并在注释里标出 item 组件和 item 控件。
@@ -142,13 +142,13 @@ python tools\fgui_autogen\fairygui_autogen.py `
 
 Current generated registry mode:
 
-- `--registry-output` writes a standalone review file under `tools/fgui_autogen/fairygui_manifests`.
+- `--registry-output` writes a standalone review file under `bin/res/assets/fairygui_manifests`.
 - `--registry-aggregate-output` updates `bin/res/scripts/ui/GeneratedUIRegistry.lua`.
 - `UIRegistry.lua` loads `GeneratedUIRegistry.lua` automatically.
 - Hand-written entries in `UIRegistry.lua` win over generated entries with the same UI name.
 - Once a UI becomes a formal page, copy the reviewed generated entry into `UIRegistry.lua` and keep business edits in Ctrl / Model / View.
 
-把 `tools/fgui_autogen/fairygui_manifests/<package>.registry.lua` 中的 UI 配置复制到：
+把 `bin/res/assets/fairygui_manifests/<package>.registry.lua` 中的 UI 配置复制到：
 
 ```text
 bin/res/scripts/ui/UIRegistry.lua
@@ -182,7 +182,7 @@ luac -p bin\res\scripts\ui\views\<UIName>AutoGen.lua `
 	bin\res\scripts\ui\views\<UIName>View.lua `
 	bin\res\scripts\ui\views\<UIName>Model.lua `
 	bin\res\scripts\ui\views\<UIName>Ctrl.lua `
-	tools\fgui_autogen\fairygui_manifests\<package>.registry.lua
+	bin\res\assets\fairygui_manifests\<package>.registry.lua
 ```
 
 工具链检查：

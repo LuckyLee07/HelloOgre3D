@@ -5,6 +5,7 @@
 当前 FairyGUI 资源分两层保存：
 
 - `bin/res/assets/<module>`：FairyGUI 导出的 XML 源数据和原始图片资源，用于检查控件结构、生成 AutoGen manifest、定位控件名。
+- `bin/res/assets/fairygui_manifests`：AutoGen 使用的 manifest 和 registry review 片段。
 - `bin/res/fuires`：运行时加载用的 `.fui` 和 atlas 图片，`FairyGuiManager:LoadPackage` 只从这里加载运行时 package。
 
 不要只保留其中一层：
@@ -46,8 +47,8 @@
 
 XML 源数据已整理为：
 
-- `tools/fgui_autogen/fairygui_manifests/act_37_test.json`
-- `tools/fgui_autogen/fairygui_manifests/act_38_test.json`
+- `bin/res/assets/fairygui_manifests/act_37_test.json`
+- `bin/res/assets/fairygui_manifests/act_38_test.json`
 
 `act_38_test.json` 由工具生成，包含：
 
@@ -64,7 +65,7 @@ python tools\fgui_autogen\fairygui_asset_manifest.py `
 	--package act_38_test `
 	--component QingLuanActMain `
 	--ui-name Act38Test `
-	--output tools\fgui_autogen\fairygui_manifests\act_38_test.json
+	--output bin\res\assets\fairygui_manifests\act_38_test.json
 ```
 
 ## 验证入口

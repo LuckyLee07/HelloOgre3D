@@ -25,12 +25,12 @@ def write_manifest(path, manifest):
 
 def default_manifest_output(package_name, ui_name):
 	name = package_name or ui_name
-	return os.path.join("tools", "fgui_autogen", "fairygui_manifests", name + ".json")
+	return os.path.join("bin", "res", "assets", "fairygui_manifests", name + ".json")
 
 
 def default_registry_output(package_name, ui_name):
 	name = package_name or ui_name
-	return os.path.join("tools", "fgui_autogen", "fairygui_manifests", name + ".registry.lua")
+	return os.path.join("bin", "res", "assets", "fairygui_manifests", name + ".registry.lua")
 
 
 def class_file(output_dir, class_name):
