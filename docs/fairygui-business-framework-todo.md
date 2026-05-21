@@ -64,7 +64,7 @@
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
 - [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
-- [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua Open/Close 耗时仍待补。
+- [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua 侧已补 Open/Close/Event/LoadPackage/CreateObject 轻量耗时 Dump，服务层统计和 Tracy 计数器仍待补。
 - [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
 - [x] 增加 `HELLO_FGUI_LONG_LOOP_SELF_TEST=1` 长循环自测入口，循环打开关闭 Act37、Act38、Layer、Mask、TextInput 并检查资源/生命周期回零。
 
@@ -182,12 +182,12 @@
 
 ## Phase 10: 性能与稳定性
 
-- [ ] FGUI 打开/关闭耗时统计。
-- [ ] package 加载耗时统计。
-- [ ] 事件分发耗时统计。
+- [x] FGUI 打开/关闭耗时统计，`DumpPerfStats` 已输出 count/success/fail/avg/max/last。
+- [x] package 加载耗时统计，`loadPackage` 已纳入 Lua 侧 perf stat。
+- [x] 事件分发耗时统计，`DumpEventStats` 已输出 avg/max/last elapsedMs。
 - [ ] render command、triangle、texture/material 切换统计。
 - [ ] UI 数量压力样例，覆盖 1/5/20/50 个弹窗或列表项规模。
-- [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event 已接入，Lua open/close 和服务层统计待补。
+- [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event 已接入，Lua open/close/event/load/create 轻量耗时已接入 Dump，服务层统计和 Tracy counter 待补。
 - [x] 长时间打开关闭循环自测，检测 handle、binding、timer、view/controller、package refCount 和资源告警是否回零。
 - [ ] Release|x64、Debug|x64、Win32 的最小构建验证清单。
 

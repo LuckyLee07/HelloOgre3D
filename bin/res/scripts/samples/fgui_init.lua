@@ -736,8 +736,16 @@ function FGUI_RunEventPayloadSelfTest()
 	end
 
 	local payload = nil
+	local beginPayload = nil
+	local endPayload = nil
+	local beginBindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchBegin", function(event)
+		beginPayload = event
+	end)
 	local bindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchMove", function(event)
 		payload = event
+	end)
+	local endBindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchEnd", function(event)
+		endPayload = event
 	end)
 	local down = FairyGuiManager:DebugInjectMouseDown(64, 64, 0)
 	local move = FairyGuiManager:DebugInjectMouseMove(96, 112)
@@ -753,8 +761,8 @@ function FGUI_RunEventPayloadSelfTest()
 		and payload.dragDeltaX ~= nil
 		and payload.dragDeltaY ~= nil
 		and (payload.dragDeltaX ~= 0 or payload.dragDeltaY ~= 0)
-	print("[FGUI] event payload self test detail:", "binding=", bindingId, "inject=", down, move, up, "payloadOk=", payloadOk, "delta=", payload and payload.dragDeltaX or nil, payload and payload.dragDeltaY or nil)
-	return bindingId ~= nil and down == true and move == true and up == true and payloadOk == true
+	print("[FGUI] event payload self test detail:", "binding=", beginBindingId, bindingId, endBindingId, "inject=", down, move, up, "payloadOk=", payloadOk, "begin=", beginPayload ~= nil, "end=", endPayload ~= nil, "delta=", payload and payload.dragDeltaX or nil, payload and payload.dragDeltaY or nil)
+	return beginBindingId ~= nil and bindingId ~= nil and endBindingId ~= nil and down == true and move == true and up == true and payloadOk == true and beginPayload ~= nil and endPayload ~= nil
 end
 
 function FGUI_RunScreenAdaptSelfTest()
@@ -922,6 +930,8 @@ function FGUI_RunSelfTestSuite()
 		return scrollDown and scrollUp, tostring(scrollDown) .. "," .. tostring(scrollUp)
 	end)
 	schedule(0.6, "EventPayload", function()
+		FairyGuiManager:Close("Act38Test", true, "selfTestEventPayloadReset")
+		FairyGuiManager:Close("Act37TestMvc", true, "selfTestEventPayloadReset")
 		return FGUI_RunEventPayloadSelfTest()
 	end)
 	schedule(0.6, "TextInput", function()
@@ -996,6 +1006,7 @@ function FGUI_RunSelfTestSuite()
 			end
 		end
 		print("[FGUI] self test suite end:", passCount, "/", #results)
+		FairyGuiManager:DumpPerfStats()
 	end)
 	return true
 end
@@ -1143,6 +1154,7 @@ function FGUI_RunLongLoopSelfTest(config)
 			closeFairyGuiLongLoopObjects()
 			local finalClean, finalDetail = checkFairyGuiLongLoopClean("final")
 			print("[FGUI] long loop self test end:", results.pass, "/", iterations, "fail=", results.fail, "finalClean=", finalClean, finalDetail)
+			FairyGuiManager:DumpPerfStats()
 			return
 		end
 

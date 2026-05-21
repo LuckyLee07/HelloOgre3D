@@ -95,6 +95,26 @@ local function tableCount(source)
 	return count
 end
 
+local function nowMs()
+	return os.clock and os.clock() * 1000 or 0
+end
+
+local function formatMs(value)
+	return string.format("%.3f", tonumber(value) or 0)
+end
+
+local function createPerfStat()
+	return {
+		count = 0,
+		success = 0,
+		fail = 0,
+		totalMs = 0,
+		maxMs = 0,
+		lastMs = 0,
+		lastName = "",
+	}
+end
+
 local function normalizeRect(rect)
 	if type(rect) ~= "table" then
 		return nil
@@ -370,6 +390,7 @@ function FairyGuiManager:Init()
 		self.eventStats = {}
 		self.eventDispatchTotal = 0
 		self.lastEvent = nil
+		self.perfStats = {}
 		self.toastQueue = {}
 		self.toastActive = nil
 		self.toastSerial = 0
@@ -449,7 +470,9 @@ function FairyGuiManager:LoadPackage(packagePath, packageName)
 		return packageInfo.packageName
 	end
 
+	local startMs = nowMs()
 	local loadedPackageName = GameManager:loadFairyGuiPackage(packagePath)
+	self:RecordPerf("loadPackage", nowMs() - startMs, packagePath, not isBlank(loadedPackageName))
 	if isBlank(loadedPackageName) then
 		return nil
 	end
@@ -514,7 +537,10 @@ function FairyGuiManager:CreateObject(packageName, objectName)
 	if not self:IsAvailable() or isBlank(packageName) or isBlank(objectName) then
 		return 0
 	end
-	return GameManager:createFairyGuiObject(packageName, objectName)
+	local startMs = nowMs()
+	local handle = GameManager:createFairyGuiObject(packageName, objectName)
+	self:RecordPerf("createObject", nowMs() - startMs, tostring(packageName) .. "/" .. tostring(objectName), handle ~= nil and handle > 0)
+	return handle
 end
 
 function FairyGuiManager:CreateContainer(name, ownerHandle)
@@ -591,6 +617,79 @@ function FairyGuiManager:DumpRenderStats()
 	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
 end
 
+function FairyGuiManager:RecordPerf(category, elapsedMs, name, success)
+	if isBlank(category) then
+		return nil
+	end
+	if self.perfStats == nil then
+		self.perfStats = {}
+	end
+
+	local stat = self.perfStats[category]
+	if stat == nil then
+		stat = createPerfStat()
+		self.perfStats[category] = stat
+	end
+
+	elapsedMs = tonumber(elapsedMs) or 0
+	stat.count = stat.count + 1
+	stat.totalMs = stat.totalMs + elapsedMs
+	stat.lastMs = elapsedMs
+	stat.lastName = name or ""
+	if elapsedMs > stat.maxMs then
+		stat.maxMs = elapsedMs
+		stat.maxName = name or ""
+	end
+	if success == false then
+		stat.fail = stat.fail + 1
+	else
+		stat.success = stat.success + 1
+	end
+	return stat
+end
+
+function FairyGuiManager:GetPerfStat(category)
+	local stat = self.perfStats ~= nil and self.perfStats[category] or nil
+	if stat == nil then
+		stat = createPerfStat()
+	end
+	return {
+		count = stat.count or 0,
+		success = stat.success or 0,
+		fail = stat.fail or 0,
+		totalMs = stat.totalMs or 0,
+		avgMs = (stat.count or 0) > 0 and (stat.totalMs or 0) / stat.count or 0,
+		maxMs = stat.maxMs or 0,
+		maxName = stat.maxName or "",
+		lastMs = stat.lastMs or 0,
+		lastName = stat.lastName or "",
+	}
+end
+
+function FairyGuiManager:GetPerfStats()
+	local stats = {}
+	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject" }) do
+		stats[category] = self:GetPerfStat(category)
+	end
+	if self.perfStats ~= nil then
+		for category, _ in pairs(self.perfStats) do
+			if stats[category] == nil then
+				stats[category] = self:GetPerfStat(category)
+			end
+		end
+	end
+	return stats
+end
+
+function FairyGuiManager:DumpPerfStats()
+	local stats = self:GetPerfStats()
+	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject" }) do
+		local stat = stats[category]
+		print("[FGUI] PerfStat", category, "count=", stat.count, "success=", stat.success, "fail=", stat.fail, "avgMs=", formatMs(stat.avgMs), "maxMs=", formatMs(stat.maxMs), "lastMs=", formatMs(stat.lastMs), "last=", stat.lastName or "", "max=", stat.maxName or "")
+	end
+	return stats
+end
+
 function FairyGuiManager:GetDebugStats()
 	local childCacheCount = 0
 	for _, children in pairs(self.childrenByHandle) do
@@ -629,6 +728,7 @@ end
 function FairyGuiManager:GetHealthStats()
 	local debugStats = self:GetDebugStats()
 	local renderStats = self:GetRenderStats()
+	local perfStats = self:GetPerfStats()
 	local threadTimerCount = 0
 	if threadpool ~= nil and threadpool.get_timer_count ~= nil then
 		threadTimerCount = threadpool:get_timer_count()
@@ -655,13 +755,24 @@ function FairyGuiManager:GetHealthStats()
 		runtimeObjectHandle = renderStats.runtimeObjectHandle,
 		runtimeBinding = renderStats.runtimeBinding,
 		eventDispatchTotal = self.eventDispatchTotal or 0,
+		openPerfCount = perfStats.open.count,
+		openAvgMs = perfStats.open.avgMs,
+		openMaxMs = perfStats.open.maxMs,
+		closePerfCount = perfStats.close.count,
+		closeAvgMs = perfStats.close.avgMs,
+		closeMaxMs = perfStats.close.maxMs,
+		eventAvgMs = perfStats.event.avgMs,
+		eventMaxMs = perfStats.event.maxMs,
+		loadPackageAvgMs = perfStats.loadPackage.avgMs,
+		loadPackageMaxMs = perfStats.loadPackage.maxMs,
 	}
 end
 
 function FairyGuiManager:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs))
 	if verbose == true then
+		self:DumpPerfStats()
 		self:DumpResourceRefs()
 		self:DumpResourceWarnings()
 		self:DumpStacks()
@@ -2013,14 +2124,20 @@ function FairyGuiManager:HandleWindowResized(width, height)
 end
 
 function FairyGuiManager:Open(name, param)
+	local startMs = nowMs()
+	local function finish(result, success)
+		self:RecordPerf("open", nowMs() - startMs, tostring(name), success ~= false and result ~= nil)
+		return result
+	end
+
 	local config = self:GetUIConfig(name)
 	if config == nil then
 		print("[FGUI] open failed, ui not registered:", tostring(name))
-		return nil
+		return finish(nil, false)
 	end
 
 	if not self:LoadUIRequires(config) then
-		return nil
+		return finish(nil, false)
 	end
 
 	local openParam = self:BuildOpenParam(name, config, param)
@@ -2028,7 +2145,7 @@ function FairyGuiManager:Open(name, param)
 	self.uiNameToKey[name] = openParam.key
 	local policyResult = self:ApplyPopupOpenPolicy(openParam)
 	if policyResult ~= nil then
-		return policyResult
+		return finish(policyResult, true)
 	end
 
 	local packagePath = config.packagePath or config.package
@@ -2039,17 +2156,17 @@ function FairyGuiManager:Open(name, param)
 		openParam.package = packagePath
 		openParam.objectName = component
 		openParam.component = component
-		return self:OpenView(config.viewClass, openParam)
+		return finish(self:OpenView(config.viewClass, openParam))
 	end
 
 	local classlua = config.classlua or config.autoGen
 	if classlua ~= nil then
 		openParam.objectName = component
 		openParam.component = component
-		return self:OpenUI(component, packagePath, classlua, openParam)
+		return finish(self:OpenUI(component, packagePath, classlua, openParam))
 	end
 
-	return self:OpenObject(component, packagePath, component, openParam)
+	return finish(self:OpenObject(component, packagePath, component, openParam))
 end
 
 function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
@@ -4100,6 +4217,7 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		bindingId = bindingId,
 	}
 
+	local startMs = nowMs()
 	local ok, err = pcall(callback, {
 		callbackId = callbackId,
 		rootHandle = rootHandle,
@@ -4119,6 +4237,9 @@ function FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindi
 		eventTypeId = eventType,
 		bindingId = bindingId,
 	})
+	local elapsedMs = nowMs() - startMs
+	self:RecordPerf("event", elapsedMs, eventName, ok)
+	self.lastEvent.elapsedMs = elapsedMs
 	if not ok then
 		print("[FGUI] event callback error:", err)
 		return false
@@ -4182,7 +4303,14 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		return false
 	end
 
+	local startMs = nowMs()
 	local handle = objectInfo.handle
+	local closeName = objectInfo.key or tostring(keyOrHandle)
+	local function finish(result, success)
+		self:RecordPerf("close", nowMs() - startMs, closeName, success ~= false and result == true)
+		return result
+	end
+
 	local param = objectInfo.param or {}
 	local ownedHandles = self:CollectOwnedHandles(objectInfo)
 	local closeSnapshot = self:CreateCloseSnapshot(objectInfo, ownedHandles)
@@ -4203,7 +4331,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		self:SetGuideMaskVisible(objectInfo, false)
 		self:RemoveStackEntry(objectInfo.key)
 		self.hiddenObjects[objectInfo.key] = objectInfo
-		return true
+		return finish(true, true)
 	end
 
 	self:ClearFocusForHandles(ownedHandles)
@@ -4236,7 +4364,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
 	self:ValidateClosedObject(closeSnapshot, closeSnapshot and closeSnapshot.ownedHandles or ownedHandles, "CloseUI")
 	self:HandleServiceClosed(objectInfo, reason)
-	return removed
+	return finish(removed, removed == true)
 end
 
 function FairyGuiManager:CloseView(viewOrKeyOrHandle, forceDestroy, reason)
@@ -4582,12 +4710,13 @@ end
 
 function FairyGuiManager:DumpEventStats()
 	local stats = self:GetEventStats()
-	print("[FGUI] DumpEventStats total=", stats.total)
+	local perf = self:GetPerfStat("event")
+	print("[FGUI] DumpEventStats total=", stats.total, "avgMs=", formatMs(perf.avgMs), "maxMs=", formatMs(perf.maxMs), "lastMs=", formatMs(perf.lastMs), "last=", perf.lastName or "")
 	for eventType, count in pairs(stats.events) do
 		print("[FGUI] EventStat", eventType, count)
 	end
 	if stats.lastEvent ~= nil then
-		print("[FGUI] LastEvent", stats.lastEvent.eventType, "root=", stats.lastEvent.rootHandle, "sender=", stats.lastEvent.senderHandle, "item=", stats.lastEvent.itemHandle, "itemIndex=", stats.lastEvent.itemIndex, "x=", stats.lastEvent.x, "y=", stats.lastEvent.y, "button=", stats.lastEvent.button, "wheel=", stats.lastEvent.wheelDelta, "dragDelta=", stats.lastEvent.dragDeltaX, stats.lastEvent.dragDeltaY)
+		print("[FGUI] LastEvent", stats.lastEvent.eventType, "root=", stats.lastEvent.rootHandle, "sender=", stats.lastEvent.senderHandle, "item=", stats.lastEvent.itemHandle, "itemIndex=", stats.lastEvent.itemIndex, "x=", stats.lastEvent.x, "y=", stats.lastEvent.y, "button=", stats.lastEvent.button, "wheel=", stats.lastEvent.wheelDelta, "dragDelta=", stats.lastEvent.dragDeltaX, stats.lastEvent.dragDeltaY, "elapsedMs=", formatMs(stats.lastEvent.elapsedMs))
 	end
 end
 
@@ -4613,6 +4742,7 @@ function FairyGuiManager:Dump()
 	self:DumpResourceWarnings()
 	self:DumpBindings()
 	self:DumpEventStats()
+	self:DumpPerfStats()
 	self:DumpStacks()
 	self:DumpLayerRoots()
 	self:DumpScenes()
