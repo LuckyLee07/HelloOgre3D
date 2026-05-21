@@ -137,6 +137,27 @@ local function tryRunFairyGuiEventPayloadSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiScreenAdaptSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_SCREEN_ADAPT_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(16, function()
+		print("[FGUI] screen adapt self test result:", FGUI_RunScreenAdaptSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiScreenAdaptDemo()
+	if not isEnvEnabled("HELLO_FGUI_SCREEN_ADAPT_DEMO") then
+		return
+	end
+
+	threadpool:delay(6, function()
+		print("[FGUI] screen adapt demo result:", FGUI_RunScreenAdaptDemo())
+	end)
+end
+
 local function tryRunFairyGuiCommonServiceDemo()
 	if not isEnvEnabled("HELLO_FGUI_COMMON_SERVICE_DEMO") then
 		return
@@ -329,6 +350,8 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiPopupRuleSelfTest()
 		tryRunFairyGuiGuideMaskSelfTest()
 		tryRunFairyGuiEventPayloadSelfTest()
+		tryRunFairyGuiScreenAdaptSelfTest()
+		tryRunFairyGuiScreenAdaptDemo()
 		tryRunFairyGuiCommonServiceDemo()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
@@ -734,6 +757,127 @@ function FGUI_RunEventPayloadSelfTest()
 	return bindingId ~= nil and down == true and move == true and up == true and payloadOk == true
 end
 
+function FGUI_RunScreenAdaptSelfTest()
+	FairyGuiManager:ClearToastQueue()
+	FairyGuiManager:Close("__Toast", true, "screenAdaptSelfTestReset")
+	FairyGuiManager:Close("__GuideMask", true, "screenAdaptSelfTestReset")
+	FairyGuiManager:Close("ScreenAdaptMessage", true, "screenAdaptSelfTestReset")
+	FairyGuiManager:Close("ScreenAdaptPopup", true, "screenAdaptSelfTestReset")
+
+	local screenWidth = FairyGuiManager:GetScreenWidth()
+	local screenHeight = FairyGuiManager:GetScreenHeight()
+	local messageHandle = FairyGuiManager:ShowMessageBox("Screen Adapt", "Centered popup should stay centered after layout refresh.", { "OK" }, nil, {
+		key = "ScreenAdaptMessage",
+		center = true,
+		closeOnMaskClick = true,
+	})
+	local messageInfo = FairyGuiManager:GetObjectInfo("ScreenAdaptMessage")
+	local messageRect = messageInfo and messageInfo.lastLayoutRect or nil
+	local messageCenterOk = messageRect ~= nil
+		and math.abs(messageRect.x - math.max((screenWidth - messageRect.width) * 0.5, 0)) <= 2
+		and math.abs(messageRect.y - math.max((screenHeight - messageRect.height) * 0.5, 0)) <= 2
+
+	local popupHandle = FairyGuiManager:ShowPopupMenu({ "Alpha", "Beta", "Gamma" }, screenWidth + 40, screenHeight + 40, nil, {
+		key = "ScreenAdaptPopup",
+		fitInScreen = true,
+	})
+	local popupInfo = FairyGuiManager:GetObjectInfo("ScreenAdaptPopup")
+	local popupRect = popupInfo and popupInfo.lastLayoutRect or nil
+	local popupClampOk = popupRect ~= nil
+		and popupRect.x >= 0
+		and popupRect.y >= 0
+		and popupRect.x + popupRect.width <= screenWidth + 1
+		and popupRect.y + popupRect.height <= screenHeight + 1
+
+	local guideHandle = FairyGuiManager:ShowGuideMask({
+		text = "Screen adapt guide",
+		highlightRect = { x = 640, y = 360, width = 180, height = 120 },
+		designWidth = 1280,
+		designHeight = 720,
+		scaleMode = "stretch",
+		closeOnMaskClick = true,
+	})
+	local guideInfo = FairyGuiManager:GetObjectInfo("__GuideMask")
+	local guideRect = guideInfo and guideInfo.guideMaskRect or nil
+	local guideOk = guideRect ~= nil
+		and guideRect.x >= 0
+		and guideRect.y >= 0
+		and guideRect.x + guideRect.width <= screenWidth + 1
+		and guideRect.y + guideRect.height <= screenHeight + 1
+
+	local toastHandle = FairyGuiManager:ShowToast("Screen adapt toast", 0, { bottom = 100 })
+	local toastInfo = FairyGuiManager:GetObjectInfo("__Toast")
+	local toastRect = toastInfo and toastInfo.toastLayoutRect or nil
+	local toastOk = toastRect ~= nil
+		and toastRect.x >= 0
+		and toastRect.x + toastRect.width <= screenWidth + 1
+		and toastRect.y >= 0
+		and toastRect.y + toastRect.height <= screenHeight + 1
+
+	print(
+		"[FGUI] screen adapt self test detail:",
+		"screen=", screenWidth, screenHeight,
+		"message=", messageHandle, messageCenterOk,
+		"popup=", popupHandle, popupClampOk,
+		"guide=", guideHandle, guideOk,
+		"toast=", toastHandle, toastOk)
+
+	FairyGuiManager:Close("__Toast", true, "screenAdaptSelfTestCleanup")
+	FairyGuiManager:Close("__GuideMask", true, "screenAdaptSelfTestCleanup")
+	FairyGuiManager:Close("ScreenAdaptMessage", true, "screenAdaptSelfTestCleanup")
+	FairyGuiManager:Close("ScreenAdaptPopup", true, "screenAdaptSelfTestCleanup")
+	return messageCenterOk == true and popupClampOk == true and guideOk == true and toastOk == true
+end
+
+function FGUI_RunScreenAdaptDemo()
+	if threadpool == nil or threadpool.delay == nil then
+		print("[FGUI] screen adapt demo failed: threadpool unavailable")
+		return false
+	end
+
+	FairyGuiManager:ClearToastQueue()
+	FairyGuiManager:Close("__Toast", true, "screenAdaptDemoReset")
+	FairyGuiManager:Close("__GuideMask", true, "screenAdaptDemoReset")
+	FairyGuiManager:Close("ScreenAdaptMessage", true, "screenAdaptDemoReset")
+	FairyGuiManager:Close("ScreenAdaptPopup", true, "screenAdaptDemoReset")
+
+	local screenWidth = FairyGuiManager:GetScreenWidth()
+	local screenHeight = FairyGuiManager:GetScreenHeight()
+	FairyGuiManager:ShowMessageBox("Screen Adapt Demo", "Centered popup, clamped menu, toast area and scaled guide mask are visible together.", { "OK" }, nil, {
+		key = "ScreenAdaptMessage",
+		center = true,
+		closeOnMaskClick = true,
+		priority = 4,
+	})
+	FairyGuiManager:ShowPopupMenu({ "Bottom Right", "Clamped", "Menu" }, screenWidth - 24, screenHeight - 24, function(index, item)
+		print("[FGUI] screen adapt demo popup select:", index, item)
+	end, {
+		key = "ScreenAdaptPopup",
+		fitInScreen = true,
+		priority = 5,
+	})
+	FairyGuiManager:ShowGuideMask({
+		text = "Guide rect uses 1280x720 design coordinates",
+		textX = 80,
+		textY = 160,
+		highlightRect = { x = 470, y = 240, width = 260, height = 150 },
+		designWidth = 1280,
+		designHeight = 720,
+		scaleMode = "stretch",
+		closeOnMaskClick = true,
+	})
+	FairyGuiManager:ShowToast("Toast keeps its screen area on resize", 6, { bottom = 110, dedupeKey = "ScreenAdaptDemoToast" })
+	threadpool:delay(8, function()
+		FairyGuiManager:Close("__Toast", true, "screenAdaptDemoCleanup")
+		FairyGuiManager:Close("__GuideMask", true, "screenAdaptDemoCleanup")
+		FairyGuiManager:Close("ScreenAdaptMessage", true, "screenAdaptDemoCleanup")
+		FairyGuiManager:Close("ScreenAdaptPopup", true, "screenAdaptDemoCleanup")
+		FairyGuiManager:DumpHealth(true)
+		print("[FGUI] screen adapt demo end")
+	end)
+	return true
+end
+
 function FGUI_RunSelfTestSuite()
 	if threadpool == nil or threadpool.delay == nil then
 		print("[FGUI] self test suite failed: threadpool unavailable")
@@ -828,6 +972,9 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "GuideMask", function()
 		return FGUI_RunGuideMaskSelfTest()
 	end)
+	schedule(0.6, "ScreenAdapt", function()
+		return FGUI_RunScreenAdaptSelfTest()
+	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
 		FairyGuiManager:Close("Act38Test", true)
@@ -835,6 +982,8 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:Close("MaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
 		FairyGuiManager:Close("__EventPayloadProbe", true)
+		FairyGuiManager:Close("ScreenAdaptMessage", true)
+		FairyGuiManager:Close("ScreenAdaptPopup", true)
 		local stats = FairyGuiManager:DumpHealth(true)
 		local resourceWarnings = FairyGuiManager:GetResourceWarnings()
 		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0 and #resourceWarnings == 0, "openUI=" .. tostring(stats.openUI)
@@ -858,6 +1007,8 @@ local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:Close("MaskProbe", true)
 	FairyGuiManager:Close("TextInputProbe", true)
 	FairyGuiManager:Close("__EventPayloadProbe", true)
+	FairyGuiManager:Close("ScreenAdaptMessage", true)
+	FairyGuiManager:Close("ScreenAdaptPopup", true)
 end
 
 local function getFairyGuiPackageRefCount()

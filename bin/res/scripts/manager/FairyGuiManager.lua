@@ -325,6 +325,9 @@ function FairyGuiManager:Init()
 	self.controllers = {}
 	self.controllersByHandle = {}
 	self.currentSceneName = "Default"
+	self.designWidth = nil
+	self.designHeight = nil
+	self.scaleMode = "stretch"
 	self.layers = copyTable(DEFAULT_LAYER_ORDER)
 		self.layerNextOrder = {}
 		self.layerObjects = {}
@@ -1102,6 +1105,17 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"destroyOnSceneChange",
 			"fullScreen",
 			"adaptScreen",
+			"alignX",
+			"alignY",
+			"hAlign",
+			"vAlign",
+			"offsetX",
+			"offsetY",
+			"fitInScreen",
+			"designWidth",
+			"designHeight",
+			"scaleMode",
+			"useDesignScale",
 			"marginLeft",
 		"marginRight",
 		"marginTop",
@@ -1606,7 +1620,7 @@ end
 
 function FairyGuiManager:GetGuideMaskRect(param)
 	param = param or {}
-	local rect = normalizeRect(param.clickThroughRect or param.highlightRect or param.highlight or param.rect)
+	local rect = self:ApplyDesignRect(param.clickThroughRect or param.highlightRect or param.highlight or param.rect, param)
 	if rect == nil then
 		return nil
 	end
@@ -1801,34 +1815,159 @@ function FairyGuiManager:GetScreenHeight()
 	return 0
 end
 
+function FairyGuiManager:SetDesignResolution(width, height, scaleMode)
+	self.designWidth = tonumber(width)
+	self.designHeight = tonumber(height)
+	if scaleMode ~= nil then
+		self.scaleMode = scaleMode
+	end
+end
+
+function FairyGuiManager:GetDesignTransform(param)
+	param = param or {}
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	local designWidth = tonumber(param.designWidth or self.designWidth)
+	local designHeight = tonumber(param.designHeight or self.designHeight)
+	if screenWidth <= 0 or screenHeight <= 0 or designWidth == nil or designHeight == nil or designWidth <= 0 or designHeight <= 0 then
+		return 1, 1, 0, 0
+	end
+
+	local scaleX = screenWidth / designWidth
+	local scaleY = screenHeight / designHeight
+	local scaleMode = param.scaleMode or self.scaleMode or "stretch"
+	if scaleMode == "fit" then
+		local scale = math.min(scaleX, scaleY)
+		return scale, scale, (screenWidth - designWidth * scale) * 0.5, (screenHeight - designHeight * scale) * 0.5
+	elseif scaleMode == "fill" then
+		local scale = math.max(scaleX, scaleY)
+		return scale, scale, (screenWidth - designWidth * scale) * 0.5, (screenHeight - designHeight * scale) * 0.5
+	elseif scaleMode == "fitWidth" then
+		return scaleX, scaleX, 0, (screenHeight - designHeight * scaleX) * 0.5
+	elseif scaleMode == "fitHeight" then
+		return scaleY, scaleY, (screenWidth - designWidth * scaleY) * 0.5, 0
+	end
+	return scaleX, scaleY, 0, 0
+end
+
+function FairyGuiManager:ApplyDesignRect(rect, param)
+	rect = normalizeRect(rect)
+	if rect == nil then
+		return nil
+	end
+	param = param or {}
+	if param.useDesignScale ~= true and param.designWidth == nil and param.designHeight == nil and param.scaleMode == nil and self.designWidth == nil and self.designHeight == nil then
+		return rect
+	end
+
+	local scaleX, scaleY, offsetX, offsetY = self:GetDesignTransform(param)
+	return {
+		x = rect.x * scaleX + offsetX,
+		y = rect.y * scaleY + offsetY,
+		width = rect.width * scaleX,
+		height = rect.height * scaleY,
+	}
+end
+
+function FairyGuiManager:ClampLayoutRect(rect, screenWidth, screenHeight)
+	if rect == nil then
+		return nil
+	end
+	rect.x = math.max(math.min(rect.x, math.max(screenWidth - rect.width, 0)), 0)
+	rect.y = math.max(math.min(rect.y, math.max(screenHeight - rect.height, 0)), 0)
+	return rect
+end
+
+function FairyGuiManager:GetLayoutRect(param)
+	param = param or {}
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	if screenWidth <= 0 or screenHeight <= 0 then
+		return nil
+	end
+
+	local left = tonumber(param.marginLeft or param.left) or 0
+	local right = tonumber(param.marginRight or param.right) or 0
+	local top = tonumber(param.marginTop or param.top) or 0
+	local bottom = tonumber(param.marginBottom or param.bottomMargin) or 0
+	if param.fullScreen == true or param.adaptScreen == true then
+		return {
+			x = left,
+			y = top,
+			width = math.max(screenWidth - left - right, 0),
+			height = math.max(screenHeight - top - bottom, 0),
+		}
+	end
+
+	local width = tonumber(param.width)
+	local height = tonumber(param.height)
+	if width == nil or height == nil then
+		return nil
+	end
+
+	local alignX = param.alignX or param.hAlign
+	local alignY = param.alignY or param.vAlign
+	if param.center == true then
+		alignX = alignX or "center"
+		alignY = alignY or "middle"
+	end
+
+	local x = tonumber(param.x)
+	local y = tonumber(param.y)
+	local offsetX = tonumber(param.offsetX) or 0
+	local offsetY = tonumber(param.offsetY) or 0
+	if alignX == "center" then
+		x = (screenWidth - width) * 0.5 + offsetX
+	elseif alignX == "right" then
+		x = screenWidth - width - right + offsetX
+	elseif x == nil then
+		x = left + offsetX
+	end
+	if alignY == "middle" or alignY == "center" then
+		y = (screenHeight - height) * 0.5 + offsetY
+	elseif alignY == "bottom" then
+		y = screenHeight - height - bottom + offsetY
+	elseif y == nil then
+		y = top + offsetY
+	end
+
+	local rect = {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+	}
+	if param.fitInScreen == true then
+		self:ClampLayoutRect(rect, screenWidth, screenHeight)
+	end
+	return rect
+end
+
 function FairyGuiManager:ApplyScreenAdapt(objectInfo)
 	if objectInfo == nil or objectInfo.handle == nil then
 		return false
 	end
 
 	local param = objectInfo.param or {}
-	if param.fullScreen ~= true and param.adaptScreen ~= true then
-		return false
-	end
-
 	local screenWidth = self:GetScreenWidth()
 	local screenHeight = self:GetScreenHeight()
 	if screenWidth <= 0 or screenHeight <= 0 then
 		return false
 	end
 
-	local left = param.marginLeft or 0
-	local right = param.marginRight or 0
-	local top = param.marginTop or 0
-	local bottom = param.marginBottom or 0
-	self:SetPosition(objectInfo.handle, left, top)
-	self:SetSize(objectInfo.handle, math.max(screenWidth - left - right, 0), math.max(screenHeight - top - bottom, 0))
+	local rect = self:GetLayoutRect(param)
+	if rect ~= nil then
+		self:SetPosition(objectInfo.handle, rect.x, rect.y)
+		self:SetSize(objectInfo.handle, rect.width, rect.height)
+		objectInfo.lastLayoutRect = rect
+	end
 	if objectInfo.modalMaskHandle ~= nil then
 		self:SetPosition(objectInfo.modalMaskHandle, 0, 0)
 		self:SetSize(objectInfo.modalMaskHandle, screenWidth, screenHeight)
 	end
 	self:UpdateGuideMaskLayout(objectInfo)
-	return true
+	self:ApplyServiceLayout(objectInfo)
+	return rect ~= nil
 end
 
 function FairyGuiManager:HandleWindowResized(width, height)
@@ -2284,6 +2423,52 @@ function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, h
 	return buttonHandle
 end
 
+function FairyGuiManager:ApplyServiceLayout(objectInfo)
+	if objectInfo == nil then
+		return false
+	end
+
+	local param = objectInfo.param or {}
+	local screenWidth = self:GetScreenWidth()
+	local screenHeight = self:GetScreenHeight()
+	if screenWidth <= 0 or screenHeight <= 0 then
+		return false
+	end
+
+	if objectInfo.serviceType == "Toast" and objectInfo.toastTextHandle ~= nil then
+		local text = tostring(objectInfo.toastText or "")
+		local width = param.width or math.min(math.max(string.len(text) * 14 + 80, 240), math.max(screenWidth - 80, 240))
+		local height = param.height or 44
+		local rect = {
+			x = param.x or math.max((screenWidth - width) * 0.5, 0),
+			y = param.y or math.max(screenHeight - (param.bottom or 120), 0),
+			width = width,
+			height = height,
+		}
+		if param.fitInScreen ~= false then
+			self:ClampLayoutRect(rect, screenWidth, screenHeight)
+		end
+		self:SetPosition(objectInfo.toastTextHandle, rect.x, rect.y)
+		self:SetSize(objectInfo.toastTextHandle, rect.width, rect.height)
+		objectInfo.toastLayoutRect = rect
+		return true
+	elseif objectInfo.serviceType == "Loading" and objectInfo.loadingTextHandle ~= nil then
+		local width = param.width or 280
+		local height = param.height or 36
+		local rect = {
+			x = param.x or math.max(screenWidth * 0.5 - width * 0.5, 0),
+			y = param.y or math.max(screenHeight * 0.5 - height * 0.5, 0),
+			width = width,
+			height = height,
+		}
+		self:SetPosition(objectInfo.loadingTextHandle, rect.x, rect.y)
+		self:SetSize(objectInfo.loadingTextHandle, rect.width, rect.height)
+		objectInfo.loadingLayoutRect = rect
+		return true
+	end
+	return false
+end
+
 function FairyGuiManager:GetServiceObject(serviceKey)
 	return self:GetObjectInfo(serviceKey)
 end
@@ -2391,13 +2576,9 @@ function FairyGuiManager:OpenToastRequest(request)
 	end
 
 	objectInfo.toastRequestId = request.id
-	local screenWidth = self:GetScreenWidth()
-	local screenHeight = self:GetScreenHeight()
-	local width = param.width or math.min(math.max(string.len(tostring(request.text or "")) * 14 + 80, 240), math.max(screenWidth - 80, 240))
-	local height = param.height or 44
-	local x = param.x or math.max((screenWidth - width) * 0.5, 0)
-	local y = param.y or math.max(screenHeight - (param.bottom or 120), 0)
-	self:AddServiceText(objectInfo, "toast_text", request.text or "", x, y, width, height, param.fontSize or 22, 255, 244, 200)
+	objectInfo.toastText = request.text or ""
+	objectInfo.toastTextHandle = self:AddServiceText(objectInfo, "toast_text", objectInfo.toastText, 0, 0, param.width or 240, param.height or 44, param.fontSize or 22, 255, 244, 200)
+	self:ApplyServiceLayout(objectInfo)
 
 	self.toastActive = {
 		id = request.id,
@@ -2486,6 +2667,7 @@ function FairyGuiManager:ShowLoading(text, param)
 		if not isBlank(text) then
 			self:SetText(existing.handle, "loading_text", text)
 		end
+		self:ApplyServiceLayout(existing)
 		return existing.handle
 	end
 
@@ -2507,9 +2689,8 @@ function FairyGuiManager:ShowLoading(text, param)
 		return nil
 	end
 	objectInfo.loadingText = text or "Loading..."
-	local screenWidth = self:GetScreenWidth()
-	local screenHeight = self:GetScreenHeight()
-	self:AddServiceText(objectInfo, "loading_text", text or "Loading...", math.max(screenWidth * 0.5 - 140, 0), math.max(screenHeight * 0.5 - 18, 0), 280, 36, param.fontSize or 24, 255, 255, 255)
+	objectInfo.loadingTextHandle = self:AddServiceText(objectInfo, "loading_text", text or "Loading...", 0, 0, param.width or 280, param.height or 36, param.fontSize or 24, 255, 255, 255)
+	self:ApplyServiceLayout(objectInfo)
 	local timeout = tonumber(param.timeout)
 	if timeout ~= nil and timeout > 0 then
 		self:Delay(objectInfo.key, timeout, function()
@@ -2562,9 +2743,6 @@ function FairyGuiManager:ShowGuideMask(param)
 	param.closeOnMaskClick = param.closeOnMaskClick == true
 	param.touchable = false
 	param.serviceType = "GuideMask"
-	if highlightRect ~= nil then
-		param.highlightRect = highlightRect
-	end
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
@@ -2598,10 +2776,17 @@ function FairyGuiManager:ShowMessageBox(title, message, buttons, callback, param
 	param.closeOnEscape = param.closeOnEscape ~= false
 	param.touchable = true
 	param.serviceType = "MessageBox"
+	if param.center ~= false then
+		if param.x == nil and param.alignX == nil and param.hAlign == nil then
+			param.alignX = "center"
+		end
+		if param.y == nil and param.alignY == nil and param.vAlign == nil then
+			param.alignY = "middle"
+		end
+	end
+	param.fitInScreen = param.fitInScreen ~= false
 
 	buttons = type(buttons) == "table" and buttons or { "OK" }
-	param.x = param.x or math.max((self:GetScreenWidth() - param.width) * 0.5, 0)
-	param.y = param.y or math.max((self:GetScreenHeight() - param.height) * 0.5, 0)
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
@@ -2649,6 +2834,7 @@ function FairyGuiManager:ShowPopupMenu(items, x, y, callback, param)
 	param.height = param.height or math.max(#items * itemHeight, itemHeight)
 	param.x = x or param.x or 0
 	param.y = y or param.y or 0
+	param.fitInScreen = param.fitInScreen ~= false
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then

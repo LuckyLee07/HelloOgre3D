@@ -59,6 +59,8 @@
 - [x] 增加 `HELLO_FGUI_POPUP_RULE_SELF_TEST=1` 自测，覆盖 popup priority、modal 空白关闭和低优先级弹窗保留。
 - [x] 增加 `HELLO_FGUI_GUIDE_MASK_SELF_TEST=1` 自测，覆盖 GuideMask 矩形高亮区域和遮罩外点击关闭。
 - [x] 增加 `HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST=1` 自测，覆盖事件坐标、button、touch id 和 drag delta payload。
+- [x] 增加 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 自测，覆盖居中弹窗、贴边 popup、设计坐标 GuideMask 和 Toast 区域布局。
+- [x] 增加 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 可视化演示，方便肉眼检查屏幕适配规则。
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
 - [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
@@ -149,11 +151,11 @@
 - [x] `fullScreen/adaptScreen/margin` 已具备第一版。
 - [x] resize 后统一回调 `OnResize` 已具备。
 - [x] Windows 高 DPI 下 FairyGUI 初始化、渲染、输入和 Lua 适配统一使用 logical screen size。
-- [ ] 对齐 MiniUIManager 的 fullscreen/adapt 规则，明确设计分辨率、缩放模式和边缘策略。
+- [~] 对齐 MiniUIManager 的 fullscreen/adapt 规则，已有设计分辨率、缩放模式和边缘策略第一版。
 - [ ] 增加 safe area 或异形屏预留字段，先在配置层占位。
-- [ ] 增加 layer root resize 后的统一布局重算。
-- [ ] 增加不同窗口尺寸下的可视化样例和日志自测。
-- [ ] 对弹窗居中、toast 区域、guide mask 区域补统一适配规则。
+- [x] 增加 layer root resize 后的统一布局重算。
+- [x] 增加不同窗口尺寸下的可视化样例和日志自测。
+- [x] 对弹窗居中、toast 区域、guide mask 区域补统一适配规则。
 
 ## Phase 8: 渲染裁剪与遮罩
 

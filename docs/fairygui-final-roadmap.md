@@ -133,6 +133,8 @@ runtime/ui/fairygui/FairyGuiSystem
 - 已增加基础 screen adapt：
   - `fullScreen / adaptScreen`
   - `marginLeft / marginRight / marginTop / marginBottom`
+  - `center / alignX / alignY / fitInScreen`
+  - `designWidth / designHeight / scaleMode` 设计坐标换算
   - resize 后统一重算并回调 `OnResize`
 - 已增加最小 click 事件桥：
   - `BaseFairyGuiView:AddClick(childPath, callback)`
@@ -163,6 +165,7 @@ runtime/ui/fairygui/FairyGuiSystem
 - UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理、priority 置顶和 modal 空白关闭；后续仍需更多真实弹窗样例。
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
 - Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补矩形高亮和点击穿透，后续补资源化样式。
+- 屏幕适配已有第一版统一布局规则：居中弹窗、贴边 popup、Toast/Loading 文案区域和设计坐标 GuideMask 会在 resize 后重算；可用 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 与 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 验证。
 - package 预加载、场景级清理、资源泄漏 Dump 和调试面板仍需继续补。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。
 
@@ -399,6 +402,7 @@ Toast
 - `FairyGuiManager:EnsureLayerRoot(layer)` 会按需创建 `Layer_Normal / Layer_Popup ...` 容器。
 - `Open` 和 modal mask 会挂载到对应 layer root，而不是全部直接挂到 FairyGUI root。
 - layer root 会在窗口 resize 后同步刷新尺寸，并保持各层基础 sorting order。
+- 打开的 UI 会在 resize 后统一重算 `fullScreen/adaptScreen/margin/center/align/fitInScreen` 布局，并同步刷新 modal mask、GuideMask 分段遮罩、Toast/Loading 文案位置。
 - `FGUI_OpenLayerSample()` 可打开 `Normal / Popup / Top / Toast` 四层验证样例，`FGUI_CloseLayerSample()` 可清理样例。
 - 也可设置 `HELLO_FGUI_LAYER_SELF_TEST=1` 在启动后自动打开 layer 验证样例并输出 dump。
 - `FGUI_RunLayerCloseSelfTest()` 会按 `CloseTopPopup -> CloseLayer("Top") -> CloseGroup("LayerProbe")` 验证真实 layer root 下的关闭和栈清理；也可设置 `HELLO_FGUI_LAYER_CLOSE_SELF_TEST=1` 自动执行。
