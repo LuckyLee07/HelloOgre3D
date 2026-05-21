@@ -129,6 +129,58 @@ function FairyGuiBaseCtrl:SetControllerIndex(controllerName, selectedIndex)
 	return self.view ~= nil and self.view:SetControllerIndex(controllerName, selectedIndex) or false
 end
 
+function FairyGuiBaseCtrl:SetValue(childPathOrValue, value)
+	return self.view ~= nil and self.view:SetValue(childPathOrValue, value) or false
+end
+
+function FairyGuiBaseCtrl:GetValue(childPath)
+	return self.view ~= nil and self.view:GetValue(childPath) or 0
+end
+
+function FairyGuiBaseCtrl:SetMin(childPathOrValue, minValue)
+	return self.view ~= nil and self.view:SetMin(childPathOrValue, minValue) or false
+end
+
+function FairyGuiBaseCtrl:GetMin(childPath)
+	return self.view ~= nil and self.view:GetMin(childPath) or 0
+end
+
+function FairyGuiBaseCtrl:SetMax(childPathOrValue, maxValue)
+	return self.view ~= nil and self.view:SetMax(childPathOrValue, maxValue) or false
+end
+
+function FairyGuiBaseCtrl:GetMax(childPath)
+	return self.view ~= nil and self.view:GetMax(childPath) or 0
+end
+
+function FairyGuiBaseCtrl:SetProgress(childPathOrValue, value, maxValue, minValue)
+	return self.view ~= nil and self.view:SetProgress(childPathOrValue, value, maxValue, minValue) or false
+end
+
+function FairyGuiBaseCtrl:SetComboBoxSelectedIndex(childPathOrSelectedIndex, selectedIndex)
+	return self.view ~= nil and self.view:SetComboBoxSelectedIndex(childPathOrSelectedIndex, selectedIndex) or false
+end
+
+function FairyGuiBaseCtrl:GetComboBoxSelectedIndex(childPath)
+	return self.view ~= nil and self.view:GetComboBoxSelectedIndex(childPath) or -1
+end
+
+function FairyGuiBaseCtrl:SetComboBoxValue(childPathOrValue, value)
+	return self.view ~= nil and self.view:SetComboBoxValue(childPathOrValue, value) or false
+end
+
+function FairyGuiBaseCtrl:GetComboBoxValue(childPath)
+	return self.view ~= nil and self.view:GetComboBoxValue(childPath) or ""
+end
+
+function FairyGuiBaseCtrl:PlayTransition(transitionName, times, delay, callback)
+	return self.view ~= nil and self.view:PlayTransition(transitionName, times, delay, callback) or false
+end
+
+function FairyGuiBaseCtrl:StopTransition(transitionName, setToComplete, processCallback)
+	return self.view ~= nil and self.view:StopTransition(transitionName, setToComplete, processCallback) or false
+end
+
 function FairyGuiBaseCtrl:SetListData(childPath, dataList, renderer)
 	return self.view ~= nil and self.view:SetListData(childPath, dataList, renderer) or false
 end

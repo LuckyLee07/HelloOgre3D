@@ -71,6 +71,18 @@ public:
 	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
 	bool setFairyGuiObjectLoaderUrl(int objectHandle, const char* url);
 	bool setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex);
+	bool setFairyGuiObjectValue(int objectHandle, Ogre::Real value);
+	Ogre::Real getFairyGuiObjectValue(int objectHandle);
+	bool setFairyGuiObjectMin(int objectHandle, Ogre::Real minValue);
+	Ogre::Real getFairyGuiObjectMin(int objectHandle);
+	bool setFairyGuiObjectMax(int objectHandle, Ogre::Real maxValue);
+	Ogre::Real getFairyGuiObjectMax(int objectHandle);
+	bool setFairyGuiComboBoxSelectedIndex(int objectHandle, int selectedIndex);
+	int getFairyGuiComboBoxSelectedIndex(int objectHandle);
+	bool setFairyGuiComboBoxValue(int objectHandle, const char* value);
+	const char* getFairyGuiComboBoxValue(int objectHandle);
+	bool playFairyGuiTransition(int objectHandle, const char* transitionName, int times, Ogre::Real delay, int callbackId);
+	bool stopFairyGuiTransition(int objectHandle, const char* transitionName, bool setToComplete, bool processCallback);
 	bool focusFairyGuiObject(int objectHandle);
 	bool clearFairyGuiFocus();
 	int getFairyGuiFocusedObject();
@@ -125,6 +137,7 @@ private:
 
 	std::string m_fairyGuiLastPackageName;
 	std::string m_fairyGuiLastObjectText;
+	std::string m_fairyGuiLastObjectValue;
 
 }; //tolua_exports
 

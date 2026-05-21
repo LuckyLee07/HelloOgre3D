@@ -498,6 +498,13 @@ self:PlayTransition("show")
 - item renderer 支持 `SetText / SetIcon / SetLoaderUrl / SetVisible / SetPosition / SetSize / SetControllerIndex`
 - `Act38Test` 已作为 List + Controller + MVC 标准样例，`HELLO_FGUI_ACT38_SELF_TEST=1` 会覆盖打开、追加 item、刷新 item、dump count。
 
+当前已落地的常用控件与 Transition 能力：
+
+- ProgressBar / Slider 支持 `min/max/value` 读写，Lua 侧提供 `SetProgress / SetValue / GetValue` 以及 Slider/ProgressBar 语义别名。
+- ComboBox 支持 `selectedIndex/value` 读写，`Manager/View/Ctrl/ListItem` 均已有封装。
+- Transition 支持按名字或默认第一个 transition 播放、停止和完成回调；回调纳入 Manager 关闭残留检查。
+- `SetControllerIndex` 已支持空名字访问第一个 controller；专用 controller change 监听与 page id/name 访问仍待补。
+
 ### Phase 5.5: AutoGen 生成链
 
 第一版生成链先不直接解析 `.fui` 二进制，而是读取导出辅助 manifest 或命令行控件列表，生成 Lua 侧 MVC 骨架。这样可以先固定工程结构，后续再替换 manifest 来源。

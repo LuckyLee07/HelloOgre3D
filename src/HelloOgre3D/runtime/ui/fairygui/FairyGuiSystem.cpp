@@ -2,14 +2,18 @@
 
 #include "Controller.h"
 #include "cocos2d.h"
+#include "GComboBox.h"
 #include "GComponent.h"
 #include "GGraph.h"
 #include "GList.h"
 #include "GLoader.h"
 #include "GObject.h"
+#include "GProgressBar.h"
 #include "GRoot.h"
+#include "GSlider.h"
 #include "GTextField.h"
 #include "GTextInput.h"
+#include "Transition.h"
 #include "UIPackage.h"
 #include "event/EventContext.h"
 #include "event/InputEvent.h"
@@ -177,6 +181,113 @@ namespace
 		AppendRectIfValid(output, intersection.getMaxX(), source.getMinY(), source.getMaxX() - intersection.getMaxX(), source.size.height);
 		AppendRectIfValid(output, intersection.getMinX(), source.getMinY(), intersection.size.width, intersection.getMinY() - source.getMinY());
 		AppendRectIfValid(output, intersection.getMinX(), intersection.getMaxY(), intersection.size.width, source.getMaxY() - intersection.getMaxY());
+	}
+
+	bool SetRangeObjectValue(fairygui::GObject* object, double value)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+		{
+			progressBar->setValue(value);
+			return true;
+		}
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+		{
+			slider->setValue(value);
+			return true;
+		}
+
+		return false;
+	}
+
+	float GetRangeObjectValue(fairygui::GObject* object)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+			return static_cast<float>(progressBar->getValue());
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+			return static_cast<float>(slider->getValue());
+
+		return 0.0f;
+	}
+
+	bool SetRangeObjectMin(fairygui::GObject* object, double minValue)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+		{
+			progressBar->setMin(minValue);
+			return true;
+		}
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+		{
+			slider->setMin(minValue);
+			return true;
+		}
+
+		return false;
+	}
+
+	float GetRangeObjectMin(fairygui::GObject* object)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+			return static_cast<float>(progressBar->getMin());
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+			return static_cast<float>(slider->getMin());
+
+		return 0.0f;
+	}
+
+	bool SetRangeObjectMax(fairygui::GObject* object, double maxValue)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+		{
+			progressBar->setMax(maxValue);
+			return true;
+		}
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+		{
+			slider->setMax(maxValue);
+			return true;
+		}
+
+		return false;
+	}
+
+	float GetRangeObjectMax(fairygui::GObject* object)
+	{
+		fairygui::GProgressBar* progressBar = dynamic_cast<fairygui::GProgressBar*>(object);
+		if (progressBar != nullptr)
+			return static_cast<float>(progressBar->getMax());
+
+		fairygui::GSlider* slider = dynamic_cast<fairygui::GSlider*>(object);
+		if (slider != nullptr)
+			return static_cast<float>(slider->getMax());
+
+		return 0.0f;
+	}
+
+	fairygui::Transition* FindTransition(fairygui::GComponent* component, const std::string& transitionName)
+	{
+		if (component == nullptr)
+			return nullptr;
+
+		if (!transitionName.empty())
+			return component->getTransition(transitionName);
+
+		return component->getTransitions().empty() ? nullptr : component->getTransitionAt(0);
 	}
 
 	std::string GetFileExtension(const std::string& filePath)
@@ -1049,14 +1160,120 @@ bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std:
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(object);
-	if (component == nullptr || controllerName.empty())
+	if (component == nullptr)
 		return false;
 
-	fairygui::GController* controller = component->getController(controllerName);
+	fairygui::GController* controller = nullptr;
+	if (!controllerName.empty())
+		controller = component->getController(controllerName);
+	else if (!component->getControllers().empty())
+		controller = component->getControllerAt(0);
 	if (controller == nullptr)
 		return false;
 
 	controller->setSelectedIndex(selectedIndex);
+	return true;
+}
+
+bool FairyGuiSystem::SetObjectHandleValue(int objectHandle, float value)
+{
+	return SetRangeObjectValue(FindObjectHandle(objectHandle), value);
+}
+
+float FairyGuiSystem::GetObjectHandleValue(int objectHandle) const
+{
+	return GetRangeObjectValue(FindObjectHandle(objectHandle));
+}
+
+bool FairyGuiSystem::SetObjectHandleMin(int objectHandle, float minValue)
+{
+	return SetRangeObjectMin(FindObjectHandle(objectHandle), minValue);
+}
+
+float FairyGuiSystem::GetObjectHandleMin(int objectHandle) const
+{
+	return GetRangeObjectMin(FindObjectHandle(objectHandle));
+}
+
+bool FairyGuiSystem::SetObjectHandleMax(int objectHandle, float maxValue)
+{
+	return SetRangeObjectMax(FindObjectHandle(objectHandle), maxValue);
+}
+
+float FairyGuiSystem::GetObjectHandleMax(int objectHandle) const
+{
+	return GetRangeObjectMax(FindObjectHandle(objectHandle));
+}
+
+bool FairyGuiSystem::SetObjectHandleComboBoxSelectedIndex(int objectHandle, int selectedIndex)
+{
+	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
+	if (comboBox == nullptr)
+		return false;
+
+	comboBox->setSelectedIndex(selectedIndex);
+	return true;
+}
+
+int FairyGuiSystem::GetObjectHandleComboBoxSelectedIndex(int objectHandle) const
+{
+	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
+	return comboBox != nullptr ? comboBox->getSelectedIndex() : -1;
+}
+
+bool FairyGuiSystem::SetObjectHandleComboBoxValue(int objectHandle, const std::string& value)
+{
+	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
+	if (comboBox == nullptr)
+		return false;
+
+	comboBox->setValue(value);
+	return true;
+}
+
+std::string FairyGuiSystem::GetObjectHandleComboBoxValue(int objectHandle) const
+{
+	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
+	return comboBox != nullptr ? comboBox->getValue() : std::string();
+}
+
+bool FairyGuiSystem::PlayObjectHandleTransition(int objectHandle, const std::string& transitionName, int times, float delay, int callbackId)
+{
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
+	fairygui::Transition* transition = FindTransition(component, transitionName);
+	if (transition == nullptr)
+		return false;
+
+	if (callbackId > 0)
+	{
+		const std::string callbackTransitionName = transitionName.empty() ? transition->name : transitionName;
+		transition->play(times, delay, [callbackId, objectHandle, callbackTransitionName]() {
+			ScriptLuaVM* luaVM = GetScriptLuaVM();
+			if (luaVM == nullptr)
+				return;
+
+			luaVM->callFunction(
+				"FairyGuiManager_DispatchTransition",
+				"iis",
+				callbackId,
+				objectHandle,
+				const_cast<char*>(callbackTransitionName.c_str()));
+		});
+		return true;
+	}
+
+	transition->play(times, delay);
+	return true;
+}
+
+bool FairyGuiSystem::StopObjectHandleTransition(int objectHandle, const std::string& transitionName, bool setToComplete, bool processCallback)
+{
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
+	fairygui::Transition* transition = FindTransition(component, transitionName);
+	if (transition == nullptr)
+		return false;
+
+	transition->stop(setToComplete, processCallback);
 	return true;
 }
 

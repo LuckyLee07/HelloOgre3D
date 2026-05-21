@@ -80,6 +80,18 @@ public:
 	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
 	bool SetObjectHandleLoaderUrl(int objectHandle, const std::string& url);
 	bool SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex);
+	bool SetObjectHandleValue(int objectHandle, float value);
+	float GetObjectHandleValue(int objectHandle) const;
+	bool SetObjectHandleMin(int objectHandle, float minValue);
+	float GetObjectHandleMin(int objectHandle) const;
+	bool SetObjectHandleMax(int objectHandle, float maxValue);
+	float GetObjectHandleMax(int objectHandle) const;
+	bool SetObjectHandleComboBoxSelectedIndex(int objectHandle, int selectedIndex);
+	int GetObjectHandleComboBoxSelectedIndex(int objectHandle) const;
+	bool SetObjectHandleComboBoxValue(int objectHandle, const std::string& value);
+	std::string GetObjectHandleComboBoxValue(int objectHandle) const;
+	bool PlayObjectHandleTransition(int objectHandle, const std::string& transitionName, int times, float delay, int callbackId);
+	bool StopObjectHandleTransition(int objectHandle, const std::string& transitionName, bool setToComplete, bool processCallback);
 	bool SetObjectHandleFocus(int objectHandle);
 	bool ClearObjectHandleFocus();
 	int GetFocusedObjectHandle() const { return m_focusedObjectHandle; }

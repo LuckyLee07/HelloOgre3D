@@ -453,6 +453,127 @@ bool GameManager::setFairyGuiObjectControllerIndex(int objectHandle, const char*
 #endif
 }
 
+bool GameManager::setFairyGuiObjectValue(int objectHandle, Ogre::Real value)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleValue(objectHandle, value);
+#else
+	return false;
+#endif
+}
+
+Ogre::Real GameManager::getFairyGuiObjectValue(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleValue(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectMin(int objectHandle, Ogre::Real minValue)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleMin(objectHandle, minValue);
+#else
+	return false;
+#endif
+}
+
+Ogre::Real GameManager::getFairyGuiObjectMin(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleMin(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool GameManager::setFairyGuiObjectMax(int objectHandle, Ogre::Real maxValue)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleMax(objectHandle, maxValue);
+#else
+	return false;
+#endif
+}
+
+Ogre::Real GameManager::getFairyGuiObjectMax(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleMax(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool GameManager::setFairyGuiComboBoxSelectedIndex(int objectHandle, int selectedIndex)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleComboBoxSelectedIndex(objectHandle, selectedIndex);
+#else
+	return false;
+#endif
+}
+
+int GameManager::getFairyGuiComboBoxSelectedIndex(int objectHandle)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetObjectHandleComboBoxSelectedIndex(objectHandle) : -1;
+#else
+	return -1;
+#endif
+}
+
+bool GameManager::setFairyGuiComboBoxValue(int objectHandle, const char* value)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->SetObjectHandleComboBoxValue(objectHandle, value != nullptr ? value : "");
+#else
+	return false;
+#endif
+}
+
+const char* GameManager::getFairyGuiComboBoxValue(int objectHandle)
+{
+	m_fairyGuiLastObjectValue.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastObjectValue = system->GetObjectHandleComboBoxValue(objectHandle);
+#endif
+	return m_fairyGuiLastObjectValue.c_str();
+}
+
+bool GameManager::playFairyGuiTransition(int objectHandle, const char* transitionName, int times, Ogre::Real delay, int callbackId)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->PlayObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", times, delay, callbackId);
+#else
+	return false;
+#endif
+}
+
+bool GameManager::stopFairyGuiTransition(int objectHandle, const char* transitionName, bool setToComplete, bool processCallback)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->StopObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", setToComplete, processCallback);
+#else
+	return false;
+#endif
+}
+
 bool GameManager::focusFairyGuiObject(int objectHandle)
 {
 #if defined(HELLO_ENABLE_FGUI)

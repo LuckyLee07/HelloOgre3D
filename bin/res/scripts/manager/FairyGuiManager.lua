@@ -239,6 +239,26 @@ function LIST_ITEM_METHODS:SetControllerIndex(controllerName, selectedIndex)
 	return manager ~= nil and manager:SetControllerIndex(self.handle, controllerName, selectedIndex) or false
 end
 
+function LIST_ITEM_METHODS:SetValue(childPathOrValue, value)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetValue(self.handle, childPathOrValue, value) or false
+end
+
+function LIST_ITEM_METHODS:SetProgress(childPathOrValue, value, maxValue, minValue)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetProgress(self.handle, childPathOrValue, value, maxValue, minValue) or false
+end
+
+function LIST_ITEM_METHODS:SetComboBoxSelectedIndex(childPathOrSelectedIndex, selectedIndex)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetComboBoxSelectedIndex(self.handle, childPathOrSelectedIndex, selectedIndex) or false
+end
+
+function LIST_ITEM_METHODS:SetComboBoxValue(childPathOrValue, value)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetComboBoxValue(self.handle, childPathOrValue, value) or false
+end
+
 local function getEventType(eventType)
 	if type(eventType) == "number" then
 		return eventType
@@ -343,6 +363,8 @@ function FairyGuiManager:Init()
 		self.callbacks = {}
 		self.bindings = {}
 		self.bindingsByHandle = {}
+		self.transitionCallbacks = {}
+		self.transitionCallbacksByHandle = {}
 		self.timers = {}
 		self.timersByKey = {}
 		self.eventStats = {}
@@ -590,6 +612,7 @@ function FairyGuiManager:GetDebugStats()
 		package = packageCount,
 		layerRoot = tableCount(self.layerRoots),
 		binding = tableCount(self.bindings),
+		transitionCallback = tableCount(self.transitionCallbacks),
 		timer = tableCount(self.timers),
 		objectHandle = tableCount(self.objectsByHandle),
 		childCache = childCacheCount,
@@ -600,7 +623,7 @@ end
 
 function FairyGuiManager:DumpDebugStats()
 	local stats = self:GetDebugStats()
-	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
+	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
 end
 
 function FairyGuiManager:GetHealthStats()
@@ -617,6 +640,7 @@ function FairyGuiManager:GetHealthStats()
 		package = debugStats.package,
 		layerRoot = debugStats.layerRoot,
 		binding = debugStats.binding,
+		transitionCallback = debugStats.transitionCallback,
 		timer = debugStats.timer,
 		threadTimer = threadTimerCount,
 		objectHandle = debugStats.objectHandle,
@@ -636,7 +660,7 @@ end
 
 function FairyGuiManager:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount)
 	if verbose == true then
 		self:DumpResourceRefs()
 		self:DumpResourceWarnings()
@@ -798,6 +822,9 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 		if self.bindingsByHandle[ownedHandle] ~= nil and tableCount(self.bindingsByHandle[ownedHandle]) > 0 then
 			table.insert(issues, "bindingsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
+		if self.transitionCallbacksByHandle[ownedHandle] ~= nil and tableCount(self.transitionCallbacksByHandle[ownedHandle]) > 0 then
+			table.insert(issues, "transitionCallbacksByHandle[" .. tostring(ownedHandle) .. "]")
+		end
 		if self.childrenByHandle[ownedHandle] ~= nil and tableCount(self.childrenByHandle[ownedHandle]) > 0 then
 			table.insert(issues, "childrenByHandle[" .. tostring(ownedHandle) .. "]")
 		end
@@ -815,6 +842,11 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 	for bindingId, binding in pairs(self.bindings) do
 		if binding ~= nil and binding.handle ~= nil and handleSet[binding.handle] == true then
 			table.insert(issues, "bindings[" .. tostring(bindingId) .. "]")
+		end
+	end
+	for callbackId, callbackInfo in pairs(self.transitionCallbacks) do
+		if callbackInfo ~= nil and callbackInfo.handle ~= nil and handleSet[callbackInfo.handle] == true then
+			table.insert(issues, "transitionCallbacks[" .. tostring(callbackId) .. "]")
 		end
 	end
 	for timerId, timerInfo in pairs(self.timers) do
@@ -3630,6 +3662,279 @@ function FairyGuiManager:SetControllerIndex(handle, controllerName, selectedInde
 	return GameManager:setFairyGuiObjectControllerIndex(handle, controllerName or "", selectedIndex or 0)
 end
 
+function FairyGuiManager:SetValue(handle, childPathOrValue, value)
+	if GameManager == nil or GameManager.setFairyGuiObjectValue == nil or handle == nil then
+		return false
+	end
+	local childPath = childPathOrValue
+	if value == nil then
+		value = childPathOrValue
+		childPath = nil
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:setFairyGuiObjectValue(targetHandle, value or 0) or false
+end
+
+function FairyGuiManager:GetValue(handle, childPath)
+	if GameManager == nil or GameManager.getFairyGuiObjectValue == nil or handle == nil then
+		return 0
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:getFairyGuiObjectValue(targetHandle) or 0
+end
+
+function FairyGuiManager:SetMin(handle, childPathOrValue, minValue)
+	if GameManager == nil or GameManager.setFairyGuiObjectMin == nil or handle == nil then
+		return false
+	end
+	local childPath = childPathOrValue
+	if minValue == nil then
+		minValue = childPathOrValue
+		childPath = nil
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:setFairyGuiObjectMin(targetHandle, minValue or 0) or false
+end
+
+function FairyGuiManager:GetMin(handle, childPath)
+	if GameManager == nil or GameManager.getFairyGuiObjectMin == nil or handle == nil then
+		return 0
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:getFairyGuiObjectMin(targetHandle) or 0
+end
+
+function FairyGuiManager:SetMax(handle, childPathOrValue, maxValue)
+	if GameManager == nil or GameManager.setFairyGuiObjectMax == nil or handle == nil then
+		return false
+	end
+	local childPath = childPathOrValue
+	if maxValue == nil then
+		maxValue = childPathOrValue
+		childPath = nil
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:setFairyGuiObjectMax(targetHandle, maxValue or 0) or false
+end
+
+function FairyGuiManager:GetMax(handle, childPath)
+	if GameManager == nil or GameManager.getFairyGuiObjectMax == nil or handle == nil then
+		return 0
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:getFairyGuiObjectMax(targetHandle) or 0
+end
+
+function FairyGuiManager:SetProgress(handle, childPathOrValue, value, maxValue, minValue)
+	local childPath = childPathOrValue
+	if type(childPathOrValue) ~= "string" then
+		minValue = maxValue
+		maxValue = value
+		value = childPathOrValue
+		childPath = nil
+	end
+
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		return false
+	end
+
+	if minValue ~= nil and not self:SetMin(targetHandle, minValue) then
+		return false
+	end
+	if maxValue ~= nil and not self:SetMax(targetHandle, maxValue) then
+		return false
+	end
+	return self:SetValue(targetHandle, value or 0)
+end
+
+function FairyGuiManager:SetSliderValue(handle, childPathOrValue, value)
+	return self:SetValue(handle, childPathOrValue, value)
+end
+
+function FairyGuiManager:GetSliderValue(handle, childPath)
+	return self:GetValue(handle, childPath)
+end
+
+function FairyGuiManager:SetProgressBarValue(handle, childPathOrValue, value)
+	return self:SetValue(handle, childPathOrValue, value)
+end
+
+function FairyGuiManager:GetProgressBarValue(handle, childPath)
+	return self:GetValue(handle, childPath)
+end
+
+function FairyGuiManager:SetComboBoxSelectedIndex(handle, childPathOrSelectedIndex, selectedIndex)
+	if GameManager == nil or GameManager.setFairyGuiComboBoxSelectedIndex == nil or handle == nil then
+		return false
+	end
+	local childPath = childPathOrSelectedIndex
+	if selectedIndex == nil then
+		selectedIndex = childPathOrSelectedIndex
+		childPath = nil
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxSelectedIndex(targetHandle, selectedIndex or 0) or false
+end
+
+function FairyGuiManager:GetComboBoxSelectedIndex(handle, childPath)
+	if GameManager == nil or GameManager.getFairyGuiComboBoxSelectedIndex == nil or handle == nil then
+		return -1
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxSelectedIndex(targetHandle) or -1
+end
+
+function FairyGuiManager:SetComboBoxValue(handle, childPathOrValue, value)
+	if GameManager == nil or GameManager.setFairyGuiComboBoxValue == nil or handle == nil then
+		return false
+	end
+	local childPath = childPathOrValue
+	if value == nil then
+		value = childPathOrValue
+		childPath = nil
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxValue(targetHandle, value or "") or false
+end
+
+function FairyGuiManager:GetComboBoxValue(handle, childPath)
+	if GameManager == nil or GameManager.getFairyGuiComboBoxValue == nil or handle == nil then
+		return ""
+	end
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxValue(targetHandle) or ""
+end
+
+function FairyGuiManager:RegisterTransitionCallback(handle, transitionName, callback)
+	if handle == nil or type(callback) ~= "function" then
+		return 0
+	end
+
+	local callbackId = self.nextCallbackId
+	self.nextCallbackId = self.nextCallbackId + 1
+	self.callbacks[callbackId] = callback
+	self.transitionCallbacks[callbackId] = {
+		callbackId = callbackId,
+		handle = handle,
+		transitionName = transitionName or "",
+	}
+
+	local callbackList = self.transitionCallbacksByHandle[handle]
+	if callbackList == nil then
+		callbackList = {}
+		self.transitionCallbacksByHandle[handle] = callbackList
+	end
+	callbackList[callbackId] = true
+	return callbackId
+end
+
+function FairyGuiManager:RemoveTransitionCallback(callbackId)
+	local callbackInfo = self.transitionCallbacks[callbackId]
+	if callbackInfo == nil then
+		return false
+	end
+
+	self.callbacks[callbackId] = nil
+	self.transitionCallbacks[callbackId] = nil
+	local callbackList = self.transitionCallbacksByHandle[callbackInfo.handle]
+	if callbackList ~= nil then
+		callbackList[callbackId] = nil
+		if tableCount(callbackList) <= 0 then
+			self.transitionCallbacksByHandle[callbackInfo.handle] = nil
+		end
+	end
+	return true
+end
+
+function FairyGuiManager:ClearTransitionCallbacksForHandle(handle, transitionName)
+	local callbackList = self.transitionCallbacksByHandle[handle]
+	if callbackList == nil then
+		return
+	end
+
+	local callbackIds = {}
+	for callbackId, _ in pairs(callbackList) do
+		local callbackInfo = self.transitionCallbacks[callbackId]
+		if transitionName == nil or transitionName == "" or callbackInfo == nil or callbackInfo.transitionName == transitionName then
+			table.insert(callbackIds, callbackId)
+		end
+	end
+	for _, callbackId in ipairs(callbackIds) do
+		self:RemoveTransitionCallback(callbackId)
+	end
+end
+
+function FairyGuiManager:PlayTransition(handle, transitionName, times, delay, callback)
+	if type(transitionName) == "table" then
+		local options = transitionName
+		transitionName = options.name or options.transitionName or ""
+		times = options.times
+		delay = options.delay
+		callback = options.onComplete or options.callback
+	elseif type(times) == "function" and callback == nil then
+		callback = times
+		times = nil
+		delay = nil
+	elseif type(delay) == "function" and callback == nil then
+		callback = delay
+		delay = nil
+	end
+
+	if GameManager == nil or GameManager.playFairyGuiTransition == nil or handle == nil then
+		return false
+	end
+
+	transitionName = transitionName or ""
+	local callbackId = self:RegisterTransitionCallback(handle, transitionName, callback)
+	local played = GameManager:playFairyGuiTransition(handle, transitionName, times or 1, delay or 0, callbackId or 0)
+	if not played and callbackId ~= nil and callbackId > 0 then
+		self:RemoveTransitionCallback(callbackId)
+	end
+	return played
+end
+
+function FairyGuiManager:StopTransition(handle, transitionName, setToComplete, processCallback)
+	if type(transitionName) == "table" then
+		local options = transitionName
+		transitionName = options.name or options.transitionName or ""
+		setToComplete = options.setToComplete
+		processCallback = options.processCallback
+	end
+	if GameManager == nil or GameManager.stopFairyGuiTransition == nil or handle == nil then
+		return false
+	end
+
+	transitionName = transitionName or ""
+	if processCallback == nil then
+		processCallback = true
+	end
+	local stopped = GameManager:stopFairyGuiTransition(handle, transitionName, setToComplete == true, processCallback == true)
+	if stopped and processCallback ~= true then
+		self:ClearTransitionCallbacksForHandle(handle, transitionName)
+	end
+	return stopped
+end
+
+function FairyGuiManager:_DispatchTransition(callbackId, objectHandle, transitionName)
+	local callback = self.callbacks[callbackId]
+	self:RemoveTransitionCallback(callbackId)
+	if callback == nil then
+		return false
+	end
+
+	local ok, err = pcall(callback, {
+		callbackId = callbackId,
+		objectHandle = objectHandle,
+		transitionName = transitionName or "",
+	})
+	if not ok then
+		print("[FGUI] transition callback error:", err)
+		return false
+	end
+	return true
+end
+
 function FairyGuiManager:AddEvent(handle, childPath, eventType, callback)
 	if GameManager == nil or handle == nil or type(callback) ~= "function" then
 		return nil
@@ -3907,6 +4212,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	self:ClearTimersForKey(objectInfo.key)
 	for _, ownedHandle in ipairs(ownedHandles) do
 		self:ClearBindingsForHandle(ownedHandle)
+		self:ClearTransitionCallbacksForHandle(ownedHandle)
 	end
 	self:ClearGuideMaskHandles(objectInfo)
 	if objectInfo.modalMaskHandle ~= nil then
@@ -4319,6 +4625,13 @@ function FairyGuiManager_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		return false
 	end
 	return _G.FairyGuiManager:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta, dragDeltaX, dragDeltaY)
+end
+
+function FairyGuiManager_DispatchTransition(callbackId, objectHandle, transitionName)
+	if _G.FairyGuiManager == nil then
+		return false
+	end
+	return _G.FairyGuiManager:_DispatchTransition(callbackId, objectHandle, transitionName)
 end
 
 function FairyGuiManager_HandleKeyPressed(keyCode, keyText)

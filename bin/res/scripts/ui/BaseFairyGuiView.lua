@@ -132,6 +132,97 @@ function BaseFairyGuiView:SetControllerIndex(controllerName, selectedIndex)
 	return FairyGuiManager:SetControllerIndex(self.handle, controllerName, selectedIndex)
 end
 
+function BaseFairyGuiView:SetValue(childPathOrValue, value)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetValue(self.handle, childPathOrValue, value)
+end
+
+function BaseFairyGuiView:GetValue(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetValue(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetMin(childPathOrValue, minValue)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetMin(self.handle, childPathOrValue, minValue)
+end
+
+function BaseFairyGuiView:GetMin(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetMin(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetMax(childPathOrValue, maxValue)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetMax(self.handle, childPathOrValue, maxValue)
+end
+
+function BaseFairyGuiView:GetMax(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetMax(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetProgress(childPathOrValue, value, maxValue, minValue)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetProgress(self.handle, childPathOrValue, value, maxValue, minValue)
+end
+
+function BaseFairyGuiView:SetComboBoxSelectedIndex(childPathOrSelectedIndex, selectedIndex)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetComboBoxSelectedIndex(self.handle, childPathOrSelectedIndex, selectedIndex)
+end
+
+function BaseFairyGuiView:GetComboBoxSelectedIndex(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return -1
+	end
+	return FairyGuiManager:GetComboBoxSelectedIndex(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetComboBoxValue(childPathOrValue, value)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetComboBoxValue(self.handle, childPathOrValue, value)
+end
+
+function BaseFairyGuiView:GetComboBoxValue(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetComboBoxValue(self.handle, childPath)
+end
+
+function BaseFairyGuiView:PlayTransition(transitionName, times, delay, callback)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:PlayTransition(self.handle, transitionName, times, delay, callback)
+end
+
+function BaseFairyGuiView:StopTransition(transitionName, setToComplete, processCallback)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:StopTransition(self.handle, transitionName, setToComplete, processCallback)
+end
+
 function BaseFairyGuiView:SetListData(childPath, dataList, renderer)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false

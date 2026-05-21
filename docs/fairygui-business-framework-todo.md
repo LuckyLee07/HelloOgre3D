@@ -137,11 +137,11 @@
 - [x] 基础 child handle 缓存、`SetText/SetVisible/SetPosition/SetSize` 已具备。
 - [x] `SetIcon/SetLoaderUrl/SetControllerIndex` 已具备。
 - [x] List item count、selected index、scroll to view 已具备第一版。
-- [ ] ProgressBar 封装。
-- [ ] Slider 封装。
-- [ ] ComboBox 封装。
-- [ ] Controller 变化监听和名字/id 双模式访问。
-- [ ] Transition 播放、停止、完成回调。
+- [x] ProgressBar 封装：C++ handle 支持 `min/max/value`，Lua `Manager/View/Ctrl/ListItem` 提供 `SetProgress/SetValue/GetValue`。
+- [x] Slider 封装：复用 `min/max/value` handle API，Lua 提供 `SetSliderValue/GetSliderValue` 别名。
+- [x] ComboBox 封装：支持 `selectedIndex/value` 读写，Lua `Manager/View/Ctrl/ListItem` 已封装。
+- [~] Controller 变化监听和名字/id 双模式访问：`SetControllerIndex` 已支持空名字访问第一个 controller，专用变化监听和按 id/page name 访问待补。
+- [x] Transition 播放、停止、完成回调：支持按名字或默认第一个 transition 播放/停止，完成回调派回 Lua，并纳入关闭残留检查。
 - [ ] List 虚拟列表、item renderer、item click payload 完整化。
 - [ ] Tree/TreeNode 最小可用封装。
 - [ ] 子页面/子组件挂载能力，支持一个大 UI 内拆多个业务子模块。
