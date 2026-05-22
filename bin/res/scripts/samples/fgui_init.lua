@@ -6,6 +6,10 @@ local function isEnvEnabled(name)
 	return value == "1" or value == "true" or value == "TRUE" or value == "True"
 end
 
+local function isFairyGuiAutomationMode()
+	return _G.HELLO_FGUI_AUTOMATION_MODE == true or isEnvEnabled("HELLO_FGUI_SKIP_SANDBOX_SCENE")
+end
+
 local function mergeFairyGuiParams(defaults, overrides)
 	local result = {}
 	if type(defaults) == "table" then
@@ -308,6 +312,18 @@ local function tryRunFairyGuiLayerCloseSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiLayerBoundarySelfTest()
+	if not isEnvEnabled("HELLO_FGUI_LAYER_BOUNDARY_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(8, function()
+		print("[FGUI] layer boundary self test result:", FGUI_RunLayerBoundarySelfTest())
+		FairyGuiManager:DumpLayerRoots()
+		FairyGuiManager:DumpStacks()
+	end)
+end
+
 local function tryRunFairyGuiAct38SelfTest()
 	if not isEnvEnabled("HELLO_FGUI_ACT38_SELF_TEST") then
 		return
@@ -394,7 +410,7 @@ local function tryOpenFairyGuiSample()
 	end
 	file:close()
 
-	threadpool:delay(1, function()
+	local function openSample()
 		local mvcCtrl = FairyGuiManager:Open("Act37TestMvc", {
 			roleId = 1001,
 			source = "InitialOpen",
@@ -432,12 +448,19 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiCleanupSelfTest()
 		tryRunFairyGuiLayerSelfTest()
 		tryRunFairyGuiLayerCloseSelfTest()
+		tryRunFairyGuiLayerBoundarySelfTest()
 		tryRunFairyGuiAct38SelfTest()
 		tryRunFairyGuiWheelSelfTest()
 		tryRunFairyGuiMaskSelfTest()
 		tryRunFairyGuiSelfTestSuite()
 		tryRunFairyGuiLongLoopSelfTest()
-	end)
+	end
+
+	if isFairyGuiAutomationMode() then
+		openSample()
+	else
+		threadpool:delay(1, openSample)
+	end
 end
 
 function FGUI_ReopenAct37Sample(param)
@@ -1058,6 +1081,9 @@ function FGUI_RunSelfTestSuite()
 	end)
 	schedule(0.6, "LayerClose", function()
 		return FGUI_RunLayerCloseSelfTest()
+	end)
+	schedule(0.6, "LayerBoundary", function()
+		return FGUI_RunLayerBoundarySelfTest()
 	end)
 	schedule(0.6, "MaskProbe", function()
 		local handle = FGUI_OpenMaskProbe()
@@ -1839,6 +1865,88 @@ function FGUI_RunLayerCloseSelfTest()
 	print("[FGUI] layer close group:", FairyGuiManager:CloseGroup("LayerProbe", true))
 	dumpLayerProbeCloseState("after CloseGroup")
 	return getLayerProbeOpenCount() == 0
+end
+
+function FGUI_RunLayerBoundarySelfTest()
+	local function near(a, b)
+		return math.abs((tonumber(a) or 0) - (tonumber(b) or 0)) < 0.01
+	end
+
+	local oldSafeArea = FairyGuiManager:GetSafeArea()
+	FairyGuiManager:SetSafeArea({ left = 8, top = 10, right = 12, bottom = 14 })
+	local safeArea = FairyGuiManager:GetSafeArea()
+	local screenWidth = FairyGuiManager:GetScreenWidth()
+	local screenHeight = FairyGuiManager:GetScreenHeight()
+	local safeRect = FairyGuiManager:GetLayoutRect({
+		width = 100,
+		height = 50,
+		alignX = "right",
+		alignY = "bottom",
+		useSafeArea = true,
+		fitInScreen = true,
+	})
+	local safeAreaOk = safeArea.left == 8
+		and safeArea.top == 10
+		and safeArea.right == 12
+		and safeArea.bottom == 14
+		and safeRect ~= nil
+		and near(safeRect.x, screenWidth - 12 - 100)
+		and near(safeRect.y, screenHeight - 14 - 50)
+
+	local topPolicy = FairyGuiManager:GetLayerPolicy("Top")
+	local toastPolicy = FairyGuiManager:GetLayerPolicy("Toast")
+	local policyOk = topPolicy.popup == true
+		and topPolicy.closeOnEscape == true
+		and toastPolicy.popup ~= true
+		and toastPolicy.closeOnEscape ~= true
+		and FairyGuiManager:IsPopupLayer("Toast") == false
+
+	local escHandle = FairyGuiManager:ShowMessageBox("Boundary", "ESC should close this popup.", { "OK" }, nil, {
+		key = "LayerBoundaryEsc",
+		popupGroup = "LayerBoundary",
+		popupMode = "stack",
+	})
+	local escObject = FairyGuiManager:GetObjectInfo("LayerBoundaryEsc")
+	local escAllowed = FairyGuiManager:CanClosePopupByEscape(escObject)
+	local escClosed = FairyGuiManager:HandleKeyPressed(1, 0)
+	local escOk = escHandle ~= nil and escAllowed == true and escClosed == true and FairyGuiManager:GetObjectInfo("LayerBoundaryEsc") == nil
+
+	local parentRoot = FairyGuiManager:EnsureLayerRoot("Top")
+	local handleA, inputA = FGUI_OpenTextInputProbe({
+		key = "LayerBoundaryInputA",
+		parentHandle = parentRoot,
+		x = 20,
+		y = 80,
+		center = false,
+	})
+	local handleB, inputB = FGUI_OpenTextInputProbe({
+		key = "LayerBoundaryInputB",
+		layer = "Top",
+		x = 20,
+		y = 260,
+		center = false,
+	})
+	local objectA = FairyGuiManager:GetObjectInfo("LayerBoundaryInputA")
+	local parentOk = parentRoot ~= nil and objectA ~= nil and objectA.parentHandle == parentRoot
+	local focusA = inputA ~= nil and FairyGuiManager:Focus(inputA) or false
+	local tabHandled = FairyGuiManager:HandleKeyPressed(15, 0)
+	local focusB = inputB ~= nil and FairyGuiManager:GetFocusedHandle() == inputB
+	local tabOk = handleA ~= nil and handleB ~= nil and focusA == true and tabHandled == true and focusB == true
+
+	FairyGuiManager:Close("LayerBoundaryInputA", true, "layerBoundaryCleanup")
+	FairyGuiManager:Close("LayerBoundaryInputB", true, "layerBoundaryCleanup")
+	FairyGuiManager:Close("LayerBoundaryEsc", true, "layerBoundaryCleanup")
+	FairyGuiManager:ClearFocus()
+	FairyGuiManager:SetSafeArea(oldSafeArea)
+
+	print("[FGUI] layer boundary self test detail:",
+		"safeAreaOk=", safeAreaOk,
+		"policyOk=", policyOk,
+		"escOk=", escOk,
+		"parentOk=", parentOk,
+		"tabOk=", tabOk,
+		"focusTarget=", tostring(inputB))
+	return safeAreaOk == true and policyOk == true and escOk == true and parentOk == true and tabOk == true
 end
 
 function FGUI_DebugInjectClick(x, y, button)

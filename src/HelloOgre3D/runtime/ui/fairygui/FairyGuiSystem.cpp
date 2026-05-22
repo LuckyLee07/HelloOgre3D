@@ -35,6 +35,7 @@ namespace
 {
 	const std::string FAIRYGUI_FALLBACK_MATERIAL = "Hello/FairyGUI/Fallback";
 	const int OIS_KC_ESCAPE = 0x01;
+	const int OIS_KC_TAB = 0x0F;
 	const int OIS_KC_BACK = 0x0E;
 	const int OIS_KC_RETURN = 0x1C;
 	const int OIS_KC_NUMPADENTER = 0x9C;
@@ -748,6 +749,8 @@ bool FairyGuiSystem::InjectKeyPressed(int keyCode, int keyText)
 	}
 
 	input->dispatchEvent(fairygui::UIEventType::KeyDown, nullptr, cocos2d::Value(keyCode));
+	if (keyCode == OIS_KC_TAB)
+		return false;
 	if (keyCode == OIS_KC_ESCAPE)
 	{
 		ClearObjectHandleFocus();

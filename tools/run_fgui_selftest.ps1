@@ -20,6 +20,7 @@ param(
 		"Pressure",
 		"Layer",
 		"LayerClose",
+		"LayerBoundary",
 		"Act38",
 		"Wheel",
 		"Mask",
@@ -69,6 +70,7 @@ function Get-DefaultWaitSeconds {
 		"EventPayload" { return 32 }
 		"Input" { return 18 }
 		"Mask" { return 18 }
+		"LayerBoundary" { return 36 }
 		default { return 28 }
 	}
 }
@@ -115,6 +117,7 @@ function Get-FairyGuiEnv {
 		}
 		"Layer" { $values["HELLO_FGUI_LAYER_SELF_TEST"] = "1" }
 		"LayerClose" { $values["HELLO_FGUI_LAYER_CLOSE_SELF_TEST"] = "1" }
+		"LayerBoundary" { $values["HELLO_FGUI_LAYER_BOUNDARY_SELF_TEST"] = "1" }
 		"Act38" { $values["HELLO_FGUI_ACT38_SELF_TEST"] = "1" }
 		"Wheel" { $values["HELLO_FGUI_WHEEL_SELF_TEST"] = "1" }
 		"Mask" { $values["HELLO_FGUI_MASK_SELF_TEST"] = "1" }
@@ -125,6 +128,7 @@ function Get-FairyGuiEnv {
 }
 
 $KnownEnvNames = @(
+	"HELLO_FGUI_SKIP_SANDBOX_SCENE",
 	"HELLO_FGUI_DEBUG_PANEL_DEMO",
 	"HELLO_FGUI_LONG_LOOP_SELF_TEST",
 	"HELLO_FGUI_LONG_LOOP_COUNT",
@@ -149,6 +153,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_PRESSURE_LIST_COUNT",
 	"HELLO_FGUI_LAYER_SELF_TEST",
 	"HELLO_FGUI_LAYER_CLOSE_SELF_TEST",
+	"HELLO_FGUI_LAYER_BOUNDARY_SELF_TEST",
 	"HELLO_FGUI_ACT38_SELF_TEST",
 	"HELLO_FGUI_WHEEL_SELF_TEST",
 	"HELLO_FGUI_MASK_SELF_TEST",
@@ -160,6 +165,9 @@ if ($Seconds -le 0) {
 }
 
 $SelectedEnv = Get-FairyGuiEnv -SelfTestMode $Mode -LoopCount $Count
+if ($SelectedEnv.Count -gt 0) {
+	$SelectedEnv["HELLO_FGUI_SKIP_SANDBOX_SCENE"] = "1"
+}
 
 Write-Host "[FGUI] mode=$Mode count=$Count seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[FGUI] exe=$ExePath"

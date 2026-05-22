@@ -148,7 +148,7 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 		recordServicePerf(self, startMs, param.serviceType, false)
 		return nil
 	end
-	if not self:AttachToLayer(handle, param.layer) then
+	if not self:AttachToLayer(handle, param.layer, param) then
 		GameManager:removeFairyGuiObject(handle)
 		recordServiceStat(self, "failed", param.serviceType, key, "attachLayer")
 		recordServicePerf(self, startMs, param.serviceType, false)
@@ -183,6 +183,10 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
 		ownedHandles = {},
 		serviceType = param.serviceType,
+		parentHandle = param.parentHandle or param.rootHandle,
+		rootLayer = param.rootLayer,
+		focusOrder = param.focusOrder,
+		tabFocus = param.tabFocus ~= false,
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo

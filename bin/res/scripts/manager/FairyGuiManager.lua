@@ -212,9 +212,16 @@ function FairyGuiManager:Init()
 	self.designHeight = nil
 	self.scaleMode = "stretch"
 	self.layers = copyTable(DEFAULT_LAYER_ORDER)
+	self.layerPolicies = {}
 	self.layerNextOrder = {}
 	self.layerObjects = {}
 	self.layerRoots = {}
+	self.safeArea = {
+		left = 0,
+		top = 0,
+		right = 0,
+		bottom = 0,
+	}
 	for layerName, _ in pairs(self.layers) do
 		self.layerNextOrder[layerName] = 0
 		self.layerObjects[layerName] = {}
@@ -887,6 +894,12 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"priority",
 			"sortingPriority",
 			"sortingOrder",
+			"parentHandle",
+			"rootHandle",
+			"parentKey",
+			"rootLayer",
+			"focusOrder",
+			"tabFocus",
 			"group",
 			"uiGroup",
 			"packageGroup",
@@ -915,9 +928,11 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"scaleMode",
 			"useDesignScale",
 			"marginLeft",
-		"marginRight",
-		"marginTop",
-		"marginBottom",
+			"marginRight",
+			"marginTop",
+			"marginBottom",
+			"useSafeArea",
+			"safeArea",
 	}
 
 	for _, fieldName in ipairs(copiedFields) do
@@ -956,6 +971,22 @@ function FairyGuiManager:GetLayerBaseOrder(layerName)
 	return self:GetLayers():GetLayerBaseOrder(layerName)
 end
 
+function FairyGuiManager:GetLayerPolicy(layerName)
+	return self:GetLayers():GetLayerPolicy(layerName)
+end
+
+function FairyGuiManager:SetLayerPolicy(layerName, policy)
+	return self:GetLayers():SetLayerPolicy(layerName, policy)
+end
+
+function FairyGuiManager:GetSafeArea()
+	return self:GetLayers():GetSafeArea()
+end
+
+function FairyGuiManager:SetSafeArea(leftOrRect, top, right, bottom)
+	return self:GetLayers():SetSafeArea(leftOrRect, top, right, bottom)
+end
+
 function FairyGuiManager:GetLayerRoot(layerName)
 	return self:GetLayers():GetLayerRoot(layerName)
 end
@@ -964,8 +995,8 @@ function FairyGuiManager:EnsureLayerRoot(layerName)
 	return self:GetLayers():EnsureLayerRoot(layerName)
 end
 
-function FairyGuiManager:AttachToLayer(handle, layerName)
-	return self:GetLayers():AttachToLayer(handle, layerName)
+function FairyGuiManager:AttachToLayer(handle, layerName, param)
+	return self:GetLayers():AttachToLayer(handle, layerName, param)
 end
 
 function FairyGuiManager:ResizeLayerRoots()
@@ -1218,7 +1249,7 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		return nil
 	end
 
-	if not self:AttachToLayer(handle, param.layer or "Normal") then
+	if not self:AttachToLayer(handle, param.layer or "Normal", param) then
 		GameManager:removeFairyGuiObject(handle)
 		return nil
 	end
@@ -1260,6 +1291,10 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		sceneName = self:GetSceneName(param),
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
+		parentHandle = param.parentHandle or param.rootHandle,
+		rootLayer = param.rootLayer,
+		focusOrder = param.focusOrder,
+		tabFocus = param.tabFocus ~= false,
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
@@ -1366,7 +1401,7 @@ function FairyGuiManager:OpenMaskProbe(param)
 	end
 
 	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName) then
+	if not self:AttachToLayer(handle, layerName, param) then
 		GameManager:removeFairyGuiObject(handle)
 		return nil
 	end
@@ -1392,6 +1427,10 @@ function FairyGuiManager:OpenMaskProbe(param)
 		sceneName = self:GetSceneName(param),
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
+		parentHandle = param.parentHandle or param.rootHandle,
+		rootLayer = param.rootLayer,
+		focusOrder = param.focusOrder,
+		tabFocus = param.tabFocus ~= false,
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
@@ -1438,7 +1477,7 @@ function FairyGuiManager:OpenTextInputProbe(param)
 	end
 
 	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName) then
+	if not self:AttachToLayer(handle, layerName, param) then
 		GameManager:removeFairyGuiObject(handle)
 		return nil
 	end
@@ -1465,6 +1504,10 @@ function FairyGuiManager:OpenTextInputProbe(param)
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
 		inputHandle = inputHandle,
+		parentHandle = param.parentHandle or param.rootHandle,
+		rootLayer = param.rootLayer,
+		focusOrder = param.focusOrder or { "probe_input" },
+		tabFocus = param.tabFocus ~= false,
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
@@ -2050,6 +2093,120 @@ function FairyGuiManager:Focus(handle, childPath)
 		return false
 	end
 	return GameManager:focusFairyGuiObject(targetHandle)
+end
+
+function FairyGuiManager:ResolveFocusHandle(objectInfo, target)
+	if objectInfo == nil then
+		return nil
+	end
+	if type(target) == "number" then
+		return target > 0 and target or nil
+	end
+	if type(target) == "string" then
+		return self:GetTargetHandle(objectInfo.handle, target)
+	end
+	if type(target) == "table" then
+		if type(target.handle) == "number" then
+			return target.handle > 0 and target.handle or nil
+		end
+		if type(target.childPath) == "string" then
+			return self:GetTargetHandle(objectInfo.handle, target.childPath)
+		end
+	end
+	return nil
+end
+
+function FairyGuiManager:GetFocusHandles(objectInfo)
+	if objectInfo == nil or objectInfo.tabFocus == false then
+		return {}
+	end
+
+	local handles = {}
+	local handleSet = {}
+	local function push(handle)
+		if type(handle) == "number" and handle > 0 and handleSet[handle] ~= true then
+			handleSet[handle] = true
+			table.insert(handles, handle)
+		end
+	end
+
+	if type(objectInfo.focusOrder) == "table" then
+		for _, target in ipairs(objectInfo.focusOrder) do
+			push(self:ResolveFocusHandle(objectInfo, target))
+		end
+	end
+	push(objectInfo.inputHandle)
+	return handles
+end
+
+function FairyGuiManager:RegisterFocusOrder(keyOrHandle, focusOrder)
+	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	if objectInfo == nil or type(focusOrder) ~= "table" then
+		return 0
+	end
+	objectInfo.focusOrder = focusOrder
+	objectInfo.focusHandles = nil
+	return #self:GetFocusHandles(objectInfo)
+end
+
+function FairyGuiManager:CollectFocusHandles()
+	local entries = {}
+	for _, entry in ipairs(self.uiStack or {}) do
+		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil then
+			table.insert(entries, {
+				objectInfo = objectInfo,
+				serial = entry.serial or 0,
+				sortingOrder = objectInfo.sortingOrder or entry.sortingOrder or 0,
+			})
+		end
+	end
+	table.sort(entries, function(a, b)
+		if a.sortingOrder == b.sortingOrder then
+			return a.serial < b.serial
+		end
+		return a.sortingOrder < b.sortingOrder
+	end)
+
+	local handles = {}
+	for _, entry in ipairs(entries) do
+		for _, handle in ipairs(self:GetFocusHandles(entry.objectInfo)) do
+			table.insert(handles, handle)
+		end
+	end
+	return handles
+end
+
+function FairyGuiManager:FocusNext(reverse)
+	local handles = self:CollectFocusHandles()
+	if #handles == 0 then
+		return false
+	end
+
+	local focusedHandle = self:GetFocusedHandle()
+	local currentIndex = nil
+	for index, handle in ipairs(handles) do
+		if handle == focusedHandle then
+			currentIndex = index
+			break
+		end
+	end
+
+	local nextIndex = nil
+	if currentIndex == nil then
+		nextIndex = reverse == true and #handles or 1
+	elseif reverse == true then
+		nextIndex = currentIndex - 1
+		if nextIndex < 1 then
+			nextIndex = #handles
+		end
+	else
+		nextIndex = currentIndex + 1
+		if nextIndex > #handles then
+			nextIndex = 1
+		end
+	end
+	return self:Focus(handles[nextIndex])
 end
 
 function FairyGuiManager:ClearFocus()

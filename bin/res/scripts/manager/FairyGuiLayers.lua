@@ -9,11 +9,53 @@ local DEFAULT_LAYER_ORDER = {
 	Toast = 6000,
 }
 
+local DEFAULT_LAYER_POLICY = {
+	Background = { baseOrder = 1000, popup = false, closeOnEscape = false, inputMode = "passThrough" },
+	Normal = { baseOrder = 2000, popup = false, closeOnEscape = false, inputMode = "hitOnly" },
+	Popup = { baseOrder = 3000, popup = true, closeOnEscape = true, inputMode = "modalOrHit" },
+	Guide = { baseOrder = 4000, popup = true, closeOnEscape = true, inputMode = "guide" },
+	Top = { baseOrder = 5000, popup = true, closeOnEscape = true, inputMode = "modalOrHit" },
+	Toast = { baseOrder = 6000, popup = false, closeOnEscape = false, inputMode = "passThrough" },
+}
+
 local SORTING_PRIORITY_STEP = 100
 local KEY_ESCAPE = 1
+local KEY_TAB = 15
+
+local function copyTable(source, target)
+	target = target or {}
+	if type(source) ~= "table" then
+		return target
+	end
+
+	for name, value in pairs(source) do
+		target[name] = value
+	end
+	return target
+end
 
 local function isBlank(value)
 	return value == nil or value == ""
+end
+
+local function normalizeSafeArea(leftOrRect, top, right, bottom)
+	local area = {}
+	if type(leftOrRect) == "table" then
+		area.left = tonumber(leftOrRect.left or leftOrRect.x or leftOrRect[1]) or 0
+		area.top = tonumber(leftOrRect.top or leftOrRect.y or leftOrRect[2]) or 0
+		area.right = tonumber(leftOrRect.right or leftOrRect[3]) or 0
+		area.bottom = tonumber(leftOrRect.bottom or leftOrRect[4]) or 0
+	else
+		area.left = tonumber(leftOrRect) or 0
+		area.top = tonumber(top) or 0
+		area.right = tonumber(right) or 0
+		area.bottom = tonumber(bottom) or 0
+	end
+	area.left = math.max(area.left, 0)
+	area.top = math.max(area.top, 0)
+	area.right = math.max(area.right, 0)
+	area.bottom = math.max(area.bottom, 0)
+	return area
 end
 
 local function normalizeRect(rect)
@@ -46,6 +88,83 @@ end
 
 function FairyGuiLayers:Init(owner)
 	self.owner = owner
+	if owner ~= nil then
+		owner.layerPolicies = owner.layerPolicies or {}
+		for layerName, policy in pairs(DEFAULT_LAYER_POLICY) do
+			if owner.layerPolicies[layerName] == nil then
+				owner.layerPolicies[layerName] = copyTable(policy)
+			end
+		end
+		owner.safeArea = owner.safeArea or normalizeSafeArea(0, 0, 0, 0)
+	end
+end
+
+function FairyGuiLayers:GetLayerPolicy(layerName)
+	local self = self.owner
+	layerName = layerName or "Normal"
+	local defaultPolicy = DEFAULT_LAYER_POLICY[layerName] or {
+		baseOrder = DEFAULT_LAYER_ORDER[layerName] or DEFAULT_LAYER_ORDER.Normal,
+		popup = false,
+		closeOnEscape = false,
+		inputMode = "hitOnly",
+	}
+	if self == nil then
+		return copyTable(defaultPolicy, { name = layerName })
+	end
+
+	self.layerPolicies = self.layerPolicies or {}
+	if self.layerPolicies[layerName] == nil then
+		self.layerPolicies[layerName] = copyTable(defaultPolicy)
+	end
+	local policy = self.layerPolicies[layerName]
+	policy.name = layerName
+	if policy.baseOrder == nil then
+		policy.baseOrder = defaultPolicy.baseOrder
+	end
+	if policy.inputMode == nil then
+		policy.inputMode = defaultPolicy.inputMode or "hitOnly"
+	end
+	return policy
+end
+
+function FairyGuiLayers:SetLayerPolicy(layerName, policy)
+	local self = self.owner
+	if self == nil or isBlank(layerName) or type(policy) ~= "table" then
+		return nil
+	end
+
+	local layerPolicy = self:GetLayerPolicy(layerName)
+	copyTable(policy, layerPolicy)
+	if layerPolicy.baseOrder ~= nil then
+		self.layers[layerName] = tonumber(layerPolicy.baseOrder) or self.layers[layerName]
+	end
+	return layerPolicy
+end
+
+function FairyGuiLayers:GetSafeArea()
+	local self = self.owner
+	if self == nil then
+		return normalizeSafeArea(0, 0, 0, 0)
+	end
+
+	self.safeArea = self.safeArea or normalizeSafeArea(0, 0, 0, 0)
+	return copyTable(self.safeArea)
+end
+
+function FairyGuiLayers:SetSafeArea(leftOrRect, top, right, bottom)
+	local self = self.owner
+	if self == nil then
+		return normalizeSafeArea(0, 0, 0, 0)
+	end
+
+	self.safeArea = normalizeSafeArea(leftOrRect, top, right, bottom)
+	for _, objectInfo in pairs(self.objects or {}) do
+		local param = objectInfo.param or {}
+		if param.useSafeArea == true or param.safeArea == true then
+			self:ApplyScreenAdapt(objectInfo)
+		end
+	end
+	return self:GetSafeArea()
 end
 
 function FairyGuiLayers:GetLayerBaseOrder(layerName)
@@ -56,7 +175,7 @@ function FairyGuiLayers:GetLayerBaseOrder(layerName)
 
 	layerName = layerName or "Normal"
 	if self.layers[layerName] == nil then
-		self.layers[layerName] = self.layers.Normal or DEFAULT_LAYER_ORDER.Normal
+		self.layers[layerName] = self:GetLayerPolicy(layerName).baseOrder or self.layers.Normal or DEFAULT_LAYER_ORDER.Normal
 		self.layerNextOrder[layerName] = 0
 		self.layerObjects[layerName] = {}
 	end
@@ -112,13 +231,37 @@ function FairyGuiLayers:EnsureLayerRoot(layerName)
 	return rootHandle
 end
 
-function FairyGuiLayers:AttachToLayer(handle, layerName)
+function FairyGuiLayers:ResolveAttachParent(layerName, param)
 	local self = self.owner
 	if self == nil then
+		return nil
+	end
+
+	param = param or {}
+	local explicitParent = param.parentHandle or param.rootHandle or param.parent or param.root
+	if type(explicitParent) == "number" and explicitParent > 0 then
+		return explicitParent
+	end
+	if type(param.parentKey) == "string" then
+		local parentInfo = self:GetObjectInfo(param.parentKey)
+		if parentInfo ~= nil then
+			return parentInfo.handle
+		end
+	end
+	if type(param.rootLayer) == "string" then
+		return self:EnsureLayerRoot(param.rootLayer)
+	end
+	local rootHandle = self:EnsureLayerRoot(layerName)
+	return rootHandle
+end
+
+function FairyGuiLayers:AttachToLayer(handle, layerName, param)
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
-	local rootHandle = self:EnsureLayerRoot(layerName)
+	local rootHandle = self:ResolveAttachParent(layerName, param)
 	if rootHandle ~= nil and GameManager.addFairyGuiObjectToParent ~= nil then
 		return GameManager:addFairyGuiObjectToParent(handle, rootHandle)
 	end
@@ -158,7 +301,8 @@ function FairyGuiLayers:NextLayerSortingOrder(layerName, priority)
 end
 
 function FairyGuiLayers:IsPopupLayer(layerName)
-	return layerName == "Popup" or layerName == "Guide" or layerName == "Top" or layerName == "Toast"
+	local policy = self:GetLayerPolicy(layerName)
+	return policy.popup == true
 end
 
 function FairyGuiLayers:GetStackMode(objectInfo)
@@ -313,6 +457,9 @@ function FairyGuiLayers:IsPopupOpenParam(param)
 	if param == nil then
 		return false
 	end
+	if param.stack == false or param.stackMode == "None" then
+		return false
+	end
 	if param.stackMode == "Popup" then
 		return true
 	end
@@ -461,13 +608,24 @@ function FairyGuiLayers:CanClosePopupByEscape(objectInfo)
 		return false
 	end
 	local param = objectInfo.param or {}
-	return param.closeOnEscape ~= false
+	if param.closeOnEscape ~= nil then
+		return param.closeOnEscape ~= false
+	end
+	return self:ShouldLayerCloseOnEscape(objectInfo.layer)
+end
+
+function FairyGuiLayers:ShouldLayerCloseOnEscape(layerName)
+	local policy = self:GetLayerPolicy(layerName)
+	return policy.closeOnEscape == true
 end
 
 function FairyGuiLayers:HandleKeyPressed(keyCode, keyText)
 	local self = self.owner
 	if self == nil then
 		return false
+	end
+	if tonumber(keyCode) == KEY_TAB then
+		return self:FocusNext(false)
 	end
 	if tonumber(keyCode) == KEY_ESCAPE then
 		local objectInfo = self:GetTopStackObject(self.popupStack)
@@ -863,12 +1021,17 @@ function FairyGuiLayers:ApplyDesignRect(rect, param)
 	}
 end
 
-function FairyGuiLayers:ClampLayoutRect(rect, screenWidth, screenHeight)
+function FairyGuiLayers:ClampLayoutRect(rect, screenWidth, screenHeight, bounds)
 	if rect == nil then
 		return nil
 	end
-	rect.x = math.max(math.min(rect.x, math.max(screenWidth - rect.width, 0)), 0)
-	rect.y = math.max(math.min(rect.y, math.max(screenHeight - rect.height, 0)), 0)
+	bounds = bounds or { x = 0, y = 0, width = screenWidth, height = screenHeight }
+	local minX = tonumber(bounds.x) or 0
+	local minY = tonumber(bounds.y) or 0
+	local maxX = minX + math.max((tonumber(bounds.width) or screenWidth) - rect.width, 0)
+	local maxY = minY + math.max((tonumber(bounds.height) or screenHeight) - rect.height, 0)
+	rect.x = math.max(math.min(rect.x, maxX), minX)
+	rect.y = math.max(math.min(rect.y, maxY), minY)
 	return rect
 end
 
@@ -889,12 +1052,22 @@ function FairyGuiLayers:GetLayoutRect(param)
 	local right = tonumber(param.marginRight or param.right) or 0
 	local top = tonumber(param.marginTop or param.top) or 0
 	local bottom = tonumber(param.marginBottom or param.bottomMargin) or 0
+	local useSafeArea = param.useSafeArea == true or param.safeArea == true
+	if useSafeArea then
+		local safeArea = self:GetSafeArea()
+		left = left + (safeArea.left or 0)
+		right = right + (safeArea.right or 0)
+		top = top + (safeArea.top or 0)
+		bottom = bottom + (safeArea.bottom or 0)
+	end
+	local layoutWidth = math.max(screenWidth - left - right, 0)
+	local layoutHeight = math.max(screenHeight - top - bottom, 0)
 	if param.fullScreen == true or param.adaptScreen == true then
 		return {
 			x = left,
 			y = top,
-			width = math.max(screenWidth - left - right, 0),
-			height = math.max(screenHeight - top - bottom, 0),
+			width = layoutWidth,
+			height = layoutHeight,
 		}
 	end
 
@@ -916,14 +1089,14 @@ function FairyGuiLayers:GetLayoutRect(param)
 	local offsetX = tonumber(param.offsetX) or 0
 	local offsetY = tonumber(param.offsetY) or 0
 	if alignX == "center" then
-		x = (screenWidth - width) * 0.5 + offsetX
+		x = left + (layoutWidth - width) * 0.5 + offsetX
 	elseif alignX == "right" then
 		x = screenWidth - width - right + offsetX
 	elseif x == nil then
 		x = left + offsetX
 	end
 	if alignY == "middle" or alignY == "center" then
-		y = (screenHeight - height) * 0.5 + offsetY
+		y = top + (layoutHeight - height) * 0.5 + offsetY
 	elseif alignY == "bottom" then
 		y = screenHeight - height - bottom + offsetY
 	elseif y == nil then
@@ -937,7 +1110,12 @@ function FairyGuiLayers:GetLayoutRect(param)
 		height = height,
 	}
 	if param.fitInScreen == true then
-		self:ClampLayoutRect(rect, screenWidth, screenHeight)
+		self:ClampLayoutRect(rect, screenWidth, screenHeight, useSafeArea and {
+			x = left,
+			y = top,
+			width = layoutWidth,
+			height = layoutHeight,
+		} or nil)
 	end
 	return rect
 end
@@ -992,7 +1170,8 @@ function FairyGuiLayers:DumpLayerRoots()
 	print("[FGUI] DumpLayerRoots begin")
 	if self.layerRoots ~= nil then
 		for layerName, handle in pairs(self.layerRoots) do
-			print("[FGUI] LayerRoot", layerName, "handle=", handle, "baseOrder=", self:GetLayerBaseOrder(layerName))
+			local policy = self:GetLayerPolicy(layerName)
+			print("[FGUI] LayerRoot", layerName, "handle=", handle, "baseOrder=", self:GetLayerBaseOrder(layerName), "popup=", policy.popup == true, "closeOnEscape=", policy.closeOnEscape == true, "inputMode=", policy.inputMode or "")
 		end
 	end
 	print("[FGUI] DumpLayerRoots end")
