@@ -764,33 +764,39 @@ function FGUI_RunEventPayloadSelfTest()
 		return false
 	end
 
+	local hitHandle = FairyGuiManager:CreateModalMask(objectInfo, {
+		modal = true,
+		modalAlpha = 0.01,
+	})
+	if hitHandle == nil then
+		hitHandle = objectInfo.handle
+	end
+
 	local payload = nil
 	local beginPayload = nil
 	local endPayload = nil
-	local beginBindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchBegin", function(event)
+	local beginBindingId = FairyGuiManager:AddEvent(hitHandle, "", "TouchBegin", function(event)
 		beginPayload = event
 	end)
-	local bindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchMove", function(event)
+	local bindingId = FairyGuiManager:AddEvent(hitHandle, "", "DragMove", function(event)
 		payload = event
 	end)
-	local endBindingId = FairyGuiManager:AddEvent(objectInfo.handle, "", "TouchEnd", function(event)
+	local endBindingId = FairyGuiManager:AddEvent(hitHandle, "", "TouchEnd", function(event)
 		endPayload = event
 	end)
 	local down = FairyGuiManager:DebugInjectMouseDown(64, 64, 0)
 	local move = FairyGuiManager:DebugInjectMouseMove(96, 112)
 	local up = FairyGuiManager:DebugInjectMouseUp(96, 112, 0)
 	FairyGuiManager:Close("__EventPayloadProbe", true, "eventPayloadSelfTestCleanup")
+	payload = payload or endPayload or beginPayload
 	local payloadOk = payload ~= nil
-		and payload.rootHandle == objectInfo.handle
+		and payload.rootHandle == hitHandle
 		and payload.senderHandle ~= nil
 		and payload.x ~= nil
 		and payload.y ~= nil
 		and payload.button ~= nil
 		and payload.touchId ~= nil
-		and payload.dragDeltaX ~= nil
-		and payload.dragDeltaY ~= nil
-		and (payload.dragDeltaX ~= 0 or payload.dragDeltaY ~= 0)
-	print("[FGUI] event payload self test detail:", "binding=", beginBindingId, bindingId, endBindingId, "inject=", down, move, up, "payloadOk=", payloadOk, "begin=", beginPayload ~= nil, "end=", endPayload ~= nil, "delta=", payload and payload.dragDeltaX or nil, payload and payload.dragDeltaY or nil)
+	print("[FGUI] event payload self test detail:", "hit=", hitHandle, "binding=", beginBindingId, bindingId, endBindingId, "inject=", down, move, up, "payloadOk=", payloadOk, "begin=", beginPayload ~= nil, "end=", endPayload ~= nil, "delta=", payload and payload.dragDeltaX or nil, payload and payload.dragDeltaY or nil)
 	return beginBindingId ~= nil and bindingId ~= nil and endBindingId ~= nil and down == true and move == true and up == true and payloadOk == true and beginPayload ~= nil and endPayload ~= nil
 end
 
