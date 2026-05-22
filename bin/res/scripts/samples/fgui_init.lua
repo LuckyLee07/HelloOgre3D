@@ -6,6 +6,21 @@ local function isEnvEnabled(name)
 	return value == "1" or value == "true" or value == "TRUE" or value == "True"
 end
 
+local function mergeFairyGuiParams(defaults, overrides)
+	local result = {}
+	if type(defaults) == "table" then
+		for key, value in pairs(defaults) do
+			result[key] = value
+		end
+	end
+	if type(overrides) == "table" then
+		for key, value in pairs(overrides) do
+			result[key] = value
+		end
+	end
+	return result
+end
+
 local function tryRunFairyGuiInputSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_INPUT_SELF_TEST") then
 		return
@@ -144,6 +159,17 @@ local function tryRunFairyGuiScreenAdaptSelfTest()
 
 	threadpool:delay(16, function()
 		print("[FGUI] screen adapt self test result:", FGUI_RunScreenAdaptSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiBusinessFlowSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_BUSINESS_FLOW_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(17, function()
+		print("[FGUI] business flow self test result:", FGUI_RunBusinessFlowSelfTest())
 		FairyGuiManager:DumpHealth(true)
 	end)
 end
@@ -322,7 +348,7 @@ local function tryRunFairyGuiLongLoopSelfTest()
 		return
 	end
 
-	local startDelay = isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 12 or 6
+	local startDelay = isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 14 or 6
 	threadpool:delay(startDelay, function()
 		local count = tonumber(os.getenv and os.getenv("HELLO_FGUI_LONG_LOOP_COUNT") or nil)
 		FGUI_RunLongLoopSelfTest({
@@ -367,6 +393,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiGuideMaskSelfTest()
 		tryRunFairyGuiEventPayloadSelfTest()
 		tryRunFairyGuiScreenAdaptSelfTest()
+		tryRunFairyGuiBusinessFlowSelfTest()
 		tryRunFairyGuiScreenAdaptDemo()
 		tryRunFairyGuiCommonServiceDemo()
 		tryRunFairyGuiDebugPanelDemo()
@@ -381,12 +408,12 @@ local function tryOpenFairyGuiSample()
 	end)
 end
 
-function FGUI_ReopenAct37Sample()
-	return FairyGuiManager:Open("Act37TestMvc", {
+function FGUI_ReopenAct37Sample(param)
+	return FairyGuiManager:Open("Act37TestMvc", mergeFairyGuiParams({
 		roleId = 2001,
 		source = "ManualReopen",
 		showRed = true,
-	})
+	}, param))
 end
 
 function FGUI_CloseAct37Sample()
@@ -397,12 +424,12 @@ function FGUI_DestroyAct37Sample()
 	return FairyGuiManager:Destroy("Act37TestMvc")
 end
 
-function FGUI_OpenAct38Sample()
+function FGUI_OpenAct38Sample(param)
 	FairyGuiManager:Close("Act38Test", true)
-	local ctrl = FairyGuiManager:Open("Act38Test", {
+	local ctrl = FairyGuiManager:Open("Act38Test", mergeFairyGuiParams({
 		selectedTab = 0,
 		dateText = "Act38 MVC Sample",
-	})
+	}, param))
 	if ctrl == nil then
 		print("[FGUI] open act_38_test failed")
 		return nil
@@ -444,14 +471,14 @@ function FGUI_CloseMaskProbe()
 	return FairyGuiManager:Close("MaskProbe", true)
 end
 
-function FGUI_OpenTextInputProbe()
-	return FairyGuiManager:OpenTextInputProbe({
+function FGUI_OpenTextInputProbe(param)
+	return FairyGuiManager:OpenTextInputProbe(mergeFairyGuiParams({
 		key = "TextInputProbe",
 		layer = "Top",
 		group = "Sample",
 		scene = "Default",
 		popupMode = "stack",
-	})
+	}, param))
 end
 
 function FGUI_CloseTextInputProbe()
@@ -921,6 +948,8 @@ function FGUI_RunScreenAdaptDemo()
 	return true
 end
 
+local closeFairyGuiBusinessFlowObjects = nil
+
 function FGUI_RunSelfTestSuite()
 	if threadpool == nil or threadpool.delay == nil then
 		print("[FGUI] self test suite failed: threadpool unavailable")
@@ -1020,15 +1049,22 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "ScreenAdapt", function()
 		return FGUI_RunScreenAdaptSelfTest()
 	end)
+	schedule(0.6, "BusinessFlow", function()
+		return FGUI_RunBusinessFlowSelfTest()
+	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
 		FairyGuiManager:Close("Act38Test", true)
 		FairyGuiManager:CloseGroup("LayerProbe", true)
 		FairyGuiManager:Close("MaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
+		FairyGuiManager:Close("BusinessFlowTextInput", true)
 		FairyGuiManager:Close("__EventPayloadProbe", true)
 		FairyGuiManager:Close("ScreenAdaptMessage", true)
 		FairyGuiManager:Close("ScreenAdaptPopup", true)
+		if closeFairyGuiBusinessFlowObjects ~= nil then
+			closeFairyGuiBusinessFlowObjects("selfTestSuiteCleanup")
+		end
 		local stats = FairyGuiManager:DumpHealth(true)
 		local resourceWarnings = FairyGuiManager:GetResourceWarnings()
 		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0 and #resourceWarnings == 0, "openUI=" .. tostring(stats.openUI)
@@ -1046,15 +1082,38 @@ function FGUI_RunSelfTestSuite()
 	return true
 end
 
+closeFairyGuiBusinessFlowObjects = function(reason)
+	reason = reason or "businessFlowCleanup"
+	FairyGuiManager:ClearToastQueue()
+	FairyGuiManager:CloseScene("BusinessFlow", true)
+	FairyGuiManager:Close("Act37TestMvc", true, reason)
+	FairyGuiManager:Close("Act38Test", true, reason)
+	FairyGuiManager:Close("BusinessFlowTextInput", true, reason)
+	FairyGuiManager:Close("__EventPayloadProbe", true, reason)
+	FairyGuiManager:Close("__Toast", true, reason)
+	FairyGuiManager:Close("__Tip", true, reason)
+	FairyGuiManager:HideLoading({ force = true, reason = reason })
+	FairyGuiManager:Close("__GuideMask", true, reason)
+	FairyGuiManager:Close("__MessageBox", true, reason)
+	FairyGuiManager:Close("__PopupMenu", true, reason)
+	FairyGuiManager:Close("BusinessFlowMessage", true, reason)
+	FairyGuiManager:Close("BusinessFlowPopup", true, reason)
+	FairyGuiManager:HideDebugPanel("BusinessFlowDebug")
+end
+
 local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:Close("Act37TestMvc", true)
 	FairyGuiManager:Close("Act38Test", true)
 	FairyGuiManager:CloseGroup("LayerProbe", true)
 	FairyGuiManager:Close("MaskProbe", true)
 	FairyGuiManager:Close("TextInputProbe", true)
+	FairyGuiManager:Close("BusinessFlowTextInput", true)
 	FairyGuiManager:Close("__EventPayloadProbe", true)
 	FairyGuiManager:Close("ScreenAdaptMessage", true)
 	FairyGuiManager:Close("ScreenAdaptPopup", true)
+	if closeFairyGuiBusinessFlowObjects ~= nil then
+		closeFairyGuiBusinessFlowObjects("longLoopCleanup")
+	end
 end
 
 local function getFairyGuiPackageRefCount()
@@ -1106,6 +1165,111 @@ local function checkFairyGuiLongLoopClean(label)
 		FairyGuiManager:DumpHealth(true)
 	end
 	return clean, detail
+end
+
+function FGUI_RunBusinessFlowSelfTest()
+	closeFairyGuiBusinessFlowObjects("businessFlowReset")
+
+	local perfBefore = FairyGuiManager:GetPerfStats()
+	local openBefore = perfBefore.open and perfBefore.open.count or 0
+	local ctrl38 = FGUI_OpenAct38Sample({
+		scene = "BusinessFlow",
+		group = "BusinessFlow",
+		dateText = "Business Flow Sample",
+	})
+	local pageOpen = ctrl38 ~= nil and FairyGuiManager:GetObjectInfo("Act38Test") ~= nil
+	local listOk = ctrl38 ~= nil and ctrl38.RunListApiSelfTest ~= nil and ctrl38:RunListApiSelfTest() or false
+
+	local dragOk = FGUI_RunEventPayloadSelfTest()
+
+	local textHandle, inputHandle = FGUI_OpenTextInputProbe({
+		key = "BusinessFlowTextInput",
+		scene = "BusinessFlow",
+		group = "BusinessFlow",
+	})
+	local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+	local keyA = FairyGuiManager:DebugInjectKeyPressed(30, 65)
+	local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
+	local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+	local textOk = textHandle ~= nil and inputHandle ~= nil and focused == true and keyA == true and submit == true and text == "A"
+
+	local toastHandle = FairyGuiManager:ShowToast("Business flow toast", 0, {
+		scene = "BusinessFlow",
+		queue = false,
+		dedupeKey = "BusinessFlowToast",
+	})
+	local loadingHandle = FairyGuiManager:ShowLoading("Business flow loading", {
+		scene = "BusinessFlow",
+		refKey = "BusinessFlow",
+	})
+	local guideHandle = FairyGuiManager:ShowGuideMask({
+		scene = "BusinessFlow",
+		text = "Business flow guide",
+		textX = 80,
+		textY = 120,
+		highlightRect = { x = 240, y = 180, width = 240, height = 150 },
+		closeOnMaskClick = false,
+	})
+	local messageHandle = FairyGuiManager:ShowMessageBox("Business Flow", "MessageBox with modal popup.", { "OK", "Cancel" }, nil, {
+		key = "BusinessFlowMessage",
+		scene = "BusinessFlow",
+		closeOnMaskClick = true,
+	})
+	local popupHandle = FairyGuiManager:ShowPopupMenu({ "Inspect", "Use", "Cancel" }, 100, 140, nil, {
+		key = "BusinessFlowPopup",
+		scene = "BusinessFlow",
+	})
+	local debugHandle = FairyGuiManager:ShowDebugPanel({
+		key = "BusinessFlowDebug",
+		scene = "BusinessFlow",
+		title = "Business Flow Debug",
+		autoRefresh = false,
+	})
+	local debugOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("BusinessFlowDebug") == true
+
+	local serviceStats = FairyGuiManager:GetServiceStats()
+	local servicesOk = toastHandle ~= nil
+		and loadingHandle ~= nil
+		and guideHandle ~= nil
+		and messageHandle ~= nil
+		and popupHandle ~= nil
+		and debugHandle ~= nil
+		and serviceStats.Toast ~= nil
+		and serviceStats.Loading ~= nil
+		and serviceStats.GuideMask ~= nil
+		and serviceStats.MessageBox ~= nil
+		and serviceStats.PopupMenu ~= nil
+		and serviceStats.DebugPanel ~= nil
+
+	local healthDuring = FairyGuiManager:GetHealthStats()
+	local perfAfter = FairyGuiManager:GetPerfStats()
+	local perfOk = perfAfter.open ~= nil and perfAfter.open.count > openBefore
+	local sceneClosed = FairyGuiManager:CloseScene("BusinessFlow", true)
+	closeFairyGuiBusinessFlowObjects("businessFlowFinalCleanup")
+	local finalClean, finalDetail = checkFairyGuiLongLoopClean("business flow final")
+
+	print(
+		"[FGUI] business flow self test detail:",
+		"page=", pageOpen,
+		"list=", listOk,
+		"drag=", dragOk,
+		"text=", textOk,
+		"services=", servicesOk,
+		"debug=", debugOk,
+		"perf=", perfOk,
+		"sceneClosed=", sceneClosed,
+		"duringOpenUI=", healthDuring.openUI,
+		finalDetail)
+
+	return pageOpen == true
+		and listOk == true
+		and dragOk == true
+		and textOk == true
+		and servicesOk == true
+		and debugOk == true
+		and perfOk == true
+		and sceneClosed > 0
+		and finalClean == true
 end
 
 function FGUI_RunLongLoopSelfTest(config)

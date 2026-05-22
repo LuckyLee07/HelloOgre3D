@@ -14,6 +14,7 @@
 			"type": "GController"
 		}
 	],
+	"transitions": [],
 	"controls": [
 		{
 			"name": "mask",
@@ -300,6 +301,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "mask",
@@ -382,6 +384,7 @@
 		},
 		"mask": {
 			"controllers": [],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "img_mask",
@@ -399,6 +402,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "title",
@@ -416,6 +420,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "icon",
@@ -463,6 +468,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "title",
@@ -480,6 +486,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "title",
@@ -497,6 +504,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "title",
@@ -514,6 +522,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "bgimg",
@@ -621,6 +630,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": [
 				{
 					"name": "title",
@@ -638,6 +648,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": []
 		},
 		"btn_help": {
@@ -648,6 +659,7 @@
 					"type": "GController"
 				}
 			],
+			"transitions": [],
 			"controls": []
 		}
 	}

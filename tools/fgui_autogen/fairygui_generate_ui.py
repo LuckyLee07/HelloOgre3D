@@ -18,9 +18,11 @@ def normalize_path(path):
 def write_manifest(path, manifest):
 	output_dir = os.path.dirname(path)
 	ensure_dir(output_dir)
-	with open(path, "w", encoding="utf-8", newline="\n") as file:
-		json.dump(manifest, file, ensure_ascii=False, indent="\t")
-		file.write("\n")
+	fairygui_autogen.write_text_file(path, render_manifest(manifest))
+
+
+def render_manifest(manifest):
+	return json.dumps(manifest, ensure_ascii=False, indent="\t") + "\n"
 
 
 def default_manifest_output(package_name, ui_name):
@@ -90,6 +92,7 @@ def build_lua_output_plan(manifest, args):
 	component = args.component or manifest.get("component") or ui_name
 	controls = fairygui_autogen.get_controls(manifest, [])
 	controllers = fairygui_autogen.get_controllers(manifest)
+	transitions = fairygui_autogen.get_transitions(manifest)
 	component_controls = manifest.get("componentControls") or {}
 
 	if not ui_name or not package_name:
@@ -97,7 +100,7 @@ def build_lua_output_plan(manifest, args):
 
 	outputs = []
 	for class_name, content, overwrite in [
-		(ui_name + "AutoGen", fairygui_autogen.render_autogen(ui_name), True),
+		(ui_name + "AutoGen", fairygui_autogen.render_autogen(ui_name, controls, controllers, transitions, component_controls, args.field_style), True),
 		(ui_name + "View", fairygui_autogen.render_view(ui_name, controls, controllers, args.field_style), args.force),
 		(ui_name + "Model", fairygui_autogen.render_model(ui_name), args.force),
 		(ui_name + "Ctrl", fairygui_autogen.render_ctrl(ui_name, controls, component_controls, args.field_style), args.force),
@@ -139,12 +142,12 @@ def describe_output_action(output):
 	return "create"
 
 
-def collect_output_warnings(outputs):
-	warnings = []
+def collect_output_notes(outputs):
+	notes = []
 	for output in outputs:
 		if describe_output_action(output) == "skip":
-			warnings.append("will keep existing hand-written file: " + normalize_path(output["path"]))
-	return warnings
+			notes.append("will keep existing hand-written file: " + normalize_path(output["path"]))
+	return notes
 
 
 def write_lua_outputs(outputs):
@@ -163,6 +166,41 @@ def write_lua_outputs(outputs):
 		if fairygui_autogen.write_file(path, output["content"], force=output["overwrite"]):
 			written.append(path)
 	return written
+
+
+def get_expected_output_content(output):
+	if output["kind"] == "registry_aggregate":
+		path = output["path"]
+		content = fairygui_autogen.read_text_file(path) if os.path.exists(path) else None
+		return fairygui_autogen.render_updated_aggregate_registry(content, output["ui_name"], output["registry_entry"])
+	return output["content"]
+
+
+def collect_stale_outputs(manifest_output, manifest, outputs):
+	stale = []
+	check_items = [{
+		"kind": "manifest",
+		"path": manifest_output,
+		"content": render_manifest(manifest),
+		"overwrite": True,
+	}]
+	check_items.extend(outputs)
+
+	for output in check_items:
+		if describe_output_action(output) == "skip":
+			continue
+
+		path = output["path"]
+		expected = get_expected_output_content(output)
+		expected = fairygui_autogen.to_output_newlines(expected)
+		if not os.path.exists(path):
+			stale.append("missing generated file: " + normalize_path(path))
+			continue
+
+		actual = fairygui_autogen.read_text_file(path)
+		if actual != expected:
+			stale.append("stale generated file: " + normalize_path(path))
+	return stale
 
 
 def print_messages(title, messages):
@@ -225,14 +263,19 @@ def main():
 	args.registry_output = args.registry_output or default_registry_output(package_name, ui_name)
 	warnings.extend(collect_manifest_warnings(manifest))
 	outputs, registry_entry = build_lua_output_plan(manifest, args)
-	warnings.extend(collect_output_warnings(outputs))
+	notes = collect_output_notes(outputs)
+	stale_outputs = collect_stale_outputs(manifest_output, manifest, outputs) if args.check else []
 
 	print_messages("Warnings", warnings)
+	print_messages("Notes", notes)
+	print_messages("Outdated generated files", stale_outputs)
 	if args.dry_run or args.check:
 		print_plan(manifest_output, outputs)
 		print("")
 		print("Registry entry:")
 		print(registry_entry)
+		if args.check and stale_outputs:
+			return 1
 		if args.check and args.strict and warnings:
 			return 1
 		return 0

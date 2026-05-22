@@ -774,7 +774,9 @@ bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 {
 	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackage");
 	if (!packagePath.empty())
+	{
 		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
+	}
 	if (!m_initialized || packagePath.empty())
 		return false;
 
@@ -785,7 +787,9 @@ std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath
 {
 	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackageAndGetName");
 	if (!packagePath.empty())
+	{
 		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
+	}
 	if (!m_initialized || packagePath.empty())
 		return std::string();
 
@@ -797,7 +801,9 @@ bool FairyGuiSystem::RemovePackage(const std::string& packageName)
 {
 	H3D_PROFILE_SCOPE_NAMED(removePackageZone, "FairyGuiSystem::RemovePackage");
 	if (!packageName.empty())
+	{
 		H3D_PROFILE_TEXT(removePackageZone, packageName.c_str(), packageName.size());
+	}
 	if (!m_initialized || packageName.empty())
 		return false;
 
@@ -809,7 +815,9 @@ fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, 
 {
 	H3D_PROFILE_SCOPE_NAMED(createObjectZone, "FairyGuiSystem::CreateObject");
 	if (!objectName.empty())
+	{
 		H3D_PROFILE_TEXT(createObjectZone, objectName.c_str(), objectName.size());
+	}
 	if (!m_initialized || packageName.empty() || objectName.empty())
 		return nullptr;
 

@@ -3,8 +3,122 @@
 
 local Act38TestAutoGen = Class("Act38TestAutoGen", ClassList.FairyGuiAutoGen)
 
+Act38TestAutoGen.ControlPath = {
+	mask = "mask",
+	loaderImgBg = "loader_img_bg",
+	tDate = "t_date",
+	btnHelp = "btn_help",
+	btnClose = "btn_close",
+	menuBgimg = "menu_bgimg",
+	menuTab = "MenuTab",
+	m2DayTaskList = "m2_dayTaskList",
+	m2SpcTaskList = "m2_spcTaskList",
+	m2ExcShopList = "m2_excShopList",
+}
+
+Act38TestAutoGen.ControlType = {
+	mask = "GComponent",
+	loaderImgBg = "GLoader",
+	tDate = "GTextField",
+	btnHelp = "GComponent",
+	btnClose = "GComponent",
+	menuBgimg = "GImage",
+	menuTab = "GList",
+	m2DayTaskList = "GList",
+	m2SpcTaskList = "GList",
+	m2ExcShopList = "GList",
+}
+
+Act38TestAutoGen.ControllerPath = {
+	m2MenuCtrl = "m2_menuCtrl",
+}
+
+Act38TestAutoGen.TransitionName = {
+}
+
+Act38TestAutoGen.ListItem = {
+	menuTab = {
+		path = "MenuTab",
+		component = "tab_btn",
+		resourceId = "ij2835",
+		selectionController = "m2_menuCtrl",
+		controls = {
+			title = { path = "title", type = "GTextField" },
+		},
+	},
+	m2DayTaskList = {
+		path = "m2_dayTaskList",
+		component = "task_item",
+		resourceId = "ij2838",
+		controls = {
+			icon = { path = "icon", type = "GLoader" },
+			num = { path = "num", type = "GTextField" },
+			desc = { path = "desc", type = "GRichTextField" },
+			btnGo = { path = "btn_go", type = "GComponent" },
+			btnGet = { path = "btn_get", type = "GComponent" },
+			btnAlrget = { path = "btn_alrget", type = "GComponent" },
+		},
+	},
+	m2SpcTaskList = {
+		path = "m2_spcTaskList",
+		component = "task_item",
+		resourceId = "ij2838",
+		controls = {
+			icon = { path = "icon", type = "GLoader" },
+			num = { path = "num", type = "GTextField" },
+			desc = { path = "desc", type = "GRichTextField" },
+			btnGo = { path = "btn_go", type = "GComponent" },
+			btnGet = { path = "btn_get", type = "GComponent" },
+			btnAlrget = { path = "btn_alrget", type = "GComponent" },
+		},
+	},
+	m2ExcShopList = {
+		path = "m2_excShopList",
+		component = "shop_item",
+		resourceId = "ij283h",
+		controls = {
+			bgimg = { path = "bgimg", type = "GImage" },
+			itembg1 = { path = "itembg1", type = "GImage" },
+			itemicon1 = { path = "itemicon1", type = "GLoader" },
+			itemmsk1 = { path = "itemmsk1", type = "GImage" },
+			num1 = { path = "num1", type = "GRichTextField" },
+			item1 = { path = "item1", type = "GGroup" },
+			itembg2 = { path = "itembg2", type = "GImage" },
+			itemicon2 = { path = "itemicon2", type = "GLoader" },
+			itemmsk2 = { path = "itemmsk2", type = "GImage" },
+			num2 = { path = "num2", type = "GTextField" },
+			itembtn = { path = "itembtn", type = "GGraph" },
+			item2 = { path = "item2", type = "GGroup" },
+			desc = { path = "desc", type = "GRichTextField" },
+			btnExchange = { path = "btn_exchange", type = "GComponent" },
+			btnAlrowned = { path = "btn_alrowned", type = "GComponent" },
+			btnAlrfinish = { path = "btn_alrfinish", type = "GComponent" },
+		},
+	},
+}
+
 function Act38TestAutoGen:Create(param)
 	return ClassList.Act38TestAutoGen.new(param)
+end
+
+function Act38TestAutoGen:GetControlPath(name)
+	return Act38TestAutoGen.ControlPath[name]
+end
+
+function Act38TestAutoGen:GetControlType(name)
+	return Act38TestAutoGen.ControlType[name]
+end
+
+function Act38TestAutoGen:GetControllerPath(name)
+	return Act38TestAutoGen.ControllerPath[name]
+end
+
+function Act38TestAutoGen:GetTransitionName(name)
+	return Act38TestAutoGen.TransitionName[name]
+end
+
+function Act38TestAutoGen:GetListItemDefine(name)
+	return Act38TestAutoGen.ListItem[name]
 end
 
 return Act38TestAutoGen

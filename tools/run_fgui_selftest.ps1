@@ -15,6 +15,7 @@ param(
 		"EventPayload",
 		"ScreenAdapt",
 		"ScreenAdaptDemo",
+		"BusinessFlow",
 		"Layer",
 		"LayerClose",
 		"Act38",
@@ -31,6 +32,7 @@ param(
 	[switch]$Visible,
 	[switch]$KeepAlive,
 	[switch]$StopExisting,
+	[switch]$IgnoreLogErrors,
 	[switch]$NoTail,
 	[switch]$DryRun
 )
@@ -42,10 +44,6 @@ $RepoRoot = Resolve-Path (Join-Path $ScriptRoot "..")
 $BinDir = Join-Path $RepoRoot "bin"
 $ExePath = Join-Path $BinDir "HelloOgre3D.exe"
 $LogPath = Join-Path $BinDir "Sandbox.log"
-
-if (-not (Test-Path -LiteralPath $ExePath)) {
-	throw "HelloOgre3D.exe not found: $ExePath"
-}
 
 function Get-DefaultWaitSeconds {
 	param(
@@ -59,6 +57,7 @@ function Get-DefaultWaitSeconds {
 		"DebugPanel" { return 24 }
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
+		"BusinessFlow" { return 32 }
 		"EventPayload" { return 32 }
 		"Input" { return 18 }
 		"Mask" { return 18 }
@@ -98,6 +97,7 @@ function Get-FairyGuiEnv {
 		"EventPayload" { $values["HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST"] = "1" }
 		"ScreenAdapt" { $values["HELLO_FGUI_SCREEN_ADAPT_SELF_TEST"] = "1" }
 		"ScreenAdaptDemo" { $values["HELLO_FGUI_SCREEN_ADAPT_DEMO"] = "1" }
+		"BusinessFlow" { $values["HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"] = "1" }
 		"Layer" { $values["HELLO_FGUI_LAYER_SELF_TEST"] = "1" }
 		"LayerClose" { $values["HELLO_FGUI_LAYER_CLOSE_SELF_TEST"] = "1" }
 		"Act38" { $values["HELLO_FGUI_ACT38_SELF_TEST"] = "1" }
@@ -127,6 +127,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST",
 	"HELLO_FGUI_SCREEN_ADAPT_SELF_TEST",
 	"HELLO_FGUI_SCREEN_ADAPT_DEMO",
+	"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST",
 	"HELLO_FGUI_LAYER_SELF_TEST",
 	"HELLO_FGUI_LAYER_CLOSE_SELF_TEST",
 	"HELLO_FGUI_ACT38_SELF_TEST",
@@ -154,6 +155,15 @@ if ($SelectedEnv.Count -gt 0) {
 if ($DryRun) {
 	Write-Host "[FGUI] dry run only; process not started."
 	exit 0
+}
+
+if (-not (Test-Path -LiteralPath $ExePath)) {
+	throw "HelloOgre3D.exe not found: $ExePath"
+}
+
+$StartLogLineCount = 0
+if (Test-Path -LiteralPath $LogPath) {
+	$StartLogLineCount = (Get-Content -LiteralPath $LogPath).Count
 }
 
 $OldEnv = @{}
@@ -189,11 +199,33 @@ try {
 		}
 	} else {
 		Write-Host "[FGUI] process exited code=$($process.ExitCode)."
+		if ($process.ExitCode -ne 0) {
+			throw "HelloOgre3D exited with code $($process.ExitCode)."
+		}
+	}
+
+	$NewLogLines = @()
+	if (Test-Path -LiteralPath $LogPath) {
+		$AllLogLines = Get-Content -LiteralPath $LogPath
+		if ($StartLogLineCount -gt $AllLogLines.Count) {
+			$StartLogLineCount = 0
+		}
+		$NewLogLines = $AllLogLines | Select-Object -Skip $StartLogLineCount
 	}
 
 	if (-not $NoTail -and (Test-Path -LiteralPath $LogPath)) {
 		Write-Host "[FGUI] log tail: $LogPath"
 		Get-Content -LiteralPath $LogPath -Tail $Tail
+	}
+
+	if (-not $IgnoreLogErrors) {
+		$FailurePattern = "OGRE EXCEPTION|PANIC:|call_func error|self test result:\s*false"
+		$Failures = @($NewLogLines | Select-String -Pattern $FailurePattern)
+		if ($Failures.Count -gt 0) {
+			Write-Host "[FGUI] detected log failures:"
+			$Failures | Select-Object -First 12 | ForEach-Object { Write-Host $_.Line }
+			throw "FGUI selftest log contains failure patterns."
+		}
 	}
 } finally {
 	foreach ($name in $KnownEnvNames) {

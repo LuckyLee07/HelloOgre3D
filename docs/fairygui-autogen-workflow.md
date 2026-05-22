@@ -82,7 +82,15 @@ python tools\fgui_autogen\fairygui_generate_ui.py `
 	--check
 ```
 
-`--dry-run` and `--check` do not write files. `--strict` makes `--check` fail when warnings exist. `--force` overwrites View / Model / Ctrl stubs. `--no-registry-aggregate` skips `GeneratedUIRegistry.lua`.
+批量扫描入口：
+
+```powershell
+python -B tools\fgui_autogen\fairygui_batch_generate.py --check --strict
+```
+
+该脚本默认扫描 `bin/res/assets/*/package.xml`，跳过 `fairygui_manifests`，优先复用已有 manifest 的 `uiName/package/component` 和独立 registry 中的 layer/cache/fullScreen 等策略。去掉 `--check` 即可批量更新受管生成物。
+
+`--dry-run` 不写文件，只打印计划。`--check` 不写文件，但会比对 manifest、`*AutoGen.lua`、独立 registry 和 `GeneratedUIRegistry.lua` 的实际内容；发现缺失或过期生成物时返回失败。`--strict` 会让 `--check` 在存在 warning 时也返回失败。`--force` 会覆盖 View / Model / Ctrl stubs。`--no-registry-aggregate` 会跳过 `GeneratedUIRegistry.lua`。
 
 Advanced manifest-only command:
 
@@ -136,6 +144,8 @@ python tools\fgui_autogen\fairygui_autogen.py `
 - `bin/res/assets/fairygui_manifests/<package>.registry.lua`
 - `bin/res/scripts/ui/GeneratedUIRegistry.lua`
 
+生成的 `*AutoGen.lua` 会输出 `ControlPath`、`ControlType`、`ControllerPath`、`TransitionName`、`ListItem`，并提供 `GetControlPath/GetControlType/GetControllerPath/GetTransitionName/GetListItemDefine` 查询函数。
+
 生成的 Ctrl 会根据 manifest 识别 `GList`，创建基础 `Refresh*List` 和 `Render*Item` stub，并在注释里标出 item 组件和 item 控件。
 
 ## Step 3: Merge Registry
@@ -175,6 +185,18 @@ bin/res/scripts/ui/UIRegistry.lua
 
 ## Step 5: Validate
 
+一键静态检查：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\check_fgui_static.ps1
+```
+
+该脚本会覆盖：
+
+- `bin/res/scripts` 下 Lua 语法检查。
+- FGUI AutoGen Python 工具编译检查。
+- 批量扫描 Act37 / Act38 的 AutoGen `--check --strict`，包括生成文件一致性检查。
+
 Lua 语法检查：
 
 ```powershell
@@ -208,6 +230,13 @@ python tools\fgui_autogen\fairygui_generate_ui.py `
 ```
 
 运行时验证：
+
+- 推荐使用统一脚本唤起 exe；脚本默认会检查本次新增日志中的 `OGRE EXCEPTION`、`call_func error` 和 `self test result: false`，命中时返回失败。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_fgui_selftest.ps1 -Mode DebugPanel -Visible
+powershell -ExecutionPolicy Bypass -File tools\run_fgui_selftest.ps1 -Mode BusinessFlow -Visible
+```
 
 - 合并 registry 后调用 `FairyGuiManager:Open("UIName", param)`。
 - 复杂 UI 应补一个 `HELLO_FGUI_<NAME>_SELF_TEST=1` 入口，至少覆盖打开、List 渲染、关闭。

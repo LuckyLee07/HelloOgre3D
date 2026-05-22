@@ -18,6 +18,13 @@ TYPE_MAP = {
 }
 
 
+OUTPUT_NEWLINE = "\r\n"
+
+
+def to_output_newlines(content):
+	return content.replace("\r\n", "\n").replace("\r", "\n").replace("\n", OUTPUT_NEWLINE)
+
+
 def normalize_path(path):
 	return path.replace("\\", "/")
 
@@ -99,6 +106,16 @@ def get_component_controls(component_path, resources=None):
 				"type": "GController",
 			})
 
+	transitions = []
+	for transition in root.findall("./transition"):
+		name = transition.get("name")
+		if name:
+			transitions.append({
+				"name": sanitize_field_name(name),
+				"path": name,
+				"type": "Transition",
+			})
+
 	controls = []
 	display_list = root.find("./displayList")
 	if display_list is not None:
@@ -115,7 +132,7 @@ def get_component_controls(component_path, resources=None):
 			if node.tag == "list":
 				control.update(build_list_info(node, resources))
 			controls.append(control)
-	return controllers, controls
+	return controllers, transitions, controls
 
 
 def find_runtime_package(asset_dir, package_name):
@@ -151,16 +168,17 @@ def build_manifest(args):
 	component_path = os.path.join(asset_dir, component_file)
 	if not os.path.exists(component_path):
 		raise FileNotFoundError("component XML not found: " + normalize_path(component_path))
-	controllers, controls = get_component_controls(component_path, resources)
+	controllers, transitions, controls = get_component_controls(component_path, resources)
 
 	component_controls = {}
 	for item in component_resources:
 		name = strip_ext(item["name"])
 		path = os.path.join(asset_dir, item["name"])
 		if os.path.exists(path):
-			component_controllers, component_nodes = get_component_controls(path, resources)
+			component_controllers, component_transitions, component_nodes = get_component_controls(path, resources)
 			component_controls[name] = {
 				"controllers": component_controllers,
+				"transitions": component_transitions,
 				"controls": component_nodes,
 			}
 
@@ -181,6 +199,7 @@ def build_manifest(args):
 		"runtimePackage": runtime_package,
 		"packageId": package_id,
 		"controllers": controllers,
+		"transitions": transitions,
 		"controls": controls,
 		"resources": resources,
 		"componentControls": component_controls,
@@ -200,9 +219,9 @@ def main():
 	output_dir = os.path.dirname(args.output)
 	if output_dir and not os.path.isdir(output_dir):
 		os.makedirs(output_dir)
-	with open(args.output, "w", encoding="utf-8", newline="\n") as file:
-		json.dump(manifest, file, ensure_ascii=False, indent="\t")
-		file.write("\n")
+	content = json.dumps(manifest, ensure_ascii=False, indent="\t") + "\n"
+	with open(args.output, "w", encoding="utf-8", newline="") as file:
+		file.write(to_output_newlines(content))
 
 
 if __name__ == "__main__":

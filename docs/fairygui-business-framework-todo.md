@@ -19,8 +19,8 @@
 - [ ] Click、Changed、ClickItem、RightClick、Drag、Touch、Wheel、Key、TextInput 事件能稳定桥接到 Lua，并在 UI 关闭后自动解绑。
 - [ ] fullscreen/adapt/margin/safe area 在窗口尺寸变化后统一重算，页面只关注自身布局策略。
 - [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump、第一版资源告警和长循环回零自测已具备，renderer/material/texture 明细仍需继续补。
-- [ ] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
-- [ ] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测。
+- [x] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
+- [x] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测；当前由 `HELLO_FGUI_BUSINESS_FLOW_SELF_TEST=1` 串联验证。
 
 ## 当前完成快照
 
@@ -34,7 +34,7 @@
 - [x] Act37 MVC、Act38 列表、LayerProbe、MaskProbe 已作为样例或自测入口。
 - [x] 通用 UI 服务已有第一版动态实现：Toast、Tip、Loading、GuideMask、MessageBox/Dialog、PopupMenu。
 - [~] 渲染裁剪与遮罩已有矩形 scissor/stencil 状态桥接和 MaskProbe 样例，但还不是完整 GPU 像素级 stencil。
-- [~] AutoGen 已能生成 Act38 MVC 基础代码和 registry，但批量化、CI 化、更多控件覆盖还没完成。
+- [x] AutoGen 已能生成 Act37/Act38 MVC 基础代码、manifest、独立 registry 和聚合 registry，并已具备批量扫描、本地 `--check --strict` 与常用控件元数据覆盖。
 - [~] 输入已覆盖鼠标、滚轮、ESC 关闭、键盘焦点和 `GTextInput` 最小文本输入，但 Tab 焦点切换、复杂编辑行为和 IME 还没补齐。
 - [x] 关闭销毁路径已有生命周期残留检测，覆盖 binding、timer、child/list cache、focus、stack、layer、view/controller map。
 
@@ -61,13 +61,16 @@
 - [x] 增加 `HELLO_FGUI_EVENT_PAYLOAD_SELF_TEST=1` 自测，覆盖事件坐标、button、touch id 和 drag delta payload。
 - [x] 增加 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 自测，覆盖居中弹窗、贴边 popup、设计坐标 GuideMask 和 Toast 区域布局。
 - [x] 增加 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 可视化演示，方便肉眼检查屏幕适配规则。
+- [x] 增加 `HELLO_FGUI_BUSINESS_FLOW_SELF_TEST=1` 组合业务流自测，串联页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理、DebugPanel 和性能观测。
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
 - [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数，仍缺更细的 renderer/material/texture 明细。
 - [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua 侧已补 Open/Close/Event/LoadPackage/CreateObject 轻量耗时 Dump，服务层统计和 Tracy 计数器仍待补。
 - [x] 增加 `HELLO_FGUI_DEBUG_PANEL_DEMO=1` 可视化调试面板，显示 Health、Render、Perf 和服务层概要。
-- [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、Cleanup。
+- [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、BusinessFlow、Cleanup。
 - [x] 增加 `HELLO_FGUI_LONG_LOOP_SELF_TEST=1` 长循环自测入口，循环打开关闭 Act37、Act38、Layer、Mask、TextInput 并检查资源/生命周期回零。
+- [x] 增加 `tools/check_fgui_static.ps1` 静态检查入口，覆盖 Lua 语法、FGUI AutoGen Python 编译和 Act37/Act38 生成链 `--check --strict`。
+- [x] `tools/run_fgui_selftest.ps1` 默认检查运行日志中的 `OGRE EXCEPTION`、`call_func error` 和 `self test result: false`，避免运行时自测假绿。
 
 ## Phase 1: 生命周期标准化
 
@@ -94,7 +97,7 @@
 - [x] 支持同 layer 内按打开时间、priority、手动 `BringToFront` 的稳定排序。
 - [ ] 支持 UI 打开时指定 parent/root，承接 MiniUIManager 的 `rootNode` 思路。
 - [x] 支持引导层高亮区域和可点击穿透区域。
-- [ ] 增加真实业务 layer 场景样例，覆盖页面、弹窗、引导、toast 同屏。
+- [x] 增加真实业务 layer 场景样例，覆盖页面、弹窗、引导、toast 同屏；当前由 `BusinessFlow` 组合自测覆盖。
 
 ## Phase 3: 资源策略
 
@@ -174,11 +177,11 @@
 - [x] `fairygui_asset_manifest.py` 能整理 `.fui` 导出资源清单。
 - [x] `fairygui_autogen.py`/`fairygui_generate_ui.py` 已能生成 Act38 MVC 示例。
 - [x] `GeneratedUIRegistry.lua` 已作为生成 registry 示例。
-- [ ] 批量扫描 `bin/res/fuires` 和 `bin/res/assets`。
-- [ ] 根据 xml 自动识别控件类型、列表、controller、transition。
-- [ ] AutoGen 生成 child path 常量和类型化访问函数。
+- [x] 批量扫描 `bin/res/fuires` 和 `bin/res/assets`；`tools/fgui_autogen/fairygui_batch_generate.py` 默认扫描 `bin/res/assets/*/package.xml`，复用现有 manifest/registry 策略并批量调用生成或 `--check`。
+- [x] 根据 xml 自动识别控件类型、列表、controller、transition；manifest 记录主组件和子组件的 `controls/controllers/transitions`，List 记录 defaultItem、item component、selectionController。
+- [x] AutoGen 生成 child path 常量和类型化访问函数；`*AutoGen.lua` 输出 `ControlPath/ControlType/ControllerPath/TransitionName/ListItem` 以及查询方法。
 - [ ] 生成 View/Ctrl/Model 模板时保留用户代码区，避免覆盖业务逻辑。
-- [ ] `--check` 模式接入本地验证，检测生成文件是否过期。
+- [x] `--check` 模式接入本地验证，检测生成文件是否过期；当前覆盖 manifest、`*AutoGen.lua`、独立 registry 和 `GeneratedUIRegistry.lua`，手写 View/Model/Ctrl 只提示 note。
 - [ ] 文档补新增 UI 的完整流程。
 
 ## Phase 10: 性能与稳定性
@@ -190,7 +193,7 @@
 - [ ] UI 数量压力样例，覆盖 1/5/20/50 个弹窗或列表项规模。
 - [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event 已接入，Lua open/close/event/load/create 轻量耗时已接入 Dump，服务层统计和 Tracy counter 待补。
 - [x] 长时间打开关闭循环自测，检测 handle、binding、timer、view/controller、package refCount 和资源告警是否回零。
-- [ ] Release|x64、Debug|x64、Win32 的最小构建验证清单。
+- [~] Release|x64、Debug|x64、Win32 的最小构建验证清单；当前 VS2017 Debug|x64 和 Release|x64 已复验通过，Win32 待补。
 
 ## 合主干前风险收敛
 
@@ -198,7 +201,7 @@
 - [x] MaskProbe 从 runtime Act38 资源硬编码迁出，改为 sample 参数传入资源。
 - [x] VS2017 Release|x64 构建通过。
 - [x] FairyGUI 样例自测通过：Act37、Act38、MaskProbe、MouseWheel。
-- [ ] 提交前筛掉未跟踪的本地配置、大包、exe/zip、工具缓存。
+- [x] 提交前筛掉未跟踪的本地配置、大包、exe/zip、工具缓存；`.gitignore` 已收口 `.claude/`、`.vscode/`、`vs2017-profile.bat`、Python `__pycache__` 和 Tracy viewer 下载产物。
 
 ## 迭代顺序
 
@@ -231,9 +234,9 @@
 
 ### Iteration 4: AutoGen 工程化
 
-- [ ] 批量生成入口。
-- [ ] `--check` 生成一致性检查。
-- [ ] 控件类型覆盖扩展。
+- [x] 批量生成入口。
+- [x] `--check` 生成一致性检查。
+- [x] 控件类型覆盖扩展。
 - [ ] 新增 UI 标准流程文档。
 
 ### Iteration 5: 渲染 parity 与性能

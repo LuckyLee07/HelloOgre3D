@@ -1,17 +1,508 @@
 {
+	"manifestVersion": 1,
+	"generatedBy": "tools/fgui_autogen/fairygui_asset_manifest.py",
 	"uiName": "Act37TestMvc",
 	"package": "act_37_test",
 	"component": "main_pifushoumai",
+	"assetDir": "bin/res/assets/act_37",
+	"runtimePackage": "bin/res/fuires/act_37_test.fui",
+	"packageId": "m2tob9z9",
+	"controllers": [],
+	"transitions": [],
 	"controls": [
-		{ "name": "btnClose", "path": "btn_close", "type": "GButton" },
-		{ "name": "btnBuy", "path": "btn_buy", "type": "GButton" },
-		{ "name": "btnRule", "path": "btn_rule", "type": "GButton" },
-		{ "name": "btnDetail", "path": "btn_detail", "type": "GButton" },
-		{ "name": "tabList", "path": "tab_list", "type": "GList" },
-		{ "name": "rewardList", "path": "reward_list", "type": "GList" },
-		{ "name": "txtTitle", "path": "txt_title", "type": "GTextField" },
-		{ "name": "txtTime", "path": "txt_time", "type": "GTextField" },
-		{ "name": "txtDesc", "path": "txt_desc", "type": "GTextField" },
-		{ "name": "redTag", "path": "redTag", "type": "GObject" }
-	]
+		{
+			"name": "img_mask",
+			"path": "img_mask",
+			"type": "GImage",
+			"xmlTag": "image"
+		},
+		{
+			"name": "tab_list",
+			"path": "tab_list",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 4,
+			"defaultItem": "ui://m2tob9z9jx3v3j",
+			"defaultItemResourceId": "jx3v3j",
+			"defaultItemComponent": "btn_sanliou"
+		},
+		{
+			"name": "loader_img_bg_04",
+			"path": "loader_img_bg_04",
+			"type": "GLoader",
+			"xmlTag": "loader"
+		},
+		{
+			"name": "reward_list",
+			"path": "reward_list",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 2,
+			"defaultItem": "ui://m2tob9z9d3mz3q",
+			"defaultItemResourceId": "d3mz3q",
+			"defaultItemComponent": "item_reward"
+		},
+		{
+			"name": "avatarLoader",
+			"path": "avatarLoader",
+			"type": "GObject",
+			"xmlTag": "loader3D"
+		},
+		{
+			"name": "btn_get",
+			"path": "btn_get",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "btn_buy",
+			"path": "btn_buy",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "btn_rule",
+			"path": "btn_rule",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "btn_detail",
+			"path": "btn_detail",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "btn_close",
+			"path": "btn_close",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "txt_title",
+			"path": "txt_title",
+			"type": "GTextField",
+			"xmlTag": "text"
+		},
+		{
+			"name": "txt_rule",
+			"path": "txt_rule",
+			"type": "GTextField",
+			"xmlTag": "text"
+		},
+		{
+			"name": "txt_desc",
+			"path": "txt_desc",
+			"type": "GTextField",
+			"xmlTag": "text"
+		},
+		{
+			"name": "txt_time",
+			"path": "txt_time",
+			"type": "GTextField",
+			"xmlTag": "text"
+		}
+	],
+	"resources": [
+		{
+			"kind": "image",
+			"id": "ufq5h",
+			"name": "img_btn_yellow.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v2m",
+			"name": "main_pifushoumai.xml",
+			"path": "/",
+			"exported": true
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2q",
+			"name": "img_btn_choose.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2r",
+			"name": "img_btn_notchoose.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2s",
+			"name": "img_btn_rule.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2t",
+			"name": "img_icon_bag.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2u",
+			"name": "img_icon_details.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2v",
+			"name": "img_icon_star.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2x",
+			"name": "img_btn_yellow02.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "jx3v2y",
+			"name": "img_card.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3j",
+			"name": "btn_sanliou.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3l",
+			"name": "btn_number.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3m",
+			"name": "btn_lingqu.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3n",
+			"name": "btn_help02.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3o",
+			"name": "btn_list.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "jx3v3p",
+			"name": "btn_close06.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "d3mz3q",
+			"name": "item_reward.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "niqu3r",
+			"name": "img_mask.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "nsio3s",
+			"name": "scroll_text.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "nsio3w",
+			"name": "bg_04.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "nsio3x",
+			"name": "bg_05.png",
+			"path": "/img/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "nsio3y",
+			"name": "loader_img_bg_04.png",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "nsio3z",
+			"name": "act_37_img_bg_04.png",
+			"path": "/图片加载器/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "tsma40",
+			"name": "btn_close_banner.png",
+			"path": "/img/",
+			"exported": true
+		}
+	],
+	"componentControls": {
+		"main_pifushoumai": {
+			"controllers": [],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "img_mask",
+					"path": "img_mask",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "tab_list",
+					"path": "tab_list",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 4,
+					"defaultItem": "ui://m2tob9z9jx3v3j",
+					"defaultItemResourceId": "jx3v3j",
+					"defaultItemComponent": "btn_sanliou"
+				},
+				{
+					"name": "loader_img_bg_04",
+					"path": "loader_img_bg_04",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "reward_list",
+					"path": "reward_list",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 2,
+					"defaultItem": "ui://m2tob9z9d3mz3q",
+					"defaultItemResourceId": "d3mz3q",
+					"defaultItemComponent": "item_reward"
+				},
+				{
+					"name": "avatarLoader",
+					"path": "avatarLoader",
+					"type": "GObject",
+					"xmlTag": "loader3D"
+				},
+				{
+					"name": "btn_get",
+					"path": "btn_get",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_buy",
+					"path": "btn_buy",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_rule",
+					"path": "btn_rule",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_detail",
+					"path": "btn_detail",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_close",
+					"path": "btn_close",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "txt_title",
+					"path": "txt_title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "txt_rule",
+					"path": "txt_rule",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "txt_desc",
+					"path": "txt_desc",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "txt_time",
+					"path": "txt_time",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"btn_sanliou": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "redTag",
+					"path": "redTag",
+					"type": "GImage",
+					"xmlTag": "image"
+				}
+			]
+		},
+		"btn_number": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				},
+				{
+					"name": "c1",
+					"path": "c1",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "icon",
+					"path": "icon",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "price",
+					"path": "price",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "buyTips",
+					"path": "buyTips",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"btn_lingqu": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				},
+				{
+					"name": "c1",
+					"path": "c1",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		},
+		"btn_help02": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		},
+		"btn_list": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		},
+		"btn_close06": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		},
+		"item_reward": {
+			"controllers": [],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "icon",
+					"path": "icon",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "num",
+					"path": "num",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"scroll_text": {
+			"controllers": [],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "text",
+					"path": "text",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		}
+	}
 }

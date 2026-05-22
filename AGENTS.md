@@ -119,7 +119,7 @@ src/Engine + src/External
 |---|---|
 | 格式 | 保持目标文件既有风格，不顺手格式化无关代码。 |
 | 缩进 | C/C++ 文件缩进使用 Tab，不把既有 Tab 转为空格。 |
-| 换行 | Windows 下 C/C++ 源文件、头文件默认 CRLF。不要无意转换整文件换行。 |
+| 换行 | 项目文本文件默认使用 CRLF；Windows 下 C/C++ 源文件、头文件必须保持 CRLF。新增或生成 `.md`、`.ps1`、`.py`、`.lua`、`.json`、`.bat` 等文本文件也默认按 CRLF 落盘。不要无意转换整文件换行。 |
 | 命名 | 优先沿用周边代码风格，不为统一命名做无关重命名。 |
 | 日志 | 使用项目既有日志路径和日志系统，不在核心代码里随意新增 `printf` / `std::cout`。 |
 | 注释 | 只在复杂逻辑前加必要说明，避免解释显而易见的代码。 |
@@ -174,7 +174,7 @@ src/Engine + src/External
 
 | 改动类型 | 验证方式 |
 |---|---|
-| 工程生成或 premake 改动 | 执行 `vs2022.bat` 或 `xcode.sh`。 |
+| 工程生成或 premake 改动 | Windows 下执行 `vs2022.bat` 或 VS2022 `MSBuild.exe`；macOS 下执行 `xcode.sh`。 |
 | `.pkg` / Lua 绑定改动 | 执行 `src\HelloOgre3D\tolua.bat`，检查生成代码和 Lua 调用点。 |
 | Lua / gameplay 行为改动 | 检查并运行受影响的 `bin/res/scripts/samples`。 |
 | AI 决策 / 行为树 / FSM 改动 | 至少验证 `Sandbox6` / `Sandbox7` / `Sandbox8` 中相关入口，必要时补专用 sample。 |
@@ -188,8 +188,8 @@ src/Engine + src/External
 
 - 搜索优先使用 `rg`。
 - 优先阅读 `README.md`、`premake/premake.lua` 和相关 `docs/*.md`，确认当前阶段和构建意图。
-- 保持与周边文件一致的编码和换行风格。
-- 如需处理 CRLF 和编码规范化，可参考 `src/HelloOgre3D/tools.py`。
+- 保持与周边文件一致的编码和换行风格；默认新建或生成文本文件使用 CRLF。
+- 如需把 LF 文本转换为 CRLF，可运行 `tools\dos2unix\lf2crlf.bat <path>`；如需处理编码规范化，可参考 `src/HelloOgre3D/tools.py`。
 - 当前项目未配置 MiniGame 那种 `code-review-graph` MCP；默认使用 `rg`、文件阅读和局部构建验证。
 
 ## 修改建议

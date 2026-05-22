@@ -17,6 +17,23 @@ local GeneratedUIRegistry = {
 		},
 	},
 -- </FairyGUIAutoGen:Act38Test>
+-- <FairyGUIAutoGen:Act37TestMvc>
+	Act37TestMvc = {
+		package = "act_37_test",
+		component = "main_pifushoumai",
+		classlua = "Act37TestMvcAutoGen",
+		layer = "Popup",
+		group = "Sample",
+		scene = "Default",
+		cache = true,
+		requires = {
+			"res.scripts.ui.views.Act37TestMvcCtrl",
+			"res.scripts.ui.views.Act37TestMvcModel",
+			"res.scripts.ui.views.Act37TestMvcView",
+			"res.scripts.ui.views.Act37TestMvcAutoGen",
+		},
+	},
+-- </FairyGUIAutoGen:Act37TestMvc>
 }
 
 return GeneratedUIRegistry
