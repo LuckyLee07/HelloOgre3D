@@ -229,7 +229,97 @@
 - [ ] UI package、贴图、材质至少有基础引用统计。
 - [ ] macOS 大小写敏感路径问题能在脚本或文档中提前检查。
 
-## 12. 建议迭代顺序
+## 12. 近期执行队列（当前安排）
+
+这部分记录当前最新判断，后续短期开发优先按这里排。专项细节仍以 `docs/fairygui-business-framework-todo.md`、`docs/ai-roadmap.md` 和对应实现文档为准。
+
+### 第一阶段：FGUI 压力样例与性能观测
+
+当前 FGUI 的 AutoGen、真实业务 UI、资源预加载、group/tag 卸载和自测闭环已经具备基础，下一步优先验证复杂 UI 增长后的稳定性和观测能力。
+
+建议任务：
+
+- 增加 UI 压力样例，覆盖 1/5/20/50 个弹窗、列表大数据量、频繁打开关闭。
+- 补 texture、material、render command、triangle 等更细的统计入口。
+- 将 package、view、binding、timer、cache、资源引用计数继续接入 dump 或 Tracy 观测链路。
+- 补服务层统计和 UI Tracy counter，便于对比不同 UI 规模下的开销。
+
+验收：
+
+- 压力样例能通过脚本或环境变量稳定触发。
+- UI 数量、资源引用、渲染统计和关闭后回零状态能在日志或 dump 中看到。
+- `run_fgui_selftest.ps1` 至少能覆盖一条压力或性能观测路径。
+
+### 第二阶段：FGUI 输入与层级边界
+
+性能和资源观测稳定后，补业务 UI 手感与规则一致性。
+
+建议任务：
+
+- Tab 焦点顺序。
+- Windows IME 最小可用链路。
+- 每个 layer 的默认输入穿透、sorting order、ESC 关闭参与规则。
+- 打开 UI 时指定 parent/root。
+- safe area 配置字段占位。
+
+验收：
+
+- 页面、弹窗、Toast、Guide、Top 层同屏时，输入命中、穿透和关闭顺序符合固定规则。
+- 文本输入至少覆盖英文、删除、提交、焦点切换和 IME 最小链路。
+
+### 第三阶段：FGUI 复杂控件与开发工作流
+
+这一阶段目标是继续降低新增业务 UI 的成本。
+
+建议任务：
+
+- Controller change listener、page id/name 访问。
+- List virtual list、item renderer、item click payload 完整化。
+- Tree/TreeNode 最小可用封装。
+- 子页面 / 子组件挂载，支持一个大 UI 拆成多个业务子模块。
+- AutoGen 生成 View/Ctrl/Model 模板时保留用户代码区。
+- 文档补齐新增 UI 的完整流程。
+
+验收：
+
+- 新 UI 能按“导出资源 -> 生成 manifest/AutoGen -> 注册 -> 编写 View/Ctrl/Model -> 自测”的流程落地。
+- 生成工具不会覆盖已有业务逻辑。
+
+### 第四阶段：AI P0 基础设施
+
+AI 方向短期不直接堆 chapter 7-9 的大能力，先铺调试、事件和调度基础，避免后续状态不可观测。
+
+建议任务：
+
+- AI Debug Panel 第一版，复用 FGUI DebugPanel 基础。
+- Local / Team / Global 事件规范化。
+- AI 更新调度、刷新频率、分帧预算和 Tracy 观测。
+
+验收：
+
+- 能选择 agent 查看 driver/state、Blackboard、Knowledge、Perception、最近事件和 BT trace 摘要。
+- AI 事件 payload 字段稳定，agent/sample/UI 关闭后不会留下无效 callback。
+- 20+ agent 场景下 AI 更新不会集中在固定帧产生明显 spike。
+
+### 第五阶段：项目工程化与长期维护
+
+当 FGUI 和 AI 的核心闭环都更稳后，再补项目级工具能力，减少后续迭代成本。
+
+建议任务：
+
+- 非 FGUI smoke test / selftest。
+- 资源缺失与 Lua 错误诊断增强，日志带 sample、script、UI name、object handle、调用上下文。
+- ConfigManager、sample preset、固定随机种子、热重载。
+- Windows minidump / Breakpad / 轻量 crash report。
+- Object / Component 继续拆分，避免新增角色时复制 SoldierObject。
+
+验收：
+
+- 常见启动失败、资源缺失、Lua 错误和崩溃能从日志或 dump 关联到同一次运行。
+- 至少一个非 FGUI sample 可以脚本化验证。
+- 新对象类型和新 sample 的接入成本下降。
+
+## 13. 建议迭代顺序
 
 ### Milestone A：UI 可用、问题可见
 
@@ -266,8 +356,11 @@
 
 验收：常见崩溃、资源缺失、Lua 错误能从日志和 dump 中定位。
 
-## 13. 跟踪清单
+## 14. 跟踪清单
 
+- [x] FGUI UI 压力样例，覆盖 1/5/20/50 弹窗或列表规模。
+- [~] FGUI texture / material / render command / triangle 明细统计（已有 source/alias 计数和同路径动态 loader 复用，尺寸/切换明细待补）。
+- [ ] FGUI 服务层统计和 Tracy counter。
 - [ ] FGUI 键盘、滚轮、文本输入、IME、焦点补齐。
 - [ ] FGUI Progress / Slider / ComboBox / Transition / 虚拟列表补齐。
 - [ ] FGUI UI debug panel 第一版。

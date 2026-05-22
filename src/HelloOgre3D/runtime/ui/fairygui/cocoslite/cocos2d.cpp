@@ -802,25 +802,42 @@ namespace cocos2d
 
 	Texture2D* TextureCache::addImage(const std::string& filename)
 	{
+		const std::string fullPath = FileUtils::getInstance()->fullPathForFilename(filename);
+		std::map<std::string, Texture2D*>::iterator it = _textures.find(fullPath);
+		if (it != _textures.end())
+			return it->second;
+
 		Image image;
-		if (!image.initWithImageFile(filename))
+		if (!image.initWithImageFile(fullPath))
 			return nullptr;
 		Texture2D* texture = new (std::nothrow) Texture2D();
 		if (texture)
 		{
 			texture->initWithImage(&image);
 			texture->autorelease();
+			_textures[fullPath] = texture;
 		}
 		return texture;
 	}
 
-	Texture2D* TextureCache::addImage(Image* image, const std::string&)
+	Texture2D* TextureCache::addImage(Image* image, const std::string& key)
 	{
+		std::string cacheKey = key.empty() && image != nullptr ? image->getFilePath() : key;
+		if (!cacheKey.empty())
+		{
+			cacheKey = "image:" + cacheKey;
+			std::map<std::string, Texture2D*>::iterator it = _textures.find(cacheKey);
+			if (it != _textures.end())
+				return it->second;
+		}
+
 		Texture2D* texture = new (std::nothrow) Texture2D();
 		if (texture)
 		{
 			texture->initWithImage(image);
 			texture->autorelease();
+			if (!cacheKey.empty())
+				_textures[cacheKey] = texture;
 		}
 		return texture;
 	}

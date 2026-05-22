@@ -21,8 +21,9 @@
 
 | 场景 | 命令 | 说明 |
 |---|---|---|
-| 生成 VS2022 工程 | `vs2022.bat` | 默认设置 `TRACY_ENABLE=1`、`ENABLE_FGUI=1`，并清理 `bin` 下部分运行产物。 |
-| 直接调用 premake | `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2022` | 需要自定义参数时使用，例如 `--with-tracy`、`--with-fairygui`。 |
+| 生成 VS2017 工程 | `vs2017.bat` | 默认设置 `ENABLE_FGUI=1`，并清理 `build`、`lib` 和 `bin` 下部分运行产物。 |
+| VS2017 构建 HelloOgre3D | `"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\amd64\MSBuild.exe" build\HelloOgre3D.sln /t:HelloOgre3D /p:Configuration=Debug /p:Platform=x64 /m` | 当前 Windows 构建验证默认使用 VS2017 MSBuild。 |
+| 直接调用 premake | `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017` | 需要自定义参数时使用，例如 `--with-tracy`、`--with-fairygui`。 |
 | 生成 Xcode 工程 | `xcode.sh` | 依赖本机已安装 `premake5`，输出到 `build/`。 |
 | 重新生成 Lua 绑定 | `src\HelloOgre3D\tolua.bat` | 修改 `.pkg` 或暴露给 Lua 的 C++ API 后执行。 |
 | FGUI 集中自测 | `cd bin; $env:HELLO_FGUI_SELF_TEST_ALL="1"; .\HelloOgre3D.exe` | 用于 FGUI 打开、关闭、输入、生命周期、资源清理回归。 |
@@ -174,7 +175,7 @@ src/Engine + src/External
 
 | 改动类型 | 验证方式 |
 |---|---|
-| 工程生成或 premake 改动 | Windows 下执行 `vs2022.bat` 或 VS2022 `MSBuild.exe`；macOS 下执行 `xcode.sh`。 |
+| 工程生成或 premake 改动 | Windows 下执行 `vs2017.bat` 或 VS2017 `MSBuild.exe`；macOS 下执行 `xcode.sh`。 |
 | `.pkg` / Lua 绑定改动 | 执行 `src\HelloOgre3D\tolua.bat`，检查生成代码和 Lua 调用点。 |
 | Lua / gameplay 行为改动 | 检查并运行受影响的 `bin/res/scripts/samples`。 |
 | AI 决策 / 行为树 / FSM 改动 | 至少验证 `Sandbox6` / `Sandbox7` / `Sandbox8` 中相关入口，必要时补专用 sample。 |

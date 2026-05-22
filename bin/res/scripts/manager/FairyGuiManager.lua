@@ -314,8 +314,8 @@ function FairyGuiManager:AddPackage(packageList)
 	return self:GetPackageManager():AddPackage(packageList)
 end
 
-function FairyGuiManager:LoadPackage(packagePath, packageName)
-	return self:GetPackageManager():LoadPackage(packagePath, packageName)
+function FairyGuiManager:LoadPackage(packagePath, packageName, meta)
+	return self:GetPackageManager():LoadPackage(packagePath, packageName, meta)
 end
 
 function FairyGuiManager:RetainPackage(packagePath, packageName)
@@ -326,8 +326,28 @@ function FairyGuiManager:ReleasePackage(packagePath, packageName, unloadWhenZero
 	return self:GetPackageManager():ReleasePackage(packagePath, packageName, unloadWhenZero)
 end
 
-function FairyGuiManager:PreloadPackage(packagePath, packageName)
-	return self:GetPackageManager():PreloadPackage(packagePath, packageName)
+function FairyGuiManager:PreloadPackage(packagePath, packageName, meta)
+	return self:GetPackageManager():PreloadPackage(packagePath, packageName, meta)
+end
+
+function FairyGuiManager:PreloadScene(sceneName, options)
+	return self:GetPackageManager():PreloadScene(sceneName, options)
+end
+
+function FairyGuiManager:PreloadScenePackages(sceneName, options)
+	return self:PreloadScene(sceneName, options)
+end
+
+function FairyGuiManager:UnloadPackagesByFilter(filter)
+	return self:GetPackageManager():UnloadPackagesByFilter(filter)
+end
+
+function FairyGuiManager:UnloadPackageGroup(groupName, force)
+	return self:GetPackageManager():UnloadPackageGroup(groupName, force)
+end
+
+function FairyGuiManager:UnloadPackageTag(tagName, force)
+	return self:GetPackageManager():UnloadPackageTag(tagName, force)
 end
 
 function FairyGuiManager:CreateObject(packageName, objectName)
@@ -869,6 +889,14 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 			"sortingOrder",
 			"group",
 			"uiGroup",
+			"packageGroup",
+			"tag",
+			"tags",
+			"packageTag",
+			"packageTags",
+			"preload",
+			"preloadScene",
+			"preloadScenes",
 			"scene",
 			"sceneName",
 			"closeOnSceneChange",
@@ -1171,7 +1199,16 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 	objectName = objectName or name
 
 	local resolvedPackagePath = self:ResolvePackagePath(packagePath)
-	local packageName = self:LoadPackage(resolvedPackagePath, param.packageName)
+	local packageName = self:LoadPackage(resolvedPackagePath, param.packageName, {
+		uiName = param.uiName,
+		group = param.group or param.uiGroup,
+		packageGroup = param.packageGroup,
+		tag = param.tag,
+		tags = param.tags,
+		packageTag = param.packageTag,
+		packageTags = param.packageTags,
+		scene = param.scene or param.sceneName,
+	})
 	if isBlank(packageName) then
 		return nil
 	end
@@ -1215,6 +1252,8 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		unloadPackageOnClose = param.unloadPackageOnClose == true or param.clearPackage == true,
 		layer = param.layer or "Normal",
 		priority = tonumber(param.priority or param.sortingPriority) or 0,
+		packageGroup = param.packageGroup or param.group or param.uiGroup,
+		packageTags = param.packageTags or param.tags or param.packageTag or param.tag,
 		popupGroup = self:GetPopupGroup(param),
 		popupMode = param.popupMode or "stack",
 		uiGroup = self:GetUIGroup(param),

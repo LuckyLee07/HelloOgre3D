@@ -174,6 +174,36 @@ local function tryRunFairyGuiBusinessFlowSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiResourcePolicySelfTest()
+	if not isEnvEnabled("HELLO_FGUI_RESOURCE_POLICY_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(18, function()
+		print("[FGUI] resource policy self test result:", FGUI_RunResourcePolicySelfTest())
+		FairyGuiManager:DumpResourceRefs()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiPressureSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_PRESSURE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(6, function()
+		local count = tonumber(os.getenv and os.getenv("HELLO_FGUI_PRESSURE_COUNT") or nil)
+		local listCount = tonumber(os.getenv and os.getenv("HELLO_FGUI_PRESSURE_LIST_COUNT") or nil)
+		local started = FGUI_RunPressureSelfTest({
+			maxPopupCount = count,
+			listItemCount = listCount,
+		})
+		if started ~= true then
+			print("[FGUI] pressure self test result:", false)
+		end
+	end)
+end
+
 local function tryRunFairyGuiScreenAdaptDemo()
 	if not isEnvEnabled("HELLO_FGUI_SCREEN_ADAPT_DEMO") then
 		return
@@ -348,7 +378,7 @@ local function tryRunFairyGuiLongLoopSelfTest()
 		return
 	end
 
-	local startDelay = isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 14 or 6
+	local startDelay = isEnvEnabled("HELLO_FGUI_SELF_TEST_ALL") and 15 or 6
 	threadpool:delay(startDelay, function()
 		local count = tonumber(os.getenv and os.getenv("HELLO_FGUI_LONG_LOOP_COUNT") or nil)
 		FGUI_RunLongLoopSelfTest({
@@ -394,6 +424,8 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiEventPayloadSelfTest()
 		tryRunFairyGuiScreenAdaptSelfTest()
 		tryRunFairyGuiBusinessFlowSelfTest()
+		tryRunFairyGuiResourcePolicySelfTest()
+		tryRunFairyGuiPressureSelfTest()
 		tryRunFairyGuiScreenAdaptDemo()
 		tryRunFairyGuiCommonServiceDemo()
 		tryRunFairyGuiDebugPanelDemo()
@@ -1052,6 +1084,9 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "BusinessFlow", function()
 		return FGUI_RunBusinessFlowSelfTest()
 	end)
+	schedule(0.6, "ResourcePolicy", function()
+		return FGUI_RunResourcePolicySelfTest()
+	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
 		FairyGuiManager:Close("Act38Test", true)
@@ -1065,6 +1100,7 @@ function FGUI_RunSelfTestSuite()
 		if closeFairyGuiBusinessFlowObjects ~= nil then
 			closeFairyGuiBusinessFlowObjects("selfTestSuiteCleanup")
 		end
+		FairyGuiManager:UnloadPackageGroup("Sample")
 		local stats = FairyGuiManager:DumpHealth(true)
 		local resourceWarnings = FairyGuiManager:GetResourceWarnings()
 		return stats.openUI == 0 and stats.binding == 0 and stats.timer == 0 and #resourceWarnings == 0, "openUI=" .. tostring(stats.openUI)
@@ -1101,6 +1137,17 @@ closeFairyGuiBusinessFlowObjects = function(reason)
 	FairyGuiManager:HideDebugPanel("BusinessFlowDebug")
 end
 
+local function closeFairyGuiPressureObjects(reason)
+	reason = reason or "pressureCleanup"
+	FairyGuiManager:CloseScene("Pressure", true)
+	FairyGuiManager:CloseGroup("Pressure", true)
+	FairyGuiManager:Close("__PressureAct38", true, reason)
+	FairyGuiManager:Close("__PressureDebug", true, reason)
+	for index = 1, 80 do
+		FairyGuiManager:Close("__PressurePopup" .. tostring(index), true, reason)
+	end
+end
+
 local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:Close("Act37TestMvc", true)
 	FairyGuiManager:Close("Act38Test", true)
@@ -1114,6 +1161,7 @@ local function closeFairyGuiLongLoopObjects()
 	if closeFairyGuiBusinessFlowObjects ~= nil then
 		closeFairyGuiBusinessFlowObjects("longLoopCleanup")
 	end
+	closeFairyGuiPressureObjects("longLoopCleanup")
 end
 
 local function getFairyGuiPackageRefCount()
@@ -1165,6 +1213,185 @@ local function checkFairyGuiLongLoopClean(label)
 		FairyGuiManager:DumpHealth(true)
 	end
 	return clean, detail
+end
+
+local function countFairyGuiPackagesByGroup(refsByPackage, groupName)
+	local count = 0
+	for _, ref in pairs(refsByPackage or {}) do
+		for _, group in ipairs(ref.groups or {}) do
+			if group == groupName then
+				count = count + 1
+				break
+			end
+		end
+	end
+	return count
+end
+
+local function buildFairyGuiPressureCounts(maxPopupCount)
+	maxPopupCount = tonumber(maxPopupCount) or 50
+	maxPopupCount = math.max(1, math.floor(maxPopupCount))
+
+	local candidates = { 1, 5, 20, maxPopupCount }
+	local seen = {}
+	local counts = {}
+	for _, count in ipairs(candidates) do
+		count = math.min(math.max(1, count), maxPopupCount)
+		if seen[count] ~= true then
+			seen[count] = true
+			table.insert(counts, count)
+		end
+	end
+	table.sort(counts)
+	return counts
+end
+
+local function createFairyGuiPressureTask(index)
+	local stateIndex = index % 3
+	return {
+		desc = "Pressure task " .. tostring(index),
+		num = tostring(index % 7) .. "/7",
+		state = stateIndex == 0 and "done" or stateIndex == 1 and "go" or "get",
+	}
+end
+
+local function createFairyGuiPressureShopItem(index)
+	local stateIndex = index % 3
+	return {
+		cost = tostring(index * 10),
+		reward = tostring(index),
+		state = stateIndex == 0 and "finish" or stateIndex == 1 and "exchange" or "owned",
+	}
+end
+
+local function buildFairyGuiPressureStats(label, popupCount, listItemCount)
+	local health = FairyGuiManager:GetHealthStats()
+	local render = FairyGuiManager:GetRenderStats()
+	local perf = FairyGuiManager:GetPerfStats()
+	local packageRefCount, packageDetail = getFairyGuiPackageRefCount()
+	local warnings = FairyGuiManager:GetResourceWarnings()
+	print(
+		"[FGUI] pressure stats:",
+		label or "",
+		"popup=", popupCount or 0,
+		"list=", listItemCount or 0,
+		"openUI=", health.openUI,
+		"hiddenUI=", health.hiddenUI,
+		"binding=", health.binding,
+		"timer=", health.timer,
+		"objectHandle=", health.objectHandle,
+		"childCache=", health.childCache,
+		"packageRef=", packageRefCount,
+		"warnings=", #warnings,
+		"command=", render.commandCount,
+		"triangle=", render.triangleCount,
+		"material=", render.materialCount,
+		"texture=", render.textureCount,
+		"materialAlias=", render.materialAliasCount,
+		"textureAlias=", render.textureAliasCount,
+		"openPerf=", perf.open and perf.open.count or 0,
+		"closePerf=", perf.close and perf.close.count or 0,
+		packageDetail)
+	return {
+		health = health,
+		render = render,
+		perf = perf,
+		packageRefCount = packageRefCount,
+		warningCount = #warnings,
+	}
+end
+
+local function openFairyGuiPressurePopup(index, popupCount)
+	local width = 220
+	local height = 112
+	local columns = math.max(1, math.ceil(math.sqrt(popupCount)))
+	local column = (index - 1) % columns
+	local row = math.floor((index - 1) / columns)
+	local x = 24 + column * 34
+	local y = 36 + row * 26
+	local key = "__PressurePopup" .. tostring(index)
+	local objectInfo = FairyGuiManager:OpenServiceContainer(key, {
+		key = key,
+		name = "PressurePopup",
+		scene = "Pressure",
+		group = "Pressure",
+		layer = "Popup",
+		stackMode = "Popup",
+		popupMode = "stack",
+		popupGroup = "Pressure",
+		closeOnSceneChange = true,
+		modal = false,
+		touchable = true,
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+		priority = index,
+		serviceType = "PressurePopup",
+	})
+	if objectInfo == nil then
+		return nil
+	end
+
+	FairyGuiManager:AddServiceImage(objectInfo, "pressure_bg", "res/assets/act_38/_imgs/board_task.png", 0, 0, width, height, 0.86)
+	FairyGuiManager:AddServiceText(objectInfo, "pressure_title", "Pressure " .. tostring(index), 10, 10, width - 20, 26, 18, 255, 236, 180)
+	FairyGuiManager:AddServiceText(objectInfo, "pressure_body", "popup=" .. tostring(index) .. "/" .. tostring(popupCount), 10, 40, width - 20, 24, 15, 210, 235, 255)
+	FairyGuiManager:AddServiceButton(objectInfo, "pressure_button", "OK", width - 72, height - 38, 58, 28, function(evt)
+		print("[FGUI] pressure popup click:", index, evt and evt.bindingId)
+	end)
+	return objectInfo.handle
+end
+
+local function openFairyGuiPressurePopups(popupCount)
+	local handles = {}
+	for index = 1, popupCount do
+		local handle = openFairyGuiPressurePopup(index, popupCount)
+		if handle ~= nil then
+			handles[#handles + 1] = handle
+		end
+	end
+	return handles
+end
+
+local function openFairyGuiPressureList(listItemCount)
+	listItemCount = math.max(1, tonumber(listItemCount) or 50)
+	local ctrl = FGUI_OpenAct38Sample({
+		key = "__PressureAct38",
+		scene = "Pressure",
+		group = "Pressure",
+		popupGroup = "Pressure",
+		popupMode = "stack",
+		modal = false,
+		fullScreen = true,
+		dateText = "Pressure List x" .. tostring(listItemCount),
+	})
+	if ctrl == nil then
+		return nil, false
+	end
+
+	local dayTasks = {}
+	local spcTasks = {}
+	local shopItems = {}
+	for index = 1, listItemCount do
+		dayTasks[index] = createFairyGuiPressureTask(index)
+		if index <= math.max(1, math.floor(listItemCount * 0.5)) then
+			spcTasks[index] = createFairyGuiPressureTask(index + 1000)
+		end
+		if index <= math.max(1, math.floor(listItemCount * 0.4)) then
+			shopItems[index] = createFairyGuiPressureShopItem(index)
+		end
+	end
+
+	local dayOk = ctrl:SetListData("m2_dayTaskList", dayTasks, function(item, data, index)
+		ctrl:RenderTaskItem(item, data, index)
+	end)
+	local spcOk = ctrl:SetListData("m2_spcTaskList", spcTasks, function(item, data, index)
+		ctrl:RenderTaskItem(item, data, index)
+	end)
+	local shopOk = ctrl:SetListData("m2_excShopList", shopItems, function(item, data, index)
+		ctrl:RenderShopItem(item, data, index)
+	end)
+	return ctrl, dayOk == true and spcOk == true and shopOk == true
 end
 
 function FGUI_RunBusinessFlowSelfTest()
@@ -1270,6 +1497,143 @@ function FGUI_RunBusinessFlowSelfTest()
 		and perfOk == true
 		and sceneClosed > 0
 		and finalClean == true
+end
+
+function FGUI_RunResourcePolicySelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "resourcePolicyReset")
+	FairyGuiManager:Close("Act38Test", true, "resourcePolicyReset")
+	FairyGuiManager:CloseGroup("LayerProbe", true)
+	FairyGuiManager:Close("TextInputProbe", true, "resourcePolicyReset")
+	FairyGuiManager:UnloadPackageGroup("Sample")
+	FairyGuiManager:UnloadPackageGroup("LayerProbe")
+
+	local preloadStats = FairyGuiManager:PreloadScene("Default", { groupName = "Sample" })
+	local refsAfterPreload = FairyGuiManager:GetPackageRefs()
+	local samplePackageCount = countFairyGuiPackagesByGroup(refsAfterPreload, "Sample")
+	local preloadOk = preloadStats.loaded >= 2 and samplePackageCount >= 2
+
+	local tagUnloadStats = FairyGuiManager:UnloadPackageTag("act38")
+	local tagUnloadOk = tagUnloadStats.unloaded >= 1
+
+	FairyGuiManager:PreloadScene("Default", { groupName = "Sample" })
+	local ctrl38 = FGUI_OpenAct38Sample({
+		scene = "ResourcePolicy",
+		group = "ResourcePolicy",
+	})
+	local openOk = ctrl38 ~= nil
+	local inUseUnloadStats = FairyGuiManager:UnloadPackageGroup("Sample")
+	local skipInUseOk = inUseUnloadStats.skipped >= 1
+
+	FairyGuiManager:Close("Act38Test", true, "resourcePolicyCloseAct38")
+	local finalUnloadStats = FairyGuiManager:UnloadPackageGroup("Sample")
+	local finalUnloadOk = finalUnloadStats.unloaded >= 1
+	local finalClean, finalDetail = checkFairyGuiLongLoopClean("resource policy final")
+
+	print(
+		"[FGUI] resource policy self test detail:",
+		"preload=", preloadStats.loaded, samplePackageCount, preloadOk,
+		"tagUnload=", tagUnloadStats.unloaded, tagUnloadOk,
+		"inUse=", inUseUnloadStats.matched, inUseUnloadStats.unloaded, inUseUnloadStats.skipped, skipInUseOk,
+		"finalUnload=", finalUnloadStats.unloaded, finalUnloadOk,
+		"open=", openOk,
+		finalDetail)
+
+	return preloadOk == true
+		and tagUnloadOk == true
+		and openOk == true
+		and skipInUseOk == true
+		and finalUnloadOk == true
+		and finalClean == true
+end
+
+function FGUI_RunPressureSelfTest(config)
+	if threadpool == nil or threadpool.delay == nil then
+		print("[FGUI] pressure self test failed: threadpool unavailable")
+		return false
+	end
+
+	config = config or {}
+	local maxPopupCount = tonumber(config.maxPopupCount) or 50
+	local listItemCount = tonumber(config.listItemCount) or math.max(maxPopupCount, 50)
+	local interval = tonumber(config.interval) or 0.5
+	local holdSeconds = tonumber(config.holdSeconds) or 0.8
+	local counts = buildFairyGuiPressureCounts(maxPopupCount)
+	local results = {}
+	local failCount = 0
+	local delay = 0
+
+	local function record(count, ok, detail)
+		if ok ~= true then
+			failCount = failCount + 1
+		end
+		results[#results + 1] = {
+			count = count,
+			ok = ok == true,
+			detail = detail,
+		}
+		print("[FGUI] pressure case:", count, ok == true and "PASS" or "FAIL", detail or "")
+	end
+
+	local function runOpenCase(popupCount)
+		closeFairyGuiLongLoopObjects()
+
+		local handles = openFairyGuiPressurePopups(popupCount)
+		local ctrl, listOk = openFairyGuiPressureList(listItemCount)
+		local health = FairyGuiManager:GetHealthStats()
+		local openOk = #handles == popupCount
+			and ctrl ~= nil
+			and listOk == true
+			and health.openUI >= popupCount + 1
+		buildFairyGuiPressureStats("open", popupCount, listItemCount)
+		return openOk, "handles=" .. tostring(#handles) .. " openUI=" .. tostring(health.openUI) .. " listOk=" .. tostring(listOk)
+	end
+
+	local function runCloseCase(popupCount)
+		buildFairyGuiPressureStats("rendered", popupCount, listItemCount)
+		closeFairyGuiPressureObjects("pressureCaseClose")
+		local clean, detail = checkFairyGuiLongLoopClean("pressure " .. tostring(popupCount))
+		return clean == true, detail
+	end
+
+	print("[FGUI] pressure self test begin:", table.concat(counts, ","), "list=", listItemCount)
+	closeFairyGuiLongLoopObjects()
+	for _, popupCount in ipairs(counts) do
+		delay = delay + interval
+		threadpool:delay(delay, function()
+			local ok, result, detail = pcall(runOpenCase, popupCount)
+			if not ok then
+				record(popupCount, false, result)
+			elseif result ~= true then
+				record(popupCount, false, detail)
+			end
+		end)
+
+		delay = delay + holdSeconds
+		threadpool:delay(delay, function()
+			local ok, result, detail = pcall(runCloseCase, popupCount)
+			if not ok then
+				record(popupCount, false, result)
+			else
+				record(popupCount, result == true, detail)
+			end
+		end)
+	end
+
+	threadpool:delay(delay + interval, function()
+		local passCount = 0
+		for _, result in ipairs(results) do
+			if result.ok then
+				passCount = passCount + 1
+			end
+		end
+		local expected = #counts
+		local finalClean, finalDetail = checkFairyGuiLongLoopClean("pressure final")
+		local allOk = passCount == expected and failCount == 0 and #results == expected and finalClean == true
+		print("[FGUI] pressure self test end:", passCount, "/", expected, "finalClean=", finalClean, finalDetail)
+		print("[FGUI] pressure self test result:", allOk)
+		FairyGuiManager:DumpPerfStats()
+	end)
+	return true
 end
 
 function FGUI_RunLongLoopSelfTest(config)

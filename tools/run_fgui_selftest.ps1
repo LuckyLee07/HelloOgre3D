@@ -16,6 +16,8 @@ param(
 		"ScreenAdapt",
 		"ScreenAdaptDemo",
 		"BusinessFlow",
+		"ResourcePolicy",
+		"Pressure",
 		"Layer",
 		"LayerClose",
 		"Act38",
@@ -44,6 +46,10 @@ $RepoRoot = Resolve-Path (Join-Path $ScriptRoot "..")
 $BinDir = Join-Path $RepoRoot "bin"
 $ExePath = Join-Path $BinDir "HelloOgre3D.exe"
 $LogPath = Join-Path $BinDir "Sandbox.log"
+$LogCandidates = @(
+	$LogPath,
+	(Join-Path $BinDir "Sandbox_d.log")
+)
 
 function Get-DefaultWaitSeconds {
 	param(
@@ -58,6 +64,8 @@ function Get-DefaultWaitSeconds {
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
 		"BusinessFlow" { return 32 }
+		"ResourcePolicy" { return 34 }
+		"Pressure" { return 180 }
 		"EventPayload" { return 32 }
 		"Input" { return 18 }
 		"Mask" { return 18 }
@@ -98,6 +106,13 @@ function Get-FairyGuiEnv {
 		"ScreenAdapt" { $values["HELLO_FGUI_SCREEN_ADAPT_SELF_TEST"] = "1" }
 		"ScreenAdaptDemo" { $values["HELLO_FGUI_SCREEN_ADAPT_DEMO"] = "1" }
 		"BusinessFlow" { $values["HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"] = "1" }
+		"ResourcePolicy" { $values["HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"] = "1" }
+		"Pressure" {
+			$values["HELLO_FGUI_PRESSURE_SELF_TEST"] = "1"
+			if ($LoopCount -gt 3) {
+				$values["HELLO_FGUI_PRESSURE_COUNT"] = [string]$LoopCount
+			}
+		}
 		"Layer" { $values["HELLO_FGUI_LAYER_SELF_TEST"] = "1" }
 		"LayerClose" { $values["HELLO_FGUI_LAYER_CLOSE_SELF_TEST"] = "1" }
 		"Act38" { $values["HELLO_FGUI_ACT38_SELF_TEST"] = "1" }
@@ -128,6 +143,10 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_SCREEN_ADAPT_SELF_TEST",
 	"HELLO_FGUI_SCREEN_ADAPT_DEMO",
 	"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST",
+	"HELLO_FGUI_RESOURCE_POLICY_SELF_TEST",
+	"HELLO_FGUI_PRESSURE_SELF_TEST",
+	"HELLO_FGUI_PRESSURE_COUNT",
+	"HELLO_FGUI_PRESSURE_LIST_COUNT",
 	"HELLO_FGUI_LAYER_SELF_TEST",
 	"HELLO_FGUI_LAYER_CLOSE_SELF_TEST",
 	"HELLO_FGUI_ACT38_SELF_TEST",
@@ -161,9 +180,13 @@ if (-not (Test-Path -LiteralPath $ExePath)) {
 	throw "HelloOgre3D.exe not found: $ExePath"
 }
 
-$StartLogLineCount = 0
-if (Test-Path -LiteralPath $LogPath) {
-	$StartLogLineCount = (Get-Content -LiteralPath $LogPath).Count
+$StartLogLineCounts = @{}
+foreach ($candidate in $LogCandidates) {
+	if (Test-Path -LiteralPath $candidate) {
+		$StartLogLineCounts[$candidate] = (Get-Content -LiteralPath $candidate).Count
+	} else {
+		$StartLogLineCounts[$candidate] = 0
+	}
 }
 
 $OldEnv = @{}
@@ -205,17 +228,31 @@ try {
 	}
 
 	$NewLogLines = @()
-	if (Test-Path -LiteralPath $LogPath) {
-		$AllLogLines = Get-Content -LiteralPath $LogPath
-		if ($StartLogLineCount -gt $AllLogLines.Count) {
-			$StartLogLineCount = 0
+	$TailLogPath = $LogPath
+	$TailLogWriteTime = [DateTime]::MinValue
+	foreach ($candidate in $LogCandidates) {
+		if (-not (Test-Path -LiteralPath $candidate)) {
+			continue
 		}
-		$NewLogLines = $AllLogLines | Select-Object -Skip $StartLogLineCount
+		$allLogLines = Get-Content -LiteralPath $candidate
+		$startLogLineCount = [int]$StartLogLineCounts[$candidate]
+		if ($startLogLineCount -gt $allLogLines.Count) {
+			$startLogLineCount = 0
+		}
+		$newCandidateLines = @($allLogLines | Select-Object -Skip $startLogLineCount)
+		if ($newCandidateLines.Count -gt 0) {
+			$NewLogLines += $newCandidateLines
+		}
+		$writeTime = (Get-Item -LiteralPath $candidate).LastWriteTime
+		if ($newCandidateLines.Count -gt 0 -and $writeTime -gt $TailLogWriteTime) {
+			$TailLogPath = $candidate
+			$TailLogWriteTime = $writeTime
+		}
 	}
 
-	if (-not $NoTail -and (Test-Path -LiteralPath $LogPath)) {
-		Write-Host "[FGUI] log tail: $LogPath"
-		Get-Content -LiteralPath $LogPath -Tail $Tail
+	if (-not $NoTail -and (Test-Path -LiteralPath $TailLogPath)) {
+		Write-Host "[FGUI] log tail: $TailLogPath"
+		Get-Content -LiteralPath $TailLogPath -Tail $Tail
 	}
 
 	if (-not $IgnoreLogErrors) {

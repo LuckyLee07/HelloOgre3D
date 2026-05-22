@@ -115,8 +115,10 @@ public:
 	int GetScreenHeight() const { return static_cast<int>(m_screenHeight); }
 	int GetObjectHandleCount() const { return static_cast<int>(m_objectHandles.size()); }
 	int GetListenerBindingCount() const { return static_cast<int>(m_listenerBindings.size()); }
-	int GetMaterialCount() const { return static_cast<int>(m_materialNames.size()); }
-	int GetTextureCount() const { return static_cast<int>(m_textureNames.size()); }
+	int GetMaterialCount() const { return static_cast<int>(m_materialNamesBySource.size()); }
+	int GetTextureCount() const { return static_cast<int>(m_textureNamesBySource.size()); }
+	int GetMaterialAliasCount() const { return static_cast<int>(m_materialNames.size()); }
+	int GetTextureAliasCount() const { return static_cast<int>(m_textureNames.size()); }
 
 private:
 	struct ListenerBinding
@@ -171,6 +173,7 @@ private:
 	void TrimStencilScopes(int depth);
 	void BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const;
 	bool CreateConfiguredPackageObject();
+	std::string GetTextureSourceKey(cocos2d::Texture2D* texture) const;
 	const std::string& GetMaterialName(cocos2d::Texture2D* texture);
 	std::string CreateOgreTexture(cocos2d::Texture2D* texture);
 	void DestroyOgreResources();
@@ -208,6 +211,8 @@ private:
 	std::map<int, ListenerBinding> m_listenerBindings;
 	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
+	std::map<std::string, std::string> m_materialNamesBySource;
+	std::map<std::string, std::string> m_textureNamesBySource;
 };
 
 #endif // __HELLO_FAIRY_GUI_SYSTEM_H__

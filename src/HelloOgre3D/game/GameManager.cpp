@@ -273,6 +273,26 @@ int GameManager::getFairyGuiTextureCount()
 #endif
 }
 
+int GameManager::getFairyGuiMaterialAliasCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetMaterialAliasCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiTextureAliasCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetTextureAliasCount() : 0;
+#else
+	return 0;
+#endif
+}
+
 int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
 {
 #if defined(HELLO_ENABLE_FGUI)

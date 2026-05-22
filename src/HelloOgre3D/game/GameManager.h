@@ -54,6 +54,8 @@ public:
 	int getFairyGuiRuntimeListenerBindingCount();
 	int getFairyGuiMaterialCount();
 	int getFairyGuiTextureCount();
+	int getFairyGuiMaterialAliasCount();
+	int getFairyGuiTextureAliasCount();
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
 	int getFairyGuiListItemCount(int objectHandle);

@@ -673,6 +673,9 @@ namespace cocos2d
 		Texture2D* addImage(const std::string&);
 		Texture2D* addImage(Image*, const std::string&);
 		void removeTexture(Texture2D*) {}
+
+	private:
+		std::map<std::string, Texture2D*> _textures;
 	};
 
 	class FileUtils

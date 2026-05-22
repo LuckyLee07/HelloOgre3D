@@ -2051,6 +2051,14 @@ const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 	if (it != m_materialNames.end())
 		return it->second;
 
+	const std::string sourceKey = GetTextureSourceKey(texture);
+	std::map<std::string, std::string>::iterator sourceIt = m_materialNamesBySource.find(sourceKey);
+	if (sourceIt != m_materialNamesBySource.end())
+	{
+		m_materialNames[texture] = sourceIt->second;
+		return m_materialNames[texture];
+	}
+
 	const std::string textureName = CreateOgreTexture(texture);
 	const std::string materialName = "Hello/FairyGUI/Material/" + std::to_string(++m_materialCounter);
 	Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(materialName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -2074,7 +2082,21 @@ const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 	}
 
 	m_materialNames[texture] = materialName;
+	m_materialNamesBySource[sourceKey] = materialName;
 	return m_materialNames[texture];
+}
+
+std::string FairyGuiSystem::GetTextureSourceKey(cocos2d::Texture2D* texture) const
+{
+	if (texture == nullptr)
+		return std::string();
+
+	if (!texture->getFilePath().empty())
+		return "file:" + texture->getFilePath();
+
+	std::ostringstream stream;
+	stream << "ptr:" << texture;
+	return stream.str();
 }
 
 std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
@@ -2087,6 +2109,14 @@ std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
 	if (data.empty())
 		return std::string();
 
+	const std::string sourceKey = GetTextureSourceKey(texture);
+	std::map<std::string, std::string>::iterator sourceIt = m_textureNamesBySource.find(sourceKey);
+	if (sourceIt != m_textureNamesBySource.end())
+	{
+		m_textureNames[texture] = sourceIt->second;
+		return sourceIt->second;
+	}
+
 	const std::string textureName = "Hello/FairyGUI/Texture/" + std::to_string(m_textureNames.size() + 1);
 	std::string extension = GetFileExtension(texture->getFilePath());
 	if (extension.empty())
@@ -2098,6 +2128,7 @@ std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
 		image.load(stream, extension);
 		Ogre::TextureManager::getSingleton().loadImage(textureName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, image);
 		m_textureNames[texture] = textureName;
+		m_textureNamesBySource[sourceKey] = textureName;
 		return textureName;
 	}
 	catch (const Ogre::Exception&)
@@ -2118,13 +2149,13 @@ void FairyGuiSystem::DestroyOgreResources()
 	if (m_pManualNode != nullptr && m_pSceneManager != nullptr)
 		m_pSceneManager->destroySceneNode(m_pManualNode);
 
-	for (std::map<cocos2d::Texture2D*, std::string>::iterator it = m_materialNames.begin(); it != m_materialNames.end(); ++it)
+	for (std::map<std::string, std::string>::iterator it = m_materialNamesBySource.begin(); it != m_materialNamesBySource.end(); ++it)
 	{
 		if (!it->second.empty() && Ogre::MaterialManager::getSingleton().resourceExists(it->second))
 			Ogre::MaterialManager::getSingleton().remove(it->second);
 	}
 
-	for (std::map<cocos2d::Texture2D*, std::string>::iterator it = m_textureNames.begin(); it != m_textureNames.end(); ++it)
+	for (std::map<std::string, std::string>::iterator it = m_textureNamesBySource.begin(); it != m_textureNamesBySource.end(); ++it)
 	{
 		if (!it->second.empty() && Ogre::TextureManager::getSingleton().resourceExists(it->second))
 			Ogre::TextureManager::getSingleton().remove(it->second);
@@ -2135,5 +2166,7 @@ void FairyGuiSystem::DestroyOgreResources()
 
 	m_materialNames.clear();
 	m_textureNames.clear();
+	m_materialNamesBySource.clear();
+	m_textureNamesBySource.clear();
 	m_materialCounter = 0;
 }

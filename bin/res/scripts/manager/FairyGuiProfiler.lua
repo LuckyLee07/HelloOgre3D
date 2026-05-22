@@ -52,6 +52,8 @@ function FairyGuiProfiler:GetRenderStats()
 	local triangleCount = 0
 	local materialCount = 0
 	local textureCount = 0
+	local materialAliasCount = 0
+	local textureAliasCount = 0
 	local runtimeObjectHandle = 0
 	local runtimeBinding = 0
 	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
@@ -66,6 +68,12 @@ function FairyGuiProfiler:GetRenderStats()
 	if GameManager ~= nil and GameManager.getFairyGuiTextureCount ~= nil then
 		textureCount = GameManager:getFairyGuiTextureCount()
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiMaterialAliasCount ~= nil then
+		materialAliasCount = GameManager:getFairyGuiMaterialAliasCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiTextureAliasCount ~= nil then
+		textureAliasCount = GameManager:getFairyGuiTextureAliasCount()
+	end
 	if GameManager ~= nil and GameManager.getFairyGuiRuntimeObjectHandleCount ~= nil then
 		runtimeObjectHandle = GameManager:getFairyGuiRuntimeObjectHandleCount()
 	end
@@ -77,6 +85,8 @@ function FairyGuiProfiler:GetRenderStats()
 		triangleCount = triangleCount or 0,
 		materialCount = materialCount or 0,
 		textureCount = textureCount or 0,
+		materialAliasCount = materialAliasCount or 0,
+		textureAliasCount = textureAliasCount or 0,
 		runtimeObjectHandle = runtimeObjectHandle or 0,
 		runtimeBinding = runtimeBinding or 0,
 	}
@@ -84,7 +94,7 @@ end
 
 function FairyGuiProfiler:DumpRenderStats()
 	local stats = self:GetRenderStats()
-	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
 end
 
 function FairyGuiProfiler:RecordPerf(category, elapsedMs, name, success)
@@ -246,6 +256,8 @@ function FairyGuiProfiler:GetHealthStats()
 		triangleCount = renderStats.triangleCount,
 		materialCount = renderStats.materialCount,
 		textureCount = renderStats.textureCount,
+		materialAliasCount = renderStats.materialAliasCount,
+		textureAliasCount = renderStats.textureAliasCount,
 		runtimeObjectHandle = renderStats.runtimeObjectHandle,
 		runtimeBinding = renderStats.runtimeBinding,
 		eventDispatchTotal = owner ~= nil and owner.eventDispatchTotal or 0,
@@ -264,7 +276,7 @@ end
 
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs))
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs))
 	local owner = self.owner
 	if verbose == true and owner ~= nil then
 		self:DumpPerfStats()
@@ -292,7 +304,7 @@ function FairyGuiProfiler:BuildDebugPanelLines()
 	return {
 		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
 		string.format("Life binding=%s timer=%s thread=%s child=%s focus=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.focusedHandle)),
-		string.format("Render cmd=%s tri=%s mat=%s tex=%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.textureCount)),
+		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
 		string.format("Perf close %s avg/max=%s/%s", tostring(perf.close.count), formatMs(perf.close.avgMs), formatMs(perf.close.maxMs)),
 		string.format("Perf event %s avg/max=%s/%s", tostring(perf.event.count), formatMs(perf.event.avgMs), formatMs(perf.event.maxMs)),
