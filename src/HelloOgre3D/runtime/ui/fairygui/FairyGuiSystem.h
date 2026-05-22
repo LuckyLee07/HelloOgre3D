@@ -3,6 +3,7 @@
 
 #include "cocos2d.h"
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
@@ -209,6 +210,7 @@ private:
 	int m_nextListenerBindingId;
 	std::map<int, ObjectHandleInfo> m_objectHandles;
 	std::map<int, ListenerBinding> m_listenerBindings;
+	std::map<int, std::size_t> m_textInputCarets;
 	std::map<cocos2d::Texture2D*, std::string> m_materialNames;
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
 	std::map<std::string, std::string> m_materialNamesBySource;

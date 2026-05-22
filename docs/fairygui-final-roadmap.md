@@ -160,7 +160,7 @@ runtime/ui/fairygui/FairyGuiSystem
 
 当前仍需继续完善：
 
-- 完整输入转发，包括键盘、滚轮、输入框/IME 和更严格的焦点处理；鼠标点击链路已通过调试注入验证。
+- 完整输入转发，包括键盘、滚轮、输入框/IME 和更严格的焦点处理；鼠标点击链路、滚轮、键盘焦点、`GTextInput` caret 编辑和 IME commit 第一版已通过调试注入验证。
 - 复杂事件的事件数据透传已补第一版，当前 `itemHandle / itemIndex / x / y / button / touchId / wheelDelta / dragDeltaX / dragDeltaY` 可到 Lua；后续继续补更复杂的 item 数据与焦点场景。
 - UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理、priority 置顶和 modal 空白关闭；后续仍需更多真实弹窗样例。
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
@@ -172,7 +172,7 @@ runtime/ui/fairygui/FairyGuiSystem
 下一轮优先级建议：
 
 1. 渲染裁剪与遮罩：当前已完成第一版矩形 scissor 裁剪和 stencil 状态桥接。`cocos-lite` 会维护 scissor enabled/rect，且每帧会重置 renderer 的裁剪状态；`StencilStateManager` 会把 `write/test/restore`、嵌套深度和倒置标记透传给 `Renderer`；`FairyGuiSystem` 会在 `CustomCommand` 后同步状态，并在写入 Ogre `ManualObject` 前对三角形做 CPU 裁剪。复杂 UI 的 `ScrollPane / List` 已具备基础越界裁剪能力；普通/倒置 mask 当前按 stencil 图形实际索引顶点的包围矩形裁剪。已新增 `FGUI_OpenMaskProbe()` / `HELLO_FGUI_MASK_SELF_TEST=1`，用于打开真实 `GComponent::setMask()` 的普通与倒置 mask 可视化样例。后续仍需补像素级非矩形 GPU stencil 和更低成本的渲染队列状态切换方案。
-2. 输入补齐：鼠标点击链路已验证，下一步补滚轮、键盘、文本输入/IME 和焦点状态，保证 `GTextInput`、滚动列表、快捷键关闭等交互可用。
+2. 输入补齐：鼠标点击、滚轮、键盘、文本输入 caret、Tab 焦点和 IME commit 第一版已验证；下一步补 Windows 原生组合态/候选窗和更细的焦点状态，保证 `GTextInput`、滚动列表、快捷键关闭等交互可用。
 3. 资源与性能观测：package refCount、material/texture 数量、render command 数、triangle 数和事件分发次数已接入 Dump，C++ FGUI update/render/load/create/event 已接入 Tracy，Lua Open/Close/Event/LoadPackage/CreateObject 轻量耗时已接入 Dump，调试面板已有第一版；后续补 Tracy 计数器。
 4. 通用控件能力：补 `Progress / Slider / ComboBox / Transition` 等常用接口，再用一个更接近业务的页面组合做验收。
 

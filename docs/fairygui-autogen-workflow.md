@@ -90,7 +90,7 @@ python -B tools\fgui_autogen\fairygui_batch_generate.py --check --strict
 
 该脚本默认扫描 `bin/res/assets/*/package.xml`，跳过 `fairygui_manifests`，优先复用已有 manifest 的 `uiName/package/component` 和独立 registry 中的 layer/cache/fullScreen 等策略。去掉 `--check` 即可批量更新受管生成物。
 
-`--dry-run` 不写文件，只打印计划。`--check` 不写文件，但会比对 manifest、`*AutoGen.lua`、独立 registry 和 `GeneratedUIRegistry.lua` 的实际内容；发现缺失或过期生成物时返回失败。`--strict` 会让 `--check` 在存在 warning 时也返回失败。`--force` 会覆盖 View / Model / Ctrl stubs。`--no-registry-aggregate` 会跳过 `GeneratedUIRegistry.lua`。
+`--dry-run` 不写文件，只打印计划。`--check` 不写文件，但会比对 manifest、`*AutoGen.lua`、独立 registry 和 `GeneratedUIRegistry.lua` 的实际内容；发现缺失或过期生成物时返回失败。`--strict` 会让 `--check` 在存在 warning 时也返回失败。`--force` 会刷新 View / Model / Ctrl stubs，并保留 `FairyGUIUserCode` 标记区。`--no-registry-aggregate` 会跳过 `GeneratedUIRegistry.lua`。
 
 Advanced manifest-only command:
 
@@ -132,7 +132,7 @@ python tools\fgui_autogen\fairygui_autogen.py `
 
 - `*AutoGen.lua` 会覆盖，因为它是生成文件。
 - `*View.lua / *Model.lua / *Ctrl.lua` 默认不覆盖，避免误删手写业务。
-- 如果确认要重建骨架，再加 `--force`。
+- 如果确认要刷新骨架，再加 `--force`；工具会保留 `FairyGUIUserCode` 标记区中的业务代码。
 - registry 输出为独立 Lua table，不自动合并到 `UIRegistry.lua`。
 
 ## Outputs
@@ -147,6 +147,18 @@ python tools\fgui_autogen\fairygui_autogen.py `
 生成的 `*AutoGen.lua` 会输出 `ControlPath`、`ControlType`、`ControllerPath`、`TransitionName`、`ListItem`，并提供 `GetControlPath/GetControlType/GetControllerPath/GetTransitionName/GetListItemDefine` 查询函数。
 
 生成的 Ctrl 会根据 manifest 识别 `GList`，创建基础 `Refresh*List` 和 `Render*Item` stub，并在注释里标出 item 组件和 item 控件。
+
+`View / Model / Ctrl` scaffold 会生成类似下面的保留区：
+
+```lua
+-- <FairyGUIUserCode:ShopMainCtrl:RegisterUIEvents>
+	self:AddClick("btn_close", function()
+		self:Close(true)
+	end)
+-- </FairyGUIUserCode:ShopMainCtrl:RegisterUIEvents>
+```
+
+业务代码优先写进这些区域。后续控件结构变化时，可以重新执行生成命令并附加 `--force`，工具会刷新 scaffold，同时把旧文件中相同 key 的保留区内容合并回新文件。旧的无标记手写文件在 `--force` 下仍会被整体替换，工具会在计划输出里提示。
 
 ## Step 3: Merge Registry
 
@@ -180,6 +192,8 @@ bin/res/scripts/ui/UIRegistry.lua
 - `<UIName>Model.lua`：数据结构、打开参数、状态变更。
 - `<UIName>Ctrl.lua`：事件绑定、刷新逻辑、List item renderer。
 - `<UIName>View.lua`：必要时补充控件访问封装。
+
+建议把事件绑定写进 `Ctrl:RegisterUIEvents` 保留区，把模型初始化写进 `Model:Init` 保留区，把额外方法写进文件尾部 `custom` 保留区。
 
 不要把业务写进 `*AutoGen.lua`。
 

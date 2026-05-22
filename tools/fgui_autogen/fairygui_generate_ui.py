@@ -99,17 +99,18 @@ def build_lua_output_plan(manifest, args):
 		raise SystemExit("--ui-name and --package are required when manifest does not provide them")
 
 	outputs = []
-	for class_name, content, overwrite in [
-		(ui_name + "AutoGen", fairygui_autogen.render_autogen(ui_name, controls, controllers, transitions, component_controls, args.field_style), True),
-		(ui_name + "View", fairygui_autogen.render_view(ui_name, controls, controllers, args.field_style), args.force),
-		(ui_name + "Model", fairygui_autogen.render_model(ui_name), args.force),
-		(ui_name + "Ctrl", fairygui_autogen.render_ctrl(ui_name, controls, component_controls, args.field_style), args.force),
+	for class_name, content, overwrite, preserve_user_code in [
+		(ui_name + "AutoGen", fairygui_autogen.render_autogen(ui_name, controls, controllers, transitions, component_controls, args.field_style), True, False),
+		(ui_name + "View", fairygui_autogen.render_view(ui_name, controls, controllers, args.field_style), args.force, True),
+		(ui_name + "Model", fairygui_autogen.render_model(ui_name), args.force, True),
+		(ui_name + "Ctrl", fairygui_autogen.render_ctrl(ui_name, controls, component_controls, args.field_style), args.force, True),
 	]:
 		outputs.append({
 			"kind": "lua",
 			"path": class_file(args.output_dir, class_name),
 			"content": content,
 			"overwrite": overwrite,
+			"preserve_user_code": preserve_user_code,
 		})
 
 	registry_entry = fairygui_autogen.render_registry_entry(ui_name, package_name, component, args.module_prefix, args)
@@ -147,6 +148,10 @@ def collect_output_notes(outputs):
 	for output in outputs:
 		if describe_output_action(output) == "skip":
 			notes.append("will keep existing hand-written file: " + normalize_path(output["path"]))
+		elif output.get("preserve_user_code") and describe_output_action(output) == "overwrite" and os.path.exists(output["path"]):
+			content = fairygui_autogen.read_text_file(output["path"])
+			if not fairygui_autogen.has_user_code_regions(content):
+				notes.append("--force will replace legacy scaffold without FairyGUIUserCode blocks: " + normalize_path(output["path"]))
 	return notes
 
 
@@ -163,7 +168,10 @@ def write_lua_outputs(outputs):
 		output_dir = os.path.dirname(path)
 		if output_dir:
 			fairygui_autogen.ensure_dir(output_dir)
-		if fairygui_autogen.write_file(path, output["content"], force=output["overwrite"]):
+		content = output["content"]
+		if output.get("preserve_user_code") and output["overwrite"] and os.path.exists(path):
+			content = fairygui_autogen.merge_user_code_regions(content, fairygui_autogen.read_text_file(path))
+		if fairygui_autogen.write_file(path, content, force=output["overwrite"]):
 			written.append(path)
 	return written
 
@@ -173,6 +181,8 @@ def get_expected_output_content(output):
 		path = output["path"]
 		content = fairygui_autogen.read_text_file(path) if os.path.exists(path) else None
 		return fairygui_autogen.render_updated_aggregate_registry(content, output["ui_name"], output["registry_entry"])
+	if output.get("preserve_user_code") and describe_output_action(output) == "overwrite" and os.path.exists(output["path"]):
+		return fairygui_autogen.merge_user_code_regions(output["content"], fairygui_autogen.read_text_file(output["path"]))
 	return output["content"]
 
 
@@ -245,7 +255,7 @@ def main():
 	parser.add_argument("--check", action="store_true", help="Validate inputs and planned outputs without writing files.")
 	parser.add_argument("--strict", action="store_true", help="Treat warnings as errors in --check mode.")
 	parser.add_argument("--no-registry-aggregate", action="store_true", help="Do not update GeneratedUIRegistry.lua.")
-	parser.add_argument("--force", action="store_true", help="Overwrite View / Model / Ctrl stubs.")
+	parser.add_argument("--force", action="store_true", help="Refresh View / Model / Ctrl stubs while preserving FairyGUIUserCode blocks.")
 	args = parser.parse_args()
 
 	if args.no_registry_aggregate:

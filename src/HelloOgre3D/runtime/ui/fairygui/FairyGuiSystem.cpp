@@ -39,6 +39,10 @@ namespace
 	const int OIS_KC_BACK = 0x0E;
 	const int OIS_KC_RETURN = 0x1C;
 	const int OIS_KC_NUMPADENTER = 0x9C;
+	const int OIS_KC_HOME = 0xC7;
+	const int OIS_KC_LEFT = 0xCB;
+	const int OIS_KC_RIGHT = 0xCD;
+	const int OIS_KC_END = 0xCF;
 	const int OIS_KC_DELETE = 0xD3;
 
 	float TransformX(const cocos2d::Mat4& transform, const cocos2d::Vec3& value)
@@ -391,7 +395,8 @@ namespace
 
 	bool IsPrintableKeyText(int keyText)
 	{
-		return keyText >= 32 && keyText != 127;
+		return keyText >= 32 && keyText != 127 && keyText <= 0x10FFFF
+			&& (keyText < 0xD800 || keyText > 0xDFFF);
 	}
 
 	void AppendUtf8Codepoint(std::string& text, unsigned int codepoint)
@@ -420,15 +425,92 @@ namespace
 		}
 	}
 
-	void RemoveLastUtf8Codepoint(std::string& text)
+	bool IsUtf8Continuation(unsigned char value)
 	{
-		if (text.empty())
-			return;
+		return (value & 0xC0) == 0x80;
+	}
 
-		size_t erasePos = text.size() - 1;
-		while (erasePos > 0 && (static_cast<unsigned char>(text[erasePos]) & 0xC0) == 0x80)
-			--erasePos;
-		text.erase(erasePos);
+	size_t GetNextUtf8ByteOffset(const std::string& text, size_t byteOffset)
+	{
+		if (byteOffset >= text.size())
+			return text.size();
+
+		++byteOffset;
+		while (byteOffset < text.size() && IsUtf8Continuation(static_cast<unsigned char>(text[byteOffset])))
+			++byteOffset;
+		return byteOffset;
+	}
+
+	size_t GetUtf8CodepointCount(const std::string& text)
+	{
+		size_t count = 0;
+		size_t byteOffset = 0;
+		while (byteOffset < text.size())
+		{
+			byteOffset = GetNextUtf8ByteOffset(text, byteOffset);
+			++count;
+		}
+		return count;
+	}
+
+	size_t ClampUtf8Caret(const std::string& text, size_t caret)
+	{
+		const size_t count = GetUtf8CodepointCount(text);
+		return std::min(caret, count);
+	}
+
+	size_t GetUtf8ByteOffsetForCaret(const std::string& text, size_t caret)
+	{
+		size_t index = 0;
+		size_t byteOffset = 0;
+		while (byteOffset < text.size() && index < caret)
+		{
+			byteOffset = GetNextUtf8ByteOffset(text, byteOffset);
+			++index;
+		}
+		return byteOffset;
+	}
+
+	bool RemoveUtf8CodepointBeforeCaret(std::string& text, size_t& caret)
+	{
+		if (caret == 0 || text.empty())
+			return false;
+
+		const size_t eraseStart = GetUtf8ByteOffsetForCaret(text, caret - 1);
+		const size_t eraseEnd = GetUtf8ByteOffsetForCaret(text, caret);
+		if (eraseStart >= eraseEnd || eraseStart >= text.size())
+			return false;
+
+		text.erase(eraseStart, eraseEnd - eraseStart);
+		--caret;
+		return true;
+	}
+
+	bool RemoveUtf8CodepointAtCaret(std::string& text, size_t& caret)
+	{
+		if (text.empty() || caret >= GetUtf8CodepointCount(text))
+			return false;
+
+		const size_t eraseStart = GetUtf8ByteOffsetForCaret(text, caret);
+		const size_t eraseEnd = GetNextUtf8ByteOffset(text, eraseStart);
+		if (eraseStart >= eraseEnd || eraseStart >= text.size())
+			return false;
+
+		text.erase(eraseStart, eraseEnd - eraseStart);
+		return true;
+	}
+
+	bool InsertUtf8CodepointAtCaret(std::string& text, size_t& caret, unsigned int codepoint)
+	{
+		std::string encoded;
+		AppendUtf8Codepoint(encoded, codepoint);
+		if (encoded.empty())
+			return false;
+
+		const size_t byteOffset = GetUtf8ByteOffsetForCaret(text, caret);
+		text.insert(byteOffset, encoded);
+		++caret;
+		return true;
 	}
 
 	std::string NormalizePackagePath(const std::string& packagePath)
@@ -484,7 +566,7 @@ FairyGuiSystem::FairyGuiSystem()
 	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
 	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
-	m_objectHandles(), m_listenerBindings(), m_materialNames(), m_textureNames()
+	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames()
 {
 }
 
@@ -1137,6 +1219,8 @@ bool FairyGuiSystem::SetObjectHandleText(int objectHandle, const std::string& te
 		return false;
 
 	object->setText(text);
+	if (dynamic_cast<fairygui::GTextInput*>(object) != nullptr)
+		m_textInputCarets[objectHandle] = GetUtf8CodepointCount(text);
 	return true;
 }
 
@@ -1399,6 +1483,7 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 		m_focusedObjectHandle = 0;
 	RemoveObjectHandleAliases(objectHandle);
 	RemoveObjectHandleListeners(objectHandle);
+	m_textInputCarets.erase(objectHandle);
 	if (it->second.retained)
 	{
 		it->second.object->removeFromParent();
@@ -1424,6 +1509,8 @@ void FairyGuiSystem::ClearObjectHandles()
 
 	while (!m_objectHandles.empty())
 		RemoveObjectHandle(m_objectHandles.begin()->first);
+	m_textInputCarets.clear();
+	m_focusedObjectHandle = 0;
 }
 
 bool FairyGuiSystem::CreateSmokeTestImage(const std::string& imagePath)
@@ -1689,6 +1776,8 @@ bool FairyGuiSystem::FocusTextInput(fairygui::GTextInput* input)
 		m_focusedObjectHandle = inputHandle;
 		input->dispatchEvent(fairygui::UIEventType::Enter);
 	}
+	if (m_textInputCarets.find(inputHandle) == m_textInputCarets.end())
+		m_textInputCarets[inputHandle] = GetUtf8CodepointCount(input->getText());
 	return true;
 }
 
@@ -1697,25 +1786,50 @@ bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode,
 	if (input == nullptr)
 		return false;
 
+	const int inputHandle = m_focusedObjectHandle;
 	std::string text = input->getText();
+	size_t caret = GetUtf8CodepointCount(text);
+	std::map<int, size_t>::iterator caretIt = m_textInputCarets.find(inputHandle);
+	if (caretIt != m_textInputCarets.end())
+		caret = ClampUtf8Caret(text, caretIt->second);
+
 	bool changed = false;
-	if (keyCode == OIS_KC_BACK || keyCode == OIS_KC_DELETE)
+	if (keyCode == OIS_KC_HOME)
 	{
-		if (!text.empty())
-		{
-			RemoveLastUtf8Codepoint(text);
-			changed = true;
-		}
+		caret = 0;
+	}
+	else if (keyCode == OIS_KC_END)
+	{
+		caret = GetUtf8CodepointCount(text);
+	}
+	else if (keyCode == OIS_KC_LEFT)
+	{
+		if (caret > 0)
+			--caret;
+	}
+	else if (keyCode == OIS_KC_RIGHT)
+	{
+		const size_t count = GetUtf8CodepointCount(text);
+		if (caret < count)
+			++caret;
+	}
+	else if (keyCode == OIS_KC_BACK)
+	{
+		changed = RemoveUtf8CodepointBeforeCaret(text, caret);
+	}
+	else if (keyCode == OIS_KC_DELETE)
+	{
+		changed = RemoveUtf8CodepointAtCaret(text, caret);
 	}
 	else if (keyCode == OIS_KC_RETURN || keyCode == OIS_KC_NUMPADENTER)
 	{
+		m_textInputCarets[inputHandle] = caret;
 		input->dispatchEvent(fairygui::UIEventType::Submit);
 		return true;
 	}
 	else if (IsPrintableKeyText(keyText))
 	{
-		AppendUtf8Codepoint(text, static_cast<unsigned int>(keyText));
-		changed = true;
+		changed = InsertUtf8CodepointAtCaret(text, caret, static_cast<unsigned int>(keyText));
 	}
 
 	if (changed)
@@ -1723,6 +1837,7 @@ bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode,
 		input->setText(text);
 		input->dispatchEvent(fairygui::UIEventType::Changed);
 	}
+	m_textInputCarets[inputHandle] = caret;
 	return true;
 }
 

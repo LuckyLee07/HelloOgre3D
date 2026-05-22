@@ -6,6 +6,7 @@ param(
 		"Input",
 		"Key",
 		"TextInput",
+		"IME",
 		"Lifecycle",
 		"Cache",
 		"CommonService",
@@ -98,6 +99,7 @@ function Get-FairyGuiEnv {
 		}
 		"Key" { $values["HELLO_FGUI_KEY_SELF_TEST"] = "1" }
 		"TextInput" { $values["HELLO_FGUI_TEXT_INPUT_SELF_TEST"] = "1" }
+		"IME" { $values["HELLO_FGUI_IME_SELF_TEST"] = "1" }
 		"Lifecycle" { $values["HELLO_FGUI_LIFECYCLE_SELF_TEST"] = "1" }
 		"Cache" { $values["HELLO_FGUI_CACHE_SELF_TEST"] = "1" }
 		"CommonService" { $values["HELLO_FGUI_COMMON_SERVICE_SELF_TEST"] = "1" }
@@ -137,6 +139,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_INPUT_DEBUG",
 	"HELLO_FGUI_KEY_SELF_TEST",
 	"HELLO_FGUI_TEXT_INPUT_SELF_TEST",
+	"HELLO_FGUI_IME_SELF_TEST",
 	"HELLO_FGUI_LIFECYCLE_SELF_TEST",
 	"HELLO_FGUI_CACHE_SELF_TEST",
 	"HELLO_FGUI_COMMON_SERVICE_SELF_TEST",

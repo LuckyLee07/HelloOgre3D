@@ -67,11 +67,29 @@ local function tryRunFairyGuiTextInputSelfTest()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
 		local keyA = FairyGuiManager:DebugInjectKeyPressed(30, 65)
 		local keyB = FairyGuiManager:DebugInjectKeyPressed(48, 66)
+		local left = FairyGuiManager:DebugInjectKeyPressed(203, 0)
+		local keyC = FairyGuiManager:DebugInjectKeyPressed(46, 67)
+		local delete = FairyGuiManager:DebugInjectKeyPressed(211, 0)
 		local backspace = FairyGuiManager:DebugInjectKeyPressed(14, 0)
 		local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		local focusHandle = FairyGuiManager:GetFocusedHandle()
-		print("[FGUI] text input self test result:", handle ~= nil, inputHandle, focused, keyA, keyB, backspace, submit, text, focusHandle)
+		print("[FGUI] text input self test result:", handle ~= nil, inputHandle, focused, keyA, keyB, left, keyC, delete, backspace, submit, text, focusHandle)
+		FairyGuiManager:Close("TextInputProbe", true)
+	end)
+end
+
+local function tryRunFairyGuiImeSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_IME_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local commit = FairyGuiManager:DebugInjectKeyPressed(0, 20013)
+		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		print("[FGUI] ime self test result:", handle ~= nil, inputHandle, focused, commit, text == "\228\184\173", text)
 		FairyGuiManager:Close("TextInputProbe", true)
 	end)
 end
@@ -432,6 +450,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiInputSelfTest()
 		tryRunFairyGuiKeySelfTest()
 		tryRunFairyGuiTextInputSelfTest()
+		tryRunFairyGuiImeSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCacheSelfTest()
 		tryRunFairyGuiCommonServiceSelfTest()
@@ -1073,11 +1092,22 @@ function FGUI_RunSelfTestSuite()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
 		local keyA = FairyGuiManager:DebugInjectKeyPressed(30, 65)
 		local keyB = FairyGuiManager:DebugInjectKeyPressed(48, 66)
+		local left = FairyGuiManager:DebugInjectKeyPressed(203, 0)
+		local keyC = FairyGuiManager:DebugInjectKeyPressed(46, 67)
+		local delete = FairyGuiManager:DebugInjectKeyPressed(211, 0)
 		local backspace = FairyGuiManager:DebugInjectKeyPressed(14, 0)
 		local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		FairyGuiManager:Close("TextInputProbe", true)
-		return handle ~= nil and focused and keyA and keyB and backspace and submit and text == "A", text
+		return handle ~= nil and focused and keyA and keyB and left and keyC and delete and backspace and submit and text == "A", text
+	end)
+	schedule(0.6, "ImeCommit", function()
+		local handle, inputHandle = FGUI_OpenTextInputProbe()
+		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local commit = FairyGuiManager:DebugInjectKeyPressed(0, 20013)
+		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		FairyGuiManager:Close("TextInputProbe", true)
+		return handle ~= nil and focused and commit and text == "\228\184\173", text
 	end)
 	schedule(0.6, "LayerClose", function()
 		return FGUI_RunLayerCloseSelfTest()
