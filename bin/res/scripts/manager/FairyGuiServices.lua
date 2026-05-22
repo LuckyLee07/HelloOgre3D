@@ -16,8 +16,108 @@ local function copyTable(source, target)
 	return target
 end
 
+local function nowMs()
+	return os.clock and os.clock() * 1000 or 0
+end
+
+local function tableCount(source)
+	local count = 0
+	if type(source) ~= "table" then
+		return count
+	end
+	for _, _ in pairs(source) do
+		count = count + 1
+	end
+	return count
+end
+
+local function ensureServiceStats(owner)
+	if owner.serviceStats == nil then
+		owner.serviceStats = {
+			createdTotal = 0,
+			closedTotal = 0,
+			failedTotal = 0,
+			peakOpen = 0,
+			toastQueuedTotal = 0,
+			toastDedupeIgnoredTotal = 0,
+			toastShownTotal = 0,
+			toastTimeoutTotal = 0,
+			loadingShowTotal = 0,
+			loadingHideTotal = 0,
+			loadingForceHideTotal = 0,
+			loadingPeakRefTotal = 0,
+			byType = {},
+		}
+	end
+	if owner.serviceStats.byType == nil then
+		owner.serviceStats.byType = {}
+	end
+	return owner.serviceStats
+end
+
+local function ensureServiceTypeStats(owner, serviceType)
+	local stats = ensureServiceStats(owner)
+	serviceType = isBlank(serviceType) and "<unknown>" or serviceType
+	if stats.byType[serviceType] == nil then
+		stats.byType[serviceType] = {
+			created = 0,
+			closed = 0,
+			failed = 0,
+			lastKey = "",
+			lastReason = "",
+		}
+	end
+	return stats.byType[serviceType], stats
+end
+
+local function getServiceOpenTotal(owner)
+	local count = 0
+	for _, objectInfo in pairs(owner.objects or {}) do
+		if objectInfo.serviceType ~= nil then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+local function recordServiceStat(owner, eventName, serviceType, key, reason)
+	if owner == nil then
+		return nil
+	end
+
+	local typeStats, stats = ensureServiceTypeStats(owner, serviceType)
+	if eventName == "created" then
+		stats.createdTotal = stats.createdTotal + 1
+		typeStats.created = typeStats.created + 1
+	elseif eventName == "closed" then
+		stats.closedTotal = stats.closedTotal + 1
+		typeStats.closed = typeStats.closed + 1
+	elseif eventName == "failed" then
+		stats.failedTotal = stats.failedTotal + 1
+		typeStats.failed = typeStats.failed + 1
+	end
+
+	stats.lastEvent = eventName or ""
+	stats.lastType = serviceType or ""
+	stats.lastKey = key or ""
+	stats.lastReason = reason or ""
+	typeStats.lastKey = key or ""
+	typeStats.lastReason = reason or ""
+	stats.peakOpen = math.max(stats.peakOpen or 0, getServiceOpenTotal(owner))
+	return stats
+end
+
+local function recordServicePerf(owner, startMs, serviceType, success)
+	if owner ~= nil and owner.RecordPerf ~= nil then
+		owner:RecordPerf("service", nowMs() - startMs, tostring(serviceType or ""), success ~= false)
+	end
+end
+
 function FairyGuiServices:Init(owner)
 	self.owner = owner
+	if owner ~= nil then
+		ensureServiceStats(owner)
+	end
 end
 
 function FairyGuiServices:OpenServiceContainer(key, param)
@@ -26,9 +126,12 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 		return nil
 	end
 
+	local startMs = nowMs()
 	param = param or {}
 	key = param.key or key
 	if isBlank(key) then
+		recordServiceStat(self, "failed", param.serviceType, key, "emptyKey")
+		recordServicePerf(self, startMs, param.serviceType, false)
 		return nil
 	end
 
@@ -41,10 +144,14 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 
 	local handle = self:CreateContainer(param.name or key)
 	if handle == nil or handle <= 0 then
+		recordServiceStat(self, "failed", param.serviceType, key, "createContainer")
+		recordServicePerf(self, startMs, param.serviceType, false)
 		return nil
 	end
 	if not self:AttachToLayer(handle, param.layer) then
 		GameManager:removeFairyGuiObject(handle)
+		recordServiceStat(self, "failed", param.serviceType, key, "attachLayer")
+		recordServicePerf(self, startMs, param.serviceType, false)
 		return nil
 	end
 
@@ -85,6 +192,8 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 	self:CreateModalMask(objectInfo, param)
 	self:ApplyScreenAdapt(objectInfo)
 	self:PushStack(objectInfo)
+	recordServiceStat(self, "created", objectInfo.serviceType, objectInfo.key, "open")
+	recordServicePerf(self, startMs, objectInfo.serviceType, true)
 	return objectInfo
 end
 
@@ -265,6 +374,7 @@ function FairyGuiServices:HandleServiceClosed(objectInfo, reason)
 		return
 	end
 
+	local stats = recordServiceStat(self, "closed", objectInfo.serviceType, objectInfo.key, reason or "close")
 	if objectInfo.serviceType == "Toast" then
 		local active = self.toastActive
 		if active ~= nil and active.key == objectInfo.key then
@@ -274,6 +384,9 @@ function FairyGuiServices:HandleServiceClosed(objectInfo, reason)
 			self.toastActive = nil
 		end
 		if reason == "toastTimeout" then
+			if stats ~= nil then
+				stats.toastTimeoutTotal = (stats.toastTimeoutTotal or 0) + 1
+			end
 			self:ShowNextToast()
 		elseif reason ~= "toastReplace" then
 			self:ClearToastQueue()
@@ -316,6 +429,12 @@ function FairyGuiServices:CreateToastRequest(text, duration, param)
 	if param.dedupe ~= false then
 		dedupeKey = param.dedupeKey or tostring(text or "")
 		if not isBlank(dedupeKey) and self.toastDedupe[dedupeKey] == true then
+			local stats = ensureServiceStats(self)
+			stats.toastDedupeIgnoredTotal = (stats.toastDedupeIgnoredTotal or 0) + 1
+			stats.lastEvent = "toastDedupe"
+			stats.lastType = "Toast"
+			stats.lastKey = dedupeKey
+			stats.lastReason = "dedupe"
 			return nil, "dedupe"
 		end
 	end
@@ -360,6 +479,8 @@ function FairyGuiServices:OpenToastRequest(request)
 	objectInfo.toastText = request.text or ""
 	objectInfo.toastTextHandle = self:AddServiceText(objectInfo, "toast_text", objectInfo.toastText, 0, 0, param.width or 240, param.height or 44, param.fontSize or 22, 255, 244, 200)
 	self:ApplyServiceLayout(objectInfo)
+	local stats = ensureServiceStats(self)
+	stats.toastShownTotal = (stats.toastShownTotal or 0) + 1
 
 	self.toastActive = {
 		id = request.id,
@@ -404,6 +525,8 @@ function FairyGuiServices:ShowToast(text, duration, param)
 	end
 	if self.toastActive ~= nil then
 		table.insert(self.toastQueue, request)
+		local stats = ensureServiceStats(self)
+		stats.toastQueuedTotal = (stats.toastQueuedTotal or 0) + 1
 		return request.id
 	end
 	return self:OpenToastRequest(request)
@@ -462,6 +585,9 @@ function FairyGuiServices:ShowLoading(text, param)
 	local refKey = param.refKey or "Default"
 	self.loadingRefs[refKey] = (self.loadingRefs[refKey] or 0) + 1
 	self.loadingRefTotal = (self.loadingRefTotal or 0) + 1
+	local stats = ensureServiceStats(self)
+	stats.loadingShowTotal = (stats.loadingShowTotal or 0) + 1
+	stats.loadingPeakRefTotal = math.max(stats.loadingPeakRefTotal or 0, self.loadingRefTotal or 0)
 
 	local existing = self:GetObjectInfo("__Loading")
 	if existing ~= nil then
@@ -520,6 +646,11 @@ function FairyGuiServices:HideLoading(paramOrReason)
 	local refKey = param.refKey or "Default"
 	local force = param.force == true
 	local reason = param.reason or "hideLoading"
+	local stats = ensureServiceStats(self)
+	stats.loadingHideTotal = (stats.loadingHideTotal or 0) + 1
+	if force then
+		stats.loadingForceHideTotal = (stats.loadingForceHideTotal or 0) + 1
+	end
 
 	if not force then
 		local refCount = self.loadingRefs[refKey] or 0
@@ -694,40 +825,85 @@ function FairyGuiServices:GetServiceStats()
 				toastQueue = 0,
 				toastActive = nil,
 				loadingRefTotal = 0,
+				serviceOpenTotal = 0,
+				serviceHiddenTotal = 0,
+				serviceKindCount = 0,
+				createdTotal = 0,
+				closedTotal = 0,
+				failedTotal = 0,
+				peakOpen = 0,
 			},
 		}
 	end
 
+	local counters = ensureServiceStats(self)
 	local stats = {
 		__meta = {
 			toastQueue = self:GetToastQueueCount(),
 			toastActive = self.toastActive ~= nil and self.toastActive.key or nil,
 			loadingRefTotal = self:GetLoadingRefCount(),
+			createdTotal = counters.createdTotal or 0,
+			closedTotal = counters.closedTotal or 0,
+			failedTotal = counters.failedTotal or 0,
+			peakOpen = counters.peakOpen or 0,
+			toastQueuedTotal = counters.toastQueuedTotal or 0,
+			toastDedupeIgnoredTotal = counters.toastDedupeIgnoredTotal or 0,
+			toastShownTotal = counters.toastShownTotal or 0,
+			toastTimeoutTotal = counters.toastTimeoutTotal or 0,
+			loadingShowTotal = counters.loadingShowTotal or 0,
+			loadingHideTotal = counters.loadingHideTotal or 0,
+			loadingForceHideTotal = counters.loadingForceHideTotal or 0,
+			loadingPeakRefTotal = counters.loadingPeakRefTotal or 0,
+			lastEvent = counters.lastEvent or "",
+			lastType = counters.lastType or "",
+			lastKey = counters.lastKey or "",
+			lastReason = counters.lastReason or "",
+			byType = counters.byType or {},
 		},
 	}
+	local serviceKinds = {}
+	local serviceOpenTotal = 0
+	local serviceHiddenTotal = 0
 	for key, objectInfo in pairs(self.objects) do
 		if objectInfo.serviceType ~= nil then
 			local serviceType = objectInfo.serviceType
-			local stat = stats[serviceType] or { open = 0, hidden = 0, keys = {} }
+			local history = counters.byType and counters.byType[serviceType] or nil
+			local stat = stats[serviceType] or {
+				open = 0,
+				hidden = 0,
+				keys = {},
+				created = history and history.created or 0,
+				closed = history and history.closed or 0,
+				failed = history and history.failed or 0,
+			}
 			stat.open = stat.open + 1
 			if self.hiddenObjects[key] ~= nil then
 				stat.hidden = stat.hidden + 1
+				serviceHiddenTotal = serviceHiddenTotal + 1
 			end
 			table.insert(stat.keys, key)
 			stats[serviceType] = stat
+			serviceKinds[serviceType] = true
+			serviceOpenTotal = serviceOpenTotal + 1
 		end
 	end
+	stats.__meta.serviceOpenTotal = serviceOpenTotal
+	stats.__meta.serviceHiddenTotal = serviceHiddenTotal
+	stats.__meta.serviceKindCount = tableCount(serviceKinds)
+	counters.peakOpen = math.max(counters.peakOpen or 0, serviceOpenTotal)
+	stats.__meta.peakOpen = counters.peakOpen
 	return stats
 end
 
 function FairyGuiServices:DumpServices()
 	print("[FGUI] DumpServices begin")
 	local stats = self:GetServiceStats()
+	local meta = stats.__meta or {}
 	for serviceType, stat in pairs(stats) do
 		if serviceType ~= "__meta" then
-			print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "keys=", table.concat(stat.keys, ","))
+			print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "created=", stat.created or 0, "closed=", stat.closed or 0, "failed=", stat.failed or 0, "keys=", table.concat(stat.keys, ","))
 		end
 	end
-	print("[FGUI] ServiceMeta toastActive=", stats.__meta.toastActive, "toastQueue=", stats.__meta.toastQueue, "loadingRefs=", stats.__meta.loadingRefTotal)
+	print("[FGUI] ServiceMeta open=", meta.serviceOpenTotal or 0, "kind=", meta.serviceKindCount or 0, "peak=", meta.peakOpen or 0, "created=", meta.createdTotal or 0, "closed=", meta.closedTotal or 0, "failed=", meta.failedTotal or 0, "toastActive=", meta.toastActive, "toastQueue=", meta.toastQueue, "toastQueuedTotal=", meta.toastQueuedTotal or 0, "toastDedupeIgnored=", meta.toastDedupeIgnoredTotal or 0, "loadingRefs=", meta.loadingRefTotal, "loadingPeakRefs=", meta.loadingPeakRefTotal or 0, "last=", tostring(meta.lastEvent or "") .. "/" .. tostring(meta.lastType or "") .. "/" .. tostring(meta.lastReason or ""))
 	print("[FGUI] DumpServices end")
 end

@@ -708,6 +708,14 @@ function FGUI_RunCommonServiceSelfTest()
 	local messageHandle = FairyGuiManager:ShowMessageBox("Message", "Common service probe", { "OK", "Cancel" })
 	local popupHandle = FairyGuiManager:ShowPopupMenu({ "One", "Two" }, 100, 120)
 	local serviceStats = FairyGuiManager:GetServiceStats()
+	local serviceMeta = serviceStats.__meta or {}
+	local serviceStatsOk = (serviceMeta.serviceOpenTotal or 0) >= 6
+		and (serviceMeta.serviceKindCount or 0) >= 6
+		and (serviceMeta.createdTotal or 0) >= 6
+		and (serviceMeta.peakOpen or 0) >= 6
+		and (serviceMeta.toastQueuedTotal or 0) >= 1
+		and (serviceMeta.toastDedupeIgnoredTotal or 0) >= 1
+		and (serviceMeta.loadingPeakRefTotal or 0) >= 2
 	local opened = toastHandle ~= nil
 		and tipHandle ~= nil
 		and loadingHandle ~= nil
@@ -722,6 +730,7 @@ function FGUI_RunCommonServiceSelfTest()
 		and serviceStats.PopupMenu ~= nil
 		and toastQueueOk == true
 		and loadingRefOk == true
+		and serviceStatsOk == true
 
 	local loadingHideOnce = FairyGuiManager:HideLoading({ refKey = "SelfTest", reason = "serviceSelfTestHideOnce" })
 	local loadingStillOpen = FairyGuiManager:GetObjectInfo("__Loading") ~= nil and FairyGuiManager:GetLoadingRefCount() == 1
@@ -735,14 +744,17 @@ function FGUI_RunCommonServiceSelfTest()
 	FairyGuiManager:Close("__MessageBox", true, "serviceSelfTestCleanup")
 	FairyGuiManager:Close("__PopupMenu", true, "serviceSelfTestCleanup")
 	local cleanupStats = FairyGuiManager:GetServiceStats()
+	local cleanupMeta = cleanupStats.__meta or {}
 	local cleaned = cleanupStats.Toast == nil
 		and cleanupStats.Tip == nil
 		and cleanupStats.Loading == nil
 		and cleanupStats.GuideMask == nil
 		and cleanupStats.MessageBox == nil
 		and cleanupStats.PopupMenu == nil
-		and cleanupStats.__meta.loadingRefTotal == 0
-		and cleanupStats.__meta.toastQueue == 0
+		and cleanupMeta.loadingRefTotal == 0
+		and cleanupMeta.toastQueue == 0
+		and cleanupMeta.serviceOpenTotal == 0
+		and (cleanupMeta.closedTotal or 0) >= 6
 
 	print(
 		"[FGUI] common service self test detail:",
@@ -755,6 +767,9 @@ function FGUI_RunCommonServiceSelfTest()
 		"guide=", guideHandle,
 		"message=", messageHandle,
 		"popup=", popupHandle,
+		"serviceStatsOk=", serviceStatsOk,
+		"service=", tostring(serviceMeta.serviceOpenTotal or 0) .. "/" .. tostring(serviceMeta.serviceKindCount or 0) .. "/" .. tostring(serviceMeta.peakOpen or 0),
+		"serviceTotals=", tostring(cleanupMeta.createdTotal or 0) .. "/" .. tostring(cleanupMeta.closedTotal or 0) .. "/" .. tostring(cleanupMeta.failedTotal or 0),
 		"opened=", opened,
 		"cleaned=", cleaned)
 	return opened == true and loadingHideOnce == true and loadingStillOpen == true and loadingHideTwice == true and loadingClosed == true and cleaned == true

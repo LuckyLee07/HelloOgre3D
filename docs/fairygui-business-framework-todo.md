@@ -18,7 +18,7 @@
 - [ ] UI 重复打开、隐藏缓存、强制销毁、场景切换清理都有明确规则和日志可查。
 - [ ] Click、Changed、ClickItem、RightClick、Drag、Touch、Wheel、Key、TextInput 事件能稳定桥接到 Lua，并在 UI 关闭后自动解绑。
 - [ ] fullscreen/adapt/margin/safe area 在窗口尺寸变化后统一重算，页面只关注自身布局策略。
-- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump、资源告警、source/alias 计数、同路径动态 loader 复用和长循环/压力回零自测已具备，texture 尺寸、切换明细与服务层统计仍需继续补。
+- [~] Package、纹理、材质、绑定数、打开 UI 数、渲染命令数、三角形数有统一 Dump；基础 `DumpHealth`、package/UI 引用 Dump、资源告警、source/alias 计数、同路径动态 loader 复用、服务层统计和长循环/压力回零自测已具备，texture 尺寸与切换明细仍需继续补。
 - [x] AutoGen 能覆盖常用控件、列表 item、controller、transition，并能在 CI 或本地命令里检查生成文件是否过期。
 - [x] 至少有一组真实业务样例覆盖页面、弹窗、列表、遮罩、拖拽、文本输入、场景清理和性能观测；当前由 `HELLO_FGUI_BUSINESS_FLOW_SELF_TEST=1` 串联验证。
 
@@ -67,7 +67,7 @@
 - [x] 增加 `HELLO_FGUI_COMMON_SERVICE_DEMO=1` 可视化演示，按节奏展示 Toast 队列、Loading 引用计数和通用服务关闭。
 - [x] FGUI 样例、自测和 demo 入口已迁到 `bin/res/scripts/samples/fgui_init.lua`，`game_init.lua` 只保留主启动壳。
 - [~] C++ 增加 FairyGUI renderer/material/texture 状态 Dump 入口；当前已有基础计数、source/alias 区分和动态 loader 资源复用，仍缺 texture 尺寸与切换明细。
-- [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent 和基础 frame counters，Lua 侧已补 Open/Close/Event/LoadPackage/CreateObject 轻量耗时 Dump，服务层统计和 Tracy 计数器仍待补。
+- [~] Tracy 增加 UI Open/Close/Event/Render zones 和计数器；当前 C++ 已覆盖 Update、Render、LoadPackage、CreateObject、DispatchEvent、服务层 counters 和基础 frame counters，Lua 侧已补 Open/Close/Event/LoadPackage/CreateObject/Service 轻量耗时 Dump，Tracy viewer 实测与更细资源明细仍待补。
 - [x] 增加 `HELLO_FGUI_DEBUG_PANEL_DEMO=1` 可视化调试面板，显示 Health、Render、Perf 和服务层概要。
 - [x] 增加 `HELLO_FGUI_SELF_TEST_ALL=1` 一键 FGUI 自测入口，集中跑 Act37、Act38、Layer、Mask、Input、Lifecycle、BusinessFlow、Cleanup。
 - [x] 增加 `HELLO_FGUI_LONG_LOOP_SELF_TEST=1` 长循环自测入口，循环打开关闭 Act37、Act38、Layer、Mask、TextInput 并检查资源/生命周期回零。
@@ -193,7 +193,7 @@
 - [x] 事件分发耗时统计，`DumpEventStats` 已输出 avg/max/last elapsedMs。
 - [~] render command、triangle、texture/material 统计；当前已输出 source/alias 计数并复用同路径动态 loader 资源，切换次数与尺寸明细待补。
 - [x] UI 数量压力样例，覆盖 1/5/20/50 个弹窗和 Act38 列表项规模；可通过 `tools/run_fgui_selftest.ps1 -Mode Pressure` 运行。
-- [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event 已接入，Lua open/close/event/load/create 轻量耗时已接入 Dump，服务层统计和 Tracy counter 待补。
+- [~] Tracy zones 和 frame counters 接入 UI 子系统；C++ FGUI update/render/load/create/event/service counters 已接入，Lua open/close/event/load/create/service 轻量耗时已接入 Dump，Tracy viewer 实测与更细资源明细待补。
 - [x] 长时间打开关闭循环自测，检测 handle、binding、timer、view/controller、package refCount 和资源告警是否回零。
 - [~] Release|x64、Debug|x64、Win32 的最小构建验证清单；当前 VS2017 Debug|x64 和 Release|x64 已复验通过，Win32 待补。
 
@@ -211,7 +211,7 @@
 
 FGUI 的 AutoGen、真实业务 UI、资源策略和自测闭环已经具备基础，后续短期优先按下面顺序推进：
 
-1. UI 压力样例与性能观测：补 1/5/20/50 个弹窗或列表规模样例，继续细化 texture、material、render command、triangle、服务层统计和 Tracy counter。
+1. UI 压力样例与性能观测：继续细化 texture、material、render command、triangle 尺寸/切换明细，并补 Tracy viewer 实测记录。
 2. 输入与层级边界：补 Tab 焦点顺序、Windows IME 最小链路、layer 输入穿透 / ESC / sorting order 规则，以及指定 parent/root 打开 UI。
 3. 复杂控件与开发工作流：补 Controller 监听、虚拟列表、Tree/TreeNode、子页面挂载、AutoGen 用户代码保留区和新增 UI 完整流程文档。
 

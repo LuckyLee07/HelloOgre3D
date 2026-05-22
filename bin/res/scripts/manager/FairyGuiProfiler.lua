@@ -153,7 +153,7 @@ end
 
 function FairyGuiProfiler:GetPerfStats()
 	local stats = {}
-	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject" }) do
+	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject", "service" }) do
 		stats[category] = self:GetPerfStat(category)
 	end
 	local owner = self.owner
@@ -169,7 +169,7 @@ end
 
 function FairyGuiProfiler:DumpPerfStats()
 	local stats = self:GetPerfStats()
-	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject" }) do
+	for _, category in ipairs({ "open", "close", "event", "loadPackage", "createObject", "service" }) do
 		local stat = stats[category]
 		print("[FGUI] PerfStat", category, "count=", stat.count, "success=", stat.success, "fail=", stat.fail, "avgMs=", formatMs(stat.avgMs), "maxMs=", formatMs(stat.maxMs), "lastMs=", formatMs(stat.lastMs), "last=", stat.lastName or "", "max=", stat.maxName or "")
 	end
@@ -228,17 +228,37 @@ function FairyGuiProfiler:DumpDebugStats()
 	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
 end
 
+function FairyGuiProfiler:PublishTracyCounters(healthStats, serviceMeta)
+	if GameManager == nil or GameManager.plotFairyGuiServiceStats == nil then
+		return false
+	end
+
+	healthStats = healthStats or {}
+	serviceMeta = serviceMeta or {}
+	return GameManager:plotFairyGuiServiceStats(
+		tonumber(serviceMeta.serviceOpenTotal) or 0,
+		tonumber(serviceMeta.serviceKindCount) or 0,
+		tonumber(serviceMeta.toastQueue) or 0,
+		tonumber(serviceMeta.loadingRefTotal) or 0,
+		tonumber(serviceMeta.createdTotal) or 0,
+		tonumber(serviceMeta.closedTotal) or 0,
+		tonumber(serviceMeta.failedTotal) or 0,
+		tonumber(serviceMeta.peakOpen) or 0)
+end
+
 function FairyGuiProfiler:GetHealthStats()
 	local owner = self.owner
 	local debugStats = self:GetDebugStats()
 	local renderStats = self:GetRenderStats()
 	local perfStats = self:GetPerfStats()
+	local serviceStats = owner ~= nil and owner:GetServiceStats() or { __meta = {} }
+	local serviceMeta = serviceStats.__meta or {}
 	local threadTimerCount = 0
 	if threadpool ~= nil and threadpool.get_timer_count ~= nil then
 		threadTimerCount = threadpool:get_timer_count()
 	end
 
-	return {
+	local stats = {
 		openUI = debugStats.openUI,
 		hiddenUI = debugStats.hiddenUI,
 		package = debugStats.package,
@@ -271,12 +291,26 @@ function FairyGuiProfiler:GetHealthStats()
 		eventMaxMs = perfStats.event.maxMs,
 		loadPackageAvgMs = perfStats.loadPackage.avgMs,
 		loadPackageMaxMs = perfStats.loadPackage.maxMs,
+		serviceOpenTotal = serviceMeta.serviceOpenTotal or 0,
+		serviceHiddenTotal = serviceMeta.serviceHiddenTotal or 0,
+		serviceKindCount = serviceMeta.serviceKindCount or 0,
+		serviceCreatedTotal = serviceMeta.createdTotal or 0,
+		serviceClosedTotal = serviceMeta.closedTotal or 0,
+		serviceFailedTotal = serviceMeta.failedTotal or 0,
+		servicePeakOpen = serviceMeta.peakOpen or 0,
+		toastQueue = serviceMeta.toastQueue or 0,
+		loadingRefTotal = serviceMeta.loadingRefTotal or 0,
+		servicePerfCount = perfStats.service.count,
+		serviceAvgMs = perfStats.service.avgMs,
+		serviceMaxMs = perfStats.service.maxMs,
 	}
+	self:PublishTracyCounters(stats, serviceMeta)
+	return stats
 end
 
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs))
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
 	local owner = self.owner
 	if verbose == true and owner ~= nil then
 		self:DumpPerfStats()
@@ -292,15 +326,6 @@ function FairyGuiProfiler:BuildDebugPanelLines()
 	local owner = self.owner
 	local health = self:GetHealthStats()
 	local perf = self:GetPerfStats()
-	local services = owner ~= nil and owner:GetServiceStats() or { __meta = {} }
-	local serviceMeta = services.__meta or {}
-	local serviceCount = 0
-	for serviceType, _ in pairs(services) do
-		if serviceType ~= "__meta" then
-			serviceCount = serviceCount + 1
-		end
-	end
-
 	return {
 		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
 		string.format("Life binding=%s timer=%s thread=%s child=%s focus=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.focusedHandle)),
@@ -308,8 +333,8 @@ function FairyGuiProfiler:BuildDebugPanelLines()
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
 		string.format("Perf close %s avg/max=%s/%s", tostring(perf.close.count), formatMs(perf.close.avgMs), formatMs(perf.close.maxMs)),
 		string.format("Perf event %s avg/max=%s/%s", tostring(perf.event.count), formatMs(perf.event.avgMs), formatMs(perf.event.maxMs)),
-		string.format("Load pkg %s avg/max=%s/%s create %s avg/max=%s/%s", tostring(perf.loadPackage.count), formatMs(perf.loadPackage.avgMs), formatMs(perf.loadPackage.maxMs), tostring(perf.createObject.count), formatMs(perf.createObject.avgMs), formatMs(perf.createObject.maxMs)),
-		string.format("Services kind=%s toastQueue=%s loadingRefs=%s", tostring(serviceCount), tostring(serviceMeta.toastQueue), tostring(serviceMeta.loadingRefTotal)),
+		string.format("Load pkg %s avg/max=%s/%s svc %s avg/max=%s/%s", tostring(perf.loadPackage.count), formatMs(perf.loadPackage.avgMs), formatMs(perf.loadPackage.maxMs), tostring(perf.service.count), formatMs(perf.service.avgMs), formatMs(perf.service.maxMs)),
+		string.format("Svc open=%s kind=%s peak=%s total=%s/%s/%s tq=%s lr=%s", tostring(health.serviceOpenTotal), tostring(health.serviceKindCount), tostring(health.servicePeakOpen), tostring(health.serviceCreatedTotal), tostring(health.serviceClosedTotal), tostring(health.serviceFailedTotal), tostring(health.toastQueue), tostring(health.loadingRefTotal)),
 	}
 end
 

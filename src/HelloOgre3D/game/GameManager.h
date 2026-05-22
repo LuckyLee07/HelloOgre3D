@@ -56,6 +56,7 @@ public:
 	int getFairyGuiTextureCount();
 	int getFairyGuiMaterialAliasCount();
 	int getFairyGuiTextureAliasCount();
+	bool plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
 	int getFairyGuiListItemCount(int objectHandle);

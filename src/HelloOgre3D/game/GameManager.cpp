@@ -293,6 +293,19 @@ int GameManager::getFairyGuiTextureAliasCount()
 #endif
 }
 
+bool GameManager::plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen)
+{
+	H3D_PROFILE_PLOT("FGUIServiceOpen", static_cast<double>(serviceOpenTotal));
+	H3D_PROFILE_PLOT("FGUIServiceKinds", static_cast<double>(serviceKindCount));
+	H3D_PROFILE_PLOT("FGUIToastQueue", static_cast<double>(toastQueueCount));
+	H3D_PROFILE_PLOT("FGUILoadingRefs", static_cast<double>(loadingRefTotal));
+	H3D_PROFILE_PLOT("FGUIServiceCreated", static_cast<double>(serviceCreatedTotal));
+	H3D_PROFILE_PLOT("FGUIServiceClosed", static_cast<double>(serviceClosedTotal));
+	H3D_PROFILE_PLOT("FGUIServiceFailed", static_cast<double>(serviceFailedTotal));
+	H3D_PROFILE_PLOT("FGUIServicePeakOpen", static_cast<double>(servicePeakOpen));
+	return true;
+}
+
 int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
 {
 #if defined(HELLO_ENABLE_FGUI)
