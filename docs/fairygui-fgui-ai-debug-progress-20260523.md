@@ -16,8 +16,13 @@
   - `tools/run_fgui_tracy_sample.ps1` wraps the existing Pressure self test and writes a compact report under `docs/perf/`.
   - The report extracts pressure stats, render detail, health, and perf lines for later Tracy viewer comparison.
 
+- FGUI stencil backend observability:
+  - C++ frame render stats now expose CPU clip source/output triangles, output fragments, stencil clip scope/polygon counts, hardware stencil support, and the active stencil backend.
+  - Lua `GetRenderStats`, `DumpRenderStats`, Pressure logs, and DebugPanel lines show `shapeCpu` backend details.
+  - Current Ogre `Pass` has no per-material stencil state; true GPU stencil parity should be implemented through a custom `Renderable` path or a ManualObject section replacement that can set/restore `RenderSystem` stencil state per renderable.
+
 ## Remaining High Priority
 
-- True GPU stencil pixel-level parity remains; shape-aware CPU stencil clipping now covers GraphMaskProbe and NestedGraphMaskProbe.
+- True GPU stencil pixel-level parity remains; shape-aware CPU stencil clipping now covers GraphMaskProbe and NestedGraphMaskProbe, with backend and CPU load visible in Dump/DebugPanel logs.
 - AI event payload normalization.
 - AI update scheduling, refresh budget, and Tracy-visible AI tick counters.

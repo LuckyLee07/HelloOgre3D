@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 23 10:50:40 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 23 15:02:00 2026.
 */
 
 #ifndef __cplusplus
@@ -4656,6 +4656,166 @@ static int tolua_GameToLua_GameManager_getFairyGuiLastStencilTriangleCount00(lua
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getFairyGuiLastCpuClipSourceTriangleCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastCpuClipSourceTriangleCount00
+static int tolua_GameToLua_GameManager_getFairyGuiLastCpuClipSourceTriangleCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiLastCpuClipSourceTriangleCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiLastCpuClipSourceTriangleCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastCpuClipSourceTriangleCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiLastCpuClipOutputTriangleCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastCpuClipOutputTriangleCount00
+static int tolua_GameToLua_GameManager_getFairyGuiLastCpuClipOutputTriangleCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiLastCpuClipOutputTriangleCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiLastCpuClipOutputTriangleCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastCpuClipOutputTriangleCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiLastCpuClipFragmentCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastCpuClipFragmentCount00
+static int tolua_GameToLua_GameManager_getFairyGuiLastCpuClipFragmentCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiLastCpuClipFragmentCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiLastCpuClipFragmentCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastCpuClipFragmentCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiLastStencilClipScopeCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastStencilClipScopeCount00
+static int tolua_GameToLua_GameManager_getFairyGuiLastStencilClipScopeCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiLastStencilClipScopeCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiLastStencilClipScopeCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastStencilClipScopeCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiLastStencilClipPolygonCount of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastStencilClipPolygonCount00
+static int tolua_GameToLua_GameManager_getFairyGuiLastStencilClipPolygonCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiLastStencilClipPolygonCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getFairyGuiLastStencilClipPolygonCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastStencilClipPolygonCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getFairyGuiLastCustomCommandCount of class  GameManager */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiLastCustomCommandCount00
 static int tolua_GameToLua_GameManager_getFairyGuiLastCustomCommandCount00(lua_State* tolua_S)
@@ -4747,6 +4907,102 @@ static int tolua_GameToLua_GameManager_getFairyGuiLastMaxBatchVertices00(lua_Sta
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getFairyGuiLastMaxBatchVertices'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isFairyGuiHardwareStencilSupported of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_isFairyGuiHardwareStencilSupported00
+static int tolua_GameToLua_GameManager_isFairyGuiHardwareStencilSupported00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isFairyGuiHardwareStencilSupported'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isFairyGuiHardwareStencilSupported();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isFairyGuiHardwareStencilSupported'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiStencilBackendString of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiStencilBackendString00
+static int tolua_GameToLua_GameManager_getFairyGuiStencilBackendString00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiStencilBackendString'", NULL);
+#endif
+  {
+   const char* tolua_ret = (const char*)  self->getFairyGuiStencilBackendString();
+   tolua_pushstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiStencilBackendString'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getFairyGuiStencilBackendDetailString of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_getFairyGuiStencilBackendDetailString00
+static int tolua_GameToLua_GameManager_getFairyGuiStencilBackendDetailString00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getFairyGuiStencilBackendDetailString'", NULL);
+#endif
+  {
+   const char* tolua_ret = (const char*)  self->getFairyGuiStencilBackendDetailString();
+   tolua_pushstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getFairyGuiStencilBackendDetailString'.",&tolua_err);
  return 0;
 #endif
 }
@@ -7778,9 +8034,17 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getFairyGuiLastCulledCommandCount",tolua_GameToLua_GameManager_getFairyGuiLastCulledCommandCount00);
    tolua_function(tolua_S,"getFairyGuiLastStencilCommandCount",tolua_GameToLua_GameManager_getFairyGuiLastStencilCommandCount00);
    tolua_function(tolua_S,"getFairyGuiLastStencilTriangleCount",tolua_GameToLua_GameManager_getFairyGuiLastStencilTriangleCount00);
+   tolua_function(tolua_S,"getFairyGuiLastCpuClipSourceTriangleCount",tolua_GameToLua_GameManager_getFairyGuiLastCpuClipSourceTriangleCount00);
+   tolua_function(tolua_S,"getFairyGuiLastCpuClipOutputTriangleCount",tolua_GameToLua_GameManager_getFairyGuiLastCpuClipOutputTriangleCount00);
+   tolua_function(tolua_S,"getFairyGuiLastCpuClipFragmentCount",tolua_GameToLua_GameManager_getFairyGuiLastCpuClipFragmentCount00);
+   tolua_function(tolua_S,"getFairyGuiLastStencilClipScopeCount",tolua_GameToLua_GameManager_getFairyGuiLastStencilClipScopeCount00);
+   tolua_function(tolua_S,"getFairyGuiLastStencilClipPolygonCount",tolua_GameToLua_GameManager_getFairyGuiLastStencilClipPolygonCount00);
    tolua_function(tolua_S,"getFairyGuiLastCustomCommandCount",tolua_GameToLua_GameManager_getFairyGuiLastCustomCommandCount00);
    tolua_function(tolua_S,"getFairyGuiLastMaxBatchTriangles",tolua_GameToLua_GameManager_getFairyGuiLastMaxBatchTriangles00);
    tolua_function(tolua_S,"getFairyGuiLastMaxBatchVertices",tolua_GameToLua_GameManager_getFairyGuiLastMaxBatchVertices00);
+   tolua_function(tolua_S,"isFairyGuiHardwareStencilSupported",tolua_GameToLua_GameManager_isFairyGuiHardwareStencilSupported00);
+   tolua_function(tolua_S,"getFairyGuiStencilBackendString",tolua_GameToLua_GameManager_getFairyGuiStencilBackendString00);
+   tolua_function(tolua_S,"getFairyGuiStencilBackendDetailString",tolua_GameToLua_GameManager_getFairyGuiStencilBackendDetailString00);
    tolua_function(tolua_S,"getFairyGuiMaterialDetailString",tolua_GameToLua_GameManager_getFairyGuiMaterialDetailString00);
    tolua_function(tolua_S,"getFairyGuiTextureDetailString",tolua_GameToLua_GameManager_getFairyGuiTextureDetailString00);
    tolua_function(tolua_S,"getFairyGuiFrameRenderDetailString",tolua_GameToLua_GameManager_getFairyGuiFrameRenderDetailString00);

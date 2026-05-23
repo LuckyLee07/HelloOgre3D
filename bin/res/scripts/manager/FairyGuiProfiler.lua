@@ -150,9 +150,17 @@ function FairyGuiProfiler:GetRenderStats()
 	local culledCommandCount = 0
 	local stencilCommandCount = 0
 	local stencilTriangleCount = 0
+	local cpuClipSourceTriangleCount = 0
+	local cpuClipOutputTriangleCount = 0
+	local cpuClipFragmentCount = 0
+	local stencilClipScopeCount = 0
+	local stencilClipPolygonCount = 0
 	local customCommandCount = 0
 	local maxBatchTriangles = 0
 	local maxBatchVertices = 0
+	local hardwareStencilSupported = false
+	local stencilBackend = ""
+	local stencilBackendDetail = ""
 	local runtimeObjectHandle = 0
 	local runtimeBinding = 0
 	local materialDetail = ""
@@ -203,6 +211,21 @@ function FairyGuiProfiler:GetRenderStats()
 	if GameManager ~= nil and GameManager.getFairyGuiLastStencilTriangleCount ~= nil then
 		stencilTriangleCount = GameManager:getFairyGuiLastStencilTriangleCount()
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipSourceTriangleCount ~= nil then
+		cpuClipSourceTriangleCount = GameManager:getFairyGuiLastCpuClipSourceTriangleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipOutputTriangleCount ~= nil then
+		cpuClipOutputTriangleCount = GameManager:getFairyGuiLastCpuClipOutputTriangleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipFragmentCount ~= nil then
+		cpuClipFragmentCount = GameManager:getFairyGuiLastCpuClipFragmentCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastStencilClipScopeCount ~= nil then
+		stencilClipScopeCount = GameManager:getFairyGuiLastStencilClipScopeCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastStencilClipPolygonCount ~= nil then
+		stencilClipPolygonCount = GameManager:getFairyGuiLastStencilClipPolygonCount()
+	end
 	if GameManager ~= nil and GameManager.getFairyGuiLastCustomCommandCount ~= nil then
 		customCommandCount = GameManager:getFairyGuiLastCustomCommandCount()
 	end
@@ -211,6 +234,15 @@ function FairyGuiProfiler:GetRenderStats()
 	end
 	if GameManager ~= nil and GameManager.getFairyGuiLastMaxBatchVertices ~= nil then
 		maxBatchVertices = GameManager:getFairyGuiLastMaxBatchVertices()
+	end
+	if GameManager ~= nil and GameManager.isFairyGuiHardwareStencilSupported ~= nil then
+		hardwareStencilSupported = GameManager:isFairyGuiHardwareStencilSupported() == true
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiStencilBackendString ~= nil then
+		stencilBackend = GameManager:getFairyGuiStencilBackendString() or ""
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiStencilBackendDetailString ~= nil then
+		stencilBackendDetail = GameManager:getFairyGuiStencilBackendDetailString() or ""
 	end
 	if GameManager ~= nil and GameManager.getFairyGuiRuntimeObjectHandleCount ~= nil then
 		runtimeObjectHandle = GameManager:getFairyGuiRuntimeObjectHandleCount()
@@ -243,9 +275,17 @@ function FairyGuiProfiler:GetRenderStats()
 		culledCommandCount = culledCommandCount or 0,
 		stencilCommandCount = stencilCommandCount or 0,
 		stencilTriangleCount = stencilTriangleCount or 0,
+		cpuClipSourceTriangleCount = cpuClipSourceTriangleCount or 0,
+		cpuClipOutputTriangleCount = cpuClipOutputTriangleCount or 0,
+		cpuClipFragmentCount = cpuClipFragmentCount or 0,
+		stencilClipScopeCount = stencilClipScopeCount or 0,
+		stencilClipPolygonCount = stencilClipPolygonCount or 0,
 		customCommandCount = customCommandCount or 0,
 		maxBatchTriangles = maxBatchTriangles or 0,
 		maxBatchVertices = maxBatchVertices or 0,
+		hardwareStencilSupported = hardwareStencilSupported == true,
+		stencilBackend = stencilBackend,
+		stencilBackendDetail = stencilBackendDetail,
 		runtimeObjectHandle = runtimeObjectHandle or 0,
 		runtimeBinding = runtimeBinding or 0,
 		materialDetail = materialDetail,
@@ -256,7 +296,10 @@ end
 
 function FairyGuiProfiler:DumpRenderStats()
 	local stats = self:GetRenderStats()
-	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "drawCommand=", stats.drawCommandCount, "drawTriangle=", stats.drawTriangleCount, "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "clip=", tostring(stats.clippedCommandCount) .. "/" .. tostring(stats.clippedTriangleCount), "cull=", stats.culledCommandCount, "stencil=", tostring(stats.stencilCommandCount) .. "/" .. tostring(stats.stencilTriangleCount), "custom=", stats.customCommandCount, "maxBatch=", tostring(stats.maxBatchTriangles) .. "/" .. tostring(stats.maxBatchVertices), "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "drawCommand=", stats.drawCommandCount, "drawTriangle=", stats.drawTriangleCount, "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "clip=", tostring(stats.clippedCommandCount) .. "/" .. tostring(stats.clippedTriangleCount), "cpuClip=", tostring(stats.cpuClipSourceTriangleCount) .. "/" .. tostring(stats.cpuClipOutputTriangleCount) .. "/" .. tostring(stats.cpuClipFragmentCount), "cull=", stats.culledCommandCount, "stencil=", tostring(stats.stencilCommandCount) .. "/" .. tostring(stats.stencilTriangleCount), "stencilClip=", tostring(stats.stencilClipScopeCount) .. "/" .. tostring(stats.stencilClipPolygonCount), "backend=", stats.stencilBackend, "hwStencil=", stats.hardwareStencilSupported, "custom=", stats.customCommandCount, "maxBatch=", tostring(stats.maxBatchTriangles) .. "/" .. tostring(stats.maxBatchVertices), "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	if not isBlank(stats.stencilBackendDetail) then
+		print("[FGUI] RenderStencilBackend", stats.stencilBackendDetail)
+	end
 	if not isBlank(stats.frameRenderDetail) then
 		print("[FGUI] RenderFrameDetail", stats.frameRenderDetail)
 	end
@@ -454,6 +497,13 @@ function FairyGuiProfiler:GetHealthStats()
 		culledCommandCount = renderStats.culledCommandCount,
 		stencilCommandCount = renderStats.stencilCommandCount,
 		stencilTriangleCount = renderStats.stencilTriangleCount,
+		cpuClipSourceTriangleCount = renderStats.cpuClipSourceTriangleCount,
+		cpuClipOutputTriangleCount = renderStats.cpuClipOutputTriangleCount,
+		cpuClipFragmentCount = renderStats.cpuClipFragmentCount,
+		stencilClipScopeCount = renderStats.stencilClipScopeCount,
+		stencilClipPolygonCount = renderStats.stencilClipPolygonCount,
+		hardwareStencilSupported = renderStats.hardwareStencilSupported,
+		stencilBackend = renderStats.stencilBackend,
 		customCommandCount = renderStats.customCommandCount,
 		maxBatchTriangles = renderStats.maxBatchTriangles,
 		maxBatchVertices = renderStats.maxBatchVertices,
@@ -732,6 +782,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 		string.format("Life binding=%s timer=%s thread=%s child=%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.controller), tostring(health.view)),
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),
+		string.format("Stencil backend=%s hw=%s cpuClip=%s/%s/%s mask=%s/%s", tostring(render.stencilBackend or "-"), tostring(render.hardwareStencilSupported == true and 1 or 0), tostring(render.cpuClipSourceTriangleCount), tostring(render.cpuClipOutputTriangleCount), tostring(render.cpuClipFragmentCount), tostring(render.stencilClipScopeCount), tostring(render.stencilClipPolygonCount)),
 		string.format("Stacks ui=%s popup=%s warnings=%s eventTotal=%s", tostring(owner ~= nil and #(owner.uiStack or {}) or 0), tostring(owner ~= nil and #(owner.popupStack or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(eventStats.total or 0)),
 		string.format("Last event=%s root=%s sender=%s item=%s xy=%s,%s", lastEvent ~= nil and tostring(lastEvent.eventType) or "-", lastEvent ~= nil and tostring(lastEvent.rootHandle) or "-", lastEvent ~= nil and tostring(lastEvent.senderHandle) or "-", lastEvent ~= nil and tostring(lastEvent.itemHandle or "") or "-", lastEvent ~= nil and tostring(lastEvent.x or "") or "-", lastEvent ~= nil and tostring(lastEvent.y or "") or "-"),
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),

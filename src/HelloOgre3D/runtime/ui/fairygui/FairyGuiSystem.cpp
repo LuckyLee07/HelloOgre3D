@@ -989,6 +989,9 @@ void FairyGuiSystem::Render()
 	H3D_PROFILE_PLOT("FGUITextureSwitches", static_cast<double>(m_lastFrameStats.textureSwitchCount));
 	H3D_PROFILE_PLOT("FGUIClippedCommands", static_cast<double>(m_lastFrameStats.clippedCommandCount));
 	H3D_PROFILE_PLOT("FGUIStencilCommands", static_cast<double>(m_lastFrameStats.stencilCommandCount));
+	H3D_PROFILE_PLOT("FGUICpuClipSourceTriangles", static_cast<double>(m_lastFrameStats.cpuClipSourceTriangleCount));
+	H3D_PROFILE_PLOT("FGUICpuClipOutputTriangles", static_cast<double>(m_lastFrameStats.cpuClipOutputTriangleCount));
+	H3D_PROFILE_PLOT("FGUIStencilClipPolygons", static_cast<double>(m_lastFrameStats.stencilClipPolygonCount));
 	H3D_PROFILE_PLOT("FGUIMaxBatchTriangles", static_cast<double>(m_lastFrameStats.maxBatchTriangles));
 }
 
@@ -2040,6 +2043,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 
 		std::vector<ActiveStencilScope> activeScopes;
 		activeScopes.reserve(m_stencilScopes.size());
+		int stencilClipPolygonCount = 0;
 		for (std::vector<StencilClipInfo>::const_iterator scopeIt = m_stencilScopes.begin(); scopeIt != m_stencilScopes.end(); ++scopeIt)
 		{
 			ActiveStencilScope activeScope;
@@ -2061,9 +2065,11 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 				}
 				activeScope.valid = !activeScope.polygons.empty();
 			}
+			stencilClipPolygonCount += static_cast<int>(activeScope.polygons.size());
 			activeScopes.push_back(activeScope);
 		}
 
+		const int stencilClipScopeCount = hasStencilClip ? static_cast<int>(activeScopes.size()) : 0;
 		const std::vector<ClipVertex> scissorPolygon = hasScissorClip ? BuildRectClipPolygon(m_scissorRect) : std::vector<ClipVertex>();
 		std::vector<ClipVertex> outputVertices;
 		std::vector<std::vector<ClipVertex> > fragments;
@@ -2079,6 +2085,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 		clipScratch.reserve(8);
 		insideScratch.reserve(8);
 		outsideScratch.reserve(8);
+		int outputFragmentCount = 0;
 		for (int index = 0; index + 2 < triangles.indexCount; index += 3)
 		{
 			std::vector<ClipVertex> triangle;
@@ -2161,17 +2168,21 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 					break;
 			}
 
+			outputFragmentCount += static_cast<int>(fragments.size());
 			for (std::vector<std::vector<ClipVertex> >::const_iterator fragmentIt = fragments.begin(); fragmentIt != fragments.end(); ++fragmentIt)
 				AppendPolygonTriangles(*fragmentIt, outputVertices);
 		}
 
 		if (outputVertices.empty())
 		{
+			RecordCpuClipWork(submittedTriangleCount, 0, outputFragmentCount, stencilClipScopeCount, stencilClipPolygonCount);
 			RecordDrawCommand(command.getTexture(), materialName, triangles.vertCount, submittedTriangleCount, 0, true);
 			return;
 		}
 
-		RecordDrawCommand(command.getTexture(), materialName, static_cast<int>(outputVertices.size()), submittedTriangleCount, static_cast<int>(outputVertices.size() / 3), true);
+		const int outputTriangleCount = static_cast<int>(outputVertices.size() / 3);
+		RecordCpuClipWork(submittedTriangleCount, outputTriangleCount, outputFragmentCount, stencilClipScopeCount, stencilClipPolygonCount);
+		RecordDrawCommand(command.getTexture(), materialName, static_cast<int>(outputVertices.size()), submittedTriangleCount, outputTriangleCount, true);
 		m_pManualObject->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		m_pManualObject->estimateVertexCount(outputVertices.size());
 		m_pManualObject->estimateIndexCount(outputVertices.size());
@@ -3031,6 +3042,17 @@ void FairyGuiSystem::RecordStencilCommand(int triangleCount)
 	m_currentFrameStats.stencilTriangleCount += triangleCount > 0 ? triangleCount : 0;
 }
 
+void FairyGuiSystem::RecordCpuClipWork(int sourceTriangleCount, int outputTriangleCount, int fragmentCount, int stencilScopeCount, int stencilPolygonCount)
+{
+	FrameRenderStats& stats = m_currentFrameStats;
+	stats.cpuClipSourceTriangleCount += sourceTriangleCount > 0 ? sourceTriangleCount : 0;
+	stats.cpuClipOutputTriangleCount += outputTriangleCount > 0 ? outputTriangleCount : 0;
+	stats.cpuClipFragmentCount += fragmentCount > 0 ? fragmentCount : 0;
+	if (stencilScopeCount > stats.maxStencilClipScopeCount)
+		stats.maxStencilClipScopeCount = stencilScopeCount;
+	stats.stencilClipPolygonCount += stencilPolygonCount > 0 ? stencilPolygonCount : 0;
+}
+
 void FairyGuiSystem::RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped)
 {
 	FrameRenderStats& stats = m_currentFrameStats;
@@ -3087,7 +3109,14 @@ std::string FairyGuiSystem::BuildFrameRenderDetailString(const FrameRenderStats&
 		<< " clip=" << stats.clippedCommandCount << "/" << stats.clippedTriangleCount
 		<< " cull=" << stats.culledCommandCount
 		<< " stencil=" << stats.stencilCommandCount << "/" << stats.stencilTriangleCount
-		<< " custom=" << stats.customCommandCount;
+		<< " custom=" << stats.customCommandCount
+		<< " backend=" << GetStencilBackendString()
+		<< " hwStencil=" << (IsHardwareStencilSupported() ? 1 : 0);
+
+	if (stats.cpuClipSourceTriangleCount > 0)
+		stream << " cpuClip=" << stats.cpuClipSourceTriangleCount << "/" << stats.cpuClipOutputTriangleCount << "/" << stats.cpuClipFragmentCount;
+	if (stats.maxStencilClipScopeCount > 0 || stats.stencilClipPolygonCount > 0)
+		stream << " stencilClip=" << stats.maxStencilClipScopeCount << "/" << stats.stencilClipPolygonCount;
 
 	const std::string materialBrief = BuildCountBrief(stats.materialCommandCounts, 3);
 	if (!materialBrief.empty())
@@ -3097,6 +3126,28 @@ std::string FairyGuiSystem::BuildFrameRenderDetailString(const FrameRenderStats&
 	if (!textureBrief.empty())
 		stream << " texTop=" << textureBrief;
 
+	return stream.str();
+}
+
+bool FairyGuiSystem::IsHardwareStencilSupported() const
+{
+	Ogre::Root* root = Ogre::Root::getSingletonPtr();
+	Ogre::RenderSystem* renderSystem = root != nullptr ? root->getRenderSystem() : nullptr;
+	const Ogre::RenderSystemCapabilities* capabilities = renderSystem != nullptr ? renderSystem->getCapabilities() : nullptr;
+	return capabilities != nullptr && capabilities->hasCapability(Ogre::RSC_HWSTENCIL);
+}
+
+std::string FairyGuiSystem::GetStencilBackendString() const
+{
+	return "shapeCpu";
+}
+
+std::string FairyGuiSystem::GetStencilBackendDetailString() const
+{
+	std::ostringstream stream;
+	stream << "backend=" << GetStencilBackendString()
+		<< " hwStencil=" << (IsHardwareStencilSupported() ? 1 : 0)
+		<< " gpuPath=customRenderableRequired";
 	return stream.str();
 }
 

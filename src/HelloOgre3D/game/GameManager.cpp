@@ -39,6 +39,7 @@ GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
 	m_fairyGuiLastPackageName(), m_fairyGuiLastObjectText(), m_fairyGuiLastObjectValue(), m_fairyGuiLastControllerString(),
+	m_fairyGuiLastStencilBackend(), m_fairyGuiLastStencilBackendDetail(),
 	m_fairyGuiLastMaterialDetail(), m_fairyGuiLastTextureDetail(), m_fairyGuiLastFrameRenderDetail(), m_fairyGuiLastImeDebug()
 {
 	
@@ -410,6 +411,56 @@ int GameManager::getFairyGuiLastStencilTriangleCount()
 #endif
 }
 
+int GameManager::getFairyGuiLastCpuClipSourceTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastCpuClipSourceTriangleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastCpuClipOutputTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastCpuClipOutputTriangleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastCpuClipFragmentCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastCpuClipFragmentCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastStencilClipScopeCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastStencilClipScopeCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastStencilClipPolygonCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastStencilClipPolygonCount() : 0;
+#else
+	return 0;
+#endif
+}
+
 int GameManager::getFairyGuiLastCustomCommandCount()
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -438,6 +489,38 @@ int GameManager::getFairyGuiLastMaxBatchVertices()
 #else
 	return 0;
 #endif
+}
+
+bool GameManager::isFairyGuiHardwareStencilSupported()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->IsHardwareStencilSupported();
+#else
+	return false;
+#endif
+}
+
+const char* GameManager::getFairyGuiStencilBackendString()
+{
+	m_fairyGuiLastStencilBackend.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastStencilBackend = system->GetStencilBackendString();
+#endif
+	return m_fairyGuiLastStencilBackend.c_str();
+}
+
+const char* GameManager::getFairyGuiStencilBackendDetailString()
+{
+	m_fairyGuiLastStencilBackendDetail.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastStencilBackendDetail = system->GetStencilBackendDetailString();
+#endif
+	return m_fairyGuiLastStencilBackendDetail.c_str();
 }
 
 const char* GameManager::getFairyGuiMaterialDetailString()

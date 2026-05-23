@@ -433,11 +433,12 @@ local function tryRunFairyGuiMaskSelfTest()
 		FairyGuiManager:DumpRenderStats()
 		threadpool:delay(1, function()
 			local render = FairyGuiManager:GetRenderStats()
-			local renderOk = render ~= nil and (render.drawCommandCount or 0) > 0 and (render.stencilCommandCount or 0) > 0
+			local clipOk = render ~= nil and (render.cpuClipSourceTriangleCount or 0) > 0 and (render.stencilClipPolygonCount or 0) > 0
+			local renderOk = render ~= nil and (render.drawCommandCount or 0) > 0 and (render.stencilCommandCount or 0) > 0 and clipOk == true
 			local closed = FGUI_CloseMaskProbe()
 			local graphClosed = FGUI_CloseGraphMaskProbe()
 			local nestedClosed = FGUI_CloseNestedGraphMaskProbe()
-			print("[FGUI] mask probe self test result:", handle ~= nil and graphHandle ~= nil and nestedHandle ~= nil and renderOk == true and closed == true and graphClosed == true and nestedClosed == true, "draw=", render and render.drawCommandCount, "stencil=", render and render.stencilCommandCount)
+			print("[FGUI] mask probe self test result:", handle ~= nil and graphHandle ~= nil and nestedHandle ~= nil and renderOk == true and closed == true and graphClosed == true and nestedClosed == true, "draw=", render and render.drawCommandCount, "stencil=", render and render.stencilCommandCount, "cpuClip=", render and tostring(render.cpuClipSourceTriangleCount) .. "/" .. tostring(render.cpuClipOutputTriangleCount) .. "/" .. tostring(render.cpuClipFragmentCount), "stencilClip=", render and tostring(render.stencilClipScopeCount) .. "/" .. tostring(render.stencilClipPolygonCount), "backend=", render and render.stencilBackend)
 			print("[FGUI] mask probe close self test:", closed, graphClosed, nestedClosed)
 			FairyGuiManager:DumpOpenUIs()
 			FairyGuiManager:DumpStacks()
@@ -760,6 +761,7 @@ function FGUI_RunDebugPanelSelfTest()
 	local hasLines = type(lines) == "table" and #lines >= 12
 	local hasRenderLine = false
 	local hasDrawLine = false
+	local hasStencilLine = false
 	local hasOpenLine = false
 	for _, line in ipairs(lines or {}) do
 		if string.find(line, "Render", 1, true) ~= nil then
@@ -767,6 +769,9 @@ function FGUI_RunDebugPanelSelfTest()
 		end
 		if string.find(line, "Draw ", 1, true) ~= nil then
 			hasDrawLine = true
+		end
+		if string.find(line, "Stencil ", 1, true) ~= nil then
+			hasStencilLine = true
 		end
 		if string.find(line, "Open ", 1, true) ~= nil then
 			hasOpenLine = true
@@ -778,6 +783,9 @@ function FGUI_RunDebugPanelSelfTest()
 		and snapshot.render.materialSwitchCount ~= nil
 		and snapshot.render.clippedCommandCount ~= nil
 		and snapshot.render.stencilCommandCount ~= nil
+		and snapshot.render.cpuClipSourceTriangleCount ~= nil
+		and snapshot.render.stencilClipPolygonCount ~= nil
+		and snapshot.render.stencilBackend ~= nil
 
 	FairyGuiManager:HideDebugPanel("__DebugPanelSelfTest")
 	FairyGuiManager:Close("Act38Test", true, "debugPanelCleanup")
@@ -796,6 +804,7 @@ function FGUI_RunDebugPanelSelfTest()
 		"binding=", hasBindings,
 		"renderLine=", hasRenderLine,
 		"drawLine=", hasDrawLine,
+		"stencilLine=", hasStencilLine,
 		"renderDetail=", hasRenderDetail,
 		"openLine=", hasOpenLine,
 		"clean=", finalClean,
@@ -813,6 +822,7 @@ function FGUI_RunDebugPanelSelfTest()
 		and hasBindings == true
 		and hasRenderLine == true
 		and hasDrawLine == true
+		and hasStencilLine == true
 		and hasRenderDetail == true
 		and hasOpenLine == true
 		and finalClean == true
@@ -1647,7 +1657,10 @@ local function buildFairyGuiPressureStats(label, popupCount, listItemCount)
 		"draw=", tostring(render.drawCommandCount) .. "/" .. tostring(render.drawTriangleCount),
 		"switch=", tostring(render.materialSwitchCount) .. "/" .. tostring(render.textureSwitchCount),
 		"clip=", tostring(render.clippedCommandCount) .. "/" .. tostring(render.clippedTriangleCount),
+		"cpuClip=", tostring(render.cpuClipSourceTriangleCount) .. "/" .. tostring(render.cpuClipOutputTriangleCount) .. "/" .. tostring(render.cpuClipFragmentCount),
 		"stencil=", tostring(render.stencilCommandCount) .. "/" .. tostring(render.stencilTriangleCount),
+		"stencilClip=", tostring(render.stencilClipScopeCount) .. "/" .. tostring(render.stencilClipPolygonCount),
+		"backend=", render.stencilBackend,
 		"maxBatch=", tostring(render.maxBatchTriangles) .. "/" .. tostring(render.maxBatchVertices),
 		"material=", render.materialCount,
 		"texture=", render.textureCount,

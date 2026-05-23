@@ -151,9 +151,17 @@ public:
 	int GetLastCulledCommandCount() const { return m_lastFrameStats.culledCommandCount; }
 	int GetLastStencilCommandCount() const { return m_lastFrameStats.stencilCommandCount; }
 	int GetLastStencilTriangleCount() const { return m_lastFrameStats.stencilTriangleCount; }
+	int GetLastCpuClipSourceTriangleCount() const { return m_lastFrameStats.cpuClipSourceTriangleCount; }
+	int GetLastCpuClipOutputTriangleCount() const { return m_lastFrameStats.cpuClipOutputTriangleCount; }
+	int GetLastCpuClipFragmentCount() const { return m_lastFrameStats.cpuClipFragmentCount; }
+	int GetLastStencilClipScopeCount() const { return m_lastFrameStats.maxStencilClipScopeCount; }
+	int GetLastStencilClipPolygonCount() const { return m_lastFrameStats.stencilClipPolygonCount; }
 	int GetLastCustomCommandCount() const { return m_lastFrameStats.customCommandCount; }
 	int GetLastMaxBatchTriangles() const { return m_lastFrameStats.maxBatchTriangles; }
 	int GetLastMaxBatchVertices() const { return m_lastFrameStats.maxBatchVertices; }
+	bool IsHardwareStencilSupported() const;
+	std::string GetStencilBackendString() const;
+	std::string GetStencilBackendDetailString() const;
 	std::string GetMaterialDetailString() const;
 	std::string GetTextureDetailString() const;
 	std::string GetFrameRenderDetailString() const { return m_lastFrameStats.detailString; }
@@ -191,7 +199,10 @@ private:
 		FrameRenderStats()
 			: drawCommandCount(0), drawTriangleCount(0), materialSwitchCount(0), textureSwitchCount(0),
 			clippedCommandCount(0), clippedTriangleCount(0), culledCommandCount(0),
-			stencilCommandCount(0), stencilTriangleCount(0), customCommandCount(0),
+			stencilCommandCount(0), stencilTriangleCount(0),
+			cpuClipSourceTriangleCount(0), cpuClipOutputTriangleCount(0), cpuClipFragmentCount(0),
+			maxStencilClipScopeCount(0), stencilClipPolygonCount(0),
+			customCommandCount(0),
 			maxBatchTriangles(0), maxBatchVertices(0),
 			materialCommandCounts(), textureCommandCounts(), lastMaterialName(), lastTextureSource(), detailString()
 		{
@@ -206,6 +217,11 @@ private:
 		int culledCommandCount;
 		int stencilCommandCount;
 		int stencilTriangleCount;
+		int cpuClipSourceTriangleCount;
+		int cpuClipOutputTriangleCount;
+		int cpuClipFragmentCount;
+		int maxStencilClipScopeCount;
+		int stencilClipPolygonCount;
 		int customCommandCount;
 		int maxBatchTriangles;
 		int maxBatchVertices;
@@ -302,6 +318,7 @@ private:
 	bool CreateConfiguredPackageObject();
 	void ResetFrameRenderStats();
 	void RecordStencilCommand(int triangleCount);
+	void RecordCpuClipWork(int sourceTriangleCount, int outputTriangleCount, int fragmentCount, int stencilScopeCount, int stencilPolygonCount);
 	void RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped);
 	void FinalizeFrameRenderStats();
 	std::string BuildFrameRenderDetailString(const FrameRenderStats& stats) const;

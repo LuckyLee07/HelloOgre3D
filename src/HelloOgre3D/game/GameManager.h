@@ -67,9 +67,17 @@ public:
 	int getFairyGuiLastCulledCommandCount();
 	int getFairyGuiLastStencilCommandCount();
 	int getFairyGuiLastStencilTriangleCount();
+	int getFairyGuiLastCpuClipSourceTriangleCount();
+	int getFairyGuiLastCpuClipOutputTriangleCount();
+	int getFairyGuiLastCpuClipFragmentCount();
+	int getFairyGuiLastStencilClipScopeCount();
+	int getFairyGuiLastStencilClipPolygonCount();
 	int getFairyGuiLastCustomCommandCount();
 	int getFairyGuiLastMaxBatchTriangles();
 	int getFairyGuiLastMaxBatchVertices();
+	bool isFairyGuiHardwareStencilSupported();
+	const char* getFairyGuiStencilBackendString();
+	const char* getFairyGuiStencilBackendDetailString();
 	const char* getFairyGuiMaterialDetailString();
 	const char* getFairyGuiTextureDetailString();
 	const char* getFairyGuiFrameRenderDetailString();
@@ -173,6 +181,8 @@ private:
 	std::string m_fairyGuiLastObjectText;
 	std::string m_fairyGuiLastObjectValue;
 	std::string m_fairyGuiLastControllerString;
+	std::string m_fairyGuiLastStencilBackend;
+	std::string m_fairyGuiLastStencilBackendDetail;
 	std::string m_fairyGuiLastMaterialDetail;
 	std::string m_fairyGuiLastTextureDetail;
 	std::string m_fairyGuiLastFrameRenderDetail;
