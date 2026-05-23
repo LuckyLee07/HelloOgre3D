@@ -126,6 +126,17 @@ local function tryRunFairyGuiVirtualListSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiTreeSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_TREE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] tree self test result:", FGUI_RunTreeSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiDebugPanelSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_DEBUG_PANEL_SELF_TEST") then
 		return
@@ -550,6 +561,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiImeSelfTest()
 		tryRunFairyGuiComplexControlsSelfTest()
 		tryRunFairyGuiVirtualListSelfTest()
+		tryRunFairyGuiTreeSelfTest()
 		tryRunFairyGuiDebugPanelSelfTest()
 		tryRunFairyGuiAiDebugPanelSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
@@ -656,6 +668,23 @@ function FGUI_RunVirtualListSelfTest()
 	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
 	print("[FGUI] virtual list self test detail:", listOk, finalClean, "render=", stats.renderCount, "items=", stats.itemHandleCount, "reuse=", stats.reuseCount, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
 	return listOk == true and finalClean == true
+end
+
+function FGUI_RunTreeSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "treeReset")
+	FairyGuiManager:Close("Act38Test", true, "treeReset")
+	local ctrl = FGUI_OpenAct38Sample({
+		scene = "Tree",
+		group = "Tree",
+		dateText = "Tree Self Test",
+	})
+	local treeOk = ctrl ~= nil and ctrl.RunTreeSelfTest ~= nil and ctrl:RunTreeSelfTest() or false
+	FairyGuiManager:Close("Act38Test", true, "treeCleanup")
+	FairyGuiManager:Close("Act37TestMvc", true, "treeCleanup")
+	local health = FairyGuiManager:GetHealthStats()
+	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
+	print("[FGUI] tree self test detail:", treeOk, finalClean, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
+	return treeOk == true and finalClean == true
 end
 
 function FGUI_CloseAct38Sample()
@@ -1450,6 +1479,9 @@ function FGUI_RunSelfTestSuite()
 	end)
 	schedule(0.6, "VirtualList", function()
 		return FGUI_RunVirtualListSelfTest()
+	end)
+	schedule(0.6, "Tree", function()
+		return FGUI_RunTreeSelfTest()
 	end)
 	schedule(0.6, "DebugPanel", function()
 		return FGUI_RunDebugPanelSelfTest()

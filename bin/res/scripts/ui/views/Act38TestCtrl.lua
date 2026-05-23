@@ -120,15 +120,25 @@ end
 function Act38TestCtrl:OnTaskItemClick(taskType, evt)
 	local itemIndex = evt.itemIndex
 	if itemIndex == nil then
-		return
+		return false
 	end
 
 	local listPath = taskType == "day" and "m2_dayTaskList" or "m2_spcTaskList"
+	if evt.treeKey ~= nil then
+		self:SetTreeNodeSelected(listPath, evt.treeKey)
+		if evt.treeHasChildren == true then
+			self:ToggleTreeNode(listPath, evt.treeKey)
+		end
+		print("[FGUI] Act38TestCtrl tree item click:", taskType, evt.treeKey, evt.treeDepth, evt.treeHasChildren, evt.treeExpanded)
+		return true
+	end
+
 	local task = self.model:AdvanceTaskState(taskType, itemIndex)
 	if task ~= nil then
 		self:UpdateListItem(listPath, itemIndex, task)
 	end
 	print("[FGUI] Act38TestCtrl task item click:", taskType, itemIndex, task and task.desc, task and task.state)
+	return task ~= nil
 end
 
 function Act38TestCtrl:OnShopItemClick(evt)
@@ -235,6 +245,89 @@ function Act38TestCtrl:RunVirtualListSelfTest()
 		and mutateCountOk == true
 		and dataOk == true
 		and statsOk == true
+end
+
+function Act38TestCtrl:RunTreeSelfTest()
+	local treeData = {
+		{
+			key = "root",
+			text = "Root Task",
+			expanded = true,
+			children = {
+				{ key = "root.daily", text = "Daily Branch" },
+				{ key = "root.special", text = "Special Branch" },
+			},
+		},
+		{ key = "solo", text = "Solo Task" },
+	}
+	local renderCount = 0
+	local treeOk = self:SetTreeData("m2_spcTaskList", treeData, function(item, node, index)
+		renderCount = renderCount + 1
+		local indent = string.rep("  ", node.depth or 0)
+		local marker = node.hasChildren and (node.expanded and "- " or "+ ") or "  "
+		local selected = node.selected and "* " or ""
+		item:SetControllerIndex("c1", node.hasChildren and 0 or 1)
+		item:SetText("desc", selected .. indent .. marker .. tostring(node.text or node.key))
+		item:SetText("num", tostring(index))
+		item:SetVisible("btn_go", node.hasChildren == true)
+		item:SetVisible("btn_get", node.hasChildren ~= true)
+		item:SetVisible("btn_alrget", false)
+	end, { resetState = true })
+	local flatBefore = self:GetTreeFlatData("m2_spcTaskList")
+	local addChildOk = self:AddTreeNode("m2_spcTaskList", "root", { key = "root.extra", text = "Extra Branch" })
+	local flatAfterAdd = self:GetTreeFlatData("m2_spcTaskList")
+	local updateOk = self:UpdateTreeNode("m2_spcTaskList", "root.daily", { text = "Daily Branch Updated" })
+	local updatedNode = self:GetTreeNode("m2_spcTaskList", "root.daily")
+	local selectOk = self:SetTreeNodeSelected("m2_spcTaskList", "root.daily")
+	local selectedKey = self:GetTreeSelectedKey("m2_spcTaskList")
+	local selectedNode = self:GetTreeSelectedNode("m2_spcTaskList")
+	local collapseOk = self:SetTreeNodeExpanded("m2_spcTaskList", "root", false)
+	local flatCollapsed = self:GetTreeFlatData("m2_spcTaskList")
+	local expandOk = self:SetTreeNodeExpanded("m2_spcTaskList", "root", true)
+	local removeOk = self:RemoveTreeNode("m2_spcTaskList", "root.special")
+	local flatAfterRemove = self:GetTreeFlatData("m2_spcTaskList")
+	local clickOk = self:OnTaskItemClick("special", {
+		itemIndex = 1,
+		treeKey = "root",
+		treeDepth = 0,
+		treeHasChildren = true,
+		treeExpanded = true,
+		itemData = flatAfterRemove[1],
+	})
+	local flatAfterClick = self:GetTreeFlatData("m2_spcTaskList")
+	local clearOk = self:ClearTree("m2_spcTaskList")
+	local flatAfterClear = self:GetTreeFlatData("m2_spcTaskList")
+
+	local countsOk = #flatBefore == 4
+		and #flatAfterAdd == 5
+		and #flatCollapsed == 2
+		and #flatAfterRemove == 4
+		and #flatAfterClick == 2
+		and #flatAfterClear == 0
+	local dataOk = updatedNode ~= nil
+		and updatedNode.text == "Daily Branch Updated"
+		and selectedKey == "root.daily"
+		and selectedNode == updatedNode
+
+	print(
+		"[FGUI] Act38TestCtrl tree self test:",
+		"tree=", treeOk,
+		"add/update/select=", addChildOk, updateOk, selectOk, selectedKey,
+		"collapse/expand/remove/click/clear=", collapseOk, expandOk, removeOk, clickOk, clearOk,
+		"counts=", #flatBefore, #flatAfterAdd, #flatCollapsed, #flatAfterRemove, #flatAfterClick, #flatAfterClear,
+		"render=", renderCount)
+
+	return treeOk == true
+		and addChildOk == true
+		and updateOk == true
+		and selectOk == true
+		and collapseOk == true
+		and expandOk == true
+		and removeOk == true
+		and clickOk == true
+		and clearOk == true
+		and countsOk == true
+		and dataOk == true
 end
 
 function Act38TestCtrl:RunComplexControlSelfTest()

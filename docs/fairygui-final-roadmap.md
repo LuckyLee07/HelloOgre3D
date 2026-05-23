@@ -505,6 +505,7 @@ self:PlayTransition("show")
 - ComboBox 支持 `selectedIndex/value` 读写，`Manager/View/Ctrl/ListItem` 均已有封装。
 - Transition 支持按名字或默认第一个 transition 播放、停止和完成回调；回调纳入 Manager 关闭残留检查。
 - `SetControllerIndex` 已支持空名字访问第一个 controller；专用 controller change 监听与 page id/name 访问仍待补。
+- Tree/TreeNode 已具备最小封装：`SetTreeData / AddTreeNode / RemoveTreeNode / ClearTree / UpdateTreeNode / SetTreeNodeSelected / ToggleTreeNode`，并接入 `HELLO_FGUI_TREE_SELF_TEST=1`。
 
 ### Phase 5.5: AutoGen 生成链
 

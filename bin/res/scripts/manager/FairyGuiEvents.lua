@@ -467,9 +467,10 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 	local binding = self.bindings[bindingId]
 	local itemIndex = rawItemIndex ~= nil and rawItemIndex >= 0 and rawItemIndex + 1 or nil
 	local eventData = nil
+	local eventListHandle = nil
 	if binding ~= nil and itemIndex ~= nil then
-		local listHandle = self:GetTargetHandle(binding.handle, binding.childPath)
-		local listData = listHandle ~= nil and self.listDataByHandle[listHandle] or nil
+		eventListHandle = self:GetTargetHandle(binding.handle, binding.childPath)
+		local listData = eventListHandle ~= nil and self.listDataByHandle[eventListHandle] or nil
 		eventData = listData ~= nil and listData[itemIndex] or nil
 	end
 
@@ -516,6 +517,18 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		eventTypeId = eventType,
 		bindingId = bindingId,
 	}
+	if eventListHandle ~= nil and self.treeDataByHandle[eventListHandle] ~= nil and type(eventData) == "table" then
+		eventPayload.treeNode = eventData
+		eventPayload.treeSource = eventData.source
+		eventPayload.treeKey = eventData.key
+		eventPayload.treeParentKey = eventData.parentKey
+		eventPayload.treeDepth = eventData.depth or 0
+		eventPayload.treeExpanded = eventData.expanded == true
+		eventPayload.treeHasChildren = eventData.hasChildren == true
+		eventPayload.treeSelected = eventData.selected == true
+		self.lastEvent.treeKey = eventPayload.treeKey
+		self.lastEvent.treeDepth = eventPayload.treeDepth
+	end
 	if binding ~= nil and binding.eventType == "ControllerChanged" then
 		eventPayload.controllerName = binding.controllerName or ""
 		eventPayload.selectedIndex = self:GetControllerIndex(binding.handle, eventPayload.controllerName)

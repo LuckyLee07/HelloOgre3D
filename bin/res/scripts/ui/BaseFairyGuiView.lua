@@ -314,11 +314,67 @@ function BaseFairyGuiView:GetTreeFlatData(childPath)
 	return FairyGuiManager:GetTreeFlatData(self.handle, childPath)
 end
 
+function BaseFairyGuiView:GetTreeNode(childPath, nodeKey)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetTreeNode(self.handle, childPath, nodeKey)
+end
+
+function BaseFairyGuiView:AddTreeNode(childPath, parentKey, node, index)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:AddTreeNode(self.handle, childPath, parentKey, node, index)
+end
+
+function BaseFairyGuiView:RemoveTreeNode(childPath, nodeKey)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:RemoveTreeNode(self.handle, childPath, nodeKey)
+end
+
+function BaseFairyGuiView:ClearTree(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:ClearTree(self.handle, childPath)
+end
+
+function BaseFairyGuiView:UpdateTreeNode(childPath, nodeKey, data)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:UpdateTreeNode(self.handle, childPath, nodeKey, data)
+end
+
 function BaseFairyGuiView:SetTreeNodeExpanded(childPath, nodeKey, expanded)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false
 	end
 	return FairyGuiManager:SetTreeNodeExpanded(self.handle, childPath, nodeKey, expanded)
+end
+
+function BaseFairyGuiView:SetTreeNodeSelected(childPath, nodeKey)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetTreeNodeSelected(self.handle, childPath, nodeKey)
+end
+
+function BaseFairyGuiView:GetTreeSelectedKey(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetTreeSelectedKey(self.handle, childPath)
+end
+
+function BaseFairyGuiView:GetTreeSelectedNode(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetTreeSelectedNode(self.handle, childPath)
 end
 
 function BaseFairyGuiView:ToggleTreeNode(childPath, nodeKey)

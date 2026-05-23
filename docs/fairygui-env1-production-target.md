@@ -55,7 +55,7 @@ ctrl:RefreshGoods(goodsList)
 - [ ] 页面、弹窗、Toast、Loading、MessageBox、PopupMenu、GuideMask、DebugPanel 可以共存，层级和关闭顺序稳定。
 - [ ] TextInput 支持中文 IME、普通英文输入、数字输入、密码输入、长度限制、输入限制、focus/killFocus、submit/change 事件。
 - [ ] List 支持 itemRenderer、item reuse、virtual list、selectedIndex、scrollToIndex、clickItem payload 和复杂 item AutoGen 绑定。
-- [ ] Tree/TreeNode、GGraph/DrawNode、ComboBox、Slider、ProgressBar、Transition、Controller 等常用控件具备业务可用 API。
+- [~] Tree/TreeNode、GGraph/DrawNode、ComboBox、Slider、ProgressBar、Transition、Controller 等常用控件具备业务可用 API；Tree 最小封装已具备，复杂 Tree item AutoGen 仍待补。
 - [ ] fullscreen、center、fit、margin、safe area、异形屏适配在 resize 后统一重算。
 - [~] package、texture、material、render command、triangle、event binding、timer、handle、cache UI 都有可 dump 的观测数据；当前已覆盖 package、texture/material source 与尺寸、render/draw/clip/stencil/switch、event binding、timer、handle、cache UI，引用 UI/package 明细仍可继续细化。
 - [ ] 大量 UI 长循环打开关闭后，资源、事件、timer、focus、controller、view/model/ctrl 引用能稳定回零。
@@ -158,11 +158,11 @@ ctrl:RefreshGoods(goodsList)
 
 ### 3. Tree / TreeNode
 
-- [ ] 创建 root/node。
-- [ ] 添加、删除、清空节点。
-- [ ] 展开/收起。
-- [ ] 选中和点击事件。
-- [ ] 节点数据绑定。
+- [x] 创建 root/node。
+- [x] 添加、删除、清空节点。
+- [x] 展开/收起。
+- [x] 选中和点击事件。
+- [x] 节点数据绑定。
 - [ ] Tree item AutoGen 支持。
 
 ### 4. DragDrop / ScrollBar / ComboBox

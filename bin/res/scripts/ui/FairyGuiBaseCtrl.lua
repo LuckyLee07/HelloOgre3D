@@ -233,8 +233,40 @@ function FairyGuiBaseCtrl:GetTreeFlatData(childPath)
 	return self.view ~= nil and self.view:GetTreeFlatData(childPath) or {}
 end
 
+function FairyGuiBaseCtrl:GetTreeNode(childPath, nodeKey)
+	return self.view ~= nil and self.view:GetTreeNode(childPath, nodeKey) or nil
+end
+
+function FairyGuiBaseCtrl:AddTreeNode(childPath, parentKey, node, index)
+	return self.view ~= nil and self.view:AddTreeNode(childPath, parentKey, node, index) or false
+end
+
+function FairyGuiBaseCtrl:RemoveTreeNode(childPath, nodeKey)
+	return self.view ~= nil and self.view:RemoveTreeNode(childPath, nodeKey) or false
+end
+
+function FairyGuiBaseCtrl:ClearTree(childPath)
+	return self.view ~= nil and self.view:ClearTree(childPath) or false
+end
+
+function FairyGuiBaseCtrl:UpdateTreeNode(childPath, nodeKey, data)
+	return self.view ~= nil and self.view:UpdateTreeNode(childPath, nodeKey, data) or false
+end
+
 function FairyGuiBaseCtrl:SetTreeNodeExpanded(childPath, nodeKey, expanded)
 	return self.view ~= nil and self.view:SetTreeNodeExpanded(childPath, nodeKey, expanded) or false
+end
+
+function FairyGuiBaseCtrl:SetTreeNodeSelected(childPath, nodeKey)
+	return self.view ~= nil and self.view:SetTreeNodeSelected(childPath, nodeKey) or false
+end
+
+function FairyGuiBaseCtrl:GetTreeSelectedKey(childPath)
+	return self.view ~= nil and self.view:GetTreeSelectedKey(childPath) or nil
+end
+
+function FairyGuiBaseCtrl:GetTreeSelectedNode(childPath)
+	return self.view ~= nil and self.view:GetTreeSelectedNode(childPath) or nil
 end
 
 function FairyGuiBaseCtrl:ToggleTreeNode(childPath, nodeKey)

@@ -2267,8 +2267,40 @@ function FairyGuiManager:GetTreeFlatData(handle, childPath)
 	return self:GetLists():GetTreeFlatData(handle, childPath)
 end
 
+function FairyGuiManager:GetTreeNode(handle, childPath, nodeKey)
+	return self:GetLists():GetTreeNode(handle, childPath, nodeKey)
+end
+
+function FairyGuiManager:AddTreeNode(handle, childPath, parentKey, node, index)
+	return self:GetLists():AddTreeNode(handle, childPath, parentKey, node, index)
+end
+
+function FairyGuiManager:RemoveTreeNode(handle, childPath, nodeKey)
+	return self:GetLists():RemoveTreeNode(handle, childPath, nodeKey)
+end
+
+function FairyGuiManager:ClearTree(handle, childPath)
+	return self:GetLists():ClearTree(handle, childPath)
+end
+
+function FairyGuiManager:UpdateTreeNode(handle, childPath, nodeKey, data)
+	return self:GetLists():UpdateTreeNode(handle, childPath, nodeKey, data)
+end
+
 function FairyGuiManager:SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
 	return self:GetLists():SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
+end
+
+function FairyGuiManager:SetTreeNodeSelected(handle, childPath, nodeKey)
+	return self:GetLists():SetTreeNodeSelected(handle, childPath, nodeKey)
+end
+
+function FairyGuiManager:GetTreeSelectedKey(handle, childPath)
+	return self:GetLists():GetTreeSelectedKey(handle, childPath)
+end
+
+function FairyGuiManager:GetTreeSelectedNode(handle, childPath)
+	return self:GetLists():GetTreeSelectedNode(handle, childPath)
 end
 
 function FairyGuiManager:ToggleTreeNode(handle, childPath, nodeKey)

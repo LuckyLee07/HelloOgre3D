@@ -22,6 +22,7 @@ param(
 		"BusinessBenchmark",
 		"ComplexControls",
 		"VirtualList",
+		"Tree",
 		"ResourcePolicy",
 		"ResourceFallback",
 		"TextInputPolicy",
@@ -84,6 +85,7 @@ function Get-DefaultWaitSeconds {
 		"BusinessBenchmark" { return 34 }
 		"ComplexControls" { return 32 }
 		"VirtualList" { return 32 }
+		"Tree" { return 32 }
 		"ResourcePolicy" { return 34 }
 		"ResourceFallback" { return 34 }
 		"TextInputPolicy" { return 30 }
@@ -140,6 +142,7 @@ function Get-FairyGuiEnv {
 		}
 		"ComplexControls" { $values["HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST"] = "1" }
 		"VirtualList" { $values["HELLO_FGUI_VIRTUAL_LIST_SELF_TEST"] = "1" }
+		"Tree" { $values["HELLO_FGUI_TREE_SELF_TEST"] = "1" }
 		"ResourcePolicy" { $values["HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"] = "1" }
 		"ResourceFallback" { $values["HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST"] = "1" }
 		"TextInputPolicy" { $values["HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST"] = "1" }
@@ -195,6 +198,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_BUSINESS_BENCHMARK_COUNT",
 	"HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST",
 	"HELLO_FGUI_VIRTUAL_LIST_SELF_TEST",
+	"HELLO_FGUI_TREE_SELF_TEST",
 	"HELLO_FGUI_RESOURCE_POLICY_SELF_TEST",
 	"HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST",
 	"HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST",
