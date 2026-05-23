@@ -506,6 +506,7 @@ self:PlayTransition("show")
 - Transition 支持按名字或默认第一个 transition 播放、停止和完成回调；回调纳入 Manager 关闭残留检查。
 - `SetControllerIndex` 已支持空名字访问第一个 controller；专用 controller change 监听与 page id/name 访问仍待补。
 - Tree/TreeNode 已具备最小封装：`SetTreeData / AddTreeNode / RemoveTreeNode / ClearTree / UpdateTreeNode / SetTreeNodeSelected / ToggleTreeNode`，并接入 `HELLO_FGUI_TREE_SELF_TEST=1`。
+- 子页面/子组件基础挂载已接入：`OpenChild / AttachChildUI / CloseChildUIs / GetChildUIKeys` 支持父 UI 内挂载 AutoGen/MVC 子模块、父级关闭级联清理和 `HELLO_FGUI_SUBMODULE_SELF_TEST=1` 回归。
 
 ### Phase 5.5: AutoGen 生成链
 

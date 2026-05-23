@@ -137,6 +137,17 @@ local function tryRunFairyGuiTreeSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiSubModuleSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_SUBMODULE_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] submodule self test result:", FGUI_RunSubModuleSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiDebugPanelSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_DEBUG_PANEL_SELF_TEST") then
 		return
@@ -562,6 +573,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiComplexControlsSelfTest()
 		tryRunFairyGuiVirtualListSelfTest()
 		tryRunFairyGuiTreeSelfTest()
+		tryRunFairyGuiSubModuleSelfTest()
 		tryRunFairyGuiDebugPanelSelfTest()
 		tryRunFairyGuiAiDebugPanelSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
@@ -685,6 +697,70 @@ function FGUI_RunTreeSelfTest()
 	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
 	print("[FGUI] tree self test detail:", treeOk, finalClean, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
 	return treeOk == true and finalClean == true
+end
+
+function FGUI_RunSubModuleSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "subModuleReset")
+	FairyGuiManager:Close("Act38Test", true, "subModuleReset")
+	FairyGuiManager:Close("__SubModuleChildAct37", true, "subModuleReset")
+	local parentCtrl = FGUI_OpenAct38Sample({
+		scene = "SubModule",
+		group = "SubModule",
+		dateText = "SubModule Self Test",
+	})
+	if parentCtrl == nil then
+		return false
+	end
+
+	local childCtrl = parentCtrl:OpenChild("Act37TestMvc", {
+		key = "__SubModuleChildAct37",
+		x = 18,
+		y = 18,
+		stackMode = "None",
+		closeOnSceneChange = false,
+	})
+	local childInfo = FairyGuiManager:GetObjectInfo("__SubModuleChildAct37")
+	local childKeys = parentCtrl:GetChildUIKeys()
+	local childLinked = childCtrl ~= nil
+		and childInfo ~= nil
+		and childInfo.parentKey == "Act38Test"
+		and #childKeys == 1
+		and childKeys[1] == "__SubModuleChildAct37"
+	local timerId = childInfo ~= nil and FairyGuiManager:Delay("__SubModuleChildAct37", 60, function()
+		print("[FGUI] stale submodule timer fired")
+	end) or nil
+	local bindingId = childInfo ~= nil and FairyGuiManager:AddClick(childInfo.handle, "", function(evt)
+		print("[FGUI] submodule root click:", evt.rootHandle)
+	end) or nil
+	local healthBefore = FairyGuiManager:GetHealthStats()
+	local parentClosed = FairyGuiManager:Close("Act38Test", true, "subModuleParentClose")
+	local childClosed = FairyGuiManager:GetObjectInfo("__SubModuleChildAct37") == nil
+	local parentClosedClean = FairyGuiManager:GetObjectInfo("Act38Test") == nil
+	local childKeysAfter = FairyGuiManager:GetChildUIKeys("Act38Test")
+	local healthAfter = FairyGuiManager:GetHealthStats()
+	local clean = healthAfter.openUI == 0
+		and healthAfter.binding == 0
+		and healthAfter.timer == 0
+		and (healthAfter.childUI or 0) == 0
+		and healthAfter.view == 0
+		and healthAfter.controller == 0
+
+	print(
+		"[FGUI] submodule self test detail:",
+		"linked=", childLinked,
+		"timer/binding=", timerId, bindingId,
+		"before=", healthBefore.openUI, healthBefore.binding, healthBefore.timer, healthBefore.childUI,
+		"closed=", parentClosed, childClosed, parentClosedClean,
+		"after=", healthAfter.openUI, healthAfter.binding, healthAfter.timer, healthAfter.childUI, healthAfter.view, healthAfter.controller,
+		"childKeysAfter=", #childKeysAfter)
+	return childLinked == true
+		and timerId ~= nil
+		and bindingId ~= nil
+		and parentClosed == true
+		and childClosed == true
+		and parentClosedClean == true
+		and #childKeysAfter == 0
+		and clean == true
 end
 
 function FGUI_CloseAct38Sample()
@@ -1482,6 +1558,9 @@ function FGUI_RunSelfTestSuite()
 	end)
 	schedule(0.6, "Tree", function()
 		return FGUI_RunTreeSelfTest()
+	end)
+	schedule(0.6, "SubModule", function()
+		return FGUI_RunSubModuleSelfTest()
 	end)
 	schedule(0.6, "DebugPanel", function()
 		return FGUI_RunDebugPanelSelfTest()

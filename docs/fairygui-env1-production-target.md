@@ -175,10 +175,10 @@ ctrl:RefreshGoods(goodsList)
 
 ### 5. 子页面 / 子组件挂载
 
-- [ ] 一个 UI 内可挂载另一个 AutoGen/MVC 子组件。
-- [ ] 子组件生命周期跟随父 UI。
-- [ ] 子组件事件和 timer 自动清理。
-- [ ] 支持指定 parent/rootHandle/rootKey 打开子界面。
+- [x] 一个 UI 内可挂载另一个 AutoGen/MVC 子组件。
+- [x] 子组件生命周期跟随父 UI。
+- [x] 子组件事件和 timer 自动清理。
+- [~] 支持指定 parent/rootHandle/rootKey 打开子界面；当前已支持 `OpenChild(parentKeyOrHandle, uiName, param)`、`parentHandle` 和 `parentChildPath/childPath`，复杂嵌套策略仍可继续补。
 
 ## P2：渲染与资源生产能力
 

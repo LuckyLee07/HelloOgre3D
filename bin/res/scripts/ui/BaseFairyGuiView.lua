@@ -496,6 +496,27 @@ function BaseFairyGuiView:Close(forceDestroy, reason)
 	return FairyGuiManager:CloseView(self, forceDestroy, reason)
 end
 
+function BaseFairyGuiView:OpenChild(uiName, param)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:OpenChild(self.handle, uiName, param)
+end
+
+function BaseFairyGuiView:CloseChildren(forceDestroy, reason)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:CloseChildUIs(self.handle, forceDestroy, reason)
+end
+
+function BaseFairyGuiView:GetChildUIKeys()
+	if FairyGuiManager == nil or self.handle == nil then
+		return {}
+	end
+	return FairyGuiManager:GetChildUIKeys(self.handle)
+end
+
 function BaseFairyGuiView:AddBinding(bindingId)
 	if bindingId ~= nil then
 		table.insert(self.bindings, bindingId)

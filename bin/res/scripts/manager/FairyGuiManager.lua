@@ -91,6 +91,12 @@ local function tableCount(source)
 	return count
 end
 
+local nonOwnedObjectHandleFields = {
+	parentHandle = true,
+	rootHandle = true,
+	attachHandle = true,
+}
+
 local function nowMs()
 	return os.clock and os.clock() * 1000 or 0
 end
@@ -310,6 +316,8 @@ function FairyGuiManager:Init()
 	self.viewsByHandle = {}
 	self.controllers = {}
 	self.controllersByHandle = {}
+	self.childKeysByParentKey = {}
+	self.parentKeyByChildKey = {}
 	self.currentSceneName = "Default"
 	self.designWidth = nil
 	self.designHeight = nil
@@ -590,7 +598,7 @@ function FairyGuiManager:CollectOwnedHandles(objectInfo)
 		end
 	end
 	for fieldName, value in pairs(objectInfo) do
-		if type(fieldName) == "string" and type(value) == "number" and string.match(fieldName, "Handle$") ~= nil then
+		if type(fieldName) == "string" and type(value) == "number" and string.match(fieldName, "Handle$") ~= nil and nonOwnedObjectHandleFields[fieldName] ~= true then
 			pushUniqueHandle(handles, handleSet, value)
 		elseif type(fieldName) == "string" and type(value) == "table" and string.match(fieldName, "Handles$") ~= nil then
 			for _, ownedHandle in pairs(value) do
@@ -688,6 +696,12 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 	if key ~= nil and self.controllers[key] ~= nil then
 		table.insert(issues, "controllers[" .. tostring(key) .. "]")
 	end
+	if key ~= nil and self.childKeysByParentKey[key] ~= nil then
+		table.insert(issues, "childKeysByParentKey[" .. tostring(key) .. "]")
+	end
+	if key ~= nil and self.parentKeyByChildKey[key] ~= nil then
+		table.insert(issues, "parentKeyByChildKey[" .. tostring(key) .. "]")
+	end
 	if key ~= nil and self.stackEntriesByKey[key] ~= nil then
 		table.insert(issues, "stackEntriesByKey[" .. tostring(key) .. "]")
 	end
@@ -758,6 +772,18 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 	for bindingId, binding in pairs(self.bindings) do
 		if binding ~= nil and binding.handle ~= nil and handleSet[binding.handle] == true then
 			table.insert(issues, "bindings[" .. tostring(bindingId) .. "]")
+		end
+	end
+	for parentKey, childMap in pairs(self.childKeysByParentKey) do
+		if parentKey == key then
+			table.insert(issues, "childKeysParent[" .. tostring(parentKey) .. "]")
+		elseif type(childMap) == "table" and childMap[key] == true then
+			table.insert(issues, "childKeysRef[" .. tostring(parentKey) .. ":" .. tostring(key) .. "]")
+		end
+	end
+	for childKey, parentKey in pairs(self.parentKeyByChildKey) do
+		if childKey == key or parentKey == key then
+			table.insert(issues, "parentKeyRef[" .. tostring(childKey) .. ":" .. tostring(parentKey) .. "]")
 		end
 	end
 	for callbackId, callbackInfo in pairs(self.transitionCallbacks) do
@@ -1129,6 +1155,134 @@ function FairyGuiManager:GetObjectInfo(keyOrHandle)
 	return self.objects[key] or self.objects[keyOrHandle]
 end
 
+function FairyGuiManager:GetObjectKey(keyOrHandle)
+	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	return objectInfo ~= nil and objectInfo.key or nil
+end
+
+function FairyGuiManager:DetachChildUI(childKeyOrHandle)
+	local childInfo = self:GetObjectInfo(childKeyOrHandle)
+	local childKey = childInfo ~= nil and childInfo.key or childKeyOrHandle
+	if childKey == nil then
+		return false
+	end
+
+	local parentKey = self.parentKeyByChildKey[childKey]
+	if parentKey == nil and childInfo ~= nil then
+		parentKey = childInfo.parentKey
+	end
+	if parentKey ~= nil then
+		local childMap = self.childKeysByParentKey[parentKey]
+		if childMap ~= nil then
+			childMap[childKey] = nil
+			if tableCount(childMap) <= 0 then
+				self.childKeysByParentKey[parentKey] = nil
+			end
+		end
+	end
+	self.parentKeyByChildKey[childKey] = nil
+	if childInfo ~= nil then
+		childInfo.parentKey = nil
+	end
+	return parentKey ~= nil
+end
+
+function FairyGuiManager:AttachChildUI(parentKeyOrHandle, childKeyOrHandle, options)
+	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
+	local childInfo = self:GetObjectInfo(childKeyOrHandle)
+	if parentInfo == nil or childInfo == nil or parentInfo.key == childInfo.key then
+		return false
+	end
+
+	self:DetachChildUI(childInfo.key)
+	local childMap = self.childKeysByParentKey[parentInfo.key]
+	if childMap == nil then
+		childMap = {}
+		self.childKeysByParentKey[parentInfo.key] = childMap
+	end
+	childMap[childInfo.key] = true
+	self.parentKeyByChildKey[childInfo.key] = parentInfo.key
+	childInfo.parentKey = parentInfo.key
+	childInfo.parentHandle = options ~= nil and options.parentHandle or childInfo.parentHandle or parentInfo.handle
+	childInfo.parentChildPath = options ~= nil and options.parentChildPath or childInfo.parentChildPath
+	childInfo.closeWithParent = options == nil or options.closeWithParent ~= false
+	return true
+end
+
+function FairyGuiManager:GetChildUIKeys(parentKeyOrHandle)
+	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
+	if parentInfo == nil then
+		return {}
+	end
+
+	local result = {}
+	local childMap = self.childKeysByParentKey[parentInfo.key]
+	if childMap ~= nil then
+		for childKey, _ in pairs(childMap) do
+			table.insert(result, childKey)
+		end
+	end
+	table.sort(result)
+	return result
+end
+
+function FairyGuiManager:CloseChildUIs(parentKeyOrHandle, forceDestroy, reason)
+	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
+	if parentInfo == nil then
+		return 0
+	end
+
+	local childKeys = self:GetChildUIKeys(parentInfo.key)
+	local closedCount = 0
+	for _, childKey in ipairs(childKeys) do
+		local childInfo = self.objects[childKey]
+		if childInfo ~= nil and childInfo.closeWithParent ~= false then
+			if self:CloseUI(childKey, forceDestroy, reason or "parentClose") then
+				closedCount = closedCount + 1
+			end
+		else
+			self:DetachChildUI(childKey)
+		end
+	end
+	return closedCount
+end
+
+function FairyGuiManager:OpenChild(parentKeyOrHandle, name, param)
+	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
+	if parentInfo == nil then
+		print("[FGUI] open child failed, parent missing:", tostring(parentKeyOrHandle), tostring(name))
+		return nil
+	end
+
+	param = copyTable(param)
+	local attachHandle = parentInfo.handle
+	local parentChildPath = param.parentChildPath or param.childPath
+	if not isBlank(parentChildPath) then
+		local childHandle = self:GetTargetHandle(parentInfo.handle, parentChildPath)
+		if childHandle ~= nil then
+			attachHandle = childHandle
+		end
+	end
+	param.parentKey = parentInfo.key
+	param.parentHandle = attachHandle
+	param.layer = param.layer or parentInfo.layer
+	param.scene = param.scene or parentInfo.sceneName
+	param.group = param.group or parentInfo.uiGroup
+	param.stackMode = param.stackMode or "None"
+	param.key = param.key or (parentInfo.key .. "." .. tostring(name))
+
+	local result = self:Open(name, param)
+	local childInfo = self:GetObjectInfo(param.key)
+	if childInfo ~= nil then
+		self:AttachChildUI(parentInfo.key, childInfo.key, {
+			parentHandle = attachHandle,
+			parentChildPath = parentChildPath,
+			closeWithParent = param.closeWithParent,
+		})
+	end
+	return result
+end
+
 function FairyGuiManager:GetLayerBaseOrder(layerName)
 	return self:GetLayers():GetLayerBaseOrder(layerName)
 end
@@ -1453,7 +1607,9 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		sceneName = self:GetSceneName(param),
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
+		parentKey = param.parentKey,
 		parentHandle = param.parentHandle or param.rootHandle,
+		closeWithParent = param.closeWithParent ~= false,
 		rootLayer = param.rootLayer,
 		focusOrder = param.focusOrder,
 		tabFocus = param.tabFocus ~= false,
@@ -3185,6 +3341,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		self:RecordPerf("close", nowMs() - startMs, closeName, success ~= false and result == true)
 		return result
 	end
+	self:CloseChildUIs(objectInfo.key, forceDestroy, reason)
 
 	local param = objectInfo.param or {}
 	local ownedHandles = self:CollectOwnedHandles(objectInfo)
@@ -3235,6 +3392,8 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
 		self.layerObjects[objectInfo.layer][handle] = nil
 	end
+	self:DetachChildUI(objectInfo.key)
+	self.childKeysByParentKey[objectInfo.key] = nil
 	self.objects[objectInfo.key] = nil
 	self.objectsByHandle[handle] = nil
 	self.hiddenObjects[objectInfo.key] = nil

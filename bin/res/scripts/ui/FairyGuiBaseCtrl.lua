@@ -57,6 +57,18 @@ function FairyGuiBaseCtrl:Close(forceDestroy, reason)
 	return false
 end
 
+function FairyGuiBaseCtrl:OpenChild(uiName, param)
+	return self.view ~= nil and self.view:OpenChild(uiName, param) or nil
+end
+
+function FairyGuiBaseCtrl:CloseChildren(forceDestroy, reason)
+	return self.view ~= nil and self.view:CloseChildren(forceDestroy, reason) or 0
+end
+
+function FairyGuiBaseCtrl:GetChildUIKeys()
+	return self.view ~= nil and self.view:GetChildUIKeys() or {}
+end
+
 function FairyGuiBaseCtrl:IsAlive()
 	return self.view ~= nil and self.view.IsAlive ~= nil and self.view:IsAlive()
 end

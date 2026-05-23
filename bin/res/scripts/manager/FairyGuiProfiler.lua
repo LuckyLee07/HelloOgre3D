@@ -403,6 +403,7 @@ function FairyGuiProfiler:GetDebugStats()
 			timer = 0,
 			objectHandle = 0,
 			childCache = 0,
+			childUI = 0,
 			view = 0,
 			controller = 0,
 		}
@@ -411,6 +412,10 @@ function FairyGuiProfiler:GetDebugStats()
 	local childCacheCount = 0
 	for _, children in pairs(owner.childrenByHandle or {}) do
 		childCacheCount = childCacheCount + tableCount(children)
+	end
+	local childUICount = 0
+	for _, children in pairs(owner.childKeysByParentKey or {}) do
+		childUICount = childUICount + tableCount(children)
 	end
 
 	local packageCount = 0
@@ -432,6 +437,7 @@ function FairyGuiProfiler:GetDebugStats()
 		timer = tableCount(owner.timers),
 		objectHandle = tableCount(owner.objectsByHandle),
 		childCache = childCacheCount,
+		childUI = childUICount,
 		view = tableCount(owner.views),
 		controller = tableCount(owner.controllers),
 	}
@@ -439,7 +445,7 @@ end
 
 function FairyGuiProfiler:DumpDebugStats()
 	local stats = self:GetDebugStats()
-	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller)
+	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller)
 end
 
 function FairyGuiProfiler:PublishTracyCounters(healthStats, serviceMeta)
@@ -483,6 +489,7 @@ function FairyGuiProfiler:GetHealthStats()
 		threadTimer = threadTimerCount,
 		objectHandle = debugStats.objectHandle,
 		childCache = debugStats.childCache,
+		childUI = debugStats.childUI,
 		view = debugStats.view,
 		controller = debugStats.controller,
 		focusedHandle = owner ~= nil and owner.GetFocusedHandle ~= nil and owner:GetFocusedHandle() or nil,
@@ -757,7 +764,7 @@ end
 
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
 	local owner = self.owner
 	if verbose == true and owner ~= nil then
 		self:DumpPerfStats()
@@ -781,7 +788,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 	local lines = {
 		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
 		string.format("Top ui=%s popup=%s focus=%s owner=%s", objectBrief(owner, snapshot.topUI), objectBrief(owner, snapshot.topPopup), tostring(health.focusedHandle or 0), snapshot.focusOwner ~= nil and tostring(snapshot.focusOwner.key or snapshot.focusOwner.uiName or "") or "-"),
-		string.format("Life binding=%s timer=%s thread=%s child=%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.controller), tostring(health.view)),
+		string.format("Life binding=%s timer=%s thread=%s child=%s/%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.childUI), tostring(health.controller), tostring(health.view)),
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),
 		string.format("Stencil backend=%s hw=%s cpuClip=%s/%s/%s mask=%s/%s", tostring(render.stencilBackend or "-"), tostring(render.hardwareStencilSupported == true and 1 or 0), tostring(render.cpuClipSourceTriangleCount), tostring(render.cpuClipOutputTriangleCount), tostring(render.cpuClipFragmentCount), tostring(render.stencilClipScopeCount), tostring(render.stencilClipPolygonCount)),

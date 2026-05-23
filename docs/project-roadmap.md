@@ -276,7 +276,7 @@
 - Controller change listener、page id/name 访问。
 - List virtual list、item renderer、item click payload 完整化。
 - Tree/TreeNode 最小可用封装已完成，当前仍可继续补复杂 Tree item AutoGen 支持。
-- 子页面 / 子组件挂载，支持一个大 UI 拆成多个业务子模块。
+- 子页面 / 子组件基础挂载已完成，支持一个大 UI 拆成多个业务子模块；后续可继续补复杂子组件模板和 AutoGen 生成约定。
 - AutoGen 生成 View/Ctrl/Model 模板时保留用户代码区。
 - 文档补齐新增 UI 的完整流程。
 
