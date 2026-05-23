@@ -30,6 +30,7 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -615,6 +616,46 @@ namespace
 	{
 		return fairygui::UIPackage::addPackage(ResolvePackagePath(packagePath));
 	}
+
+	std::string TrimRenderDetailKey(const std::string& key)
+	{
+		if (key.empty())
+			return "-";
+
+		const std::string::size_type slash = key.find_last_of("/\\");
+		if (slash != std::string::npos && slash + 1 < key.size())
+			return key.substr(slash + 1);
+
+		const std::string prefix = "file:";
+		if (key.compare(0, prefix.size(), prefix) == 0)
+			return key.substr(prefix.size());
+
+		if (key.size() > 36)
+			return key.substr(0, 33) + "...";
+		return key;
+	}
+
+	std::string BuildCountBrief(const std::map<std::string, int>& counts, int maxCount)
+	{
+		std::vector<std::pair<std::string, int> > entries;
+		for (std::map<std::string, int>::const_iterator it = counts.begin(); it != counts.end(); ++it)
+			entries.push_back(*it);
+
+		std::sort(entries.begin(), entries.end(), [](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) {
+			if (a.second == b.second)
+				return a.first < b.first;
+			return a.second > b.second;
+		});
+
+		std::ostringstream stream;
+		for (size_t index = 0; index < entries.size() && index < static_cast<size_t>(maxCount); ++index)
+		{
+			if (index > 0)
+				stream << ",";
+			stream << TrimRenderDetailKey(entries[index].first) << ":" << entries[index].second;
+		}
+		return stream.str();
+	}
 }
 
 FairyGuiSystem::FairyGuiSystem()
@@ -626,7 +667,8 @@ FairyGuiSystem::FairyGuiSystem()
 	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
 	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
-	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames(), m_materialNamesBySource(), m_textureNamesBySource(), m_textureDetailsBySource()
+	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames(), m_materialNamesBySource(), m_textureNamesBySource(), m_textureDetailsBySource(),
+	m_currentFrameStats(), m_lastFrameStats()
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	, m_nativeWindowHandle(nullptr), m_previousWindowProc(nullptr), m_nativeImeHookInstalled(false)
 #endif
@@ -704,6 +746,8 @@ void FairyGuiSystem::Shutdown()
 	m_focusedObjectHandle = 0;
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
+	ResetFrameRenderStats();
+	m_lastFrameStats = FrameRenderStats();
 	m_nextObjectHandle = 1;
 	m_nextListenerBindingId = 1;
 	m_textInputCarets.clear();
@@ -727,6 +771,7 @@ void FairyGuiSystem::Render()
 		return;
 
 	cocos2d::Renderer* renderer = cocos2d::Director::getInstance()->getRenderer();
+	ResetFrameRenderStats();
 	renderer->beginFrame();
 	renderer->setCommandSink(this);
 	BeginOgreRender();
@@ -736,8 +781,16 @@ void FairyGuiSystem::Render()
 	renderer->setCommandSink(nullptr);
 	m_lastRenderCommandCount = renderer->getTriangleCommandCount();
 	m_lastTriangleCount = renderer->getSubmittedTriangleCount();
+	FinalizeFrameRenderStats();
 	H3D_PROFILE_PLOT("FGUIRenderCommands", static_cast<double>(m_lastRenderCommandCount));
 	H3D_PROFILE_PLOT("FGUITriangles", static_cast<double>(m_lastTriangleCount));
+	H3D_PROFILE_PLOT("FGUIDrawCommands", static_cast<double>(m_lastFrameStats.drawCommandCount));
+	H3D_PROFILE_PLOT("FGUIDrawTriangles", static_cast<double>(m_lastFrameStats.drawTriangleCount));
+	H3D_PROFILE_PLOT("FGUIMaterialSwitches", static_cast<double>(m_lastFrameStats.materialSwitchCount));
+	H3D_PROFILE_PLOT("FGUITextureSwitches", static_cast<double>(m_lastFrameStats.textureSwitchCount));
+	H3D_PROFILE_PLOT("FGUIClippedCommands", static_cast<double>(m_lastFrameStats.clippedCommandCount));
+	H3D_PROFILE_PLOT("FGUIStencilCommands", static_cast<double>(m_lastFrameStats.stencilCommandCount));
+	H3D_PROFILE_PLOT("FGUIMaxBatchTriangles", static_cast<double>(m_lastFrameStats.maxBatchTriangles));
 }
 
 void FairyGuiSystem::HandleWindowResized(unsigned int width, unsigned int height)
@@ -1720,11 +1773,13 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 
 	if (m_stencilStage == cocos2d::STENCIL_STAGE_WRITE)
 	{
+		RecordStencilCommand(triangles.indexCount / 3);
 		CollectStencilTriangle(command);
 		return;
 	}
 
 	const std::string& materialName = GetMaterialName(command.getTexture());
+	const int submittedTriangleCount = triangles.indexCount / 3;
 	std::vector<cocos2d::Rect> clipRects;
 	BuildActiveClipRects(clipRects);
 	if (!clipRects.empty())
@@ -1775,8 +1830,12 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 		}
 
 		if (outputVertices.empty())
+		{
+			RecordDrawCommand(command.getTexture(), materialName, triangles.vertCount, submittedTriangleCount, 0, true);
 			return;
+		}
 
+		RecordDrawCommand(command.getTexture(), materialName, static_cast<int>(outputVertices.size()), submittedTriangleCount, static_cast<int>(outputVertices.size() / 3), true);
 		m_pManualObject->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		m_pManualObject->estimateVertexCount(outputVertices.size());
 		m_pManualObject->estimateIndexCount(outputVertices.size());
@@ -1794,6 +1853,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 		return;
 	}
 
+	RecordDrawCommand(command.getTexture(), materialName, triangles.vertCount, submittedTriangleCount, submittedTriangleCount, false);
 	m_pManualObject->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 	m_pManualObject->estimateVertexCount(static_cast<size_t>(triangles.vertCount));
 	m_pManualObject->estimateIndexCount(static_cast<size_t>(triangles.indexCount));
@@ -1819,6 +1879,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
 {
 	(void)command;
+	++m_currentFrameStats.customCommandCount;
 	SyncScissorState();
 	SyncStencilState();
 }
@@ -2493,6 +2554,86 @@ bool FairyGuiSystem::CreateConfiguredPackageObject()
 		GetEnvironmentFloat("HELLO_FGUI_OBJECT_Y", 16.0f));
 	m_pRoot->addChild(object);
 	return true;
+}
+
+void FairyGuiSystem::ResetFrameRenderStats()
+{
+	m_currentFrameStats = FrameRenderStats();
+}
+
+void FairyGuiSystem::RecordStencilCommand(int triangleCount)
+{
+	++m_currentFrameStats.stencilCommandCount;
+	m_currentFrameStats.stencilTriangleCount += triangleCount > 0 ? triangleCount : 0;
+}
+
+void FairyGuiSystem::RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped)
+{
+	FrameRenderStats& stats = m_currentFrameStats;
+	submittedTriangleCount = submittedTriangleCount > 0 ? submittedTriangleCount : 0;
+	drawTriangleCount = drawTriangleCount > 0 ? drawTriangleCount : 0;
+	vertexCount = vertexCount > 0 ? vertexCount : 0;
+
+	if (clipped)
+	{
+		++stats.clippedCommandCount;
+		if (submittedTriangleCount > drawTriangleCount)
+			stats.clippedTriangleCount += submittedTriangleCount - drawTriangleCount;
+	}
+
+	if (drawTriangleCount <= 0)
+	{
+		if (submittedTriangleCount > 0)
+			++stats.culledCommandCount;
+		return;
+	}
+
+	const std::string textureSource = texture != nullptr ? GetTextureSourceKey(texture) : "fallback";
+	const std::string materialKey = !materialName.empty() ? materialName : "-";
+	if (!stats.lastMaterialName.empty() && stats.lastMaterialName != materialKey)
+		++stats.materialSwitchCount;
+	if (!stats.lastTextureSource.empty() && stats.lastTextureSource != textureSource)
+		++stats.textureSwitchCount;
+	stats.lastMaterialName = materialKey;
+	stats.lastTextureSource = textureSource;
+
+	++stats.drawCommandCount;
+	stats.drawTriangleCount += drawTriangleCount;
+	if (drawTriangleCount > stats.maxBatchTriangles)
+		stats.maxBatchTriangles = drawTriangleCount;
+	if (vertexCount > stats.maxBatchVertices)
+		stats.maxBatchVertices = vertexCount;
+	stats.materialCommandCounts[materialKey] += 1;
+	stats.textureCommandCounts[textureSource] += 1;
+}
+
+void FairyGuiSystem::FinalizeFrameRenderStats()
+{
+	m_lastFrameStats = m_currentFrameStats;
+	m_lastFrameStats.detailString = BuildFrameRenderDetailString(m_lastFrameStats);
+}
+
+std::string FairyGuiSystem::BuildFrameRenderDetailString(const FrameRenderStats& stats) const
+{
+	std::ostringstream stream;
+	stream << "draw=" << stats.drawCommandCount
+		<< " tri=" << stats.drawTriangleCount
+		<< " maxBatch=" << stats.maxBatchTriangles << "/" << stats.maxBatchVertices
+		<< " switch=" << stats.materialSwitchCount << "/" << stats.textureSwitchCount
+		<< " clip=" << stats.clippedCommandCount << "/" << stats.clippedTriangleCount
+		<< " cull=" << stats.culledCommandCount
+		<< " stencil=" << stats.stencilCommandCount << "/" << stats.stencilTriangleCount
+		<< " custom=" << stats.customCommandCount;
+
+	const std::string materialBrief = BuildCountBrief(stats.materialCommandCounts, 3);
+	if (!materialBrief.empty())
+		stream << " matTop=" << materialBrief;
+
+	const std::string textureBrief = BuildCountBrief(stats.textureCommandCounts, 3);
+	if (!textureBrief.empty())
+		stream << " texTop=" << textureBrief;
+
+	return stream.str();
 }
 
 std::string FairyGuiSystem::GetMaterialDetailString() const

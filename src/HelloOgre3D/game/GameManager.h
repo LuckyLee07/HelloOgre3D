@@ -56,8 +56,21 @@ public:
 	int getFairyGuiTextureCount();
 	int getFairyGuiMaterialAliasCount();
 	int getFairyGuiTextureAliasCount();
+	int getFairyGuiLastDrawCommandCount();
+	int getFairyGuiLastDrawTriangleCount();
+	int getFairyGuiLastMaterialSwitchCount();
+	int getFairyGuiLastTextureSwitchCount();
+	int getFairyGuiLastClippedCommandCount();
+	int getFairyGuiLastClippedTriangleCount();
+	int getFairyGuiLastCulledCommandCount();
+	int getFairyGuiLastStencilCommandCount();
+	int getFairyGuiLastStencilTriangleCount();
+	int getFairyGuiLastCustomCommandCount();
+	int getFairyGuiLastMaxBatchTriangles();
+	int getFairyGuiLastMaxBatchVertices();
 	const char* getFairyGuiMaterialDetailString();
 	const char* getFairyGuiTextureDetailString();
+	const char* getFairyGuiFrameRenderDetailString();
 	bool plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
@@ -157,6 +170,7 @@ private:
 	std::string m_fairyGuiLastControllerString;
 	std::string m_fairyGuiLastMaterialDetail;
 	std::string m_fairyGuiLastTextureDetail;
+	std::string m_fairyGuiLastFrameRenderDetail;
 
 }; //tolua_exports
 

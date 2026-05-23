@@ -294,6 +294,126 @@ int GameManager::getFairyGuiTextureAliasCount()
 #endif
 }
 
+int GameManager::getFairyGuiLastDrawCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastDrawCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastDrawTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastDrawTriangleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastMaterialSwitchCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastMaterialSwitchCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastTextureSwitchCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastTextureSwitchCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastClippedCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastClippedCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastClippedTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastClippedTriangleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastCulledCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastCulledCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastStencilCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastStencilCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastStencilTriangleCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastStencilTriangleCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastCustomCommandCount()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastCustomCommandCount() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastMaxBatchTriangles()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastMaxBatchTriangles() : 0;
+#else
+	return 0;
+#endif
+}
+
+int GameManager::getFairyGuiLastMaxBatchVertices()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr ? system->GetLastMaxBatchVertices() : 0;
+#else
+	return 0;
+#endif
+}
+
 const char* GameManager::getFairyGuiMaterialDetailString()
 {
 	m_fairyGuiLastMaterialDetail.clear();
@@ -314,6 +434,17 @@ const char* GameManager::getFairyGuiTextureDetailString()
 		m_fairyGuiLastTextureDetail = system->GetTextureDetailString();
 #endif
 	return m_fairyGuiLastTextureDetail.c_str();
+}
+
+const char* GameManager::getFairyGuiFrameRenderDetailString()
+{
+	m_fairyGuiLastFrameRenderDetail.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastFrameRenderDetail = system->GetFrameRenderDetailString();
+#endif
+	return m_fairyGuiLastFrameRenderDetail.c_str();
 }
 
 bool GameManager::plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen)

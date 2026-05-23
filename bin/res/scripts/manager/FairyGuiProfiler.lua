@@ -129,10 +129,23 @@ function FairyGuiProfiler:GetRenderStats()
 	local textureCount = 0
 	local materialAliasCount = 0
 	local textureAliasCount = 0
+	local drawCommandCount = 0
+	local drawTriangleCount = 0
+	local materialSwitchCount = 0
+	local textureSwitchCount = 0
+	local clippedCommandCount = 0
+	local clippedTriangleCount = 0
+	local culledCommandCount = 0
+	local stencilCommandCount = 0
+	local stencilTriangleCount = 0
+	local customCommandCount = 0
+	local maxBatchTriangles = 0
+	local maxBatchVertices = 0
 	local runtimeObjectHandle = 0
 	local runtimeBinding = 0
 	local materialDetail = ""
 	local textureDetail = ""
+	local frameRenderDetail = ""
 	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
 		commandCount = GameManager:getFairyGuiLastRenderCommandCount()
 	end
@@ -151,6 +164,42 @@ function FairyGuiProfiler:GetRenderStats()
 	if GameManager ~= nil and GameManager.getFairyGuiTextureAliasCount ~= nil then
 		textureAliasCount = GameManager:getFairyGuiTextureAliasCount()
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastDrawCommandCount ~= nil then
+		drawCommandCount = GameManager:getFairyGuiLastDrawCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastDrawTriangleCount ~= nil then
+		drawTriangleCount = GameManager:getFairyGuiLastDrawTriangleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastMaterialSwitchCount ~= nil then
+		materialSwitchCount = GameManager:getFairyGuiLastMaterialSwitchCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastTextureSwitchCount ~= nil then
+		textureSwitchCount = GameManager:getFairyGuiLastTextureSwitchCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastClippedCommandCount ~= nil then
+		clippedCommandCount = GameManager:getFairyGuiLastClippedCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastClippedTriangleCount ~= nil then
+		clippedTriangleCount = GameManager:getFairyGuiLastClippedTriangleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastCulledCommandCount ~= nil then
+		culledCommandCount = GameManager:getFairyGuiLastCulledCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastStencilCommandCount ~= nil then
+		stencilCommandCount = GameManager:getFairyGuiLastStencilCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastStencilTriangleCount ~= nil then
+		stencilTriangleCount = GameManager:getFairyGuiLastStencilTriangleCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastCustomCommandCount ~= nil then
+		customCommandCount = GameManager:getFairyGuiLastCustomCommandCount()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastMaxBatchTriangles ~= nil then
+		maxBatchTriangles = GameManager:getFairyGuiLastMaxBatchTriangles()
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiLastMaxBatchVertices ~= nil then
+		maxBatchVertices = GameManager:getFairyGuiLastMaxBatchVertices()
+	end
 	if GameManager ~= nil and GameManager.getFairyGuiRuntimeObjectHandleCount ~= nil then
 		runtimeObjectHandle = GameManager:getFairyGuiRuntimeObjectHandleCount()
 	end
@@ -163,6 +212,9 @@ function FairyGuiProfiler:GetRenderStats()
 	if GameManager ~= nil and GameManager.getFairyGuiTextureDetailString ~= nil then
 		textureDetail = GameManager:getFairyGuiTextureDetailString() or ""
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiFrameRenderDetailString ~= nil then
+		frameRenderDetail = GameManager:getFairyGuiFrameRenderDetailString() or ""
+	end
 	return {
 		commandCount = commandCount or 0,
 		triangleCount = triangleCount or 0,
@@ -170,16 +222,32 @@ function FairyGuiProfiler:GetRenderStats()
 		textureCount = textureCount or 0,
 		materialAliasCount = materialAliasCount or 0,
 		textureAliasCount = textureAliasCount or 0,
+		drawCommandCount = drawCommandCount or 0,
+		drawTriangleCount = drawTriangleCount or 0,
+		materialSwitchCount = materialSwitchCount or 0,
+		textureSwitchCount = textureSwitchCount or 0,
+		clippedCommandCount = clippedCommandCount or 0,
+		clippedTriangleCount = clippedTriangleCount or 0,
+		culledCommandCount = culledCommandCount or 0,
+		stencilCommandCount = stencilCommandCount or 0,
+		stencilTriangleCount = stencilTriangleCount or 0,
+		customCommandCount = customCommandCount or 0,
+		maxBatchTriangles = maxBatchTriangles or 0,
+		maxBatchVertices = maxBatchVertices or 0,
 		runtimeObjectHandle = runtimeObjectHandle or 0,
 		runtimeBinding = runtimeBinding or 0,
 		materialDetail = materialDetail,
 		textureDetail = textureDetail,
+		frameRenderDetail = frameRenderDetail,
 	}
 end
 
 function FairyGuiProfiler:DumpRenderStats()
 	local stats = self:GetRenderStats()
-	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "drawCommand=", stats.drawCommandCount, "drawTriangle=", stats.drawTriangleCount, "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "clip=", tostring(stats.clippedCommandCount) .. "/" .. tostring(stats.clippedTriangleCount), "cull=", stats.culledCommandCount, "stencil=", tostring(stats.stencilCommandCount) .. "/" .. tostring(stats.stencilTriangleCount), "custom=", stats.customCommandCount, "maxBatch=", tostring(stats.maxBatchTriangles) .. "/" .. tostring(stats.maxBatchVertices), "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	if not isBlank(stats.frameRenderDetail) then
+		print("[FGUI] RenderFrameDetail", stats.frameRenderDetail)
+	end
 	if not isBlank(stats.materialDetail) then
 		print("[FGUI] RenderMaterialDetail", stats.materialDetail)
 	end
@@ -365,6 +433,18 @@ function FairyGuiProfiler:GetHealthStats()
 		focusedHandle = owner ~= nil and owner.GetFocusedHandle ~= nil and owner:GetFocusedHandle() or nil,
 		commandCount = renderStats.commandCount,
 		triangleCount = renderStats.triangleCount,
+		drawCommandCount = renderStats.drawCommandCount,
+		drawTriangleCount = renderStats.drawTriangleCount,
+		materialSwitchCount = renderStats.materialSwitchCount,
+		textureSwitchCount = renderStats.textureSwitchCount,
+		clippedCommandCount = renderStats.clippedCommandCount,
+		clippedTriangleCount = renderStats.clippedTriangleCount,
+		culledCommandCount = renderStats.culledCommandCount,
+		stencilCommandCount = renderStats.stencilCommandCount,
+		stencilTriangleCount = renderStats.stencilTriangleCount,
+		customCommandCount = renderStats.customCommandCount,
+		maxBatchTriangles = renderStats.maxBatchTriangles,
+		maxBatchVertices = renderStats.maxBatchVertices,
 		materialCount = renderStats.materialCount,
 		textureCount = renderStats.textureCount,
 		materialAliasCount = renderStats.materialAliasCount,
@@ -566,7 +646,7 @@ end
 
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
+	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
 	local owner = self.owner
 	if verbose == true and owner ~= nil then
 		self:DumpPerfStats()
@@ -592,6 +672,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 		string.format("Top ui=%s popup=%s focus=%s owner=%s", objectBrief(owner, snapshot.topUI), objectBrief(owner, snapshot.topPopup), tostring(health.focusedHandle or 0), snapshot.focusOwner ~= nil and tostring(snapshot.focusOwner.key or snapshot.focusOwner.uiName or "") or "-"),
 		string.format("Life binding=%s timer=%s thread=%s child=%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.controller), tostring(health.view)),
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
+		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),
 		string.format("Stacks ui=%s popup=%s warnings=%s eventTotal=%s", tostring(owner ~= nil and #(owner.uiStack or {}) or 0), tostring(owner ~= nil and #(owner.popupStack or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(eventStats.total or 0)),
 		string.format("Last event=%s root=%s sender=%s item=%s xy=%s,%s", lastEvent ~= nil and tostring(lastEvent.eventType) or "-", lastEvent ~= nil and tostring(lastEvent.rootHandle) or "-", lastEvent ~= nil and tostring(lastEvent.senderHandle) or "-", lastEvent ~= nil and tostring(lastEvent.itemHandle or "") or "-", lastEvent ~= nil and tostring(lastEvent.x or "") or "-", lastEvent ~= nil and tostring(lastEvent.y or "") or "-"),
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
@@ -645,6 +726,9 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 	if not isBlank(render.textureDetail) then
 		table.insert(lines, clampText("Tex " .. render.textureDetail, options.lineMaxLen or 96))
 	end
+	if not isBlank(render.frameRenderDetail) then
+		table.insert(lines, clampText("Frame " .. render.frameRenderDetail, options.lineMaxLen or 96))
+	end
 
 	local lineCount = tonumber(options.lineCount)
 	if lineCount ~= nil and lineCount > 0 and #lines > lineCount then
@@ -696,7 +780,7 @@ function FairyGuiProfiler:ShowDebugPanel(param)
 	param.popupGroup = param.popupGroup or "DebugPanel"
 	param.popupMode = param.popupMode or "replace"
 	param.width = param.width or 640
-	param.lineCount = param.lineCount or 16
+	param.lineCount = param.lineCount or 18
 	param.lineHeight = param.lineHeight or 21
 	param.height = param.height or math.max(236, 54 + param.lineCount * param.lineHeight)
 	param.top = param.top or 24

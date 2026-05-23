@@ -57,7 +57,7 @@ ctrl:RefreshGoods(goodsList)
 - [ ] List 支持 itemRenderer、item reuse、virtual list、selectedIndex、scrollToIndex、clickItem payload 和复杂 item AutoGen 绑定。
 - [ ] Tree/TreeNode、GGraph/DrawNode、ComboBox、Slider、ProgressBar、Transition、Controller 等常用控件具备业务可用 API。
 - [ ] fullscreen、center、fit、margin、safe area、异形屏适配在 resize 后统一重算。
-- [ ] package、texture、material、render command、triangle、event binding、timer、handle、cache UI 都有可 dump 的观测数据。
+- [~] package、texture、material、render command、triangle、event binding、timer、handle、cache UI 都有可 dump 的观测数据；当前已覆盖 package、texture/material source 与尺寸、render/draw/clip/stencil/switch、event binding、timer、handle、cache UI，引用 UI/package 明细仍可继续细化。
 - [ ] 大量 UI 长循环打开关闭后，资源、事件、timer、focus、controller、view/model/ctrl 引用能稳定回零。
 - [ ] 有至少一个接近真实业务规模的 benchmark UI，长期作为 FGUI 回归基准。
 
@@ -189,7 +189,7 @@ ctrl:RefreshGoods(goodsList)
 - [ ] 像素级 GPU stencil mask。
 - [ ] 普通 mask、倒置 mask、嵌套 mask。
 - [ ] 图片 mask / alpha mask 兼容策略。
-- [ ] mask 状态切换统计。
+- [x] mask 状态切换统计。
 - [ ] 多 mask 自测样例。
 
 ### 2. GGraph / DrawNode
@@ -202,9 +202,9 @@ ctrl:RefreshGoods(goodsList)
 ### 3. 资源 Fallback 与统计
 
 - [ ] 缺 package、缺 component、缺 image、缺 font 有统一 fallback 和日志。
-- [ ] texture 尺寸、格式、引用 UI、引用 package 可 dump。
-- [ ] material 数量和切换统计。
-- [ ] render command、batch、triangle、clip、mask 切换统计。
+- [~] texture 尺寸、格式、引用 UI、引用 package 可 dump；当前已补尺寸和 source，引用 UI/package 明细待补。
+- [x] material 数量和切换统计。
+- [x] render command、batch、triangle、clip、mask 切换统计。
 - [ ] package preload、group/tag unload、scene preload 策略稳定。
 
 ### 4. 压力测试

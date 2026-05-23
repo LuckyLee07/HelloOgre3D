@@ -138,8 +138,21 @@ public:
 	int GetTextureCount() const { return static_cast<int>(m_textureNamesBySource.size()); }
 	int GetMaterialAliasCount() const { return static_cast<int>(m_materialNames.size()); }
 	int GetTextureAliasCount() const { return static_cast<int>(m_textureNames.size()); }
+	int GetLastDrawCommandCount() const { return m_lastFrameStats.drawCommandCount; }
+	int GetLastDrawTriangleCount() const { return m_lastFrameStats.drawTriangleCount; }
+	int GetLastMaterialSwitchCount() const { return m_lastFrameStats.materialSwitchCount; }
+	int GetLastTextureSwitchCount() const { return m_lastFrameStats.textureSwitchCount; }
+	int GetLastClippedCommandCount() const { return m_lastFrameStats.clippedCommandCount; }
+	int GetLastClippedTriangleCount() const { return m_lastFrameStats.clippedTriangleCount; }
+	int GetLastCulledCommandCount() const { return m_lastFrameStats.culledCommandCount; }
+	int GetLastStencilCommandCount() const { return m_lastFrameStats.stencilCommandCount; }
+	int GetLastStencilTriangleCount() const { return m_lastFrameStats.stencilTriangleCount; }
+	int GetLastCustomCommandCount() const { return m_lastFrameStats.customCommandCount; }
+	int GetLastMaxBatchTriangles() const { return m_lastFrameStats.maxBatchTriangles; }
+	int GetLastMaxBatchVertices() const { return m_lastFrameStats.maxBatchVertices; }
 	std::string GetMaterialDetailString() const;
 	std::string GetTextureDetailString() const;
+	std::string GetFrameRenderDetailString() const { return m_lastFrameStats.detailString; }
 
 private:
 	struct ListenerBinding
@@ -157,6 +170,36 @@ private:
 		std::string textureName;
 		int width;
 		int height;
+	};
+
+	struct FrameRenderStats
+	{
+		FrameRenderStats()
+			: drawCommandCount(0), drawTriangleCount(0), materialSwitchCount(0), textureSwitchCount(0),
+			clippedCommandCount(0), clippedTriangleCount(0), culledCommandCount(0),
+			stencilCommandCount(0), stencilTriangleCount(0), customCommandCount(0),
+			maxBatchTriangles(0), maxBatchVertices(0),
+			materialCommandCounts(), textureCommandCounts(), lastMaterialName(), lastTextureSource(), detailString()
+		{
+		}
+
+		int drawCommandCount;
+		int drawTriangleCount;
+		int materialSwitchCount;
+		int textureSwitchCount;
+		int clippedCommandCount;
+		int clippedTriangleCount;
+		int culledCommandCount;
+		int stencilCommandCount;
+		int stencilTriangleCount;
+		int customCommandCount;
+		int maxBatchTriangles;
+		int maxBatchVertices;
+		std::map<std::string, int> materialCommandCounts;
+		std::map<std::string, int> textureCommandCounts;
+		std::string lastMaterialName;
+		std::string lastTextureSource;
+		std::string detailString;
 	};
 
 	struct ObjectHandleInfo
@@ -208,6 +251,11 @@ private:
 	void TrimStencilScopes(int depth);
 	void BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const;
 	bool CreateConfiguredPackageObject();
+	void ResetFrameRenderStats();
+	void RecordStencilCommand(int triangleCount);
+	void RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped);
+	void FinalizeFrameRenderStats();
+	std::string BuildFrameRenderDetailString(const FrameRenderStats& stats) const;
 	std::string GetTextureSourceKey(cocos2d::Texture2D* texture) const;
 	const std::string& GetMaterialName(cocos2d::Texture2D* texture);
 	std::string CreateOgreTexture(cocos2d::Texture2D* texture);
@@ -250,6 +298,8 @@ private:
 	std::map<std::string, std::string> m_materialNamesBySource;
 	std::map<std::string, std::string> m_textureNamesBySource;
 	std::map<std::string, TextureDetail> m_textureDetailsBySource;
+	FrameRenderStats m_currentFrameStats;
+	FrameRenderStats m_lastFrameStats;
 #if defined(_WIN32)
 	HWND m_nativeWindowHandle;
 	void* m_previousWindowProc;

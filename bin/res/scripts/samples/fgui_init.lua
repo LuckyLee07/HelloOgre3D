@@ -660,10 +660,10 @@ function FGUI_RunDebugPanelSelfTest()
 		scene = "DebugPanelSelfTest",
 		title = "Debug Panel Self Test",
 		autoRefresh = false,
-		lineCount = 16,
+		lineCount = 18,
 	})
 	local refreshOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("__DebugPanelSelfTest") == true
-	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 16 })
+	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 18 })
 	local snapshot = FairyGuiManager:GetDebugPanelSnapshot({ maxPackages = 5, maxBindings = 6 })
 	local hasTop = snapshot ~= nil and snapshot.topUI ~= nil
 	local hasLayer = snapshot ~= nil and type(snapshot.layerSummary) == "table" and #snapshot.layerSummary > 0
@@ -672,15 +672,25 @@ function FGUI_RunDebugPanelSelfTest()
 	local hasBindings = snapshot ~= nil and type(snapshot.bindingSummary) == "table" and #snapshot.bindingSummary > 0
 	local hasLines = type(lines) == "table" and #lines >= 12
 	local hasRenderLine = false
+	local hasDrawLine = false
 	local hasOpenLine = false
 	for _, line in ipairs(lines or {}) do
 		if string.find(line, "Render", 1, true) ~= nil then
 			hasRenderLine = true
 		end
+		if string.find(line, "Draw ", 1, true) ~= nil then
+			hasDrawLine = true
+		end
 		if string.find(line, "Open ", 1, true) ~= nil then
 			hasOpenLine = true
 		end
 	end
+	local hasRenderDetail = snapshot ~= nil
+		and snapshot.render ~= nil
+		and snapshot.render.drawCommandCount ~= nil
+		and snapshot.render.materialSwitchCount ~= nil
+		and snapshot.render.clippedCommandCount ~= nil
+		and snapshot.render.stencilCommandCount ~= nil
 
 	FairyGuiManager:HideDebugPanel("__DebugPanelSelfTest")
 	FairyGuiManager:Close("Act38Test", true, "debugPanelCleanup")
@@ -698,6 +708,8 @@ function FGUI_RunDebugPanelSelfTest()
 		"event=", hasEvent,
 		"binding=", hasBindings,
 		"renderLine=", hasRenderLine,
+		"drawLine=", hasDrawLine,
+		"renderDetail=", hasRenderDetail,
 		"openLine=", hasOpenLine,
 		"clean=", finalClean,
 		"openUI=", health.openUI,
@@ -713,6 +725,8 @@ function FGUI_RunDebugPanelSelfTest()
 		and hasEvent == true
 		and hasBindings == true
 		and hasRenderLine == true
+		and hasDrawLine == true
+		and hasRenderDetail == true
 		and hasOpenLine == true
 		and finalClean == true
 end
@@ -1480,6 +1494,11 @@ local function buildFairyGuiPressureStats(label, popupCount, listItemCount)
 		"warnings=", #warnings,
 		"command=", render.commandCount,
 		"triangle=", render.triangleCount,
+		"draw=", tostring(render.drawCommandCount) .. "/" .. tostring(render.drawTriangleCount),
+		"switch=", tostring(render.materialSwitchCount) .. "/" .. tostring(render.textureSwitchCount),
+		"clip=", tostring(render.clippedCommandCount) .. "/" .. tostring(render.clippedTriangleCount),
+		"stencil=", tostring(render.stencilCommandCount) .. "/" .. tostring(render.stencilTriangleCount),
+		"maxBatch=", tostring(render.maxBatchTriangles) .. "/" .. tostring(render.maxBatchVertices),
 		"material=", render.materialCount,
 		"texture=", render.textureCount,
 		"materialAlias=", render.materialAliasCount,
