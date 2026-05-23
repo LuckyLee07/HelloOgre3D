@@ -356,6 +356,20 @@ function BaseFairyGuiView:RefreshList(childPath)
 	return FairyGuiManager:RefreshList(self.handle, childPath)
 end
 
+function BaseFairyGuiView:GetListDebugStats(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return {}
+	end
+	return FairyGuiManager:GetListDebugStats(self.handle, childPath)
+end
+
+function BaseFairyGuiView:DumpListDebugStats(childPath, label)
+	if FairyGuiManager == nil or self.handle == nil then
+		return {}
+	end
+	return FairyGuiManager:DumpListDebugStats(self.handle, childPath, label)
+end
+
 function BaseFairyGuiView:UpdateListItem(childPath, index, data)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false

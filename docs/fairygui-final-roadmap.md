@@ -496,7 +496,8 @@ self:PlayTransition("show")
 - `RefreshList / RefreshListItem`
 - `AppendListItem / UpdateListItem / RemoveListItem / ClearList`
 - item renderer 支持 `SetText / SetIcon / SetLoaderUrl / SetVisible / SetPosition / SetSize / SetControllerIndex`
-- `Act38Test` 已作为 List + Controller + MVC 标准样例，`HELLO_FGUI_ACT38_SELF_TEST=1` 会覆盖打开、追加 item、刷新 item、dump count。
+- virtual list 已接入 `SetVirtualListData`，Lua 侧会跟踪 item handle 复用关系并清理复用 item 的 child cache；`GetListDebugStats / DumpListDebugStats` 可观测 renderCount、itemHandleCount、realizedCount、reuseCount。
+- `Act38Test` 已作为 List + Controller + MVC 标准样例，`HELLO_FGUI_ACT38_SELF_TEST=1` 会覆盖打开、追加 item、刷新 item、dump count；`HELLO_FGUI_VIRTUAL_LIST_SELF_TEST=1` 覆盖 80 条虚拟列表、滚动、更新/追加/删除、复用统计和关闭回零。
 
 当前已落地的常用控件与 Transition 能力：
 

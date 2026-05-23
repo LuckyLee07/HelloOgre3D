@@ -150,7 +150,7 @@
 - [x] ComboBox 封装：支持 `selectedIndex/value` 读写，Lua `Manager/View/Ctrl/ListItem` 已封装。
 - [~] Controller 变化监听和名字/id 双模式访问：`SetControllerIndex` 已支持空名字访问第一个 controller，专用变化监听和按 id/page name 访问待补。
 - [x] Transition 播放、停止、完成回调：支持按名字或默认第一个 transition 播放/停止，完成回调派回 Lua，并纳入关闭残留检查。
-- [ ] List 虚拟列表、item renderer、item click payload 完整化。
+- [x] List 虚拟列表、item renderer、item click payload 完整化；已补 `HELLO_FGUI_VIRTUAL_LIST_SELF_TEST=1`，覆盖 80 条数据、itemRenderer、scrollToView、更新/追加/删除、item handle 复用统计和关闭回零。
 - [ ] Tree/TreeNode 最小可用封装。
 - [ ] 子页面/子组件挂载能力，支持一个大 UI 内拆多个业务子模块。
 

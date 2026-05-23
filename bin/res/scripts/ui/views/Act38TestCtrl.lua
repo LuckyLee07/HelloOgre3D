@@ -167,6 +167,76 @@ function Act38TestCtrl:RunListApiSelfTest()
 	return appendOk and updateTaskOk and updateShopOk
 end
 
+function Act38TestCtrl:RunVirtualListSelfTest()
+	local virtualTasks = {}
+	for index = 1, 80 do
+		virtualTasks[index] = {
+			desc = "Virtual Task " .. tostring(index),
+			num = tostring(index) .. "/80",
+			state = index % 3 == 0 and "done" or index % 2 == 0 and "get" or "go",
+		}
+	end
+
+	local rendererCount = 0
+	local virtualOk = self:SetVirtualListData("m2_dayTaskList", virtualTasks, function(item, data, index)
+		rendererCount = rendererCount + 1
+		self:RenderTaskItem(item, data, index)
+	end)
+	local countOk = self:GetListItemCount("m2_dayTaskList") == #virtualTasks
+	local refreshOk = self:RefreshList("m2_dayTaskList")
+	local scrollFirstOk = self:ScrollListToView("m2_dayTaskList", 1)
+	local scrollMiddleOk = self:ScrollListToView("m2_dayTaskList", 40)
+	local scrollEndOk = self:ScrollListToView("m2_dayTaskList", #virtualTasks)
+	local renderStats = self:GetListDebugStats("m2_dayTaskList")
+
+	local updatedTask = {
+		desc = "Virtual Task Updated",
+		num = "2/80",
+		state = "get",
+	}
+	local updateOk = self:UpdateListItem("m2_dayTaskList", 2, updatedTask)
+	local appendOk = self:AppendListItem("m2_dayTaskList", {
+		desc = "Virtual Task Appended",
+		num = tostring(#virtualTasks + 1) .. "/81",
+		state = "go",
+	})
+	local removeOk = self:RemoveListItem("m2_dayTaskList", 3)
+	local mutateCountOk = self:GetListItemCount("m2_dayTaskList") == #virtualTasks
+	local dataOk = self:GetListData("m2_dayTaskList", 2) == updatedTask
+	local stats = self:GetListDebugStats("m2_dayTaskList")
+	local statsOk = renderStats.virtual == true
+		and renderStats.dataCount >= #virtualTasks
+		and renderStats.backendItemCount >= #virtualTasks
+		and renderStats.renderCount > 0
+		and renderStats.itemHandleCount > 0
+		and renderStats.itemHandleCount < renderStats.dataCount
+
+	print(
+		"[FGUI] Act38TestCtrl virtual list self test:",
+		"virtual=", virtualOk,
+		"count=", countOk,
+		"refresh=", refreshOk,
+		"scroll=", scrollFirstOk, scrollMiddleOk, scrollEndOk,
+		"mutate=", updateOk, appendOk, removeOk, mutateCountOk, dataOk,
+		"renderer=", rendererCount,
+		"renderStats=", renderStats.renderCount, renderStats.itemHandleCount, renderStats.realizedCount, renderStats.reuseCount,
+		"finalStats=", stats.renderCount, stats.itemHandleCount, stats.realizedCount, stats.reuseCount,
+		"last=", stats.lastIndex, stats.lastItemHandle)
+
+	return virtualOk == true
+		and countOk == true
+		and refreshOk == true
+		and scrollFirstOk == true
+		and scrollMiddleOk == true
+		and scrollEndOk == true
+		and updateOk == true
+		and appendOk == true
+		and removeOk == true
+		and mutateCountOk == true
+		and dataOk == true
+		and statsOk == true
+end
+
 function Act38TestCtrl:RunComplexControlSelfTest()
 	local controllerName = "m2_menuCtrl"
 	local pageCount = self:GetControllerPageCount(controllerName)

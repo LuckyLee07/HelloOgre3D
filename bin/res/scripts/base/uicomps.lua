@@ -217,20 +217,26 @@ end
 
 
 function GUI_WindowResized(width, height)
-	local dimension1 = cameraInfoPanel:GetDimension()
-    local ui_posx1 = width - dimension1.x - 20;
-    local ui_posy1 = 35 + dimension1.y;
-    cameraInfoPanel:setPosition(Vector2(ui_posx1, ui_posy1))
+	if cameraInfoPanel ~= nil then
+		local dimension1 = cameraInfoPanel:GetDimension()
+		local ui_posx1 = width - dimension1.x - 20;
+		local ui_posy1 = 35 + dimension1.y;
+		cameraInfoPanel:setPosition(Vector2(ui_posx1, ui_posy1))
+	end
 
-    local dimension2 = profileInfoPanel:GetDimension()
-    local ui_posx2 = width - dimension2.x - 20;
-    local ui_posy2 = 20;
-    profileInfoPanel:setPosition(Vector2(ui_posx2, ui_posy2))
+	if profileInfoPanel ~= nil then
+		local dimension2 = profileInfoPanel:GetDimension()
+		local ui_posx2 = width - dimension2.x - 20;
+		local ui_posy2 = 20;
+		profileInfoPanel:setPosition(Vector2(ui_posx2, ui_posy2))
+	end
 
-    local dimension = chapterInfoPanel:GetDimension()
-    local ui_posx = width - dimension.x - 20;
-    local ui_posy = height - dimension.y - 35;
-    chapterInfoPanel:setPosition(Vector2(ui_posx, ui_posy))
+	if chapterInfoPanel ~= nil then
+		local dimension = chapterInfoPanel:GetDimension()
+		local ui_posx = width - dimension.x - 20;
+		local ui_posy = height - dimension.y - 35;
+		chapterInfoPanel:setPosition(Vector2(ui_posx, ui_posy))
+	end
 end
 
 

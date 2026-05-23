@@ -296,9 +296,12 @@ function FairyGuiManager:Init()
 	self.hiddenObjects = {}
 	self.childrenByHandle = {}
 	self.listItemHandlesByHandle = {}
+	self.listItemIndexByHandle = {}
 	self.listDataByHandle = {}
 	self.listRenderersByHandle = {}
 	self.listVirtualByHandle = {}
+	self.listVirtualOptionsByHandle = {}
+	self.listVirtualStatsByHandle = {}
 	self.treeDataByHandle = {}
 	self.treeStateByHandle = {}
 	self.treeRenderersByHandle = {}
@@ -723,6 +726,9 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 		if self.listItemHandlesByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listItemHandlesByHandle[" .. tostring(ownedHandle) .. "]")
 		end
+		if self.listItemIndexByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "listItemIndexByHandle[" .. tostring(ownedHandle) .. "]")
+		end
 		if self.listDataByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listDataByHandle[" .. tostring(ownedHandle) .. "]")
 		end
@@ -731,6 +737,12 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 		end
 		if self.listVirtualByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listVirtualByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.listVirtualOptionsByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "listVirtualOptionsByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.listVirtualStatsByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "listVirtualStatsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
 		if self.treeDataByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "treeDataByHandle[" .. tostring(ownedHandle) .. "]")
@@ -776,6 +788,17 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 			for itemIndex, itemHandle in pairs(itemHandles) do
 				if itemHandle ~= nil and handleSet[itemHandle] == true then
 					table.insert(issues, "listItemHandlesRef[" .. tostring(listHandle) .. ":" .. tostring(itemIndex) .. "]")
+				end
+			end
+		end
+	end
+	for listHandle, itemIndexes in pairs(self.listItemIndexByHandle) do
+		if handleSet[listHandle] == true then
+			table.insert(issues, "listItemIndexParent[" .. tostring(listHandle) .. "]")
+		elseif type(itemIndexes) == "table" then
+			for itemHandle, itemIndex in pairs(itemIndexes) do
+				if itemHandle ~= nil and handleSet[itemHandle] == true then
+					table.insert(issues, "listItemIndexRef[" .. tostring(listHandle) .. ":" .. tostring(itemIndex) .. "]")
 				end
 			end
 		end
@@ -2262,6 +2285,14 @@ end
 
 function FairyGuiManager:RefreshList(handle, childPath)
 	return self:GetLists():RefreshList(handle, childPath)
+end
+
+function FairyGuiManager:GetListDebugStats(handle, childPath)
+	return self:GetLists():GetListDebugStats(handle, childPath)
+end
+
+function FairyGuiManager:DumpListDebugStats(handle, childPath, label)
+	return self:GetLists():DumpListDebugStats(handle, childPath, label)
 end
 
 function FairyGuiManager:UpdateListItem(handle, childPath, index, data)

@@ -115,6 +115,17 @@ local function tryRunFairyGuiComplexControlsSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiVirtualListSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_VIRTUAL_LIST_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] virtual list self test result:", FGUI_RunVirtualListSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiDebugPanelSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_DEBUG_PANEL_SELF_TEST") then
 		return
@@ -538,6 +549,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiTextInputSelfTest()
 		tryRunFairyGuiImeSelfTest()
 		tryRunFairyGuiComplexControlsSelfTest()
+		tryRunFairyGuiVirtualListSelfTest()
 		tryRunFairyGuiDebugPanelSelfTest()
 		tryRunFairyGuiAiDebugPanelSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
@@ -626,6 +638,24 @@ function FGUI_RunComplexControlsSelfTest()
 	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
 	print("[FGUI] complex controls self test detail:", complexOk, finalClean, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
 	return complexOk == true and finalClean == true
+end
+
+function FGUI_RunVirtualListSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "virtualListReset")
+	FairyGuiManager:Close("Act38Test", true, "virtualListReset")
+	local ctrl = FGUI_OpenAct38Sample({
+		scene = "VirtualList",
+		group = "VirtualList",
+		dateText = "Virtual List Self Test",
+	})
+	local listOk = ctrl ~= nil and ctrl.RunVirtualListSelfTest ~= nil and ctrl:RunVirtualListSelfTest() or false
+	local stats = ctrl ~= nil and ctrl:GetListDebugStats("m2_dayTaskList") or {}
+	FairyGuiManager:Close("Act38Test", true, "virtualListCleanup")
+	FairyGuiManager:Close("Act37TestMvc", true, "virtualListCleanup")
+	local health = FairyGuiManager:GetHealthStats()
+	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
+	print("[FGUI] virtual list self test detail:", listOk, finalClean, "render=", stats.renderCount, "items=", stats.itemHandleCount, "reuse=", stats.reuseCount, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
+	return listOk == true and finalClean == true
 end
 
 function FGUI_CloseAct38Sample()
@@ -1417,6 +1447,9 @@ function FGUI_RunSelfTestSuite()
 	end)
 	schedule(0.6, "ComplexControls", function()
 		return FGUI_RunComplexControlsSelfTest()
+	end)
+	schedule(0.6, "VirtualList", function()
+		return FGUI_RunVirtualListSelfTest()
 	end)
 	schedule(0.6, "DebugPanel", function()
 		return FGUI_RunDebugPanelSelfTest()

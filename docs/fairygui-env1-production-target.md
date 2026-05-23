@@ -139,13 +139,13 @@ ctrl:RefreshGoods(goodsList)
 
 ### 1. List / Virtual List
 
-- [ ] itemRenderer 标准协议。
-- [ ] item reuse 生命周期。
-- [ ] selectedIndex / selectedItem。
-- [ ] scrollToIndex / scrollToBottom。
-- [ ] clickItem payload 标准化。
+- [x] itemRenderer 标准协议。
+- [x] item reuse 生命周期。
+- [~] selectedIndex / selectedItem：`selectedIndex` 已具备，`selectedItem` 语义封装待补。
+- [~] scrollToIndex / scrollToBottom：`scrollToView` 已具备，`scrollToBottom` 语义封装待补。
+- [x] clickItem payload 标准化。
 - [ ] 复杂 item 支持 AutoGen 子结构。
-- [ ] 大列表压力自测。
+- [x] 大列表压力自测：`HELLO_FGUI_VIRTUAL_LIST_SELF_TEST=1` 覆盖 80 条虚拟列表和 item handle 复用统计。
 
 ### 2. Controller / Transition
 

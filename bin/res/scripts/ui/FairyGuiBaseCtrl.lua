@@ -257,6 +257,14 @@ function FairyGuiBaseCtrl:RefreshList(childPath)
 	return self.view ~= nil and self.view:RefreshList(childPath) or false
 end
 
+function FairyGuiBaseCtrl:GetListDebugStats(childPath)
+	return self.view ~= nil and self.view:GetListDebugStats(childPath) or {}
+end
+
+function FairyGuiBaseCtrl:DumpListDebugStats(childPath, label)
+	return self.view ~= nil and self.view:DumpListDebugStats(childPath, label) or {}
+end
+
 function FairyGuiBaseCtrl:UpdateListItem(childPath, index, data)
 	return self.view ~= nil and self.view:UpdateListItem(childPath, index, data) or false
 end

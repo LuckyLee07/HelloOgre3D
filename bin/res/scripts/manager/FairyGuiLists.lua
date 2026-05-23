@@ -6,6 +6,17 @@ local function isBlank(value)
 	return value == nil or value == ""
 end
 
+local function tableCount(source)
+	local count = 0
+	if type(source) ~= "table" then
+		return count
+	end
+	for _, _ in pairs(source) do
+		count = count + 1
+	end
+	return count
+end
+
 local function getCurrentManager()
 	if _G.FairyGuiManager ~= nil then
 		return _G.FairyGuiManager
@@ -138,6 +149,72 @@ function FairyGuiLists:Init(owner)
 	self.owner = owner
 end
 
+function FairyGuiLists:GetOrCreateVirtualStats(listHandle)
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
+		return nil
+	end
+
+	local stats = owner.listVirtualStatsByHandle[listHandle]
+	if stats == nil then
+		stats = {
+			virtual = owner.listVirtualByHandle[listHandle] == true,
+			dataCount = 0,
+			renderCount = 0,
+			itemHandleCount = 0,
+			realizedCount = 0,
+			reuseCount = 0,
+			lastIndex = 0,
+			lastItemHandle = 0,
+			lastRenderOk = false,
+			loop = false,
+			fallback = false,
+		}
+		owner.listVirtualStatsByHandle[listHandle] = stats
+	end
+	return stats
+end
+
+function FairyGuiLists:ResetVirtualStats(listHandle, dataCount, options, virtualEnabled)
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
+		return nil
+	end
+
+	local stats = {
+		virtual = virtualEnabled == true,
+		dataCount = dataCount or 0,
+		renderCount = 0,
+		itemHandleCount = 0,
+		realizedCount = 0,
+		reuseCount = 0,
+		lastIndex = 0,
+		lastItemHandle = 0,
+		lastRenderOk = false,
+		loop = options ~= nil and options.loop == true,
+		fallback = virtualEnabled ~= true,
+	}
+	owner.listVirtualStatsByHandle[listHandle] = stats
+	return stats
+end
+
+function FairyGuiLists:UpdateVirtualStatsCounts(listHandle)
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
+		return nil
+	end
+
+	local stats = owner.listVirtualStatsByHandle[listHandle]
+	if stats == nil then
+		return nil
+	end
+	stats.itemHandleCount = tableCount(owner.listItemHandlesByHandle[listHandle])
+	stats.realizedCount = tableCount(owner.listItemIndexByHandle[listHandle])
+	local dataList = owner.listDataByHandle[listHandle]
+	stats.dataCount = type(dataList) == "table" and #dataList or 0
+	return stats
+end
+
 function FairyGuiLists:GetChild(handle, childPath)
 	local self = self.owner
 	if self == nil or GameManager == nil or handle == nil or isBlank(childPath) then
@@ -183,6 +260,7 @@ function FairyGuiLists:GetTargetHandle(handle, childPath)
 end
 
 function FairyGuiLists:ClearListCacheByListHandle(listHandle)
+	local lists = self
 	local self = self.owner
 	if self == nil or listHandle == nil then
 		return
@@ -195,16 +273,21 @@ function FairyGuiLists:ClearListCacheByListHandle(listHandle)
 		end
 	end
 	self.listItemHandlesByHandle[listHandle] = nil
+	self.listItemIndexByHandle[listHandle] = nil
 	self.listDataByHandle[listHandle] = nil
 	self.listRenderersByHandle[listHandle] = nil
 	self.listVirtualByHandle[listHandle] = nil
+	self.listVirtualOptionsByHandle[listHandle] = nil
+	self.listVirtualStatsByHandle[listHandle] = nil
 	self.treeDataByHandle[listHandle] = nil
 	self.treeStateByHandle[listHandle] = nil
 	self.treeRenderersByHandle[listHandle] = nil
 	self.treeChildPathByHandle[listHandle] = nil
+	lists:UpdateVirtualStatsCounts(listHandle)
 end
 
 function FairyGuiLists:ClearListItemHandleCache(listHandle)
+	local lists = self
 	local self = self.owner
 	if self == nil or listHandle == nil then
 		return
@@ -217,6 +300,8 @@ function FairyGuiLists:ClearListItemHandleCache(listHandle)
 		end
 	end
 	self.listItemHandlesByHandle[listHandle] = nil
+	self.listItemIndexByHandle[listHandle] = nil
+	lists:UpdateVirtualStatsCounts(listHandle)
 end
 
 function FairyGuiLists:ClearListCacheForHandle(handle)
@@ -292,6 +377,7 @@ function FairyGuiLists:RenderListItemByHandle(listHandle, index, itemHandle)
 end
 
 function FairyGuiLists:RenderVirtualListItemByHandle(listHandle, index, itemHandle)
+	local lists = self
 	local self = self.owner
 	if self == nil or listHandle == nil or index == nil or itemHandle == nil or itemHandle <= 0 then
 		return false
@@ -302,8 +388,43 @@ function FairyGuiLists:RenderVirtualListItemByHandle(listHandle, index, itemHand
 		itemHandles = {}
 		self.listItemHandlesByHandle[listHandle] = itemHandles
 	end
+
+	local itemIndexes = self.listItemIndexByHandle[listHandle]
+	if itemIndexes == nil then
+		itemIndexes = {}
+		self.listItemIndexByHandle[listHandle] = itemIndexes
+	end
+
+	local stats = lists:GetOrCreateVirtualStats(listHandle)
+	local oldIndex = itemIndexes[itemHandle]
+	if oldIndex ~= nil and oldIndex ~= index then
+		itemHandles[oldIndex] = nil
+		self.childrenByHandle[itemHandle] = nil
+		if stats ~= nil then
+			stats.reuseCount = (stats.reuseCount or 0) + 1
+		end
+	end
+
+	local oldHandle = itemHandles[index]
+	if oldHandle ~= nil and oldHandle ~= itemHandle then
+		itemIndexes[oldHandle] = nil
+		self.childrenByHandle[oldHandle] = nil
+	end
+
 	itemHandles[index] = itemHandle
-	return self:RenderListItemByHandle(listHandle, index, itemHandle)
+	itemIndexes[itemHandle] = index
+
+	if stats ~= nil then
+		stats.renderCount = (stats.renderCount or 0) + 1
+		stats.lastIndex = index
+		stats.lastItemHandle = itemHandle
+	end
+	local rendered = self:RenderListItemByHandle(listHandle, index, itemHandle)
+	if stats ~= nil then
+		stats.lastRenderOk = rendered == true
+	end
+	lists:UpdateVirtualStatsCounts(listHandle)
+	return rendered
 end
 
 function FairyGuiLists:GetListHandle(handle, childPath)
@@ -378,6 +499,7 @@ function FairyGuiLists:SetListData(handle, childPath, dataList, renderer)
 end
 
 function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer, options)
+	local lists = self
 	local self = self.owner
 	if self == nil or type(dataList) ~= "table" then
 		return false
@@ -395,17 +517,20 @@ function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer,
 		self.listRenderersByHandle[listHandle] = nil
 	end
 	self:ClearListItemHandleCache(listHandle)
+	self.listVirtualOptionsByHandle[listHandle] = options or {}
 
 	local virtualEnabled = false
 	if GameManager ~= nil and GameManager.setFairyGuiListVirtual ~= nil then
 		virtualEnabled = GameManager:setFairyGuiListVirtual(listHandle, options ~= nil and options.loop == true) == true
 	end
 	self.listVirtualByHandle[listHandle] = virtualEnabled
+	lists:ResetVirtualStats(listHandle, #dataList, options, virtualEnabled)
 	if virtualEnabled then
 		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
 		if countOk and GameManager.refreshFairyGuiList ~= nil then
 			GameManager:refreshFairyGuiList(listHandle)
 		end
+		lists:UpdateVirtualStatsCounts(listHandle)
 		return countOk == true
 	end
 	return self:SetListData(handle, childPath, dataList, renderer)
@@ -556,10 +681,19 @@ function FairyGuiLists:RefreshListItem(handle, childPath, index)
 	if listHandle == nil or index == nil then
 		return false
 	end
+	if self.listVirtualByHandle[listHandle] == true then
+		local itemHandles = self.listItemHandlesByHandle[listHandle]
+		local itemHandle = itemHandles ~= nil and itemHandles[index] or nil
+		if itemHandle ~= nil then
+			return self:RenderListItemByHandle(listHandle, index, itemHandle)
+		end
+		return GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil and GameManager:refreshFairyGuiList(listHandle) == true
+	end
 	return self:RenderListItemByHandle(listHandle, index)
 end
 
 function FairyGuiLists:RefreshList(handle, childPath)
+	local lists = self
 	local self = self.owner
 	if self == nil then
 		return false
@@ -571,7 +705,9 @@ function FairyGuiLists:RefreshList(handle, childPath)
 	end
 
 	if self.listVirtualByHandle[listHandle] == true and GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil then
-		return GameManager:refreshFairyGuiList(listHandle)
+		local refreshOk = GameManager:refreshFairyGuiList(listHandle)
+		lists:UpdateVirtualStatsCounts(listHandle)
+		return refreshOk
 	end
 
 	local dataList = self.listDataByHandle[listHandle]
@@ -583,6 +719,7 @@ function FairyGuiLists:RefreshList(handle, childPath)
 end
 
 function FairyGuiLists:UpdateListItem(handle, childPath, index, data)
+	local lists = self
 	local self = self.owner
 	if self == nil then
 		return false
@@ -598,10 +735,19 @@ function FairyGuiLists:UpdateListItem(handle, childPath, index, data)
 		return false
 	end
 	dataList[index] = data
+	if self.listVirtualByHandle[listHandle] == true then
+		local itemHandles = self.listItemHandlesByHandle[listHandle]
+		local itemHandle = itemHandles ~= nil and itemHandles[index] or nil
+		local renderOk = itemHandle ~= nil and self:RenderListItemByHandle(listHandle, index, itemHandle) or false
+		local refreshOk = GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil and GameManager:refreshFairyGuiList(listHandle) == true
+		lists:UpdateVirtualStatsCounts(listHandle)
+		return renderOk == true or refreshOk == true
+	end
 	return self:RenderListItemByHandle(listHandle, index)
 end
 
 function FairyGuiLists:AppendListItem(handle, childPath, data)
+	local lists = self
 	local self = self.owner
 	if self == nil then
 		return false
@@ -618,6 +764,17 @@ function FairyGuiLists:AppendListItem(handle, childPath, data)
 		self.listDataByHandle[listHandle] = dataList
 	end
 	table.insert(dataList, data)
+	if self.listVirtualByHandle[listHandle] == true then
+		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+			return false
+		end
+		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and GameManager.refreshFairyGuiList ~= nil then
+			GameManager:refreshFairyGuiList(listHandle)
+		end
+		lists:UpdateVirtualStatsCounts(listHandle)
+		return countOk == true
+	end
 	if not self:SetListItemCount(handle, childPath, #dataList) then
 		return false
 	end
@@ -625,6 +782,7 @@ function FairyGuiLists:AppendListItem(handle, childPath, data)
 end
 
 function FairyGuiLists:RemoveListItem(handle, childPath, index)
+	local lists = self
 	local self = self.owner
 	if self == nil then
 		return false
@@ -640,6 +798,18 @@ function FairyGuiLists:RemoveListItem(handle, childPath, index)
 		return false
 	end
 	table.remove(dataList, index)
+	if self.listVirtualByHandle[listHandle] == true then
+		self:ClearListItemHandleCache(listHandle)
+		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+			return false
+		end
+		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and GameManager.refreshFairyGuiList ~= nil then
+			GameManager:refreshFairyGuiList(listHandle)
+		end
+		lists:UpdateVirtualStatsCounts(listHandle)
+		return countOk == true
+	end
 	if not self:SetListItemCount(handle, childPath, #dataList) then
 		return false
 	end
@@ -647,6 +817,7 @@ function FairyGuiLists:RemoveListItem(handle, childPath, index)
 end
 
 function FairyGuiLists:ClearList(handle, childPath)
+	local lists = self
 	local self = self.owner
 	if self == nil then
 		return false
@@ -658,7 +829,87 @@ function FairyGuiLists:ClearList(handle, childPath)
 	end
 
 	local renderer = self.listRenderersByHandle[listHandle]
+	if self.listVirtualByHandle[listHandle] == true then
+		self.listDataByHandle[listHandle] = {}
+		self:ClearListItemHandleCache(listHandle)
+		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+			return false
+		end
+		local countOk = GameManager:setFairyGuiListItemCount(listHandle, 0)
+		if countOk and GameManager.refreshFairyGuiList ~= nil then
+			GameManager:refreshFairyGuiList(listHandle)
+		end
+		lists:UpdateVirtualStatsCounts(listHandle)
+		return countOk == true
+	end
 	return self:SetListData(handle, childPath, {}, renderer)
+end
+
+function FairyGuiLists:GetListDebugStats(handle, childPath)
+	local self = self.owner
+	if self == nil then
+		return {}
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return {}
+	end
+
+	local dataList = self.listDataByHandle[listHandle]
+	local itemHandles = self.listItemHandlesByHandle[listHandle]
+	local itemIndexes = self.listItemIndexByHandle[listHandle]
+	local stats = self.listVirtualStatsByHandle[listHandle]
+	local result = {
+		listHandle = listHandle,
+		childPath = childPath,
+		virtual = self.listVirtualByHandle[listHandle] == true,
+		dataCount = type(dataList) == "table" and #dataList or 0,
+		itemHandleCount = tableCount(itemHandles),
+		realizedCount = tableCount(itemIndexes),
+		renderer = type(self.listRenderersByHandle[listHandle]) == "function",
+		backendItemCount = GameManager ~= nil and GameManager.getFairyGuiListItemCount ~= nil and GameManager:getFairyGuiListItemCount(listHandle) or 0,
+		renderCount = 0,
+		reuseCount = 0,
+		lastIndex = 0,
+		lastItemHandle = 0,
+		lastRenderOk = false,
+		loop = false,
+		fallback = false,
+	}
+	if stats ~= nil then
+		result.virtual = stats.virtual == true
+		result.dataCount = stats.dataCount or result.dataCount
+		result.itemHandleCount = stats.itemHandleCount or result.itemHandleCount
+		result.realizedCount = stats.realizedCount or result.realizedCount
+		result.renderCount = stats.renderCount or 0
+		result.reuseCount = stats.reuseCount or 0
+		result.lastIndex = stats.lastIndex or 0
+		result.lastItemHandle = stats.lastItemHandle or 0
+		result.lastRenderOk = stats.lastRenderOk == true
+		result.loop = stats.loop == true
+		result.fallback = stats.fallback == true
+	end
+	return result
+end
+
+function FairyGuiLists:DumpListDebugStats(handle, childPath, label)
+	local stats = self:GetListDebugStats(handle, childPath)
+	print(
+		"[FGUI] list debug stats:",
+		label or childPath or "",
+		"listHandle=", stats.listHandle,
+		"virtual=", stats.virtual,
+		"data=", stats.dataCount,
+		"backend=", stats.backendItemCount,
+		"items=", stats.itemHandleCount,
+		"realized=", stats.realizedCount,
+		"render=", stats.renderCount,
+		"reuse=", stats.reuseCount,
+		"last=", stats.lastIndex,
+		stats.lastItemHandle,
+		"fallback=", stats.fallback)
+	return stats
 end
 
 function FairyGuiLists:SetListSelectedIndex(handle, childPath, selectedIndex)
