@@ -428,15 +428,17 @@ local function tryRunFairyGuiMaskSelfTest()
 	threadpool:delay(6, function()
 		local handle = FGUI_OpenMaskProbe()
 		local graphHandle = FGUI_OpenGraphMaskProbe()
-		print("[FGUI] mask probe open self test:", handle ~= nil, graphHandle ~= nil, handle, graphHandle)
+		local nestedHandle = FGUI_OpenNestedGraphMaskProbe()
+		print("[FGUI] mask probe open self test:", handle ~= nil, graphHandle ~= nil, nestedHandle ~= nil, handle, graphHandle, nestedHandle)
 		FairyGuiManager:DumpRenderStats()
 		threadpool:delay(1, function()
 			local render = FairyGuiManager:GetRenderStats()
 			local renderOk = render ~= nil and (render.drawCommandCount or 0) > 0 and (render.stencilCommandCount or 0) > 0
 			local closed = FGUI_CloseMaskProbe()
 			local graphClosed = FGUI_CloseGraphMaskProbe()
-			print("[FGUI] mask probe self test result:", handle ~= nil and graphHandle ~= nil and renderOk == true and closed == true and graphClosed == true, "draw=", render and render.drawCommandCount, "stencil=", render and render.stencilCommandCount)
-			print("[FGUI] mask probe close self test:", closed, graphClosed)
+			local nestedClosed = FGUI_CloseNestedGraphMaskProbe()
+			print("[FGUI] mask probe self test result:", handle ~= nil and graphHandle ~= nil and nestedHandle ~= nil and renderOk == true and closed == true and graphClosed == true and nestedClosed == true, "draw=", render and render.drawCommandCount, "stencil=", render and render.stencilCommandCount)
+			print("[FGUI] mask probe close self test:", closed, graphClosed, nestedClosed)
 			FairyGuiManager:DumpOpenUIs()
 			FairyGuiManager:DumpStacks()
 			FairyGuiManager:DumpDebugStats()
@@ -628,12 +630,36 @@ function FGUI_OpenGraphMaskProbe()
 	})
 end
 
+function FGUI_OpenNestedGraphMaskProbe()
+	return FairyGuiManager:OpenMaskProbe({
+		key = "NestedGraphMaskProbe",
+		layer = "Top",
+		group = "Sample",
+		scene = "Default",
+		popupMode = "stack",
+		graphMask = true,
+		nestedMask = true,
+		assets = {
+			background = "res/assets/act_38/_imgs/board_task.png",
+			content = "res/assets/act_38/_imgs/board_task.png",
+			stripA = "res/assets/act_38/_imgs/board_prop_exchange.png",
+			stripB = "res/assets/act_38/_imgs/btn_green.png",
+			stripC = "res/assets/act_38/_imgs/button_close.png",
+			mask = "res/assets/act_38/_imgs/img_mask.png",
+		},
+	})
+end
+
 function FGUI_CloseMaskProbe()
 	return FairyGuiManager:Close("MaskProbe", true)
 end
 
 function FGUI_CloseGraphMaskProbe()
 	return FairyGuiManager:Close("GraphMaskProbe", true)
+end
+
+function FGUI_CloseNestedGraphMaskProbe()
+	return FairyGuiManager:Close("NestedGraphMaskProbe", true)
 end
 
 function FGUI_OpenTextInputProbe(param)
@@ -1370,6 +1396,11 @@ function FGUI_RunSelfTestSuite()
 		local closed = FGUI_CloseGraphMaskProbe()
 		return handle ~= nil and closed == true, handle
 	end)
+	schedule(0.6, "NestedGraphMaskProbe", function()
+		local handle = FGUI_OpenNestedGraphMaskProbe()
+		local closed = FGUI_CloseNestedGraphMaskProbe()
+		return handle ~= nil and closed == true, handle
+	end)
 	schedule(0.6, "LifecycleResidue", function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		if handle == nil or inputHandle == nil then
@@ -1414,6 +1445,7 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:CloseGroup("LayerProbe", true)
 		FairyGuiManager:Close("MaskProbe", true)
 		FairyGuiManager:Close("GraphMaskProbe", true)
+		FairyGuiManager:Close("NestedGraphMaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
 		FairyGuiManager:Close("BusinessFlowTextInput", true)
 		FairyGuiManager:Close("__EventPayloadProbe", true)
@@ -1478,6 +1510,7 @@ local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:CloseGroup("LayerProbe", true)
 	FairyGuiManager:Close("MaskProbe", true)
 	FairyGuiManager:Close("GraphMaskProbe", true)
+	FairyGuiManager:Close("NestedGraphMaskProbe", true)
 	FairyGuiManager:Close("TextInputProbe", true)
 	FairyGuiManager:Close("BusinessFlowTextInput", true)
 	FairyGuiManager:Close("__EventPayloadProbe", true)
@@ -2060,6 +2093,11 @@ function FGUI_RunLongLoopSelfTest(config)
 			local graphMaskClosed = FGUI_CloseGraphMaskProbe()
 			if graphMaskHandle == nil or graphMaskClosed ~= true then
 				return false, "Graph mask probe failed"
+			end
+			local nestedMaskHandle = FGUI_OpenNestedGraphMaskProbe()
+			local nestedMaskClosed = FGUI_CloseNestedGraphMaskProbe()
+			if nestedMaskHandle == nil or nestedMaskClosed ~= true then
+				return false, "Nested graph mask probe failed"
 			end
 
 			local textHandle, inputHandle = FGUI_OpenTextInputProbe()

@@ -26,6 +26,7 @@
 #include "profiling/Profile.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <map>
@@ -266,6 +267,168 @@ namespace
 		AppendRectIfValid(output, intersection.getMaxX(), source.getMinY(), source.getMaxX() - intersection.getMaxX(), source.size.height);
 		AppendRectIfValid(output, intersection.getMinX(), source.getMinY(), intersection.size.width, intersection.getMinY() - source.getMinY());
 		AppendRectIfValid(output, intersection.getMinX(), intersection.getMaxY(), intersection.size.width, source.getMaxY() - intersection.getMaxY());
+	}
+
+	float PolygonSignedArea(const std::vector<ClipVertex>& polygon)
+	{
+		if (polygon.size() < 3)
+			return 0.0f;
+
+		float area = 0.0f;
+		for (size_t index = 0; index < polygon.size(); ++index)
+		{
+			const ClipVertex& current = polygon[index];
+			const ClipVertex& next = polygon[(index + 1) % polygon.size()];
+			area += current.x * next.y - next.x * current.y;
+		}
+		return area * 0.5f;
+	}
+
+	bool IsValidClipPolygon(const std::vector<ClipVertex>& polygon)
+	{
+		return polygon.size() >= 3 && std::abs(PolygonSignedArea(polygon)) > 0.001f;
+	}
+
+	float Cross(const ClipVertex& a, const ClipVertex& b, const ClipVertex& point)
+	{
+		return (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
+	}
+
+	bool IsInsideConvexEdge(const ClipVertex& vertex, const ClipVertex& edgeStart, const ClipVertex& edgeEnd, float orientation, bool keepInside)
+	{
+		const float side = Cross(edgeStart, edgeEnd, vertex);
+		if (orientation >= 0.0f)
+			return keepInside ? side >= -0.001f : side < -0.001f;
+		return keepInside ? side <= 0.001f : side > 0.001f;
+	}
+
+	ClipVertex IntersectConvexEdge(const ClipVertex& from, const ClipVertex& to, const ClipVertex& edgeStart, const ClipVertex& edgeEnd)
+	{
+		const float fromSide = Cross(edgeStart, edgeEnd, from);
+		const float toSide = Cross(edgeStart, edgeEnd, to);
+		const float denominator = fromSide - toSide;
+		const float t = denominator != 0.0f ? fromSide / denominator : 0.0f;
+		return InterpolateClipVertex(from, to, std::max(0.0f, std::min(1.0f, t)));
+	}
+
+	void ClipPolygonByConvexEdge(const std::vector<ClipVertex>& input, std::vector<ClipVertex>& output, const ClipVertex& edgeStart, const ClipVertex& edgeEnd, float orientation, bool keepInside)
+	{
+		output.clear();
+		if (input.empty())
+			return;
+
+		ClipVertex previous = input.back();
+		bool previousInside = IsInsideConvexEdge(previous, edgeStart, edgeEnd, orientation, keepInside);
+		for (std::vector<ClipVertex>::const_iterator it = input.begin(); it != input.end(); ++it)
+		{
+			const ClipVertex& current = *it;
+			const bool currentInside = IsInsideConvexEdge(current, edgeStart, edgeEnd, orientation, keepInside);
+			if (currentInside != previousInside)
+				output.push_back(IntersectConvexEdge(previous, current, edgeStart, edgeEnd));
+			if (currentInside)
+				output.push_back(current);
+			previous = current;
+			previousInside = currentInside;
+		}
+	}
+
+	void ClipPolygonToConvexPolygon(const std::vector<ClipVertex>& input, const std::vector<ClipVertex>& clipPolygon, std::vector<ClipVertex>& output, std::vector<ClipVertex>& scratch)
+	{
+		output.clear();
+		if (!IsValidClipPolygon(input) || !IsValidClipPolygon(clipPolygon))
+			return;
+
+		const float orientation = PolygonSignedArea(clipPolygon);
+		scratch = input;
+		for (size_t index = 0; index < clipPolygon.size(); ++index)
+		{
+			const ClipVertex& edgeStart = clipPolygon[index];
+			const ClipVertex& edgeEnd = clipPolygon[(index + 1) % clipPolygon.size()];
+			ClipPolygonByConvexEdge(scratch, output, edgeStart, edgeEnd, orientation, true);
+			if (!IsValidClipPolygon(output))
+			{
+				output.clear();
+				return;
+			}
+			scratch.swap(output);
+		}
+		output.swap(scratch);
+	}
+
+	void SubtractConvexPolygon(const std::vector<ClipVertex>& source, const std::vector<ClipVertex>& cut, std::vector<std::vector<ClipVertex> >& output, std::vector<ClipVertex>& insideScratch, std::vector<ClipVertex>& outsideScratch)
+	{
+		if (!IsValidClipPolygon(source))
+			return;
+		if (!IsValidClipPolygon(cut))
+		{
+			output.push_back(source);
+			return;
+		}
+
+		const float orientation = PolygonSignedArea(cut);
+		insideScratch = source;
+		for (size_t index = 0; index < cut.size(); ++index)
+		{
+			const ClipVertex& edgeStart = cut[index];
+			const ClipVertex& edgeEnd = cut[(index + 1) % cut.size()];
+			ClipPolygonByConvexEdge(insideScratch, outsideScratch, edgeStart, edgeEnd, orientation, false);
+			if (IsValidClipPolygon(outsideScratch))
+				output.push_back(outsideScratch);
+
+			std::vector<ClipVertex> nextInside;
+			ClipPolygonByConvexEdge(insideScratch, nextInside, edgeStart, edgeEnd, orientation, true);
+			if (!IsValidClipPolygon(nextInside))
+				return;
+			insideScratch.swap(nextInside);
+		}
+	}
+
+	ClipVertex MakeClipVertex(float x, float y)
+	{
+		ClipVertex vertex;
+		vertex.x = x;
+		vertex.y = y;
+		vertex.u = 0.0f;
+		vertex.v = 0.0f;
+		vertex.color = Ogre::ColourValue::White;
+		return vertex;
+	}
+
+	std::vector<ClipVertex> BuildClipPolygon(const std::vector<cocos2d::Vec2>& points)
+	{
+		std::vector<ClipVertex> polygon;
+		polygon.reserve(points.size());
+		for (std::vector<cocos2d::Vec2>::const_iterator it = points.begin(); it != points.end(); ++it)
+			polygon.push_back(MakeClipVertex(it->x, it->y));
+		if (!IsValidClipPolygon(polygon))
+			polygon.clear();
+		return polygon;
+	}
+
+	std::vector<ClipVertex> BuildRectClipPolygon(const cocos2d::Rect& rect)
+	{
+		std::vector<ClipVertex> polygon;
+		if (rect.size.width <= 0.0f || rect.size.height <= 0.0f)
+			return polygon;
+
+		polygon.push_back(MakeClipVertex(rect.getMinX(), rect.getMinY()));
+		polygon.push_back(MakeClipVertex(rect.getMaxX(), rect.getMinY()));
+		polygon.push_back(MakeClipVertex(rect.getMaxX(), rect.getMaxY()));
+		polygon.push_back(MakeClipVertex(rect.getMinX(), rect.getMaxY()));
+		return polygon;
+	}
+
+	void AppendPolygonTriangles(const std::vector<ClipVertex>& polygon, std::vector<ClipVertex>& outputVertices)
+	{
+		if (!IsValidClipPolygon(polygon))
+			return;
+
+		for (size_t index = 1; index + 1 < polygon.size(); ++index)
+		{
+			outputVertices.push_back(polygon[0]);
+			outputVertices.push_back(polygon[index]);
+			outputVertices.push_back(polygon[index + 1]);
+		}
 	}
 
 	bool SetRangeObjectValue(fairygui::GObject* object, double value)
@@ -700,7 +863,7 @@ FairyGuiSystem::FairyGuiSystem()
 	m_focusedObjectHandle(0),
 	m_scissorEnabled(false), m_scissorRect(cocos2d::Rect::ZERO),
 	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
-	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
+	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_pendingStencilPolygons(), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
 	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames(), m_materialNamesBySource(), m_textureNamesBySource(), m_textureDetailsBySource(),
 	m_currentFrameStats(), m_lastFrameStats(), m_imeStats()
@@ -1864,19 +2027,62 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 
 	const std::string& materialName = GetMaterialName(command.getTexture());
 	const int submittedTriangleCount = triangles.indexCount / 3;
-	std::vector<cocos2d::Rect> clipRects;
-	BuildActiveClipRects(clipRects);
-	if (!clipRects.empty())
+	const bool hasScissorClip = m_scissorEnabled && m_scissorRect.size.width > 0.0f && m_scissorRect.size.height > 0.0f;
+	const bool hasStencilClip = !m_stencilScopes.empty();
+	if (hasScissorClip || hasStencilClip)
 	{
+		struct ActiveStencilScope
+		{
+			bool inverted;
+			bool valid;
+			std::vector<std::vector<ClipVertex> > polygons;
+		};
+
+		std::vector<ActiveStencilScope> activeScopes;
+		activeScopes.reserve(m_stencilScopes.size());
+		for (std::vector<StencilClipInfo>::const_iterator scopeIt = m_stencilScopes.begin(); scopeIt != m_stencilScopes.end(); ++scopeIt)
+		{
+			ActiveStencilScope activeScope;
+			activeScope.inverted = scopeIt->inverted;
+			activeScope.valid = scopeIt->valid;
+			if (scopeIt->valid)
+			{
+				for (std::vector<StencilClipInfo::Polygon>::const_iterator polygonIt = scopeIt->polygons.begin(); polygonIt != scopeIt->polygons.end(); ++polygonIt)
+				{
+					std::vector<ClipVertex> polygon = BuildClipPolygon(polygonIt->points);
+					if (IsValidClipPolygon(polygon))
+						activeScope.polygons.push_back(polygon);
+				}
+				if (activeScope.polygons.empty())
+				{
+					std::vector<ClipVertex> rectPolygon = BuildRectClipPolygon(scopeIt->rect);
+					if (IsValidClipPolygon(rectPolygon))
+						activeScope.polygons.push_back(rectPolygon);
+				}
+				activeScope.valid = !activeScope.polygons.empty();
+			}
+			activeScopes.push_back(activeScope);
+		}
+
+		const std::vector<ClipVertex> scissorPolygon = hasScissorClip ? BuildRectClipPolygon(m_scissorRect) : std::vector<ClipVertex>();
 		std::vector<ClipVertex> outputVertices;
+		std::vector<std::vector<ClipVertex> > fragments;
+		std::vector<std::vector<ClipVertex> > nextFragments;
 		std::vector<ClipVertex> clippedPolygon;
 		std::vector<ClipVertex> clipScratch;
-		outputVertices.reserve(static_cast<size_t>(triangles.indexCount) * clipRects.size());
+		std::vector<ClipVertex> insideScratch;
+		std::vector<ClipVertex> outsideScratch;
+		outputVertices.reserve(static_cast<size_t>(triangles.indexCount));
+		fragments.reserve(8);
+		nextFragments.reserve(8);
 		clippedPolygon.reserve(8);
 		clipScratch.reserve(8);
+		insideScratch.reserve(8);
+		outsideScratch.reserve(8);
 		for (int index = 0; index + 2 < triangles.indexCount; index += 3)
 		{
-			ClipVertex triangle[3];
+			std::vector<ClipVertex> triangle;
+			triangle.resize(3);
 			bool validTriangle = true;
 			for (int vertexIndex = 0; vertexIndex < 3; ++vertexIndex)
 			{
@@ -1895,22 +2101,68 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 				triangle[vertexIndex].color = ToOgreColor(vertex.colors);
 			}
 
-			if (!validTriangle)
+			if (!validTriangle || !IsValidClipPolygon(triangle))
 				continue;
 
-			for (std::vector<cocos2d::Rect>::const_iterator clipIt = clipRects.begin(); clipIt != clipRects.end(); ++clipIt)
+			fragments.clear();
+			fragments.push_back(triangle);
+			if (hasScissorClip)
 			{
-				ClipTriangleToRect(triangle, *clipIt, clippedPolygon, clipScratch);
-				if (clippedPolygon.size() < 3)
-					continue;
-
-				for (size_t polygonIndex = 1; polygonIndex + 1 < clippedPolygon.size(); ++polygonIndex)
+				nextFragments.clear();
+				for (std::vector<std::vector<ClipVertex> >::const_iterator fragmentIt = fragments.begin(); fragmentIt != fragments.end(); ++fragmentIt)
 				{
-					outputVertices.push_back(clippedPolygon[0]);
-					outputVertices.push_back(clippedPolygon[polygonIndex]);
-					outputVertices.push_back(clippedPolygon[polygonIndex + 1]);
+					ClipPolygonToConvexPolygon(*fragmentIt, scissorPolygon, clippedPolygon, clipScratch);
+					if (IsValidClipPolygon(clippedPolygon))
+						nextFragments.push_back(clippedPolygon);
 				}
+				fragments.swap(nextFragments);
+				if (fragments.empty())
+					continue;
 			}
+
+			for (std::vector<ActiveStencilScope>::const_iterator scopeIt = activeScopes.begin(); scopeIt != activeScopes.end(); ++scopeIt)
+			{
+				if (!scopeIt->valid)
+				{
+					if (scopeIt->inverted)
+						continue;
+					fragments.clear();
+					break;
+				}
+
+				if (scopeIt->inverted)
+				{
+					for (std::vector<std::vector<ClipVertex> >::const_iterator maskIt = scopeIt->polygons.begin(); maskIt != scopeIt->polygons.end(); ++maskIt)
+					{
+						nextFragments.clear();
+						for (std::vector<std::vector<ClipVertex> >::const_iterator fragmentIt = fragments.begin(); fragmentIt != fragments.end(); ++fragmentIt)
+							SubtractConvexPolygon(*fragmentIt, *maskIt, nextFragments, insideScratch, outsideScratch);
+						fragments.swap(nextFragments);
+						if (fragments.empty())
+							break;
+					}
+				}
+				else
+				{
+					nextFragments.clear();
+					for (std::vector<std::vector<ClipVertex> >::const_iterator fragmentIt = fragments.begin(); fragmentIt != fragments.end(); ++fragmentIt)
+					{
+						for (std::vector<std::vector<ClipVertex> >::const_iterator maskIt = scopeIt->polygons.begin(); maskIt != scopeIt->polygons.end(); ++maskIt)
+						{
+							ClipPolygonToConvexPolygon(*fragmentIt, *maskIt, clippedPolygon, clipScratch);
+							if (IsValidClipPolygon(clippedPolygon))
+								nextFragments.push_back(clippedPolygon);
+						}
+					}
+					fragments.swap(nextFragments);
+				}
+
+				if (fragments.empty())
+					break;
+			}
+
+			for (std::vector<std::vector<ClipVertex> >::const_iterator fragmentIt = fragments.begin(); fragmentIt != fragments.end(); ++fragmentIt)
+				AppendPolygonTriangles(*fragmentIt, outputVertices);
 		}
 
 		if (outputVertices.empty())
@@ -2569,6 +2821,7 @@ void FairyGuiSystem::BeginOgreRender()
 	m_stencilScopes.clear();
 	m_pendingStencilValid = false;
 	m_pendingStencilDepth = 0;
+	m_pendingStencilPolygons.clear();
 	SyncScissorState();
 	SyncStencilState();
 	if (m_pManualObject != nullptr)
@@ -2626,32 +2879,46 @@ void FairyGuiSystem::BeginStencilWrite(int depth, bool inverted)
 	m_pendingStencilInverted = inverted;
 	m_pendingStencilValid = false;
 	m_pendingStencilRect = cocos2d::Rect::ZERO;
+	m_pendingStencilPolygons.clear();
 }
 
 void FairyGuiSystem::CollectStencilTriangle(const cocos2d::TrianglesCommand& command)
 {
 	const cocos2d::TrianglesCommand::Triangles& triangles = command.getTriangles();
-	for (int index = 0; index < triangles.indexCount; ++index)
+	for (int index = 0; index + 2 < triangles.indexCount; index += 3)
 	{
-		const int sourceIndex = triangles.indices[index];
-		if (sourceIndex < 0 || sourceIndex >= triangles.vertCount)
-			continue;
-
-		const cocos2d::V3F_C4B_T2F& vertex = triangles.verts[sourceIndex];
-		const float x = TransformX(command.getTransform(), vertex.vertices);
-		const float y = TransformY(command.getTransform(), vertex.vertices);
-		if (!m_pendingStencilValid)
+		StencilClipInfo::Polygon polygon;
+		polygon.points.reserve(3);
+		bool validTriangle = true;
+		for (int vertexIndex = 0; vertexIndex < 3; ++vertexIndex)
 		{
-			m_pendingStencilRect.setRect(x, y, 0.0f, 0.0f);
-			m_pendingStencilValid = true;
-			continue;
+			const int sourceIndex = triangles.indices[index + vertexIndex];
+			if (sourceIndex < 0 || sourceIndex >= triangles.vertCount)
+			{
+				validTriangle = false;
+				break;
+			}
+
+			const cocos2d::V3F_C4B_T2F& vertex = triangles.verts[sourceIndex];
+			const float x = TransformX(command.getTransform(), vertex.vertices);
+			const float y = TransformY(command.getTransform(), vertex.vertices);
+			polygon.points.push_back(cocos2d::Vec2(x, y));
+			if (!m_pendingStencilValid)
+			{
+				m_pendingStencilRect.setRect(x, y, 0.0f, 0.0f);
+				m_pendingStencilValid = true;
+				continue;
+			}
+
+			const float minX = std::min(m_pendingStencilRect.getMinX(), x);
+			const float minY = std::min(m_pendingStencilRect.getMinY(), y);
+			const float maxX = std::max(m_pendingStencilRect.getMaxX(), x);
+			const float maxY = std::max(m_pendingStencilRect.getMaxY(), y);
+			m_pendingStencilRect.setRect(minX, minY, maxX - minX, maxY - minY);
 		}
 
-		const float minX = std::min(m_pendingStencilRect.getMinX(), x);
-		const float minY = std::min(m_pendingStencilRect.getMinY(), y);
-		const float maxX = std::max(m_pendingStencilRect.getMaxX(), x);
-		const float maxY = std::max(m_pendingStencilRect.getMaxY(), y);
-		m_pendingStencilRect.setRect(minX, minY, maxX - minX, maxY - minY);
+		if (validTriangle && polygon.points.size() == 3)
+			m_pendingStencilPolygons.push_back(polygon);
 	}
 }
 
@@ -2661,10 +2928,12 @@ void FairyGuiSystem::FinalizeStencilScope(int depth)
 
 	StencilClipInfo clipInfo;
 	clipInfo.rect = m_pendingStencilRect;
+	clipInfo.polygons = m_pendingStencilPolygons;
 	clipInfo.inverted = m_pendingStencilInverted;
 	clipInfo.valid = m_pendingStencilValid && m_pendingStencilRect.size.width > 0.0f && m_pendingStencilRect.size.height > 0.0f;
 	m_stencilScopes.push_back(clipInfo);
 	m_pendingStencilValid = false;
+	m_pendingStencilPolygons.clear();
 }
 
 void FairyGuiSystem::TrimStencilScopes(int depth)

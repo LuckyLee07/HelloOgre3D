@@ -1357,6 +1357,7 @@ function FairyGuiManager:OpenMaskProbe(param)
 	local stripCPath = param.stripCImage or assets.stripC
 	local maskPath = param.maskImage or assets.mask
 	local useGraphMask = param.graphMask == true
+	local useNestedMask = param.nestedMask == true
 	if isBlank(backgroundPath) or isBlank(contentPath) or isBlank(stripAPath) or isBlank(stripBPath) or isBlank(stripCPath) or isBlank(maskPath) then
 		print("[FGUI] open mask probe failed, missing image asset")
 		return nil
@@ -1409,6 +1410,34 @@ function FairyGuiManager:OpenMaskProbe(param)
 		return childHandle
 	end
 
+	local function createNestedPanel(parentHandle, inverted)
+		local nestedHandle = self:CreateContainer("nested_mask_panel", parentHandle)
+		if nestedHandle == nil or nestedHandle <= 0 then
+			return nil
+		end
+		self:SetPosition(nestedHandle, 94, 82)
+		self:SetSize(nestedHandle, 132, 74)
+		self:SetTouchable(nestedHandle, false)
+		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(nestedHandle, parentHandle) then
+			GameManager:removeFairyGuiObject(nestedHandle)
+			return nil
+		end
+
+		local nestedContent = addImage(nestedHandle, "nested_content", stripBPath, -28, 8, 184, 58, 0.92)
+		local nestedAccent = addImage(nestedHandle, "nested_accent", stripCPath, 82, 0, 46, 46, 0.9)
+		local nestedMask = nil
+		if useGraphMask then
+			nestedMask = addGraphPolygon(nestedHandle, "nested_graph_mask", 14, 8, 104, 58, 5, 1.0, 0.78, 0.25, 0.82)
+		else
+			nestedMask = addImage(nestedHandle, "nested_mask", maskPath, 14, 8, 104, 58)
+		end
+		if nestedContent == nil or nestedAccent == nil or nestedMask == nil or not self:SetMask(nestedHandle, nestedMask, inverted == true) then
+			GameManager:removeFairyGuiObject(nestedHandle)
+			return nil
+		end
+		return nestedHandle
+	end
+
 	local function createPanel(parentHandle, name, x, y, inverted)
 		local panelHandle = self:CreateContainer(name, parentHandle)
 		if panelHandle == nil or panelHandle <= 0 then
@@ -1433,6 +1462,10 @@ function FairyGuiManager:OpenMaskProbe(param)
 			mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
 		end
 		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
+			GameManager:removeFairyGuiObject(panelHandle)
+			return nil
+		end
+		if useNestedMask and createNestedPanel(panelHandle, inverted) == nil then
 			GameManager:removeFairyGuiObject(panelHandle)
 			return nil
 		end

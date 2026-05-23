@@ -253,7 +253,13 @@ private:
 
 	struct StencilClipInfo
 	{
+		struct Polygon
+		{
+			std::vector<cocos2d::Vec2> points;
+		};
+
 		cocos2d::Rect rect;
+		std::vector<Polygon> polygons;
 		bool inverted;
 		bool valid;
 	};
@@ -327,6 +333,7 @@ private:
 	bool m_pendingStencilInverted;
 	bool m_pendingStencilValid;
 	cocos2d::Rect m_pendingStencilRect;
+	std::vector<StencilClipInfo::Polygon> m_pendingStencilPolygons;
 	std::vector<StencilClipInfo> m_stencilScopes;
 	int m_lastRenderCommandCount;
 	int m_lastTriangleCount;
