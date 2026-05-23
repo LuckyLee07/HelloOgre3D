@@ -123,7 +123,9 @@ public:
 	bool RemoveObjectHandle(int objectHandle);
 	void ClearObjectHandles();
 	bool CreateSmokeTestImage(const std::string& imagePath);
+	bool InjectImeCompositionText(const std::string& text);
 	bool InjectImeCommitText(const std::string& text);
+	bool ClearImeCompositionText();
 	bool HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result);
 
 	bool IsInitialized() const { return m_initialized; }
@@ -153,6 +155,16 @@ public:
 	std::string GetMaterialDetailString() const;
 	std::string GetTextureDetailString() const;
 	std::string GetFrameRenderDetailString() const { return m_lastFrameStats.detailString; }
+	std::string GetImeDebugString() const;
+	bool IsImeCompositionActive() const { return m_imeStats.compositionActive; }
+	bool IsImeCandidateOpen() const { return m_imeStats.candidateOpen; }
+	int GetImeCompositionUpdateCount() const { return m_imeStats.compositionUpdateCount; }
+	int GetImeCompositionCommitCount() const { return m_imeStats.compositionCommitCount; }
+	int GetImeCompositionEndCount() const { return m_imeStats.compositionEndCount; }
+	int GetImeCandidateOpenCount() const { return m_imeStats.candidateOpenCount; }
+	int GetImeCandidateCloseCount() const { return m_imeStats.candidateCloseCount; }
+	int GetImeCandidateCount() const { return m_imeStats.candidateCount; }
+	int GetImeCandidateSelection() const { return m_imeStats.candidateSelection; }
 
 private:
 	struct ListenerBinding
@@ -209,6 +221,34 @@ private:
 		bool retained;
 	};
 
+	struct ImeStats
+	{
+		ImeStats()
+			: compositionActive(false), candidateOpen(false), compositionUpdateCount(0),
+			compositionCommitCount(0), compositionEndCount(0), candidateOpenCount(0),
+			candidateCloseCount(0), candidateChangeCount(0), candidateCount(0),
+			candidateSelection(-1), focusedHandle(0), compositionX(0), compositionY(0),
+			compositionText(), commitText()
+		{
+		}
+
+		bool compositionActive;
+		bool candidateOpen;
+		int compositionUpdateCount;
+		int compositionCommitCount;
+		int compositionEndCount;
+		int candidateOpenCount;
+		int candidateCloseCount;
+		int candidateChangeCount;
+		int candidateCount;
+		int candidateSelection;
+		int focusedHandle;
+		int compositionX;
+		int compositionY;
+		std::string compositionText;
+		std::string commitText;
+	};
+
 	struct StencilClipInfo
 	{
 		cocos2d::Rect rect;
@@ -234,6 +274,7 @@ private:
 	void InstallNativeImeHook();
 	void RemoveNativeImeHook();
 	void UpdateNativeImeCandidatePosition();
+	void EndImeComposition(bool countEnd);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
 	float GetInputScaleX() const;
@@ -300,6 +341,7 @@ private:
 	std::map<std::string, TextureDetail> m_textureDetailsBySource;
 	FrameRenderStats m_currentFrameStats;
 	FrameRenderStats m_lastFrameStats;
+	ImeStats m_imeStats;
 #if defined(_WIN32)
 	HWND m_nativeWindowHandle;
 	void* m_previousWindowProc;

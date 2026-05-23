@@ -2,6 +2,7 @@ param(
 	[ValidateSet(
 		"DebugPanel",
 		"DebugPanelSelfTest",
+		"AiDebugPanel",
 		"LongLoop",
 		"All",
 		"Input",
@@ -33,6 +34,10 @@ param(
 	[string]$Mode = "DebugPanel",
 	[ValidateRange(1, 1000)]
 	[int]$Count = 3,
+	[ValidateRange(0, 1000)]
+	[int]$PressurePopupCount = 0,
+	[ValidateRange(0, 1000)]
+	[int]$PressureListCount = 0,
 	[int]$Seconds = 0,
 	[int]$Tail = 220,
 	[switch]$Visible,
@@ -58,7 +63,9 @@ $LogCandidates = @(
 function Get-DefaultWaitSeconds {
 	param(
 		[string]$SelfTestMode,
-		[int]$LoopCount
+		[int]$LoopCount,
+		[int]$PressurePopupCount,
+		[int]$PressureListCount
 	)
 
 	switch ($SelfTestMode) {
@@ -66,6 +73,7 @@ function Get-DefaultWaitSeconds {
 		"LongLoop" { return [Math]::Max(28, 18 + $LoopCount * 4) }
 		"DebugPanel" { return 24 }
 		"DebugPanelSelfTest" { return 32 }
+		"AiDebugPanel" { return 30 }
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
 		"BusinessFlow" { return 32 }
@@ -90,6 +98,7 @@ function Get-FairyGuiEnv {
 	switch ($SelfTestMode) {
 		"DebugPanel" { $values["HELLO_FGUI_DEBUG_PANEL_DEMO"] = "1" }
 		"DebugPanelSelfTest" { $values["HELLO_FGUI_DEBUG_PANEL_SELF_TEST"] = "1" }
+		"AiDebugPanel" { $values["HELLO_FGUI_AI_DEBUG_PANEL_SELF_TEST"] = "1" }
 		"LongLoop" {
 			$values["HELLO_FGUI_LONG_LOOP_SELF_TEST"] = "1"
 			$values["HELLO_FGUI_LONG_LOOP_COUNT"] = [string]$LoopCount
@@ -119,8 +128,15 @@ function Get-FairyGuiEnv {
 		"ResourcePolicy" { $values["HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"] = "1" }
 		"Pressure" {
 			$values["HELLO_FGUI_PRESSURE_SELF_TEST"] = "1"
-			if ($LoopCount -gt 3) {
-				$values["HELLO_FGUI_PRESSURE_COUNT"] = [string]$LoopCount
+			$maxPopupCount = $PressurePopupCount
+			if ($maxPopupCount -le 0 -and $LoopCount -gt 3) {
+				$maxPopupCount = $LoopCount
+			}
+			if ($maxPopupCount -gt 0) {
+				$values["HELLO_FGUI_PRESSURE_COUNT"] = [string]$maxPopupCount
+			}
+			if ($PressureListCount -gt 0) {
+				$values["HELLO_FGUI_PRESSURE_LIST_COUNT"] = [string]$PressureListCount
 			}
 		}
 		"Layer" { $values["HELLO_FGUI_LAYER_SELF_TEST"] = "1" }
@@ -139,6 +155,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_SKIP_SANDBOX_SCENE",
 	"HELLO_FGUI_DEBUG_PANEL_DEMO",
 	"HELLO_FGUI_DEBUG_PANEL_SELF_TEST",
+	"HELLO_FGUI_AI_DEBUG_PANEL_SELF_TEST",
 	"HELLO_FGUI_LONG_LOOP_SELF_TEST",
 	"HELLO_FGUI_LONG_LOOP_COUNT",
 	"HELLO_FGUI_SELF_TEST_ALL",
@@ -175,7 +192,7 @@ if ($Seconds -le 0) {
 	$Seconds = Get-DefaultWaitSeconds -SelfTestMode $Mode -LoopCount $Count
 }
 
-$SelectedEnv = Get-FairyGuiEnv -SelfTestMode $Mode -LoopCount $Count
+$SelectedEnv = Get-FairyGuiEnv -SelfTestMode $Mode -LoopCount $Count -PressurePopupCount $PressurePopupCount -PressureListCount $PressureListCount
 if ($SelectedEnv.Count -gt 0) {
 	$SelectedEnv["HELLO_FGUI_SKIP_SANDBOX_SCENE"] = "1"
 }
@@ -200,11 +217,15 @@ if (-not (Test-Path -LiteralPath $ExePath)) {
 }
 
 $StartLogLineCounts = @{}
+$StartLogWriteTimes = @{}
 foreach ($candidate in $LogCandidates) {
 	if (Test-Path -LiteralPath $candidate) {
+		$item = Get-Item -LiteralPath $candidate
 		$StartLogLineCounts[$candidate] = (Get-Content -LiteralPath $candidate).Count
+		$StartLogWriteTimes[$candidate] = $item.LastWriteTime
 	} else {
 		$StartLogLineCounts[$candidate] = 0
+		$StartLogWriteTimes[$candidate] = [DateTime]::MinValue
 	}
 }
 
@@ -263,6 +284,10 @@ try {
 			$NewLogLines += $newCandidateLines
 		}
 		$writeTime = (Get-Item -LiteralPath $candidate).LastWriteTime
+		if ($newCandidateLines.Count -eq 0 -and $writeTime -gt [DateTime]$StartLogWriteTimes[$candidate]) {
+			$newCandidateLines = @($allLogLines)
+			$NewLogLines += $newCandidateLines
+		}
 		if ($newCandidateLines.Count -gt 0 -and $writeTime -gt $TailLogWriteTime) {
 			$TailLogPath = $candidate
 			$TailLogWriteTime = $writeTime
@@ -275,7 +300,10 @@ try {
 	}
 
 	if (-not $IgnoreLogErrors) {
-		$FailurePattern = "OGRE EXCEPTION|PANIC:|call_func error|self test result:\s*false"
+		if ($NewLogLines.Count -eq 0) {
+			throw "FGUI selftest produced no new log output."
+		}
+		$FailurePattern = "OGRE EXCEPTION|PANIC:|call_func error|self test result:\s*false|self test case:.*FAIL"
 		$Failures = @($NewLogLines | Select-String -Pattern $FailurePattern)
 		if ($Failures.Count -gt 0) {
 			Write-Host "[FGUI] detected log failures:"

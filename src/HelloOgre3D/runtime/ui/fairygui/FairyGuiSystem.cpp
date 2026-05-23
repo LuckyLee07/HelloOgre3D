@@ -74,6 +74,41 @@ namespace
 		return output;
 	}
 
+	std::string ReadImeCompositionString(HIMC context, DWORD index)
+	{
+		if (context == nullptr)
+			return std::string();
+
+		const LONG byteCount = ImmGetCompositionStringW(context, index, nullptr, 0);
+		if (byteCount <= 0)
+			return std::string();
+
+		std::wstring text(static_cast<size_t>(byteCount / sizeof(wchar_t)), L'\0');
+		ImmGetCompositionStringW(context, index, &text[0], byteCount);
+		return WideToUtf8(text);
+	}
+
+	bool ReadImeCandidateInfo(HIMC context, int& candidateCount, int& candidateSelection)
+	{
+		candidateCount = 0;
+		candidateSelection = -1;
+		if (context == nullptr)
+			return false;
+
+		const DWORD byteCount = ImmGetCandidateListW(context, 0, nullptr, 0);
+		if (byteCount == 0)
+			return false;
+
+		std::vector<char> buffer(byteCount);
+		LPCANDIDATELIST candidateList = reinterpret_cast<LPCANDIDATELIST>(&buffer[0]);
+		if (ImmGetCandidateListW(context, 0, candidateList, byteCount) == 0)
+			return false;
+
+		candidateCount = static_cast<int>(candidateList->dwCount);
+		candidateSelection = static_cast<int>(candidateList->dwSelection);
+		return true;
+	}
+
 	LRESULT CALLBACK FairyGuiNativeImeWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		std::map<HWND, FairyGuiSystem*>::iterator it = g_nativeImeSystemsByWindow.find(hwnd);
@@ -668,7 +703,7 @@ FairyGuiSystem::FairyGuiSystem()
 	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
 	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames(), m_materialNamesBySource(), m_textureNamesBySource(), m_textureDetailsBySource(),
-	m_currentFrameStats(), m_lastFrameStats()
+	m_currentFrameStats(), m_lastFrameStats(), m_imeStats()
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	, m_nativeWindowHandle(nullptr), m_previousWindowProc(nullptr), m_nativeImeHookInstalled(false)
 #endif
@@ -746,6 +781,7 @@ void FairyGuiSystem::Shutdown()
 	m_focusedObjectHandle = 0;
 	m_lastRenderCommandCount = 0;
 	m_lastTriangleCount = 0;
+	m_imeStats = ImeStats();
 	ResetFrameRenderStats();
 	m_lastFrameStats = FrameRenderStats();
 	m_nextObjectHandle = 1;
@@ -1548,6 +1584,7 @@ bool FairyGuiSystem::ClearObjectHandleFocus()
 	if (input != nullptr)
 		input->dispatchEvent(fairygui::UIEventType::Exit);
 	m_focusedObjectHandle = 0;
+	EndImeComposition(true);
 	return true;
 }
 
@@ -1712,7 +1749,7 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 		return false;
 
 	if (objectHandle == m_focusedObjectHandle || GetObjectHandleOwner(m_focusedObjectHandle) == objectHandle)
-		m_focusedObjectHandle = 0;
+		ClearObjectHandleFocus();
 	RemoveObjectHandleAliases(objectHandle);
 	RemoveObjectHandleListeners(objectHandle);
 	m_textInputCarets.erase(objectHandle);
@@ -2117,15 +2154,76 @@ bool FairyGuiSystem::ApplyTextInputUtf8Text(fairygui::GTextInput* input, const s
 	return true;
 }
 
+void FairyGuiSystem::EndImeComposition(bool countEnd)
+{
+	if (countEnd && (m_imeStats.compositionActive || !m_imeStats.compositionText.empty() || m_imeStats.candidateOpen))
+		++m_imeStats.compositionEndCount;
+	m_imeStats.compositionActive = false;
+	m_imeStats.candidateOpen = false;
+	m_imeStats.compositionText.clear();
+	m_imeStats.candidateCount = 0;
+	m_imeStats.candidateSelection = -1;
+}
+
+bool FairyGuiSystem::InjectImeCompositionText(const std::string& text)
+{
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input == nullptr)
+	{
+		m_focusedObjectHandle = 0;
+		EndImeComposition(true);
+		return false;
+	}
+
+	m_imeStats.focusedHandle = m_focusedObjectHandle;
+	m_imeStats.compositionActive = !text.empty();
+	m_imeStats.compositionText = text;
+	++m_imeStats.compositionUpdateCount;
+	UpdateNativeImeCandidatePosition();
+	return true;
+}
+
 bool FairyGuiSystem::InjectImeCommitText(const std::string& text)
 {
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input == nullptr)
 	{
 		m_focusedObjectHandle = 0;
+		EndImeComposition(true);
 		return false;
 	}
+
+	m_imeStats.focusedHandle = m_focusedObjectHandle;
+	m_imeStats.commitText = text;
+	++m_imeStats.compositionCommitCount;
+	EndImeComposition(false);
 	return ApplyTextInputUtf8Text(input, text);
+}
+
+bool FairyGuiSystem::ClearImeCompositionText()
+{
+	EndImeComposition(true);
+	return true;
+}
+
+std::string FairyGuiSystem::GetImeDebugString() const
+{
+	std::ostringstream stream;
+	stream << "active=" << (m_imeStats.compositionActive ? 1 : 0)
+		<< " candidate=" << (m_imeStats.candidateOpen ? 1 : 0)
+		<< " focus=" << m_imeStats.focusedHandle
+		<< " compUpdates=" << m_imeStats.compositionUpdateCount
+		<< " commits=" << m_imeStats.compositionCommitCount
+		<< " ends=" << m_imeStats.compositionEndCount
+		<< " candOpen=" << m_imeStats.candidateOpenCount
+		<< " candClose=" << m_imeStats.candidateCloseCount
+		<< " candChange=" << m_imeStats.candidateChangeCount
+		<< " candCount=" << m_imeStats.candidateCount
+		<< " candSelection=" << m_imeStats.candidateSelection
+		<< " pos=" << m_imeStats.compositionX << "," << m_imeStats.compositionY
+		<< " comp=\"" << m_imeStats.compositionText << "\""
+		<< " commit=\"" << m_imeStats.commitText << "\"";
+	return stream.str();
 }
 
 void FairyGuiSystem::InstallNativeImeHook()
@@ -2174,7 +2272,6 @@ void FairyGuiSystem::RemoveNativeImeHook()
 
 bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result)
 {
-	(void)wParam;
 	result = 0;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	if (!m_initialized || m_nativeWindowHandle == nullptr)
@@ -2182,38 +2279,86 @@ bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long 
 
 	if (message == WM_IME_STARTCOMPOSITION)
 	{
+		m_imeStats.compositionActive = true;
+		m_imeStats.focusedHandle = m_focusedObjectHandle;
 		UpdateNativeImeCandidatePosition();
+		return false;
+	}
+
+	if (message == WM_IME_ENDCOMPOSITION)
+	{
+		EndImeComposition(true);
+		return false;
+	}
+
+	if (message == WM_IME_NOTIFY)
+	{
+		HIMC context = ImmGetContext(m_nativeWindowHandle);
+		const DWORD notify = static_cast<DWORD>(wParam);
+		bool updateCandidatePosition = false;
+		if (notify == IMN_OPENCANDIDATE)
+		{
+			m_imeStats.candidateOpen = true;
+			++m_imeStats.candidateOpenCount;
+			ReadImeCandidateInfo(context, m_imeStats.candidateCount, m_imeStats.candidateSelection);
+			updateCandidatePosition = true;
+		}
+		else if (notify == IMN_CLOSECANDIDATE)
+		{
+			m_imeStats.candidateOpen = false;
+			++m_imeStats.candidateCloseCount;
+			m_imeStats.candidateCount = 0;
+			m_imeStats.candidateSelection = -1;
+		}
+		else if (notify == IMN_CHANGECANDIDATE)
+		{
+			++m_imeStats.candidateChangeCount;
+			ReadImeCandidateInfo(context, m_imeStats.candidateCount, m_imeStats.candidateSelection);
+			updateCandidatePosition = true;
+		}
+		if (context != nullptr)
+			ImmReleaseContext(m_nativeWindowHandle, context);
+		if (updateCandidatePosition)
+			UpdateNativeImeCandidatePosition();
 		return false;
 	}
 
 	if (message != WM_IME_COMPOSITION)
 		return false;
 
-	if ((static_cast<LPARAM>(lParam) & GCS_RESULTSTR) == 0)
-	{
-		UpdateNativeImeCandidatePosition();
-		return false;
-	}
-
 	HIMC context = ImmGetContext(m_nativeWindowHandle);
 	if (context == nullptr)
 		return false;
 
-	const LONG byteCount = ImmGetCompositionStringW(context, GCS_RESULTSTR, nullptr, 0);
-	if (byteCount <= 0)
+	const LPARAM flags = static_cast<LPARAM>(lParam);
+	bool consumed = false;
+	bool updateCandidatePosition = false;
+	if ((flags & GCS_COMPSTR) != 0)
 	{
-		ImmReleaseContext(m_nativeWindowHandle, context);
-		return false;
+		m_imeStats.focusedHandle = m_focusedObjectHandle;
+		m_imeStats.compositionText = ReadImeCompositionString(context, GCS_COMPSTR);
+		m_imeStats.compositionActive = !m_imeStats.compositionText.empty();
+		++m_imeStats.compositionUpdateCount;
+		updateCandidatePosition = true;
 	}
 
-	std::wstring resultText(static_cast<size_t>(byteCount / sizeof(wchar_t)), L'\0');
-	ImmGetCompositionStringW(context, GCS_RESULTSTR, &resultText[0], byteCount);
-	ImmReleaseContext(m_nativeWindowHandle, context);
+	if ((flags & GCS_RESULTSTR) != 0)
+	{
+		const std::string resultText = ReadImeCompositionString(context, GCS_RESULTSTR);
+		ImmReleaseContext(m_nativeWindowHandle, context);
+		consumed = !resultText.empty() && InjectImeCommitText(resultText);
+		result = 0;
+		return consumed;
+	}
 
-	const bool consumed = InjectImeCommitText(WideToUtf8(resultText));
-	result = 0;
+	ImmReleaseContext(m_nativeWindowHandle, context);
+	if (updateCandidatePosition)
+		UpdateNativeImeCandidatePosition();
 	return consumed;
 #else
+	(void)message;
+	(void)wParam;
+	(void)lParam;
 	return false;
 #endif
 }
@@ -2235,6 +2380,9 @@ void FairyGuiSystem::UpdateNativeImeCandidatePosition()
 	const cocos2d::Rect bounds = input->localToGlobal(cocos2d::Rect(cocos2d::Vec2::ZERO, input->getSize()));
 	const int rawX = ToRawInputX(static_cast<int>(bounds.origin.x));
 	const int rawY = ToRawInputY(static_cast<int>(m_screenHeight > 0 ? m_screenHeight - bounds.origin.y : bounds.origin.y));
+	m_imeStats.focusedHandle = m_focusedObjectHandle;
+	m_imeStats.compositionX = rawX;
+	m_imeStats.compositionY = rawY;
 
 	COMPOSITIONFORM composition = {};
 	composition.dwStyle = CFS_POINT;

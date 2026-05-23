@@ -50,6 +50,18 @@ local function joinBriefs(values, emptyText)
 	return table.concat(values, " | ")
 end
 
+local function splitLines(text)
+	local lines = {}
+	text = tostring(text or "")
+	if text == "" then
+		return lines
+	end
+	for line in string.gmatch(text .. "\n", "([^\n]*)\n") do
+		table.insert(lines, line)
+	end
+	return lines
+end
+
 local function pushLimited(values, value, maxCount)
 	if type(values) ~= "table" then
 		return
@@ -644,6 +656,53 @@ function FairyGuiProfiler:GetDebugPanelSnapshot(options)
 	}
 end
 
+function FairyGuiProfiler:GetAiDebugSnapshot(options)
+	options = options or {}
+	local maxAgents = tonumber(options.maxAgents) or 8
+	local agentCount = 0
+	local soldierCount = 0
+	local summary = ""
+
+	if ObjectManager ~= nil then
+		if ObjectManager.getAiAgentCount ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:getAiAgentCount()
+			end)
+			if ok then
+				agentCount = tonumber(value) or 0
+			end
+		end
+		if ObjectManager.getAiSoldierCount ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:getAiSoldierCount()
+			end)
+			if ok then
+				soldierCount = tonumber(value) or 0
+			end
+		end
+		if ObjectManager.buildAiDebugSummary ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:buildAiDebugSummary(maxAgents)
+			end)
+			if ok then
+				summary = tostring(value or "")
+			else
+				summary = "AI summary error: " .. tostring(value)
+			end
+		end
+	end
+
+	if isBlank(summary) then
+		summary = string.format("AI agents=%s soldiers=%s showing=0", tostring(agentCount), tostring(soldierCount))
+	end
+	return {
+		agentCount = agentCount,
+		soldierCount = soldierCount,
+		summary = summary,
+		lines = splitLines(summary),
+	}
+end
+
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
 	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
@@ -741,6 +800,28 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 	return lines
 end
 
+function FairyGuiProfiler:BuildAiDebugPanelLines(options)
+	options = options or {}
+	local snapshot = self:GetAiDebugSnapshot(options)
+	local lines = {}
+	for _, line in ipairs(snapshot.lines or {}) do
+		table.insert(lines, clampText(line, options.lineMaxLen or 112))
+	end
+	if #lines <= 0 then
+		table.insert(lines, "AI agents=0 soldiers=0 showing=0")
+	end
+
+	local lineCount = tonumber(options.lineCount)
+	if lineCount ~= nil and lineCount > 0 and #lines > lineCount then
+		local limited = {}
+		for index = 1, lineCount do
+			limited[index] = lines[index]
+		end
+		return limited
+	end
+	return lines
+end
+
 function FairyGuiProfiler:RefreshDebugPanel(key)
 	local owner = self.owner
 	if owner == nil then
@@ -760,6 +841,33 @@ function FairyGuiProfiler:RefreshDebugPanel(key)
 	local lines = self:BuildDebugPanelLines({
 		lineCount = #lineHandles,
 		lineMaxLen = objectInfo.param.lineMaxLen or 96,
+	})
+	for index, handle in ipairs(lineHandles) do
+		owner:SetText(handle, nil, lines[index] or "")
+	end
+	return true
+end
+
+function FairyGuiProfiler:RefreshAiDebugPanel(key)
+	local owner = self.owner
+	if owner == nil then
+		return false
+	end
+
+	local objectInfo = owner:GetObjectInfo(key or "__AiDebugPanel")
+	if objectInfo == nil then
+		return false
+	end
+
+	if objectInfo.debugPanelTitleHandle ~= nil then
+		owner:SetText(objectInfo.debugPanelTitleHandle, nil, string.format("%s  %s", tostring(objectInfo.param.title or "AI Debug"), os.date and os.date("%H:%M:%S") or ""))
+	end
+
+	local lineHandles = objectInfo.debugPanelLineHandles or {}
+	local lines = self:BuildAiDebugPanelLines({
+		lineCount = #lineHandles,
+		lineMaxLen = objectInfo.param.lineMaxLen or 112,
+		maxAgents = objectInfo.param.maxAgents or 8,
 	})
 	for index, handle in ipairs(lineHandles) do
 		owner:SetText(handle, nil, lines[index] or "")
@@ -822,4 +930,61 @@ function FairyGuiProfiler:HideDebugPanel(key)
 		return false
 	end
 	return owner:Close(key or "__DebugPanel", true, "hideDebugPanel")
+end
+
+function FairyGuiProfiler:ShowAiDebugPanel(param)
+	local owner = self.owner
+	if owner == nil then
+		return nil
+	end
+
+	param = copyTable(param)
+	param.key = param.key or "__AiDebugPanel"
+	param.layer = param.layer or "Top"
+	param.stackMode = param.stackMode or "Popup"
+	param.popupGroup = param.popupGroup or "AiDebugPanel"
+	param.popupMode = param.popupMode or "replace"
+	param.width = param.width or 700
+	param.lineCount = param.lineCount or 14
+	param.lineHeight = param.lineHeight or 21
+	param.height = param.height or math.max(206, 54 + param.lineCount * param.lineHeight)
+	param.top = param.top or 72
+	param.right = param.right or 24
+	param.modal = false
+	param.touchable = param.touchable ~= false
+	param.closeOnEscape = false
+	param.closeOnSceneChange = param.closeOnSceneChange == true
+	param.serviceType = "AiDebugPanel"
+
+	local objectInfo = owner:OpenServiceContainer(param.key, param)
+	if objectInfo == nil then
+		return nil
+	end
+
+	objectInfo.debugPanelBackgroundHandle = owner:AddServiceImage(objectInfo, "ai_debug_panel_bg", param.background or "res/assets/act_38/_imgs/board_task.png", 0, 0, param.width, param.height, param.alpha or 0.92)
+	objectInfo.debugPanelTitleHandle = owner:AddServiceText(objectInfo, "ai_debug_panel_title", param.title or "AI Debug", 18, 12, param.width - 88, 28, 20, 255, 236, 180)
+	objectInfo.debugPanelLineHandles = {}
+	for index = 1, param.lineCount do
+		objectInfo.debugPanelLineHandles[index] = owner:AddServiceText(objectInfo, "ai_debug_panel_line_" .. tostring(index), "", 18, 42 + (index - 1) * param.lineHeight, param.width - 36, param.lineHeight, 15, 210, 235, 255)
+	end
+	owner:AddServiceButton(objectInfo, "ai_debug_panel_close", "X", param.width - 60, 10, 42, 30, function()
+		self:HideAiDebugPanel(param.key)
+	end)
+	owner:ApplyServiceLayout(objectInfo)
+	self:RefreshAiDebugPanel(param.key)
+
+	if param.autoRefresh ~= false then
+		objectInfo.debugPanelTimer = owner:AddTimer(param.key, param.duration or 3600, param.refreshInterval or 1, function()
+			self:RefreshAiDebugPanel(param.key)
+		end)
+	end
+	return objectInfo.handle
+end
+
+function FairyGuiProfiler:HideAiDebugPanel(key)
+	local owner = self.owner
+	if owner == nil then
+		return false
+	end
+	return owner:Close(key or "__AiDebugPanel", true, "hideAiDebugPanel")
 end

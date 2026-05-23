@@ -1683,20 +1683,40 @@ function FairyGuiManager:GetDebugPanelSnapshot(options)
 	return self:GetProfiler():GetDebugPanelSnapshot(options)
 end
 
+function FairyGuiManager:GetAiDebugSnapshot(options)
+	return self:GetProfiler():GetAiDebugSnapshot(options)
+end
+
 function FairyGuiManager:BuildDebugPanelLines(options)
 	return self:GetProfiler():BuildDebugPanelLines(options)
+end
+
+function FairyGuiManager:BuildAiDebugPanelLines(options)
+	return self:GetProfiler():BuildAiDebugPanelLines(options)
 end
 
 function FairyGuiManager:RefreshDebugPanel(key)
 	return self:GetProfiler():RefreshDebugPanel(key)
 end
 
+function FairyGuiManager:RefreshAiDebugPanel(key)
+	return self:GetProfiler():RefreshAiDebugPanel(key)
+end
+
 function FairyGuiManager:ShowDebugPanel(param)
 	return self:GetProfiler():ShowDebugPanel(param)
 end
 
+function FairyGuiManager:ShowAiDebugPanel(param)
+	return self:GetProfiler():ShowAiDebugPanel(param)
+end
+
 function FairyGuiManager:HideDebugPanel(key)
 	return self:GetProfiler():HideDebugPanel(key)
+end
+
+function FairyGuiManager:HideAiDebugPanel(key)
+	return self:GetProfiler():HideAiDebugPanel(key)
 end
 
 function FairyGuiManager:OpenUI(name, packagePath, classluaOrObjectName, param)
@@ -2115,6 +2135,27 @@ function FairyGuiManager:DebugInjectImeCommitText(text)
 		return false
 	end
 	return GameManager:injectFairyGuiImeCommitText(text or "")
+end
+
+function FairyGuiManager:DebugInjectImeCompositionText(text)
+	if GameManager == nil or GameManager.injectFairyGuiImeCompositionText == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiImeCompositionText(text or "")
+end
+
+function FairyGuiManager:DebugClearImeComposition()
+	if GameManager == nil or GameManager.clearFairyGuiImeComposition == nil then
+		return false
+	end
+	return GameManager:clearFairyGuiImeComposition()
+end
+
+function FairyGuiManager:GetImeDebugString()
+	if GameManager == nil or GameManager.getFairyGuiImeDebugString == nil then
+		return ""
+	end
+	return GameManager:getFairyGuiImeDebugString() or ""
 end
 
 function FairyGuiManager:SetText(handle, childPath, text)

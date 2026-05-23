@@ -39,7 +39,7 @@ GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
 	m_fairyGuiLastPackageName(), m_fairyGuiLastObjectText(), m_fairyGuiLastObjectValue(), m_fairyGuiLastControllerString(),
-	m_fairyGuiLastMaterialDetail(), m_fairyGuiLastTextureDetail()
+	m_fairyGuiLastMaterialDetail(), m_fairyGuiLastTextureDetail(), m_fairyGuiLastFrameRenderDetail(), m_fairyGuiLastImeDebug()
 {
 	
 }
@@ -1011,6 +1011,16 @@ bool GameManager::injectFairyGuiKeyReleased(int keyCode, int keyText)
 #endif
 }
 
+bool GameManager::injectFairyGuiImeCompositionText(const char* text)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->InjectImeCompositionText(text != nullptr ? text : "");
+#else
+	return false;
+#endif
+}
+
 bool GameManager::injectFairyGuiImeCommitText(const char* text)
 {
 #if defined(HELLO_ENABLE_FGUI)
@@ -1019,6 +1029,27 @@ bool GameManager::injectFairyGuiImeCommitText(const char* text)
 #else
 	return false;
 #endif
+}
+
+bool GameManager::clearFairyGuiImeComposition()
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	return system != nullptr && system->ClearImeCompositionText();
+#else
+	return false;
+#endif
+}
+
+const char* GameManager::getFairyGuiImeDebugString()
+{
+	m_fairyGuiLastImeDebug.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system != nullptr)
+		m_fairyGuiLastImeDebug = system->GetImeDebugString();
+#endif
+	return m_fairyGuiLastImeDebug.c_str();
 }
 
 int GameManager::addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId)

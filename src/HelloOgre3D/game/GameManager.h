@@ -125,7 +125,10 @@ public:
 		bool injectFairyGuiClick(int x, int y, int button);
 		bool injectFairyGuiKeyPressed(int keyCode, int keyText);
 		bool injectFairyGuiKeyReleased(int keyCode, int keyText);
+		bool injectFairyGuiImeCompositionText(const char* text);
 		bool injectFairyGuiImeCommitText(const char* text);
+		bool clearFairyGuiImeComposition();
+		const char* getFairyGuiImeDebugString();
 		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
 		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
 		int addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId);
@@ -171,6 +174,7 @@ private:
 	std::string m_fairyGuiLastMaterialDetail;
 	std::string m_fairyGuiLastTextureDetail;
 	std::string m_fairyGuiLastFrameRenderDetail;
+	std::string m_fairyGuiLastImeDebug;
 
 }; //tolua_exports
 

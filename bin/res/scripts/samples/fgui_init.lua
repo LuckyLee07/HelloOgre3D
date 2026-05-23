@@ -87,9 +87,18 @@ local function tryRunFairyGuiImeSelfTest()
 	threadpool:delay(9, function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local compose = FairyGuiManager:DebugInjectImeCompositionText("zhong")
+		local composeText = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		local composeDebug = FairyGuiManager:GetImeDebugString()
 		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
-		print("[FGUI] ime self test result:", handle ~= nil, inputHandle, focused, commit, text == "\228\184\173", text)
+		local commitDebug = FairyGuiManager:GetImeDebugString()
+		local clear = FairyGuiManager:DebugClearImeComposition()
+		local clearDebug = FairyGuiManager:GetImeDebugString()
+		local composeOk = compose == true and composeText == "" and string.find(composeDebug, "active=1", 1, true) ~= nil
+		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=1", 1, true) ~= nil
+		local clearOk = clear == true and string.find(clearDebug, "active=0", 1, true) ~= nil
+		print("[FGUI] ime self test result:", handle ~= nil, inputHandle, focused, composeOk, commitOk, clearOk, text, composeDebug, commitDebug, clearDebug)
 		FairyGuiManager:Close("TextInputProbe", true)
 	end)
 end
@@ -113,6 +122,17 @@ local function tryRunFairyGuiDebugPanelSelfTest()
 
 	threadpool:delay(9, function()
 		print("[FGUI] debug panel self test result:", FGUI_RunDebugPanelSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiAiDebugPanelSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_AI_DEBUG_PANEL_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] ai debug panel self test result:", FGUI_RunAiDebugPanelSelfTest())
 		FairyGuiManager:DumpHealth(true)
 	end)
 end
@@ -476,6 +496,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiImeSelfTest()
 		tryRunFairyGuiComplexControlsSelfTest()
 		tryRunFairyGuiDebugPanelSelfTest()
+		tryRunFairyGuiAiDebugPanelSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCacheSelfTest()
 		tryRunFairyGuiCommonServiceSelfTest()
@@ -642,6 +663,18 @@ function FGUI_RefreshDebugPanel(key)
 	return FairyGuiManager:RefreshDebugPanel(key)
 end
 
+function FGUI_ShowAiDebugPanel(param)
+	return FairyGuiManager:ShowAiDebugPanel(param)
+end
+
+function FGUI_HideAiDebugPanel(key)
+	return FairyGuiManager:HideAiDebugPanel(key)
+end
+
+function FGUI_RefreshAiDebugPanel(key)
+	return FairyGuiManager:RefreshAiDebugPanel(key)
+end
+
 function FGUI_RunDebugPanelSelfTest()
 	FairyGuiManager:Close("Act37TestMvc", true, "debugPanelReset")
 	FairyGuiManager:Close("Act38Test", true, "debugPanelReset")
@@ -729,6 +762,42 @@ function FGUI_RunDebugPanelSelfTest()
 		and hasRenderDetail == true
 		and hasOpenLine == true
 		and finalClean == true
+end
+
+function FGUI_RunAiDebugPanelSelfTest()
+	FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
+	local debugHandle = FairyGuiManager:ShowAiDebugPanel({
+		key = "__AiDebugPanelSelfTest",
+		scene = "AiDebugPanelSelfTest",
+		title = "AI Debug Panel Self Test",
+		autoRefresh = false,
+		lineCount = 10,
+		maxAgents = 8,
+	})
+	local refreshOk = debugHandle ~= nil and FairyGuiManager:RefreshAiDebugPanel("__AiDebugPanelSelfTest") == true
+	local snapshot = FairyGuiManager:GetAiDebugSnapshot({ maxAgents = 8 })
+	local lines = FairyGuiManager:BuildAiDebugPanelLines({ lineCount = 10, maxAgents = 8 })
+	local hasSnapshot = snapshot ~= nil and type(snapshot.lines) == "table" and #snapshot.lines >= 1
+	local hasHeader = false
+	for _, line in ipairs(lines or {}) do
+		if string.find(line, "AI agents=", 1, true) ~= nil then
+			hasHeader = true
+			break
+		end
+	end
+	FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
+	local closed = FairyGuiManager:GetObjectInfo("__AiDebugPanelSelfTest") == nil
+	print(
+		"[FGUI] ai debug panel self test detail:",
+		"debug=", debugHandle,
+		"refresh=", refreshOk,
+		"snapshot=", hasSnapshot,
+		"lines=", type(lines) == "table" and #lines or 0,
+		"header=", hasHeader,
+		"closed=", closed,
+		"agents=", snapshot and snapshot.agentCount or nil,
+		"soldiers=", snapshot and snapshot.soldierCount or nil)
+	return debugHandle ~= nil and refreshOk == true and hasSnapshot == true and hasHeader == true and closed == true
 end
 
 function FGUI_ShowToast(text, duration)
@@ -1214,6 +1283,9 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "DebugPanel", function()
 		return FGUI_RunDebugPanelSelfTest()
 	end)
+	schedule(0.6, "AiDebugPanel", function()
+		return FGUI_RunAiDebugPanelSelfTest()
+	end)
 	schedule(0.6, "MouseWheel", function()
 		local ctrl = FairyGuiManager:GetController("Act38Test") or FGUI_OpenAct38Sample()
 		local scrollDown = FairyGuiManager:DebugInjectMouseWheel(745, 485, -120)
@@ -1242,10 +1314,17 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "ImeCommit", function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+		local compose = FairyGuiManager:DebugInjectImeCompositionText("zhong")
+		local composeText = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		local composeDebug = FairyGuiManager:GetImeDebugString()
 		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+		local commitDebug = FairyGuiManager:GetImeDebugString()
+		local clear = FairyGuiManager:DebugClearImeComposition()
 		FairyGuiManager:Close("TextInputProbe", true)
-		return handle ~= nil and focused and commit and text == "\228\184\173", text
+		local composeOk = compose == true and composeText == "" and string.find(composeDebug, "active=1", 1, true) ~= nil
+		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=", 1, true) ~= nil
+		return handle ~= nil and focused and composeOk and commitOk and clear == true, text
 	end)
 	schedule(0.6, "LayerClose", function()
 		return FGUI_RunLayerCloseSelfTest()
@@ -1304,6 +1383,7 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:Close("TextInputProbe", true)
 		FairyGuiManager:Close("BusinessFlowTextInput", true)
 		FairyGuiManager:Close("__EventPayloadProbe", true)
+		FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
 		FairyGuiManager:Close("ScreenAdaptMessage", true)
 		FairyGuiManager:Close("ScreenAdaptPopup", true)
 		if closeFairyGuiBusinessFlowObjects ~= nil then
@@ -1344,6 +1424,7 @@ closeFairyGuiBusinessFlowObjects = function(reason)
 	FairyGuiManager:Close("BusinessFlowMessage", true, reason)
 	FairyGuiManager:Close("BusinessFlowPopup", true, reason)
 	FairyGuiManager:HideDebugPanel("BusinessFlowDebug")
+	FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
 end
 
 local function closeFairyGuiPressureObjects(reason)
@@ -1367,6 +1448,7 @@ local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:Close("__EventPayloadProbe", true)
 	FairyGuiManager:Close("ScreenAdaptMessage", true)
 	FairyGuiManager:Close("ScreenAdaptPopup", true)
+	FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
 	if closeFairyGuiBusinessFlowObjects ~= nil then
 		closeFairyGuiBusinessFlowObjects("longLoopCleanup")
 	end

@@ -2,6 +2,7 @@
 #define __OBJECT_MANAGER_H__
 
 #include <map>
+#include <string>
 #include <vector>
 #include <unordered_map>
 #include "OISKeyboard.h"
@@ -50,6 +51,9 @@ public:
 	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
+	int getAiAgentCount() const;
+	int getAiSoldierCount() const;
+	std::string buildAiDebugSummary(int maxAgents);
 	//tolua_end
 
 	std::vector<BlockObject*> getFixedObjects();

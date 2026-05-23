@@ -1,6 +1,10 @@
 #include "ObjectManager.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
+#include "objects/SoldierObject.h"
+#include "ai/behavior/BehaviorTreeDriver.h"
+#include "ai/decision/DecisionTreeDriver.h"
+#include "ai/common/Blackboard.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "ClientManager.h"
@@ -11,7 +15,55 @@
 #include "ai/navigation/NavigationMesh.h"
 #include "profiling/Profile.h"
 
+#include <sstream>
+
 ObjectManager* g_ObjectManager = nullptr;
+
+namespace
+{
+	std::string TrimDebugText(const std::string& text, size_t maxLength)
+	{
+		if (text.size() <= maxLength)
+			return text;
+		if (maxLength <= 3)
+			return text.substr(0, maxLength);
+		return text.substr(0, maxLength - 3) + "...";
+	}
+
+	void AppendBlackboardBrief(std::ostringstream& stream, Blackboard* blackboard)
+	{
+		if (blackboard == nullptr)
+			return;
+
+		bool wrote = false;
+		stream << " bb={";
+		if (blackboard->Has("maxHealth"))
+		{
+			stream << "maxHealth:" << blackboard->GetFloat("maxHealth", 0.0f);
+			wrote = true;
+		}
+		if (blackboard->Has("movePos"))
+		{
+			const Ogre::Vector3 movePos = blackboard->GetVec3("movePos");
+			stream << (wrote ? "," : "") << "movePos:" << static_cast<int>(movePos.x) << "," << static_cast<int>(movePos.y) << "," << static_cast<int>(movePos.z);
+			wrote = true;
+		}
+		if (blackboard->Has("__bt.traceFrame"))
+		{
+			stream << (wrote ? "," : "") << "btFrame:" << blackboard->GetInt("__bt.traceFrame", 0);
+			wrote = true;
+		}
+		if (blackboard->Has("__bt.traceEventCount"))
+		{
+			stream << (wrote ? "," : "") << "btEvents:" << blackboard->GetInt("__bt.traceEventCount", 0);
+			wrote = true;
+		}
+		if (!wrote)
+			stream << "-";
+		stream << "}";
+	}
+}
+
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld)
@@ -114,6 +166,84 @@ std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentTy
 	}
 
 	return specifyAgents;
+}
+
+int ObjectManager::getAiAgentCount() const
+{
+	return static_cast<int>(m_agents.size());
+}
+
+int ObjectManager::getAiSoldierCount() const
+{
+	int count = 0;
+	for (std::vector<AgentObject*>::const_iterator it = m_agents.begin(); it != m_agents.end(); ++it)
+	{
+		if (dynamic_cast<SoldierObject*>(*it) != nullptr)
+			++count;
+	}
+	return count;
+}
+
+std::string ObjectManager::buildAiDebugSummary(int maxAgents)
+{
+	if (maxAgents < 0)
+		maxAgents = 0;
+	if (maxAgents > 32)
+		maxAgents = 32;
+
+	const int soldierCount = getAiSoldierCount();
+	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
+	std::ostringstream stream;
+	stream << "AI agents=" << m_agents.size() << " soldiers=" << soldierCount << " showing=" << showingCount;
+
+	for (int index = 0; index < showingCount; ++index)
+	{
+		AgentObject* agent = m_agents[index];
+		if (agent == nullptr)
+			continue;
+
+		SoldierObject* soldier = dynamic_cast<SoldierObject*>(agent);
+		stream << "\n#" << index
+			<< " id=" << agent->GetObjId()
+			<< " team=" << agent->GetTeamId()
+			<< " type=" << agent->getAgentType()
+			<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")"
+			<< " hp=" << static_cast<int>(agent->GetHealth());
+
+		if (soldier == nullptr)
+		{
+			stream << " driver=Agent";
+			continue;
+		}
+
+		stream << "/" << static_cast<int>(soldier->GetMaxHealth())
+			<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo();
+
+		BehaviorTreeDriver* behaviorDriver = soldier->GetBehaviorTreeDriver();
+		DecisionTreeDriver* decisionDriver = soldier->GetDecisionTreeDriver();
+		if (behaviorDriver != nullptr)
+		{
+			if (!behaviorDriver->IsDebugTraceEnabled())
+				behaviorDriver->SetDebugTraceEnabled(true);
+			stream << " driver=BT traceFrame=" << behaviorDriver->GetDebugTraceFrame();
+			AppendBlackboardBrief(stream, behaviorDriver->GetBlackboard());
+			const std::string trace = behaviorDriver->GetLastDebugTrace();
+			if (!trace.empty())
+				stream << " trace=" << TrimDebugText(trace, 96);
+			else
+				stream << " trace=pending";
+		}
+		else if (decisionDriver != nullptr)
+		{
+			stream << " driver=DT";
+			AppendBlackboardBrief(stream, decisionDriver->GetBlackboard());
+		}
+		else
+		{
+			stream << " driver=" << (soldier->GetFsmController() != nullptr ? "FSM" : "None");
+		}
+	}
+	return stream.str();
 }
 
 void ObjectManager::clearAllObjects(int objType, bool forceAll)
