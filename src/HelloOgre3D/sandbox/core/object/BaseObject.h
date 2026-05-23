@@ -1,6 +1,7 @@
 #ifndef __BASE_OBJECT__
 #define __BASE_OBJECT__
 
+#include <string>
 #include "SandboxMacros.h"
 #include "object/SandboxObject.h"
 #include "script/LuaClassNameTraits.h"
@@ -54,6 +55,8 @@ public:
 	bool RemoveComponent(IComponent* comp);
 
 	IComponent* GetComponent(const std::string& key);
+	int GetComponentCount() const;
+	std::string BuildComponentDebugString() const;
 
 protected:
 	ObjectType m_objType;

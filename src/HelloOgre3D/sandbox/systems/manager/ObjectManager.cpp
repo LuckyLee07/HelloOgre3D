@@ -2,6 +2,7 @@
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
 #include "objects/SoldierObject.h"
+#include "objects/VehicleObject.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
@@ -16,11 +17,40 @@
 #include "profiling/Profile.h"
 
 #include <sstream>
+#include <algorithm>
+#include <vector>
 
 ObjectManager* g_ObjectManager = nullptr;
 
 namespace
 {
+	const char* ObjectTypeToString(BaseObject::ObjectType type)
+	{
+		switch (type)
+		{
+		case BaseObject::OBJ_TYPE_BLOCK:
+			return "Block";
+		case BaseObject::OBJ_TYPE_PLANE:
+			return "Plane";
+		case BaseObject::OBJ_TYPE_BULLET:
+			return "Bullet";
+		case BaseObject::OBJ_TYPE_AGENT:
+			return "Agent";
+		case BaseObject::OBJ_TYPE_SOLDIER:
+			return "Soldier";
+		case BaseObject::OBJ_TYPE_NONE:
+		default:
+			return "None";
+		}
+	}
+
+	std::string FormatVec3(const Ogre::Vector3& value)
+	{
+		std::ostringstream stream;
+		stream << static_cast<int>(value.x) << "," << static_cast<int>(value.y) << "," << static_cast<int>(value.z);
+		return stream.str();
+	}
+
 	std::string TrimDebugText(const std::string& text, size_t maxLength)
 	{
 		if (text.size() <= maxLength)
@@ -168,6 +198,11 @@ std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentTy
 	return specifyAgents;
 }
 
+int ObjectManager::getObjectCount() const
+{
+	return static_cast<int>(m_objects.size());
+}
+
 int ObjectManager::getAiAgentCount() const
 {
 	return static_cast<int>(m_agents.size());
@@ -241,6 +276,86 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		else
 		{
 			stream << " driver=" << (soldier->GetFsmController() != nullptr ? "FSM" : "None");
+		}
+	}
+	return stream.str();
+}
+
+std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
+{
+	if (maxObjects < 0)
+		maxObjects = 0;
+	if (maxObjects > 64)
+		maxObjects = 64;
+
+	std::vector<int> objectIds;
+	objectIds.reserve(m_objects.size());
+	for (std::unordered_map<int, BaseObject*>::const_iterator iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+	{
+		objectIds.push_back(iter->first);
+	}
+	std::sort(objectIds.begin(), objectIds.end());
+
+	const int showingCount = maxObjects < static_cast<int>(objectIds.size()) ? maxObjects : static_cast<int>(objectIds.size());
+	std::ostringstream stream;
+	stream << "[ObjectInspector] objects=" << m_objects.size()
+		<< " agents=" << m_agents.size()
+		<< " blocks=" << m_blocks.size()
+		<< " navMeshes=" << m_navMeshes.size()
+		<< " pendingSceneNodes=" << m_remSceneNodes.size()
+		<< " showing=" << showingCount;
+
+	for (int index = 0; index < showingCount; ++index)
+	{
+		std::unordered_map<int, BaseObject*>::const_iterator found = m_objects.find(objectIds[index]);
+		if (found == m_objects.end() || found->second == nullptr)
+			continue;
+
+		BaseObject* object = found->second;
+		stream << "\n[ObjectInspector] id=" << object->GetObjId()
+			<< " type=" << ObjectTypeToString(object->GetObjType())
+			<< " team=" << object->GetTeamId()
+			<< " liveTicks=" << object->GetLiveTicks()
+			<< " components=" << object->BuildComponentDebugString();
+
+		if (VehicleObject* vehicle = dynamic_cast<VehicleObject*>(object))
+		{
+			stream << " pos=" << FormatVec3(vehicle->GetPosition())
+				<< " vel=" << FormatVec3(vehicle->GetVelocity())
+				<< " hp=" << static_cast<int>(vehicle->GetHealth())
+				<< " speed=" << static_cast<int>(vehicle->GetSpeed())
+				<< " target=" << FormatVec3(vehicle->GetTarget())
+				<< " hasPath=" << (vehicle->HasPath() ? "true" : "false");
+		}
+		else if (BlockObject* block = dynamic_cast<BlockObject*>(object))
+		{
+			stream << " pos=" << FormatVec3(block->GetPosition())
+				<< " mass=" << static_cast<int>(block->GetMass());
+			if (block->GetObjType() != BaseObject::OBJ_TYPE_PLANE)
+			{
+				stream << " radius=" << static_cast<int>(block->GetRadius());
+			}
+		}
+
+		if (AgentObject* agent = dynamic_cast<AgentObject*>(object))
+		{
+			stream << " agentType=" << agent->getAgentType()
+				<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")";
+		}
+
+		if (SoldierObject* soldier = dynamic_cast<SoldierObject*>(object))
+		{
+			const char* driverName = "None";
+			if (soldier->GetBehaviorTreeDriver() != nullptr)
+				driverName = "BT";
+			else if (soldier->GetDecisionTreeDriver() != nullptr)
+				driverName = "DT";
+			else if (soldier->GetFsmController() != nullptr)
+				driverName = "FSM";
+
+			stream << " soldierHpMax=" << static_cast<int>(soldier->GetMaxHealth())
+				<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo()
+				<< " driver=" << driverName;
 		}
 	}
 	return stream.str();

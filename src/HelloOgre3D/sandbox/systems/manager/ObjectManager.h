@@ -51,9 +51,11 @@ public:
 	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
+	int getObjectCount() const;
 	int getAiAgentCount() const;
 	int getAiSoldierCount() const;
 	std::string buildAiDebugSummary(int maxAgents);
+	std::string buildObjectDebugSummary(int maxObjects);
 	//tolua_end
 
 	std::vector<BlockObject*> getFixedObjects();

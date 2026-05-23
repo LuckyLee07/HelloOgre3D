@@ -22,6 +22,7 @@
 #include "systems/physics/PhysicsWorld.h"
 #include "core/SandboxMacros.h"
 #include "profiling/Profile.h"
+#include "diagnostics/RuntimeResourceDiagnostics.h"
 
 using namespace Ogre;
 
@@ -1462,4 +1463,9 @@ long long GameManager::getTimeInMillis()
 Ogre::Real GameManager::getTimeInSeconds()
 {
 	return (Ogre::Real)(getTimeInMillis() / 1000);
+}
+
+std::string GameManager::buildRuntimeResourceDump(int maxEntriesPerType)
+{
+	return RuntimeResourceDiagnostics::BuildResourceDump(maxEntriesPerType);
 }

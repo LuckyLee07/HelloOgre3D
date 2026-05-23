@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 class IComponent;
 class GameObject
@@ -19,6 +20,10 @@ public:
 
 	bool removeComponent(const std::string& key);
 	bool removeComponent(IComponent* comp);
+
+	int getComponentCount() const;
+	std::vector<std::string> getComponentKeys() const;
+	std::string buildComponentDebugString() const;
 	
 	void update(int deltaMs);
 	

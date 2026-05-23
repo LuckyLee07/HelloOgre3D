@@ -1,19 +1,54 @@
---require("res.scripts.samples.Sandbox1")
---require("res.scripts.samples.Sandbox2")
---require("res.scripts.samples.Sandbox3")
---require("res.scripts.samples.Sandbox4")
---require("res.scripts.samples.Sandbox5")
---require("res.scripts.samples.Sandbox6")
---require("res.scripts.samples.Sandbox7")
-require("res.scripts.samples.Sandbox8")
+local SANDBOX_SAMPLE_NAMES = {
+	Sandbox1 = true,
+	Sandbox2 = true,
+	Sandbox3 = true,
+	Sandbox4 = true,
+	Sandbox5 = true,
+	Sandbox6 = true,
+	Sandbox7 = true,
+	Sandbox8 = true,
+}
+
+local function getEnvValue(name)
+	return os.getenv and os.getenv(name) or nil
+end
+
+local function isTruthyEnvValue(value)
+	return value == "1" or value == "true" or value == "TRUE" or value == "True" or value == "yes" or value == "YES"
+end
+
+local function getSandboxSampleName()
+	local sampleName = getEnvValue("HELLO_SANDBOX_SAMPLE")
+	if sampleName == nil or sampleName == "" or sampleName == "Default" then
+		return "Sandbox8"
+	end
+	if string.match(sampleName, "^%d+$") ~= nil then
+		sampleName = "Sandbox" .. sampleName
+	end
+	if SANDBOX_SAMPLE_NAMES[sampleName] ~= true then
+		error("[SandboxSmoke] unknown HELLO_SANDBOX_SAMPLE=" .. tostring(sampleName))
+	end
+	return sampleName
+end
+
+local sandboxSampleName = getSandboxSampleName()
+local sandboxSmokeRunId = getEnvValue("HELLO_SANDBOX_SMOKE_RUN_ID")
+_G.HELLO_SANDBOX_SAMPLE_NAME = sandboxSampleName
+_G.HELLO_SANDBOX_SMOKE_MODE = isTruthyEnvValue(getEnvValue("HELLO_SANDBOX_SMOKE_TEST"))
+_G.HELLO_SANDBOX_SMOKE_RUN_ID = sandboxSmokeRunId
+require("res.scripts.samples." .. sandboxSampleName)
+if sandboxSmokeRunId ~= nil and sandboxSmokeRunId ~= "" then
+	print("[SandboxSmoke] run id:", sandboxSmokeRunId)
+end
+print("[SandboxSmoke] sample selected:", sandboxSampleName)
 
 _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 
 require("res.scripts.samples.fgui_init")
+local RuntimeDiagnostics = require("res.scripts.samples.runtime_diagnostics")
 
 local function isEnvEnabled(name)
-	local value = os.getenv and os.getenv(name) or nil
-	return value == "1" or value == "true" or value == "TRUE" or value == "yes" or value == "YES"
+	return isTruthyEnvValue(getEnvValue(name))
 end
 
 local FGUI_AUTOMATION_ENV_NAMES = {
@@ -60,6 +95,17 @@ local function isFairyGuiAutomationMode()
 	return false
 end
 
+local function tryRunRuntimeDiagnosticSelfTest()
+	if not isEnvEnabled("HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST") then
+		return
+	end
+
+	local delaySeconds = tonumber(getEnvValue("HELLO_RUNTIME_DIAGNOSTIC_DELAY")) or 4
+	threadpool:delay(delaySeconds, function()
+		RuntimeDiagnostics.RunSelfTest()
+	end)
+end
+
 _G.HELLO_FGUI_AUTOMATION_MODE = isFairyGuiAutomationMode()
 
 if _G.HELLO_FGUI_AUTOMATION_MODE then
@@ -83,6 +129,7 @@ _G.__init__ = function(sec, msec)
 	end)
 
 	FGUI_Init()
+	tryRunRuntimeDiagnosticSelfTest()
 end
 
 _G.__tick__ = function(detalMsec)

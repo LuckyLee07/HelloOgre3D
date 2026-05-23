@@ -96,3 +96,13 @@ IComponent* BaseObject::GetComponent(const std::string& key)
 {
 	return m_pGameObjet->getComponent(key);
 }
+
+int BaseObject::GetComponentCount() const
+{
+	return m_pGameObjet != nullptr ? m_pGameObjet->getComponentCount() : 0;
+}
+
+std::string BaseObject::BuildComponentDebugString() const
+{
+	return m_pGameObjet != nullptr ? m_pGameObjet->buildComponentDebugString() : "-";
+}

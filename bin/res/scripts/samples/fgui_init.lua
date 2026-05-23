@@ -542,6 +542,11 @@ local function tryRunFairyGuiLongLoopSelfTest()
 end
 
 local function tryOpenFairyGuiSample()
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true or isEnvEnabled("HELLO_SANDBOX_SMOKE_TEST") then
+		print("[SandboxSmoke] skip FGUI sample for smoke")
+		return
+	end
+
 	local file = io.open("res/fuires/act_37_test.fui", "rb")
 	if file == nil then
 		return

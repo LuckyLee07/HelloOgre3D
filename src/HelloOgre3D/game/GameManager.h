@@ -35,6 +35,7 @@ public:
 
 	long long getTimeInMillis();
 	Ogre::Real getTimeInSeconds();
+	std::string buildRuntimeResourceDump(int maxEntriesPerType);
 
 	bool isFairyGuiAvailable();
 	const char* loadFairyGuiPackage(const char* packagePath);

@@ -1,6 +1,6 @@
 /*
 ** Lua binding: GameToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 23 15:02:00 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 23 22:45:20 2026.
 */
 
 #ifndef __cplusplus
@@ -3569,6 +3569,40 @@ static int tolua_GameToLua_GameManager_getTimeInSeconds00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getTimeInSeconds'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildRuntimeResourceDump of class  GameManager */
+#ifndef TOLUA_DISABLE_tolua_GameToLua_GameManager_buildRuntimeResourceDump00
+static int tolua_GameToLua_GameManager_buildRuntimeResourceDump00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GameManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GameManager* self = (GameManager*)  tolua_tousertype(tolua_S,1,0);
+  int maxEntriesPerType = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildRuntimeResourceDump'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildRuntimeResourceDump(maxEntriesPerType);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildRuntimeResourceDump'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8003,6 +8037,7 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getScreenHeight",tolua_GameToLua_GameManager_getScreenHeight00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_GameToLua_GameManager_getTimeInMillis00);
    tolua_function(tolua_S,"getTimeInSeconds",tolua_GameToLua_GameManager_getTimeInSeconds00);
+   tolua_function(tolua_S,"buildRuntimeResourceDump",tolua_GameToLua_GameManager_buildRuntimeResourceDump00);
    tolua_function(tolua_S,"isFairyGuiAvailable",tolua_GameToLua_GameManager_isFairyGuiAvailable00);
    tolua_function(tolua_S,"loadFairyGuiPackage",tolua_GameToLua_GameManager_loadFairyGuiPackage00);
    tolua_function(tolua_S,"removeFairyGuiPackage",tolua_GameToLua_GameManager_removeFairyGuiPackage00);

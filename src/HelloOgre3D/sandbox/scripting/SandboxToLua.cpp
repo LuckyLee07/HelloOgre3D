@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 23 09:56:31 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 23 22:45:20 2026.
 */
 
 #ifndef __cplusplus
@@ -7163,6 +7163,38 @@ static int tolua_SandboxToLua_ObjectManager_getSpecifyAgents00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: getObjectCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getObjectCount00
+static int tolua_SandboxToLua_ObjectManager_getObjectCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getObjectCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getObjectCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getObjectCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getAiAgentCount of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getAiAgentCount00
 static int tolua_SandboxToLua_ObjectManager_getAiAgentCount00(lua_State* tolua_S)
@@ -7256,6 +7288,40 @@ static int tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00(lua_State* tol
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'buildAiDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildObjectDebugSummary of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00
+static int tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int maxObjects = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildObjectDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildObjectDebugSummary(maxObjects);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildObjectDebugSummary'.",&tolua_err);
  return 0;
 #endif
 }
@@ -9852,9 +9918,11 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAllAgents",tolua_SandboxToLua_ObjectManager_getAllAgents00);
    tolua_function(tolua_S,"getAllBlocks",tolua_SandboxToLua_ObjectManager_getAllBlocks00);
    tolua_function(tolua_S,"getSpecifyAgents",tolua_SandboxToLua_ObjectManager_getSpecifyAgents00);
+   tolua_function(tolua_S,"getObjectCount",tolua_SandboxToLua_ObjectManager_getObjectCount00);
    tolua_function(tolua_S,"getAiAgentCount",tolua_SandboxToLua_ObjectManager_getAiAgentCount00);
    tolua_function(tolua_S,"getAiSoldierCount",tolua_SandboxToLua_ObjectManager_getAiSoldierCount00);
    tolua_function(tolua_S,"buildAiDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00);
+   tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"NavigationMesh","NavigationMesh","",NULL);
   tolua_beginmodule(tolua_S,"NavigationMesh");
