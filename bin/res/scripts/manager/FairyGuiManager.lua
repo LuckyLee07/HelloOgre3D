@@ -99,6 +99,101 @@ local function formatMs(value)
 	return string.format("%.3f", tonumber(value) or 0)
 end
 
+local function utf8CharLen(byteValue)
+	if byteValue == nil then
+		return 0
+	end
+	if byteValue < 0x80 then
+		return 1
+	elseif byteValue < 0xE0 then
+		return 2
+	elseif byteValue < 0xF0 then
+		return 3
+	elseif byteValue < 0xF8 then
+		return 4
+	end
+	return 1
+end
+
+local function utf8CodepointCount(text)
+	text = tostring(text or "")
+	local index = 1
+	local count = 0
+	while index <= #text do
+		index = index + math.max(utf8CharLen(string.byte(text, index)), 1)
+		count = count + 1
+	end
+	return count
+end
+
+local function utf8SubCodepoints(text, maxCount)
+	text = tostring(text or "")
+	maxCount = tonumber(maxCount) or 0
+	if maxCount <= 0 then
+		return ""
+	end
+
+	local index = 1
+	local count = 0
+	while index <= #text and count < maxCount do
+		index = index + math.max(utf8CharLen(string.byte(text, index)), 1)
+		count = count + 1
+	end
+	return string.sub(text, 1, index - 1)
+end
+
+local function eachUtf8Char(text, callback)
+	text = tostring(text or "")
+	local index = 1
+	while index <= #text do
+		local charLen = math.max(utf8CharLen(string.byte(text, index)), 1)
+		callback(string.sub(text, index, index + charLen - 1))
+		index = index + charLen
+	end
+end
+
+local function applyTextRestrict(text, policy)
+	text = tostring(text or "")
+	if type(policy) ~= "table" then
+		return text
+	end
+
+	local inputType = tostring(policy.inputType or policy.type or "")
+	local restrict = policy.restrict or policy.allowedChars
+	if inputType == "" and isBlank(restrict) then
+		return text
+	end
+
+	local output = {}
+	eachUtf8Char(text, function(ch)
+		local keep = true
+		if inputType == "number" or inputType == "numeric" then
+			keep = string.match(ch, "%d") ~= nil
+				or (ch == "." and policy.allowDecimal == true)
+				or (ch == "-" and policy.allowNegative == true and #output == 0)
+		elseif inputType == "integer" then
+			keep = string.match(ch, "%d") ~= nil
+				or (ch == "-" and policy.allowNegative == true and #output == 0)
+		end
+		if keep and not isBlank(restrict) then
+			keep = string.find(tostring(restrict), ch, 1, true) ~= nil
+		end
+		if keep then
+			table.insert(output, ch)
+		end
+	end)
+	return table.concat(output)
+end
+
+local function applyTextInputPolicy(text, policy)
+	local normalized = applyTextRestrict(text, policy)
+	local maxLength = tonumber(policy and (policy.maxLength or policy.maxLen) or nil)
+	if maxLength ~= nil and maxLength > 0 and utf8CodepointCount(normalized) > maxLength then
+		normalized = utf8SubCodepoints(normalized, maxLength)
+	end
+	return normalized
+end
+
 local function isEnvEnabled(name)
 	local value = os.getenv and os.getenv(name) or nil
 	return value == "1" or value == "true" or value == "TRUE" or value == "True"
@@ -245,6 +340,14 @@ function FairyGuiManager:Init()
 	self.eventStats = {}
 	self.eventDispatchTotal = 0
 	self.lastEvent = nil
+	self.resourceFallbacks = {}
+	self.resourceFallbackKeys = {}
+	self.resourceFallbackMaxCount = 128
+	self.resourceFallbackPolicy = {
+		recordMissingChild = false,
+	}
+	self.textInputPoliciesByHandle = {}
+	self.textInputPolicyBindingsByHandle = {}
 	self.perfStats = {}
 	self.cachePolicy = {
 		maxHiddenPerPackage = 2,
@@ -1617,6 +1720,17 @@ function FairyGuiManager:OpenTextInputProbe(param)
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:ApplyScreenAdapt(objectInfo)
 	self:PushStack(objectInfo)
+	if param.textInputPolicy ~= nil then
+		self:SetTextInputPolicy(handle, "probe_input", param.textInputPolicy)
+	elseif param.maxLength ~= nil or param.restrict ~= nil or param.inputType ~= nil then
+		self:SetTextInputPolicy(handle, "probe_input", {
+			maxLength = param.maxLength,
+			restrict = param.restrict,
+			inputType = param.inputType,
+			allowDecimal = param.allowDecimal,
+			allowNegative = param.allowNegative,
+		})
+	end
 	self:AddChanged(handle, "probe_input", function(evt)
 		print("[FGUI] text input changed:", self:GetText(handle, "probe_input"), evt.senderHandle)
 	end)
@@ -2232,6 +2346,209 @@ function FairyGuiManager:GetImeDebugString()
 		return ""
 	end
 	return GameManager:getFairyGuiImeDebugString() or ""
+end
+
+function FairyGuiManager:RecordResourceFallback(kind, context, detail)
+	kind = tostring(kind or "unknown")
+	context = type(context) == "table" and context or {}
+	local key = table.concat({
+		kind,
+		tostring(context.uiName or ""),
+		tostring(context.key or ""),
+		tostring(context.packageName or context.package or ""),
+		tostring(context.packagePath or ""),
+		tostring(context.objectName or context.component or ""),
+		tostring(context.childPath or ""),
+		tostring(context.handle or ""),
+		tostring(context.eventType or ""),
+	}, "|")
+
+	local existing = self.resourceFallbackKeys[key]
+	if existing ~= nil then
+		existing.count = (existing.count or 1) + 1
+		existing.lastMs = nowMs()
+		existing.detail = detail or existing.detail
+		return existing
+	end
+
+	local record = copyTable(context, {
+		kind = kind,
+		count = 1,
+		firstMs = nowMs(),
+		lastMs = nowMs(),
+		detail = detail,
+	})
+	self.resourceFallbackKeys[key] = record
+	table.insert(self.resourceFallbacks, record)
+	while #self.resourceFallbacks > (self.resourceFallbackMaxCount or 128) do
+		local removed = table.remove(self.resourceFallbacks, 1)
+		if removed ~= nil then
+			local removedKey = table.concat({
+				tostring(removed.kind or ""),
+				tostring(removed.uiName or ""),
+				tostring(removed.key or ""),
+				tostring(removed.packageName or removed.package or ""),
+				tostring(removed.packagePath or ""),
+				tostring(removed.objectName or removed.component or ""),
+				tostring(removed.childPath or ""),
+				tostring(removed.handle or ""),
+				tostring(removed.eventType or ""),
+			}, "|")
+			self.resourceFallbackKeys[removedKey] = nil
+		end
+	end
+
+	print("[FGUI] ResourceFallback", kind,
+		"ui=", tostring(record.uiName or record.key or ""),
+		"package=", tostring(record.packageName or record.packagePath or record.package or ""),
+		"object=", tostring(record.objectName or record.component or ""),
+		"child=", tostring(record.childPath or ""),
+		"handle=", tostring(record.handle or ""),
+		"detail=", tostring(record.detail or ""))
+	return record
+end
+
+function FairyGuiManager:GetResourceFallbacks()
+	local result = {}
+	for _, record in ipairs(self.resourceFallbacks or {}) do
+		table.insert(result, copyTable(record))
+	end
+	return result
+end
+
+function FairyGuiManager:ClearResourceFallbacks()
+	self.resourceFallbacks = {}
+	self.resourceFallbackKeys = {}
+end
+
+function FairyGuiManager:SetResourceFallbackPolicy(policy)
+	if type(policy) ~= "table" then
+		return self.resourceFallbackPolicy
+	end
+	self.resourceFallbackPolicy = self.resourceFallbackPolicy or {}
+	for name, value in pairs(policy) do
+		self.resourceFallbackPolicy[name] = value
+	end
+	return self.resourceFallbackPolicy
+end
+
+function FairyGuiManager:GetResourceFallbackPolicy()
+	return copyTable(self.resourceFallbackPolicy or {})
+end
+
+function FairyGuiManager:DumpResourceFallbacks(filter)
+	filter = type(filter) == "table" and filter or {}
+	local count = 0
+	print("[FGUI] DumpResourceFallbacks begin")
+	for _, record in ipairs(self.resourceFallbacks or {}) do
+		local matched = true
+		if filter.kind ~= nil and record.kind ~= filter.kind then
+			matched = false
+		end
+		if filter.uiName ~= nil and record.uiName ~= filter.uiName and record.key ~= filter.uiName then
+			matched = false
+		end
+		if filter.packageName ~= nil and record.packageName ~= filter.packageName and record.packagePath ~= filter.packageName then
+			matched = false
+		end
+		if matched then
+			count = count + 1
+			print("[FGUI] ResourceFallback",
+				record.kind,
+				"count=", record.count or 1,
+				"ui=", tostring(record.uiName or record.key or ""),
+				"package=", tostring(record.packageName or record.packagePath or record.package or ""),
+				"object=", tostring(record.objectName or record.component or ""),
+				"child=", tostring(record.childPath or ""),
+				"handle=", tostring(record.handle or ""),
+				"event=", tostring(record.eventType or ""),
+				"detail=", tostring(record.detail or ""))
+		end
+	end
+	print("[FGUI] DumpResourceFallbacks end count=", count)
+	return count
+end
+
+function FairyGuiManager:ApplyTextInputPolicy(handle, childPath)
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		return false
+	end
+	local policy = self.textInputPoliciesByHandle[targetHandle]
+	if type(policy) ~= "table" then
+		return true
+	end
+	if policy._applying == true then
+		return true
+	end
+
+	local text = self:GetText(targetHandle, nil)
+	local normalized = applyTextInputPolicy(text, policy)
+	if normalized ~= text then
+		policy._applying = true
+		self:SetText(targetHandle, nil, normalized)
+		policy._applying = nil
+	end
+	return true
+end
+
+function FairyGuiManager:SetTextInputPolicy(handle, childPath, policy)
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		self:RecordResourceFallback("missingTextInputPolicyTarget", {
+			handle = handle,
+			childPath = childPath,
+		}, "SetTextInputPolicy target not found")
+		return false
+	end
+
+	if type(policy) ~= "table" then
+		local bindingId = self.textInputPolicyBindingsByHandle[targetHandle]
+		if bindingId ~= nil then
+			self:RemoveBinding(bindingId)
+		end
+		self.textInputPoliciesByHandle[targetHandle] = nil
+		self.textInputPolicyBindingsByHandle[targetHandle] = nil
+		return true
+	end
+
+	local policyCopy = copyTable(policy)
+	self.textInputPoliciesByHandle[targetHandle] = policyCopy
+	if self.textInputPolicyBindingsByHandle[targetHandle] == nil then
+		local bindingId = self:AddChanged(handle, childPath, function()
+			self:ApplyTextInputPolicy(targetHandle, nil)
+		end)
+		if bindingId ~= nil then
+			self.textInputPolicyBindingsByHandle[targetHandle] = bindingId
+		end
+	end
+	self:ApplyTextInputPolicy(targetHandle, nil)
+	return true
+end
+
+function FairyGuiManager:GetTextInputPolicy(handle, childPath)
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		return nil
+	end
+	local policy = self.textInputPoliciesByHandle[targetHandle]
+	if type(policy) ~= "table" then
+		return nil
+	end
+	return copyTable(policy)
+end
+
+function FairyGuiManager:ClearTextInputPoliciesForHandles(handles)
+	if type(handles) ~= "table" then
+		return
+	end
+	for _, handle in ipairs(handles) do
+		local bindingId = self.textInputPolicyBindingsByHandle[handle]
+		if bindingId ~= nil then
+			self.textInputPolicyBindingsByHandle[handle] = nil
+		end
+		self.textInputPoliciesByHandle[handle] = nil
+	end
 end
 
 function FairyGuiManager:SetText(handle, childPath, text)
@@ -2851,6 +3168,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		self:ClearListCacheByListHandle(ownedHandle)
 		self.childrenByHandle[ownedHandle] = nil
 	end
+	self:ClearTextInputPoliciesForHandles(ownedHandles)
 	if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
 		self.layerObjects[objectInfo.layer][handle] = nil
 	end
@@ -3026,8 +3344,75 @@ function FairyGuiManager:DumpPackages()
 	return self:GetPackageManager():DumpPackages()
 end
 
+function FairyGuiManager:DumpPackageRef(packageKey)
+	return self:GetPackageManager():DumpPackageRef(packageKey)
+end
+
 function FairyGuiManager:GetPackageRefs()
 	return self:GetPackageManager():GetPackageRefs()
+end
+
+function FairyGuiManager:DumpUI(keyOrHandle)
+	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	if objectInfo == nil then
+		print("[FGUI] DumpUI missing:", tostring(keyOrHandle))
+		return false
+	end
+	local hidden = self.hiddenObjects[objectInfo.key] ~= nil
+	local ownedHandles = self:CollectOwnedHandles(objectInfo)
+	print("[FGUI] DumpUI",
+		"key=", tostring(objectInfo.key),
+		"handle=", tostring(objectInfo.handle),
+		"uiName=", tostring(objectInfo.uiName or objectInfo.name or ""),
+		"package=", tostring(objectInfo.packageName or objectInfo.packagePath or ""),
+		"object=", tostring(objectInfo.objectName or ""),
+		"layer=", tostring(objectInfo.layer or ""),
+		"group=", tostring(objectInfo.uiGroup or objectInfo.popupGroup or ""),
+		"scene=", tostring(objectInfo.sceneName or ""),
+		"cache=", objectInfo.cache == true,
+		"hidden=", hidden,
+		"stackMode=", tostring(self:GetStackMode(objectInfo)),
+		"owned=", #ownedHandles)
+	local childHandles = self.childrenByHandle[objectInfo.handle] or {}
+	for childPath, childHandle in pairs(childHandles) do
+		print("[FGUI] DumpUIChild", tostring(objectInfo.key), "path=", tostring(childPath), "handle=", tostring(childHandle))
+	end
+	return true
+end
+
+function FairyGuiManager:DumpDebugTarget(target)
+	if target == nil or target == "" or target == "top" then
+		local top = self:GetTopUI()
+		return self:DumpUI(top ~= nil and top.key or nil)
+	end
+	if target == "topPopup" then
+		local topPopup = self:GetTopPopup()
+		return self:DumpUI(topPopup ~= nil and topPopup.key or nil)
+	end
+	local objectInfo = self:GetObjectInfo(target)
+	if objectInfo ~= nil then
+		return self:DumpUI(objectInfo.key)
+	end
+	if self:DumpPackageRef(target) then
+		return true
+	end
+	print("[FGUI] DumpDebugTarget missing:", tostring(target))
+	return false
+end
+
+function FairyGuiManager:CloseDebugTarget(target, forceDestroy)
+	if target == nil or target == "" or target == "top" then
+		return self:CloseTop(nil, forceDestroy == true)
+	end
+	if target == "topPopup" then
+		return self:CloseTopPopup(forceDestroy == true)
+	end
+	local objectInfo = self:GetObjectInfo(target)
+	if objectInfo == nil then
+		print("[FGUI] CloseDebugTarget missing:", tostring(target))
+		return false
+	end
+	return self:Close(objectInfo.key, forceDestroy == true, "debugPanelCloseTarget")
 end
 
 function FairyGuiManager:DumpResourceRefs()
@@ -3080,6 +3465,7 @@ function FairyGuiManager:Dump()
 	self:DumpPackages()
 	self:DumpResourceRefs()
 	self:DumpResourceWarnings()
+	self:DumpResourceFallbacks()
 	self:DumpBindings()
 	self:DumpEventStats()
 	self:DumpPerfStats()

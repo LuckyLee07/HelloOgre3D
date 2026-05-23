@@ -19,8 +19,11 @@ param(
 		"ScreenAdapt",
 		"ScreenAdaptDemo",
 		"BusinessFlow",
+		"BusinessBenchmark",
 		"ComplexControls",
 		"ResourcePolicy",
+		"ResourceFallback",
+		"TextInputPolicy",
 		"Pressure",
 		"Layer",
 		"LayerClose",
@@ -77,8 +80,11 @@ function Get-DefaultWaitSeconds {
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
 		"BusinessFlow" { return 32 }
+		"BusinessBenchmark" { return 34 }
 		"ComplexControls" { return 32 }
 		"ResourcePolicy" { return 34 }
+		"ResourceFallback" { return 34 }
+		"TextInputPolicy" { return 30 }
 		"Pressure" { return 180 }
 		"EventPayload" { return 32 }
 		"Input" { return 18 }
@@ -91,7 +97,9 @@ function Get-DefaultWaitSeconds {
 function Get-FairyGuiEnv {
 	param(
 		[string]$SelfTestMode,
-		[int]$LoopCount
+		[int]$LoopCount,
+		[int]$PressurePopupCount,
+		[int]$PressureListCount
 	)
 
 	$values = [ordered]@{}
@@ -124,8 +132,14 @@ function Get-FairyGuiEnv {
 		"ScreenAdapt" { $values["HELLO_FGUI_SCREEN_ADAPT_SELF_TEST"] = "1" }
 		"ScreenAdaptDemo" { $values["HELLO_FGUI_SCREEN_ADAPT_DEMO"] = "1" }
 		"BusinessFlow" { $values["HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"] = "1" }
+		"BusinessBenchmark" {
+			$values["HELLO_FGUI_BUSINESS_BENCHMARK_SELF_TEST"] = "1"
+			$values["HELLO_FGUI_BUSINESS_BENCHMARK_COUNT"] = [string]$LoopCount
+		}
 		"ComplexControls" { $values["HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST"] = "1" }
 		"ResourcePolicy" { $values["HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"] = "1" }
+		"ResourceFallback" { $values["HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST"] = "1" }
+		"TextInputPolicy" { $values["HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST"] = "1" }
 		"Pressure" {
 			$values["HELLO_FGUI_PRESSURE_SELF_TEST"] = "1"
 			$maxPopupCount = $PressurePopupCount
@@ -174,8 +188,12 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_SCREEN_ADAPT_SELF_TEST",
 	"HELLO_FGUI_SCREEN_ADAPT_DEMO",
 	"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST",
+	"HELLO_FGUI_BUSINESS_BENCHMARK_SELF_TEST",
+	"HELLO_FGUI_BUSINESS_BENCHMARK_COUNT",
 	"HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST",
 	"HELLO_FGUI_RESOURCE_POLICY_SELF_TEST",
+	"HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST",
+	"HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST",
 	"HELLO_FGUI_PRESSURE_SELF_TEST",
 	"HELLO_FGUI_PRESSURE_COUNT",
 	"HELLO_FGUI_PRESSURE_LIST_COUNT",
@@ -240,8 +258,17 @@ foreach ($item in $SelectedEnv.GetEnumerator()) {
 
 try {
 	if ($StopExisting) {
-		Get-Process -Name "HelloOgre3D" -ErrorAction SilentlyContinue | Stop-Process -Force
-		Start-Sleep -Seconds 1
+		$existingProcesses = @(Get-Process -Name "HelloOgre3D" -ErrorAction SilentlyContinue)
+		if ($existingProcesses.Count -gt 0) {
+			$existingProcesses | Stop-Process -Force
+			$existingProcesses | ForEach-Object {
+				try {
+					Wait-Process -Id $_.Id -Timeout 5 -ErrorAction SilentlyContinue
+				} catch {
+				}
+			}
+		}
+		Start-Sleep -Seconds 2
 	}
 
 	if ($Visible) {

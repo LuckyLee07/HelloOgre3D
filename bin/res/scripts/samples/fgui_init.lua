@@ -239,6 +239,18 @@ local function tryRunFairyGuiBusinessFlowSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiBusinessBenchmarkSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_BUSINESS_BENCHMARK_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(18, function()
+		print("[FGUI] business benchmark self test result:", FGUI_RunBusinessBenchmarkSelfTest())
+		FairyGuiManager:DumpPerfStats()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiResourcePolicySelfTest()
 	if not isEnvEnabled("HELLO_FGUI_RESOURCE_POLICY_SELF_TEST") then
 		return
@@ -247,6 +259,29 @@ local function tryRunFairyGuiResourcePolicySelfTest()
 	threadpool:delay(18, function()
 		print("[FGUI] resource policy self test result:", FGUI_RunResourcePolicySelfTest())
 		FairyGuiManager:DumpResourceRefs()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiResourceFallbackSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(19, function()
+		print("[FGUI] resource fallback self test result:", FGUI_RunResourceFallbackSelfTest())
+		FairyGuiManager:DumpResourceFallbacks()
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
+local function tryRunFairyGuiTextInputPolicySelfTest()
+	if not isEnvEnabled("HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(20, function()
+		print("[FGUI] text input policy self test result:", FGUI_RunTextInputPolicySelfTest())
 		FairyGuiManager:DumpHealth(true)
 	end)
 end
@@ -513,7 +548,10 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiEventPayloadSelfTest()
 		tryRunFairyGuiScreenAdaptSelfTest()
 		tryRunFairyGuiBusinessFlowSelfTest()
+		tryRunFairyGuiBusinessBenchmarkSelfTest()
 		tryRunFairyGuiResourcePolicySelfTest()
+		tryRunFairyGuiResourceFallbackSelfTest()
+		tryRunFairyGuiTextInputPolicySelfTest()
 		tryRunFairyGuiPressureSelfTest()
 		tryRunFairyGuiScreenAdaptDemo()
 		tryRunFairyGuiCommonServiceDemo()
@@ -702,12 +740,24 @@ function FGUI_DumpResourceWarnings()
 	return FairyGuiManager:DumpResourceWarnings()
 end
 
+function FGUI_DumpResourceFallbacks()
+	return FairyGuiManager:DumpResourceFallbacks()
+end
+
 function FGUI_Dump()
 	return FairyGuiManager:Dump()
 end
 
 function FGUI_ShowDebugPanel(param)
 	return FairyGuiManager:ShowDebugPanel(param)
+end
+
+function FGUI_DumpDebugTarget(target)
+	return FairyGuiManager:DumpDebugTarget(target)
+end
+
+function FGUI_CloseDebugTarget(target, forceDestroy)
+	return FairyGuiManager:CloseDebugTarget(target, forceDestroy)
 end
 
 function FGUI_HideDebugPanel(key)
@@ -749,20 +799,25 @@ function FGUI_RunDebugPanelSelfTest()
 		title = "Debug Panel Self Test",
 		autoRefresh = false,
 		lineCount = 18,
+		debugTarget = "Act38Test",
 	})
 	local refreshOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("__DebugPanelSelfTest") == true
-	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 18 })
+	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 24 })
 	local snapshot = FairyGuiManager:GetDebugPanelSnapshot({ maxPackages = 5, maxBindings = 6 })
+	local targetObjectInfo = FairyGuiManager:GetObjectInfo("Act38Test")
+	local packageKey = targetObjectInfo ~= nil and (targetObjectInfo.packageName or targetObjectInfo.packagePath) or nil
 	local hasTop = snapshot ~= nil and snapshot.topUI ~= nil
 	local hasLayer = snapshot ~= nil and type(snapshot.layerSummary) == "table" and #snapshot.layerSummary > 0
 	local hasPackage = snapshot ~= nil and type(snapshot.packageSummary) == "table" and #snapshot.packageSummary > 0
 	local hasEvent = snapshot ~= nil and snapshot.eventStats ~= nil and (snapshot.eventStats.total or 0) > 0
 	local hasBindings = snapshot ~= nil and type(snapshot.bindingSummary) == "table" and #snapshot.bindingSummary > 0
+	local hasFallbackSnapshot = snapshot ~= nil and type(snapshot.resourceFallbacks) == "table"
 	local hasLines = type(lines) == "table" and #lines >= 12
 	local hasRenderLine = false
 	local hasDrawLine = false
 	local hasStencilLine = false
 	local hasOpenLine = false
+	local hasFallbackLine = false
 	for _, line in ipairs(lines or {}) do
 		if string.find(line, "Render", 1, true) ~= nil then
 			hasRenderLine = true
@@ -776,6 +831,9 @@ function FGUI_RunDebugPanelSelfTest()
 		if string.find(line, "Open ", 1, true) ~= nil then
 			hasOpenLine = true
 		end
+		if string.find(line, "Fallbacks ", 1, true) ~= nil then
+			hasFallbackLine = true
+		end
 	end
 	local hasRenderDetail = snapshot ~= nil
 		and snapshot.render ~= nil
@@ -786,6 +844,10 @@ function FGUI_RunDebugPanelSelfTest()
 		and snapshot.render.cpuClipSourceTriangleCount ~= nil
 		and snapshot.render.stencilClipPolygonCount ~= nil
 		and snapshot.render.stencilBackend ~= nil
+	local dumpTargetOk = FairyGuiManager:DumpDebugTarget("Act38Test") == true
+	local dumpPackageOk = packageKey ~= nil and FairyGuiManager:DumpPackageRef(packageKey) == true
+	local closeTargetOk = FairyGuiManager:CloseDebugTarget("Act38Test", true) == true
+	local targetClosed = FairyGuiManager:GetObjectInfo("Act38Test") == nil
 
 	FairyGuiManager:HideDebugPanel("__DebugPanelSelfTest")
 	FairyGuiManager:Close("Act38Test", true, "debugPanelCleanup")
@@ -802,11 +864,17 @@ function FGUI_RunDebugPanelSelfTest()
 		"package=", hasPackage,
 		"event=", hasEvent,
 		"binding=", hasBindings,
+		"fallbackSnapshot=", hasFallbackSnapshot,
+		"fallbackLine=", hasFallbackLine,
 		"renderLine=", hasRenderLine,
 		"drawLine=", hasDrawLine,
 		"stencilLine=", hasStencilLine,
 		"renderDetail=", hasRenderDetail,
 		"openLine=", hasOpenLine,
+		"dumpTarget=", dumpTargetOk,
+		"dumpPackage=", dumpPackageOk,
+		"closeTarget=", closeTargetOk,
+		"targetClosed=", targetClosed,
 		"clean=", finalClean,
 		"openUI=", health.openUI,
 		"binding=", health.binding,
@@ -820,11 +888,17 @@ function FGUI_RunDebugPanelSelfTest()
 		and hasPackage == true
 		and hasEvent == true
 		and hasBindings == true
+		and hasFallbackSnapshot == true
+		and hasFallbackLine == true
 		and hasRenderLine == true
 		and hasDrawLine == true
 		and hasStencilLine == true
 		and hasRenderDetail == true
 		and hasOpenLine == true
+		and dumpTargetOk == true
+		and dumpPackageOk == true
+		and closeTargetOk == true
+		and targetClosed == true
 		and finalClean == true
 end
 
@@ -1446,8 +1520,17 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "BusinessFlow", function()
 		return FGUI_RunBusinessFlowSelfTest()
 	end)
+	schedule(0.6, "BusinessBenchmark", function()
+		return FGUI_RunBusinessBenchmarkSelfTest({ iterations = 2 })
+	end)
 	schedule(0.6, "ResourcePolicy", function()
 		return FGUI_RunResourcePolicySelfTest()
+	end)
+	schedule(0.6, "ResourceFallback", function()
+		return FGUI_RunResourceFallbackSelfTest()
+	end)
+	schedule(0.6, "TextInputPolicy", function()
+		return FGUI_RunTextInputPolicySelfTest()
 	end)
 	schedule(0.6, "Cleanup", function()
 		FairyGuiManager:Close("Act37TestMvc", true)
@@ -1462,6 +1545,7 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
 		FairyGuiManager:Close("ScreenAdaptMessage", true)
 		FairyGuiManager:Close("ScreenAdaptPopup", true)
+		FairyGuiManager:ClearResourceFallbacks()
 		if closeFairyGuiBusinessFlowObjects ~= nil then
 			closeFairyGuiBusinessFlowObjects("selfTestSuiteCleanup")
 		end
@@ -1950,6 +2034,208 @@ function FGUI_RunResourcePolicySelfTest()
 		and hide37 == true
 		and hide38 == true
 		and cacheWarningOk == true
+		and finalClean == true
+end
+
+function FGUI_RunResourceFallbackSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "resourceFallbackReset")
+	FairyGuiManager:Close("Act38Test", true, "resourceFallbackReset")
+	FairyGuiManager:ClearResourceFallbacks()
+	FairyGuiManager:UnloadPackageGroup("ResourceFallback", true)
+	local fallbackPolicy = FairyGuiManager:GetResourceFallbackPolicy()
+	FairyGuiManager:SetResourceFallbackPolicy({ recordMissingChild = true })
+
+	local packageFallback = FairyGuiManager:RecordResourceFallback("missingPackage", {
+		packagePath = "res/fuires/__missing_fgui_package__",
+		packageName = "__missing_fgui_package__",
+		uiName = "ResourceFallbackSelfTest",
+		group = "ResourceFallback",
+		scene = "ResourceFallback",
+	}, "self test simulated missing package")
+	local componentFallback = FairyGuiManager:RecordResourceFallback("missingComponent", {
+		packageName = "act_38_test",
+		objectName = "__MissingComponent__",
+		uiName = "ResourceFallbackSelfTest",
+		group = "ResourceFallback",
+		scene = "ResourceFallback",
+	}, "self test simulated missing component")
+
+	local ctrl = FGUI_OpenAct38Sample({
+		scene = "ResourceFallback",
+		group = "ResourceFallback",
+	})
+	local handle = ctrl ~= nil and ctrl:GetHandle() or nil
+	local missingChild = handle ~= nil and FairyGuiManager:GetChild(handle, "__missing_child__") or nil
+	local missingEvent = handle ~= nil and FairyGuiManager:AddClick(handle, "__missing_button__", function()
+	end) or nil
+
+	local fallbacks = FairyGuiManager:GetResourceFallbacks()
+	local kindCount = {}
+	for _, item in ipairs(fallbacks or {}) do
+		kindCount[item.kind] = (kindCount[item.kind] or 0) + 1
+	end
+	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 24 })
+	local hasFallbackLine = false
+	for _, line in ipairs(lines or {}) do
+		if string.find(line, "Fallbacks ", 1, true) ~= nil then
+			hasFallbackLine = true
+			break
+		end
+	end
+	local dumpCount = FairyGuiManager:DumpResourceFallbacks()
+
+	FairyGuiManager:Close("Act38Test", true, "resourceFallbackCleanup")
+	FairyGuiManager:UnloadPackageGroup("ResourceFallback", true)
+	FairyGuiManager:SetResourceFallbackPolicy(fallbackPolicy)
+	local finalClean, finalDetail = checkFairyGuiLongLoopClean("resource fallback final")
+	local ok = packageFallback ~= nil
+		and componentFallback ~= nil
+		and missingChild == nil
+		and missingEvent == nil
+		and (kindCount.missingPackage or 0) >= 1
+		and (kindCount.missingComponent or 0) >= 1
+		and (kindCount.missingChild or 0) >= 1
+		and (kindCount.missingEventTarget or 0) >= 1
+		and hasFallbackLine == true
+		and dumpCount >= 4
+		and finalClean == true
+
+	print(
+		"[FGUI] resource fallback self test detail:",
+		"missingPackage=", kindCount.missingPackage or 0,
+		"missingComponent=", kindCount.missingComponent or 0,
+		"missingChild=", kindCount.missingChild or 0,
+		"missingEventTarget=", kindCount.missingEventTarget or 0,
+		"fallbackLine=", hasFallbackLine,
+		"dump=", dumpCount,
+		finalDetail)
+	return ok
+end
+
+function FGUI_RunTextInputPolicySelfTest()
+	FairyGuiManager:Close("TextInputProbe", true, "textInputPolicyReset")
+
+	local handle, inputHandle = FGUI_OpenTextInputProbe({
+		textInputPolicy = {
+			inputType = "integer",
+			maxLength = 3,
+		},
+	})
+	local opened = handle ~= nil and inputHandle ~= nil
+	local policy = inputHandle ~= nil and FairyGuiManager:GetTextInputPolicy(inputHandle) or nil
+	local policyOk = policy ~= nil and policy.inputType == "integer" and tonumber(policy.maxLength) == 3
+	local setText = inputHandle ~= nil and FairyGuiManager:SetText(inputHandle, nil, "a1b2\228\184\1733") or false
+	local applied = inputHandle ~= nil and FairyGuiManager:ApplyTextInputPolicy(inputHandle, nil) or false
+	local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+	local cleared = inputHandle ~= nil and FairyGuiManager:SetTextInputPolicy(inputHandle, nil, nil) or false
+	local clearedPolicy = inputHandle ~= nil and FairyGuiManager:GetTextInputPolicy(inputHandle) or nil
+	local snapshot = FairyGuiManager:CaptureCloseSnapshot("TextInputProbe")
+	local closed = FairyGuiManager:Close("TextInputProbe", true, "textInputPolicyCleanup")
+	local clean = FairyGuiManager:ValidateClosedObject(snapshot, nil, "TextInputPolicySelfTest", true)
+
+	print(
+		"[FGUI] text input policy self test detail:",
+		"opened=", opened,
+		"policy=", policyOk,
+		"setText=", setText,
+		"applied=", applied,
+		"text=", text,
+		"cleared=", cleared,
+		"clearedPolicy=", clearedPolicy == nil,
+		"closed=", closed,
+		"clean=", clean)
+	return opened == true
+		and policyOk == true
+		and setText == true
+		and applied == true
+		and text == "123"
+		and cleared == true
+		and clearedPolicy == nil
+		and closed == true
+		and clean == true
+end
+
+function FGUI_RunBusinessBenchmarkSelfTest(config)
+	config = config or {}
+	local iterations = tonumber(config.iterations) or tonumber(os.getenv and os.getenv("HELLO_FGUI_BUSINESS_BENCHMARK_COUNT") or nil) or 3
+	iterations = math.max(1, math.min(tonumber(iterations) or 3, 20))
+
+	closeFairyGuiBusinessFlowObjects("businessBenchmarkReset")
+	FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkReset")
+	FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkReset")
+	FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
+
+	local perfBefore = FairyGuiManager:GetPerfStats()
+	local openBefore = perfBefore.open and perfBefore.open.count or 0
+	local passCount = 0
+	local failDetail = ""
+	for index = 1, iterations do
+		FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkIterationReset")
+		FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkIterationReset")
+		FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
+
+		local ctrl = FGUI_OpenAct38Sample({
+			key = "BusinessBenchmarkAct38",
+			scene = "BusinessBenchmark",
+			group = "BusinessBenchmark",
+			dateText = "Business Benchmark " .. tostring(index),
+		})
+		local listOk = ctrl ~= nil and ctrl.RunListApiSelfTest ~= nil and ctrl:RunListApiSelfTest() or false
+		local debugHandle = FairyGuiManager:ShowDebugPanel({
+			key = "BusinessBenchmarkDebug",
+			scene = "BusinessBenchmark",
+			title = "Business Benchmark",
+			autoRefresh = false,
+			lineCount = 16,
+			debugTarget = "BusinessBenchmarkAct38",
+		})
+		local debugOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("BusinessBenchmarkDebug") == true
+		local textHandle, inputHandle = FGUI_OpenTextInputProbe({
+			key = "BusinessBenchmarkTextInput",
+			scene = "BusinessBenchmark",
+			group = "BusinessBenchmark",
+			textInputPolicy = {
+				inputType = "integer",
+				maxLength = 4,
+			},
+		})
+		local textOk = false
+		if inputHandle ~= nil then
+			FairyGuiManager:SetText(inputHandle, nil, "A12B34")
+			FairyGuiManager:ApplyTextInputPolicy(inputHandle, nil)
+			textOk = FairyGuiManager:GetText(inputHandle) == "1234"
+		end
+		local iterationOk = ctrl ~= nil and listOk == true and debugOk == true and textHandle ~= nil and textOk == true
+		if iterationOk then
+			passCount = passCount + 1
+		else
+			failDetail = failDetail .. string.format("[#%s ctrl=%s list=%s debug=%s text=%s]", tostring(index), tostring(ctrl ~= nil), tostring(listOk), tostring(debugOk), tostring(textOk))
+		end
+
+		FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkIterationCleanup")
+		FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
+		FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkIterationCleanup")
+	end
+
+	FairyGuiManager:CloseScene("BusinessBenchmark", true)
+	FairyGuiManager:CloseGroup("BusinessBenchmark", true)
+	local perfAfter = FairyGuiManager:GetPerfStats()
+	local render = FairyGuiManager:GetRenderStats()
+	local finalClean, finalDetail = checkFairyGuiLongLoopClean("business benchmark final")
+	local perfOk = perfAfter.open ~= nil and perfAfter.open.count > openBefore
+
+	print(
+		"[FGUI] business benchmark self test detail:",
+		"pass=", passCount,
+		"/", iterations,
+		"perf=", perfOk,
+		"openCount=", perfAfter.open and perfAfter.open.count or 0,
+		"openAvgMs=", perfAfter.open and perfAfter.open.avgMs or 0,
+		"draw=", tostring(render.drawCommandCount) .. "/" .. tostring(render.drawTriangleCount),
+		"fail=", failDetail,
+		finalDetail)
+	return passCount == iterations
+		and perfOk == true
 		and finalClean == true
 end
 

@@ -675,6 +675,7 @@ function FairyGuiProfiler:GetDebugPanelSnapshot(options)
 	local render = self:GetRenderStats()
 	local eventStats = owner ~= nil and owner:GetEventStats() or { total = 0, events = {}, lastEvent = nil }
 	local warnings = owner ~= nil and owner:GetResourceWarnings() or {}
+	local fallbacks = owner ~= nil and owner:GetResourceFallbacks() or {}
 	local focusOwner = self:FindFocusOwner(health.focusedHandle)
 	local topUI = owner ~= nil and owner:GetTopStackObject(owner.uiStack or {}) or nil
 	local topPopup = owner ~= nil and owner:GetTopStackObject(owner.popupStack or {}) or nil
@@ -695,6 +696,7 @@ function FairyGuiProfiler:GetDebugPanelSnapshot(options)
 		render = render,
 		eventStats = eventStats,
 		resourceWarnings = warnings,
+		resourceFallbacks = fallbacks,
 		focusOwner = focusOwner,
 		topUI = topUI,
 		topPopup = topPopup,
@@ -783,7 +785,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),
 		string.format("Stencil backend=%s hw=%s cpuClip=%s/%s/%s mask=%s/%s", tostring(render.stencilBackend or "-"), tostring(render.hardwareStencilSupported == true and 1 or 0), tostring(render.cpuClipSourceTriangleCount), tostring(render.cpuClipOutputTriangleCount), tostring(render.cpuClipFragmentCount), tostring(render.stencilClipScopeCount), tostring(render.stencilClipPolygonCount)),
-		string.format("Stacks ui=%s popup=%s warnings=%s eventTotal=%s", tostring(owner ~= nil and #(owner.uiStack or {}) or 0), tostring(owner ~= nil and #(owner.popupStack or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(eventStats.total or 0)),
+		string.format("Stacks ui=%s popup=%s warnings=%s fallback=%s eventTotal=%s", tostring(owner ~= nil and #(owner.uiStack or {}) or 0), tostring(owner ~= nil and #(owner.popupStack or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(#(snapshot.resourceFallbacks or {})), tostring(eventStats.total or 0)),
 		string.format("Last event=%s root=%s sender=%s item=%s xy=%s,%s", lastEvent ~= nil and tostring(lastEvent.eventType) or "-", lastEvent ~= nil and tostring(lastEvent.rootHandle) or "-", lastEvent ~= nil and tostring(lastEvent.senderHandle) or "-", lastEvent ~= nil and tostring(lastEvent.itemHandle or "") or "-", lastEvent ~= nil and tostring(lastEvent.x or "") or "-", lastEvent ~= nil and tostring(lastEvent.y or "") or "-"),
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
 		string.format("Perf close %s avg/max=%s/%s", tostring(perf.close.count), formatMs(perf.close.avgMs), formatMs(perf.close.maxMs)),
@@ -829,6 +831,12 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 		pushLimited(warningBriefs, tostring(warning.kind) .. ":" .. tostring(warning.packageKey), options.maxWarningBriefs or 2)
 	end
 	table.insert(lines, clampText("Warnings " .. joinBriefs(warningBriefs, "none"), options.lineMaxLen or 96))
+
+	local fallbackBriefs = {}
+	for _, fallback in ipairs(snapshot.resourceFallbacks or {}) do
+		pushLimited(fallbackBriefs, tostring(fallback.kind) .. ":" .. tostring(fallback.uiName or fallback.packageName or fallback.packagePath or fallback.key or "?"), options.maxFallbackBriefs or 2)
+	end
+	table.insert(lines, clampText("Fallbacks " .. joinBriefs(fallbackBriefs, "none"), options.lineMaxLen or 96))
 
 	if not isBlank(render.materialDetail) then
 		table.insert(lines, clampText("Mat " .. render.materialDetail, options.lineMaxLen or 96))
@@ -949,18 +957,29 @@ function FairyGuiProfiler:ShowDebugPanel(param)
 	param.closeOnEscape = false
 	param.closeOnSceneChange = param.closeOnSceneChange == true
 	param.serviceType = "DebugPanel"
+	param.debugTarget = param.debugTarget or "topPopup"
 
 	local objectInfo = owner:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
 		return nil
 	end
 
+	objectInfo.debugPanelTarget = param.debugTarget
 	objectInfo.debugPanelBackgroundHandle = owner:AddServiceImage(objectInfo, "debug_panel_bg", param.background or "res/assets/act_38/_imgs/board_task.png", 0, 0, param.width, param.height, param.alpha or 0.92)
-	objectInfo.debugPanelTitleHandle = owner:AddServiceText(objectInfo, "debug_panel_title", param.title or "FGUI Debug", 18, 12, param.width - 88, 28, 20, 255, 236, 180)
+	objectInfo.debugPanelTitleHandle = owner:AddServiceText(objectInfo, "debug_panel_title", param.title or "FGUI Debug", 18, 12, param.width - 230, 28, 20, 255, 236, 180)
 	objectInfo.debugPanelLineHandles = {}
 	for index = 1, param.lineCount do
 		objectInfo.debugPanelLineHandles[index] = owner:AddServiceText(objectInfo, "debug_panel_line_" .. tostring(index), "", 18, 42 + (index - 1) * param.lineHeight, param.width - 36, param.lineHeight, 15, 210, 235, 255)
 	end
+	owner:AddServiceButton(objectInfo, "debug_panel_refresh", "R", param.width - 204, 10, 34, 30, function()
+		self:RefreshDebugPanel(param.key)
+	end)
+	owner:AddServiceButton(objectInfo, "debug_panel_dump", "D", param.width - 168, 10, 34, 30, function()
+		owner:DumpDebugTarget(objectInfo.debugPanelTarget or param.debugTarget)
+	end)
+	owner:AddServiceButton(objectInfo, "debug_panel_close_target", "C", param.width - 132, 10, 34, 30, function()
+		owner:CloseDebugTarget(objectInfo.debugPanelTarget or param.debugTarget, true)
+	end)
 	owner:AddServiceButton(objectInfo, "debug_panel_close", "X", param.width - 60, 10, 42, 30, function()
 		self:HideDebugPanel(param.key)
 	end)

@@ -291,6 +291,17 @@ function FairyGuiEvents:AddEvent(handle, childPath, eventType, callback)
 	end
 	if bindingId == nil or bindingId <= 0 then
 		self.callbacks[callbackId] = nil
+		local objectInfo = self:GetObjectInfo(handle)
+		self:RecordResourceFallback("missingEventTarget", {
+			handle = handle,
+			key = objectInfo ~= nil and objectInfo.key or nil,
+			uiName = objectInfo ~= nil and objectInfo.uiName or nil,
+			packageName = objectInfo ~= nil and objectInfo.packageName or nil,
+			packagePath = objectInfo ~= nil and objectInfo.packagePath or nil,
+			objectName = objectInfo ~= nil and objectInfo.objectName or nil,
+			childPath = childPath or "",
+			eventType = eventType,
+		}, "addFairyGuiEventListener returned empty binding")
 		return nil
 	end
 

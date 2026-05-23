@@ -179,7 +179,13 @@ function FairyGuiPackage:LoadPackage(packagePath, packageName, meta)
 	local loadedPackageName = GameManager:loadFairyGuiPackage(packagePath)
 	owner:RecordPerf("loadPackage", nowMs() - startMs, packagePath, not isBlank(loadedPackageName))
 	if isBlank(loadedPackageName) then
-		print("[FGUI] load package failed:", packagePath)
+		owner:RecordResourceFallback("missingPackage", {
+			packagePath = packagePath,
+			packageName = packageName,
+			uiName = meta ~= nil and meta.uiName or nil,
+			group = meta ~= nil and (meta.group or meta.packageGroup) or nil,
+			sceneName = meta ~= nil and (meta.scene or meta.sceneName) or nil,
+		}, "loadFairyGuiPackage returned empty")
 		return nil
 	end
 
@@ -365,7 +371,10 @@ function FairyGuiPackage:CreateObject(packageName, objectName)
 	local handle = GameManager:createFairyGuiObject(packageName, objectName)
 	owner:RecordPerf("createObject", nowMs() - startMs, tostring(packageName) .. "/" .. tostring(objectName), handle ~= nil and handle > 0)
 	if handle == nil or handle <= 0 then
-		print("[FGUI] create object failed:", packageName, objectName)
+		owner:RecordResourceFallback("missingComponent", {
+			packageName = packageName,
+			objectName = objectName,
+		}, "createFairyGuiObject returned empty handle")
 	end
 	return handle
 end
@@ -682,4 +691,31 @@ function FairyGuiPackage:DumpResourceWarnings()
 		print("[FGUI] ResourceWarning", warning.kind, "package=", warning.packageKey, warning.detail or "")
 	end
 	return #warnings == 0, warnings
+end
+
+function FairyGuiPackage:DumpPackageRef(packageKey)
+	local owner = self.owner
+	if owner == nil then
+		return false
+	end
+	local refsByPackage = self:GetPackageRefs()
+	local ref = refsByPackage[packageKey]
+	if ref == nil then
+		for key, value in pairs(refsByPackage) do
+			if value.packageName == packageKey or value.packagePath == packageKey then
+				ref = value
+				packageKey = key
+				break
+			end
+		end
+	end
+	if ref == nil then
+		print("[FGUI] DumpPackageRef missing:", tostring(packageKey))
+		return false
+	end
+	print("[FGUI] DumpPackageRef", tostring(packageKey), "path=", ref.packagePath, "refCount=", ref.refCount, "open=", ref.openCount, "hidden=", ref.hiddenCount, "cache=", ref.cacheCount, "stackRefs=", ref.stackCount, "groups=", table.concat(ref.groups or {}, ","), "tags=", table.concat(ref.tags or {}, ","), "scenes=", table.concat(ref.scenes or {}, ","))
+	for _, objectInfo in ipairs(ref.objects or {}) do
+		print("[FGUI] DumpPackageRefUI", tostring(packageKey), "key=", objectInfo.key, "handle=", objectInfo.handle, "uiName=", objectInfo.uiName, "object=", objectInfo.objectName, "layer=", objectInfo.layer, "scene=", objectInfo.sceneName)
+	end
+	return true
 end

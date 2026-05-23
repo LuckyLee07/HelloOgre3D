@@ -90,6 +90,20 @@ function BaseFairyGuiView:GetText(childPath)
 	return FairyGuiManager:GetText(self.handle, childPath)
 end
 
+function BaseFairyGuiView:SetTextInputPolicy(childPath, policy)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetTextInputPolicy(self.handle, childPath, policy)
+end
+
+function BaseFairyGuiView:GetTextInputPolicy(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetTextInputPolicy(self.handle, childPath)
+end
+
 function BaseFairyGuiView:Focus(childPath)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false

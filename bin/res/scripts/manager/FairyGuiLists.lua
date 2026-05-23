@@ -151,6 +151,19 @@ function FairyGuiLists:GetChild(handle, childPath)
 
 	local childHandle = GameManager:getFairyGuiChild(handle, childPath)
 	if childHandle == nil or childHandle <= 0 then
+		local policy = self.resourceFallbackPolicy or {}
+		if policy.recordMissingChild == true then
+			local objectInfo = self:GetObjectInfo(handle)
+			self:RecordResourceFallback("missingChild", {
+				handle = handle,
+				key = objectInfo ~= nil and objectInfo.key or nil,
+				uiName = objectInfo ~= nil and objectInfo.uiName or nil,
+				packageName = objectInfo ~= nil and objectInfo.packageName or nil,
+				packagePath = objectInfo ~= nil and objectInfo.packagePath or nil,
+				objectName = objectInfo ~= nil and objectInfo.objectName or nil,
+				childPath = childPath,
+			}, "getFairyGuiChild returned empty handle")
+		end
 		return nil
 	end
 

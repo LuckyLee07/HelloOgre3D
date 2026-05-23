@@ -28,26 +28,24 @@ if (-not (Test-Path -LiteralPath $ResolvedOutputDir)) {
 
 $env:HELLO_FGUI_PRESSURE_LIST_COUNT = [string]$ListCount
 try {
-	$selfTestArgs = @(
-		"-ExecutionPolicy", "Bypass",
-		"-File", $SelfTestScript,
-		"-Mode", "Pressure",
-		"-Count", [string]$Count,
-		"-PressurePopupCount", [string]$Count,
-		"-PressureListCount", [string]$ListCount,
-		"-Seconds", [string]$Seconds,
-		"-Tail", [string]$Tail,
-		"-StopExisting"
-	)
+	$selfTestArgs = @{
+		Mode = "Pressure"
+		Count = $Count
+		PressurePopupCount = $Count
+		PressureListCount = $ListCount
+		Seconds = $Seconds
+		Tail = $Tail
+		StopExisting = $true
+	}
 	if ($Visible) {
-		$selfTestArgs += "-Visible"
+		$selfTestArgs["Visible"] = $true
 	}
 	if ($KeepAlive) {
-		$selfTestArgs += "-KeepAlive"
+		$selfTestArgs["KeepAlive"] = $true
 	}
 
 	Write-Host "[FGUI] Tracy sample pressure count=$Count listCount=$ListCount seconds=$Seconds"
-	$output = & powershell @selfTestArgs 2>&1
+	$output = & $SelfTestScript @selfTestArgs 2>&1
 	$output | ForEach-Object { Write-Host $_ }
 
 	if ($NoReport) {

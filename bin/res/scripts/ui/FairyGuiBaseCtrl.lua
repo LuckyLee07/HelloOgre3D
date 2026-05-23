@@ -101,6 +101,14 @@ function FairyGuiBaseCtrl:GetText(childPath)
 	return self.view ~= nil and self.view:GetText(childPath) or ""
 end
 
+function FairyGuiBaseCtrl:SetTextInputPolicy(childPath, policy)
+	return self.view ~= nil and self.view:SetTextInputPolicy(childPath, policy) or false
+end
+
+function FairyGuiBaseCtrl:GetTextInputPolicy(childPath)
+	return self.view ~= nil and self.view:GetTextInputPolicy(childPath) or nil
+end
+
 function FairyGuiBaseCtrl:Focus(childPath)
 	return self.view ~= nil and self.view:Focus(childPath) or false
 end
