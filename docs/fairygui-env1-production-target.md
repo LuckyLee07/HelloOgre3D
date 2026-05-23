@@ -122,16 +122,16 @@ ctrl:RefreshGoods(goodsList)
 
 待补能力：
 
-- [ ] 当前打开 UI 列表、layer、sorting order、popup stack、modal mask。
-- [ ] 当前 focus 对象、输入命中对象、鼠标坐标、最近事件。
-- [ ] package refCount、preload、group/tag、cache UI。
-- [ ] handle 数量、event binding 数量、timer 数量、child cache 数量。
-- [ ] render stats、resource stats、service stats。
-- [ ] 支持刷新、关闭指定 UI、dump 指定 package 或 UI。
+- [~] 当前打开 UI 列表、layer、sorting order、popup stack、modal mask；当前已显示 open/hidden UI、layer baseOrder、UI/popup stack，modal mask 明细待补。
+- [x] 当前 focus 对象、输入命中对象、鼠标坐标、最近事件。
+- [x] package refCount、preload、group/tag、cache UI。
+- [x] handle 数量、event binding 数量、timer 数量、child cache 数量。
+- [x] render stats、resource stats、service stats。
+- [~] 支持刷新、关闭指定 UI、dump 指定 package 或 UI；当前已支持刷新/关闭 DebugPanel 和 snapshot API，交互式 dump 指令待补。
 
 验收建议：
 
-- [ ] DebugPanel 能辅助定位层级、输入、资源泄露和事件泄露问题。
+- [x] DebugPanel 能辅助定位层级、输入、资源泄露和事件泄露问题。
 
 ## P1：常用控件能力补齐
 

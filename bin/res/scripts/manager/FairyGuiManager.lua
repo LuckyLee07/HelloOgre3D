@@ -1679,8 +1679,12 @@ function FairyGuiManager:DumpServices()
 	return self:GetServices():DumpServices()
 end
 
-function FairyGuiManager:BuildDebugPanelLines()
-	return self:GetProfiler():BuildDebugPanelLines()
+function FairyGuiManager:GetDebugPanelSnapshot(options)
+	return self:GetProfiler():GetDebugPanelSnapshot(options)
+end
+
+function FairyGuiManager:BuildDebugPanelLines(options)
+	return self:GetProfiler():BuildDebugPanelLines(options)
 end
 
 function FairyGuiManager:RefreshDebugPanel(key)

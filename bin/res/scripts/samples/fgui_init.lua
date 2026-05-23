@@ -106,6 +106,17 @@ local function tryRunFairyGuiComplexControlsSelfTest()
 	end)
 end
 
+local function tryRunFairyGuiDebugPanelSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_DEBUG_PANEL_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] debug panel self test result:", FGUI_RunDebugPanelSelfTest())
+		FairyGuiManager:DumpHealth(true)
+	end)
+end
+
 local function tryRunFairyGuiLifecycleSelfTest()
 	if not isEnvEnabled("HELLO_FGUI_LIFECYCLE_SELF_TEST") then
 		return
@@ -464,6 +475,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiTextInputSelfTest()
 		tryRunFairyGuiImeSelfTest()
 		tryRunFairyGuiComplexControlsSelfTest()
+		tryRunFairyGuiDebugPanelSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCacheSelfTest()
 		tryRunFairyGuiCommonServiceSelfTest()
@@ -628,6 +640,81 @@ end
 
 function FGUI_RefreshDebugPanel(key)
 	return FairyGuiManager:RefreshDebugPanel(key)
+end
+
+function FGUI_RunDebugPanelSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "debugPanelReset")
+	FairyGuiManager:Close("Act38Test", true, "debugPanelReset")
+	FairyGuiManager:HideDebugPanel("__DebugPanelSelfTest")
+	local ctrl = FGUI_OpenAct38Sample({
+		scene = "DebugPanelSelfTest",
+		group = "DebugPanelSelfTest",
+	})
+	if ctrl == nil then
+		return false
+	end
+
+	local wheelOk = FairyGuiManager:DebugInjectMouseWheel(745, 485, -120)
+	local debugHandle = FairyGuiManager:ShowDebugPanel({
+		key = "__DebugPanelSelfTest",
+		scene = "DebugPanelSelfTest",
+		title = "Debug Panel Self Test",
+		autoRefresh = false,
+		lineCount = 16,
+	})
+	local refreshOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("__DebugPanelSelfTest") == true
+	local lines = FairyGuiManager:BuildDebugPanelLines({ lineCount = 16 })
+	local snapshot = FairyGuiManager:GetDebugPanelSnapshot({ maxPackages = 5, maxBindings = 6 })
+	local hasTop = snapshot ~= nil and snapshot.topUI ~= nil
+	local hasLayer = snapshot ~= nil and type(snapshot.layerSummary) == "table" and #snapshot.layerSummary > 0
+	local hasPackage = snapshot ~= nil and type(snapshot.packageSummary) == "table" and #snapshot.packageSummary > 0
+	local hasEvent = snapshot ~= nil and snapshot.eventStats ~= nil and (snapshot.eventStats.total or 0) > 0
+	local hasBindings = snapshot ~= nil and type(snapshot.bindingSummary) == "table" and #snapshot.bindingSummary > 0
+	local hasLines = type(lines) == "table" and #lines >= 12
+	local hasRenderLine = false
+	local hasOpenLine = false
+	for _, line in ipairs(lines or {}) do
+		if string.find(line, "Render", 1, true) ~= nil then
+			hasRenderLine = true
+		end
+		if string.find(line, "Open ", 1, true) ~= nil then
+			hasOpenLine = true
+		end
+	end
+
+	FairyGuiManager:HideDebugPanel("__DebugPanelSelfTest")
+	FairyGuiManager:Close("Act38Test", true, "debugPanelCleanup")
+	local health = FairyGuiManager:GetHealthStats()
+	local finalClean = health.openUI == 0 and health.binding == 0 and health.timer == 0
+	print(
+		"[FGUI] debug panel self test detail:",
+		"debug=", debugHandle,
+		"refresh=", refreshOk,
+		"wheel=", wheelOk,
+		"lines=", hasLines, #lines,
+		"top=", hasTop,
+		"layer=", hasLayer,
+		"package=", hasPackage,
+		"event=", hasEvent,
+		"binding=", hasBindings,
+		"renderLine=", hasRenderLine,
+		"openLine=", hasOpenLine,
+		"clean=", finalClean,
+		"openUI=", health.openUI,
+		"binding=", health.binding,
+		"timer=", health.timer)
+	return debugHandle ~= nil
+		and refreshOk == true
+		and wheelOk == true
+		and hasLines == true
+		and hasTop == true
+		and hasLayer == true
+		and hasPackage == true
+		and hasEvent == true
+		and hasBindings == true
+		and hasRenderLine == true
+		and hasOpenLine == true
+		and finalClean == true
 end
 
 function FGUI_ShowToast(text, duration)
@@ -1109,6 +1196,9 @@ function FGUI_RunSelfTestSuite()
 	end)
 	schedule(0.6, "ComplexControls", function()
 		return FGUI_RunComplexControlsSelfTest()
+	end)
+	schedule(0.6, "DebugPanel", function()
+		return FGUI_RunDebugPanelSelfTest()
 	end)
 	schedule(0.6, "MouseWheel", function()
 		local ctrl = FairyGuiManager:GetController("Act38Test") or FGUI_OpenAct38Sample()

@@ -1,6 +1,7 @@
 param(
 	[ValidateSet(
 		"DebugPanel",
+		"DebugPanelSelfTest",
 		"LongLoop",
 		"All",
 		"Input",
@@ -64,6 +65,7 @@ function Get-DefaultWaitSeconds {
 		"All" { return [Math]::Max(42, 28 + $LoopCount * 4) }
 		"LongLoop" { return [Math]::Max(28, 18 + $LoopCount * 4) }
 		"DebugPanel" { return 24 }
+		"DebugPanelSelfTest" { return 32 }
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
 		"BusinessFlow" { return 32 }
@@ -87,6 +89,7 @@ function Get-FairyGuiEnv {
 	$values = [ordered]@{}
 	switch ($SelfTestMode) {
 		"DebugPanel" { $values["HELLO_FGUI_DEBUG_PANEL_DEMO"] = "1" }
+		"DebugPanelSelfTest" { $values["HELLO_FGUI_DEBUG_PANEL_SELF_TEST"] = "1" }
 		"LongLoop" {
 			$values["HELLO_FGUI_LONG_LOOP_SELF_TEST"] = "1"
 			$values["HELLO_FGUI_LONG_LOOP_COUNT"] = [string]$LoopCount
@@ -135,6 +138,7 @@ function Get-FairyGuiEnv {
 $KnownEnvNames = @(
 	"HELLO_FGUI_SKIP_SANDBOX_SCENE",
 	"HELLO_FGUI_DEBUG_PANEL_DEMO",
+	"HELLO_FGUI_DEBUG_PANEL_SELF_TEST",
 	"HELLO_FGUI_LONG_LOOP_SELF_TEST",
 	"HELLO_FGUI_LONG_LOOP_COUNT",
 	"HELLO_FGUI_SELF_TEST_ALL",

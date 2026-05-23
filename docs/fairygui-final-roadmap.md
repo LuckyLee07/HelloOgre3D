@@ -166,7 +166,7 @@ runtime/ui/fairygui/FairyGuiSystem
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
 - Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补矩形高亮和点击穿透，后续补资源化样式。
 - 屏幕适配已有第一版统一布局规则：居中弹窗、贴边 popup、Toast/Loading 文案区域和设计坐标 GuideMask 会在 resize 后重算；可用 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 与 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 验证。
-- package 预加载、场景级清理和资源泄漏 Dump 仍需继续补；调试面板已有第一版 Health/Perf 可视化。
+- package 预加载、场景级清理和资源泄漏 Dump 仍需继续补；调试面板已升级为 DebugPanel snapshot，可显示 UI/layer/binding/package/event/resource/render/perf/service 概要。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。
 
 下一轮优先级建议：
@@ -290,7 +290,7 @@ MiniUIManager 中值得借鉴的能力：
    - `DumpOpenUIs / DumpPackages / DumpBindings`
    - UI 打开关闭日志开关。
    - Tracy zone 覆盖 `Open / Close / LoadPackage / CreateObject / DispatchEvent / Render`。
-   - 可选调试面板显示当前打开 UI、layer、绑定事件数、package 引用数。（已接第一版 Health/Perf 面板）
+   - 可选调试面板显示当前打开 UI、layer、绑定事件数、package 引用数。（已升级为 snapshot 面板，并接入 DebugPanelSelfTest）
 
 9. 屏幕适配
    - root resize 后自动通知打开的 UI。
