@@ -39,6 +39,19 @@
 - Blocked in this desktop session: hidden or nested PowerShell launches later hit Ogre D3D9 `Cannot create device`, so the Tracy wrapper could not complete a fresh hidden-mode report after the visible pass.
 - Static script note: `tools/check_fgui_static.ps1` could not run here because `luac` is not available on PATH.
 
+## 2026-05-23 P0 Closure
+
+- IME input closure:
+  - Native IME composition is cancelled when FGUI text input focus is cleared or the debug clear API is called.
+  - Candidate/composition window coordinates are clamped to the FGUI client bounds before being passed to the Windows IME APIs.
+  - `HELLO_FGUI_IME_SELF_TEST=1` now covers commit plus active-composition clear/end state.
+  - DebugPanel Health now includes an `IME active/cand/focus/update/commit/end/pos` line and `DebugPanelSelfTest` asserts that the IME snapshot and line exist.
+
+- Tracy pressure closure:
+  - `tools/run_fgui_tracy_sample.ps1` now writes visible-mode suffixes, command metadata, and PASS/CHECK_LOG result status into the generated report.
+  - Passed: `tools/run_fgui_tracy_sample.ps1 -Count 2 -ListCount 20 -Seconds 45 -Tail 140 -Visible`.
+  - Recorded visible pressure extract: `docs/perf/fgui-tracy-sample-20260523-213540-visible.md`.
+
 ## Remaining High Priority
 
 - True GPU stencil pixel-level parity remains; shape-aware CPU stencil clipping now covers GraphMaskProbe and NestedGraphMaskProbe, with backend and CPU load visible in Dump/DebugPanel logs.

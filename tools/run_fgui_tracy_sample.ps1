@@ -53,15 +53,37 @@ try {
 	}
 
 	$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-	$reportPath = Join-Path $ResolvedOutputDir "fgui-tracy-sample-$timestamp.md"
-	$interesting = @($output | Select-String -Pattern "pressure stats|RenderFrameDetail|RenderStats|PerfStat|Health|OGRE EXCEPTION|PANIC|self test result:\s*false")
+	$reportSuffix = ""
+	if ($Visible) {
+		$reportSuffix = "-visible"
+	}
+	$reportPath = Join-Path $ResolvedOutputDir "fgui-tracy-sample-$timestamp$reportSuffix.md"
+	$outputText = $output -join "`n"
+	$passed = $outputText -match "pressure self test result:\s*true" -and $outputText -notmatch "OGRE EXCEPTION|PANIC|self test result:\s*false|self test case:.*FAIL"
+	$resultText = if ($passed) { "PASS" } else { "CHECK_LOG" }
+	$runMode = if ($Visible) { "visible window" } else { "hidden window" }
+	$commandLine = "tools\run_fgui_tracy_sample.ps1 -Count $Count -ListCount $ListCount -Seconds $Seconds -Tail $Tail"
+	if ($Visible) {
+		$commandLine = "$commandLine -Visible"
+	}
+	if ($KeepAlive) {
+		$commandLine = "$commandLine -KeepAlive"
+	}
+	$interesting = @($output | Select-String -Pattern "pressure stats|pressure case|pressure self test end|pressure self test result|RenderFrameDetail|RenderStats|PerfStat|Health|OGRE EXCEPTION|PANIC|self test result:\s*false")
 	$lines = New-Object System.Collections.Generic.List[string]
-	$lines.Add("# FGUI Tracy Sample $timestamp")
+	$title = "FGUI Tracy Sample $timestamp"
+	if ($Visible) {
+		$title = "$title Visible"
+	}
+	$lines.Add("# $title")
 	$lines.Add("")
 	$lines.Add("- Mode: Pressure")
 	$lines.Add("- Count: $Count")
 	$lines.Add("- ListCount: $ListCount")
 	$lines.Add("- Seconds: $Seconds")
+	$lines.Add("- Run mode: $runMode")
+	$lines.Add("- Result: $resultText")
+	$lines.Add("- Command: ``$commandLine``")
 	$lines.Add("- Tracy viewer: tools\tracy-viewer")
 	$lines.Add("")
 	$lines.Add("## Extract")

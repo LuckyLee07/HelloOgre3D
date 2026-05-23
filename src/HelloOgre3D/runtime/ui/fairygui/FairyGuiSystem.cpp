@@ -602,6 +602,16 @@ namespace
 		return scale > 1.0f ? static_cast<int>(static_cast<float>(value) * scale + 0.5f) : value;
 	}
 
+	int ClampClientCoordinate(float value, unsigned int logicalPixels)
+	{
+		if (logicalPixels == 0)
+			return static_cast<int>(value >= 0.0f ? value + 0.5f : value - 0.5f);
+
+		const float maxValue = static_cast<float>(logicalPixels - 1);
+		const float clamped = std::max(0.0f, std::min(maxValue, value));
+		return static_cast<int>(clamped + 0.5f);
+	}
+
 	std::string DescribeObject(fairygui::GObject* object)
 	{
 		if (object == nullptr)
@@ -1796,6 +1806,7 @@ bool FairyGuiSystem::ClearObjectHandleFocus()
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input != nullptr)
 		input->dispatchEvent(fairygui::UIEventType::Exit);
+	CancelNativeImeComposition();
 	m_focusedObjectHandle = 0;
 	EndImeComposition(true);
 	return true;
@@ -2512,6 +2523,7 @@ bool FairyGuiSystem::InjectImeCommitText(const std::string& text)
 
 bool FairyGuiSystem::ClearImeCompositionText()
 {
+	CancelNativeImeComposition();
 	EndImeComposition(true);
 	return true;
 }
@@ -2549,7 +2561,16 @@ void FairyGuiSystem::InstallNativeImeHook()
 
 	WNDPROC currentProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hwnd, GWLP_WNDPROC));
 	if (currentProc == FairyGuiNativeImeWndProc)
+	{
+		std::map<HWND, WNDPROC>::iterator procIt = g_nativeImePreviousWndProcByWindow.find(hwnd);
+		if (procIt == g_nativeImePreviousWndProcByWindow.end() || procIt->second == nullptr)
+			return;
+		m_nativeWindowHandle = hwnd;
+		m_previousWindowProc = reinterpret_cast<void*>(procIt->second);
+		g_nativeImeSystemsByWindow[hwnd] = this;
+		m_nativeImeHookInstalled = true;
 		return;
+	}
 
 	m_nativeWindowHandle = hwnd;
 	m_previousWindowProc = reinterpret_cast<void*>(currentProc);
@@ -2567,12 +2588,22 @@ void FairyGuiSystem::RemoveNativeImeHook()
 		return;
 
 	HWND hwnd = m_nativeWindowHandle;
+	std::map<HWND, FairyGuiSystem*>::iterator systemIt = g_nativeImeSystemsByWindow.find(hwnd);
+	if (systemIt != g_nativeImeSystemsByWindow.end() && systemIt->second != this)
+	{
+		m_nativeWindowHandle = nullptr;
+		m_previousWindowProc = nullptr;
+		m_nativeImeHookInstalled = false;
+		return;
+	}
+
 	std::map<HWND, WNDPROC>::iterator procIt = g_nativeImePreviousWndProcByWindow.find(hwnd);
 	const LONG_PTR currentProc = GetWindowLongPtr(hwnd, GWLP_WNDPROC);
 	if (procIt != g_nativeImePreviousWndProcByWindow.end() && currentProc == reinterpret_cast<LONG_PTR>(FairyGuiNativeImeWndProc))
 		SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(procIt->second));
 
-	g_nativeImeSystemsByWindow.erase(hwnd);
+	if (systemIt != g_nativeImeSystemsByWindow.end())
+		g_nativeImeSystemsByWindow.erase(systemIt);
 	g_nativeImePreviousWndProcByWindow.erase(hwnd);
 	m_nativeWindowHandle = nullptr;
 	m_previousWindowProc = nullptr;
@@ -2673,6 +2704,22 @@ bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long 
 #endif
 }
 
+void FairyGuiSystem::CancelNativeImeComposition()
+{
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	if (m_nativeWindowHandle == nullptr)
+		return;
+	if (!m_imeStats.compositionActive && m_imeStats.compositionText.empty() && !m_imeStats.candidateOpen)
+		return;
+
+	HIMC context = ImmGetContext(m_nativeWindowHandle);
+	if (context == nullptr)
+		return;
+	ImmNotifyIME(context, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+	ImmReleaseContext(m_nativeWindowHandle, context);
+#endif
+}
+
 void FairyGuiSystem::UpdateNativeImeCandidatePosition()
 {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -2688,8 +2735,9 @@ void FairyGuiSystem::UpdateNativeImeCandidatePosition()
 		return;
 
 	const cocos2d::Rect bounds = input->localToGlobal(cocos2d::Rect(cocos2d::Vec2::ZERO, input->getSize()));
-	const int rawX = ToRawInputX(static_cast<int>(bounds.origin.x));
-	const int rawY = ToRawInputY(static_cast<int>(m_screenHeight > 0 ? m_screenHeight - bounds.origin.y : bounds.origin.y));
+	const float candidateY = m_screenHeight > 0 ? static_cast<float>(m_screenHeight) - bounds.getMinY() : bounds.getMinY();
+	const int rawX = ToRawInputX(ClampClientCoordinate(bounds.getMinX(), m_screenWidth));
+	const int rawY = ToRawInputY(ClampClientCoordinate(candidateY, m_screenHeight));
 	m_imeStats.focusedHandle = m_focusedObjectHandle;
 	m_imeStats.compositionX = rawX;
 	m_imeStats.compositionY = rawY;

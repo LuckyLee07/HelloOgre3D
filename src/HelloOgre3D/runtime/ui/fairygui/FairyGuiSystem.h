@@ -298,6 +298,7 @@ private:
 	void InstallNativeImeHook();
 	void RemoveNativeImeHook();
 	void UpdateNativeImeCandidatePosition();
+	void CancelNativeImeComposition();
 	void EndImeComposition(bool countEnd);
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;

@@ -172,8 +172,8 @@ runtime/ui/fairygui/FairyGuiSystem
 下一轮优先级建议：
 
 1. 渲染裁剪与遮罩：当前已完成第一版矩形 scissor 裁剪和 stencil 状态桥接。`cocos-lite` 会维护 scissor enabled/rect，且每帧会重置 renderer 的裁剪状态；`StencilStateManager` 会把 `write/test/restore`、嵌套深度和倒置标记透传给 `Renderer`；`FairyGuiSystem` 会在 `CustomCommand` 后同步状态，并在写入 Ogre `ManualObject` 前对三角形做 CPU 裁剪。复杂 UI 的 `ScrollPane / List` 已具备基础越界裁剪能力；普通/倒置 mask 当前会记录 stencil 图形实际三角形，并按多边形做形状感知 CPU 裁剪。已新增 `FGUI_OpenMaskProbe()` / `FGUI_OpenGraphMaskProbe()` / `FGUI_OpenNestedGraphMaskProbe()` / `HELLO_FGUI_MASK_SELF_TEST=1`，用于打开真实 `GComponent::setMask()` 的普通、倒置、GGraph 和嵌套 mask 可视化样例；`DrawNode` 已具备 rect、regular polygon、line/circle/polygon 的最小三角绘制链路。当前 stencil backend 明确为 `shapeCpu`，Dump/DebugPanel/Pressure 日志已可观测硬件 stencil 支持、CPU clip 输入/输出三角、fragment 和 stencil scope/polygon；后续真正 GPU stencil 需要 custom Renderable 或替换 ManualObject section，才能逐 renderable 设置/恢复 `RenderSystem` stencil 状态。
-2. 输入补齐：鼠标点击、滚轮、键盘、文本输入 caret、Tab 焦点和 IME commit 第一版已验证；下一步补 Windows 原生组合态/候选窗和更细的焦点状态，保证 `GTextInput`、滚动列表、快捷键关闭等交互可用。
-3. 资源与性能观测：package refCount、material/texture 数量、texture 尺寸、render/draw command 数、triangle 数、clip/stencil/custom command、CPU clip/stencil backend、材质/纹理切换、max batch 和事件分发次数已接入 Dump / DebugPanel / Pressure 日志，C++ FGUI update/render/load/create/event/frame counters 已接入 Tracy，Lua Open/Close/Event/LoadPackage/CreateObject 轻量耗时已接入 Dump；后续补 Tracy viewer 实测记录。
+2. 输入补齐：鼠标点击、滚轮、键盘、文本输入 caret、Tab 焦点、IME commit、Windows 原生组合态统计、候选窗定位和组合态清理已验证，`GTextInput`、滚动列表、快捷键关闭等交互具备第一版可用闭环。
+3. 资源与性能观测：package refCount、material/texture 数量、texture 尺寸、render/draw command 数、triangle 数、clip/stencil/custom command、CPU clip/stencil backend、材质/纹理切换、max batch 和事件分发次数已接入 Dump / DebugPanel / Pressure 日志，C++ FGUI update/render/load/create/event/frame counters 已接入 Tracy，Lua Open/Close/Event/LoadPackage/CreateObject 轻量耗时已接入 Dump，visible pressure 实测报告已归档。
 4. 通用控件能力：补 `Progress / Slider / ComboBox / Transition` 等常用接口，再用一个更接近业务的页面组合做验收。
 
 ## 3. MiniUIManager 参考清单与当前缺口

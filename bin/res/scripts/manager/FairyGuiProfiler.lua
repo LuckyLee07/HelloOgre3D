@@ -43,6 +43,48 @@ local function clampText(value, maxLen)
 	return string.sub(value, 1, maxLen - 3) .. "..."
 end
 
+local function parseImeDebugString(debugText)
+	debugText = tostring(debugText or "")
+	local values = {}
+	for key, value in string.gmatch(debugText, "([%w]+)=\"([^\"]*)\"") do
+		values[key] = value
+	end
+	for key, value in string.gmatch(debugText, "([%w]+)=([^%s\"]+)") do
+		if values[key] == nil then
+			values[key] = value
+		end
+	end
+
+	return {
+		raw = debugText,
+		available = debugText ~= "",
+		active = tonumber(values.active) == 1,
+		candidate = tonumber(values.candidate) == 1,
+		focus = tonumber(values.focus) or 0,
+		compUpdates = tonumber(values.compUpdates) or 0,
+		commits = tonumber(values.commits) or 0,
+		ends = tonumber(values.ends) or 0,
+		candOpen = tonumber(values.candOpen) or 0,
+		candClose = tonumber(values.candClose) or 0,
+		candChange = tonumber(values.candChange) or 0,
+		candCount = tonumber(values.candCount) or 0,
+		candSelection = tonumber(values.candSelection) or -1,
+		pos = values.pos or "",
+		comp = values.comp or "",
+		commit = values.commit or "",
+	}
+end
+
+local function getImeStats(owner)
+	if owner ~= nil and owner.GetImeDebugString ~= nil then
+		return parseImeDebugString(owner:GetImeDebugString())
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiImeDebugString ~= nil then
+		return parseImeDebugString(GameManager:getFairyGuiImeDebugString())
+	end
+	return parseImeDebugString("")
+end
+
 local function joinBriefs(values, emptyText)
 	if type(values) ~= "table" or #values <= 0 then
 		return emptyText or "-"
@@ -406,6 +448,7 @@ function FairyGuiProfiler:GetDebugStats()
 			childUI = 0,
 			view = 0,
 			controller = 0,
+			ime = getImeStats(nil),
 		}
 	end
 
@@ -440,12 +483,13 @@ function FairyGuiProfiler:GetDebugStats()
 		childUI = childUICount,
 		view = tableCount(owner.views),
 		controller = tableCount(owner.controllers),
+		ime = getImeStats(owner),
 	}
 end
 
 function FairyGuiProfiler:DumpDebugStats()
 	local stats = self:GetDebugStats()
-	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller)
+	print("[FGUI] DebugStats openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller, "ime=", stats.ime ~= nil and stats.ime.raw or "")
 end
 
 function FairyGuiProfiler:PublishTracyCounters(healthStats, serviceMeta)
@@ -492,6 +536,7 @@ function FairyGuiProfiler:GetHealthStats()
 		childUI = debugStats.childUI,
 		view = debugStats.view,
 		controller = debugStats.controller,
+		ime = debugStats.ime or getImeStats(owner),
 		focusedHandle = owner ~= nil and owner.GetFocusedHandle ~= nil and owner:GetFocusedHandle() or nil,
 		commandCount = renderStats.commandCount,
 		triangleCount = renderStats.triangleCount,
@@ -785,9 +830,11 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 	local render = snapshot.render
 	local eventStats = snapshot.eventStats or { total = 0, events = {}, lastEvent = nil }
 	local lastEvent = eventStats.lastEvent
+	local ime = health.ime or {}
 	local lines = {
 		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
 		string.format("Top ui=%s popup=%s focus=%s owner=%s", objectBrief(owner, snapshot.topUI), objectBrief(owner, snapshot.topPopup), tostring(health.focusedHandle or 0), snapshot.focusOwner ~= nil and tostring(snapshot.focusOwner.key or snapshot.focusOwner.uiName or "") or "-"),
+		string.format("IME active=%s cand=%s focus=%s upd/commit/end=%s/%s/%s cand=%s/%s/%s pos=%s", tostring(ime.active == true and 1 or 0), tostring(ime.candidate == true and 1 or 0), tostring(ime.focus or 0), tostring(ime.compUpdates or 0), tostring(ime.commits or 0), tostring(ime.ends or 0), tostring(ime.candOpen or 0), tostring(ime.candClose or 0), tostring(ime.candChange or 0), tostring(ime.pos or "-")),
 		string.format("Life binding=%s timer=%s thread=%s child=%s/%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.childUI), tostring(health.controller), tostring(health.view)),
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),

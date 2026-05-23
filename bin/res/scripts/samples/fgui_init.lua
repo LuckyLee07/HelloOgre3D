@@ -93,11 +93,12 @@ local function tryRunFairyGuiImeSelfTest()
 		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		local commitDebug = FairyGuiManager:GetImeDebugString()
+		local composeClear = FairyGuiManager:DebugInjectImeCompositionText("qing")
 		local clear = FairyGuiManager:DebugClearImeComposition()
 		local clearDebug = FairyGuiManager:GetImeDebugString()
 		local composeOk = compose == true and composeText == "" and string.find(composeDebug, "active=1", 1, true) ~= nil
-		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=1", 1, true) ~= nil
-		local clearOk = clear == true and string.find(clearDebug, "active=0", 1, true) ~= nil
+		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=1", 1, true) ~= nil and string.find(commitDebug, "active=0", 1, true) ~= nil
+		local clearOk = composeClear == true and clear == true and string.find(clearDebug, "active=0", 1, true) ~= nil and string.find(clearDebug, "ends=1", 1, true) ~= nil
 		print("[FGUI] ime self test result:", handle ~= nil, inputHandle, focused, composeOk, commitOk, clearOk, text, composeDebug, commitDebug, clearDebug)
 		FairyGuiManager:Close("TextInputProbe", true)
 	end)
@@ -947,13 +948,18 @@ function FGUI_RunDebugPanelSelfTest()
 	local hasEvent = snapshot ~= nil and snapshot.eventStats ~= nil and (snapshot.eventStats.total or 0) > 0
 	local hasBindings = snapshot ~= nil and type(snapshot.bindingSummary) == "table" and #snapshot.bindingSummary > 0
 	local hasFallbackSnapshot = snapshot ~= nil and type(snapshot.resourceFallbacks) == "table"
+	local hasImeSnapshot = snapshot ~= nil and snapshot.health ~= nil and snapshot.health.ime ~= nil and snapshot.health.ime.raw ~= nil
 	local hasLines = type(lines) == "table" and #lines >= 12
+	local hasImeLine = false
 	local hasRenderLine = false
 	local hasDrawLine = false
 	local hasStencilLine = false
 	local hasOpenLine = false
 	local hasFallbackLine = false
 	for _, line in ipairs(lines or {}) do
+		if string.find(line, "IME ", 1, true) ~= nil then
+			hasImeLine = true
+		end
 		if string.find(line, "Render", 1, true) ~= nil then
 			hasRenderLine = true
 		end
@@ -1000,6 +1006,8 @@ function FGUI_RunDebugPanelSelfTest()
 		"event=", hasEvent,
 		"binding=", hasBindings,
 		"fallbackSnapshot=", hasFallbackSnapshot,
+		"imeSnapshot=", hasImeSnapshot,
+		"imeLine=", hasImeLine,
 		"fallbackLine=", hasFallbackLine,
 		"renderLine=", hasRenderLine,
 		"drawLine=", hasDrawLine,
@@ -1024,6 +1032,8 @@ function FGUI_RunDebugPanelSelfTest()
 		and hasEvent == true
 		and hasBindings == true
 		and hasFallbackSnapshot == true
+		and hasImeSnapshot == true
+		and hasImeLine == true
 		and hasFallbackLine == true
 		and hasRenderLine == true
 		and hasDrawLine == true
@@ -1602,11 +1612,14 @@ function FGUI_RunSelfTestSuite()
 		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		local commitDebug = FairyGuiManager:GetImeDebugString()
+		local composeClear = FairyGuiManager:DebugInjectImeCompositionText("qing")
 		local clear = FairyGuiManager:DebugClearImeComposition()
+		local clearDebug = FairyGuiManager:GetImeDebugString()
 		FairyGuiManager:Close("TextInputProbe", true)
 		local composeOk = compose == true and composeText == "" and string.find(composeDebug, "active=1", 1, true) ~= nil
-		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=", 1, true) ~= nil
-		return handle ~= nil and focused and composeOk and commitOk and clear == true, text
+		local commitOk = commit == true and text == "\228\184\173" and string.find(commitDebug, "commits=", 1, true) ~= nil and string.find(commitDebug, "active=0", 1, true) ~= nil
+		local clearOk = composeClear == true and clear == true and string.find(clearDebug, "active=0", 1, true) ~= nil and string.find(clearDebug, "ends=", 1, true) ~= nil
+		return handle ~= nil and focused and composeOk and commitOk and clearOk, text
 	end)
 	schedule(0.6, "LayerClose", function()
 		return FGUI_RunLayerCloseSelfTest()
