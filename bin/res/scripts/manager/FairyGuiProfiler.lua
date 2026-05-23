@@ -56,6 +56,8 @@ function FairyGuiProfiler:GetRenderStats()
 	local textureAliasCount = 0
 	local runtimeObjectHandle = 0
 	local runtimeBinding = 0
+	local materialDetail = ""
+	local textureDetail = ""
 	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
 		commandCount = GameManager:getFairyGuiLastRenderCommandCount()
 	end
@@ -80,6 +82,12 @@ function FairyGuiProfiler:GetRenderStats()
 	if GameManager ~= nil and GameManager.getFairyGuiRuntimeListenerBindingCount ~= nil then
 		runtimeBinding = GameManager:getFairyGuiRuntimeListenerBindingCount()
 	end
+	if GameManager ~= nil and GameManager.getFairyGuiMaterialDetailString ~= nil then
+		materialDetail = GameManager:getFairyGuiMaterialDetailString() or ""
+	end
+	if GameManager ~= nil and GameManager.getFairyGuiTextureDetailString ~= nil then
+		textureDetail = GameManager:getFairyGuiTextureDetailString() or ""
+	end
 	return {
 		commandCount = commandCount or 0,
 		triangleCount = triangleCount or 0,
@@ -89,12 +97,20 @@ function FairyGuiProfiler:GetRenderStats()
 		textureAliasCount = textureAliasCount or 0,
 		runtimeObjectHandle = runtimeObjectHandle or 0,
 		runtimeBinding = runtimeBinding or 0,
+		materialDetail = materialDetail,
+		textureDetail = textureDetail,
 	}
 end
 
 function FairyGuiProfiler:DumpRenderStats()
 	local stats = self:GetRenderStats()
 	print("[FGUI] RenderStats commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding)
+	if not isBlank(stats.materialDetail) then
+		print("[FGUI] RenderMaterialDetail", stats.materialDetail)
+	end
+	if not isBlank(stats.textureDetail) then
+		print("[FGUI] RenderTextureDetail", stats.textureDetail)
+	end
 end
 
 function FairyGuiProfiler:RecordPerf(category, elapsedMs, name, success)

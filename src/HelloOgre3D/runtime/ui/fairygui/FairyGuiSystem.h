@@ -8,6 +8,10 @@
 #include <string>
 #include <vector>
 
+#if defined(_WIN32)
+typedef struct HWND__* HWND;
+#endif
+
 namespace Ogre
 {
 	class RenderWindow;
@@ -23,10 +27,12 @@ namespace cocos2d
 
 namespace fairygui
 {
+	class GController;
 	class EventContext;
 	class GObject;
 	class GRoot;
 	class GTextInput;
+	class UIEventDispatcher;
 }
 
 class FairyGuiSystem : public cocos2d::RenderCommandSink
@@ -81,6 +87,13 @@ public:
 	bool SetObjectHandleIcon(int objectHandle, const std::string& icon);
 	bool SetObjectHandleLoaderUrl(int objectHandle, const std::string& url);
 	bool SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex);
+	int GetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName) const;
+	bool SetObjectHandleControllerPage(int objectHandle, const std::string& controllerName, const std::string& pageName);
+	std::string GetObjectHandleControllerPage(int objectHandle, const std::string& controllerName) const;
+	std::string GetObjectHandleControllerPageId(int objectHandle, const std::string& controllerName) const;
+	int GetObjectHandleControllerPageCount(int objectHandle, const std::string& controllerName) const;
+	std::string GetObjectHandleControllerPageNameAt(int objectHandle, const std::string& controllerName, int pageIndex) const;
+	std::string GetObjectHandleControllerPageIdAt(int objectHandle, const std::string& controllerName, int pageIndex) const;
 	bool SetObjectHandleValue(int objectHandle, float value);
 	float GetObjectHandleValue(int objectHandle) const;
 	bool SetObjectHandleMin(int objectHandle, float minValue);
@@ -100,13 +113,18 @@ public:
 	bool SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex);
 	int GetObjectHandleListSelectedIndex(int objectHandle);
 	bool ScrollObjectHandleListToView(int objectHandle, int itemIndex);
+	bool SetObjectHandleListVirtual(int objectHandle, bool loop);
+	bool RefreshObjectHandleList(int objectHandle);
 	bool CenterObjectHandle(int objectHandle, bool restraint);
 	int AddObjectHandleEventListener(int objectHandle, const std::string& childPath, int eventType, int callbackId);
 	int AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId);
+	int AddObjectHandleControllerChangedListener(int objectHandle, const std::string& controllerName, int callbackId);
 	bool RemoveObjectHandleListener(int bindingId);
 	bool RemoveObjectHandle(int objectHandle);
 	void ClearObjectHandles();
 	bool CreateSmokeTestImage(const std::string& imagePath);
+	bool InjectImeCommitText(const std::string& text);
+	bool HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result);
 
 	bool IsInitialized() const { return m_initialized; }
 	fairygui::GRoot* GetRoot() const { return m_pRoot; }
@@ -120,6 +138,8 @@ public:
 	int GetTextureCount() const { return static_cast<int>(m_textureNamesBySource.size()); }
 	int GetMaterialAliasCount() const { return static_cast<int>(m_materialNames.size()); }
 	int GetTextureAliasCount() const { return static_cast<int>(m_textureNames.size()); }
+	std::string GetMaterialDetailString() const;
+	std::string GetTextureDetailString() const;
 
 private:
 	struct ListenerBinding
@@ -127,7 +147,16 @@ private:
 		int rootHandle;
 		int callbackId;
 		int eventType;
-		fairygui::GObject* target;
+		fairygui::UIEventDispatcher* target;
+		fairygui::GObject* targetObject;
+		std::string controllerName;
+	};
+
+	struct TextureDetail
+	{
+		std::string textureName;
+		int width;
+		int height;
 	};
 
 	struct ObjectHandleInfo
@@ -148,6 +177,7 @@ private:
 	virtual void handleCustomCommand(const cocos2d::CustomCommand& command) override;
 	fairygui::GObject* FindObjectHandle(int objectHandle) const;
 	fairygui::GObject* FindEventTarget(int objectHandle, const std::string& childPath) const;
+	fairygui::GController* FindController(int objectHandle, const std::string& controllerName) const;
 	fairygui::GTextInput* FindTextInput(int objectHandle) const;
 	fairygui::GTextInput* FindTextInputTarget(fairygui::GObject* target) const;
 	int FindOwnerHandleForObject(fairygui::GObject* object) const;
@@ -157,6 +187,10 @@ private:
 	void RemoveObjectHandleListeners(int objectHandle);
 	bool FocusTextInput(fairygui::GTextInput* input);
 	bool ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText);
+	bool ApplyTextInputUtf8Text(fairygui::GTextInput* input, const std::string& committedText);
+	void InstallNativeImeHook();
+	void RemoveNativeImeHook();
+	void UpdateNativeImeCandidatePosition();
 	void DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context);
 	void ConvertMousePosition(int x, int y, float& outX, float& outY) const;
 	float GetInputScaleX() const;
@@ -215,6 +249,12 @@ private:
 	std::map<cocos2d::Texture2D*, std::string> m_textureNames;
 	std::map<std::string, std::string> m_materialNamesBySource;
 	std::map<std::string, std::string> m_textureNamesBySource;
+	std::map<std::string, TextureDetail> m_textureDetailsBySource;
+#if defined(_WIN32)
+	HWND m_nativeWindowHandle;
+	void* m_previousWindowProc;
+	bool m_nativeImeHookInstalled;
+#endif
 };
 
 #endif // __HELLO_FAIRY_GUI_SYSTEM_H__

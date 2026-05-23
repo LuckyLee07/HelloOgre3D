@@ -604,8 +604,15 @@ function FairyGuiPackage:GetResourceWarnings()
 	end
 
 	local refsByPackage = self:GetPackageRefs()
+	local policy = owner.cachePolicy or {}
+	local maxHiddenPerPackage = tonumber(policy.maxHiddenPerPackage) or 0
+	local maxHiddenTotal = tonumber(policy.maxHiddenTotal) or 0
+	local warnHiddenMs = (tonumber(policy.warnHiddenSeconds) or 0) * 1000
+	local hiddenTotal = 0
+	local currentMs = nowMs()
 	for packageKey, ref in pairs(refsByPackage) do
 		local isPackageRef = ref.packageName ~= nil or ref.packagePath ~= nil
+		hiddenTotal = hiddenTotal + (ref.hiddenCount or 0)
 		if isPackageRef and ref.openCount > 0 and ref.refCount < ref.openCount then
 			table.insert(warnings, {
 				kind = "refCountTooLow",
@@ -634,6 +641,13 @@ function FairyGuiPackage:GetResourceWarnings()
 				detail = "hidden=" .. tostring(ref.hiddenCount),
 			})
 		end
+		if isPackageRef and maxHiddenPerPackage > 0 and ref.hiddenCount > maxHiddenPerPackage then
+			table.insert(warnings, {
+				kind = "hiddenCacheOverPackageBudget",
+				packageKey = packageKey,
+				detail = "hidden=" .. tostring(ref.hiddenCount) .. " max=" .. tostring(maxHiddenPerPackage),
+			})
+		end
 		for _, objectInfo in ipairs(ref.objects) do
 			if owner.hiddenObjects[objectInfo.key] == nil and ref.stackedKeys[objectInfo.key] ~= true and owner:GetStackMode(objectInfo) ~= "None" then
 				table.insert(warnings, {
@@ -642,7 +656,21 @@ function FairyGuiPackage:GetResourceWarnings()
 					detail = "key=" .. tostring(objectInfo.key),
 				})
 			end
+			if owner.hiddenObjects[objectInfo.key] ~= nil and warnHiddenMs > 0 and objectInfo.cacheHiddenAtMs ~= nil and currentMs - objectInfo.cacheHiddenAtMs > warnHiddenMs then
+				table.insert(warnings, {
+					kind = "hiddenCacheLongLived",
+					packageKey = packageKey,
+					detail = "key=" .. tostring(objectInfo.key) .. " hiddenMs=" .. tostring(math.floor(currentMs - objectInfo.cacheHiddenAtMs)),
+				})
+			end
 		end
+	end
+	if maxHiddenTotal > 0 and hiddenTotal > maxHiddenTotal then
+		table.insert(warnings, {
+			kind = "hiddenCacheOverTotalBudget",
+			packageKey = "*",
+			detail = "hidden=" .. tostring(hiddenTotal) .. " max=" .. tostring(maxHiddenTotal),
+		})
 	end
 	return warnings
 end

@@ -203,6 +203,11 @@ function FairyGuiManager:Init()
 	self.listItemHandlesByHandle = {}
 	self.listDataByHandle = {}
 	self.listRenderersByHandle = {}
+	self.listVirtualByHandle = {}
+	self.treeDataByHandle = {}
+	self.treeStateByHandle = {}
+	self.treeRenderersByHandle = {}
+	self.treeChildPathByHandle = {}
 	self.views = {}
 	self.viewsByHandle = {}
 	self.controllers = {}
@@ -241,6 +246,11 @@ function FairyGuiManager:Init()
 	self.eventDispatchTotal = 0
 	self.lastEvent = nil
 	self.perfStats = {}
+	self.cachePolicy = {
+		maxHiddenPerPackage = 2,
+		maxHiddenTotal = 6,
+		warnHiddenSeconds = 60,
+	}
 	self.profiler = ClassList.FairyGuiProfiler.new(self)
 	self.packageManager = ClassList.FairyGuiPackage.new(self)
 	self.services = ClassList.FairyGuiServices.new(self)
@@ -601,6 +611,18 @@ function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
 		end
 		if self.listRenderersByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listRenderersByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.listVirtualByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "listVirtualByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.treeDataByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "treeDataByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.treeStateByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "treeStateByHandle[" .. tostring(ownedHandle) .. "]")
+		end
+		if self.treeRenderersByHandle[ownedHandle] ~= nil then
+			table.insert(issues, "treeRenderersByHandle[" .. tostring(ownedHandle) .. "]")
 		end
 	end
 
@@ -1299,6 +1321,7 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
 	self.hiddenObjects[key] = nil
+	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:CreateModalMask(objectInfo, param)
 	self:ApplyScreenAdapt(objectInfo)
@@ -1436,6 +1459,7 @@ function FairyGuiManager:OpenMaskProbe(param)
 	self.objectsByHandle[handle] = objectInfo
 	self.uiNameToKey.MaskProbe = key
 	self.hiddenObjects[key] = nil
+	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:ApplyScreenAdapt(objectInfo)
 	self:PushStack(objectInfo)
@@ -1513,6 +1537,7 @@ function FairyGuiManager:OpenTextInputProbe(param)
 	self.objectsByHandle[handle] = objectInfo
 	self.uiNameToKey.TextInputProbe = key
 	self.hiddenObjects[key] = nil
+	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:ApplyScreenAdapt(objectInfo)
 	self:PushStack(objectInfo)
@@ -1772,6 +1797,7 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
 		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
 		self.hiddenObjects[key] = nil
+		objectInfo.cacheHiddenAtMs = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
 			self:SetVisible(objectInfo.modalMaskHandle, true)
@@ -1867,6 +1893,7 @@ function FairyGuiManager:OpenView(viewClass, param)
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
 		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
 		self.hiddenObjects[key] = nil
+		objectInfo.cacheHiddenAtMs = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
 			self:SetVisible(objectInfo.modalMaskHandle, true)
@@ -1967,8 +1994,8 @@ function FairyGuiManager:GetListItemByHandle(listHandle, index, data)
 	return self:GetLists():GetListItemByHandle(listHandle, index, data)
 end
 
-function FairyGuiManager:RenderListItemByHandle(listHandle, index)
-	return self:GetLists():RenderListItemByHandle(listHandle, index)
+function FairyGuiManager:RenderListItemByHandle(listHandle, index, itemHandle)
+	return self:GetLists():RenderListItemByHandle(listHandle, index, itemHandle)
 end
 
 function FairyGuiManager:GetListHandle(handle, childPath)
@@ -1989,6 +2016,26 @@ end
 
 function FairyGuiManager:SetListData(handle, childPath, dataList, renderer)
 	return self:GetLists():SetListData(handle, childPath, dataList, renderer)
+end
+
+function FairyGuiManager:SetVirtualListData(handle, childPath, dataList, renderer, options)
+	return self:GetLists():SetVirtualListData(handle, childPath, dataList, renderer, options)
+end
+
+function FairyGuiManager:SetTreeData(handle, childPath, treeData, renderer, options)
+	return self:GetLists():SetTreeData(handle, childPath, treeData, renderer, options)
+end
+
+function FairyGuiManager:GetTreeFlatData(handle, childPath)
+	return self:GetLists():GetTreeFlatData(handle, childPath)
+end
+
+function FairyGuiManager:SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
+	return self:GetLists():SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
+end
+
+function FairyGuiManager:ToggleTreeNode(handle, childPath, nodeKey)
+	return self:GetLists():ToggleTreeNode(handle, childPath, nodeKey)
 end
 
 function FairyGuiManager:GetListData(handle, childPath, index)
@@ -2057,6 +2104,13 @@ end
 
 function FairyGuiManager:DebugInjectKeyReleased(keyCode, keyText)
 	return self:GetEvents():DebugInjectKeyReleased(keyCode, keyText)
+end
+
+function FairyGuiManager:DebugInjectImeCommitText(text)
+	if GameManager == nil or GameManager.injectFairyGuiImeCommitText == nil then
+		return false
+	end
+	return GameManager:injectFairyGuiImeCommitText(text or "")
 end
 
 function FairyGuiManager:SetText(handle, childPath, text)
@@ -2278,6 +2332,55 @@ function FairyGuiManager:SetControllerIndex(handle, controllerName, selectedInde
 	return GameManager:setFairyGuiObjectControllerIndex(handle, controllerName or "", selectedIndex or 0)
 end
 
+function FairyGuiManager:GetControllerIndex(handle, controllerName)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerIndex == nil or handle == nil then
+		return -1
+	end
+	return GameManager:getFairyGuiObjectControllerIndex(handle, controllerName or "")
+end
+
+function FairyGuiManager:SetControllerPage(handle, controllerName, pageName)
+	if GameManager == nil or GameManager.setFairyGuiObjectControllerPage == nil or handle == nil then
+		return false
+	end
+	return GameManager:setFairyGuiObjectControllerPage(handle, controllerName or "", pageName or "")
+end
+
+function FairyGuiManager:GetControllerPage(handle, controllerName)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerPage == nil or handle == nil then
+		return ""
+	end
+	return GameManager:getFairyGuiObjectControllerPage(handle, controllerName or "")
+end
+
+function FairyGuiManager:GetControllerPageId(handle, controllerName)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageId == nil or handle == nil then
+		return ""
+	end
+	return GameManager:getFairyGuiObjectControllerPageId(handle, controllerName or "")
+end
+
+function FairyGuiManager:GetControllerPageCount(handle, controllerName)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageCount == nil or handle == nil then
+		return 0
+	end
+	return GameManager:getFairyGuiObjectControllerPageCount(handle, controllerName or "")
+end
+
+function FairyGuiManager:GetControllerPageNameAt(handle, controllerName, pageIndex)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageNameAt == nil or handle == nil then
+		return ""
+	end
+	return GameManager:getFairyGuiObjectControllerPageNameAt(handle, controllerName or "", pageIndex or 0)
+end
+
+function FairyGuiManager:GetControllerPageIdAt(handle, controllerName, pageIndex)
+	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageIdAt == nil or handle == nil then
+		return ""
+	end
+	return GameManager:getFairyGuiObjectControllerPageIdAt(handle, controllerName or "", pageIndex or 0)
+end
+
 function FairyGuiManager:SetValue(handle, childPathOrValue, value)
 	if GameManager == nil or GameManager.setFairyGuiObjectValue == nil or handle == nil then
 		return false
@@ -2458,6 +2561,10 @@ function FairyGuiManager:AddChanged(handle, childPath, callback)
 	return self:GetEvents():AddChanged(handle, childPath, callback)
 end
 
+function FairyGuiManager:AddControllerChanged(handle, controllerName, callback)
+	return self:GetEvents():AddControllerChanged(handle, controllerName, callback)
+end
+
 function FairyGuiManager:AddClickItem(handle, childPath, callback)
 	return self:GetEvents():AddClickItem(handle, childPath, callback)
 end
@@ -2597,6 +2704,7 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		end
 		self:SetGuideMaskVisible(objectInfo, false)
 		self:RemoveStackEntry(objectInfo.key)
+		objectInfo.cacheHiddenAtMs = nowMs()
 		self.hiddenObjects[objectInfo.key] = objectInfo
 		return finish(true, true)
 	end
@@ -2809,6 +2917,21 @@ function FairyGuiManager:GetResourceWarnings()
 	return self:GetPackageManager():GetResourceWarnings()
 end
 
+function FairyGuiManager:SetCachePolicy(policy)
+	if type(policy) ~= "table" then
+		return self.cachePolicy
+	end
+	self.cachePolicy = self.cachePolicy or {}
+	for name, value in pairs(policy) do
+		self.cachePolicy[name] = value
+	end
+	return self.cachePolicy
+end
+
+function FairyGuiManager:GetCachePolicy()
+	return copyTable(self.cachePolicy or {})
+end
+
 function FairyGuiManager:DumpResourceWarnings()
 	return self:GetPackageManager():DumpResourceWarnings()
 end
@@ -2858,6 +2981,13 @@ function FairyGuiManager_DispatchTransition(callbackId, objectHandle, transition
 		return false
 	end
 	return _G.FairyGuiManager:_DispatchTransition(callbackId, objectHandle, transitionName)
+end
+
+function FairyGuiManager_RenderVirtualListItem(listHandle, index, itemHandle)
+	if _G.FairyGuiManager == nil then
+		return false
+	end
+	return _G.FairyGuiManager:GetLists():RenderVirtualListItemByHandle(listHandle, index, itemHandle)
 end
 
 function FairyGuiManager_HandleKeyPressed(keyCode, keyText)

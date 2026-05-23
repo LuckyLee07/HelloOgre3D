@@ -28,8 +28,18 @@
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <vector>
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <imm.h>
+#pragma comment(lib, "imm32.lib")
+#endif
 
 namespace
 {
@@ -44,6 +54,40 @@ namespace
 	const int OIS_KC_RIGHT = 0xCD;
 	const int OIS_KC_END = 0xCF;
 	const int OIS_KC_DELETE = 0xD3;
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	std::map<HWND, FairyGuiSystem*> g_nativeImeSystemsByWindow;
+	std::map<HWND, WNDPROC> g_nativeImePreviousWndProcByWindow;
+
+	std::string WideToUtf8(const std::wstring& value)
+	{
+		if (value.empty())
+			return std::string();
+
+		const int required = WideCharToMultiByte(CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
+		if (required <= 0)
+			return std::string();
+
+		std::string output(static_cast<size_t>(required), '\0');
+		WideCharToMultiByte(CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), &output[0], required, nullptr, nullptr);
+		return output;
+	}
+
+	LRESULT CALLBACK FairyGuiNativeImeWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		std::map<HWND, FairyGuiSystem*>::iterator it = g_nativeImeSystemsByWindow.find(hwnd);
+		if (it != g_nativeImeSystemsByWindow.end() && it->second != nullptr)
+		{
+			long long result = 0;
+			if (it->second->HandleNativeImeMessage(static_cast<unsigned int>(message), static_cast<unsigned long long>(wParam), static_cast<long long>(lParam), result))
+				return static_cast<LRESULT>(result);
+		}
+
+		std::map<HWND, WNDPROC>::iterator procIt = g_nativeImePreviousWndProcByWindow.find(hwnd);
+		WNDPROC previousProc = procIt != g_nativeImePreviousWndProcByWindow.end() ? procIt->second : nullptr;
+		return previousProc != nullptr ? CallWindowProc(previousProc, hwnd, message, wParam, lParam) : DefWindowProc(hwnd, message, wParam, lParam);
+	}
+#endif
 
 	float TransformX(const cocos2d::Mat4& transform, const cocos2d::Vec3& value)
 	{
@@ -513,6 +557,22 @@ namespace
 		return true;
 	}
 
+	size_t CountUtf8CodepointsInString(const std::string& text)
+	{
+		return GetUtf8CodepointCount(text);
+	}
+
+	bool InsertUtf8TextAtCaret(std::string& text, size_t& caret, const std::string& committedText)
+	{
+		if (committedText.empty())
+			return false;
+
+		const size_t byteOffset = GetUtf8ByteOffsetForCaret(text, caret);
+		text.insert(byteOffset, committedText);
+		caret += CountUtf8CodepointsInString(committedText);
+		return true;
+	}
+
 	std::string NormalizePackagePath(const std::string& packagePath)
 	{
 		std::string normalized = packagePath;
@@ -566,7 +626,10 @@ FairyGuiSystem::FairyGuiSystem()
 	m_stencilStage(cocos2d::STENCIL_STAGE_DISABLED), m_stencilDepth(0), m_stencilRevision(0),
 	m_pendingStencilDepth(0), m_pendingStencilInverted(false), m_pendingStencilValid(false), m_pendingStencilRect(cocos2d::Rect::ZERO), m_stencilScopes(),
 	m_lastRenderCommandCount(0), m_lastTriangleCount(0), m_materialCounter(0), m_nextObjectHandle(1), m_nextListenerBindingId(1),
-	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames()
+	m_objectHandles(), m_listenerBindings(), m_textInputCarets(), m_materialNames(), m_textureNames(), m_materialNamesBySource(), m_textureNamesBySource(), m_textureDetailsBySource()
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	, m_nativeWindowHandle(nullptr), m_previousWindowProc(nullptr), m_nativeImeHookInstalled(false)
+#endif
 {
 }
 
@@ -607,6 +670,7 @@ bool FairyGuiSystem::Initialize(Ogre::RenderWindow* renderWindow, Ogre::SceneMan
 		m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pManualNode->attachObject(m_pManualObject);
 		m_pManualNode->_updateBounds();
+		InstallNativeImeHook();
 		if (!CreateConfiguredPackageObject() && IsEnvironmentEnabled("HELLO_FGUI_SMOKE_TEST"))
 			CreateSmokeTestImage("media/fonts/dejavu/dejavu.png");
 	}
@@ -615,6 +679,7 @@ bool FairyGuiSystem::Initialize(Ogre::RenderWindow* renderWindow, Ogre::SceneMan
 
 void FairyGuiSystem::Shutdown()
 {
+	RemoveNativeImeHook();
 	ClearObjectHandles();
 
 	if (m_pScene != nullptr)
@@ -641,6 +706,7 @@ void FairyGuiSystem::Shutdown()
 	m_lastTriangleCount = 0;
 	m_nextObjectHandle = 1;
 	m_nextListenerBindingId = 1;
+	m_textInputCarets.clear();
 }
 
 void FairyGuiSystem::Update(float deltaSeconds)
@@ -681,6 +747,7 @@ void FairyGuiSystem::HandleWindowResized(unsigned int width, unsigned int height
 	cocos2d::Director::getInstance()->getOpenGLView()->setFrameSize((float)width, (float)height);
 	if (m_pRoot != nullptr)
 		m_pRoot->setSize((float)width, (float)height);
+	UpdateNativeImeCandidatePosition();
 }
 
 bool FairyGuiSystem::InjectMouseMove(int x, int y)
@@ -1253,21 +1320,65 @@ bool FairyGuiSystem::SetObjectHandleLoaderUrl(int objectHandle, const std::strin
 
 bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex)
 {
-	fairygui::GObject* object = FindObjectHandle(objectHandle);
-	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(object);
-	if (component == nullptr)
-		return false;
-
-	fairygui::GController* controller = nullptr;
-	if (!controllerName.empty())
-		controller = component->getController(controllerName);
-	else if (!component->getControllers().empty())
-		controller = component->getControllerAt(0);
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	if (controller == nullptr)
 		return false;
 
 	controller->setSelectedIndex(selectedIndex);
 	return true;
+}
+
+int FairyGuiSystem::GetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	return controller != nullptr ? controller->getSelectedIndex() : -1;
+}
+
+bool FairyGuiSystem::SetObjectHandleControllerPage(int objectHandle, const std::string& controllerName, const std::string& pageName)
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	if (controller == nullptr)
+		return false;
+
+	controller->setSelectedPage(pageName);
+	return true;
+}
+
+std::string FairyGuiSystem::GetObjectHandleControllerPage(int objectHandle, const std::string& controllerName) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	return controller != nullptr ? controller->getSelectedPage() : std::string();
+}
+
+std::string FairyGuiSystem::GetObjectHandleControllerPageId(int objectHandle, const std::string& controllerName) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	return controller != nullptr ? controller->getSelectedPageId() : std::string();
+}
+
+int FairyGuiSystem::GetObjectHandleControllerPageCount(int objectHandle, const std::string& controllerName) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	return controller != nullptr ? controller->getPageCount() : 0;
+}
+
+std::string FairyGuiSystem::GetObjectHandleControllerPageNameAt(int objectHandle, const std::string& controllerName, int pageIndex) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	if (controller == nullptr || pageIndex < 0 || pageIndex >= controller->getPageCount())
+		return std::string();
+
+	const std::string pageId = controller->getPageId(pageIndex);
+	return controller->getPageNameById(pageId);
+}
+
+std::string FairyGuiSystem::GetObjectHandleControllerPageIdAt(int objectHandle, const std::string& controllerName, int pageIndex) const
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	if (controller == nullptr || pageIndex < 0 || pageIndex >= controller->getPageCount())
+		return std::string();
+
+	return controller->getPageId(pageIndex);
 }
 
 bool FairyGuiSystem::SetObjectHandleValue(int objectHandle, float value)
@@ -1426,6 +1537,51 @@ bool FairyGuiSystem::ScrollObjectHandleListToView(int objectHandle, int itemInde
 	return true;
 }
 
+bool FairyGuiSystem::SetObjectHandleListVirtual(int objectHandle, bool loop)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr)
+		return false;
+	if (list->getScrollPane() == nullptr || list->getDefaultItem().empty())
+		return false;
+
+	if (list->itemRenderer == nullptr)
+	{
+		list->itemRenderer = [this, objectHandle](int itemIndex, fairygui::GObject* item) {
+			ScriptLuaVM* luaVM = GetScriptLuaVM();
+			if (luaVM == nullptr || item == nullptr)
+				return;
+
+			const int itemHandle = GetOrCreateObjectAlias(GetObjectHandleOwner(objectHandle), item);
+			luaVM->callFunction(
+				"FairyGuiManager_RenderVirtualListItem",
+				"iii",
+				objectHandle,
+				itemIndex + 1,
+				itemHandle);
+		};
+	}
+	if (!list->isVirtual())
+	{
+		if (loop)
+			list->setVirtualAndLoop();
+		else
+			list->setVirtual();
+	}
+	return true;
+}
+
+bool FairyGuiSystem::RefreshObjectHandleList(int objectHandle)
+{
+	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
+	if (list == nullptr)
+		return false;
+
+	if (list->isVirtual())
+		list->refreshVirtualList();
+	return true;
+}
+
 bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
@@ -1448,6 +1604,7 @@ int FairyGuiSystem::AddObjectHandleEventListener(int objectHandle, const std::st
 	binding.callbackId = callbackId;
 	binding.eventType = eventType;
 	binding.target = target;
+	binding.targetObject = target;
 	m_listenerBindings[bindingId] = binding;
 
 	target->addEventListener(eventType, [this, callbackId, objectHandle, eventType, bindingId](fairygui::EventContext* context) {
@@ -1459,6 +1616,28 @@ int FairyGuiSystem::AddObjectHandleEventListener(int objectHandle, const std::st
 int FairyGuiSystem::AddObjectHandleClickListener(int objectHandle, const std::string& childPath, int callbackId)
 {
 	return AddObjectHandleEventListener(objectHandle, childPath, fairygui::UIEventType::Click, callbackId);
+}
+
+int FairyGuiSystem::AddObjectHandleControllerChangedListener(int objectHandle, const std::string& controllerName, int callbackId)
+{
+	fairygui::GController* controller = FindController(objectHandle, controllerName);
+	if (controller == nullptr || callbackId <= 0)
+		return 0;
+
+	const int bindingId = m_nextListenerBindingId++;
+	ListenerBinding binding;
+	binding.rootHandle = objectHandle;
+	binding.callbackId = callbackId;
+	binding.eventType = fairygui::UIEventType::Changed;
+	binding.target = controller;
+	binding.targetObject = FindObjectHandle(objectHandle);
+	binding.controllerName = controllerName;
+	m_listenerBindings[bindingId] = binding;
+
+	controller->addEventListener(fairygui::UIEventType::Changed, [this, callbackId, objectHandle, bindingId](fairygui::EventContext* context) {
+		DispatchObjectHandleEvent(callbackId, objectHandle, fairygui::UIEventType::Changed, bindingId, context);
+	}, fairygui::EventTag(bindingId));
+	return bindingId;
 }
 
 bool FairyGuiSystem::RemoveObjectHandleListener(int bindingId)
@@ -1663,6 +1842,20 @@ fairygui::GObject* FairyGuiSystem::FindEventTarget(int objectHandle, const std::
 	return component->getChildByPath(childPath);
 }
 
+fairygui::GController* FairyGuiSystem::FindController(int objectHandle, const std::string& controllerName) const
+{
+	fairygui::GObject* object = FindObjectHandle(objectHandle);
+	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(object);
+	if (component == nullptr)
+		return nullptr;
+
+	if (!controllerName.empty())
+		return component->getController(controllerName);
+	if (!component->getControllers().empty())
+		return component->getControllerAt(0);
+	return nullptr;
+}
+
 fairygui::GTextInput* FairyGuiSystem::FindTextInput(int objectHandle) const
 {
 	return dynamic_cast<fairygui::GTextInput*>(FindObjectHandle(objectHandle));
@@ -1778,6 +1971,7 @@ bool FairyGuiSystem::FocusTextInput(fairygui::GTextInput* input)
 	}
 	if (m_textInputCarets.find(inputHandle) == m_textInputCarets.end())
 		m_textInputCarets[inputHandle] = GetUtf8CodepointCount(input->getText());
+	UpdateNativeImeCandidatePosition();
 	return true;
 }
 
@@ -1841,6 +2035,161 @@ bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode,
 	return true;
 }
 
+bool FairyGuiSystem::ApplyTextInputUtf8Text(fairygui::GTextInput* input, const std::string& committedText)
+{
+	if (input == nullptr || committedText.empty())
+		return false;
+
+	const int inputHandle = m_focusedObjectHandle;
+	std::string text = input->getText();
+	size_t caret = GetUtf8CodepointCount(text);
+	std::map<int, size_t>::iterator caretIt = m_textInputCarets.find(inputHandle);
+	if (caretIt != m_textInputCarets.end())
+		caret = ClampUtf8Caret(text, caretIt->second);
+
+	if (!InsertUtf8TextAtCaret(text, caret, committedText))
+		return false;
+
+	input->setText(text);
+	input->dispatchEvent(fairygui::UIEventType::Changed);
+	m_textInputCarets[inputHandle] = caret;
+	return true;
+}
+
+bool FairyGuiSystem::InjectImeCommitText(const std::string& text)
+{
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input == nullptr)
+	{
+		m_focusedObjectHandle = 0;
+		return false;
+	}
+	return ApplyTextInputUtf8Text(input, text);
+}
+
+void FairyGuiSystem::InstallNativeImeHook()
+{
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	if (m_nativeImeHookInstalled || m_pRenderWindow == nullptr)
+		return;
+
+	HWND hwnd = nullptr;
+	m_pRenderWindow->getCustomAttribute("WINDOW", &hwnd);
+	if (hwnd == nullptr)
+		return;
+
+	WNDPROC currentProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hwnd, GWLP_WNDPROC));
+	if (currentProc == FairyGuiNativeImeWndProc)
+		return;
+
+	m_nativeWindowHandle = hwnd;
+	m_previousWindowProc = reinterpret_cast<void*>(currentProc);
+	g_nativeImePreviousWndProcByWindow[hwnd] = currentProc;
+	g_nativeImeSystemsByWindow[hwnd] = this;
+	SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(FairyGuiNativeImeWndProc));
+	m_nativeImeHookInstalled = true;
+#endif
+}
+
+void FairyGuiSystem::RemoveNativeImeHook()
+{
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	if (!m_nativeImeHookInstalled || m_nativeWindowHandle == nullptr)
+		return;
+
+	HWND hwnd = m_nativeWindowHandle;
+	std::map<HWND, WNDPROC>::iterator procIt = g_nativeImePreviousWndProcByWindow.find(hwnd);
+	const LONG_PTR currentProc = GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+	if (procIt != g_nativeImePreviousWndProcByWindow.end() && currentProc == reinterpret_cast<LONG_PTR>(FairyGuiNativeImeWndProc))
+		SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(procIt->second));
+
+	g_nativeImeSystemsByWindow.erase(hwnd);
+	g_nativeImePreviousWndProcByWindow.erase(hwnd);
+	m_nativeWindowHandle = nullptr;
+	m_previousWindowProc = nullptr;
+	m_nativeImeHookInstalled = false;
+#endif
+}
+
+bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result)
+{
+	(void)wParam;
+	result = 0;
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	if (!m_initialized || m_nativeWindowHandle == nullptr)
+		return false;
+
+	if (message == WM_IME_STARTCOMPOSITION)
+	{
+		UpdateNativeImeCandidatePosition();
+		return false;
+	}
+
+	if (message != WM_IME_COMPOSITION)
+		return false;
+
+	if ((static_cast<LPARAM>(lParam) & GCS_RESULTSTR) == 0)
+	{
+		UpdateNativeImeCandidatePosition();
+		return false;
+	}
+
+	HIMC context = ImmGetContext(m_nativeWindowHandle);
+	if (context == nullptr)
+		return false;
+
+	const LONG byteCount = ImmGetCompositionStringW(context, GCS_RESULTSTR, nullptr, 0);
+	if (byteCount <= 0)
+	{
+		ImmReleaseContext(m_nativeWindowHandle, context);
+		return false;
+	}
+
+	std::wstring resultText(static_cast<size_t>(byteCount / sizeof(wchar_t)), L'\0');
+	ImmGetCompositionStringW(context, GCS_RESULTSTR, &resultText[0], byteCount);
+	ImmReleaseContext(m_nativeWindowHandle, context);
+
+	const bool consumed = InjectImeCommitText(WideToUtf8(resultText));
+	result = 0;
+	return consumed;
+#else
+	return false;
+#endif
+}
+
+void FairyGuiSystem::UpdateNativeImeCandidatePosition()
+{
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+	if (m_nativeWindowHandle == nullptr)
+		return;
+
+	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
+	if (input == nullptr)
+		return;
+
+	HIMC context = ImmGetContext(m_nativeWindowHandle);
+	if (context == nullptr)
+		return;
+
+	const cocos2d::Rect bounds = input->localToGlobal(cocos2d::Rect(cocos2d::Vec2::ZERO, input->getSize()));
+	const int rawX = ToRawInputX(static_cast<int>(bounds.origin.x));
+	const int rawY = ToRawInputY(static_cast<int>(m_screenHeight > 0 ? m_screenHeight - bounds.origin.y : bounds.origin.y));
+
+	COMPOSITIONFORM composition = {};
+	composition.dwStyle = CFS_POINT;
+	composition.ptCurrentPos.x = rawX;
+	composition.ptCurrentPos.y = rawY;
+	ImmSetCompositionWindow(context, &composition);
+
+	CANDIDATEFORM candidate = {};
+	candidate.dwIndex = 0;
+	candidate.dwStyle = CFS_CANDIDATEPOS;
+	candidate.ptCurrentPos = composition.ptCurrentPos;
+	ImmSetCandidateWindow(context, &candidate);
+	ImmReleaseContext(m_nativeWindowHandle, context);
+#endif
+}
+
 void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle, int eventType, int bindingId, fairygui::EventContext* context)
 {
 	H3D_PROFILE_SCOPE("FairyGuiSystem::DispatchEvent");
@@ -1873,7 +2222,7 @@ void FairyGuiSystem::DispatchObjectHandleEvent(int callbackId, int objectHandle,
 				itemHandle = GetOrCreateObjectAlias(objectHandle, item);
 
 				std::map<int, ListenerBinding>::const_iterator bindingIt = m_listenerBindings.find(bindingId);
-				fairygui::GList* list = bindingIt != m_listenerBindings.end() ? dynamic_cast<fairygui::GList*>(bindingIt->second.target) : nullptr;
+				fairygui::GList* list = bindingIt != m_listenerBindings.end() ? dynamic_cast<fairygui::GList*>(bindingIt->second.targetObject) : nullptr;
 				if (list != nullptr)
 				{
 					const int childIndex = list->getChildIndex(item);
@@ -2146,6 +2495,34 @@ bool FairyGuiSystem::CreateConfiguredPackageObject()
 	return true;
 }
 
+std::string FairyGuiSystem::GetMaterialDetailString() const
+{
+	std::ostringstream stream;
+	bool first = true;
+	for (std::map<std::string, std::string>::const_iterator it = m_materialNamesBySource.begin(); it != m_materialNamesBySource.end(); ++it)
+	{
+		if (!first)
+			stream << "; ";
+		stream << it->first << "=" << it->second;
+		first = false;
+	}
+	return stream.str();
+}
+
+std::string FairyGuiSystem::GetTextureDetailString() const
+{
+	std::ostringstream stream;
+	bool first = true;
+	for (std::map<std::string, TextureDetail>::const_iterator it = m_textureDetailsBySource.begin(); it != m_textureDetailsBySource.end(); ++it)
+	{
+		if (!first)
+			stream << "; ";
+		stream << it->first << "=" << it->second.textureName << "(" << it->second.width << "x" << it->second.height << ")";
+		first = false;
+	}
+	return stream.str();
+}
+
 const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 {
 	if (texture == nullptr || texture->getImageData().empty())
@@ -2247,6 +2624,11 @@ std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
 		Ogre::TextureManager::getSingleton().loadImage(textureName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, image);
 		m_textureNames[texture] = textureName;
 		m_textureNamesBySource[sourceKey] = textureName;
+		TextureDetail detail;
+		detail.textureName = textureName;
+		detail.width = texture->getPixelsWide();
+		detail.height = texture->getPixelsHigh();
+		m_textureDetailsBySource[sourceKey] = detail;
 		return textureName;
 	}
 	catch (const Ogre::Exception&)
@@ -2286,5 +2668,6 @@ void FairyGuiSystem::DestroyOgreResources()
 	m_textureNames.clear();
 	m_materialNamesBySource.clear();
 	m_textureNamesBySource.clear();
+	m_textureDetailsBySource.clear();
 	m_materialCounter = 0;
 }

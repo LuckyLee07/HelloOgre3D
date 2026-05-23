@@ -319,6 +319,40 @@ function FairyGuiEvents:AddChanged(handle, childPath, callback)
 	return self:AddEvent(handle, childPath, "Changed", callback)
 end
 
+function FairyGuiEvents:AddControllerChanged(handle, controllerName, callback)
+	local self = self.owner
+	if self == nil or GameManager == nil or GameManager.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then
+		return nil
+	end
+
+	local callbackId = self.nextCallbackId
+	self.nextCallbackId = self.nextCallbackId + 1
+	self.callbacks[callbackId] = callback
+
+	local bindingId = GameManager:addFairyGuiControllerChangedListener(handle, controllerName or "", callbackId)
+	if bindingId == nil or bindingId <= 0 then
+		self.callbacks[callbackId] = nil
+		return nil
+	end
+
+	self.bindings[bindingId] = {
+		bindingId = bindingId,
+		callbackId = callbackId,
+		handle = handle,
+		childPath = "",
+		eventType = "ControllerChanged",
+		controllerName = controllerName or "",
+	}
+
+	local bindingList = self.bindingsByHandle[handle]
+	if bindingList == nil then
+		bindingList = {}
+		self.bindingsByHandle[handle] = bindingList
+	end
+	bindingList[bindingId] = true
+	return bindingId
+end
+
 function FairyGuiEvents:AddClickItem(handle, childPath, callback)
 	return self:AddEvent(handle, childPath, "ClickItem", callback)
 end
@@ -429,6 +463,9 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 	end
 
 	local eventName = EVENT_NAMES[eventType] or eventType
+	if binding ~= nil and binding.eventType == "ControllerChanged" then
+		eventName = "ControllerChanged"
+	end
 	self.eventDispatchTotal = (self.eventDispatchTotal or 0) + 1
 	self.eventStats[eventName] = (self.eventStats[eventName] or 0) + 1
 	self.lastEvent = {
@@ -449,8 +486,7 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		bindingId = bindingId,
 	}
 
-	local startMs = nowMs()
-	local ok, err = pcall(callback, {
+	local eventPayload = {
 		callbackId = callbackId,
 		rootHandle = rootHandle,
 		senderHandle = senderHandle,
@@ -468,7 +504,17 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		eventType = eventName,
 		eventTypeId = eventType,
 		bindingId = bindingId,
-	})
+	}
+	if binding ~= nil and binding.eventType == "ControllerChanged" then
+		eventPayload.controllerName = binding.controllerName or ""
+		eventPayload.selectedIndex = self:GetControllerIndex(binding.handle, eventPayload.controllerName)
+		eventPayload.selectedPage = self:GetControllerPage(binding.handle, eventPayload.controllerName)
+		eventPayload.selectedPageId = self:GetControllerPageId(binding.handle, eventPayload.controllerName)
+		eventPayload.pageCount = self:GetControllerPageCount(binding.handle, eventPayload.controllerName)
+	end
+
+	local startMs = nowMs()
+	local ok, err = pcall(callback, eventPayload)
 	local elapsedMs = nowMs() - startMs
 	self:RecordPerf("event", elapsedMs, eventName, ok)
 	self.lastEvent.elapsedMs = elapsedMs

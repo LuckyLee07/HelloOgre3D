@@ -167,4 +167,90 @@ function Act38TestCtrl:RunListApiSelfTest()
 	return appendOk and updateTaskOk and updateShopOk
 end
 
+function Act38TestCtrl:RunComplexControlSelfTest()
+	local controllerName = "m2_menuCtrl"
+	local pageCount = self:GetControllerPageCount(controllerName)
+	local beforeIndex = self:GetControllerIndex(controllerName)
+	local changedCount = 0
+	local lastControllerEvent = nil
+	local bindingId = self:AddControllerChanged(controllerName, function(evt)
+		changedCount = changedCount + 1
+		lastControllerEvent = evt
+		print("[FGUI] Act38TestCtrl controller changed:", evt.controllerName, evt.selectedIndex, evt.selectedPage, evt.selectedPageId)
+	end)
+
+	local targetIndex = pageCount > 1 and ((beforeIndex + 1) % pageCount) or beforeIndex
+	local setIndexOk = pageCount > 0 and self:SetControllerIndex(controllerName, targetIndex) or false
+	local indexOk = self:GetControllerIndex(controllerName) == targetIndex
+	local targetPage = pageCount > 0 and self:GetControllerPageNameAt(controllerName, beforeIndex >= 0 and beforeIndex or 0) or ""
+	local targetPageId = pageCount > 0 and self:GetControllerPageIdAt(controllerName, beforeIndex >= 0 and beforeIndex or 0) or ""
+	local setPageOk = targetPage ~= "" and self:SetControllerPage(controllerName, targetPage) or setIndexOk
+	local pageOk = targetPage == "" or self:GetControllerPage(controllerName) == targetPage
+
+	local virtualTasks = {}
+	for index = 1, 24 do
+		virtualTasks[index] = {
+			desc = "Virtual Task " .. tostring(index),
+			num = tostring(index) .. "/24",
+			state = index % 3 == 0 and "done" or index % 2 == 0 and "get" or "go",
+		}
+	end
+	local virtualOk = self:SetVirtualListData("m2_dayTaskList", virtualTasks, function(item, data, index)
+		self:RenderTaskItem(item, data, index)
+	end)
+	local virtualCountOk = self:GetListItemCount("m2_dayTaskList") == #virtualTasks
+
+	local treeData = {
+		{
+			key = "root",
+			text = "Root Task",
+			expanded = true,
+			children = {
+				{ key = "root.daily", text = "Daily Branch" },
+				{ key = "root.special", text = "Special Branch" },
+			},
+		},
+		{ key = "solo", text = "Solo Task" },
+	}
+	local treeOk = self:SetTreeData("m2_spcTaskList", treeData, function(item, node, index)
+		local indent = string.rep("  ", node.depth or 0)
+		local marker = node.hasChildren and (node.expanded and "- " or "+ ") or "  "
+		item:SetControllerIndex("c1", node.hasChildren and 0 or 1)
+		item:SetText("desc", indent .. marker .. tostring(node.text or node.key))
+		item:SetText("num", tostring(index))
+		item:SetVisible("btn_go", node.hasChildren == true)
+		item:SetVisible("btn_get", node.hasChildren ~= true)
+		item:SetVisible("btn_alrget", false)
+	end)
+	local flatBefore = self:GetTreeFlatData("m2_spcTaskList")
+	local collapseOk = self:SetTreeNodeExpanded("m2_spcTaskList", "root", false)
+	local flatCollapsed = self:GetTreeFlatData("m2_spcTaskList")
+	local expandOk = self:SetTreeNodeExpanded("m2_spcTaskList", "root", true)
+	local flatExpanded = self:GetTreeFlatData("m2_spcTaskList")
+	local treeCountOk = #flatBefore == 4 and #flatCollapsed == 2 and #flatExpanded == 4
+
+	print(
+		"[FGUI] Act38TestCtrl complex control self test:",
+		"binding=", bindingId,
+		"page=", pageCount, beforeIndex, targetIndex, targetPage, targetPageId,
+		"controller=", setIndexOk, indexOk, setPageOk, pageOk, changedCount,
+		"virtual=", virtualOk, virtualCountOk,
+		"tree=", treeOk, collapseOk, expandOk, treeCountOk,
+		"lastEvent=", lastControllerEvent and lastControllerEvent.selectedIndex)
+
+	return bindingId ~= nil
+		and pageCount > 0
+		and setIndexOk == true
+		and indexOk == true
+		and setPageOk == true
+		and pageOk == true
+		and changedCount > 0
+		and virtualOk == true
+		and virtualCountOk == true
+		and treeOk == true
+		and collapseOk == true
+		and expandOk == true
+		and treeCountOk == true
+end
+
 return Act38TestCtrl

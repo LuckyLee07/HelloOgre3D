@@ -56,6 +56,8 @@ public:
 	int getFairyGuiTextureCount();
 	int getFairyGuiMaterialAliasCount();
 	int getFairyGuiTextureAliasCount();
+	const char* getFairyGuiMaterialDetailString();
+	const char* getFairyGuiTextureDetailString();
 	bool plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	int getFairyGuiChild(int objectHandle, const char* childPath);
 	int getFairyGuiListItem(int objectHandle, int itemIndex);
@@ -74,6 +76,13 @@ public:
 	bool setFairyGuiObjectIcon(int objectHandle, const char* icon);
 	bool setFairyGuiObjectLoaderUrl(int objectHandle, const char* url);
 	bool setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex);
+	int getFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName);
+	bool setFairyGuiObjectControllerPage(int objectHandle, const char* controllerName, const char* pageName);
+	const char* getFairyGuiObjectControllerPage(int objectHandle, const char* controllerName);
+	const char* getFairyGuiObjectControllerPageId(int objectHandle, const char* controllerName);
+	int getFairyGuiObjectControllerPageCount(int objectHandle, const char* controllerName);
+	const char* getFairyGuiObjectControllerPageNameAt(int objectHandle, const char* controllerName, int pageIndex);
+	const char* getFairyGuiObjectControllerPageIdAt(int objectHandle, const char* controllerName, int pageIndex);
 	bool setFairyGuiObjectValue(int objectHandle, Ogre::Real value);
 	Ogre::Real getFairyGuiObjectValue(int objectHandle);
 	bool setFairyGuiObjectMin(int objectHandle, Ogre::Real minValue);
@@ -92,6 +101,8 @@ public:
 	bool setFairyGuiListItemCount(int objectHandle, int itemCount);
 	bool setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex);
 	int getFairyGuiListSelectedIndex(int objectHandle);
+	bool setFairyGuiListVirtual(int objectHandle, bool loop);
+	bool refreshFairyGuiList(int objectHandle);
 		bool scrollFairyGuiListToView(int objectHandle, int itemIndex);
 		bool centerFairyGuiObject(int objectHandle, bool restraint);
 		bool injectFairyGuiMouseMove(int x, int y);
@@ -101,8 +112,10 @@ public:
 		bool injectFairyGuiClick(int x, int y, int button);
 		bool injectFairyGuiKeyPressed(int keyCode, int keyText);
 		bool injectFairyGuiKeyReleased(int keyCode, int keyText);
+		bool injectFairyGuiImeCommitText(const char* text);
 		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
 		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
+		int addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId);
 		bool removeFairyGuiListener(int bindingId);
 	bool removeFairyGuiObject(int objectHandle);
 	void clearFairyGuiObjects();
@@ -141,6 +154,9 @@ private:
 	std::string m_fairyGuiLastPackageName;
 	std::string m_fairyGuiLastObjectText;
 	std::string m_fairyGuiLastObjectValue;
+	std::string m_fairyGuiLastControllerString;
+	std::string m_fairyGuiLastMaterialDetail;
+	std::string m_fairyGuiLastTextureDetail;
 
 }; //tolua_exports
 

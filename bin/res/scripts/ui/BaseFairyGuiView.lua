@@ -132,6 +132,55 @@ function BaseFairyGuiView:SetControllerIndex(controllerName, selectedIndex)
 	return FairyGuiManager:SetControllerIndex(self.handle, controllerName, selectedIndex)
 end
 
+function BaseFairyGuiView:GetControllerIndex(controllerName)
+	if FairyGuiManager == nil or self.handle == nil then
+		return -1
+	end
+	return FairyGuiManager:GetControllerIndex(self.handle, controllerName)
+end
+
+function BaseFairyGuiView:SetControllerPage(controllerName, pageName)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetControllerPage(self.handle, controllerName, pageName)
+end
+
+function BaseFairyGuiView:GetControllerPage(controllerName)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetControllerPage(self.handle, controllerName)
+end
+
+function BaseFairyGuiView:GetControllerPageId(controllerName)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetControllerPageId(self.handle, controllerName)
+end
+
+function BaseFairyGuiView:GetControllerPageCount(controllerName)
+	if FairyGuiManager == nil or self.handle == nil then
+		return 0
+	end
+	return FairyGuiManager:GetControllerPageCount(self.handle, controllerName)
+end
+
+function BaseFairyGuiView:GetControllerPageNameAt(controllerName, pageIndex)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetControllerPageNameAt(self.handle, controllerName, pageIndex)
+end
+
+function BaseFairyGuiView:GetControllerPageIdAt(controllerName, pageIndex)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetControllerPageIdAt(self.handle, controllerName, pageIndex)
+end
+
 function BaseFairyGuiView:SetValue(childPathOrValue, value)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false
@@ -228,6 +277,41 @@ function BaseFairyGuiView:SetListData(childPath, dataList, renderer)
 		return false
 	end
 	return FairyGuiManager:SetListData(self.handle, childPath, dataList, renderer)
+end
+
+function BaseFairyGuiView:SetVirtualListData(childPath, dataList, renderer, options)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetVirtualListData(self.handle, childPath, dataList, renderer, options)
+end
+
+function BaseFairyGuiView:SetTreeData(childPath, treeData, renderer, options)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetTreeData(self.handle, childPath, treeData, renderer, options)
+end
+
+function BaseFairyGuiView:GetTreeFlatData(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return {}
+	end
+	return FairyGuiManager:GetTreeFlatData(self.handle, childPath)
+end
+
+function BaseFairyGuiView:SetTreeNodeExpanded(childPath, nodeKey, expanded)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:SetTreeNodeExpanded(self.handle, childPath, nodeKey, expanded)
+end
+
+function BaseFairyGuiView:ToggleTreeNode(childPath, nodeKey)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:ToggleTreeNode(self.handle, childPath, nodeKey)
 end
 
 function BaseFairyGuiView:GetListData(childPath, index)
@@ -438,6 +522,13 @@ end
 
 function BaseFairyGuiView:AddChanged(childPath, callback)
 	return self:AddEvent(childPath, "Changed", callback)
+end
+
+function BaseFairyGuiView:AddControllerChanged(controllerName, callback)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return self:AddBinding(FairyGuiManager:AddControllerChanged(self.handle, controllerName, callback))
 end
 
 function BaseFairyGuiView:AddClickItem(childPath, callback)

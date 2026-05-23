@@ -129,6 +129,34 @@ function FairyGuiBaseCtrl:SetControllerIndex(controllerName, selectedIndex)
 	return self.view ~= nil and self.view:SetControllerIndex(controllerName, selectedIndex) or false
 end
 
+function FairyGuiBaseCtrl:GetControllerIndex(controllerName)
+	return self.view ~= nil and self.view:GetControllerIndex(controllerName) or -1
+end
+
+function FairyGuiBaseCtrl:SetControllerPage(controllerName, pageName)
+	return self.view ~= nil and self.view:SetControllerPage(controllerName, pageName) or false
+end
+
+function FairyGuiBaseCtrl:GetControllerPage(controllerName)
+	return self.view ~= nil and self.view:GetControllerPage(controllerName) or ""
+end
+
+function FairyGuiBaseCtrl:GetControllerPageId(controllerName)
+	return self.view ~= nil and self.view:GetControllerPageId(controllerName) or ""
+end
+
+function FairyGuiBaseCtrl:GetControllerPageCount(controllerName)
+	return self.view ~= nil and self.view:GetControllerPageCount(controllerName) or 0
+end
+
+function FairyGuiBaseCtrl:GetControllerPageNameAt(controllerName, pageIndex)
+	return self.view ~= nil and self.view:GetControllerPageNameAt(controllerName, pageIndex) or ""
+end
+
+function FairyGuiBaseCtrl:GetControllerPageIdAt(controllerName, pageIndex)
+	return self.view ~= nil and self.view:GetControllerPageIdAt(controllerName, pageIndex) or ""
+end
+
 function FairyGuiBaseCtrl:SetValue(childPathOrValue, value)
 	return self.view ~= nil and self.view:SetValue(childPathOrValue, value) or false
 end
@@ -183,6 +211,26 @@ end
 
 function FairyGuiBaseCtrl:SetListData(childPath, dataList, renderer)
 	return self.view ~= nil and self.view:SetListData(childPath, dataList, renderer) or false
+end
+
+function FairyGuiBaseCtrl:SetVirtualListData(childPath, dataList, renderer, options)
+	return self.view ~= nil and self.view:SetVirtualListData(childPath, dataList, renderer, options) or false
+end
+
+function FairyGuiBaseCtrl:SetTreeData(childPath, treeData, renderer, options)
+	return self.view ~= nil and self.view:SetTreeData(childPath, treeData, renderer, options) or false
+end
+
+function FairyGuiBaseCtrl:GetTreeFlatData(childPath)
+	return self.view ~= nil and self.view:GetTreeFlatData(childPath) or {}
+end
+
+function FairyGuiBaseCtrl:SetTreeNodeExpanded(childPath, nodeKey, expanded)
+	return self.view ~= nil and self.view:SetTreeNodeExpanded(childPath, nodeKey, expanded) or false
+end
+
+function FairyGuiBaseCtrl:ToggleTreeNode(childPath, nodeKey)
+	return self.view ~= nil and self.view:ToggleTreeNode(childPath, nodeKey) or false
 end
 
 function FairyGuiBaseCtrl:GetListData(childPath, index)
@@ -247,6 +295,10 @@ end
 
 function FairyGuiBaseCtrl:AddChanged(childPath, callback)
 	return self.view ~= nil and self.view:AddChanged(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddControllerChanged(controllerName, callback)
+	return self.view ~= nil and self.view:AddControllerChanged(controllerName, callback) or nil
 end
 
 function FairyGuiBaseCtrl:AddClickItem(childPath, callback)

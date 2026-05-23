@@ -17,6 +17,7 @@ param(
 		"ScreenAdapt",
 		"ScreenAdaptDemo",
 		"BusinessFlow",
+		"ComplexControls",
 		"ResourcePolicy",
 		"Pressure",
 		"Layer",
@@ -66,6 +67,7 @@ function Get-DefaultWaitSeconds {
 		"CommonServiceDemo" { return 28 }
 		"ScreenAdaptDemo" { return 24 }
 		"BusinessFlow" { return 32 }
+		"ComplexControls" { return 32 }
 		"ResourcePolicy" { return 34 }
 		"Pressure" { return 180 }
 		"EventPayload" { return 32 }
@@ -110,6 +112,7 @@ function Get-FairyGuiEnv {
 		"ScreenAdapt" { $values["HELLO_FGUI_SCREEN_ADAPT_SELF_TEST"] = "1" }
 		"ScreenAdaptDemo" { $values["HELLO_FGUI_SCREEN_ADAPT_DEMO"] = "1" }
 		"BusinessFlow" { $values["HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"] = "1" }
+		"ComplexControls" { $values["HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST"] = "1" }
 		"ResourcePolicy" { $values["HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"] = "1" }
 		"Pressure" {
 			$values["HELLO_FGUI_PRESSURE_SELF_TEST"] = "1"
@@ -150,6 +153,7 @@ $KnownEnvNames = @(
 	"HELLO_FGUI_SCREEN_ADAPT_SELF_TEST",
 	"HELLO_FGUI_SCREEN_ADAPT_DEMO",
 	"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST",
+	"HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST",
 	"HELLO_FGUI_RESOURCE_POLICY_SELF_TEST",
 	"HELLO_FGUI_PRESSURE_SELF_TEST",
 	"HELLO_FGUI_PRESSURE_COUNT",

@@ -87,10 +87,22 @@ local function tryRunFairyGuiImeSelfTest()
 	threadpool:delay(9, function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
-		local commit = FairyGuiManager:DebugInjectKeyPressed(0, 20013)
+		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		print("[FGUI] ime self test result:", handle ~= nil, inputHandle, focused, commit, text == "\228\184\173", text)
 		FairyGuiManager:Close("TextInputProbe", true)
+	end)
+end
+
+local function tryRunFairyGuiComplexControlsSelfTest()
+	if not isEnvEnabled("HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST") then
+		return
+	end
+
+	threadpool:delay(9, function()
+		print("[FGUI] complex controls self test result:", FGUI_RunComplexControlsSelfTest())
+		FairyGuiManager:DumpEventStats()
+		FairyGuiManager:DumpRenderStats()
 	end)
 end
 
@@ -451,6 +463,7 @@ local function tryOpenFairyGuiSample()
 		tryRunFairyGuiKeySelfTest()
 		tryRunFairyGuiTextInputSelfTest()
 		tryRunFairyGuiImeSelfTest()
+		tryRunFairyGuiComplexControlsSelfTest()
 		tryRunFairyGuiLifecycleSelfTest()
 		tryRunFairyGuiCacheSelfTest()
 		tryRunFairyGuiCommonServiceSelfTest()
@@ -517,6 +530,23 @@ function FGUI_OpenAct38Sample(param)
 		"spcCount=", ctrl:GetListItemCount("m2_spcTaskList"),
 		"shopCount=", ctrl:GetListItemCount("m2_excShopList"))
 	return ctrl
+end
+
+function FGUI_RunComplexControlsSelfTest()
+	FairyGuiManager:Close("Act37TestMvc", true, "complexControlsReset")
+	FairyGuiManager:Close("Act38Test", true, "complexControlsReset")
+	local ctrl = FGUI_OpenAct38Sample({
+		scene = "ComplexControls",
+		group = "ComplexControls",
+		dateText = "Complex Controls Self Test",
+	})
+	local complexOk = ctrl ~= nil and ctrl.RunComplexControlSelfTest ~= nil and ctrl:RunComplexControlSelfTest() or false
+	FairyGuiManager:Close("Act38Test", true, "complexControlsCleanup")
+	FairyGuiManager:Close("Act37TestMvc", true, "complexControlsCleanup")
+	local health = FairyGuiManager:GetHealthStats()
+	local finalClean = health.openUI == 0 and health.binding == 0 and health.transitionCallback == 0
+	print("[FGUI] complex controls self test detail:", complexOk, finalClean, "openUI=", health.openUI, "binding=", health.binding, "transition=", health.transitionCallback)
+	return complexOk == true and finalClean == true
 end
 
 function FGUI_CloseAct38Sample()
@@ -1077,10 +1107,14 @@ function FGUI_RunSelfTestSuite()
 		local ok = ctrl ~= nil and ctrl.RunListApiSelfTest ~= nil and ctrl:RunListApiSelfTest() or false
 		return ok, ctrl and ctrl:GetHandle() or nil
 	end)
+	schedule(0.6, "ComplexControls", function()
+		return FGUI_RunComplexControlsSelfTest()
+	end)
 	schedule(0.6, "MouseWheel", function()
+		local ctrl = FairyGuiManager:GetController("Act38Test") or FGUI_OpenAct38Sample()
 		local scrollDown = FairyGuiManager:DebugInjectMouseWheel(745, 485, -120)
 		local scrollUp = FairyGuiManager:DebugInjectMouseWheel(745, 485, 120)
-		return scrollDown and scrollUp, tostring(scrollDown) .. "," .. tostring(scrollUp)
+		return ctrl ~= nil and scrollDown and scrollUp, tostring(ctrl ~= nil) .. "," .. tostring(scrollDown) .. "," .. tostring(scrollUp)
 	end)
 	schedule(0.6, "EventPayload", function()
 		FairyGuiManager:Close("Act38Test", true, "selfTestEventPayloadReset")
@@ -1104,7 +1138,7 @@ function FGUI_RunSelfTestSuite()
 	schedule(0.6, "ImeCommit", function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
-		local commit = FairyGuiManager:DebugInjectKeyPressed(0, 20013)
+		local commit = FairyGuiManager:DebugInjectImeCommitText("\228\184\173")
 		local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
 		FairyGuiManager:Close("TextInputProbe", true)
 		return handle ~= nil and focused and commit and text == "\228\184\173", text
@@ -1598,6 +1632,32 @@ function FGUI_RunResourcePolicySelfTest()
 	FairyGuiManager:Close("Act38Test", true, "resourcePolicyCloseAct38")
 	local finalUnloadStats = FairyGuiManager:UnloadPackageGroup("Sample")
 	local finalUnloadOk = finalUnloadStats.unloaded >= 1
+
+	local oldCachePolicy = FairyGuiManager:GetCachePolicy()
+	FairyGuiManager:SetCachePolicy({ maxHiddenTotal = 1, maxHiddenPerPackage = 4, warnHiddenSeconds = 60 })
+	local cache37 = FGUI_ReopenAct37Sample({
+		key = "ResourcePolicyCache37",
+		cache = true,
+		group = "ResourcePolicy",
+	})
+	local cache38 = FGUI_OpenAct38Sample({
+		key = "ResourcePolicyCache38",
+		cache = true,
+		group = "ResourcePolicy",
+	})
+	local hide37 = cache37 ~= nil and FairyGuiManager:Close("ResourcePolicyCache37", false, "resourcePolicyCacheHide") or false
+	local hide38 = cache38 ~= nil and FairyGuiManager:Close("ResourcePolicyCache38", false, "resourcePolicyCacheHide") or false
+	local cacheWarnings = FairyGuiManager:GetResourceWarnings()
+	local cacheWarningOk = false
+	for _, warning in ipairs(cacheWarnings) do
+		if warning.kind == "hiddenCacheOverTotalBudget" then
+			cacheWarningOk = true
+			break
+		end
+	end
+	FairyGuiManager:Close("ResourcePolicyCache37", true, "resourcePolicyCacheCleanup")
+	FairyGuiManager:Close("ResourcePolicyCache38", true, "resourcePolicyCacheCleanup")
+	FairyGuiManager:SetCachePolicy(oldCachePolicy)
 	local finalClean, finalDetail = checkFairyGuiLongLoopClean("resource policy final")
 
 	print(
@@ -1606,6 +1666,7 @@ function FGUI_RunResourcePolicySelfTest()
 		"tagUnload=", tagUnloadStats.unloaded, tagUnloadOk,
 		"inUse=", inUseUnloadStats.matched, inUseUnloadStats.unloaded, inUseUnloadStats.skipped, skipInUseOk,
 		"finalUnload=", finalUnloadStats.unloaded, finalUnloadOk,
+		"cachePolicy=", hide37, hide38, cacheWarningOk, #cacheWarnings,
 		"open=", openOk,
 		finalDetail)
 
@@ -1614,6 +1675,9 @@ function FGUI_RunResourcePolicySelfTest()
 		and openOk == true
 		and skipInUseOk == true
 		and finalUnloadOk == true
+		and hide37 == true
+		and hide38 == true
+		and cacheWarningOk == true
 		and finalClean == true
 end
 

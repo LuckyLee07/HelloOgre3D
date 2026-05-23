@@ -61,9 +61,62 @@ function LIST_ITEM_METHODS:SetControllerIndex(controllerName, selectedIndex)
 	return manager ~= nil and manager:SetControllerIndex(self.handle, controllerName, selectedIndex) or false
 end
 
+function LIST_ITEM_METHODS:SetControllerPage(controllerName, pageName)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:SetControllerPage(self.handle, controllerName, pageName) or false
+end
+
 function LIST_ITEM_METHODS:SetValue(childPathOrValue, value)
 	local manager = getCurrentManager()
 	return manager ~= nil and manager:SetValue(self.handle, childPathOrValue, value) or false
+end
+
+local function buildTreeKey(parentKey, index, node)
+	if type(node) == "table" and node.key ~= nil then
+		return tostring(node.key)
+	end
+	return tostring(parentKey or "root") .. "." .. tostring(index)
+end
+
+local function copyTreeRow(node, nodeKey, parentKey, depth, expanded, hasChildren)
+	local row = {}
+	if type(node) == "table" then
+		for key, value in pairs(node) do
+			if key ~= "children" then
+				row[key] = value
+			end
+		end
+	end
+	row.key = nodeKey
+	row.parentKey = parentKey
+	row.depth = depth
+	row.expanded = expanded
+	row.hasChildren = hasChildren
+	row.source = node
+	return row
+end
+
+local function flattenTreeNodes(nodes, state, output, depth, parentKey)
+	if type(nodes) ~= "table" then
+		return
+	end
+
+	state.expanded = state.expanded or {}
+	for index, node in ipairs(nodes) do
+		local nodeKey = buildTreeKey(parentKey, index, node)
+		local children = type(node) == "table" and node.children or nil
+		local hasChildren = type(children) == "table" and #children > 0
+		local expanded = state.expanded[nodeKey]
+		if expanded == nil then
+			expanded = type(node) ~= "table" or node.expanded ~= false
+			state.expanded[nodeKey] = expanded
+		end
+
+		table.insert(output, copyTreeRow(node, nodeKey, parentKey, depth, expanded, hasChildren))
+		if hasChildren and expanded == true then
+			flattenTreeNodes(children, state, output, depth + 1, nodeKey)
+		end
+	end
 end
 
 function LIST_ITEM_METHODS:SetProgress(childPathOrValue, value, maxValue, minValue)
@@ -131,6 +184,11 @@ function FairyGuiLists:ClearListCacheByListHandle(listHandle)
 	self.listItemHandlesByHandle[listHandle] = nil
 	self.listDataByHandle[listHandle] = nil
 	self.listRenderersByHandle[listHandle] = nil
+	self.listVirtualByHandle[listHandle] = nil
+	self.treeDataByHandle[listHandle] = nil
+	self.treeStateByHandle[listHandle] = nil
+	self.treeRenderersByHandle[listHandle] = nil
+	self.treeChildPathByHandle[listHandle] = nil
 end
 
 function FairyGuiLists:ClearListItemHandleCache(listHandle)
@@ -198,7 +256,7 @@ function FairyGuiLists:GetListItemByHandle(listHandle, index, data)
 	return self:CreateListItemAdapter(listHandle, itemHandle, index, data)
 end
 
-function FairyGuiLists:RenderListItemByHandle(listHandle, index)
+function FairyGuiLists:RenderListItemByHandle(listHandle, index, itemHandle)
 	local self = self.owner
 	if self == nil then
 		return false
@@ -206,7 +264,7 @@ function FairyGuiLists:RenderListItemByHandle(listHandle, index)
 
 	local dataList = self.listDataByHandle[listHandle]
 	local data = dataList ~= nil and dataList[index] or nil
-	local item = self:GetListItemByHandle(listHandle, index, data)
+	local item = itemHandle ~= nil and self:CreateListItemAdapter(listHandle, itemHandle, index, data) or self:GetListItemByHandle(listHandle, index, data)
 	if item == nil then
 		return false
 	end
@@ -218,6 +276,21 @@ function FairyGuiLists:RenderListItemByHandle(listHandle, index)
 		item:SetText("", tostring(data or ""))
 	end
 	return true
+end
+
+function FairyGuiLists:RenderVirtualListItemByHandle(listHandle, index, itemHandle)
+	local self = self.owner
+	if self == nil or listHandle == nil or index == nil or itemHandle == nil or itemHandle <= 0 then
+		return false
+	end
+
+	local itemHandles = self.listItemHandlesByHandle[listHandle]
+	if itemHandles == nil then
+		itemHandles = {}
+		self.listItemHandlesByHandle[listHandle] = itemHandles
+	end
+	itemHandles[index] = itemHandle
+	return self:RenderListItemByHandle(listHandle, index, itemHandle)
 end
 
 function FairyGuiLists:GetListHandle(handle, childPath)
@@ -291,6 +364,157 @@ function FairyGuiLists:SetListData(handle, childPath, dataList, renderer)
 	return true
 end
 
+function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer, options)
+	local self = self.owner
+	if self == nil or type(dataList) ~= "table" then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	self.listDataByHandle[listHandle] = dataList
+	if type(renderer) == "function" then
+		self.listRenderersByHandle[listHandle] = renderer
+	else
+		self.listRenderersByHandle[listHandle] = nil
+	end
+	self:ClearListItemHandleCache(listHandle)
+
+	local virtualEnabled = false
+	if GameManager ~= nil and GameManager.setFairyGuiListVirtual ~= nil then
+		virtualEnabled = GameManager:setFairyGuiListVirtual(listHandle, options ~= nil and options.loop == true) == true
+	end
+	self.listVirtualByHandle[listHandle] = virtualEnabled
+	if virtualEnabled then
+		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and GameManager.refreshFairyGuiList ~= nil then
+			GameManager:refreshFairyGuiList(listHandle)
+		end
+		return countOk == true
+	end
+	return self:SetListData(handle, childPath, dataList, renderer)
+end
+
+function FairyGuiLists:BuildTreeFlatData(listHandle)
+	local self = self.owner
+	if self == nil or listHandle == nil then
+		return {}
+	end
+
+	local flat = {}
+	local state = self.treeStateByHandle[listHandle] or { expanded = {} }
+	self.treeStateByHandle[listHandle] = state
+	flattenTreeNodes(self.treeDataByHandle[listHandle], state, flat, 0, nil)
+	return flat
+end
+
+function FairyGuiLists:RefreshTree(handle, childPath)
+	local self = self.owner
+	if self == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	local flat = self:GetLists():BuildTreeFlatData(listHandle)
+	local renderer = self.treeRenderersByHandle[listHandle]
+	return self:GetLists():SetListData(handle, childPath, flat, function(item, node, index)
+		item.treeNode = node
+		item.treeDepth = node ~= nil and node.depth or 0
+		item.treeKey = node ~= nil and node.key or nil
+		if type(renderer) == "function" then
+			renderer(item, node, index)
+		else
+			local indent = string.rep("  ", item.treeDepth or 0)
+			local marker = node ~= nil and node.hasChildren and (node.expanded and "- " or "+ ") or "  "
+			item:SetText("", indent .. marker .. tostring(node and (node.text or node.label or node.key) or ""))
+		end
+	end)
+end
+
+function FairyGuiLists:SetTreeData(handle, childPath, treeData, renderer, options)
+	local self = self.owner
+	if self == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil then
+		return false
+	end
+
+	local nodes = treeData
+	if type(treeData) == "table" and treeData.nodes ~= nil then
+		nodes = treeData.nodes
+	end
+	if type(nodes) ~= "table" then
+		return false
+	end
+
+	self.treeDataByHandle[listHandle] = nodes
+	self.treeChildPathByHandle[listHandle] = childPath
+	if options ~= nil and options.resetState == true or self.treeStateByHandle[listHandle] == nil then
+		self.treeStateByHandle[listHandle] = { expanded = {} }
+	end
+	if type(renderer) == "function" then
+		self.treeRenderersByHandle[listHandle] = renderer
+	else
+		self.treeRenderersByHandle[listHandle] = nil
+	end
+	return self:GetLists():RefreshTree(handle, childPath)
+end
+
+function FairyGuiLists:GetTreeFlatData(handle, childPath)
+	local self = self.owner
+	if self == nil then
+		return {}
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	return self:GetLists():BuildTreeFlatData(listHandle)
+end
+
+function FairyGuiLists:SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
+	local self = self.owner
+	if self == nil or nodeKey == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or self.treeDataByHandle[listHandle] == nil then
+		return false
+	end
+
+	local state = self.treeStateByHandle[listHandle] or { expanded = {} }
+	self.treeStateByHandle[listHandle] = state
+	state.expanded[tostring(nodeKey)] = expanded == true
+	return self:GetLists():RefreshTree(handle, childPath)
+end
+
+function FairyGuiLists:ToggleTreeNode(handle, childPath, nodeKey)
+	local self = self.owner
+	if self == nil or nodeKey == nil then
+		return false
+	end
+
+	local listHandle = self:GetListHandle(handle, childPath)
+	if listHandle == nil or self.treeDataByHandle[listHandle] == nil then
+		return false
+	end
+
+	local state = self.treeStateByHandle[listHandle] or { expanded = {} }
+	self.treeStateByHandle[listHandle] = state
+	nodeKey = tostring(nodeKey)
+	state.expanded[nodeKey] = state.expanded[nodeKey] ~= true
+	return self:GetLists():RefreshTree(handle, childPath)
+end
+
 function FairyGuiLists:GetListData(handle, childPath, index)
 	local self = self.owner
 	if self == nil then
@@ -331,6 +555,10 @@ function FairyGuiLists:RefreshList(handle, childPath)
 	local listHandle = self:GetListHandle(handle, childPath)
 	if listHandle == nil then
 		return false
+	end
+
+	if self.listVirtualByHandle[listHandle] == true and GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil then
+		return GameManager:refreshFairyGuiList(listHandle)
 	end
 
 	local dataList = self.listDataByHandle[listHandle]
