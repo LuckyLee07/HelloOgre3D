@@ -405,6 +405,20 @@ function FairyGuiManager:CreateTextInput(ownerHandle, name, text, fontSize, red,
 	return GameManager:createFairyGuiTextInput(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
 end
 
+function FairyGuiManager:CreateGraphRect(ownerHandle, name, width, height, red, green, blue, alpha)
+	if not self:IsAvailable() or GameManager.createFairyGuiGraphRect == nil then
+		return 0
+	end
+	return GameManager:createFairyGuiGraphRect(ownerHandle or 0, name or "", width or 1, height or 1, red or 1, green or 1, blue or 1, alpha or 1)
+end
+
+function FairyGuiManager:CreateGraphRegularPolygon(ownerHandle, name, width, height, sides, red, green, blue, alpha)
+	if not self:IsAvailable() or GameManager.createFairyGuiGraphRegularPolygon == nil then
+		return 0
+	end
+	return GameManager:createFairyGuiGraphRegularPolygon(ownerHandle or 0, name or "", width or 1, height or 1, sides or 6, red or 1, green or 1, blue or 1, alpha or 1)
+end
+
 function FairyGuiManager:GetRenderStats()
 	return self:GetProfiler():GetRenderStats()
 end
@@ -1332,6 +1346,7 @@ end
 function FairyGuiManager:OpenMaskProbe(param)
 	param = param or {}
 	local key = param.key or "MaskProbe"
+	local uiName = param.uiName or key
 	self:CloseUI(key, true)
 
 	local assets = param.assets or {}
@@ -1341,6 +1356,7 @@ function FairyGuiManager:OpenMaskProbe(param)
 	local stripBPath = param.stripBImage or assets.stripB
 	local stripCPath = param.stripCImage or assets.stripC
 	local maskPath = param.maskImage or assets.mask
+	local useGraphMask = param.graphMask == true
 	if isBlank(backgroundPath) or isBlank(contentPath) or isBlank(stripAPath) or isBlank(stripBPath) or isBlank(stripCPath) or isBlank(maskPath) then
 		print("[FGUI] open mask probe failed, missing image asset")
 		return nil
@@ -1357,6 +1373,21 @@ function FairyGuiManager:OpenMaskProbe(param)
 		if alpha ~= nil then
 			self:SetAlpha(childHandle, alpha)
 		end
+		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			GameManager:removeFairyGuiObject(childHandle)
+			return nil
+		end
+		return childHandle
+	end
+
+	local function addGraphPolygon(parentHandle, name, x, y, width, height, sides, red, green, blue, alpha)
+		local childHandle = self:CreateGraphRegularPolygon(parentHandle, name, width, height, sides or 6, red or 0.35, green or 0.8, blue or 1.0, alpha or 1.0)
+		if childHandle == nil or childHandle <= 0 then
+			return nil
+		end
+		self:SetPosition(childHandle, x, y)
+		self:SetSize(childHandle, width, height)
+		self:SetTouchable(childHandle, false)
 		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
 			GameManager:removeFairyGuiObject(childHandle)
 			return nil
@@ -1395,7 +1426,12 @@ function FairyGuiManager:OpenMaskProbe(param)
 		local stripA = addImage(panelHandle, "content_strip_a", stripAPath, -20, 50, 180, 72)
 		local stripB = addImage(panelHandle, "content_strip_b", stripBPath, 130, 82, 160, 52)
 		local stripC = addImage(panelHandle, "content_strip_c", stripCPath, 245, 20, 64, 64)
-		local mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
+		local mask = nil
+		if useGraphMask then
+			mask = addGraphPolygon(panelHandle, "stencil_graph_mask", 72, 46, 176, 118, 6, 0.2, 0.9, 1.0, 0.86)
+		else
+			mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
+		end
 		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
 			GameManager:removeFairyGuiObject(panelHandle)
 			return nil
@@ -1416,8 +1452,15 @@ function FairyGuiManager:OpenMaskProbe(param)
 	local invertedLabel = addText(handle, "inverted_label", "inverted mask: center area is cut out", 404, 42, 320, 24, 255, 220, 210)
 	local normalPanel = createPanel(handle, "normal_panel", 28, 70, false)
 	local invertedPanel = createPanel(handle, "inverted_panel", 404, 70, true)
-	local normalOverlay = addImage(handle, "normal_mask_overlay", maskPath, 100, 116, 176, 118, 0.35)
-	local invertedOverlay = addImage(handle, "inverted_mask_overlay", maskPath, 476, 116, 176, 118, 0.35)
+	local normalOverlay = nil
+	local invertedOverlay = nil
+	if useGraphMask then
+		normalOverlay = addGraphPolygon(handle, "normal_graph_mask_overlay", 100, 116, 176, 118, 6, 0.2, 0.9, 1.0, 0.35)
+		invertedOverlay = addGraphPolygon(handle, "inverted_graph_mask_overlay", 476, 116, 176, 118, 6, 0.2, 0.9, 1.0, 0.35)
+	else
+		normalOverlay = addImage(handle, "normal_mask_overlay", maskPath, 100, 116, 176, 118, 0.35)
+		invertedOverlay = addImage(handle, "inverted_mask_overlay", maskPath, 476, 116, 176, 118, 0.35)
+	end
 	if background == nil or title == nil or normalLabel == nil or invertedLabel == nil or normalPanel == nil or invertedPanel == nil or normalOverlay == nil or invertedOverlay == nil then
 		GameManager:removeFairyGuiObject(handle)
 		return nil
@@ -1438,10 +1481,10 @@ function FairyGuiManager:OpenMaskProbe(param)
 	local objectInfo = {
 		handle = handle,
 		key = key,
-		name = "MaskProbe",
+		name = uiName,
 		objectName = "FairyGuiMaskProbe",
 		param = param,
-		uiName = "MaskProbe",
+		uiName = uiName,
 		cache = false,
 		layer = layerName,
 		popupGroup = self:GetPopupGroup(param),
@@ -1457,7 +1500,7 @@ function FairyGuiManager:OpenMaskProbe(param)
 	}
 	self.objects[key] = objectInfo
 	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey.MaskProbe = key
+	self.uiNameToKey[uiName] = key
 	self.hiddenObjects[key] = nil
 	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)

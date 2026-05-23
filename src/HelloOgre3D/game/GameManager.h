@@ -45,6 +45,8 @@ public:
 	int createFairyGuiLoader(int ownerHandle, const char* name, const char* url);
 	int createFairyGuiText(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue);
 	int createFairyGuiTextInput(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue);
+	int createFairyGuiGraphRect(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
+	int createFairyGuiGraphRegularPolygon(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, int sides, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha);
 	int getFairyGuiLastRenderCommandCount();
 	int getFairyGuiLastTriangleCount();

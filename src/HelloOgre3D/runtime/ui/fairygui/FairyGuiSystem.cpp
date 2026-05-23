@@ -1216,6 +1216,53 @@ int FairyGuiSystem::CreateTextInputHandle(int ownerHandle, const std::string& na
 	return objectHandle;
 }
 
+int FairyGuiSystem::CreateGraphRectHandle(int ownerHandle, const std::string& name, float width, float height, float red, float green, float blue, float alpha)
+{
+	if (!m_initialized || width <= 0.0f || height <= 0.0f)
+		return 0;
+
+	fairygui::GGraph* graph = fairygui::GGraph::create();
+	if (graph == nullptr)
+		return 0;
+
+	graph->name = name;
+	graph->drawRect(width, height, 0, cocos2d::Color4F(red, green, blue, alpha), cocos2d::Color4F(red, green, blue, alpha));
+	graph->setTouchable(false);
+	graph->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = graph;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
+int FairyGuiSystem::CreateGraphRegularPolygonHandle(int ownerHandle, const std::string& name, float width, float height, int sides, float red, float green, float blue, float alpha)
+{
+	if (!m_initialized || width <= 0.0f || height <= 0.0f || sides < 3)
+		return 0;
+
+	fairygui::GGraph* graph = fairygui::GGraph::create();
+	if (graph == nullptr)
+		return 0;
+
+	graph->name = name;
+	graph->setSize(width, height);
+	graph->drawRegularPolygon(0, cocos2d::Color4F(red, green, blue, alpha), cocos2d::Color4F(red, green, blue, alpha), sides, -90.0f);
+	graph->setTouchable(false);
+	graph->retain();
+
+	const int objectHandle = m_nextObjectHandle++;
+	ObjectHandleInfo handleInfo;
+	handleInfo.object = graph;
+	handleInfo.ownerHandle = ownerHandle;
+	handleInfo.retained = true;
+	m_objectHandles[objectHandle] = handleInfo;
+	return objectHandle;
+}
+
 int FairyGuiSystem::CreateModalMaskHandle(float red, float green, float blue, float alpha)
 {
 	if (!m_initialized || m_screenWidth == 0 || m_screenHeight == 0)

@@ -69,6 +69,8 @@ public:
 	int CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url);
 	int CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue);
 	int CreateTextInputHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue);
+	int CreateGraphRectHandle(int ownerHandle, const std::string& name, float width, float height, float red, float green, float blue, float alpha);
+	int CreateGraphRegularPolygonHandle(int ownerHandle, const std::string& name, float width, float height, int sides, float red, float green, float blue, float alpha);
 	int CreateModalMaskHandle(float red, float green, float blue, float alpha);
 	int GetObjectHandleChild(int objectHandle, const std::string& childPath);
 	int GetObjectHandleListItem(int objectHandle, int itemIndex);

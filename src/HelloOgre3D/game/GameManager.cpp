@@ -181,6 +181,32 @@ int GameManager::createFairyGuiTextInput(int ownerHandle, const char* name, cons
 #endif
 }
 
+int GameManager::createFairyGuiGraphRect(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateGraphRectHandle(ownerHandle, name != nullptr ? name : "", width, height, red, green, blue, alpha);
+#else
+	return 0;
+#endif
+}
+
+int GameManager::createFairyGuiGraphRegularPolygon(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, int sides, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
+	if (system == nullptr)
+		return 0;
+
+	return system->CreateGraphRegularPolygonHandle(ownerHandle, name != nullptr ? name : "", width, height, sides, red, green, blue, alpha);
+#else
+	return 0;
+#endif
+}
+
 int GameManager::createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
 {
 #if defined(HELLO_ENABLE_FGUI)

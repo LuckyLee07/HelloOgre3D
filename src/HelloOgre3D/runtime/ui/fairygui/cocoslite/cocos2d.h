@@ -1195,14 +1195,31 @@ namespace cocos2d
 	class DrawNode : public Node
 	{
 	public:
+		DrawNode();
+
 		CREATE_FUNC(DrawNode);
 
-		void clear() {}
-		void setLineWidth(float) {}
-		void drawTriangle(const Vec2&, const Vec2&, const Vec2&, const Color4F&) {}
-		void drawCircle(const Vec2&, float, float, unsigned int, bool, float, float, const Color4F&) {}
-		void drawSolidCircle(const Vec2&, float, float, unsigned int, float, float, const Color4F&) {}
-		void drawPolygon(const Vec2*, int, const Color4F&, float, const Color4F&) {}
+		void clear();
+		void setLineWidth(float width) { _lineWidth = width; }
+		void drawTriangle(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color4F& color);
+		void drawCircle(const Vec2& center, float radius, float angle, unsigned int segments, bool drawLineToCenter, float scaleX, float scaleY, const Color4F& color);
+		void drawSolidCircle(const Vec2& center, float radius, float angle, unsigned int segments, float scaleX, float scaleY, const Color4F& color);
+		void drawPolygon(const Vec2* points, int count, const Color4F& fillColor, float borderWidth, const Color4F& borderColor);
+
+	protected:
+		virtual void draw(Renderer* renderer, const Mat4& transform, uint32_t flags) override;
+
+	private:
+		void appendVertex(const Vec2& point, const Color4F& color);
+		void appendTriangle(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color4F& color);
+		void appendLine(const Vec2& from, const Vec2& to, float width, const Color4F& color);
+
+		std::vector<V3F_C4B_T2F> _vertices;
+		std::vector<unsigned short> _indices;
+		TrianglesCommand _trianglesCommand;
+		TrianglesCommand::Triangles _triangles;
+		BlendFunc _blendFunc;
+		float _lineWidth;
 	};
 
 	class Sprite : public Node

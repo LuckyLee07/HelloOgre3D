@@ -18,6 +18,6 @@
 
 ## Remaining High Priority
 
-- GPU stencil pixel-level parity and GGraph/DrawNode render coverage.
+- GPU stencil pixel-level parity; GGraph/DrawNode render coverage has a first pass with GraphMaskProbe self-test.
 - AI event payload normalization.
 - AI update scheduling, refresh budget, and Tracy-visible AI tick counters.

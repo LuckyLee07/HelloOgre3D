@@ -1489,6 +1489,179 @@ namespace cocos2d
 		return const_cast<Scene*>(dynamic_cast<const Scene*>(node));
 	}
 
+	static uint8_t ClampColorByte(float value)
+	{
+		if (value <= 0.0f)
+			return 0;
+		if (value >= 1.0f)
+			return 255;
+		return static_cast<uint8_t>(value * 255.0f + 0.5f);
+	}
+
+	static Color4B ToColor4B(const Color4F& color)
+	{
+		return Color4B(ClampColorByte(color.r), ClampColorByte(color.g), ClampColorByte(color.b), ClampColorByte(color.a));
+	}
+
+	static Color4B TintVertexColor(const Color4B& color, const Color3B& displayedColor, uint8_t displayedOpacity)
+	{
+		return Color4B(
+			static_cast<uint8_t>(static_cast<int>(color.r) * static_cast<int>(displayedColor.r) / 255),
+			static_cast<uint8_t>(static_cast<int>(color.g) * static_cast<int>(displayedColor.g) / 255),
+			static_cast<uint8_t>(static_cast<int>(color.b) * static_cast<int>(displayedColor.b) / 255),
+			static_cast<uint8_t>(static_cast<int>(color.a) * static_cast<int>(displayedOpacity) / 255));
+	}
+
+	DrawNode::DrawNode() :
+		_triangles(),
+		_blendFunc(),
+		_lineWidth(1.0f)
+	{
+	}
+
+	void DrawNode::clear()
+	{
+		_vertices.clear();
+		_indices.clear();
+	}
+
+	void DrawNode::appendVertex(const Vec2& point, const Color4F& color)
+	{
+		if (_vertices.size() >= 65535)
+			return;
+
+		V3F_C4B_T2F vertex;
+		vertex.vertices = Vec3(point.x, point.y, 0.0f);
+		vertex.colors = ToColor4B(color);
+		vertex.texCoords = Tex2F(0.0f, 0.0f);
+		_vertices.push_back(vertex);
+	}
+
+	void DrawNode::appendTriangle(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color4F& color)
+	{
+		if (_vertices.size() + 3 > 65535)
+			return;
+
+		const unsigned short baseIndex = static_cast<unsigned short>(_vertices.size());
+		appendVertex(p1, color);
+		appendVertex(p2, color);
+		appendVertex(p3, color);
+		_indices.push_back(baseIndex);
+		_indices.push_back(static_cast<unsigned short>(baseIndex + 1));
+		_indices.push_back(static_cast<unsigned short>(baseIndex + 2));
+	}
+
+	void DrawNode::appendLine(const Vec2& from, const Vec2& to, float width, const Color4F& color)
+	{
+		const float dx = to.x - from.x;
+		const float dy = to.y - from.y;
+		const float length = std::sqrt(dx * dx + dy * dy);
+		if (length <= 0.0001f || width <= 0.0f)
+			return;
+
+		const float halfWidth = width * 0.5f;
+		const float nx = -dy / length * halfWidth;
+		const float ny = dx / length * halfWidth;
+		const Vec2 p1(from.x + nx, from.y + ny);
+		const Vec2 p2(to.x + nx, to.y + ny);
+		const Vec2 p3(to.x - nx, to.y - ny);
+		const Vec2 p4(from.x - nx, from.y - ny);
+		appendTriangle(p1, p2, p3, color);
+		appendTriangle(p1, p3, p4, color);
+	}
+
+	void DrawNode::drawTriangle(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color4F& color)
+	{
+		appendTriangle(p1, p2, p3, color);
+	}
+
+	void DrawNode::drawCircle(const Vec2& center, float radius, float angle, unsigned int segments, bool drawLineToCenter, float scaleX, float scaleY, const Color4F& color)
+	{
+		if (radius <= 0.0f)
+			return;
+
+		const unsigned int segmentCount = std::max(8u, std::min(segments, 96u));
+		const float delta = static_cast<float>(M_PI * 2.0 / static_cast<double>(segmentCount));
+		Vec2 first;
+		Vec2 previous;
+		for (unsigned int index = 0; index <= segmentCount; ++index)
+		{
+			const float currentAngle = angle + delta * static_cast<float>(index);
+			const Vec2 point(
+				center.x + std::cos(currentAngle) * radius * scaleX,
+				center.y + std::sin(currentAngle) * radius * scaleY);
+			if (index == 0)
+			{
+				first = point;
+				previous = point;
+				continue;
+			}
+			appendLine(previous, point, _lineWidth, color);
+			previous = point;
+		}
+		if (drawLineToCenter)
+			appendLine(center, first, _lineWidth, color);
+	}
+
+	void DrawNode::drawSolidCircle(const Vec2& center, float radius, float angle, unsigned int segments, float scaleX, float scaleY, const Color4F& color)
+	{
+		if (radius <= 0.0f)
+			return;
+
+		const unsigned int segmentCount = std::max(8u, std::min(segments, 96u));
+		const float delta = static_cast<float>(M_PI * 2.0 / static_cast<double>(segmentCount));
+		Vec2 previous(
+			center.x + std::cos(angle) * radius * scaleX,
+			center.y + std::sin(angle) * radius * scaleY);
+		for (unsigned int index = 1; index <= segmentCount; ++index)
+		{
+			const float currentAngle = angle + delta * static_cast<float>(index);
+			const Vec2 point(
+				center.x + std::cos(currentAngle) * radius * scaleX,
+				center.y + std::sin(currentAngle) * radius * scaleY);
+			appendTriangle(center, previous, point, color);
+			previous = point;
+		}
+	}
+
+	void DrawNode::drawPolygon(const Vec2* points, int count, const Color4F& fillColor, float borderWidth, const Color4F& borderColor)
+	{
+		if (points == nullptr || count < 3)
+			return;
+
+		for (int index = 1; index + 1 < count; ++index)
+			appendTriangle(points[0], points[index], points[index + 1], fillColor);
+
+		if (borderWidth > 0.0f)
+		{
+			for (int index = 0; index < count; ++index)
+				appendLine(points[index], points[(index + 1) % count], borderWidth, borderColor);
+		}
+	}
+
+	void DrawNode::draw(Renderer* renderer, const Mat4& transform, uint32_t flags)
+	{
+		if (renderer == nullptr || _vertices.empty() || _indices.empty())
+			return;
+
+		std::vector<V3F_C4B_T2F> tintedVertices;
+		const V3F_C4B_T2F* commandVertices = &_vertices[0];
+		if (_displayedOpacity != 255 || _displayedColor != Color3B::WHITE)
+		{
+			tintedVertices = _vertices;
+			for (std::vector<V3F_C4B_T2F>::iterator it = tintedVertices.begin(); it != tintedVertices.end(); ++it)
+				it->colors = TintVertexColor(it->colors, _displayedColor, _displayedOpacity);
+			commandVertices = &tintedVertices[0];
+		}
+
+		_triangles.verts = const_cast<V3F_C4B_T2F*>(commandVertices);
+		_triangles.vertCount = static_cast<int>(_vertices.size());
+		_triangles.indices = &_indices[0];
+		_triangles.indexCount = static_cast<int>(_indices.size());
+		_trianglesCommand.init(_globalZOrder, nullptr, getGLProgramState(), _blendFunc, _triangles, transform, flags);
+		renderer->addCommand(&_trianglesCommand);
+	}
+
 	Sprite::Sprite() :
 		_texture(nullptr),
 		_spriteFrame(nullptr),

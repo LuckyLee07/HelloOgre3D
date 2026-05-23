@@ -78,7 +78,7 @@ void GGraph::drawPolygon(int lineSize, const cocos2d::Color4F& lineColor, const 
     {
         Vec2 pt = *(points + i);
         pt.y = h - pt.y;
-        _polygonPoints->push_back(*(points + i));
+        _polygonPoints->push_back(pt);
     }
     updateShape();
 }
@@ -103,6 +103,7 @@ void GGraph::drawRegularPolygon(int lineSize, const cocos2d::Color4F& lineColor,
     }
     else if (_distances != nullptr)
         _distances->clear();
+    updateShape();
 }
 
 void GGraph::updateShape()

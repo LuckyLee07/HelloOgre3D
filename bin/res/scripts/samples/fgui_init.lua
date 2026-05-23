@@ -427,11 +427,16 @@ local function tryRunFairyGuiMaskSelfTest()
 
 	threadpool:delay(6, function()
 		local handle = FGUI_OpenMaskProbe()
-		print("[FGUI] mask probe self test result:", handle ~= nil, handle)
+		local graphHandle = FGUI_OpenGraphMaskProbe()
+		print("[FGUI] mask probe open self test:", handle ~= nil, graphHandle ~= nil, handle, graphHandle)
 		FairyGuiManager:DumpRenderStats()
 		threadpool:delay(1, function()
+			local render = FairyGuiManager:GetRenderStats()
+			local renderOk = render ~= nil and (render.drawCommandCount or 0) > 0 and (render.stencilCommandCount or 0) > 0
 			local closed = FGUI_CloseMaskProbe()
-			print("[FGUI] mask probe close self test:", closed)
+			local graphClosed = FGUI_CloseGraphMaskProbe()
+			print("[FGUI] mask probe self test result:", handle ~= nil and graphHandle ~= nil and renderOk == true and closed == true and graphClosed == true, "draw=", render and render.drawCommandCount, "stencil=", render and render.stencilCommandCount)
+			print("[FGUI] mask probe close self test:", closed, graphClosed)
 			FairyGuiManager:DumpOpenUIs()
 			FairyGuiManager:DumpStacks()
 			FairyGuiManager:DumpDebugStats()
@@ -604,8 +609,31 @@ function FGUI_OpenMaskProbe()
 	})
 end
 
+function FGUI_OpenGraphMaskProbe()
+	return FairyGuiManager:OpenMaskProbe({
+		key = "GraphMaskProbe",
+		layer = "Top",
+		group = "Sample",
+		scene = "Default",
+		popupMode = "stack",
+		graphMask = true,
+		assets = {
+			background = "res/assets/act_38/_imgs/board_task.png",
+			content = "res/assets/act_38/_imgs/board_task.png",
+			stripA = "res/assets/act_38/_imgs/board_prop_exchange.png",
+			stripB = "res/assets/act_38/_imgs/btn_green.png",
+			stripC = "res/assets/act_38/_imgs/button_close.png",
+			mask = "res/assets/act_38/_imgs/img_mask.png",
+		},
+	})
+end
+
 function FGUI_CloseMaskProbe()
 	return FairyGuiManager:Close("MaskProbe", true)
+end
+
+function FGUI_CloseGraphMaskProbe()
+	return FairyGuiManager:Close("GraphMaskProbe", true)
 end
 
 function FGUI_OpenTextInputProbe(param)
@@ -1337,6 +1365,11 @@ function FGUI_RunSelfTestSuite()
 		local closed = FGUI_CloseMaskProbe()
 		return handle ~= nil and closed == true, handle
 	end)
+	schedule(0.6, "GraphMaskProbe", function()
+		local handle = FGUI_OpenGraphMaskProbe()
+		local closed = FGUI_CloseGraphMaskProbe()
+		return handle ~= nil and closed == true, handle
+	end)
 	schedule(0.6, "LifecycleResidue", function()
 		local handle, inputHandle = FGUI_OpenTextInputProbe()
 		if handle == nil or inputHandle == nil then
@@ -1380,6 +1413,7 @@ function FGUI_RunSelfTestSuite()
 		FairyGuiManager:Close("Act38Test", true)
 		FairyGuiManager:CloseGroup("LayerProbe", true)
 		FairyGuiManager:Close("MaskProbe", true)
+		FairyGuiManager:Close("GraphMaskProbe", true)
 		FairyGuiManager:Close("TextInputProbe", true)
 		FairyGuiManager:Close("BusinessFlowTextInput", true)
 		FairyGuiManager:Close("__EventPayloadProbe", true)
@@ -1443,6 +1477,7 @@ local function closeFairyGuiLongLoopObjects()
 	FairyGuiManager:Close("Act38Test", true)
 	FairyGuiManager:CloseGroup("LayerProbe", true)
 	FairyGuiManager:Close("MaskProbe", true)
+	FairyGuiManager:Close("GraphMaskProbe", true)
 	FairyGuiManager:Close("TextInputProbe", true)
 	FairyGuiManager:Close("BusinessFlowTextInput", true)
 	FairyGuiManager:Close("__EventPayloadProbe", true)
@@ -2020,6 +2055,11 @@ function FGUI_RunLongLoopSelfTest(config)
 			local maskClosed = FGUI_CloseMaskProbe()
 			if maskHandle == nil or maskClosed ~= true then
 				return false, "Mask probe failed"
+			end
+			local graphMaskHandle = FGUI_OpenGraphMaskProbe()
+			local graphMaskClosed = FGUI_CloseGraphMaskProbe()
+			if graphMaskHandle == nil or graphMaskClosed ~= true then
+				return false, "Graph mask probe failed"
 			end
 
 			local textHandle, inputHandle = FGUI_OpenTextInputProbe()
