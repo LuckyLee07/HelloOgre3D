@@ -113,9 +113,45 @@ local function recordServicePerf(owner, startMs, serviceType, success)
 	end
 end
 
+local function bindOwnerState(owner, state)
+	if owner == nil or state == nil then
+		return
+	end
+	owner.toastQueue = state.toastQueue
+	owner.toastActive = state.toastActive
+	owner.toastSerial = state.toastSerial
+	owner.toastDedupe = state.toastDedupe
+	owner.loadingRefs = state.loadingRefs
+	owner.loadingRefTotal = state.loadingRefTotal
+	owner.serviceStats = state.serviceStats
+end
+
+local function syncStateFromOwner(owner)
+	local state = owner ~= nil and owner.services or nil
+	if state == nil then
+		return
+	end
+	state.toastQueue = owner.toastQueue or {}
+	state.toastActive = owner.toastActive
+	state.toastSerial = owner.toastSerial or 0
+	state.toastDedupe = owner.toastDedupe or {}
+	state.loadingRefs = owner.loadingRefs or {}
+	state.loadingRefTotal = owner.loadingRefTotal or 0
+	state.serviceStats = owner.serviceStats or state.serviceStats
+	bindOwnerState(owner, state)
+end
+
 function FairyGuiServices:Init(owner)
 	self.owner = owner
+	self.toastQueue = owner ~= nil and owner.toastQueue or self.toastQueue or {}
+	self.toastActive = owner ~= nil and owner.toastActive or self.toastActive
+	self.toastSerial = owner ~= nil and owner.toastSerial or self.toastSerial or 0
+	self.toastDedupe = owner ~= nil and owner.toastDedupe or self.toastDedupe or {}
+	self.loadingRefs = owner ~= nil and owner.loadingRefs or self.loadingRefs or {}
+	self.loadingRefTotal = owner ~= nil and owner.loadingRefTotal or self.loadingRefTotal or 0
 	if owner ~= nil then
+		self.serviceStats = owner.serviceStats or self.serviceStats or ensureServiceStats(owner)
+		bindOwnerState(owner, self)
 		ensureServiceStats(owner)
 	end
 end
@@ -386,6 +422,7 @@ function FairyGuiServices:HandleServiceClosed(objectInfo, reason)
 				self.toastDedupe[active.dedupeKey] = nil
 			end
 			self.toastActive = nil
+			syncStateFromOwner(self)
 		end
 		if reason == "toastTimeout" then
 			if stats ~= nil then
@@ -398,6 +435,7 @@ function FairyGuiServices:HandleServiceClosed(objectInfo, reason)
 	elseif objectInfo.serviceType == "Loading" then
 		self.loadingRefs = {}
 		self.loadingRefTotal = 0
+		syncStateFromOwner(self)
 	end
 end
 
@@ -412,6 +450,7 @@ function FairyGuiServices:ClearToastQueue()
 	if self.toastActive ~= nil and self.toastActive.dedupeKey ~= nil then
 		self.toastDedupe[self.toastActive.dedupeKey] = true
 	end
+	syncStateFromOwner(self)
 end
 
 function FairyGuiServices:GetToastQueueCount()
@@ -492,6 +531,7 @@ function FairyGuiServices:OpenToastRequest(request)
 		handle = objectInfo.handle,
 		dedupeKey = request.dedupeKey,
 	}
+	syncStateFromOwner(self)
 	if request.duration > 0 then
 		self:Delay(objectInfo.key, request.duration, function()
 			self:CloseUI(objectInfo.key, true, "toastTimeout")
@@ -525,6 +565,7 @@ function FairyGuiServices:ShowToast(text, duration, param)
 	local requestParam = request.param or {}
 	if requestParam.queue == false and self.toastActive ~= nil then
 		self.toastQueue = {}
+		syncStateFromOwner(self)
 		self:CloseUI(self.toastActive.key, true, "toastReplace")
 	end
 	if self.toastActive ~= nil then
@@ -589,6 +630,7 @@ function FairyGuiServices:ShowLoading(text, param)
 	local refKey = param.refKey or "Default"
 	self.loadingRefs[refKey] = (self.loadingRefs[refKey] or 0) + 1
 	self.loadingRefTotal = (self.loadingRefTotal or 0) + 1
+	syncStateFromOwner(self)
 	local stats = ensureServiceStats(self)
 	stats.loadingShowTotal = (stats.loadingShowTotal or 0) + 1
 	stats.loadingPeakRefTotal = math.max(stats.loadingPeakRefTotal or 0, self.loadingRefTotal or 0)
@@ -618,6 +660,7 @@ function FairyGuiServices:ShowLoading(text, param)
 	if objectInfo == nil then
 		self.loadingRefs[refKey] = math.max((self.loadingRefs[refKey] or 1) - 1, 0)
 		self.loadingRefTotal = math.max((self.loadingRefTotal or 1) - 1, 0)
+		syncStateFromOwner(self)
 		return nil
 	end
 	objectInfo.loadingText = text or "Loading..."
@@ -664,6 +707,7 @@ function FairyGuiServices:HideLoading(paramOrReason)
 			if self.loadingRefs[refKey] <= 0 then
 				self.loadingRefs[refKey] = nil
 			end
+			syncStateFromOwner(self)
 		end
 		if (self.loadingRefTotal or 0) > 0 then
 			return true
@@ -672,6 +716,7 @@ function FairyGuiServices:HideLoading(paramOrReason)
 
 	self.loadingRefs = {}
 	self.loadingRefTotal = 0
+	syncStateFromOwner(self)
 	return self:Close("__Loading", true, reason)
 end
 

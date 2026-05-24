@@ -88,14 +88,44 @@ end
 
 function FairyGuiLayers:Init(owner)
 	self.owner = owner
+	self.currentSceneName = owner ~= nil and owner.currentSceneName or self.currentSceneName or "Default"
+	self.designWidth = owner ~= nil and owner.designWidth or self.designWidth
+	self.designHeight = owner ~= nil and owner.designHeight or self.designHeight
+	self.scaleMode = owner ~= nil and owner.scaleMode or self.scaleMode or "stretch"
+	self.layers = owner ~= nil and owner.layers or self.layers or copyTable(DEFAULT_LAYER_ORDER)
+	self.layerPolicies = owner ~= nil and owner.layerPolicies or self.layerPolicies or {}
+	self.layerNextOrder = owner ~= nil and owner.layerNextOrder or self.layerNextOrder or {}
+	self.layerObjects = owner ~= nil and owner.layerObjects or self.layerObjects or {}
+	self.layerRoots = owner ~= nil and owner.layerRoots or self.layerRoots or {}
+	self.safeArea = owner ~= nil and owner.safeArea or self.safeArea or normalizeSafeArea(0, 0, 0, 0)
+	self.uiStack = owner ~= nil and owner.uiStack or self.uiStack or {}
+	self.popupStack = owner ~= nil and owner.popupStack or self.popupStack or {}
+	self.stackEntriesByKey = owner ~= nil and owner.stackEntriesByKey or self.stackEntriesByKey or {}
+	self.nextStackSerial = owner ~= nil and owner.nextStackSerial or self.nextStackSerial or 0
+	for layerName, _ in pairs(self.layers) do
+		self.layerNextOrder[layerName] = self.layerNextOrder[layerName] or 0
+		self.layerObjects[layerName] = self.layerObjects[layerName] or {}
+	end
 	if owner ~= nil then
-		owner.layerPolicies = owner.layerPolicies or {}
+		owner.currentSceneName = self.currentSceneName
+		owner.designWidth = self.designWidth
+		owner.designHeight = self.designHeight
+		owner.scaleMode = self.scaleMode
+		owner.layers = self.layers
+		owner.layerPolicies = self.layerPolicies
+		owner.layerNextOrder = self.layerNextOrder
+		owner.layerObjects = self.layerObjects
+		owner.layerRoots = self.layerRoots
+		owner.safeArea = self.safeArea
+		owner.uiStack = self.uiStack
+		owner.popupStack = self.popupStack
+		owner.stackEntriesByKey = self.stackEntriesByKey
+		owner.nextStackSerial = self.nextStackSerial
 		for layerName, policy in pairs(DEFAULT_LAYER_POLICY) do
 			if owner.layerPolicies[layerName] == nil then
 				owner.layerPolicies[layerName] = copyTable(policy)
 			end
 		end
-		owner.safeArea = owner.safeArea or normalizeSafeArea(0, 0, 0, 0)
 	end
 end
 

@@ -62,6 +62,30 @@ end
 
 function FairyGuiEvents:Init(owner)
 	self.owner = owner
+	self.callbacks = owner ~= nil and owner.callbacks or self.callbacks or {}
+	self.bindings = owner ~= nil and owner.bindings or self.bindings or {}
+	self.bindingsByHandle = owner ~= nil and owner.bindingsByHandle or self.bindingsByHandle or {}
+	self.transitionCallbacks = owner ~= nil and owner.transitionCallbacks or self.transitionCallbacks or {}
+	self.transitionCallbacksByHandle = owner ~= nil and owner.transitionCallbacksByHandle or self.transitionCallbacksByHandle or {}
+	self.timers = owner ~= nil and owner.timers or self.timers or {}
+	self.timersByKey = owner ~= nil and owner.timersByKey or self.timersByKey or {}
+	self.eventStats = owner ~= nil and owner.eventStats or self.eventStats or {}
+	self.eventDispatchTotal = owner ~= nil and owner.eventDispatchTotal or self.eventDispatchTotal or 0
+	self.lastEvent = owner ~= nil and owner.lastEvent or self.lastEvent
+	self.nextCallbackId = owner ~= nil and owner.nextCallbackId or self.nextCallbackId or 1
+	if owner ~= nil then
+		owner.callbacks = self.callbacks
+		owner.bindings = self.bindings
+		owner.bindingsByHandle = self.bindingsByHandle
+		owner.transitionCallbacks = self.transitionCallbacks
+		owner.transitionCallbacksByHandle = self.transitionCallbacksByHandle
+		owner.timers = self.timers
+		owner.timersByKey = self.timersByKey
+		owner.eventStats = self.eventStats
+		owner.eventDispatchTotal = self.eventDispatchTotal
+		owner.lastEvent = self.lastEvent
+		owner.nextCallbackId = self.nextCallbackId
+	end
 end
 
 function FairyGuiEvents:DebugInjectMouseMove(x, y)

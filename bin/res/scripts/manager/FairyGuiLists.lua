@@ -185,6 +185,32 @@ end
 
 function FairyGuiLists:Init(owner)
 	self.owner = owner
+	self.childrenByHandle = owner ~= nil and owner.childrenByHandle or self.childrenByHandle or {}
+	self.listItemHandlesByHandle = owner ~= nil and owner.listItemHandlesByHandle or self.listItemHandlesByHandle or {}
+	self.listItemIndexByHandle = owner ~= nil and owner.listItemIndexByHandle or self.listItemIndexByHandle or {}
+	self.listDataByHandle = owner ~= nil and owner.listDataByHandle or self.listDataByHandle or {}
+	self.listRenderersByHandle = owner ~= nil and owner.listRenderersByHandle or self.listRenderersByHandle or {}
+	self.listVirtualByHandle = owner ~= nil and owner.listVirtualByHandle or self.listVirtualByHandle or {}
+	self.listVirtualOptionsByHandle = owner ~= nil and owner.listVirtualOptionsByHandle or self.listVirtualOptionsByHandle or {}
+	self.listVirtualStatsByHandle = owner ~= nil and owner.listVirtualStatsByHandle or self.listVirtualStatsByHandle or {}
+	self.treeDataByHandle = owner ~= nil and owner.treeDataByHandle or self.treeDataByHandle or {}
+	self.treeStateByHandle = owner ~= nil and owner.treeStateByHandle or self.treeStateByHandle or {}
+	self.treeRenderersByHandle = owner ~= nil and owner.treeRenderersByHandle or self.treeRenderersByHandle or {}
+	self.treeChildPathByHandle = owner ~= nil and owner.treeChildPathByHandle or self.treeChildPathByHandle or {}
+	if owner ~= nil then
+		owner.childrenByHandle = self.childrenByHandle
+		owner.listItemHandlesByHandle = self.listItemHandlesByHandle
+		owner.listItemIndexByHandle = self.listItemIndexByHandle
+		owner.listDataByHandle = self.listDataByHandle
+		owner.listRenderersByHandle = self.listRenderersByHandle
+		owner.listVirtualByHandle = self.listVirtualByHandle
+		owner.listVirtualOptionsByHandle = self.listVirtualOptionsByHandle
+		owner.listVirtualStatsByHandle = self.listVirtualStatsByHandle
+		owner.treeDataByHandle = self.treeDataByHandle
+		owner.treeStateByHandle = self.treeStateByHandle
+		owner.treeRenderersByHandle = self.treeRenderersByHandle
+		owner.treeChildPathByHandle = self.treeChildPathByHandle
+	end
 end
 
 function FairyGuiLists:GetOrCreateVirtualStats(listHandle)

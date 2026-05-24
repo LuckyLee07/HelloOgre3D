@@ -1,4 +1,5 @@
 require("res.scripts.manager.FairyGuiProfiler")
+require("res.scripts.manager.FairyGuiLifecycle")
 require("res.scripts.manager.FairyGuiPackage")
 require("res.scripts.manager.FairyGuiServices")
 require("res.scripts.manager.FairyGuiLayers")
@@ -292,92 +293,22 @@ function FairyGuiManager:GetInst()
 end
 
 function FairyGuiManager:Init()
-	self.packageRoot = "res/fuires"
-	self.packages = {}
-	self.packagesByName = {}
-	self.objects = {}
-	self.objectsByHandle = {}
-	self.uiRegistry = {}
-	self.uiNameToKey = {}
-	self.hiddenObjects = {}
-	self.childrenByHandle = {}
-	self.listItemHandlesByHandle = {}
-	self.listItemIndexByHandle = {}
-	self.listDataByHandle = {}
-	self.listRenderersByHandle = {}
-	self.listVirtualByHandle = {}
-	self.listVirtualOptionsByHandle = {}
-	self.listVirtualStatsByHandle = {}
-	self.treeDataByHandle = {}
-	self.treeStateByHandle = {}
-	self.treeRenderersByHandle = {}
-	self.treeChildPathByHandle = {}
-	self.views = {}
-	self.viewsByHandle = {}
-	self.controllers = {}
-	self.controllersByHandle = {}
-	self.childKeysByParentKey = {}
-	self.parentKeyByChildKey = {}
-	self.currentSceneName = "Default"
-	self.designWidth = nil
-	self.designHeight = nil
-	self.scaleMode = "stretch"
-	self.layers = copyTable(DEFAULT_LAYER_ORDER)
-	self.layerPolicies = {}
-	self.layerNextOrder = {}
-	self.layerObjects = {}
-	self.layerRoots = {}
-	self.safeArea = {
-		left = 0,
-		top = 0,
-		right = 0,
-		bottom = 0,
-	}
-	for layerName, _ in pairs(self.layers) do
-		self.layerNextOrder[layerName] = 0
-		self.layerObjects[layerName] = {}
-	end
-	self.uiStack = {}
-	self.popupStack = {}
-	self.stackEntriesByKey = {}
-	self.nextStackSerial = 0
-	self.callbacks = {}
-	self.bindings = {}
-	self.bindingsByHandle = {}
-	self.transitionCallbacks = {}
-	self.transitionCallbacksByHandle = {}
-	self.timers = {}
-	self.timersByKey = {}
-	self.eventStats = {}
-	self.eventDispatchTotal = 0
-	self.lastEvent = nil
-	self.resourceFallbacks = {}
-	self.resourceFallbackKeys = {}
-	self.resourceFallbackMaxCount = 128
-	self.resourceFallbackPolicy = {
-		recordMissingChild = false,
-	}
 	self.textInputPoliciesByHandle = {}
 	self.textInputPolicyBindingsByHandle = {}
-	self.perfStats = {}
-	self.cachePolicy = {
-		maxHiddenPerPackage = 2,
-		maxHiddenTotal = 6,
-		warnHiddenSeconds = 60,
-	}
+	self.lifecycle = ClassList.FairyGuiLifecycle.new(self)
 	self.profiler = ClassList.FairyGuiProfiler.new(self)
 	self.packageManager = ClassList.FairyGuiPackage.new(self)
 	self.services = ClassList.FairyGuiServices.new(self)
 	self.layersManager = ClassList.FairyGuiLayers.new(self)
 	self.events = ClassList.FairyGuiEvents.new(self)
 	self.lists = ClassList.FairyGuiLists.new(self)
-	self.toastQueue = {}
-	self.toastActive = nil
-	self.toastSerial = 0
-	self.toastDedupe = {}
-	self.loadingRefs = {}
-	self.loadingRefTotal = 0
-	self.nextCallbackId = 1
+end
+
+function FairyGuiManager:GetLifecycle()
+	if self.lifecycle == nil then
+		self.lifecycle = ClassList.FairyGuiLifecycle.new(self)
+	end
+	return self.lifecycle
 end
 
 function FairyGuiManager:GetProfiler()
@@ -2568,124 +2499,27 @@ function FairyGuiManager:GetImeDebugString()
 end
 
 function FairyGuiManager:RecordResourceFallback(kind, context, detail)
-	kind = tostring(kind or "unknown")
-	context = type(context) == "table" and context or {}
-	local key = table.concat({
-		kind,
-		tostring(context.uiName or ""),
-		tostring(context.key or ""),
-		tostring(context.packageName or context.package or ""),
-		tostring(context.packagePath or ""),
-		tostring(context.objectName or context.component or ""),
-		tostring(context.childPath or ""),
-		tostring(context.handle or ""),
-		tostring(context.eventType or ""),
-	}, "|")
-
-	local existing = self.resourceFallbackKeys[key]
-	if existing ~= nil then
-		existing.count = (existing.count or 1) + 1
-		existing.lastMs = nowMs()
-		existing.detail = detail or existing.detail
-		return existing
-	end
-
-	local record = copyTable(context, {
-		kind = kind,
-		count = 1,
-		firstMs = nowMs(),
-		lastMs = nowMs(),
-		detail = detail,
-	})
-	self.resourceFallbackKeys[key] = record
-	table.insert(self.resourceFallbacks, record)
-	while #self.resourceFallbacks > (self.resourceFallbackMaxCount or 128) do
-		local removed = table.remove(self.resourceFallbacks, 1)
-		if removed ~= nil then
-			local removedKey = table.concat({
-				tostring(removed.kind or ""),
-				tostring(removed.uiName or ""),
-				tostring(removed.key or ""),
-				tostring(removed.packageName or removed.package or ""),
-				tostring(removed.packagePath or ""),
-				tostring(removed.objectName or removed.component or ""),
-				tostring(removed.childPath or ""),
-				tostring(removed.handle or ""),
-				tostring(removed.eventType or ""),
-			}, "|")
-			self.resourceFallbackKeys[removedKey] = nil
-		end
-	end
-
-	print("[FGUI] ResourceFallback", kind,
-		"ui=", tostring(record.uiName or record.key or ""),
-		"package=", tostring(record.packageName or record.packagePath or record.package or ""),
-		"object=", tostring(record.objectName or record.component or ""),
-		"child=", tostring(record.childPath or ""),
-		"handle=", tostring(record.handle or ""),
-		"detail=", tostring(record.detail or ""))
-	return record
+	return self:GetPackageManager():RecordResourceFallback(kind, context, detail)
 end
 
 function FairyGuiManager:GetResourceFallbacks()
-	local result = {}
-	for _, record in ipairs(self.resourceFallbacks or {}) do
-		table.insert(result, copyTable(record))
-	end
-	return result
+	return self:GetPackageManager():GetResourceFallbacks()
 end
 
 function FairyGuiManager:ClearResourceFallbacks()
-	self.resourceFallbacks = {}
-	self.resourceFallbackKeys = {}
+	return self:GetPackageManager():ClearResourceFallbacks()
 end
 
 function FairyGuiManager:SetResourceFallbackPolicy(policy)
-	if type(policy) ~= "table" then
-		return self.resourceFallbackPolicy
-	end
-	self.resourceFallbackPolicy = self.resourceFallbackPolicy or {}
-	for name, value in pairs(policy) do
-		self.resourceFallbackPolicy[name] = value
-	end
-	return self.resourceFallbackPolicy
+	return self:GetPackageManager():SetResourceFallbackPolicy(policy)
 end
 
 function FairyGuiManager:GetResourceFallbackPolicy()
-	return copyTable(self.resourceFallbackPolicy or {})
+	return self:GetPackageManager():GetResourceFallbackPolicy()
 end
 
 function FairyGuiManager:DumpResourceFallbacks(filter)
-	filter = type(filter) == "table" and filter or {}
-	local count = 0
-	print("[FGUI] DumpResourceFallbacks begin")
-	for _, record in ipairs(self.resourceFallbacks or {}) do
-		local matched = true
-		if filter.kind ~= nil and record.kind ~= filter.kind then
-			matched = false
-		end
-		if filter.uiName ~= nil and record.uiName ~= filter.uiName and record.key ~= filter.uiName then
-			matched = false
-		end
-		if filter.packageName ~= nil and record.packageName ~= filter.packageName and record.packagePath ~= filter.packageName then
-			matched = false
-		end
-		if matched then
-			count = count + 1
-			print("[FGUI] ResourceFallback",
-				record.kind,
-				"count=", record.count or 1,
-				"ui=", tostring(record.uiName or record.key or ""),
-				"package=", tostring(record.packageName or record.packagePath or record.package or ""),
-				"object=", tostring(record.objectName or record.component or ""),
-				"child=", tostring(record.childPath or ""),
-				"handle=", tostring(record.handle or ""),
-				"event=", tostring(record.eventType or ""),
-				"detail=", tostring(record.detail or ""))
-		end
-	end
-	print("[FGUI] DumpResourceFallbacks end count=", count)
-	return count
+	return self:GetPackageManager():DumpResourceFallbacks(filter)
 end
 
 function FairyGuiManager:ApplyTextInputPolicy(handle, childPath)

@@ -174,6 +174,10 @@ end
 
 function FairyGuiProfiler:Init(owner)
 	self.owner = owner
+	self.perfStats = owner ~= nil and owner.perfStats or self.perfStats or {}
+	if owner ~= nil then
+		owner.perfStats = self.perfStats
+	end
 end
 
 function FairyGuiProfiler:GetRenderStats()
