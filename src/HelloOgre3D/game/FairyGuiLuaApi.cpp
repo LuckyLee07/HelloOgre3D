@@ -14,7 +14,8 @@
 FairyGuiLuaApi::FairyGuiLuaApi(ClientManager* clientManager)
 	: m_clientManager(clientManager),
 	m_lastPackageName(), m_lastStencilBackend(), m_lastStencilBackendDetail(),
-	m_lastMaterialDetail(), m_lastTextureDetail(), m_lastFrameRenderDetail()
+	m_lastMaterialDetail(), m_lastTextureDetail(), m_lastFrameRenderDetail(),
+	m_lastObjectText(), m_lastObjectValue(), m_lastControllerString(), m_lastImeDebug()
 {
 }
 
@@ -523,4 +524,695 @@ bool FairyGuiLuaApi::PlotServiceStats(int serviceOpenTotal, int serviceKindCount
 {
 	RuntimeProfileCounters::PlotFairyGuiServiceStats(serviceOpenTotal, serviceKindCount, toastQueueCount, loadingRefTotal, serviceCreatedTotal, serviceClosedTotal, serviceFailedTotal, servicePeakOpen);
 	return true;
+}
+
+int FairyGuiLuaApi::GetChild(int objectHandle, const char* childPath) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleChild(objectHandle, childPath != nullptr ? childPath : "") : 0;
+#else
+	return 0;
+#endif
+}
+
+int FairyGuiLuaApi::GetListItem(int objectHandle, int itemIndex) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleListItem(objectHandle, itemIndex) : 0;
+#else
+	return 0;
+#endif
+}
+
+int FairyGuiLuaApi::GetListItemCount(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleListItemCount(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::AddObjectToRoot(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->AddObjectHandleToRoot(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::AddObjectToParent(int objectHandle, int parentHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->AddObjectHandleToParent(objectHandle, parentHandle);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectPosition(int objectHandle, float x, float y) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandlePosition(objectHandle, x, y);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectSize(int objectHandle, float width, float height) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleSize(objectHandle, width, height);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectVisible(int objectHandle, bool visible) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleVisible(objectHandle, visible);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectAlpha(int objectHandle, float alpha) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleAlpha(objectHandle, alpha);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectTouchable(int objectHandle, bool touchable) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleTouchable(objectHandle, touchable);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectMask(int objectHandle, int maskHandle, bool inverted) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleMask(objectHandle, maskHandle, inverted);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectSortingOrder(int objectHandle, int sortingOrder) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleSortingOrder(objectHandle, sortingOrder);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectText(int objectHandle, const char* text) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleText(objectHandle, text != nullptr ? text : "");
+#else
+	return false;
+#endif
+}
+
+const char* FairyGuiLuaApi::GetObjectText(int objectHandle)
+{
+	m_lastObjectText.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastObjectText = system->GetObjectHandleText(objectHandle);
+#endif
+	return m_lastObjectText.c_str();
+}
+
+bool FairyGuiLuaApi::SetObjectIcon(int objectHandle, const char* icon) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleIcon(objectHandle, icon != nullptr ? icon : "");
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectLoaderUrl(int objectHandle, const char* url) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleLoaderUrl(objectHandle, url != nullptr ? url : "");
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleControllerIndex(objectHandle, controllerName != nullptr ? controllerName : "", selectedIndex);
+#else
+	return false;
+#endif
+}
+
+int FairyGuiLuaApi::GetObjectControllerIndex(int objectHandle, const char* controllerName) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleControllerIndex(objectHandle, controllerName != nullptr ? controllerName : "") : -1;
+#else
+	return -1;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectControllerPage(int objectHandle, const char* controllerName, const char* pageName) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleControllerPage(objectHandle, controllerName != nullptr ? controllerName : "", pageName != nullptr ? pageName : "");
+#else
+	return false;
+#endif
+}
+
+const char* FairyGuiLuaApi::GetObjectControllerPage(int objectHandle, const char* controllerName)
+{
+	m_lastControllerString.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastControllerString = system->GetObjectHandleControllerPage(objectHandle, controllerName != nullptr ? controllerName : "");
+#endif
+	return m_lastControllerString.c_str();
+}
+
+const char* FairyGuiLuaApi::GetObjectControllerPageId(int objectHandle, const char* controllerName)
+{
+	m_lastControllerString.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastControllerString = system->GetObjectHandleControllerPageId(objectHandle, controllerName != nullptr ? controllerName : "");
+#endif
+	return m_lastControllerString.c_str();
+}
+
+int FairyGuiLuaApi::GetObjectControllerPageCount(int objectHandle, const char* controllerName) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleControllerPageCount(objectHandle, controllerName != nullptr ? controllerName : "") : 0;
+#else
+	return 0;
+#endif
+}
+
+const char* FairyGuiLuaApi::GetObjectControllerPageNameAt(int objectHandle, const char* controllerName, int pageIndex)
+{
+	m_lastControllerString.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastControllerString = system->GetObjectHandleControllerPageNameAt(objectHandle, controllerName != nullptr ? controllerName : "", pageIndex);
+#endif
+	return m_lastControllerString.c_str();
+}
+
+const char* FairyGuiLuaApi::GetObjectControllerPageIdAt(int objectHandle, const char* controllerName, int pageIndex)
+{
+	m_lastControllerString.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastControllerString = system->GetObjectHandleControllerPageIdAt(objectHandle, controllerName != nullptr ? controllerName : "", pageIndex);
+#endif
+	return m_lastControllerString.c_str();
+}
+
+bool FairyGuiLuaApi::SetObjectValue(int objectHandle, float value) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleValue(objectHandle, value);
+#else
+	return false;
+#endif
+}
+
+float FairyGuiLuaApi::GetObjectValue(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleValue(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectMin(int objectHandle, float minValue) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleMin(objectHandle, minValue);
+#else
+	return false;
+#endif
+}
+
+float FairyGuiLuaApi::GetObjectMin(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleMin(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::SetObjectMax(int objectHandle, float maxValue) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleMax(objectHandle, maxValue);
+#else
+	return false;
+#endif
+}
+
+float FairyGuiLuaApi::GetObjectMax(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleMax(objectHandle) : 0;
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::SetComboBoxSelectedIndex(int objectHandle, int selectedIndex) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleComboBoxSelectedIndex(objectHandle, selectedIndex);
+#else
+	return false;
+#endif
+}
+
+int FairyGuiLuaApi::GetComboBoxSelectedIndex(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleComboBoxSelectedIndex(objectHandle) : -1;
+#else
+	return -1;
+#endif
+}
+
+bool FairyGuiLuaApi::SetComboBoxValue(int objectHandle, const char* value) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleComboBoxValue(objectHandle, value != nullptr ? value : "");
+#else
+	return false;
+#endif
+}
+
+const char* FairyGuiLuaApi::GetComboBoxValue(int objectHandle)
+{
+	m_lastObjectValue.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastObjectValue = system->GetObjectHandleComboBoxValue(objectHandle);
+#endif
+	return m_lastObjectValue.c_str();
+}
+
+bool FairyGuiLuaApi::PlayTransition(int objectHandle, const char* transitionName, int times, float delay, int callbackId) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->PlayObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", times, delay, callbackId);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::StopTransition(int objectHandle, const char* transitionName, bool setToComplete, bool processCallback) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->StopObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", setToComplete, processCallback);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::FocusObject(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleFocus(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::ClearFocus() const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->ClearObjectHandleFocus();
+#else
+	return false;
+#endif
+}
+
+int FairyGuiLuaApi::GetFocusedObject() const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetFocusedObjectHandle() : 0;
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::SetListItemCount(int objectHandle, int itemCount) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleListItemCount(objectHandle, itemCount);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::SetListSelectedIndex(int objectHandle, int selectedIndex) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleListSelectedIndex(objectHandle, selectedIndex);
+#else
+	return false;
+#endif
+}
+
+int FairyGuiLuaApi::GetListSelectedIndex(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr ? system->GetObjectHandleListSelectedIndex(objectHandle) : -1;
+#else
+	return -1;
+#endif
+}
+
+bool FairyGuiLuaApi::SetListVirtual(int objectHandle, bool loop) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->SetObjectHandleListVirtual(objectHandle, loop);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::RefreshList(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->RefreshObjectHandleList(objectHandle);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::ScrollListToView(int objectHandle, int itemIndex) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->ScrollObjectHandleListToView(objectHandle, itemIndex);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::CenterObject(int objectHandle, bool restraint) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->CenterObjectHandle(objectHandle, restraint);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectMouseMove(int x, int y) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectMouseMove(x, y);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectMouseDown(int x, int y, int button) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectMouseDown(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectMouseUp(int x, int y, int button) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectMouseUp(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectMouseWheel(int x, int y, int wheelDelta) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectMouseWheel(x, y, wheelDelta);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectLogicalMouseMove(int x, int y) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectLogicalMouseMove(x, y);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectLogicalMouseDown(int x, int y, int button) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectLogicalMouseDown(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectLogicalMouseUp(int x, int y, int button) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectLogicalMouseUp(x, y, button);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectLogicalMouseWheel(int x, int y, int wheelDelta) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectLogicalMouseWheel(x, y, wheelDelta);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectLogicalClick(int x, int y, int button) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system == nullptr)
+		return false;
+
+	system->InjectLogicalMouseMove(x, y);
+	const bool downConsumed = system->InjectLogicalMouseDown(x, y, button);
+	const bool upConsumed = system->InjectLogicalMouseUp(x, y, button);
+	return downConsumed || upConsumed;
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectKeyPressed(int keyCode, int keyText) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectKeyPressed(keyCode, keyText);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectKeyReleased(int keyCode, int keyText) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectKeyReleased(keyCode, keyText);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectImeCompositionText(const char* text) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectImeCompositionText(text != nullptr ? text : "");
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::InjectImeCommitText(const char* text) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->InjectImeCommitText(text != nullptr ? text : "");
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::ClearImeComposition() const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->ClearImeCompositionText();
+#else
+	return false;
+#endif
+}
+
+const char* FairyGuiLuaApi::GetImeDebugString()
+{
+	m_lastImeDebug.clear();
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		m_lastImeDebug = system->GetImeDebugString();
+#endif
+	return m_lastImeDebug.c_str();
+}
+
+int FairyGuiLuaApi::AddEventListener(int objectHandle, const char* childPath, int eventType, int callbackId) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system == nullptr)
+		return 0;
+
+	return system->AddObjectHandleEventListener(objectHandle, childPath != nullptr ? childPath : "", eventType, callbackId);
+#else
+	return 0;
+#endif
+}
+
+int FairyGuiLuaApi::AddClickListener(int objectHandle, const char* childPath, int callbackId) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system == nullptr)
+		return 0;
+
+	return system->AddObjectHandleClickListener(objectHandle, childPath != nullptr ? childPath : "", callbackId);
+#else
+	return 0;
+#endif
+}
+
+int FairyGuiLuaApi::AddControllerChangedListener(int objectHandle, const char* controllerName, int callbackId) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system == nullptr)
+		return 0;
+
+	return system->AddObjectHandleControllerChangedListener(objectHandle, controllerName != nullptr ? controllerName : "", callbackId);
+#else
+	return 0;
+#endif
+}
+
+bool FairyGuiLuaApi::RemoveListener(int bindingId) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->RemoveObjectHandleListener(bindingId);
+#else
+	return false;
+#endif
+}
+
+bool FairyGuiLuaApi::RemoveObject(int objectHandle) const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	return system != nullptr && system->RemoveObjectHandle(objectHandle);
+#else
+	return false;
+#endif
+}
+
+void FairyGuiLuaApi::ClearObjects() const
+{
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* system = GetSystem();
+	if (system != nullptr)
+		system->ClearObjectHandles();
+#endif
 }

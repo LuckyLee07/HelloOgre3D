@@ -181,11 +181,6 @@ private:
 
 	FairyGuiLuaApi* m_pFairyGuiLuaApi;
 
-	std::string m_fairyGuiLastObjectText;
-	std::string m_fairyGuiLastObjectValue;
-	std::string m_fairyGuiLastControllerString;
-	std::string m_fairyGuiLastImeDebug;
-
 }; //tolua_exports
 
 extern GameManager* g_GameManager;

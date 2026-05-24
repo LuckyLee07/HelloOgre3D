@@ -13,9 +13,6 @@
 #endif
 #include "ClientManager.h"
 #include "FairyGuiLuaApi.h"
-#if defined(HELLO_ENABLE_FGUI)
-#include "ui/fairygui/FairyGuiSystem.h"
-#endif
 #include "systems/ui/UIManager.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -40,8 +37,7 @@ GameManager* GetGameManager()
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
-	m_pFairyGuiLuaApi(new FairyGuiLuaApi(pClientMgr)),
-	m_fairyGuiLastObjectText(), m_fairyGuiLastObjectValue(), m_fairyGuiLastControllerString(), m_fairyGuiLastImeDebug()
+	m_pFairyGuiLuaApi(new FairyGuiLuaApi(pClientMgr))
 {
 	
 }
@@ -296,662 +292,318 @@ bool GameManager::plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKind
 
 int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->GetObjectHandleChild(objectHandle, childPath != nullptr ? childPath : "");
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetChild(objectHandle, childPath) : 0;
 }
 
 int GameManager::getFairyGuiListItem(int objectHandle, int itemIndex)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->GetObjectHandleListItem(objectHandle, itemIndex);
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListItem(objectHandle, itemIndex) : 0;
 }
 
 int GameManager::getFairyGuiListItemCount(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->GetObjectHandleListItemCount(objectHandle);
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListItemCount(objectHandle) : 0;
 }
 
 bool GameManager::addFairyGuiObjectToRoot(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->AddObjectHandleToRoot(objectHandle);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->AddObjectToRoot(objectHandle);
 }
 
 bool GameManager::addFairyGuiObjectToParent(int objectHandle, int parentHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->AddObjectHandleToParent(objectHandle, parentHandle);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->AddObjectToParent(objectHandle, parentHandle);
 }
 
 bool GameManager::setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandlePosition(objectHandle, x, y);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectPosition(objectHandle, x, y);
 }
 
 bool GameManager::setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleSize(objectHandle, width, height);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectSize(objectHandle, width, height);
 }
 
 bool GameManager::setFairyGuiObjectVisible(int objectHandle, bool visible)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleVisible(objectHandle, visible);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectVisible(objectHandle, visible);
 }
 
 bool GameManager::setFairyGuiObjectAlpha(int objectHandle, Ogre::Real alpha)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleAlpha(objectHandle, alpha);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectAlpha(objectHandle, alpha);
 }
 
 bool GameManager::setFairyGuiObjectTouchable(int objectHandle, bool touchable)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleTouchable(objectHandle, touchable);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectTouchable(objectHandle, touchable);
 }
 
 bool GameManager::setFairyGuiObjectMask(int objectHandle, int maskHandle, bool inverted)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleMask(objectHandle, maskHandle, inverted);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMask(objectHandle, maskHandle, inverted);
 }
 
 bool GameManager::setFairyGuiObjectSortingOrder(int objectHandle, int sortingOrder)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleSortingOrder(objectHandle, sortingOrder);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectSortingOrder(objectHandle, sortingOrder);
 }
 
 bool GameManager::setFairyGuiObjectText(int objectHandle, const char* text)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleText(objectHandle, text != nullptr ? text : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectText(objectHandle, text);
 }
 
 const char* GameManager::getFairyGuiObjectText(int objectHandle)
 {
-	m_fairyGuiLastObjectText.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastObjectText = system->GetObjectHandleText(objectHandle);
-#endif
-	return m_fairyGuiLastObjectText.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectText(objectHandle) : "";
 }
 
 bool GameManager::setFairyGuiObjectIcon(int objectHandle, const char* icon)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleIcon(objectHandle, icon != nullptr ? icon : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectIcon(objectHandle, icon);
 }
 
 bool GameManager::setFairyGuiObjectLoaderUrl(int objectHandle, const char* url)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleLoaderUrl(objectHandle, url != nullptr ? url : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectLoaderUrl(objectHandle, url);
 }
 
 bool GameManager::setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleControllerIndex(objectHandle, controllerName != nullptr ? controllerName : "", selectedIndex);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectControllerIndex(objectHandle, controllerName, selectedIndex);
 }
 
 int GameManager::getFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleControllerIndex(objectHandle, controllerName != nullptr ? controllerName : "") : -1;
-#else
-	return -1;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerIndex(objectHandle, controllerName) : -1;
 }
 
 bool GameManager::setFairyGuiObjectControllerPage(int objectHandle, const char* controllerName, const char* pageName)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleControllerPage(objectHandle, controllerName != nullptr ? controllerName : "", pageName != nullptr ? pageName : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectControllerPage(objectHandle, controllerName, pageName);
 }
 
 const char* GameManager::getFairyGuiObjectControllerPage(int objectHandle, const char* controllerName)
 {
-	m_fairyGuiLastControllerString.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastControllerString = system->GetObjectHandleControllerPage(objectHandle, controllerName != nullptr ? controllerName : "");
-#endif
-	return m_fairyGuiLastControllerString.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPage(objectHandle, controllerName) : "";
 }
 
 const char* GameManager::getFairyGuiObjectControllerPageId(int objectHandle, const char* controllerName)
 {
-	m_fairyGuiLastControllerString.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastControllerString = system->GetObjectHandleControllerPageId(objectHandle, controllerName != nullptr ? controllerName : "");
-#endif
-	return m_fairyGuiLastControllerString.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageId(objectHandle, controllerName) : "";
 }
 
 int GameManager::getFairyGuiObjectControllerPageCount(int objectHandle, const char* controllerName)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleControllerPageCount(objectHandle, controllerName != nullptr ? controllerName : "") : 0;
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageCount(objectHandle, controllerName) : 0;
 }
 
 const char* GameManager::getFairyGuiObjectControllerPageNameAt(int objectHandle, const char* controllerName, int pageIndex)
 {
-	m_fairyGuiLastControllerString.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastControllerString = system->GetObjectHandleControllerPageNameAt(objectHandle, controllerName != nullptr ? controllerName : "", pageIndex);
-#endif
-	return m_fairyGuiLastControllerString.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageNameAt(objectHandle, controllerName, pageIndex) : "";
 }
 
 const char* GameManager::getFairyGuiObjectControllerPageIdAt(int objectHandle, const char* controllerName, int pageIndex)
 {
-	m_fairyGuiLastControllerString.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastControllerString = system->GetObjectHandleControllerPageIdAt(objectHandle, controllerName != nullptr ? controllerName : "", pageIndex);
-#endif
-	return m_fairyGuiLastControllerString.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageIdAt(objectHandle, controllerName, pageIndex) : "";
 }
 
 bool GameManager::setFairyGuiObjectValue(int objectHandle, Ogre::Real value)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleValue(objectHandle, value);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectValue(objectHandle, value);
 }
 
 Ogre::Real GameManager::getFairyGuiObjectValue(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleValue(objectHandle) : 0;
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectValue(objectHandle) : 0;
 }
 
 bool GameManager::setFairyGuiObjectMin(int objectHandle, Ogre::Real minValue)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleMin(objectHandle, minValue);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMin(objectHandle, minValue);
 }
 
 Ogre::Real GameManager::getFairyGuiObjectMin(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleMin(objectHandle) : 0;
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectMin(objectHandle) : 0;
 }
 
 bool GameManager::setFairyGuiObjectMax(int objectHandle, Ogre::Real maxValue)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleMax(objectHandle, maxValue);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMax(objectHandle, maxValue);
 }
 
 Ogre::Real GameManager::getFairyGuiObjectMax(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleMax(objectHandle) : 0;
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectMax(objectHandle) : 0;
 }
 
 bool GameManager::setFairyGuiComboBoxSelectedIndex(int objectHandle, int selectedIndex)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleComboBoxSelectedIndex(objectHandle, selectedIndex);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetComboBoxSelectedIndex(objectHandle, selectedIndex);
 }
 
 int GameManager::getFairyGuiComboBoxSelectedIndex(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleComboBoxSelectedIndex(objectHandle) : -1;
-#else
-	return -1;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetComboBoxSelectedIndex(objectHandle) : -1;
 }
 
 bool GameManager::setFairyGuiComboBoxValue(int objectHandle, const char* value)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleComboBoxValue(objectHandle, value != nullptr ? value : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetComboBoxValue(objectHandle, value);
 }
 
 const char* GameManager::getFairyGuiComboBoxValue(int objectHandle)
 {
-	m_fairyGuiLastObjectValue.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastObjectValue = system->GetObjectHandleComboBoxValue(objectHandle);
-#endif
-	return m_fairyGuiLastObjectValue.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetComboBoxValue(objectHandle) : "";
 }
 
 bool GameManager::playFairyGuiTransition(int objectHandle, const char* transitionName, int times, Ogre::Real delay, int callbackId)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->PlayObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", times, delay, callbackId);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->PlayTransition(objectHandle, transitionName, times, delay, callbackId);
 }
 
 bool GameManager::stopFairyGuiTransition(int objectHandle, const char* transitionName, bool setToComplete, bool processCallback)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->StopObjectHandleTransition(objectHandle, transitionName != nullptr ? transitionName : "", setToComplete, processCallback);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->StopTransition(objectHandle, transitionName, setToComplete, processCallback);
 }
 
 bool GameManager::focusFairyGuiObject(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleFocus(objectHandle);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->FocusObject(objectHandle);
 }
 
 bool GameManager::clearFairyGuiFocus()
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->ClearObjectHandleFocus();
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ClearFocus();
 }
 
 int GameManager::getFairyGuiFocusedObject()
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetFocusedObjectHandle() : 0;
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetFocusedObject() : 0;
 }
 
 bool GameManager::setFairyGuiListItemCount(int objectHandle, int itemCount)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleListItemCount(objectHandle, itemCount);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListItemCount(objectHandle, itemCount);
 }
 
 bool GameManager::setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleListSelectedIndex(objectHandle, selectedIndex);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListSelectedIndex(objectHandle, selectedIndex);
 }
 
 int GameManager::getFairyGuiListSelectedIndex(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr ? system->GetObjectHandleListSelectedIndex(objectHandle) : -1;
-#else
-	return -1;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListSelectedIndex(objectHandle) : -1;
 }
 
 bool GameManager::setFairyGuiListVirtual(int objectHandle, bool loop)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->SetObjectHandleListVirtual(objectHandle, loop);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListVirtual(objectHandle, loop);
 }
 
 bool GameManager::refreshFairyGuiList(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->RefreshObjectHandleList(objectHandle);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RefreshList(objectHandle);
 }
 
 bool GameManager::scrollFairyGuiListToView(int objectHandle, int itemIndex)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->ScrollObjectHandleListToView(objectHandle, itemIndex);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ScrollListToView(objectHandle, itemIndex);
 }
 
 bool GameManager::centerFairyGuiObject(int objectHandle, bool restraint)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->CenterObjectHandle(objectHandle, restraint);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->CenterObject(objectHandle, restraint);
 }
 
 bool GameManager::injectFairyGuiMouseMove(int x, int y)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectLogicalMouseMove(x, y);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseMove(x, y);
 }
 
 bool GameManager::injectFairyGuiMouseDown(int x, int y, int button)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectLogicalMouseDown(x, y, button);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseDown(x, y, button);
 }
 
 bool GameManager::injectFairyGuiMouseUp(int x, int y, int button)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectLogicalMouseUp(x, y, button);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseUp(x, y, button);
 }
 
 bool GameManager::injectFairyGuiMouseWheel(int x, int y, int wheelDelta)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectLogicalMouseWheel(x, y, wheelDelta);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseWheel(x, y, wheelDelta);
 }
 
 bool GameManager::injectFairyGuiClick(int x, int y, int button)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return false;
-
-	system->InjectLogicalMouseMove(x, y);
-	const bool downConsumed = system->InjectLogicalMouseDown(x, y, button);
-	const bool upConsumed = system->InjectLogicalMouseUp(x, y, button);
-	return downConsumed || upConsumed;
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalClick(x, y, button);
 }
 
 bool GameManager::injectFairyGuiKeyPressed(int keyCode, int keyText)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectKeyPressed(keyCode, keyText);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyPressed(keyCode, keyText);
 }
 
 bool GameManager::injectFairyGuiKeyReleased(int keyCode, int keyText)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectKeyReleased(keyCode, keyText);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyReleased(keyCode, keyText);
 }
 
 bool GameManager::injectFairyGuiImeCompositionText(const char* text)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectImeCompositionText(text != nullptr ? text : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectImeCompositionText(text);
 }
 
 bool GameManager::injectFairyGuiImeCommitText(const char* text)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->InjectImeCommitText(text != nullptr ? text : "");
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectImeCommitText(text);
 }
 
 bool GameManager::clearFairyGuiImeComposition()
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->ClearImeCompositionText();
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ClearImeComposition();
 }
 
 const char* GameManager::getFairyGuiImeDebugString()
 {
-	m_fairyGuiLastImeDebug.clear();
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		m_fairyGuiLastImeDebug = system->GetImeDebugString();
-#endif
-	return m_fairyGuiLastImeDebug.c_str();
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetImeDebugString() : "";
 }
 
 int GameManager::addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->AddObjectHandleEventListener(objectHandle, childPath != nullptr ? childPath : "", eventType, callbackId);
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddEventListener(objectHandle, childPath, eventType, callbackId) : 0;
 }
 
 int GameManager::addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->AddObjectHandleClickListener(objectHandle, childPath != nullptr ? childPath : "", callbackId);
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddClickListener(objectHandle, childPath, callbackId) : 0;
 }
 
 int GameManager::addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system == nullptr)
-		return 0;
-
-	return system->AddObjectHandleControllerChangedListener(objectHandle, controllerName != nullptr ? controllerName : "", callbackId);
-#else
-	return 0;
-#endif
+	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddControllerChangedListener(objectHandle, controllerName, callbackId) : 0;
 }
 
 bool GameManager::removeFairyGuiListener(int bindingId)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->RemoveObjectHandleListener(bindingId);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RemoveListener(bindingId);
 }
 
 bool GameManager::removeFairyGuiObject(int objectHandle)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	return system != nullptr && system->RemoveObjectHandle(objectHandle);
-#else
-	return false;
-#endif
+	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RemoveObject(objectHandle);
 }
 
 void GameManager::clearFairyGuiObjects()
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
-		system->ClearObjectHandles();
-#endif
+	if (m_pFairyGuiLuaApi != nullptr)
+		m_pFairyGuiLuaApi->ClearObjects();
 }
 
 void GameManager::Initialize()
@@ -1110,11 +762,8 @@ void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 
 bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr && system->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
+	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
 		return true;
-#endif
 
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyPressed", "ii>b", keycode, static_cast<int>(key), &consumed);
@@ -1127,11 +776,8 @@ bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr && system->InjectKeyReleased(static_cast<int>(keycode), static_cast<int>(key)))
+	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyReleased(static_cast<int>(keycode), static_cast<int>(key)))
 		return true;
-#endif
 
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyReleased", "ii>b", keycode, static_cast<int>(key), &consumed);
@@ -1146,36 +792,27 @@ bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr)
+	if (m_pFairyGuiLuaApi != nullptr)
 	{
-		if (evt.state.Z.rel != 0 && system->InjectMouseWheel(evt.state.X.abs, evt.state.Y.abs, evt.state.Z.rel))
+		if (evt.state.Z.rel != 0 && m_pFairyGuiLuaApi->InjectMouseWheel(evt.state.X.abs, evt.state.Y.abs, evt.state.Z.rel))
 			return true;
-		if (system->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
+		if (m_pFairyGuiLuaApi->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
 			return true;
 	}
-#endif
 	return false;
 }
 
 bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr && system->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
-#endif
 	return false;
 }
 
 bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-#if defined(HELLO_ENABLE_FGUI)
-	FairyGuiSystem* system = m_pClientManager != nullptr ? m_pClientManager->getFairyGuiSystem() : nullptr;
-	if (system != nullptr && system->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
-#endif
 	return false;
 }
 
