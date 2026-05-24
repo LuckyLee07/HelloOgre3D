@@ -41,13 +41,27 @@ public:
 
 	void update(int deltaMs); // 每帧调用以清除 KeyDown/KeyUp 状态
 
+#if defined(OIS_APPLE_PLATFORM)
+	void HandleNativeMouseMove(int x, int y, int relX, int relY, int wheelDelta, int buttons);
+	void HandleNativeMouseButton(int x, int y, int relX, int relY, OIS::MouseButtonID button, bool pressed, int buttons);
+#endif
+
 private:
+#if defined(OIS_APPLE_PLATFORM)
+	void InstallNativeMouseBridge();
+	void UninstallNativeMouseBridge();
+#endif
+
 	size_t m_windowHnd;
 
 	// OIS Input devices
 	OIS::Mouse* m_pMouse;
 	OIS::Keyboard* m_pKeyboard;
 	OIS::InputManager * m_pOISInputMgr;
+#if defined(OIS_APPLE_PLATFORM)
+	void* m_nativeMouseBridge;
+	OIS::MouseState m_nativeMouseState;
+#endif
 
 	std::vector<IInputHandler*> m_inputHandlers;
 

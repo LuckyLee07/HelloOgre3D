@@ -4,8 +4,23 @@
 #include "OgreRenderWindow.h"
 #include "ogre/OgreCameraController.h"
 
-InputManager::InputManager() : m_pOISInputMgr(nullptr),
-	m_pMouse(nullptr), m_pKeyboard(nullptr), m_windowHnd(0)
+namespace
+{
+	int ClampMouseCoordinate(int value, int maxValue)
+	{
+		if (maxValue <= 0)
+			return value;
+		if (value < 0)
+			return 0;
+		return value > maxValue ? maxValue : value;
+	}
+}
+
+InputManager::InputManager() : m_windowHnd(0),
+	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr)
+#if defined(OIS_APPLE_PLATFORM)
+	, m_nativeMouseBridge(nullptr), m_nativeMouseState()
+#endif
 {
 	Ogre::RenderWindow* pRenderWindow = GetClientMgr()->getRenderWindow();
 	pRenderWindow->getCustomAttribute("WINDOW", &m_windowHnd);
@@ -51,6 +66,22 @@ void InputManager::Initialize()
 		m_pMouse->setEventCallback(this);
 	if (m_pKeyboard != nullptr)
 		m_pKeyboard->setEventCallback(this);
+
+	Ogre::RenderWindow* renderWindow = GetClientMgr()->getRenderWindow();
+	if (renderWindow != nullptr)
+	{
+		unsigned int width = 0;
+		unsigned int height = 0;
+		unsigned int colourDepth = 0;
+		int left = 0;
+		int top = 0;
+		renderWindow->getMetrics(width, height, colourDepth, left, top);
+		resizeMouseState(width, height);
+	}
+
+#if defined(OIS_APPLE_PLATFORM)
+	InstallNativeMouseBridge();
+#endif
 }
 
 void InputManager::capture()
@@ -64,10 +95,16 @@ void InputManager::capture()
 
 void InputManager::closeWindow()
 {
+#if defined(OIS_APPLE_PLATFORM)
+	UninstallNativeMouseBridge();
+#endif
+
 	if (m_pOISInputMgr == nullptr) return;
 
-	m_pOISInputMgr->destroyInputObject(m_pMouse);
-	m_pOISInputMgr->destroyInputObject(m_pKeyboard);
+	if (m_pMouse != nullptr)
+		m_pOISInputMgr->destroyInputObject(m_pMouse);
+	if (m_pKeyboard != nullptr)
+		m_pOISInputMgr->destroyInputObject(m_pKeyboard);
 	m_pMouse = nullptr;
 	m_pKeyboard = nullptr;
 
@@ -79,6 +116,10 @@ void InputManager::closeWindow()
 
 void InputManager::resizeMouseState(int width, int height)
 {
+#if defined(OIS_APPLE_PLATFORM)
+	m_nativeMouseState.width = width;
+	m_nativeMouseState.height = height;
+#endif
 	if (m_pMouse == nullptr)
 		return;
 	const OIS::MouseState& mouseState = m_pMouse->getMouseState();
@@ -184,6 +225,45 @@ bool InputManager::isKeyReleased(OIS::KeyCode key) const
 	auto iter = m_KeyUpMap.find(key);
 	return iter != m_KeyUpMap.end() && iter->second;
 }
+
+#if defined(OIS_APPLE_PLATFORM)
+void InputManager::HandleNativeMouseMove(int x, int y, int relX, int relY, int wheelDelta, int buttons)
+{
+	m_nativeMouseState.X.abs = ClampMouseCoordinate(x, m_nativeMouseState.width);
+	m_nativeMouseState.Y.abs = ClampMouseCoordinate(y, m_nativeMouseState.height);
+	m_nativeMouseState.X.rel = relX;
+	m_nativeMouseState.Y.rel = relY;
+	m_nativeMouseState.Z.rel = wheelDelta;
+	m_nativeMouseState.Z.abs += wheelDelta;
+	m_nativeMouseState.buttons = buttons;
+
+	OIS::MouseEvent event(nullptr, m_nativeMouseState);
+	mouseMoved(event);
+
+	m_nativeMouseState.X.rel = 0;
+	m_nativeMouseState.Y.rel = 0;
+	m_nativeMouseState.Z.rel = 0;
+}
+
+void InputManager::HandleNativeMouseButton(int x, int y, int relX, int relY, OIS::MouseButtonID button, bool pressed, int buttons)
+{
+	m_nativeMouseState.X.abs = ClampMouseCoordinate(x, m_nativeMouseState.width);
+	m_nativeMouseState.Y.abs = ClampMouseCoordinate(y, m_nativeMouseState.height);
+	m_nativeMouseState.X.rel = relX;
+	m_nativeMouseState.Y.rel = relY;
+	m_nativeMouseState.Z.rel = 0;
+	m_nativeMouseState.buttons = buttons;
+
+	OIS::MouseEvent event(nullptr, m_nativeMouseState);
+	if (pressed)
+		mousePressed(event, button);
+	else
+		mouseReleased(event, button);
+
+	m_nativeMouseState.X.rel = 0;
+	m_nativeMouseState.Y.rel = 0;
+}
+#endif
 
 void InputManager::update(int deltaMs)
 {

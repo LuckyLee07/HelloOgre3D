@@ -205,6 +205,11 @@ function CreateGameProject( projectName )
       "../src/" .. projectName .. "/runtime/**.h",
       "../src/" .. projectName .. "/runtime/**.cpp",
     } )
+    filter "system:macosx"
+      files( {
+        "../src/" .. projectName .. "/**.mm",
+      } )
+    filter {}
     if HELLO_FAIRYGUI_ENABLED then
       excludes( {
         "../src/" .. projectName .. "/runtime/ui/fairygui/cocoslite/**.cpp",
