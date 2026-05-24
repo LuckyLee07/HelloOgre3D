@@ -103,7 +103,8 @@
 
 - [x] `SandboxEventPayload` 第一版已统一 `eventType/scope/senderId/targetId/teamId/timeMs/x/y/z` 字段。
 - [x] Local 事件已覆盖 `HEALTH_CHANGE`、`ASM_STATE_CHANGE`、`ASM_NOTIFY`，并由 dispatcher 记录最近事件、订阅者数量和派发次数。
-- [ ] Team / Global 派发路径、延迟派发和订阅生命周期 token 仍待补齐。
+- [x] Dispatcher 已返回订阅 token，`AgentObject` / `SoldierObject` 在销毁链路中显式解绑 Local event callback。
+- [ ] Team / Global 派发路径和延迟派发仍待补齐。
 
 ## 6. P0：AI 更新调度与性能观测
 
@@ -136,7 +137,8 @@
 
 - [x] `AIScheduler` 第一版已支持 Soldier AI tick 与动画/渲染 update 解耦、按 agentId 错峰、每帧 tick budget 和 Lua 可配置开关。
 - [x] `RuntimeProfileCounters` 已接入 `AIScheduler*` Tracy plots，`ObjectManager:buildAiSchedulerDebugSummary()` 可 dump 最近一帧调度数据。
-- [ ] Sensor / KnowledgeSource / InfluenceMap 独立刷新频率和固定 20+ agent preset 仍待补齐。
+- [x] `ai_perf_smoke` sample preset 已固定 seed、20 个 agent、固定出生点和 AI scheduler 参数，可由 smoke 脚本复现性能样例。
+- [ ] Sensor / KnowledgeSource / InfluenceMap 独立刷新频率仍待补齐。
 
 ## 7. P1：感知系统组件化
 

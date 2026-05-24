@@ -100,27 +100,19 @@ function Sandbox_Initialize()
     local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
-    -- Create agents and randomly place them on the navmesh.
+    local sampleName = "Sandbox6"
+    local agentCount = ConfigManager:GetAgentCount(sampleName, 7)
+    print(ConfigManager:BuildDebugSummary(sampleName))
+
+    -- Create agents and place them through the selected sample preset.
     local agentLuafile = _GetFilePath("IndirectSoldierAgent.lua")
-    for i=1, 7 do
-        local teamId = i > 3 and 0 or 1
-        local agentType = Soldier.AppearanceTypes.LIGHT
-        if i > 3 then agentType = Soldier.AppearanceTypes.DARK end
+    for i=1, agentCount do
+        local teamId = ConfigManager:GetAgentTeamId(sampleName, i)
+        local agentType = ConfigManager:GetAgentAppearance(sampleName, i, Soldier.AppearanceTypes)
         local agent = Create_Soldier(agentLuafile, agentType, teamId)
         table.insert(_agents, agent);
 
-        local height = agent:GetHeight()
-        local randomPoint = Sandbox:RandomPoint("default");
-        randomPoint.y = randomPoint.y + height * 0.5
-        agent:setPosition(randomPoint);
-        
-        -- Use the Agent's closest point to the navmesh as their target position.
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
-        agent:SetTarget(navPosition);
-
-        -- Increase the target radius to prevent agents from slowing to reach
-        -- their target position.
-        agent:SetTargetRadius(1);
+        ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, i, "default")
     end
 end
 

@@ -22,6 +22,11 @@ param(
 	[int]$DiagMaxObjects = 8,
 	[int]$DiagMaxResources = 6,
 	[int]$DiagMaxEvents = 6,
+	[string]$Preset = "",
+	[int]$Seed = 0,
+	[int]$AgentCount = 0,
+	[int]$LightTeamCount = 0,
+	[string]$SpawnMode = "",
 	[switch]$AiScheduler,
 	[int]$AiTickMs = 50,
 	[int]$AiMaxPerFrame = 8,
@@ -53,6 +58,14 @@ $KnownEnvNames = @(
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS",
+	"HELLO_SAMPLE_PRESET",
+	"HELLO_SAMPLE_SEED",
+	"HELLO_SAMPLE_AGENT_COUNT",
+	"HELLO_SAMPLE_LIGHT_COUNT",
+	"HELLO_SAMPLE_SPAWN_MODE",
+	"HELLO_SAMPLE_AI_SCHEDULER",
+	"HELLO_SAMPLE_AI_TICK_MS",
+	"HELLO_SAMPLE_AI_MAX_PER_FRAME",
 	"HELLO_AI_SCHEDULER_ENABLE",
 	"HELLO_AI_SCHEDULER_TICK_MS",
 	"HELLO_AI_SCHEDULER_MAX_PER_FRAME"
@@ -73,13 +86,31 @@ if ($RuntimeDiag) {
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES"] = [string]$DiagMaxResources
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS"] = [string]$DiagMaxEvents
 }
+if ($Preset -ne "") {
+	$SelectedEnv["HELLO_SAMPLE_PRESET"] = $Preset
+}
+if ($Seed -gt 0) {
+	$SelectedEnv["HELLO_SAMPLE_SEED"] = [string]$Seed
+}
+if ($AgentCount -gt 0) {
+	$SelectedEnv["HELLO_SAMPLE_AGENT_COUNT"] = [string]$AgentCount
+}
+if ($LightTeamCount -gt 0) {
+	$SelectedEnv["HELLO_SAMPLE_LIGHT_COUNT"] = [string]$LightTeamCount
+}
+if ($SpawnMode -ne "") {
+	$SelectedEnv["HELLO_SAMPLE_SPAWN_MODE"] = $SpawnMode
+}
 if ($AiScheduler) {
 	$SelectedEnv["HELLO_AI_SCHEDULER_ENABLE"] = "1"
 	$SelectedEnv["HELLO_AI_SCHEDULER_TICK_MS"] = [string]$AiTickMs
 	$SelectedEnv["HELLO_AI_SCHEDULER_MAX_PER_FRAME"] = [string]$AiMaxPerFrame
 }
+if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
+	$Seconds = 120
+}
 
-Write-Host "[SMOKE] sample=$SelectedSample runId=$RunId runtimeDiag=$($RuntimeDiag.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$($RuntimeDiag.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -229,6 +260,12 @@ try {
 			$diagMatches = @($LogLinesForChecks | Select-String -Pattern "\[RuntimeDiag\] self test result:\s+true")
 			if ($diagMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm runtime diagnostic selftest success."
+			}
+			if ($Preset -ne "") {
+				$presetMatches = @($LogLinesForChecks | Select-String -Pattern "\[ConfigManager\].*preset=.*$([regex]::Escape($Preset))")
+				if ($presetMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm sample preset: $Preset"
+				}
 			}
 		}
 

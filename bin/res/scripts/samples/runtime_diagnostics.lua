@@ -4,12 +4,15 @@ local function getEnvValue(name)
 	return os.getenv and os.getenv(name) or nil
 end
 
-local function getEnvNumber(name, defaultValue)
-	local value = tonumber(getEnvValue(name))
-	if value == nil then
-		return defaultValue
+local function getDiagnosticLimit(key, envName, defaultValue)
+	local envValue = tonumber(getEnvValue(envName))
+	if envValue ~= nil then
+		return envValue
 	end
-	return value
+	if ConfigManager ~= nil and ConfigManager.GetDiagnosticLimit ~= nil then
+		return ConfigManager:GetDiagnosticLimit(_G.HELLO_SANDBOX_SAMPLE_NAME, key, defaultValue)
+	end
+	return defaultValue
 end
 
 local function printLines(text)
@@ -23,11 +26,17 @@ end
 
 function RuntimeDiagnostics.RunSelfTest()
 	local ok = true
-	local maxObjects = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS", 8)
-	local maxResources = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES", 6)
-	local maxEvents = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS", 6)
+	local maxObjects = getDiagnosticLimit("maxObjects", "HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS", 8)
+	local maxResources = getDiagnosticLimit("maxResources", "HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES", 6)
+	local maxEvents = getDiagnosticLimit("maxEvents", "HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS", 6)
 
 	print("[RuntimeDiag] self test begin", "sample=", tostring(_G.HELLO_SANDBOX_SAMPLE_NAME), "maxObjects=", maxObjects, "maxResources=", maxResources, "maxEvents=", maxEvents)
+	if ConfigManager == nil or ConfigManager.BuildDebugSummary == nil then
+		print("[RuntimeDiag] config manager unavailable")
+		ok = false
+	else
+		printLines(ConfigManager:BuildDebugSummary(_G.HELLO_SANDBOX_SAMPLE_NAME))
+	end
 
 	if ObjectManager == nil or ObjectManager.buildObjectDebugSummary == nil then
 		print("[RuntimeDiag] object inspector unavailable")

@@ -79,22 +79,18 @@ function Sandbox_Initialize()
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     -- 7 个 BT 驱动的士兵：3 个 LIGHT (team 1) + 4 个 DARK (team 0)
+    local sampleName = "Sandbox8"
+    local agentCount = ConfigManager:GetAgentCount(sampleName, 7)
+    print(ConfigManager:BuildDebugSummary(sampleName))
+
     local agentLuafile = "res/scripts/agent/BehaviorSoldierAgent.lua"
-    for i = 1, 7 do
-        local teamId = i > 3 and 0 or 1
-        local agentType = (i > 3) and Soldier.AppearanceTypes.DARK
-                                   or  Soldier.AppearanceTypes.LIGHT
+    for i = 1, agentCount do
+        local teamId = ConfigManager:GetAgentTeamId(sampleName, i)
+        local agentType = ConfigManager:GetAgentAppearance(sampleName, i, Soldier.AppearanceTypes)
         local agent = Create_Soldier(agentLuafile, agentType, teamId)
         table.insert(_agents, agent)
 
-        local height = agent:GetHeight()
-        local randomPoint = Sandbox:RandomPoint("default")
-        randomPoint.y = randomPoint.y + height * 0.5
-        agent:setPosition(randomPoint)
-
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition())
-        agent:SetTarget(navPosition)
-        agent:SetTargetRadius(1)
+        ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, i, "default")
     end
 end
 

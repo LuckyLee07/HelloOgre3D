@@ -13,6 +13,7 @@ require("res.scripts.ui.FairyGuiBaseCtrl")
 require("res.scripts.ui.FairyGuiBaseMvcView")
 require("res.scripts.ui.FairyGuiAutoGen")
 require("res.scripts.manager.LuaPluginMgr")
+require("res.scripts.manager.ConfigManager")
 require("res.scripts.manager.FairyGuiManager")
 require("res.scripts.ui.UIRegistry")
 

@@ -118,6 +118,8 @@ private:
 	// so Update() just calls m_driver->Tick(); typed accessors above downcast on demand.
 	IDecisionDriver* m_driver = nullptr;
 	bool m_aiTickInUpdateEnabled = true;
+	int m_asmStateChangeEventToken = 0;
+	int m_asmNotifyEventToken = 0;
 
 }; //tolua_exports
 

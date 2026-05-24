@@ -75,6 +75,7 @@ protected:
 	
 	RenderableObject* m_pAgentBody;
 	bool m_onPlayDeathAnim = false;
+	int m_healthChangeEventToken = 0;
 
 private:
 	AGENT_OBJ_TYPE m_agentType;

@@ -38,7 +38,7 @@ AgentObject::~AgentObject()
 void AgentObject::CreateEventDispatcher()
 {
 	Event()->CreateDispatcher("HEALTH_CHANGE");
-	Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
+	m_healthChangeEventToken = Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
 		double health = context.Get_Number("health");
 		if (health <= 0.0 && !GetUseCppFSM()) this->OnDeath(3.5f);
 	});
@@ -46,6 +46,8 @@ void AgentObject::CreateEventDispatcher()
 
 void AgentObject::RemoveEventDispatcher()
 {
+	Event()->Unsubscribe("HEALTH_CHANGE", m_healthChangeEventToken);
+	m_healthChangeEventToken = 0;
 	Event()->RemoveDispatcher("HEALTH_CHANGE");
 }
 

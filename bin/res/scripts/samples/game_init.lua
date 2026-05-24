@@ -115,10 +115,14 @@ local function tryRunRuntimeDiagnosticSelfTest()
 end
 
 local function tryConfigureAiScheduler()
-	if ObjectManager == nil or ObjectManager.configureAiScheduler == nil then
+	if ConfigManager ~= nil and ConfigManager.ConfigureAiScheduler ~= nil then
+		ConfigManager:ConfigureAiScheduler(ObjectManager, _G.HELLO_SANDBOX_SAMPLE_NAME)
 		return
 	end
 
+	if ObjectManager == nil or ObjectManager.configureAiScheduler == nil then
+		return
+	end
 	local enabled = isEnvEnabled("HELLO_AI_SCHEDULER_ENABLE")
 	local tickMs = getEnvNumber("HELLO_AI_SCHEDULER_TICK_MS", 50)
 	local maxPerFrame = getEnvNumber("HELLO_AI_SCHEDULER_MAX_PER_FRAME", 8)
@@ -139,7 +143,11 @@ if _G.HELLO_FGUI_AUTOMATION_MODE then
 end
 
 _G.__init__ = function(sec, msec)
-	math.randomseed(os.time())
+	if ConfigManager ~= nil and ConfigManager.ApplyStartupSeed ~= nil then
+		ConfigManager:ApplyStartupSeed(_G.HELLO_SANDBOX_SAMPLE_NAME)
+	else
+		math.randomseed(os.time())
+	end
 	threadpool:init(sec * 1000 + msec, 10)
 
 	-- Init LuaPanda

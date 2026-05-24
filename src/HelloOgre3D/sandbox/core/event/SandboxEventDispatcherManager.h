@@ -45,13 +45,24 @@ public:
 	}
 
 	// 订阅事件
-	void Subscribe(const std::string& eventName, const SandboxEventDispatcher::Callback& callback)
+	SandboxEventDispatcher::Token Subscribe(const std::string& eventName, const SandboxEventDispatcher::Callback& callback)
 	{
 		auto dispatcher = GetDispatcher(eventName);
 		if (dispatcher != nullptr)
 		{
-			dispatcher->BindCallback(callback);
+			return dispatcher->BindCallback(callback);
 		}
+		return 0;
+	}
+
+	bool Unsubscribe(const std::string& eventName, SandboxEventDispatcher::Token token)
+	{
+		auto dispatcher = GetDispatcher(eventName);
+		if (dispatcher != nullptr)
+		{
+			return dispatcher->UnbindCallback(token);
+		}
+		return false;
 	}
 
 	// 触发事件

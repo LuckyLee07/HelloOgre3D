@@ -62,6 +62,7 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 
 SoldierObject::~SoldierObject()
 {
+	this->RemoveEventDispatcher();
 	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_animController);
@@ -72,7 +73,7 @@ void SoldierObject::CreateEventDispatcher()
 {
 	Event()->CreateDispatcher("ASM_STATE_CHANGE");
 	Event()->CreateDispatcher("ASM_NOTIFY");
-	Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
+	m_asmStateChangeEventToken = Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
 		int stateId = (int)context.Get_Number("StateId");
 		if (!GetUseCppFSM() && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
 		{
@@ -89,7 +90,7 @@ void SoldierObject::CreateEventDispatcher()
 		if (!pState) return;
 		pState->Event()->Emit("FSM_STATE_CHANGE", context);
 	});
-	Event()->Subscribe("ASM_NOTIFY", [&](const SandboxContext& context) -> void {
+	m_asmNotifyEventToken = Event()->Subscribe("ASM_NOTIFY", [&](const SandboxContext& context) -> void {
 		const std::string eventName = context.Get_String("EventName");
 		const int stateId = (int)context.Get_Number("StateId");
 		const float normalizedTime = (float)context.Get_Number("NormalizedTime");
@@ -106,6 +107,10 @@ void SoldierObject::CreateEventDispatcher()
 
 void SoldierObject::RemoveEventDispatcher()
 {
+	Event()->Unsubscribe("ASM_STATE_CHANGE", m_asmStateChangeEventToken);
+	Event()->Unsubscribe("ASM_NOTIFY", m_asmNotifyEventToken);
+	m_asmStateChangeEventToken = 0;
+	m_asmNotifyEventToken = 0;
 	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
 	Event()->RemoveDispatcher("ASM_NOTIFY");
 }
