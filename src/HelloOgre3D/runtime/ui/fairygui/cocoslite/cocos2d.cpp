@@ -357,6 +357,11 @@ namespace cocos2d
 	{
 	}
 
+	Color3B::Color3B(const Color4F& color)
+		: r(static_cast<uint8_t>(color.r * 255)), g(static_cast<uint8_t>(color.g * 255)), b(static_cast<uint8_t>(color.b * 255))
+	{
+	}
+
 	bool operator==(const Color3B& lhs, const Color3B& rhs)
 	{
 		return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b;

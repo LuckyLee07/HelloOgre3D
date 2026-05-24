@@ -218,16 +218,22 @@ function CreateGameProject( projectName )
       postbuildcommands {}
     filter "system:macosx"
       postbuildcommands( {
-        "{MKDIR} \"$TARGET_BUILD_DIR/res\"",
-        "{COPYFILE} ../../bin/Sandbox.cfg \"$TARGET_BUILD_DIR\"",
-        "{COPYFILE} ../../bin/Sandbox_d.cfg \"$TARGET_BUILD_DIR\"",
-        "{COPYFILE} ../../bin/SandboxResources.cfg \"$TARGET_BUILD_DIR\"",
-        "{COPYFILE} ../../bin/SandboxResources_d.cfg \"$TARGET_BUILD_DIR\"",
-        "{COPYDIR} ../../bin/res \"$TARGET_BUILD_DIR/res\"",
-        "{MKDIR} \"$TARGET_BUILD_DIR/res/scripts\"",
-        "/bin/cp -R \"$SRCROOT/../../bin/res/scripts/.\" \"$TARGET_BUILD_DIR/res/scripts/\"",
-        "/bin/ln -sfn \"$SRCROOT/../../media\" \"$TARGET_BUILD_DIR/../media\"",
-        "/bin/ln -sfn \"$SRCROOT/../../media\" \"$PROJECT_DIR/../media\""
+        "HELLO_BIN_DIR=\"$(cd \"$SRCROOT/../../bin\" && pwd)\"",
+        "HELLO_TARGET_DIR=\"$(mkdir -p \"$TARGET_BUILD_DIR\" && cd \"$TARGET_BUILD_DIR\" && pwd)\"",
+        "if [ \"$HELLO_BIN_DIR\" != \"$HELLO_TARGET_DIR\" ]; then",
+        "  mkdir -p \"$TARGET_BUILD_DIR/res\"",
+        "  /bin/cp -f \"$HELLO_BIN_DIR/Sandbox.cfg\" \"$TARGET_BUILD_DIR\"",
+        "  /bin/cp -f \"$HELLO_BIN_DIR/Sandbox_d.cfg\" \"$TARGET_BUILD_DIR\"",
+        "  /bin/cp -f \"$HELLO_BIN_DIR/SandboxResources.cfg\" \"$TARGET_BUILD_DIR\"",
+        "  /bin/cp -f \"$HELLO_BIN_DIR/SandboxResources_d.cfg\" \"$TARGET_BUILD_DIR\"",
+        "  /bin/cp -R \"$HELLO_BIN_DIR/res/.\" \"$TARGET_BUILD_DIR/res/\"",
+        "fi",
+        "HELLO_MEDIA_DIR=\"$(cd \"$SRCROOT/../../media\" && pwd)\"",
+        "HELLO_TARGET_MEDIA_DIR=\"$(cd \"$TARGET_BUILD_DIR/..\" && pwd)/media\"",
+        "if [ \"$HELLO_MEDIA_DIR\" != \"$HELLO_TARGET_MEDIA_DIR\" ]; then",
+        "  /bin/ln -shfn \"$HELLO_MEDIA_DIR\" \"$TARGET_BUILD_DIR/../media\"",
+        "fi",
+        "/bin/ln -shfn \"$HELLO_MEDIA_DIR\" \"$PROJECT_DIR/../media\""
       } )
     filter {}
 end

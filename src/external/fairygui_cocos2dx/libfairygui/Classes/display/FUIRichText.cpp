@@ -6,6 +6,9 @@
 #include <vector>
 #include <locale>
 #include <algorithm>
+#if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32) && (CC_TARGET_PLATFORM != CC_PLATFORM_WINRT)
+#include <strings.h>
+#endif
 
 #include "utils/ToolSet.h"
 #include "UIPackage.h"

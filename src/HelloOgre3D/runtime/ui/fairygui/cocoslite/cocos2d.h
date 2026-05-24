@@ -31,7 +31,17 @@ typedef intptr_t ssize_t;
 #define CC_PLATFORM_WIN32 2
 #define CC_PLATFORM_MAC 3
 #define CC_PLATFORM_LINUX 4
+#ifndef CC_TARGET_PLATFORM
+#if defined(_WIN32)
 #define CC_TARGET_PLATFORM CC_PLATFORM_WIN32
+#elif defined(__APPLE__)
+#define CC_TARGET_PLATFORM CC_PLATFORM_MAC
+#elif defined(__linux__)
+#define CC_TARGET_PLATFORM CC_PLATFORM_LINUX
+#else
+#define CC_TARGET_PLATFORM CC_PLATFORM_PC
+#endif
+#endif
 #define CC_ENABLE_SCRIPT_BINDING 0
 #define CC_ENABLE_GC_FOR_NATIVE_OBJECTS 0
 #define CC_USE_CULLING 0
@@ -243,6 +253,7 @@ namespace cocos2d
 		Color3B();
 		Color3B(uint8_t ar, uint8_t ag, uint8_t ab);
 		explicit Color3B(const struct Color4B& color);
+		explicit Color3B(const struct Color4F& color);
 	};
 
 	bool operator==(const Color3B& lhs, const Color3B& rhs);

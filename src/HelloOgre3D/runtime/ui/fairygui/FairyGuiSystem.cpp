@@ -46,6 +46,9 @@
 namespace
 {
 	const std::string FAIRYGUI_FALLBACK_MATERIAL = "Hello/FairyGUI/Fallback";
+	const std::string FAIRYGUI_FALLBACK_TEXTURE = "textures/base/baseWhite.dds";
+	const std::string FAIRYGUI_VERTEX_PROGRAM = "gorilla2DVP";
+	const std::string FAIRYGUI_FRAGMENT_PROGRAM = "gorilla2DFP";
 	const int OIS_KC_ESCAPE = 0x01;
 	const int OIS_KC_TAB = 0x0F;
 	const int OIS_KC_BACK = 0x0E;
@@ -143,6 +146,35 @@ namespace
 			color.g / 255.0f,
 			color.b / 255.0f,
 			color.a / 255.0f);
+	}
+
+	bool HasFairyGuiGpuProgram(const std::string& programName)
+	{
+		Ogre::HighLevelGpuProgramManager* manager = Ogre::HighLevelGpuProgramManager::getSingletonPtr();
+		return manager != nullptr && manager->resourceExists(programName);
+	}
+
+	void ConfigureFairyGuiPass(Ogre::Pass* pass, const std::string& textureName)
+	{
+		if (pass == nullptr)
+			return;
+
+		pass->setLightingEnabled(false);
+		pass->setDepthCheckEnabled(false);
+		pass->setDepthWriteEnabled(false);
+		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		pass->setCullingMode(Ogre::CULL_NONE);
+		pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+		pass->setVertexColourTracking(Ogre::TVC_AMBIENT | Ogre::TVC_DIFFUSE);
+		if (HasFairyGuiGpuProgram(FAIRYGUI_VERTEX_PROGRAM))
+			pass->setVertexProgram(FAIRYGUI_VERTEX_PROGRAM);
+		if (HasFairyGuiGpuProgram(FAIRYGUI_FRAGMENT_PROGRAM))
+			pass->setFragmentProgram(FAIRYGUI_FRAGMENT_PROGRAM);
+
+		pass->removeAllTextureUnitStates();
+		Ogre::TextureUnitState* textureUnit = pass->createTextureUnitState(textureName.empty() ? FAIRYGUI_FALLBACK_TEXTURE : textureName);
+		textureUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
+		textureUnit->setTextureFiltering(Ogre::TFO_BILINEAR);
 	}
 
 	struct ClipVertex
@@ -3234,14 +3266,7 @@ const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 		if (!Ogre::MaterialManager::getSingleton().resourceExists(FAIRYGUI_FALLBACK_MATERIAL))
 		{
 			Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(FAIRYGUI_FALLBACK_MATERIAL, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-			Ogre::Pass* pass = material->getTechnique(0)->getPass(0);
-			pass->setLightingEnabled(false);
-			pass->setDepthCheckEnabled(false);
-			pass->setDepthWriteEnabled(false);
-			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-			pass->setCullingMode(Ogre::CULL_NONE);
-			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
-			pass->setVertexColourTracking(Ogre::TVC_AMBIENT | Ogre::TVC_DIFFUSE);
+			ConfigureFairyGuiPass(material->getTechnique(0)->getPass(0), FAIRYGUI_FALLBACK_TEXTURE);
 		}
 		return FAIRYGUI_FALLBACK_MATERIAL;
 	}
@@ -3265,20 +3290,7 @@ const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 
 	Ogre::Technique* technique = material->getTechnique(0);
 	Ogre::Pass* pass = technique->getPass(0);
-	pass->setLightingEnabled(false);
-	pass->setDepthCheckEnabled(false);
-	pass->setDepthWriteEnabled(false);
-	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-	pass->setCullingMode(Ogre::CULL_NONE);
-	pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
-	pass->setVertexColourTracking(Ogre::TVC_AMBIENT | Ogre::TVC_DIFFUSE);
-
-	if (!textureName.empty())
-	{
-		Ogre::TextureUnitState* textureUnit = pass->createTextureUnitState(textureName);
-		textureUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
-		textureUnit->setTextureFiltering(Ogre::TFO_BILINEAR);
-	}
+	ConfigureFairyGuiPass(pass, textureName);
 
 	m_materialNames[texture] = materialName;
 	m_materialNamesBySource[sourceKey] = materialName;
