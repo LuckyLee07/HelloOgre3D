@@ -3,6 +3,19 @@
 #include "SandboxMacros.h"
 #include <sstream>
 
+namespace
+{
+	void DestroyComponent(IComponent* component)
+	{
+		if (component == nullptr)
+			return;
+
+		component->onDestroy();
+		component->onDetach();
+		SAFE_DELETE(component);
+	}
+}
+
 GameObject::GameObject() : m_userdata(nullptr)
 {
 }
@@ -12,11 +25,7 @@ GameObject::~GameObject()
 	auto iter = m_components.begin();
 	for (; iter != m_components.end(); iter++)
 	{
-		if (iter->second)
-		{
-			iter->second->onDetach();
-			SAFE_DELETE(iter->second);
-		}
+		DestroyComponent(iter->second);
 	}
 	m_components.clear();
 }
@@ -37,8 +46,12 @@ bool GameObject::addComponent(const std::string& key, IComponent* comp)
 	
 	if (m_components.find(key) != m_components.end())
 		return false;
+
+	if (comp->getGameObject() != nullptr)
+		return false;
 	
 	m_components[key] = comp;
+	comp->setComponentKey(key);
 	comp->onAttach(this);
 	comp->start();
 	return true;
@@ -54,17 +67,28 @@ IComponent* GameObject::getComponent(const std::string& key)
 	return nullptr;
 }
 
+const IComponent* GameObject::getComponent(const std::string& key) const
+{
+	std::map<std::string, IComponent*>::const_iterator iter = m_components.find(key);
+	if (iter != m_components.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+
+bool GameObject::hasComponent(const std::string& key) const
+{
+	return m_components.find(key) != m_components.end();
+}
+
 bool GameObject::removeComponent(const std::string& key)
 {
 	auto iter = m_components.find(key);
 	if (iter == m_components.end()) 
 		return false;
 	
-	if (iter->second)
-	{
-		iter->second->onDetach();
-		SAFE_DELETE(iter->second);
-	}
+	DestroyComponent(iter->second);
 	m_components.erase(iter);
 
 	return true;
@@ -79,8 +103,7 @@ bool GameObject::removeComponent(IComponent* comp)
 	{
 		if (iter->second == comp)
 		{
-			iter->second->onDetach();
-			SAFE_DELETE(iter->second);
+			DestroyComponent(iter->second);
 
 			m_components.erase(iter);
 			return true;

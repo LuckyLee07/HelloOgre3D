@@ -87,14 +87,29 @@ bool BaseObject::AddComponent(const std::string& key, IComponent* comp)
 	return m_pGameObjet->addComponent(key, comp);
 }
 
+bool BaseObject::HasComponent(const std::string& key) const
+{
+	return m_pGameObjet != nullptr && m_pGameObjet->hasComponent(key);
+}
+
+bool BaseObject::RemoveComponent(const std::string& key)
+{
+	return m_pGameObjet != nullptr && m_pGameObjet->removeComponent(key);
+}
+
 bool BaseObject::RemoveComponent(IComponent* comp)
 {
-	return m_pGameObjet->removeComponent(comp);
+	return m_pGameObjet != nullptr && m_pGameObjet->removeComponent(comp);
 }
 
 IComponent* BaseObject::GetComponent(const std::string& key)
 {
-	return m_pGameObjet->getComponent(key);
+	return m_pGameObjet != nullptr ? m_pGameObjet->getComponent(key) : nullptr;
+}
+
+const IComponent* BaseObject::GetComponent(const std::string& key) const
+{
+	return m_pGameObjet != nullptr ? m_pGameObjet->getComponent(key) : nullptr;
 }
 
 int BaseObject::GetComponentCount() const

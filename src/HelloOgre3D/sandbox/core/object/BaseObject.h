@@ -4,10 +4,10 @@
 #include <string>
 #include "SandboxMacros.h"
 #include "object/SandboxObject.h"
+#include "object/GameObject.h"
 #include "script/LuaClassNameTraits.h"
 
 class IComponent;
-class GameObject;
 struct Collision;
 
 class BaseObject : public SandboxObject //tolua_exports
@@ -51,15 +51,46 @@ public:
 
 	virtual void CollideWithObject(BaseObject* pCollideObj, const Collision& collision);
 
+	// BaseObject owns its component container. Components added here are owned by
+	// the container and deleted when removed or when the object is destroyed.
 	bool AddComponent(const std::string& key, IComponent* comp);
+	bool HasComponent(const std::string& key) const;
+	bool RemoveComponent(const std::string& key);
 	bool RemoveComponent(IComponent* comp);
 
 	IComponent* GetComponent(const std::string& key);
+	const IComponent* GetComponent(const std::string& key) const;
+
+	template<typename T>
+	T* GetComponentAs(const std::string& key)
+	{
+		return m_pGameObjet != nullptr ? m_pGameObjet->getComponentAs<T>(key) : nullptr;
+	}
+
+	template<typename T>
+	const T* GetComponentAs(const std::string& key) const
+	{
+		return m_pGameObjet != nullptr ? m_pGameObjet->getComponentAs<T>(key) : nullptr;
+	}
+
+	template<typename T>
+	T* FindComponent()
+	{
+		return m_pGameObjet != nullptr ? m_pGameObjet->findComponent<T>() : nullptr;
+	}
+
+	template<typename T>
+	const T* FindComponent() const
+	{
+		return m_pGameObjet != nullptr ? m_pGameObjet->findComponent<T>() : nullptr;
+	}
+
 	int GetComponentCount() const;
 	std::string BuildComponentDebugString() const;
 
 protected:
 	ObjectType m_objType;
+	// Historical name kept to avoid a broad rename. Owns the component container.
 	GameObject* m_pGameObjet;
 
 private:
