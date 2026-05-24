@@ -42,7 +42,8 @@ Lua gameplay / sample
 UI ViewController
   |
   v
-FairyGuiManager.lua
+manager/fairygui/FairyGuiManager.lua
+  (legacy entry: manager/FairyGuiManager.lua)
   - UI 注册表
   - 生命周期
   - layer 管理
