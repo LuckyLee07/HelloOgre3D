@@ -14,6 +14,7 @@ class UIManager;
 class InputManager;
 class ObjectManager;
 class ClientManager;
+class FairyGuiLuaApi;
 
 class GameManager : public IInputHandler //tolua_exports
 { //tolua_exports
@@ -178,15 +179,11 @@ private:
 
 	long long m_SimulationTime; // 运行时间
 
-	std::string m_fairyGuiLastPackageName;
+	FairyGuiLuaApi* m_pFairyGuiLuaApi;
+
 	std::string m_fairyGuiLastObjectText;
 	std::string m_fairyGuiLastObjectValue;
 	std::string m_fairyGuiLastControllerString;
-	std::string m_fairyGuiLastStencilBackend;
-	std::string m_fairyGuiLastStencilBackendDetail;
-	std::string m_fairyGuiLastMaterialDetail;
-	std::string m_fairyGuiLastTextureDetail;
-	std::string m_fairyGuiLastFrameRenderDetail;
 	std::string m_fairyGuiLastImeDebug;
 
 }; //tolua_exports

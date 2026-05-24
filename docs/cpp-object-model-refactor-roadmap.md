@@ -312,6 +312,13 @@ Lua Binding Adapter
 - [x] `BaseObject / GameObject` 增加 keyed lookup、typed lookup 和按类型查找 helper，为后续拆 `HealthComponent / AiDriverComponent` 做准备。
 - [x] macOS arm64 Debug Xcode 构建通过，确认首批对象模型改动不破坏当前工程编译。
 
+### 2026-05-24 FGUI Lua adapter 首批落地
+
+- [x] 新增 `FairyGuiLuaApi`，作为 `GameManager` 与 `FairyGuiSystem` 之间的 Lua binding adapter。
+- [x] `GameManager` 保留原有 tolua 导出函数名，首批将 FGUI availability、package、基础对象创建和渲染 diagnostics 接口转发到 `FairyGuiLuaApi`。
+- [x] package 名、stencil/material/texture/frame render 等临时字符串缓存从 `GameManager` 移到 adapter，减少 manager 状态膨胀。
+- [ ] 对象属性、输入注入、事件监听等 FGUI Lua 接口后续继续分批迁移。
+
 ## 10. 验证策略
 
 按重构影响面选择最小验证：
