@@ -5,6 +5,8 @@ require("res.scripts.manager.FairyGuiServices")
 require("res.scripts.manager.FairyGuiLayers")
 require("res.scripts.manager.FairyGuiEvents")
 require("res.scripts.manager.FairyGuiLists")
+require("res.scripts.manager.FairyGuiControls")
+require("res.scripts.manager.FairyGuiProbes")
 
 local FairyGuiManager = Class("FairyGuiManager")
 
@@ -92,149 +94,14 @@ local function tableCount(source)
 	return count
 end
 
-local nonOwnedObjectHandleFields = {
-	parentHandle = true,
-	rootHandle = true,
-	attachHandle = true,
-}
-
 local function nowMs()
 	return os.clock and os.clock() * 1000 or 0
-end
-
-local function formatMs(value)
-	return string.format("%.3f", tonumber(value) or 0)
-end
-
-local function utf8CharLen(byteValue)
-	if byteValue == nil then
-		return 0
-	end
-	if byteValue < 0x80 then
-		return 1
-	elseif byteValue < 0xE0 then
-		return 2
-	elseif byteValue < 0xF0 then
-		return 3
-	elseif byteValue < 0xF8 then
-		return 4
-	end
-	return 1
-end
-
-local function utf8CodepointCount(text)
-	text = tostring(text or "")
-	local index = 1
-	local count = 0
-	while index <= #text do
-		index = index + math.max(utf8CharLen(string.byte(text, index)), 1)
-		count = count + 1
-	end
-	return count
-end
-
-local function utf8SubCodepoints(text, maxCount)
-	text = tostring(text or "")
-	maxCount = tonumber(maxCount) or 0
-	if maxCount <= 0 then
-		return ""
-	end
-
-	local index = 1
-	local count = 0
-	while index <= #text and count < maxCount do
-		index = index + math.max(utf8CharLen(string.byte(text, index)), 1)
-		count = count + 1
-	end
-	return string.sub(text, 1, index - 1)
-end
-
-local function eachUtf8Char(text, callback)
-	text = tostring(text or "")
-	local index = 1
-	while index <= #text do
-		local charLen = math.max(utf8CharLen(string.byte(text, index)), 1)
-		callback(string.sub(text, index, index + charLen - 1))
-		index = index + charLen
-	end
-end
-
-local function applyTextRestrict(text, policy)
-	text = tostring(text or "")
-	if type(policy) ~= "table" then
-		return text
-	end
-
-	local inputType = tostring(policy.inputType or policy.type or "")
-	local restrict = policy.restrict or policy.allowedChars
-	if inputType == "" and isBlank(restrict) then
-		return text
-	end
-
-	local output = {}
-	eachUtf8Char(text, function(ch)
-		local keep = true
-		if inputType == "number" or inputType == "numeric" then
-			keep = string.match(ch, "%d") ~= nil
-				or (ch == "." and policy.allowDecimal == true)
-				or (ch == "-" and policy.allowNegative == true and #output == 0)
-		elseif inputType == "integer" then
-			keep = string.match(ch, "%d") ~= nil
-				or (ch == "-" and policy.allowNegative == true and #output == 0)
-		end
-		if keep and not isBlank(restrict) then
-			keep = string.find(tostring(restrict), ch, 1, true) ~= nil
-		end
-		if keep then
-			table.insert(output, ch)
-		end
-	end)
-	return table.concat(output)
-end
-
-local function applyTextInputPolicy(text, policy)
-	local normalized = applyTextRestrict(text, policy)
-	local maxLength = tonumber(policy and (policy.maxLength or policy.maxLen) or nil)
-	if maxLength ~= nil and maxLength > 0 and utf8CodepointCount(normalized) > maxLength then
-		normalized = utf8SubCodepoints(normalized, maxLength)
-	end
-	return normalized
 end
 
 local function isEnvEnabled(name)
 	local value = os.getenv and os.getenv(name) or nil
 	return value == "1" or value == "true" or value == "TRUE" or value == "True"
 end
-
-local function pushUniqueHandle(handles, handleSet, handle)
-	if type(handle) ~= "number" or handle <= 0 or handleSet[handle] == true then
-		return
-	end
-	handleSet[handle] = true
-	table.insert(handles, handle)
-end
-
-local function containsHandle(handles, targetHandle)
-	if type(handles) ~= "table" or targetHandle == nil then
-		return false
-	end
-
-	for _, handle in ipairs(handles) do
-		if handle == targetHandle then
-			return true
-		end
-	end
-	return false
-end
-
-local DEFAULT_LAYER_ORDER = {
-	Background = 1000,
-	Normal = 2000,
-	Popup = 3000,
-	Guide = 4000,
-	Top = 5000,
-	Toast = 6000,
-}
 
 local function callLifecycle(view, functionName, ...)
 	local func = view and view[functionName]
@@ -293,8 +160,6 @@ function FairyGuiManager:GetInst()
 end
 
 function FairyGuiManager:Init()
-	self.textInputPoliciesByHandle = {}
-	self.textInputPolicyBindingsByHandle = {}
 	self.lifecycle = ClassList.FairyGuiLifecycle.new(self)
 	self.profiler = ClassList.FairyGuiProfiler.new(self)
 	self.packageManager = ClassList.FairyGuiPackage.new(self)
@@ -302,6 +167,8 @@ function FairyGuiManager:Init()
 	self.layersManager = ClassList.FairyGuiLayers.new(self)
 	self.events = ClassList.FairyGuiEvents.new(self)
 	self.lists = ClassList.FairyGuiLists.new(self)
+	self.controls = ClassList.FairyGuiControls.new(self)
+	self.probes = ClassList.FairyGuiProbes.new(self)
 end
 
 function FairyGuiManager:GetLifecycle()
@@ -351,6 +218,20 @@ function FairyGuiManager:GetLists()
 		self.lists = ClassList.FairyGuiLists.new(self)
 	end
 	return self.lists
+end
+
+function FairyGuiManager:GetControls()
+	if self.controls == nil then
+		self.controls = ClassList.FairyGuiControls.new(self)
+	end
+	return self.controls
+end
+
+function FairyGuiManager:GetProbes()
+	if self.probes == nil then
+		self.probes = ClassList.FairyGuiProbes.new(self)
+	end
+	return self.probes
 end
 
 function FairyGuiManager:IsAvailable()
@@ -516,430 +397,52 @@ function FairyGuiManager:IsStrictLifecycleEnabled()
 end
 
 function FairyGuiManager:CollectOwnedHandles(objectInfo)
-	local handles = {}
-	local handleSet = {}
-	if objectInfo == nil then
-		return handles, handleSet
-	end
-
-	pushUniqueHandle(handles, handleSet, objectInfo.handle)
-	if type(objectInfo.ownedHandles) == "table" then
-		for _, ownedHandle in pairs(objectInfo.ownedHandles) do
-			pushUniqueHandle(handles, handleSet, ownedHandle)
-		end
-	end
-	for fieldName, value in pairs(objectInfo) do
-		if type(fieldName) == "string" and type(value) == "number" and string.match(fieldName, "Handle$") ~= nil and nonOwnedObjectHandleFields[fieldName] ~= true then
-			pushUniqueHandle(handles, handleSet, value)
-		elseif type(fieldName) == "string" and type(value) == "table" and string.match(fieldName, "Handles$") ~= nil then
-			for _, ownedHandle in pairs(value) do
-				pushUniqueHandle(handles, handleSet, ownedHandle)
-			end
-		end
-	end
-
-	local index = 1
-	while index <= #handles do
-		local handle = handles[index]
-		local childHandles = self.childrenByHandle[handle]
-		if childHandles ~= nil then
-			for _, childHandle in pairs(childHandles) do
-				pushUniqueHandle(handles, handleSet, childHandle)
-			end
-		end
-
-		local itemHandles = self.listItemHandlesByHandle[handle]
-		if itemHandles ~= nil then
-			for _, itemHandle in pairs(itemHandles) do
-				pushUniqueHandle(handles, handleSet, itemHandle)
-			end
-		end
-		index = index + 1
-	end
-	return handles, handleSet
+	return self:GetLifecycle():CollectOwnedHandles(objectInfo)
 end
 
 function FairyGuiManager:CreateCloseSnapshot(objectInfo, ownedHandles)
-	if objectInfo == nil then
-		return nil
-	end
-
-	local snapshot = {
-		key = objectInfo.key,
-		handle = objectInfo.handle,
-		uiName = objectInfo.uiName,
-		layer = objectInfo.layer,
-		modalMaskHandle = objectInfo.modalMaskHandle,
-		viewRef = objectInfo.view,
-		ctrlRef = objectInfo.ctrl,
-		ownedHandles = {},
-	}
-	if ownedHandles == nil then
-		ownedHandles = self:CollectOwnedHandles(objectInfo)
-	end
-	for index, handle in ipairs(ownedHandles) do
-		snapshot.ownedHandles[index] = handle
-	end
-	return snapshot
+	return self:GetLifecycle():CreateCloseSnapshot(objectInfo, ownedHandles)
 end
 
 function FairyGuiManager:CaptureCloseSnapshot(keyOrHandle)
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
-	if objectInfo == nil then
-		return nil
-	end
-	local ownedHandles = self:CollectOwnedHandles(objectInfo)
-	return self:CreateCloseSnapshot(objectInfo, ownedHandles)
+	return self:GetLifecycle():CaptureCloseSnapshot(keyOrHandle)
 end
 
 function FairyGuiManager:GetCloseResidue(objectInfo, ownedHandles)
-	local issues = {}
-	if objectInfo == nil then
-		table.insert(issues, "objectInfo=nil")
-		return issues
-	end
-
-	local key = objectInfo.key
-	local handle = objectInfo.handle
-	local handleSet = {}
-	local handles = ownedHandles or objectInfo.ownedHandles or {}
-	for _, ownedHandle in ipairs(handles) do
-		if type(ownedHandle) == "number" and ownedHandle > 0 then
-			handleSet[ownedHandle] = true
-		end
-	end
-	if type(handle) == "number" and handle > 0 then
-		handleSet[handle] = true
-	end
-	if type(objectInfo.modalMaskHandle) == "number" and objectInfo.modalMaskHandle > 0 then
-		handleSet[objectInfo.modalMaskHandle] = true
-	end
-
-	if key ~= nil and self.objects[key] ~= nil then
-		table.insert(issues, "objects[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.hiddenObjects[key] ~= nil then
-		table.insert(issues, "hiddenObjects[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.views[key] ~= nil then
-		table.insert(issues, "views[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.controllers[key] ~= nil then
-		table.insert(issues, "controllers[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.childKeysByParentKey[key] ~= nil then
-		table.insert(issues, "childKeysByParentKey[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.parentKeyByChildKey[key] ~= nil then
-		table.insert(issues, "parentKeyByChildKey[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.stackEntriesByKey[key] ~= nil then
-		table.insert(issues, "stackEntriesByKey[" .. tostring(key) .. "]")
-	end
-	if key ~= nil and self.timersByKey[key] ~= nil and tableCount(self.timersByKey[key]) > 0 then
-		table.insert(issues, "timersByKey[" .. tostring(key) .. "]")
-	end
-	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == key then
-		table.insert(issues, "uiNameToKey[" .. tostring(objectInfo.uiName) .. "]")
-	end
-	if objectInfo.viewRef ~= nil and objectInfo.viewRef.GetTimerCount ~= nil and objectInfo.viewRef:GetTimerCount() > 0 then
-		table.insert(issues, "viewTimer[" .. tostring(objectInfo.viewRef:GetTimerCount()) .. "]")
-	end
-	if objectInfo.ctrlRef ~= nil and objectInfo.ctrlRef.GetTimerCount ~= nil and objectInfo.ctrlRef:GetTimerCount() > 0 then
-		table.insert(issues, "ctrlTimer[" .. tostring(objectInfo.ctrlRef:GetTimerCount()) .. "]")
-	end
-
-	for ownedHandle, _ in pairs(handleSet) do
-		if self.objectsByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "objectsByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.viewsByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "viewsByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.controllersByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "controllersByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.bindingsByHandle[ownedHandle] ~= nil and tableCount(self.bindingsByHandle[ownedHandle]) > 0 then
-			table.insert(issues, "bindingsByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.transitionCallbacksByHandle[ownedHandle] ~= nil and tableCount(self.transitionCallbacksByHandle[ownedHandle]) > 0 then
-			table.insert(issues, "transitionCallbacksByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.childrenByHandle[ownedHandle] ~= nil and tableCount(self.childrenByHandle[ownedHandle]) > 0 then
-			table.insert(issues, "childrenByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listItemHandlesByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listItemHandlesByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listItemIndexByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listItemIndexByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listDataByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listDataByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listRenderersByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listRenderersByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listVirtualByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listVirtualByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listVirtualOptionsByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listVirtualOptionsByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.listVirtualStatsByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "listVirtualStatsByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.treeDataByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "treeDataByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.treeStateByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "treeStateByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-		if self.treeRenderersByHandle[ownedHandle] ~= nil then
-			table.insert(issues, "treeRenderersByHandle[" .. tostring(ownedHandle) .. "]")
-		end
-	end
-
-	for bindingId, binding in pairs(self.bindings) do
-		if binding ~= nil and binding.handle ~= nil and handleSet[binding.handle] == true then
-			table.insert(issues, "bindings[" .. tostring(bindingId) .. "]")
-		end
-	end
-	for parentKey, childMap in pairs(self.childKeysByParentKey) do
-		if parentKey == key then
-			table.insert(issues, "childKeysParent[" .. tostring(parentKey) .. "]")
-		elseif type(childMap) == "table" and childMap[key] == true then
-			table.insert(issues, "childKeysRef[" .. tostring(parentKey) .. ":" .. tostring(key) .. "]")
-		end
-	end
-	for childKey, parentKey in pairs(self.parentKeyByChildKey) do
-		if childKey == key or parentKey == key then
-			table.insert(issues, "parentKeyRef[" .. tostring(childKey) .. ":" .. tostring(parentKey) .. "]")
-		end
-	end
-	for callbackId, callbackInfo in pairs(self.transitionCallbacks) do
-		if callbackInfo ~= nil and callbackInfo.handle ~= nil and handleSet[callbackInfo.handle] == true then
-			table.insert(issues, "transitionCallbacks[" .. tostring(callbackId) .. "]")
-		end
-	end
-	for timerId, timerInfo in pairs(self.timers) do
-		if timerInfo ~= nil and timerInfo.key == key then
-			table.insert(issues, "timers[" .. tostring(timerId) .. "]")
-		end
-	end
-	for parentHandle, childHandles in pairs(self.childrenByHandle) do
-		if handleSet[parentHandle] == true then
-			table.insert(issues, "childrenByHandleParent[" .. tostring(parentHandle) .. "]")
-		elseif type(childHandles) == "table" then
-			for childPath, childHandle in pairs(childHandles) do
-				if childHandle ~= nil and handleSet[childHandle] == true then
-					table.insert(issues, "childrenByHandleRef[" .. tostring(parentHandle) .. ":" .. tostring(childPath) .. "]")
-				end
-			end
-		end
-	end
-	for listHandle, itemHandles in pairs(self.listItemHandlesByHandle) do
-		if handleSet[listHandle] == true then
-			table.insert(issues, "listItemHandlesParent[" .. tostring(listHandle) .. "]")
-		elseif type(itemHandles) == "table" then
-			for itemIndex, itemHandle in pairs(itemHandles) do
-				if itemHandle ~= nil and handleSet[itemHandle] == true then
-					table.insert(issues, "listItemHandlesRef[" .. tostring(listHandle) .. ":" .. tostring(itemIndex) .. "]")
-				end
-			end
-		end
-	end
-	for listHandle, itemIndexes in pairs(self.listItemIndexByHandle) do
-		if handleSet[listHandle] == true then
-			table.insert(issues, "listItemIndexParent[" .. tostring(listHandle) .. "]")
-		elseif type(itemIndexes) == "table" then
-			for itemHandle, itemIndex in pairs(itemIndexes) do
-				if itemHandle ~= nil and handleSet[itemHandle] == true then
-					table.insert(issues, "listItemIndexRef[" .. tostring(listHandle) .. ":" .. tostring(itemIndex) .. "]")
-				end
-			end
-		end
-	end
-	for layerName, layerObjects in pairs(self.layerObjects) do
-		for ownedHandle, _ in pairs(handleSet) do
-			if layerObjects[ownedHandle] ~= nil then
-				table.insert(issues, "layerObjects[" .. tostring(layerName) .. ":" .. tostring(ownedHandle) .. "]")
-			end
-		end
-	end
-	for index, entry in ipairs(self.uiStack) do
-		if entry ~= nil and entry.key == key then
-			table.insert(issues, "uiStack[" .. tostring(index) .. "]")
-		end
-	end
-	for index, entry in ipairs(self.popupStack) do
-		if entry ~= nil and entry.key == key then
-			table.insert(issues, "popupStack[" .. tostring(index) .. "]")
-		end
-	end
-
-	local focusedHandle = self:GetFocusedHandle()
-	if focusedHandle ~= nil and handleSet[focusedHandle] == true then
-		table.insert(issues, "focusedHandle[" .. tostring(focusedHandle) .. "]")
-	end
-	return issues
+	return self:GetLifecycle():GetCloseResidue(objectInfo, ownedHandles)
 end
 
 function FairyGuiManager:ValidateClosedObject(objectInfo, ownedHandles, label, printWhenClean)
-	local issues = self:GetCloseResidue(objectInfo, ownedHandles)
-	if #issues <= 0 then
-		if printWhenClean == true then
-			print("[FGUI] close residue ok:", label or "", "key=", objectInfo and objectInfo.key)
-		end
-		return true, issues
-	end
-
-	local message = table.concat(issues, "; ")
-	print("[FGUI] close residue warning:", label or "", "key=", objectInfo and objectInfo.key, message)
-	if self:IsStrictLifecycleEnabled() then
-		error("[FGUI] close residue: " .. message)
-	end
-	return false, issues
+	return self:GetLifecycle():ValidateClosedObject(objectInfo, ownedHandles, label, printWhenClean)
 end
 
 function FairyGuiManager:ClearFocusForHandles(ownedHandles)
-	local focusedHandle = self:GetFocusedHandle()
-	if focusedHandle == nil or focusedHandle <= 0 then
-		return false
-	end
-	if not containsHandle(ownedHandles, focusedHandle) then
-		return false
-	end
-	return self:ClearFocus()
+	return self:GetLifecycle():ClearFocusForHandles(ownedHandles)
 end
 
 function FairyGuiManager:AddTimer(keyOrHandle, duration, interval, tickFunc, finishFunc)
-	if threadpool == nil or threadpool.timer == nil then
-		return nil
-	end
-
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
-	if objectInfo == nil then
-		return nil
-	end
-
-	local key = objectInfo.key
-	local seq = nil
-	local function removeTimerRecord()
-		if seq ~= nil then
-			self:RemoveTimerRecord(seq)
-		end
-	end
-	local function isOwnerAlive()
-		return key ~= nil and self.objects[key] ~= nil
-	end
-	local function callTimerCallback(callback, ...)
-		if type(callback) ~= "function" then
-			return
-		end
-		local ok, err = pcall(callback, ...)
-		if not ok then
-			print("[FGUI] timer callback error:", key, err)
-		end
-	end
-
-	local wrappedTick = nil
-	if type(tickFunc) == "function" then
-		wrappedTick = function(timerInfo, tick)
-			if not isOwnerAlive() then
-				removeTimerRecord()
-				return
-			end
-			callTimerCallback(tickFunc, timerInfo, tick)
-		end
-	end
-	local wrappedFinish = function(timerInfo)
-		if isOwnerAlive() then
-			callTimerCallback(finishFunc, timerInfo)
-		end
-		removeTimerRecord()
-	end
-
-	seq = threadpool:timer(duration, interval, wrappedTick, wrappedFinish)
-	if seq == nil then
-		return nil
-	end
-
-	self.timers[seq] = {
-		seq = seq,
-		key = key,
-		handle = objectInfo.handle,
-	}
-	local timerList = self.timersByKey[key]
-	if timerList == nil then
-		timerList = {}
-		self.timersByKey[key] = timerList
-	end
-	timerList[seq] = true
-	return seq
+	return self:GetLifecycle():AddTimer(keyOrHandle, duration, interval, tickFunc, finishFunc)
 end
 
 function FairyGuiManager:Delay(keyOrHandle, timeout, func)
-	return self:AddTimer(keyOrHandle, timeout, timeout, nil, func)
+	return self:GetLifecycle():Delay(keyOrHandle, timeout, func)
 end
 
 function FairyGuiManager:RemoveTimerRecord(timerId)
-	local timerInfo = self.timers[timerId]
-	if timerInfo == nil then
-		return false
-	end
-
-	self.timers[timerId] = nil
-	local timerList = self.timersByKey[timerInfo.key]
-	if timerList ~= nil then
-		timerList[timerId] = nil
-		if tableCount(timerList) <= 0 then
-			self.timersByKey[timerInfo.key] = nil
-		end
-	end
-	return true
+	return self:GetLifecycle():RemoveTimerRecord(timerId)
 end
 
 function FairyGuiManager:CancelTimer(timerId)
-	if timerId == nil then
-		return false
-	end
-
-	local removed = self:RemoveTimerRecord(timerId)
-	if threadpool ~= nil and threadpool.cancel_timer ~= nil then
-		return threadpool:cancel_timer(timerId) or removed
-	end
-	return removed
+	return self:GetLifecycle():CancelTimer(timerId)
 end
 
 function FairyGuiManager:ClearTimersForKey(key)
-	if key == nil then
-		return 0
-	end
-
-	local timerList = self.timersByKey[key]
-	if timerList == nil then
-		return 0
-	end
-
-	local timerIds = {}
-	for timerId, _ in pairs(timerList) do
-		table.insert(timerIds, timerId)
-	end
-	local removedCount = 0
-	for _, timerId in ipairs(timerIds) do
-		if self:CancelTimer(timerId) then
-			removedCount = removedCount + 1
-		end
-	end
-	return removedCount
+	return self:GetLifecycle():ClearTimersForKey(key)
 end
 
 function FairyGuiManager:GetTimerCountForKey(key)
-	local timerList = self.timersByKey[key]
-	return tableCount(timerList)
+	return self:GetLifecycle():GetTimerCountForKey(key)
 end
-
 function FairyGuiManager:RegisterUI(name, config)
 	if isBlank(name) or type(config) ~= "table" then
 		return false
@@ -1557,318 +1060,18 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 end
 
 function FairyGuiManager:OpenMaskProbe(param)
-	param = param or {}
-	local key = param.key or "MaskProbe"
-	local uiName = param.uiName or key
-	self:CloseUI(key, true)
-
-	local assets = param.assets or {}
-	local backgroundPath = param.backgroundImage or assets.background
-	local contentPath = param.contentImage or assets.content
-	local stripAPath = param.stripAImage or assets.stripA
-	local stripBPath = param.stripBImage or assets.stripB
-	local stripCPath = param.stripCImage or assets.stripC
-	local maskPath = param.maskImage or assets.mask
-	local useGraphMask = param.graphMask == true
-	local useNestedMask = param.nestedMask == true
-	if isBlank(backgroundPath) or isBlank(contentPath) or isBlank(stripAPath) or isBlank(stripBPath) or isBlank(stripCPath) or isBlank(maskPath) then
-		print("[FGUI] open mask probe failed, missing image asset")
-		return nil
-	end
-
-	local function addImage(parentHandle, name, path, x, y, width, height, alpha)
-		local childHandle = self:CreateLoader(parentHandle, name, path)
-		if childHandle == nil or childHandle <= 0 then
-			return nil
-		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
-		self:SetTouchable(childHandle, false)
-		if alpha ~= nil then
-			self:SetAlpha(childHandle, alpha)
-		end
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
-			return nil
-		end
-		return childHandle
-	end
-
-	local function addGraphPolygon(parentHandle, name, x, y, width, height, sides, red, green, blue, alpha)
-		local childHandle = self:CreateGraphRegularPolygon(parentHandle, name, width, height, sides or 6, red or 0.35, green or 0.8, blue or 1.0, alpha or 1.0)
-		if childHandle == nil or childHandle <= 0 then
-			return nil
-		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
-		self:SetTouchable(childHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
-			return nil
-		end
-		return childHandle
-	end
-
-	local function addText(parentHandle, name, text, x, y, width, height, red, green, blue)
-		local childHandle = self:CreateText(parentHandle, name, text, 18, red, green, blue)
-		if childHandle == nil or childHandle <= 0 then
-			return nil
-		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
-			return nil
-		end
-		return childHandle
-	end
-
-	local function createNestedPanel(parentHandle, inverted)
-		local nestedHandle = self:CreateContainer("nested_mask_panel", parentHandle)
-		if nestedHandle == nil or nestedHandle <= 0 then
-			return nil
-		end
-		self:SetPosition(nestedHandle, 94, 82)
-		self:SetSize(nestedHandle, 132, 74)
-		self:SetTouchable(nestedHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(nestedHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(nestedHandle)
-			return nil
-		end
-
-		local nestedContent = addImage(nestedHandle, "nested_content", stripBPath, -28, 8, 184, 58, 0.92)
-		local nestedAccent = addImage(nestedHandle, "nested_accent", stripCPath, 82, 0, 46, 46, 0.9)
-		local nestedMask = nil
-		if useGraphMask then
-			nestedMask = addGraphPolygon(nestedHandle, "nested_graph_mask", 14, 8, 104, 58, 5, 1.0, 0.78, 0.25, 0.82)
-		else
-			nestedMask = addImage(nestedHandle, "nested_mask", maskPath, 14, 8, 104, 58)
-		end
-		if nestedContent == nil or nestedAccent == nil or nestedMask == nil or not self:SetMask(nestedHandle, nestedMask, inverted == true) then
-			GameManager:removeFairyGuiObject(nestedHandle)
-			return nil
-		end
-		return nestedHandle
-	end
-
-	local function createPanel(parentHandle, name, x, y, inverted)
-		local panelHandle = self:CreateContainer(name, parentHandle)
-		if panelHandle == nil or panelHandle <= 0 then
-			return nil
-		end
-		self:SetPosition(panelHandle, x, y)
-		self:SetSize(panelHandle, 320, 210)
-		self:SetTouchable(panelHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(panelHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(panelHandle)
-			return nil
-		end
-
-		local background = addImage(panelHandle, "content_bg", contentPath, -70, 28, 460, 150)
-		local stripA = addImage(panelHandle, "content_strip_a", stripAPath, -20, 50, 180, 72)
-		local stripB = addImage(panelHandle, "content_strip_b", stripBPath, 130, 82, 160, 52)
-		local stripC = addImage(panelHandle, "content_strip_c", stripCPath, 245, 20, 64, 64)
-		local mask = nil
-		if useGraphMask then
-			mask = addGraphPolygon(panelHandle, "stencil_graph_mask", 72, 46, 176, 118, 6, 0.2, 0.9, 1.0, 0.86)
-		else
-			mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
-		end
-		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
-			GameManager:removeFairyGuiObject(panelHandle)
-			return nil
-		end
-		if useNestedMask and createNestedPanel(panelHandle, inverted) == nil then
-			GameManager:removeFairyGuiObject(panelHandle)
-			return nil
-		end
-		return panelHandle
-	end
-
-	local handle = self:CreateContainer("FairyGuiMaskProbe")
-	if handle == nil or handle <= 0 then
-		return nil
-	end
-	self:SetSize(handle, 760, 330)
-	self:SetTouchable(handle, true)
-
-	local background = addImage(handle, "probe_bg", backgroundPath, 0, 24, 760, 286, 0.7)
-	local title = addText(handle, "probe_title", "FairyGUI Mask Probe", 12, 0, 320, 24, 255, 244, 210)
-	local normalLabel = addText(handle, "normal_label", "normal mask: only inside area is visible", 28, 42, 320, 24, 210, 255, 220)
-	local invertedLabel = addText(handle, "inverted_label", "inverted mask: center area is cut out", 404, 42, 320, 24, 255, 220, 210)
-	local normalPanel = createPanel(handle, "normal_panel", 28, 70, false)
-	local invertedPanel = createPanel(handle, "inverted_panel", 404, 70, true)
-	local normalOverlay = nil
-	local invertedOverlay = nil
-	if useGraphMask then
-		normalOverlay = addGraphPolygon(handle, "normal_graph_mask_overlay", 100, 116, 176, 118, 6, 0.2, 0.9, 1.0, 0.35)
-		invertedOverlay = addGraphPolygon(handle, "inverted_graph_mask_overlay", 476, 116, 176, 118, 6, 0.2, 0.9, 1.0, 0.35)
-	else
-		normalOverlay = addImage(handle, "normal_mask_overlay", maskPath, 100, 116, 176, 118, 0.35)
-		invertedOverlay = addImage(handle, "inverted_mask_overlay", maskPath, 476, 116, 176, 118, 0.35)
-	end
-	if background == nil or title == nil or normalLabel == nil or invertedLabel == nil or normalPanel == nil or invertedPanel == nil or normalOverlay == nil or invertedOverlay == nil then
-		GameManager:removeFairyGuiObject(handle)
-		return nil
-	end
-
-	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName, param) then
-		GameManager:removeFairyGuiObject(handle)
-		return nil
-	end
-
-	if param.x ~= nil and param.y ~= nil then
-		self:SetPosition(handle, param.x, param.y)
-	elseif param.center ~= false then
-		GameManager:centerFairyGuiObject(handle, param.restraint == true)
-	end
-
-	local objectInfo = {
-		handle = handle,
-		key = key,
-		name = uiName,
-		objectName = "FairyGuiMaskProbe",
-		param = param,
-		uiName = uiName,
-		cache = false,
-		layer = layerName,
-		popupGroup = self:GetPopupGroup(param),
-		popupMode = param.popupMode or "stack",
-		uiGroup = self:GetUIGroup(param),
-		sceneName = self:GetSceneName(param),
-		closeOnSceneChange = param.closeOnSceneChange ~= false,
-		destroyOnSceneChange = param.destroyOnSceneChange == true,
-		parentHandle = param.parentHandle or param.rootHandle,
-		rootLayer = param.rootLayer,
-		focusOrder = param.focusOrder,
-		tabFocus = param.tabFocus ~= false,
-	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey[uiName] = key
-	self.hiddenObjects[key] = nil
-	objectInfo.cacheHiddenAtMs = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:ApplyScreenAdapt(objectInfo)
-	self:PushStack(objectInfo)
-	return handle
+	return self:GetProbes():OpenMaskProbe(param)
 end
 
 function FairyGuiManager:OpenTextInputProbe(param)
-	param = param or {}
-	local key = param.key or "TextInputProbe"
-	self:CloseUI(key, true)
-
-	local handle = self:CreateContainer("FairyGuiTextInputProbe")
-	if handle == nil or handle <= 0 then
-		return nil
-	end
-	self:SetSize(handle, 480, 160)
-	self:SetTouchable(handle, true)
-
-	local titleHandle = self:CreateText(handle, "probe_title", param.title or "FairyGUI TextInput Probe", 18, 255, 244, 210)
-	local inputHandle = self:CreateTextInput(handle, "probe_input", param.text or "", 20, 230, 255, 235)
-	local hintHandle = self:CreateText(handle, "probe_hint", "type, backspace, enter", 16, 190, 210, 230)
-	if titleHandle == nil or titleHandle <= 0 or inputHandle == nil or inputHandle <= 0 or hintHandle == nil or hintHandle <= 0 then
-		GameManager:removeFairyGuiObject(handle)
-		return nil
-	end
-
-	self:SetPosition(titleHandle, 0, 0)
-	self:SetSize(titleHandle, 420, 28)
-	self:SetPosition(inputHandle, 0, 44)
-	self:SetSize(inputHandle, 420, 42)
-	self:SetPosition(hintHandle, 0, 104)
-	self:SetSize(hintHandle, 420, 28)
-	if GameManager.addFairyGuiObjectToParent == nil
-		or not GameManager:addFairyGuiObjectToParent(titleHandle, handle)
-		or not GameManager:addFairyGuiObjectToParent(inputHandle, handle)
-		or not GameManager:addFairyGuiObjectToParent(hintHandle, handle) then
-		GameManager:removeFairyGuiObject(handle)
-		return nil
-	end
-
-	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName, param) then
-		GameManager:removeFairyGuiObject(handle)
-		return nil
-	end
-
-	if param.x ~= nil and param.y ~= nil then
-		self:SetPosition(handle, param.x, param.y)
-	elseif param.center ~= false then
-		GameManager:centerFairyGuiObject(handle, param.restraint == true)
-	end
-
-	local objectInfo = {
-		handle = handle,
-		key = key,
-		name = "TextInputProbe",
-		objectName = "FairyGuiTextInputProbe",
-		param = param,
-		uiName = "TextInputProbe",
-		cache = false,
-		layer = layerName,
-		popupGroup = self:GetPopupGroup(param),
-		popupMode = param.popupMode or "stack",
-		uiGroup = self:GetUIGroup(param),
-		sceneName = self:GetSceneName(param),
-		closeOnSceneChange = param.closeOnSceneChange ~= false,
-		destroyOnSceneChange = param.destroyOnSceneChange == true,
-		inputHandle = inputHandle,
-		parentHandle = param.parentHandle or param.rootHandle,
-		rootLayer = param.rootLayer,
-		focusOrder = param.focusOrder or { "probe_input" },
-		tabFocus = param.tabFocus ~= false,
-	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey.TextInputProbe = key
-	self.hiddenObjects[key] = nil
-	objectInfo.cacheHiddenAtMs = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:ApplyScreenAdapt(objectInfo)
-	self:PushStack(objectInfo)
-	if param.textInputPolicy ~= nil then
-		self:SetTextInputPolicy(handle, "probe_input", param.textInputPolicy)
-	elseif param.maxLength ~= nil or param.restrict ~= nil or param.inputType ~= nil then
-		self:SetTextInputPolicy(handle, "probe_input", {
-			maxLength = param.maxLength,
-			restrict = param.restrict,
-			inputType = param.inputType,
-			allowDecimal = param.allowDecimal,
-			allowNegative = param.allowNegative,
-		})
-	end
-	self:AddChanged(handle, "probe_input", function(evt)
-		print("[FGUI] text input changed:", self:GetText(handle, "probe_input"), evt.senderHandle)
-	end)
-	self:AddSubmit(handle, "probe_input", function(evt)
-		print("[FGUI] text input submit:", self:GetText(handle, "probe_input"), evt.senderHandle)
-	end)
-	return handle, inputHandle
+	return self:GetProbes():OpenTextInputProbe(param)
 end
-
 function FairyGuiManager:AddOwnedHandle(objectInfo, handle)
-	if objectInfo == nil or handle == nil or handle <= 0 then
-		return handle
-	end
-	if objectInfo.ownedHandles == nil then
-		objectInfo.ownedHandles = {}
-	end
-	table.insert(objectInfo.ownedHandles, handle)
-	return handle
+	return self:GetLifecycle():AddOwnedHandle(objectInfo, handle)
 end
 
 function FairyGuiManager:AddObjectHandleToParent(childHandle, parentHandle)
-	if childHandle == nil or childHandle <= 0 or parentHandle == nil or parentHandle <= 0 then
-		return false
-	end
-	if GameManager == nil or GameManager.addFairyGuiObjectToParent == nil then
-		return false
-	end
-	return GameManager:addFairyGuiObjectToParent(childHandle, parentHandle)
+	return self:GetLifecycle():AddObjectHandleToParent(childHandle, parentHandle)
 end
 
 function FairyGuiManager:OpenServiceContainer(key, param)
@@ -2523,499 +1726,172 @@ function FairyGuiManager:DumpResourceFallbacks(filter)
 end
 
 function FairyGuiManager:ApplyTextInputPolicy(handle, childPath)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	local policy = self.textInputPoliciesByHandle[targetHandle]
-	if type(policy) ~= "table" then
-		return true
-	end
-	if policy._applying == true then
-		return true
-	end
-
-	local text = self:GetText(targetHandle, nil)
-	local normalized = applyTextInputPolicy(text, policy)
-	if normalized ~= text then
-		policy._applying = true
-		self:SetText(targetHandle, nil, normalized)
-		policy._applying = nil
-	end
-	return true
+	return self:GetControls():ApplyTextInputPolicy(handle, childPath)
 end
 
 function FairyGuiManager:SetTextInputPolicy(handle, childPath, policy)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		self:RecordResourceFallback("missingTextInputPolicyTarget", {
-			handle = handle,
-			childPath = childPath,
-		}, "SetTextInputPolicy target not found")
-		return false
-	end
-
-	if type(policy) ~= "table" then
-		local bindingId = self.textInputPolicyBindingsByHandle[targetHandle]
-		if bindingId ~= nil then
-			self:RemoveBinding(bindingId)
-		end
-		self.textInputPoliciesByHandle[targetHandle] = nil
-		self.textInputPolicyBindingsByHandle[targetHandle] = nil
-		return true
-	end
-
-	local policyCopy = copyTable(policy)
-	self.textInputPoliciesByHandle[targetHandle] = policyCopy
-	if self.textInputPolicyBindingsByHandle[targetHandle] == nil then
-		local bindingId = self:AddChanged(handle, childPath, function()
-			self:ApplyTextInputPolicy(targetHandle, nil)
-		end)
-		if bindingId ~= nil then
-			self.textInputPolicyBindingsByHandle[targetHandle] = bindingId
-		end
-	end
-	self:ApplyTextInputPolicy(targetHandle, nil)
-	return true
+	return self:GetControls():SetTextInputPolicy(handle, childPath, policy)
 end
 
 function FairyGuiManager:GetTextInputPolicy(handle, childPath)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return nil
-	end
-	local policy = self.textInputPoliciesByHandle[targetHandle]
-	if type(policy) ~= "table" then
-		return nil
-	end
-	return copyTable(policy)
+	return self:GetControls():GetTextInputPolicy(handle, childPath)
 end
 
 function FairyGuiManager:ClearTextInputPoliciesForHandles(handles)
-	if type(handles) ~= "table" then
-		return
-	end
-	for _, handle in ipairs(handles) do
-		local bindingId = self.textInputPolicyBindingsByHandle[handle]
-		if bindingId ~= nil then
-			self.textInputPolicyBindingsByHandle[handle] = nil
-		end
-		self.textInputPoliciesByHandle[handle] = nil
-	end
+	return self:GetControls():ClearTextInputPoliciesForHandles(handles)
 end
 
 function FairyGuiManager:SetText(handle, childPath, text)
-	if GameManager == nil then
-		return false
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return GameManager:setFairyGuiObjectText(targetHandle, tostring(text or ""))
+	return self:GetControls():SetText(handle, childPath, text)
 end
 
 function FairyGuiManager:GetText(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiObjectText == nil then
-		return ""
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return ""
-	end
-	return GameManager:getFairyGuiObjectText(targetHandle) or ""
+	return self:GetControls():GetText(handle, childPath)
 end
 
 function FairyGuiManager:Focus(handle, childPath)
-	if GameManager == nil or GameManager.focusFairyGuiObject == nil then
-		return false
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return GameManager:focusFairyGuiObject(targetHandle)
+	return self:GetControls():Focus(handle, childPath)
 end
 
 function FairyGuiManager:ResolveFocusHandle(objectInfo, target)
-	if objectInfo == nil then
-		return nil
-	end
-	if type(target) == "number" then
-		return target > 0 and target or nil
-	end
-	if type(target) == "string" then
-		return self:GetTargetHandle(objectInfo.handle, target)
-	end
-	if type(target) == "table" then
-		if type(target.handle) == "number" then
-			return target.handle > 0 and target.handle or nil
-		end
-		if type(target.childPath) == "string" then
-			return self:GetTargetHandle(objectInfo.handle, target.childPath)
-		end
-	end
-	return nil
+	return self:GetControls():ResolveFocusHandle(objectInfo, target)
 end
 
 function FairyGuiManager:GetFocusHandles(objectInfo)
-	if objectInfo == nil or objectInfo.tabFocus == false then
-		return {}
-	end
-
-	local handles = {}
-	local handleSet = {}
-	local function push(handle)
-		if type(handle) == "number" and handle > 0 and handleSet[handle] ~= true then
-			handleSet[handle] = true
-			table.insert(handles, handle)
-		end
-	end
-
-	if type(objectInfo.focusOrder) == "table" then
-		for _, target in ipairs(objectInfo.focusOrder) do
-			push(self:ResolveFocusHandle(objectInfo, target))
-		end
-	end
-	push(objectInfo.inputHandle)
-	return handles
+	return self:GetControls():GetFocusHandles(objectInfo)
 end
 
 function FairyGuiManager:RegisterFocusOrder(keyOrHandle, focusOrder)
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
-	if objectInfo == nil or type(focusOrder) ~= "table" then
-		return 0
-	end
-	objectInfo.focusOrder = focusOrder
-	objectInfo.focusHandles = nil
-	return #self:GetFocusHandles(objectInfo)
+	return self:GetControls():RegisterFocusOrder(keyOrHandle, focusOrder)
 end
 
 function FairyGuiManager:CollectFocusHandles()
-	local entries = {}
-	for _, entry in ipairs(self.uiStack or {}) do
-		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
-		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil then
-			table.insert(entries, {
-				objectInfo = objectInfo,
-				serial = entry.serial or 0,
-				sortingOrder = objectInfo.sortingOrder or entry.sortingOrder or 0,
-			})
-		end
-	end
-	table.sort(entries, function(a, b)
-		if a.sortingOrder == b.sortingOrder then
-			return a.serial < b.serial
-		end
-		return a.sortingOrder < b.sortingOrder
-	end)
-
-	local handles = {}
-	for _, entry in ipairs(entries) do
-		for _, handle in ipairs(self:GetFocusHandles(entry.objectInfo)) do
-			table.insert(handles, handle)
-		end
-	end
-	return handles
+	return self:GetControls():CollectFocusHandles()
 end
 
 function FairyGuiManager:FocusNext(reverse)
-	local handles = self:CollectFocusHandles()
-	if #handles == 0 then
-		return false
-	end
-
-	local focusedHandle = self:GetFocusedHandle()
-	local currentIndex = nil
-	for index, handle in ipairs(handles) do
-		if handle == focusedHandle then
-			currentIndex = index
-			break
-		end
-	end
-
-	local nextIndex = nil
-	if currentIndex == nil then
-		nextIndex = reverse == true and #handles or 1
-	elseif reverse == true then
-		nextIndex = currentIndex - 1
-		if nextIndex < 1 then
-			nextIndex = #handles
-		end
-	else
-		nextIndex = currentIndex + 1
-		if nextIndex > #handles then
-			nextIndex = 1
-		end
-	end
-	return self:Focus(handles[nextIndex])
+	return self:GetControls():FocusNext(reverse)
 end
 
 function FairyGuiManager:ClearFocus()
-	if GameManager == nil or GameManager.clearFairyGuiFocus == nil then
-		return false
-	end
-	return GameManager:clearFairyGuiFocus()
+	return self:GetControls():ClearFocus()
 end
 
 function FairyGuiManager:GetFocusedHandle()
-	if GameManager == nil or GameManager.getFairyGuiFocusedObject == nil then
-		return 0
-	end
-	return GameManager:getFairyGuiFocusedObject()
+	return self:GetControls():GetFocusedHandle()
 end
 
 function FairyGuiManager:SetIcon(handle, childPath, icon)
-	if GameManager == nil then
-		return false
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return GameManager:setFairyGuiObjectIcon(targetHandle, tostring(icon or ""))
+	return self:GetControls():SetIcon(handle, childPath, icon)
 end
 
 function FairyGuiManager:SetLoaderUrl(handle, childPath, url)
-	if GameManager == nil then
-		return false
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return GameManager:setFairyGuiObjectLoaderUrl(targetHandle, tostring(url or ""))
+	return self:GetControls():SetLoaderUrl(handle, childPath, url)
 end
 
 function FairyGuiManager:SetChildVisible(handle, childPath, visible)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return self:SetVisible(targetHandle, visible == true)
+	return self:GetControls():SetChildVisible(handle, childPath, visible)
 end
 
 function FairyGuiManager:SetChildPosition(handle, childPath, x, y)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return self:SetPosition(targetHandle, x, y)
+	return self:GetControls():SetChildPosition(handle, childPath, x, y)
 end
 
 function FairyGuiManager:SetChildSize(handle, childPath, width, height)
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-	return self:SetSize(targetHandle, width, height)
+	return self:GetControls():SetChildSize(handle, childPath, width, height)
 end
 
 function FairyGuiManager:SetControllerIndex(handle, controllerName, selectedIndex)
-	if GameManager == nil or handle == nil then
-		return false
-	end
-	return GameManager:setFairyGuiObjectControllerIndex(handle, controllerName or "", selectedIndex or 0)
+	return self:GetControls():SetControllerIndex(handle, controllerName, selectedIndex)
 end
 
 function FairyGuiManager:GetControllerIndex(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerIndex == nil or handle == nil then
-		return -1
-	end
-	return GameManager:getFairyGuiObjectControllerIndex(handle, controllerName or "")
+	return self:GetControls():GetControllerIndex(handle, controllerName)
 end
 
 function FairyGuiManager:SetControllerPage(handle, controllerName, pageName)
-	if GameManager == nil or GameManager.setFairyGuiObjectControllerPage == nil or handle == nil then
-		return false
-	end
-	return GameManager:setFairyGuiObjectControllerPage(handle, controllerName or "", pageName or "")
+	return self:GetControls():SetControllerPage(handle, controllerName, pageName)
 end
 
 function FairyGuiManager:GetControllerPage(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPage == nil or handle == nil then
-		return ""
-	end
-	return GameManager:getFairyGuiObjectControllerPage(handle, controllerName or "")
+	return self:GetControls():GetControllerPage(handle, controllerName)
 end
 
 function FairyGuiManager:GetControllerPageId(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageId == nil or handle == nil then
-		return ""
-	end
-	return GameManager:getFairyGuiObjectControllerPageId(handle, controllerName or "")
+	return self:GetControls():GetControllerPageId(handle, controllerName)
 end
 
 function FairyGuiManager:GetControllerPageCount(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageCount == nil or handle == nil then
-		return 0
-	end
-	return GameManager:getFairyGuiObjectControllerPageCount(handle, controllerName or "")
+	return self:GetControls():GetControllerPageCount(handle, controllerName)
 end
 
 function FairyGuiManager:GetControllerPageNameAt(handle, controllerName, pageIndex)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageNameAt == nil or handle == nil then
-		return ""
-	end
-	return GameManager:getFairyGuiObjectControllerPageNameAt(handle, controllerName or "", pageIndex or 0)
+	return self:GetControls():GetControllerPageNameAt(handle, controllerName, pageIndex)
 end
 
 function FairyGuiManager:GetControllerPageIdAt(handle, controllerName, pageIndex)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageIdAt == nil or handle == nil then
-		return ""
-	end
-	return GameManager:getFairyGuiObjectControllerPageIdAt(handle, controllerName or "", pageIndex or 0)
+	return self:GetControls():GetControllerPageIdAt(handle, controllerName, pageIndex)
 end
 
 function FairyGuiManager:SetValue(handle, childPathOrValue, value)
-	if GameManager == nil or GameManager.setFairyGuiObjectValue == nil or handle == nil then
-		return false
-	end
-	local childPath = childPathOrValue
-	if value == nil then
-		value = childPathOrValue
-		childPath = nil
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectValue(targetHandle, value or 0) or false
+	return self:GetControls():SetValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiManager:GetValue(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiObjectValue == nil or handle == nil then
-		return 0
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectValue(targetHandle) or 0
+	return self:GetControls():GetValue(handle, childPath)
 end
 
 function FairyGuiManager:SetMin(handle, childPathOrValue, minValue)
-	if GameManager == nil or GameManager.setFairyGuiObjectMin == nil or handle == nil then
-		return false
-	end
-	local childPath = childPathOrValue
-	if minValue == nil then
-		minValue = childPathOrValue
-		childPath = nil
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectMin(targetHandle, minValue or 0) or false
+	return self:GetControls():SetMin(handle, childPathOrValue, minValue)
 end
 
 function FairyGuiManager:GetMin(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiObjectMin == nil or handle == nil then
-		return 0
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectMin(targetHandle) or 0
+	return self:GetControls():GetMin(handle, childPath)
 end
 
 function FairyGuiManager:SetMax(handle, childPathOrValue, maxValue)
-	if GameManager == nil or GameManager.setFairyGuiObjectMax == nil or handle == nil then
-		return false
-	end
-	local childPath = childPathOrValue
-	if maxValue == nil then
-		maxValue = childPathOrValue
-		childPath = nil
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectMax(targetHandle, maxValue or 0) or false
+	return self:GetControls():SetMax(handle, childPathOrValue, maxValue)
 end
 
 function FairyGuiManager:GetMax(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiObjectMax == nil or handle == nil then
-		return 0
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectMax(targetHandle) or 0
+	return self:GetControls():GetMax(handle, childPath)
 end
 
 function FairyGuiManager:SetProgress(handle, childPathOrValue, value, maxValue, minValue)
-	local childPath = childPathOrValue
-	if type(childPathOrValue) ~= "string" then
-		minValue = maxValue
-		maxValue = value
-		value = childPathOrValue
-		childPath = nil
-	end
-
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	if targetHandle == nil then
-		return false
-	end
-
-	if minValue ~= nil and not self:SetMin(targetHandle, minValue) then
-		return false
-	end
-	if maxValue ~= nil and not self:SetMax(targetHandle, maxValue) then
-		return false
-	end
-	return self:SetValue(targetHandle, value or 0)
+	return self:GetControls():SetProgress(handle, childPathOrValue, value, maxValue, minValue)
 end
 
 function FairyGuiManager:SetSliderValue(handle, childPathOrValue, value)
-	return self:SetValue(handle, childPathOrValue, value)
+	return self:GetControls():SetSliderValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiManager:GetSliderValue(handle, childPath)
-	return self:GetValue(handle, childPath)
+	return self:GetControls():GetSliderValue(handle, childPath)
 end
 
 function FairyGuiManager:SetProgressBarValue(handle, childPathOrValue, value)
-	return self:SetValue(handle, childPathOrValue, value)
+	return self:GetControls():SetProgressBarValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiManager:GetProgressBarValue(handle, childPath)
-	return self:GetValue(handle, childPath)
+	return self:GetControls():GetProgressBarValue(handle, childPath)
 end
 
 function FairyGuiManager:SetComboBoxSelectedIndex(handle, childPathOrSelectedIndex, selectedIndex)
-	if GameManager == nil or GameManager.setFairyGuiComboBoxSelectedIndex == nil or handle == nil then
-		return false
-	end
-	local childPath = childPathOrSelectedIndex
-	if selectedIndex == nil then
-		selectedIndex = childPathOrSelectedIndex
-		childPath = nil
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxSelectedIndex(targetHandle, selectedIndex or 0) or false
+	return self:GetControls():SetComboBoxSelectedIndex(handle, childPathOrSelectedIndex, selectedIndex)
 end
 
 function FairyGuiManager:GetComboBoxSelectedIndex(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiComboBoxSelectedIndex == nil or handle == nil then
-		return -1
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxSelectedIndex(targetHandle) or -1
+	return self:GetControls():GetComboBoxSelectedIndex(handle, childPath)
 end
 
 function FairyGuiManager:SetComboBoxValue(handle, childPathOrValue, value)
-	if GameManager == nil or GameManager.setFairyGuiComboBoxValue == nil or handle == nil then
-		return false
-	end
-	local childPath = childPathOrValue
-	if value == nil then
-		value = childPathOrValue
-		childPath = nil
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxValue(targetHandle, value or "") or false
+	return self:GetControls():SetComboBoxValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiManager:GetComboBoxValue(handle, childPath)
-	if GameManager == nil or GameManager.getFairyGuiComboBoxValue == nil or handle == nil then
-		return ""
-	end
-	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxValue(targetHandle) or ""
+	return self:GetControls():GetComboBoxValue(handle, childPath)
 end
-
 function FairyGuiManager:RegisterTransitionCallback(handle, transitionName, callback)
 	return self:GetEvents():RegisterTransitionCallback(handle, transitionName, callback)
 end
