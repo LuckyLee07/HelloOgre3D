@@ -20,6 +20,7 @@ class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
 class NavigationMesh;
+class AIScheduler;
 
 //tolua_begin
 enum MGR_OBJ_TYPE
@@ -55,6 +56,9 @@ public:
 	int getAiAgentCount() const;
 	int getAiSoldierCount() const;
 	std::string buildAiDebugSummary(int maxAgents);
+	void configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame);
+	std::string buildAiSchedulerDebugSummary() const;
+	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string buildObjectDebugSummary(int maxObjects);
 	//tolua_end
 
@@ -90,6 +94,7 @@ private:
 
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;
+	AIScheduler* m_aiScheduler;
 }; //tolua_exports
 
 extern ObjectManager* g_ObjectManager;

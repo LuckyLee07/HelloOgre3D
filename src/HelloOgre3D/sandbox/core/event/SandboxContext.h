@@ -16,6 +16,10 @@ public:
 	{
 		return Get<std::string>(key);
 	}
+	std::string Get_String(const std::string& key, const std::string& defaultValue) const
+	{
+		return Get<std::string>(key, defaultValue);
+	}
 
 	// number 类型
 	SandboxContext& Set_Number(const std::string& key, double value)
@@ -25,6 +29,10 @@ public:
 	double Get_Number(const std::string& key) const
 	{
 		return Get<double>(key);
+	}
+	double Get_Number(const std::string& key, double defaultValue) const
+	{
+		return Get<double>(key, defaultValue);
 	}
 
 	// Reference 类型
@@ -52,7 +60,7 @@ public:
 		return Get<T>(key);
 	}
 
-private:
+public:
 	// 设置参数
 	template<typename T>
 	SandboxContext& Set(const std::string& key, const T& value)

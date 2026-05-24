@@ -99,6 +99,12 @@
 - [ ] agent 销毁、sample 重载、UI 关闭后不会留下悬空 callback。
 - [ ] 事件派发耗时接入 Tracy 或至少有统计 dump。
 
+当前进展（2026-05-23）：
+
+- [x] `SandboxEventPayload` 第一版已统一 `eventType/scope/senderId/targetId/teamId/timeMs/x/y/z` 字段。
+- [x] Local 事件已覆盖 `HEALTH_CHANGE`、`ASM_STATE_CHANGE`、`ASM_NOTIFY`，并由 dispatcher 记录最近事件、订阅者数量和派发次数。
+- [ ] Team / Global 派发路径、延迟派发和订阅生命周期 token 仍待补齐。
+
 ## 6. P0：AI 更新调度与性能观测
 
 ### 目标
@@ -125,6 +131,12 @@
 - [ ] 感知和知识源刷新频率可配置。
 - [ ] InfluenceMap 更新频率和 layer 开关可配置。
 - [ ] 有一份固定 sample 用于性能回归。
+
+当前进展（2026-05-23）：
+
+- [x] `AIScheduler` 第一版已支持 Soldier AI tick 与动画/渲染 update 解耦、按 agentId 错峰、每帧 tick budget 和 Lua 可配置开关。
+- [x] `RuntimeProfileCounters` 已接入 `AIScheduler*` Tracy plots，`ObjectManager:buildAiSchedulerDebugSummary()` 可 dump 最近一帧调度数据。
+- [ ] Sensor / KnowledgeSource / InfluenceMap 独立刷新频率和固定 20+ agent preset 仍待补齐。
 
 ## 7. P1：感知系统组件化
 

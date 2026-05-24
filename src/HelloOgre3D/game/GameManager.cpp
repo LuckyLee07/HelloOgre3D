@@ -22,6 +22,7 @@
 #include "systems/physics/PhysicsWorld.h"
 #include "core/SandboxMacros.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 #include "diagnostics/RuntimeResourceDiagnostics.h"
 
 using namespace Ogre;
@@ -559,14 +560,7 @@ const char* GameManager::getFairyGuiFrameRenderDetailString()
 
 bool GameManager::plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen)
 {
-	H3D_PROFILE_PLOT("FGUIServiceOpen", static_cast<double>(serviceOpenTotal));
-	H3D_PROFILE_PLOT("FGUIServiceKinds", static_cast<double>(serviceKindCount));
-	H3D_PROFILE_PLOT("FGUIToastQueue", static_cast<double>(toastQueueCount));
-	H3D_PROFILE_PLOT("FGUILoadingRefs", static_cast<double>(loadingRefTotal));
-	H3D_PROFILE_PLOT("FGUIServiceCreated", static_cast<double>(serviceCreatedTotal));
-	H3D_PROFILE_PLOT("FGUIServiceClosed", static_cast<double>(serviceClosedTotal));
-	H3D_PROFILE_PLOT("FGUIServiceFailed", static_cast<double>(serviceFailedTotal));
-	H3D_PROFILE_PLOT("FGUIServicePeakOpen", static_cast<double>(servicePeakOpen));
+	RuntimeProfileCounters::PlotFairyGuiServiceStats(serviceOpenTotal, serviceKindCount, toastQueueCount, loadingRefTotal, serviceCreatedTotal, serviceClosedTotal, serviceFailedTotal, servicePeakOpen);
 	return true;
 }
 

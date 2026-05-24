@@ -9,6 +9,7 @@
 #include "systems/manager/ObjectManager.h"
 #include "components/AgentLocomotion.h"
 #include "components/PhysicsComponent.h"
+#include "event/SandboxEventPayload.h"
 #include "object/GameObject.h"
 
 using namespace Ogre;
@@ -208,7 +209,10 @@ void VehicleObject::SetHealth(Ogre::Real health)
 
 	m_health = health;
 
-	Event()->Emit("HEALTH_CHANGE", SandboxContext().Set_Number("health", health));
+	SandboxContext context = SandboxEventPayload::Make(SandboxEventTypes::HealthChanged(), SandboxEventScope::Local, this);
+	SandboxEventPayload::SetPosition(context, GetPosition());
+	context.Set_Number("health", health);
+	Event()->Emit("HEALTH_CHANGE", context);
 }
 
 void VehicleObject::SetMaxForce(Ogre::Real maxForce)

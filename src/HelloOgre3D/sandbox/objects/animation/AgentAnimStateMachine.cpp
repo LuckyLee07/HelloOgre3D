@@ -7,6 +7,7 @@
 #include "object/BaseObject.h"
 #include "event/SandboxContext.h"
 #include "event/SandboxEventDispatcherManager.h"
+#include "event/SandboxEventPayload.h"
 #include "GameDefine.h"
 #include "OgreMath.h"
 
@@ -234,7 +235,7 @@ void AgentAnimStateMachine::FireStateChageEvent(AgentAnimState* pNextState)
 	if (m_owner == nullptr || pNextState == nullptr)
 		return;
 
-	SandboxContext context;
+	SandboxContext context = SandboxEventPayload::Make(SandboxEventTypes::AnimStateChanged(), SandboxEventScope::Local, m_owner);
 	context.Set_Number("StateId", pNextState->GetID());
 	context.Set_String("StateName", pNextState->GetName());
 	m_owner->Event()->Emit("ASM_STATE_CHANGE", context);
@@ -283,7 +284,7 @@ void AgentAnimStateMachine::FireNotifyEvent(AgentAnimState* state, const AnimNot
 		return;
 	}
 
-	SandboxContext context;
+	SandboxContext context = SandboxEventPayload::Make(SandboxEventTypes::AnimNotify(), SandboxEventScope::Local, m_owner);
 	context.Set_Number("StateId", state->GetID());
 	context.Set_String("StateName", state->GetName());
 	context.Set_String("EventName", notify.eventName);

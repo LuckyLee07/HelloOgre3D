@@ -25,14 +25,29 @@ function RuntimeDiagnostics.RunSelfTest()
 	local ok = true
 	local maxObjects = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS", 8)
 	local maxResources = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES", 6)
+	local maxEvents = getEnvNumber("HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS", 6)
 
-	print("[RuntimeDiag] self test begin", "sample=", tostring(_G.HELLO_SANDBOX_SAMPLE_NAME), "maxObjects=", maxObjects, "maxResources=", maxResources)
+	print("[RuntimeDiag] self test begin", "sample=", tostring(_G.HELLO_SANDBOX_SAMPLE_NAME), "maxObjects=", maxObjects, "maxResources=", maxResources, "maxEvents=", maxEvents)
 
 	if ObjectManager == nil or ObjectManager.buildObjectDebugSummary == nil then
 		print("[RuntimeDiag] object inspector unavailable")
 		ok = false
 	else
 		printLines(ObjectManager:buildObjectDebugSummary(maxObjects))
+	end
+
+	if ObjectManager == nil or ObjectManager.buildAiSchedulerDebugSummary == nil then
+		print("[RuntimeDiag] AI scheduler diagnostics unavailable")
+		ok = false
+	else
+		printLines(ObjectManager:buildAiSchedulerDebugSummary())
+	end
+
+	if ObjectManager == nil or ObjectManager.buildAiEventDebugSummary == nil then
+		print("[RuntimeDiag] AI event diagnostics unavailable")
+		ok = false
+	else
+		printLines(ObjectManager:buildAiEventDebugSummary(maxObjects, maxEvents))
 	end
 
 	if GameManager == nil or GameManager.buildRuntimeResourceDump == nil then

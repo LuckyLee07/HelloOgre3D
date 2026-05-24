@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 23 22:45:20 2026.
+** Generated automatically by tolua++-1.0.92 on Sun May 24 00:05:49 2026.
 */
 
 #ifndef __cplusplus
@@ -7293,6 +7293,111 @@ static int tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00(lua_State* tol
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: configureAiScheduler of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_configureAiScheduler00
+static int tolua_SandboxToLua_ObjectManager_configureAiScheduler00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+  int tickIntervalMs = ((int)  tolua_tonumber(tolua_S,3,0));
+  int maxTicksPerFrame = ((int)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureAiScheduler'", NULL);
+#endif
+  {
+   self->configureAiScheduler(enabled,tickIntervalMs,maxTicksPerFrame);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureAiScheduler'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildAiSchedulerDebugSummary of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00
+static int tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildAiSchedulerDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildAiSchedulerDebugSummary();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildAiSchedulerDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildAiEventDebugSummary of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00
+static int tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int maxAgents = ((int)  tolua_tonumber(tolua_S,2,0));
+  int maxEvents = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildAiEventDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildAiEventDebugSummary(maxAgents,maxEvents);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildAiEventDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: buildObjectDebugSummary of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00
 static int tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00(lua_State* tolua_S)
@@ -9922,6 +10027,9 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAiAgentCount",tolua_SandboxToLua_ObjectManager_getAiAgentCount00);
    tolua_function(tolua_S,"getAiSoldierCount",tolua_SandboxToLua_ObjectManager_getAiSoldierCount00);
    tolua_function(tolua_S,"buildAiDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00);
+   tolua_function(tolua_S,"configureAiScheduler",tolua_SandboxToLua_ObjectManager_configureAiScheduler00);
+   tolua_function(tolua_S,"buildAiSchedulerDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00);
+   tolua_function(tolua_S,"buildAiEventDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00);
    tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"NavigationMesh","NavigationMesh","",NULL);

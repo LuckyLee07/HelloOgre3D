@@ -33,7 +33,7 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_animController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_animController(nullptr), m_aiTickInUpdateEnabled(true)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -142,23 +142,9 @@ void SoldierObject::Update(int deltaMilisec)
 	// Keep body transform in sync with physics before animation/bone evaluation.
 	this->updateWorldTransform();
 
-	static int totalMilisec = 0;
-	totalMilisec += deltaMilisec;
+	if (m_aiTickInUpdateEnabled)
+		TickAi(deltaMilisec);
 
-	bool forceUpdate = true;
-	if (forceUpdate || totalMilisec > 1000)
-	{
-		totalMilisec = 0;
-		H3D_PROFILE_SCOPE("Lua::Agent_Update");
-		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
-	}
-
-	// Single driver path — could be FSM, DT, or future BT (all IDecisionDriver).
-	if (m_driver)
-	{
-		H3D_PROFILE_SCOPE("IDecisionDriver::Tick");
-		m_driver->Tick((float)deltaMilisec);
-	}
 	if (m_animController && GetUseCppFSM())
 	{
 		H3D_PROFILE_SCOPE("SoldierAnimController::Update");
@@ -177,6 +163,33 @@ void SoldierObject::Update(int deltaMilisec)
 	}
 
 	TryApplyPendingStance();
+}
+
+void SoldierObject::TickAi(int deltaMilisec)
+{
+	H3D_PROFILE_SCOPE("SoldierObject::TickAi");
+	static int totalMilisec = 0;
+	totalMilisec += deltaMilisec;
+
+	bool forceUpdate = true;
+	if (forceUpdate || totalMilisec > 1000)
+	{
+		totalMilisec = 0;
+		H3D_PROFILE_SCOPE("Lua::Agent_Update");
+		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
+	}
+
+	// Single driver path could be FSM, DT, or future BT (all IDecisionDriver).
+	if (m_driver)
+	{
+		H3D_PROFILE_SCOPE("IDecisionDriver::Tick");
+		m_driver->Tick((float)deltaMilisec);
+	}
+}
+
+void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
+{
+	m_aiTickInUpdateEnabled = enabled;
 }
 
 void SoldierObject::SyncWeaponToHandBone()

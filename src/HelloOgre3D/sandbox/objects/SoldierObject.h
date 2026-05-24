@@ -17,6 +17,8 @@ public:
 
 	virtual void Init() override;
 	virtual void Update(int deltaMs) override;
+	void TickAi(int deltaMs);
+	void SetAiTickInUpdateEnabled(bool enabled);
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
@@ -115,6 +117,7 @@ private:
 	// One driver to rule them all (FSM / DT / future BT). All implement IDecisionDriver
 	// so Update() just calls m_driver->Tick(); typed accessors above downcast on demand.
 	IDecisionDriver* m_driver = nullptr;
+	bool m_aiTickInUpdateEnabled = true;
 
 }; //tolua_exports
 

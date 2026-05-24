@@ -16,6 +16,11 @@ public:
 		m_callbacks.push_back(callback);
 	}
 
+	int GetCallbackCount() const
+	{
+		return static_cast<int>(m_callbacks.size());
+	}
+
 	// 执行回调
 	void Invoke(const SandboxContext& context)
 	{

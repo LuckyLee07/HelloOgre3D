@@ -51,6 +51,14 @@ local function isEnvEnabled(name)
 	return isTruthyEnvValue(getEnvValue(name))
 end
 
+local function getEnvNumber(name, defaultValue)
+	local value = tonumber(getEnvValue(name))
+	if value == nil then
+		return defaultValue
+	end
+	return value
+end
+
 local FGUI_AUTOMATION_ENV_NAMES = {
 	"HELLO_FGUI_SKIP_SANDBOX_SCENE",
 	"HELLO_FGUI_DEBUG_PANEL_DEMO",
@@ -106,6 +114,20 @@ local function tryRunRuntimeDiagnosticSelfTest()
 	end)
 end
 
+local function tryConfigureAiScheduler()
+	if ObjectManager == nil or ObjectManager.configureAiScheduler == nil then
+		return
+	end
+
+	local enabled = isEnvEnabled("HELLO_AI_SCHEDULER_ENABLE")
+	local tickMs = getEnvNumber("HELLO_AI_SCHEDULER_TICK_MS", 50)
+	local maxPerFrame = getEnvNumber("HELLO_AI_SCHEDULER_MAX_PER_FRAME", 8)
+	ObjectManager:configureAiScheduler(enabled, tickMs, maxPerFrame)
+	if enabled then
+		print("[AIScheduler] configured", "enabled=", tostring(enabled), "tickMs=", tickMs, "maxPerFrame=", maxPerFrame)
+	end
+end
+
 _G.HELLO_FGUI_AUTOMATION_MODE = isFairyGuiAutomationMode()
 
 if _G.HELLO_FGUI_AUTOMATION_MODE then
@@ -129,6 +151,7 @@ _G.__init__ = function(sec, msec)
 	end)
 
 	FGUI_Init()
+	tryConfigureAiScheduler()
 	tryRunRuntimeDiagnosticSelfTest()
 end
 

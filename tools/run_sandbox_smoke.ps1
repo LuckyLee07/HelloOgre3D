@@ -21,6 +21,10 @@ param(
 	[switch]$RuntimeDiag,
 	[int]$DiagMaxObjects = 8,
 	[int]$DiagMaxResources = 6,
+	[int]$DiagMaxEvents = 6,
+	[switch]$AiScheduler,
+	[int]$AiTickMs = 50,
+	[int]$AiMaxPerFrame = 8,
 	[switch]$DryRun
 )
 
@@ -47,7 +51,11 @@ $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_RUN_ID",
 	"HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS",
-	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES"
+	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES",
+	"HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS",
+	"HELLO_AI_SCHEDULER_ENABLE",
+	"HELLO_AI_SCHEDULER_TICK_MS",
+	"HELLO_AI_SCHEDULER_MAX_PER_FRAME"
 )
 
 $RunId = "{0:yyyyMMddHHmmssfff}-{1}" -f (Get-Date), $PID
@@ -63,9 +71,15 @@ if ($RuntimeDiag) {
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST"] = "1"
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS"] = [string]$DiagMaxObjects
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES"] = [string]$DiagMaxResources
+	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS"] = [string]$DiagMaxEvents
+}
+if ($AiScheduler) {
+	$SelectedEnv["HELLO_AI_SCHEDULER_ENABLE"] = "1"
+	$SelectedEnv["HELLO_AI_SCHEDULER_TICK_MS"] = [string]$AiTickMs
+	$SelectedEnv["HELLO_AI_SCHEDULER_MAX_PER_FRAME"] = [string]$AiMaxPerFrame
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample runId=$RunId runtimeDiag=$($RuntimeDiag.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample runId=$RunId runtimeDiag=$($RuntimeDiag.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -215,6 +229,13 @@ try {
 			$diagMatches = @($LogLinesForChecks | Select-String -Pattern "\[RuntimeDiag\] self test result:\s+true")
 			if ($diagMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm runtime diagnostic selftest success."
+			}
+		}
+
+		if ($AiScheduler) {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler diagnostics."
 			}
 		}
 

@@ -3,6 +3,7 @@
 #include "objects/BlockObject.h"
 #include "objects/SoldierObject.h"
 #include "objects/VehicleObject.h"
+#include "ai/common/AIScheduler.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
@@ -99,6 +100,7 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld)
 {
 	m_pScriptVM = GetScriptLuaVM();
+	m_aiScheduler = new AIScheduler();
 }
 
 ObjectManager::~ObjectManager()
@@ -107,6 +109,7 @@ ObjectManager::~ObjectManager()
 	m_pPhysicsWorld = nullptr;
 
 	this->clearAllObjects(MGR_OBJ_ALLS);
+	SAFE_DELETE(m_aiScheduler);
 
 	auto iter = m_navMeshes.begin();
 	for ( ; iter != m_navMeshes.end(); iter++)
@@ -124,16 +127,35 @@ ObjectManager* ObjectManager::GetInstance()
 void ObjectManager::Update(int deltaMilliseconds)
 {
 	H3D_PROFILE_SCOPE("ObjectManager::Update");
+	const bool useAiScheduler = m_aiScheduler != nullptr && m_aiScheduler->IsEnabled();
+	if (m_aiScheduler != nullptr)
+		m_aiScheduler->BeginFrame(deltaMilliseconds, getAiSoldierCount());
+
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;
 		if (pObject == nullptr || pObject->CheckNeedClear())
 		{
+			if (m_aiScheduler != nullptr && pObject != nullptr)
+				m_aiScheduler->RemoveAgent(pObject->GetObjId());
 			iter = m_objects.erase(iter);
 			this->realRemoveObject(pObject);
 		}
 		else
 		{
+			SoldierObject* soldier = dynamic_cast<SoldierObject*>(pObject);
+			if (soldier != nullptr && useAiScheduler)
+			{
+				soldier->SetAiTickInUpdateEnabled(false);
+				int aiDeltaMs = 0;
+				if (m_aiScheduler->ShouldTick(soldier->GetObjId(), deltaMilliseconds, &aiDeltaMs))
+					soldier->TickAi(aiDeltaMs);
+			}
+			else if (soldier != nullptr)
+			{
+				soldier->SetAiTickInUpdateEnabled(true);
+			}
+
 			pObject->Update(deltaMilliseconds);
 			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
 			{
@@ -142,6 +164,8 @@ void ObjectManager::Update(int deltaMilliseconds)
 			iter++;
 		}
 	}
+	if (m_aiScheduler != nullptr)
+		m_aiScheduler->PublishTracyCounters();
 
 	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
 	for (auto iter = m_remSceneNodes.begin(); iter != m_remSceneNodes.end();)
@@ -217,6 +241,47 @@ int ObjectManager::getAiSoldierCount() const
 			++count;
 	}
 	return count;
+}
+
+void ObjectManager::configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame)
+{
+	if (m_aiScheduler == nullptr)
+		return;
+	m_aiScheduler->Configure(enabled, tickIntervalMs, maxTicksPerFrame);
+}
+
+std::string ObjectManager::buildAiSchedulerDebugSummary() const
+{
+	if (m_aiScheduler == nullptr)
+		return "[AIScheduler] unavailable";
+	return m_aiScheduler->BuildDebugSummary();
+}
+
+std::string ObjectManager::buildAiEventDebugSummary(int maxAgents, int maxEvents)
+{
+	if (maxAgents < 0)
+		maxAgents = 0;
+	if (maxAgents > 32)
+		maxAgents = 32;
+	if (maxEvents < 0)
+		maxEvents = 0;
+	if (maxEvents > 32)
+		maxEvents = 32;
+
+	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
+	std::ostringstream stream;
+	stream << "[AIEvent] agents=" << m_agents.size()
+		<< " showing=" << showingCount
+		<< " maxEvents=" << maxEvents;
+	for (int index = 0; index < showingCount; ++index)
+	{
+		AgentObject* agent = m_agents[index];
+		if (agent == nullptr)
+			continue;
+
+		stream << "\n" << agent->Event()->BuildDebugSummary("agent#" + std::to_string(agent->GetObjId()), maxEvents);
+	}
+	return stream.str();
 }
 
 std::string ObjectManager::buildAiDebugSummary(int maxAgents)
@@ -385,10 +450,14 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		{
 			auto pAgent = *iter;
 			m_objects.erase(pAgent->GetObjId());
+			if (m_aiScheduler != nullptr)
+				m_aiScheduler->RemoveAgent(pAgent->GetObjId());
 
 			SAFE_DELETE(pAgent);
 		}
 		m_agents.clear();
+		if (m_aiScheduler != nullptr)
+			m_aiScheduler->Clear();
 	}
 }
 std::vector<BlockObject*> ObjectManager::getFixedObjects()
@@ -474,6 +543,8 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 			if ((*it)->GetObjId() == objid)
 			{
 				m_agents.erase(it);
+				if (m_aiScheduler != nullptr)
+					m_aiScheduler->RemoveAgent(objid);
 				SAFE_DELETE(pObject);
 				return true;
 			}
