@@ -1,8 +1,8 @@
-#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
 
-bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
+bool FairyGuiSystemImpl::LoadPackage(const std::string& packagePath)
 {
-	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackage");
+	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystemImpl::LoadPackage");
 	if (!packagePath.empty())
 	{
 		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
@@ -13,9 +13,9 @@ bool FairyGuiSystem::LoadPackage(const std::string& packagePath)
 	return AddPackage(packagePath) != nullptr;
 }
 
-std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath)
+std::string FairyGuiSystemImpl::LoadPackageAndGetName(const std::string& packagePath)
 {
-	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystem::LoadPackageAndGetName");
+	H3D_PROFILE_SCOPE_NAMED(loadPackageZone, "FairyGuiSystemImpl::LoadPackageAndGetName");
 	if (!packagePath.empty())
 	{
 		H3D_PROFILE_TEXT(loadPackageZone, packagePath.c_str(), packagePath.size());
@@ -27,9 +27,9 @@ std::string FairyGuiSystem::LoadPackageAndGetName(const std::string& packagePath
 	return package != nullptr ? package->getName() : std::string();
 }
 
-bool FairyGuiSystem::RemovePackage(const std::string& packageName)
+bool FairyGuiSystemImpl::RemovePackage(const std::string& packageName)
 {
-	H3D_PROFILE_SCOPE_NAMED(removePackageZone, "FairyGuiSystem::RemovePackage");
+	H3D_PROFILE_SCOPE_NAMED(removePackageZone, "FairyGuiSystemImpl::RemovePackage");
 	if (!packageName.empty())
 	{
 		H3D_PROFILE_TEXT(removePackageZone, packageName.c_str(), packageName.size());
@@ -41,9 +41,9 @@ bool FairyGuiSystem::RemovePackage(const std::string& packageName)
 	return true;
 }
 
-fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, const std::string& objectName)
+fairygui::GObject* FairyGuiSystemImpl::CreateObject(const std::string& packageName, const std::string& objectName)
 {
-	H3D_PROFILE_SCOPE_NAMED(createObjectZone, "FairyGuiSystem::CreateObject");
+	H3D_PROFILE_SCOPE_NAMED(createObjectZone, "FairyGuiSystemImpl::CreateObject");
 	if (!objectName.empty())
 	{
 		H3D_PROFILE_TEXT(createObjectZone, objectName.c_str(), objectName.size());
@@ -54,7 +54,7 @@ fairygui::GObject* FairyGuiSystem::CreateObject(const std::string& packageName, 
 	return fairygui::UIPackage::createObject(packageName, objectName);
 }
 
-bool FairyGuiSystem::AddToRoot(fairygui::GObject* object)
+bool FairyGuiSystemImpl::AddToRoot(fairygui::GObject* object)
 {
 	if (!m_initialized || m_pRoot == nullptr || object == nullptr)
 		return false;
@@ -63,7 +63,7 @@ bool FairyGuiSystem::AddToRoot(fairygui::GObject* object)
 	return true;
 }
 
-int FairyGuiSystem::CreateObjectHandle(const std::string& packageName, const std::string& objectName)
+int FairyGuiSystemImpl::CreateObjectHandle(const std::string& packageName, const std::string& objectName)
 {
 	fairygui::GObject* object = CreateObject(packageName, objectName);
 	if (object == nullptr)
@@ -80,7 +80,7 @@ int FairyGuiSystem::CreateObjectHandle(const std::string& packageName, const std
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateContainerHandle(const std::string& name)
+int FairyGuiSystemImpl::CreateContainerHandle(const std::string& name)
 {
 	if (!m_initialized)
 		return 0;
@@ -103,7 +103,7 @@ int FairyGuiSystem::CreateContainerHandle(const std::string& name)
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateChildContainerHandle(int ownerHandle, const std::string& name)
+int FairyGuiSystemImpl::CreateChildContainerHandle(int ownerHandle, const std::string& name)
 {
 	if (!m_initialized)
 		return 0;
@@ -125,7 +125,7 @@ int FairyGuiSystem::CreateChildContainerHandle(int ownerHandle, const std::strin
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url)
+int FairyGuiSystemImpl::CreateLoaderHandle(int ownerHandle, const std::string& name, const std::string& url)
 {
 	if (!m_initialized)
 		return 0;
@@ -149,7 +149,7 @@ int FairyGuiSystem::CreateLoaderHandle(int ownerHandle, const std::string& name,
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
+int FairyGuiSystemImpl::CreateTextHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
 {
 	if (!m_initialized)
 		return 0;
@@ -177,7 +177,7 @@ int FairyGuiSystem::CreateTextHandle(int ownerHandle, const std::string& name, c
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateTextInputHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
+int FairyGuiSystemImpl::CreateTextInputHandle(int ownerHandle, const std::string& name, const std::string& text, float fontSize, float red, float green, float blue)
 {
 	if (!m_initialized)
 		return 0;
@@ -205,7 +205,7 @@ int FairyGuiSystem::CreateTextInputHandle(int ownerHandle, const std::string& na
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateGraphRectHandle(int ownerHandle, const std::string& name, float width, float height, float red, float green, float blue, float alpha)
+int FairyGuiSystemImpl::CreateGraphRectHandle(int ownerHandle, const std::string& name, float width, float height, float red, float green, float blue, float alpha)
 {
 	if (!m_initialized || width <= 0.0f || height <= 0.0f)
 		return 0;
@@ -228,7 +228,7 @@ int FairyGuiSystem::CreateGraphRectHandle(int ownerHandle, const std::string& na
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateGraphRegularPolygonHandle(int ownerHandle, const std::string& name, float width, float height, int sides, float red, float green, float blue, float alpha)
+int FairyGuiSystemImpl::CreateGraphRegularPolygonHandle(int ownerHandle, const std::string& name, float width, float height, int sides, float red, float green, float blue, float alpha)
 {
 	if (!m_initialized || width <= 0.0f || height <= 0.0f || sides < 3)
 		return 0;
@@ -252,7 +252,7 @@ int FairyGuiSystem::CreateGraphRegularPolygonHandle(int ownerHandle, const std::
 	return objectHandle;
 }
 
-int FairyGuiSystem::CreateModalMaskHandle(float red, float green, float blue, float alpha)
+int FairyGuiSystemImpl::CreateModalMaskHandle(float red, float green, float blue, float alpha)
 {
 	if (!m_initialized || m_screenWidth == 0 || m_screenHeight == 0)
 		return 0;
@@ -279,7 +279,7 @@ int FairyGuiSystem::CreateModalMaskHandle(float red, float green, float blue, fl
 	return objectHandle;
 }
 
-int FairyGuiSystem::GetObjectHandleChild(int objectHandle, const std::string& childPath)
+int FairyGuiSystemImpl::GetObjectHandleChild(int objectHandle, const std::string& childPath)
 {
 	if (childPath.empty())
 		return objectHandle;
@@ -291,7 +291,7 @@ int FairyGuiSystem::GetObjectHandleChild(int objectHandle, const std::string& ch
 	return GetOrCreateObjectAlias(GetObjectHandleOwner(objectHandle), child);
 }
 
-int FairyGuiSystem::GetObjectHandleListItem(int objectHandle, int itemIndex)
+int FairyGuiSystemImpl::GetObjectHandleListItem(int objectHandle, int itemIndex)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr || itemIndex < 0 || itemIndex >= list->getNumItems())
@@ -305,7 +305,7 @@ int FairyGuiSystem::GetObjectHandleListItem(int objectHandle, int itemIndex)
 	return GetOrCreateObjectAlias(GetObjectHandleOwner(objectHandle), item);
 }
 
-int FairyGuiSystem::GetObjectHandleListItemCount(int objectHandle)
+int FairyGuiSystemImpl::GetObjectHandleListItemCount(int objectHandle)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr)
@@ -314,12 +314,12 @@ int FairyGuiSystem::GetObjectHandleListItemCount(int objectHandle)
 	return list->getNumItems();
 }
 
-bool FairyGuiSystem::AddObjectHandleToRoot(int objectHandle)
+bool FairyGuiSystemImpl::AddObjectHandleToRoot(int objectHandle)
 {
 	return AddToRoot(FindObjectHandle(objectHandle));
 }
 
-bool FairyGuiSystem::AddObjectHandleToParent(int objectHandle, int parentHandle)
+bool FairyGuiSystemImpl::AddObjectHandleToParent(int objectHandle, int parentHandle)
 {
 	if (parentHandle <= 0)
 		return AddObjectHandleToRoot(objectHandle);
@@ -333,7 +333,7 @@ bool FairyGuiSystem::AddObjectHandleToParent(int objectHandle, int parentHandle)
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandlePosition(int objectHandle, float x, float y)
+bool FairyGuiSystemImpl::SetObjectHandlePosition(int objectHandle, float x, float y)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -343,7 +343,7 @@ bool FairyGuiSystem::SetObjectHandlePosition(int objectHandle, float x, float y)
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleSize(int objectHandle, float width, float height)
+bool FairyGuiSystemImpl::SetObjectHandleSize(int objectHandle, float width, float height)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -353,7 +353,7 @@ bool FairyGuiSystem::SetObjectHandleSize(int objectHandle, float width, float he
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleVisible(int objectHandle, bool visible)
+bool FairyGuiSystemImpl::SetObjectHandleVisible(int objectHandle, bool visible)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -363,7 +363,7 @@ bool FairyGuiSystem::SetObjectHandleVisible(int objectHandle, bool visible)
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleAlpha(int objectHandle, float alpha)
+bool FairyGuiSystemImpl::SetObjectHandleAlpha(int objectHandle, float alpha)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -373,7 +373,7 @@ bool FairyGuiSystem::SetObjectHandleAlpha(int objectHandle, float alpha)
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleTouchable(int objectHandle, bool touchable)
+bool FairyGuiSystemImpl::SetObjectHandleTouchable(int objectHandle, bool touchable)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -383,7 +383,7 @@ bool FairyGuiSystem::SetObjectHandleTouchable(int objectHandle, bool touchable)
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleMask(int objectHandle, int maskHandle, bool inverted)
+bool FairyGuiSystemImpl::SetObjectHandleMask(int objectHandle, int maskHandle, bool inverted)
 {
 	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
 	fairygui::GObject* mask = FindObjectHandle(maskHandle);
@@ -394,7 +394,7 @@ bool FairyGuiSystem::SetObjectHandleMask(int objectHandle, int maskHandle, bool 
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleSortingOrder(int objectHandle, int sortingOrder)
+bool FairyGuiSystemImpl::SetObjectHandleSortingOrder(int objectHandle, int sortingOrder)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -404,7 +404,7 @@ bool FairyGuiSystem::SetObjectHandleSortingOrder(int objectHandle, int sortingOr
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleText(int objectHandle, const std::string& text)
+bool FairyGuiSystemImpl::SetObjectHandleText(int objectHandle, const std::string& text)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -416,13 +416,13 @@ bool FairyGuiSystem::SetObjectHandleText(int objectHandle, const std::string& te
 	return true;
 }
 
-std::string FairyGuiSystem::GetObjectHandleText(int objectHandle) const
+std::string FairyGuiSystemImpl::GetObjectHandleText(int objectHandle) const
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	return object != nullptr ? object->getText() : std::string();
 }
 
-bool FairyGuiSystem::SetObjectHandleIcon(int objectHandle, const std::string& icon)
+bool FairyGuiSystemImpl::SetObjectHandleIcon(int objectHandle, const std::string& icon)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -432,7 +432,7 @@ bool FairyGuiSystem::SetObjectHandleIcon(int objectHandle, const std::string& ic
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleLoaderUrl(int objectHandle, const std::string& url)
+bool FairyGuiSystemImpl::SetObjectHandleLoaderUrl(int objectHandle, const std::string& url)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	fairygui::GLoader* loader = dynamic_cast<fairygui::GLoader*>(object);
@@ -443,7 +443,7 @@ bool FairyGuiSystem::SetObjectHandleLoaderUrl(int objectHandle, const std::strin
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex)
+bool FairyGuiSystemImpl::SetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName, int selectedIndex)
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	if (controller == nullptr)
@@ -453,13 +453,13 @@ bool FairyGuiSystem::SetObjectHandleControllerIndex(int objectHandle, const std:
 	return true;
 }
 
-int FairyGuiSystem::GetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName) const
+int FairyGuiSystemImpl::GetObjectHandleControllerIndex(int objectHandle, const std::string& controllerName) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	return controller != nullptr ? controller->getSelectedIndex() : -1;
 }
 
-bool FairyGuiSystem::SetObjectHandleControllerPage(int objectHandle, const std::string& controllerName, const std::string& pageName)
+bool FairyGuiSystemImpl::SetObjectHandleControllerPage(int objectHandle, const std::string& controllerName, const std::string& pageName)
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	if (controller == nullptr)
@@ -469,25 +469,25 @@ bool FairyGuiSystem::SetObjectHandleControllerPage(int objectHandle, const std::
 	return true;
 }
 
-std::string FairyGuiSystem::GetObjectHandleControllerPage(int objectHandle, const std::string& controllerName) const
+std::string FairyGuiSystemImpl::GetObjectHandleControllerPage(int objectHandle, const std::string& controllerName) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	return controller != nullptr ? controller->getSelectedPage() : std::string();
 }
 
-std::string FairyGuiSystem::GetObjectHandleControllerPageId(int objectHandle, const std::string& controllerName) const
+std::string FairyGuiSystemImpl::GetObjectHandleControllerPageId(int objectHandle, const std::string& controllerName) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	return controller != nullptr ? controller->getSelectedPageId() : std::string();
 }
 
-int FairyGuiSystem::GetObjectHandleControllerPageCount(int objectHandle, const std::string& controllerName) const
+int FairyGuiSystemImpl::GetObjectHandleControllerPageCount(int objectHandle, const std::string& controllerName) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	return controller != nullptr ? controller->getPageCount() : 0;
 }
 
-std::string FairyGuiSystem::GetObjectHandleControllerPageNameAt(int objectHandle, const std::string& controllerName, int pageIndex) const
+std::string FairyGuiSystemImpl::GetObjectHandleControllerPageNameAt(int objectHandle, const std::string& controllerName, int pageIndex) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	if (controller == nullptr || pageIndex < 0 || pageIndex >= controller->getPageCount())
@@ -497,7 +497,7 @@ std::string FairyGuiSystem::GetObjectHandleControllerPageNameAt(int objectHandle
 	return controller->getPageNameById(pageId);
 }
 
-std::string FairyGuiSystem::GetObjectHandleControllerPageIdAt(int objectHandle, const std::string& controllerName, int pageIndex) const
+std::string FairyGuiSystemImpl::GetObjectHandleControllerPageIdAt(int objectHandle, const std::string& controllerName, int pageIndex) const
 {
 	fairygui::GController* controller = FindController(objectHandle, controllerName);
 	if (controller == nullptr || pageIndex < 0 || pageIndex >= controller->getPageCount())
@@ -506,37 +506,37 @@ std::string FairyGuiSystem::GetObjectHandleControllerPageIdAt(int objectHandle, 
 	return controller->getPageId(pageIndex);
 }
 
-bool FairyGuiSystem::SetObjectHandleValue(int objectHandle, float value)
+bool FairyGuiSystemImpl::SetObjectHandleValue(int objectHandle, float value)
 {
 	return SetRangeObjectValue(FindObjectHandle(objectHandle), value);
 }
 
-float FairyGuiSystem::GetObjectHandleValue(int objectHandle) const
+float FairyGuiSystemImpl::GetObjectHandleValue(int objectHandle) const
 {
 	return GetRangeObjectValue(FindObjectHandle(objectHandle));
 }
 
-bool FairyGuiSystem::SetObjectHandleMin(int objectHandle, float minValue)
+bool FairyGuiSystemImpl::SetObjectHandleMin(int objectHandle, float minValue)
 {
 	return SetRangeObjectMin(FindObjectHandle(objectHandle), minValue);
 }
 
-float FairyGuiSystem::GetObjectHandleMin(int objectHandle) const
+float FairyGuiSystemImpl::GetObjectHandleMin(int objectHandle) const
 {
 	return GetRangeObjectMin(FindObjectHandle(objectHandle));
 }
 
-bool FairyGuiSystem::SetObjectHandleMax(int objectHandle, float maxValue)
+bool FairyGuiSystemImpl::SetObjectHandleMax(int objectHandle, float maxValue)
 {
 	return SetRangeObjectMax(FindObjectHandle(objectHandle), maxValue);
 }
 
-float FairyGuiSystem::GetObjectHandleMax(int objectHandle) const
+float FairyGuiSystemImpl::GetObjectHandleMax(int objectHandle) const
 {
 	return GetRangeObjectMax(FindObjectHandle(objectHandle));
 }
 
-bool FairyGuiSystem::SetObjectHandleComboBoxSelectedIndex(int objectHandle, int selectedIndex)
+bool FairyGuiSystemImpl::SetObjectHandleComboBoxSelectedIndex(int objectHandle, int selectedIndex)
 {
 	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
 	if (comboBox == nullptr)
@@ -546,13 +546,13 @@ bool FairyGuiSystem::SetObjectHandleComboBoxSelectedIndex(int objectHandle, int 
 	return true;
 }
 
-int FairyGuiSystem::GetObjectHandleComboBoxSelectedIndex(int objectHandle) const
+int FairyGuiSystemImpl::GetObjectHandleComboBoxSelectedIndex(int objectHandle) const
 {
 	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
 	return comboBox != nullptr ? comboBox->getSelectedIndex() : -1;
 }
 
-bool FairyGuiSystem::SetObjectHandleComboBoxValue(int objectHandle, const std::string& value)
+bool FairyGuiSystemImpl::SetObjectHandleComboBoxValue(int objectHandle, const std::string& value)
 {
 	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
 	if (comboBox == nullptr)
@@ -562,13 +562,13 @@ bool FairyGuiSystem::SetObjectHandleComboBoxValue(int objectHandle, const std::s
 	return true;
 }
 
-std::string FairyGuiSystem::GetObjectHandleComboBoxValue(int objectHandle) const
+std::string FairyGuiSystemImpl::GetObjectHandleComboBoxValue(int objectHandle) const
 {
 	fairygui::GComboBox* comboBox = dynamic_cast<fairygui::GComboBox*>(FindObjectHandle(objectHandle));
 	return comboBox != nullptr ? comboBox->getValue() : std::string();
 }
 
-bool FairyGuiSystem::PlayObjectHandleTransition(int objectHandle, const std::string& transitionName, int times, float delay, int callbackId)
+bool FairyGuiSystemImpl::PlayObjectHandleTransition(int objectHandle, const std::string& transitionName, int times, float delay, int callbackId)
 {
 	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
 	fairygui::Transition* transition = FindTransition(component, transitionName);
@@ -597,7 +597,7 @@ bool FairyGuiSystem::PlayObjectHandleTransition(int objectHandle, const std::str
 	return true;
 }
 
-bool FairyGuiSystem::StopObjectHandleTransition(int objectHandle, const std::string& transitionName, bool setToComplete, bool processCallback)
+bool FairyGuiSystemImpl::StopObjectHandleTransition(int objectHandle, const std::string& transitionName, bool setToComplete, bool processCallback)
 {
 	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(FindObjectHandle(objectHandle));
 	fairygui::Transition* transition = FindTransition(component, transitionName);
@@ -608,13 +608,13 @@ bool FairyGuiSystem::StopObjectHandleTransition(int objectHandle, const std::str
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleFocus(int objectHandle)
+bool FairyGuiSystemImpl::SetObjectHandleFocus(int objectHandle)
 {
 	fairygui::GTextInput* input = FindTextInput(objectHandle);
 	return FocusTextInput(input);
 }
 
-bool FairyGuiSystem::ClearObjectHandleFocus()
+bool FairyGuiSystemImpl::ClearObjectHandleFocus()
 {
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input != nullptr)
@@ -625,7 +625,7 @@ bool FairyGuiSystem::ClearObjectHandleFocus()
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleListItemCount(int objectHandle, int itemCount)
+bool FairyGuiSystemImpl::SetObjectHandleListItemCount(int objectHandle, int itemCount)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr || itemCount < 0)
@@ -635,7 +635,7 @@ bool FairyGuiSystem::SetObjectHandleListItemCount(int objectHandle, int itemCoun
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex)
+bool FairyGuiSystemImpl::SetObjectHandleListSelectedIndex(int objectHandle, int selectedIndex)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr)
@@ -645,7 +645,7 @@ bool FairyGuiSystem::SetObjectHandleListSelectedIndex(int objectHandle, int sele
 	return true;
 }
 
-int FairyGuiSystem::GetObjectHandleListSelectedIndex(int objectHandle)
+int FairyGuiSystemImpl::GetObjectHandleListSelectedIndex(int objectHandle)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr)
@@ -654,7 +654,7 @@ int FairyGuiSystem::GetObjectHandleListSelectedIndex(int objectHandle)
 	return list->getSelectedIndex();
 }
 
-bool FairyGuiSystem::ScrollObjectHandleListToView(int objectHandle, int itemIndex)
+bool FairyGuiSystemImpl::ScrollObjectHandleListToView(int objectHandle, int itemIndex)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr || itemIndex < 0 || itemIndex >= list->getNumItems())
@@ -664,7 +664,7 @@ bool FairyGuiSystem::ScrollObjectHandleListToView(int objectHandle, int itemInde
 	return true;
 }
 
-bool FairyGuiSystem::SetObjectHandleListVirtual(int objectHandle, bool loop)
+bool FairyGuiSystemImpl::SetObjectHandleListVirtual(int objectHandle, bool loop)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr)
@@ -698,7 +698,7 @@ bool FairyGuiSystem::SetObjectHandleListVirtual(int objectHandle, bool loop)
 	return true;
 }
 
-bool FairyGuiSystem::RefreshObjectHandleList(int objectHandle)
+bool FairyGuiSystemImpl::RefreshObjectHandleList(int objectHandle)
 {
 	fairygui::GList* list = dynamic_cast<fairygui::GList*>(FindObjectHandle(objectHandle));
 	if (list == nullptr)
@@ -709,7 +709,7 @@ bool FairyGuiSystem::RefreshObjectHandleList(int objectHandle)
 	return true;
 }
 
-bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
+bool FairyGuiSystemImpl::CenterObjectHandle(int objectHandle, bool restraint)
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	if (object == nullptr)
@@ -719,7 +719,7 @@ bool FairyGuiSystem::CenterObjectHandle(int objectHandle, bool restraint)
 	return true;
 }
 
-bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
+bool FairyGuiSystemImpl::RemoveObjectHandle(int objectHandle)
 {
 	std::map<int, ObjectHandleInfo>::iterator it = m_objectHandles.find(objectHandle);
 	if (it == m_objectHandles.end() || it->second.object == nullptr)
@@ -739,7 +739,7 @@ bool FairyGuiSystem::RemoveObjectHandle(int objectHandle)
 	return true;
 }
 
-void FairyGuiSystem::ClearObjectHandles()
+void FairyGuiSystemImpl::ClearObjectHandles()
 {
 	m_listenerBindings.clear();
 
@@ -759,7 +759,7 @@ void FairyGuiSystem::ClearObjectHandles()
 	m_focusedObjectHandle = 0;
 }
 
-bool FairyGuiSystem::CreateSmokeTestImage(const std::string& imagePath)
+bool FairyGuiSystemImpl::CreateSmokeTestImage(const std::string& imagePath)
 {
 	if (!m_initialized || m_pRoot == nullptr || imagePath.empty())
 		return false;
@@ -776,14 +776,14 @@ bool FairyGuiSystem::CreateSmokeTestImage(const std::string& imagePath)
 	return true;
 }
 
-fairygui::GObject* FairyGuiSystem::FindObjectHandle(int objectHandle) const
+fairygui::GObject* FairyGuiSystemImpl::FindObjectHandle(int objectHandle) const
 {
 	std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.find(objectHandle);
 	return it != m_objectHandles.end() ? it->second.object : nullptr;
 }
 
 
-fairygui::GController* FairyGuiSystem::FindController(int objectHandle, const std::string& controllerName) const
+fairygui::GController* FairyGuiSystemImpl::FindController(int objectHandle, const std::string& controllerName) const
 {
 	fairygui::GObject* object = FindObjectHandle(objectHandle);
 	fairygui::GComponent* component = dynamic_cast<fairygui::GComponent*>(object);
@@ -797,12 +797,12 @@ fairygui::GController* FairyGuiSystem::FindController(int objectHandle, const st
 	return nullptr;
 }
 
-fairygui::GTextInput* FairyGuiSystem::FindTextInput(int objectHandle) const
+fairygui::GTextInput* FairyGuiSystemImpl::FindTextInput(int objectHandle) const
 {
 	return dynamic_cast<fairygui::GTextInput*>(FindObjectHandle(objectHandle));
 }
 
-fairygui::GTextInput* FairyGuiSystem::FindTextInputTarget(fairygui::GObject* target) const
+fairygui::GTextInput* FairyGuiSystemImpl::FindTextInputTarget(fairygui::GObject* target) const
 {
 	while (target != nullptr && target != m_pRoot)
 	{
@@ -814,7 +814,7 @@ fairygui::GTextInput* FairyGuiSystem::FindTextInputTarget(fairygui::GObject* tar
 	return nullptr;
 }
 
-int FairyGuiSystem::FindOwnerHandleForObject(fairygui::GObject* object) const
+int FairyGuiSystemImpl::FindOwnerHandleForObject(fairygui::GObject* object) const
 {
 	if (object == nullptr)
 		return 0;
@@ -836,7 +836,7 @@ int FairyGuiSystem::FindOwnerHandleForObject(fairygui::GObject* object) const
 	return 0;
 }
 
-int FairyGuiSystem::GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object)
+int FairyGuiSystemImpl::GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* object)
 {
 	if (object == nullptr)
 		return 0;
@@ -857,7 +857,7 @@ int FairyGuiSystem::GetOrCreateObjectAlias(int ownerHandle, fairygui::GObject* o
 	return aliasHandle;
 }
 
-int FairyGuiSystem::GetObjectHandleOwner(int objectHandle) const
+int FairyGuiSystemImpl::GetObjectHandleOwner(int objectHandle) const
 {
 	std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.find(objectHandle);
 	if (it == m_objectHandles.end())
@@ -865,7 +865,7 @@ int FairyGuiSystem::GetObjectHandleOwner(int objectHandle) const
 	return it->second.ownerHandle != 0 ? it->second.ownerHandle : objectHandle;
 }
 
-void FairyGuiSystem::RemoveObjectHandleAliases(int objectHandle)
+void FairyGuiSystemImpl::RemoveObjectHandleAliases(int objectHandle)
 {
 	std::vector<int> aliasHandles;
 	for (std::map<int, ObjectHandleInfo>::const_iterator it = m_objectHandles.begin(); it != m_objectHandles.end(); ++it)
@@ -879,7 +879,7 @@ void FairyGuiSystem::RemoveObjectHandleAliases(int objectHandle)
 }
 
 
-bool FairyGuiSystem::CreateConfiguredPackageObject()
+bool FairyGuiSystemImpl::CreateConfiguredPackageObject()
 {
 	if (!m_initialized || m_pRoot == nullptr)
 		return false;

@@ -382,8 +382,11 @@ void ClientManager::Initialize()
     m_pInputManager->Initialize();
 
 #if defined(HELLO_ENABLE_FGUI)
+    FairyGuiSystemStartupContext fairyGuiContext;
+    fairyGuiContext.renderWindow = m_pRenderWindow;
+    fairyGuiContext.sceneManager = m_pSceneManager;
     m_pFairyGuiSystem = new FairyGuiSystem();
-    m_pFairyGuiSystem->Initialize(m_pRenderWindow, m_pSceneManager);
+    m_pFairyGuiSystem->Initialize(fairyGuiContext);
 #endif
 
     m_pDebugDrawer = new DebugDrawer();

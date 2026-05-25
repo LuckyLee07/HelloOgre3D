@@ -2,7 +2,6 @@ local FairyGuiNativeApi = {}
 
 local BACKEND_NAMES = {
 	"FairyGuiRuntime",
-	"GameManager",
 }
 
 local METHOD_ALIASES = {

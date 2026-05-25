@@ -1,6 +1,6 @@
-#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
 
-void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& command)
+void FairyGuiSystemImpl::handleTrianglesCommand(const cocos2d::TrianglesCommand& command)
 {
 	if (m_pManualObject == nullptr || m_screenWidth == 0 || m_screenHeight == 0)
 		return;
@@ -211,7 +211,7 @@ void FairyGuiSystem::handleTrianglesCommand(const cocos2d::TrianglesCommand& com
 	m_pManualObject->end();
 }
 
-void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
+void FairyGuiSystemImpl::handleCustomCommand(const cocos2d::CustomCommand& command)
 {
 	(void)command;
 	++m_currentFrameStats.customCommandCount;
@@ -219,7 +219,7 @@ void FairyGuiSystem::handleCustomCommand(const cocos2d::CustomCommand& command)
 	SyncStencilState();
 }
 
-void FairyGuiSystem::BeginOgreRender()
+void FairyGuiSystemImpl::BeginOgreRender()
 {
 	m_stencilScopes.clear();
 	m_pendingStencilValid = false;
@@ -231,7 +231,7 @@ void FairyGuiSystem::BeginOgreRender()
 		m_pManualObject->clear();
 }
 
-void FairyGuiSystem::EndOgreRender()
+void FairyGuiSystemImpl::EndOgreRender()
 {
 	if (m_pManualObject != nullptr && m_pManualNode != nullptr)
 	{
@@ -240,14 +240,14 @@ void FairyGuiSystem::EndOgreRender()
 	}
 }
 
-void FairyGuiSystem::SyncScissorState()
+void FairyGuiSystemImpl::SyncScissorState()
 {
 	cocos2d::GLView* view = cocos2d::Director::getInstance()->getOpenGLView();
 	m_scissorEnabled = view != nullptr && view->isScissorEnabled();
 	m_scissorRect = view != nullptr ? view->getScissorRect() : cocos2d::Rect::ZERO;
 }
 
-void FairyGuiSystem::SyncStencilState()
+void FairyGuiSystemImpl::SyncStencilState()
 {
 	cocos2d::Renderer* renderer = cocos2d::Director::getInstance()->getRenderer();
 	if (renderer == nullptr)
@@ -276,7 +276,7 @@ void FairyGuiSystem::SyncStencilState()
 	m_stencilRevision = revision;
 }
 
-void FairyGuiSystem::BeginStencilWrite(int depth, bool inverted)
+void FairyGuiSystemImpl::BeginStencilWrite(int depth, bool inverted)
 {
 	m_pendingStencilDepth = depth;
 	m_pendingStencilInverted = inverted;
@@ -285,7 +285,7 @@ void FairyGuiSystem::BeginStencilWrite(int depth, bool inverted)
 	m_pendingStencilPolygons.clear();
 }
 
-void FairyGuiSystem::CollectStencilTriangle(const cocos2d::TrianglesCommand& command)
+void FairyGuiSystemImpl::CollectStencilTriangle(const cocos2d::TrianglesCommand& command)
 {
 	const cocos2d::TrianglesCommand::Triangles& triangles = command.getTriangles();
 	for (int index = 0; index + 2 < triangles.indexCount; index += 3)
@@ -325,7 +325,7 @@ void FairyGuiSystem::CollectStencilTriangle(const cocos2d::TrianglesCommand& com
 	}
 }
 
-void FairyGuiSystem::FinalizeStencilScope(int depth)
+void FairyGuiSystemImpl::FinalizeStencilScope(int depth)
 {
 	TrimStencilScopes(depth - 1);
 
@@ -339,7 +339,7 @@ void FairyGuiSystem::FinalizeStencilScope(int depth)
 	m_pendingStencilPolygons.clear();
 }
 
-void FairyGuiSystem::TrimStencilScopes(int depth)
+void FairyGuiSystemImpl::TrimStencilScopes(int depth)
 {
 	if (depth < 0)
 		depth = 0;
@@ -347,7 +347,7 @@ void FairyGuiSystem::TrimStencilScopes(int depth)
 		m_stencilScopes.pop_back();
 }
 
-void FairyGuiSystem::BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const
+void FairyGuiSystemImpl::BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects) const
 {
 	if (m_stencilScopes.empty())
 	{
@@ -395,18 +395,18 @@ void FairyGuiSystem::BuildActiveClipRects(std::vector<cocos2d::Rect>& clipRects)
 }
 
 
-void FairyGuiSystem::ResetFrameRenderStats()
+void FairyGuiSystemImpl::ResetFrameRenderStats()
 {
 	m_currentFrameStats = FrameRenderStats();
 }
 
-void FairyGuiSystem::RecordStencilCommand(int triangleCount)
+void FairyGuiSystemImpl::RecordStencilCommand(int triangleCount)
 {
 	++m_currentFrameStats.stencilCommandCount;
 	m_currentFrameStats.stencilTriangleCount += triangleCount > 0 ? triangleCount : 0;
 }
 
-void FairyGuiSystem::RecordCpuClipWork(int sourceTriangleCount, int outputTriangleCount, int fragmentCount, int stencilScopeCount, int stencilPolygonCount)
+void FairyGuiSystemImpl::RecordCpuClipWork(int sourceTriangleCount, int outputTriangleCount, int fragmentCount, int stencilScopeCount, int stencilPolygonCount)
 {
 	FrameRenderStats& stats = m_currentFrameStats;
 	stats.cpuClipSourceTriangleCount += sourceTriangleCount > 0 ? sourceTriangleCount : 0;
@@ -417,7 +417,7 @@ void FairyGuiSystem::RecordCpuClipWork(int sourceTriangleCount, int outputTriang
 	stats.stencilClipPolygonCount += stencilPolygonCount > 0 ? stencilPolygonCount : 0;
 }
 
-void FairyGuiSystem::RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped)
+void FairyGuiSystemImpl::RecordDrawCommand(cocos2d::Texture2D* texture, const std::string& materialName, int vertexCount, int submittedTriangleCount, int drawTriangleCount, bool clipped)
 {
 	FrameRenderStats& stats = m_currentFrameStats;
 	submittedTriangleCount = submittedTriangleCount > 0 ? submittedTriangleCount : 0;
@@ -457,13 +457,13 @@ void FairyGuiSystem::RecordDrawCommand(cocos2d::Texture2D* texture, const std::s
 	stats.textureCommandCounts[textureSource] += 1;
 }
 
-void FairyGuiSystem::FinalizeFrameRenderStats()
+void FairyGuiSystemImpl::FinalizeFrameRenderStats()
 {
 	m_lastFrameStats = m_currentFrameStats;
 	m_lastFrameStats.detailString = BuildFrameRenderDetailString(m_lastFrameStats);
 }
 
-std::string FairyGuiSystem::BuildFrameRenderDetailString(const FrameRenderStats& stats) const
+std::string FairyGuiSystemImpl::BuildFrameRenderDetailString(const FrameRenderStats& stats) const
 {
 	std::ostringstream stream;
 	stream << "draw=" << stats.drawCommandCount
@@ -493,7 +493,7 @@ std::string FairyGuiSystem::BuildFrameRenderDetailString(const FrameRenderStats&
 	return stream.str();
 }
 
-bool FairyGuiSystem::IsHardwareStencilSupported() const
+bool FairyGuiSystemImpl::IsHardwareStencilSupported() const
 {
 	Ogre::Root* root = Ogre::Root::getSingletonPtr();
 	Ogre::RenderSystem* renderSystem = root != nullptr ? root->getRenderSystem() : nullptr;
@@ -501,12 +501,12 @@ bool FairyGuiSystem::IsHardwareStencilSupported() const
 	return capabilities != nullptr && capabilities->hasCapability(Ogre::RSC_HWSTENCIL);
 }
 
-std::string FairyGuiSystem::GetStencilBackendString() const
+std::string FairyGuiSystemImpl::GetStencilBackendString() const
 {
 	return "shapeCpu";
 }
 
-std::string FairyGuiSystem::GetStencilBackendDetailString() const
+std::string FairyGuiSystemImpl::GetStencilBackendDetailString() const
 {
 	std::ostringstream stream;
 	stream << "backend=" << GetStencilBackendString()
@@ -515,7 +515,7 @@ std::string FairyGuiSystem::GetStencilBackendDetailString() const
 	return stream.str();
 }
 
-std::string FairyGuiSystem::GetMaterialDetailString() const
+std::string FairyGuiSystemImpl::GetMaterialDetailString() const
 {
 	std::ostringstream stream;
 	bool first = true;
@@ -529,7 +529,7 @@ std::string FairyGuiSystem::GetMaterialDetailString() const
 	return stream.str();
 }
 
-std::string FairyGuiSystem::GetTextureDetailString() const
+std::string FairyGuiSystemImpl::GetTextureDetailString() const
 {
 	std::ostringstream stream;
 	bool first = true;
@@ -543,7 +543,7 @@ std::string FairyGuiSystem::GetTextureDetailString() const
 	return stream.str();
 }
 
-const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
+const std::string& FairyGuiSystemImpl::GetMaterialName(cocos2d::Texture2D* texture)
 {
 	if (texture == nullptr || texture->getImageData().empty())
 	{
@@ -581,7 +581,7 @@ const std::string& FairyGuiSystem::GetMaterialName(cocos2d::Texture2D* texture)
 	return m_materialNames[texture];
 }
 
-std::string FairyGuiSystem::GetTextureSourceKey(cocos2d::Texture2D* texture) const
+std::string FairyGuiSystemImpl::GetTextureSourceKey(cocos2d::Texture2D* texture) const
 {
 	if (texture == nullptr)
 		return std::string();
@@ -594,7 +594,7 @@ std::string FairyGuiSystem::GetTextureSourceKey(cocos2d::Texture2D* texture) con
 	return stream.str();
 }
 
-std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
+std::string FairyGuiSystemImpl::CreateOgreTexture(cocos2d::Texture2D* texture)
 {
 	std::map<cocos2d::Texture2D*, std::string>::iterator it = m_textureNames.find(texture);
 	if (it != m_textureNames.end())
@@ -637,7 +637,7 @@ std::string FairyGuiSystem::CreateOgreTexture(cocos2d::Texture2D* texture)
 	}
 }
 
-void FairyGuiSystem::DestroyOgreResources()
+void FairyGuiSystemImpl::DestroyOgreResources()
 {
 	if (m_pManualObject != nullptr && m_pSceneManager != nullptr)
 	{

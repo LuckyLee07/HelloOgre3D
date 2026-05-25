@@ -52,7 +52,7 @@ manager/fairygui/FairyGuiManager.lua
   - 自动解绑
   |
   v
-GameManager tolua API
+FairyGuiRuntime tolua API
   |
   v
 runtime/ui/fairygui/FairyGuiSystem
@@ -140,7 +140,7 @@ runtime/ui/fairygui/FairyGuiSystem
 - 已增加最小 click 事件桥：
   - `BaseFairyGuiView:AddClick(childPath, callback)`
   - `FairyGuiManager:AddClick(...)`
-  - `GameManager:addFairyGuiClickListener(...)`
+  - `FairyGuiRuntime:AddClickListener(...)`
   - `FairyGuiSystem::AddObjectHandleClickListener(...)`
 - 已增加通用事件桥：
   - `AddChanged`

@@ -37,6 +37,7 @@ public:
 	long long getTimeInMillis();
 	Ogre::Real getTimeInSeconds();
 	std::string buildRuntimeResourceDump(int maxEntriesPerType);
+	//tolua_end
 
 	bool isFairyGuiAvailable();
 	const char* loadFairyGuiPackage(const char* packagePath);
@@ -128,26 +129,25 @@ public:
 	int getFairyGuiListSelectedIndex(int objectHandle);
 	bool setFairyGuiListVirtual(int objectHandle, bool loop);
 	bool refreshFairyGuiList(int objectHandle);
-		bool scrollFairyGuiListToView(int objectHandle, int itemIndex);
-		bool centerFairyGuiObject(int objectHandle, bool restraint);
-		bool injectFairyGuiMouseMove(int x, int y);
-		bool injectFairyGuiMouseDown(int x, int y, int button);
-		bool injectFairyGuiMouseUp(int x, int y, int button);
-		bool injectFairyGuiMouseWheel(int x, int y, int wheelDelta);
-		bool injectFairyGuiClick(int x, int y, int button);
-		bool injectFairyGuiKeyPressed(int keyCode, int keyText);
-		bool injectFairyGuiKeyReleased(int keyCode, int keyText);
-		bool injectFairyGuiImeCompositionText(const char* text);
-		bool injectFairyGuiImeCommitText(const char* text);
-		bool clearFairyGuiImeComposition();
-		const char* getFairyGuiImeDebugString();
-		int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
-		int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
-		int addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId);
-		bool removeFairyGuiListener(int bindingId);
+	bool scrollFairyGuiListToView(int objectHandle, int itemIndex);
+	bool centerFairyGuiObject(int objectHandle, bool restraint);
+	bool injectFairyGuiMouseMove(int x, int y);
+	bool injectFairyGuiMouseDown(int x, int y, int button);
+	bool injectFairyGuiMouseUp(int x, int y, int button);
+	bool injectFairyGuiMouseWheel(int x, int y, int wheelDelta);
+	bool injectFairyGuiClick(int x, int y, int button);
+	bool injectFairyGuiKeyPressed(int keyCode, int keyText);
+	bool injectFairyGuiKeyReleased(int keyCode, int keyText);
+	bool injectFairyGuiImeCompositionText(const char* text);
+	bool injectFairyGuiImeCommitText(const char* text);
+	bool clearFairyGuiImeComposition();
+	const char* getFairyGuiImeDebugString();
+	int addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId);
+	int addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId);
+	int addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId);
+	bool removeFairyGuiListener(int bindingId);
 	bool removeFairyGuiObject(int objectHandle);
 	void clearFairyGuiObjects();
-	//tolua_end
 
 	Ogre::Camera* getCamera();
 	Ogre::SceneNode* getRootSceneNode();

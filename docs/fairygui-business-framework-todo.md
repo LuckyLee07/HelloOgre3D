@@ -27,7 +27,7 @@
 - [x] 官方 FairyGUI-cocos2dx/libfairygui 已接入，并通过 `cocos-lite` 适配到 Ogre。
 - [x] `FairyGuiSystem` 已接入 `ClientManager` 生命周期，支持 package 加载、对象 handle、事件桥接、输入转发和 Ogre 绘制。
 - [x] Lua 侧已有 `FairyGuiManager.lua`，支持 `OpenUI/CloseUI/CloseAll`、registry、View、MVC、Ctrl 业务入口。
-- [x] Lua 侧 native 入口已通过 `FairyGuiNativeApi` 收敛，默认优先 `FairyGuiRuntime`，`GameManager` 仅作为旧接口兼容 fallback。
+- [x] Lua 侧 native 入口已通过 `FairyGuiNativeApi` 收敛，默认只走 `FairyGuiRuntime`，不再回退 `GameManager`。
 - [x] 基础生命周期已具备：`OnCreate/OnReopen/OnShow/OnHide/OnClose/OnRemove/OnDestroy/OnResize`。
 - [x] 基础层级已具备：`Background/Normal/Popup/Guide/Top/Toast`、layer root、sorting order、modal mask、UI stack、popup stack。
 - [x] 基础资源策略已具备：package 缓存、refCount、`cache` 隐藏复用、关闭时可卸载 package。

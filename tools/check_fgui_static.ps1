@@ -34,18 +34,16 @@ function Test-FairyGuiNativeEntryGuard {
 
 	$nativeApiText = Get-Content -LiteralPath $nativeApiPath -Raw
 	$runtimeIndex = $nativeApiText.IndexOf('"FairyGuiRuntime"')
-	$gameManagerIndex = $nativeApiText.IndexOf('"GameManager"')
-	if ($runtimeIndex -lt 0 -or $gameManagerIndex -lt 0 -or $runtimeIndex -gt $gameManagerIndex) {
-		throw "FairyGuiNativeApi.lua must resolve FairyGuiRuntime before GameManager"
+	if ($runtimeIndex -lt 0) {
+		throw "FairyGuiNativeApi.lua must resolve FairyGuiRuntime"
+	}
+	if ($nativeApiText.IndexOf("GameManager") -ge 0) {
+		throw "FairyGuiNativeApi.lua must not use GameManager as a FairyGUI native backend"
 	}
 
 	$violations = @()
 	$fguiLuaFiles = Get-ChildItem -Recurse -File $fguiLuaRoot -Filter "*.lua"
 	foreach ($file in $fguiLuaFiles) {
-		if ($file.Name -eq "FairyGuiNativeApi.lua") {
-			continue
-		}
-
 		$matches = Select-String -LiteralPath $file.FullName -Pattern "GameManager" -SimpleMatch
 		foreach ($match in $matches) {
 			$violations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
@@ -55,6 +53,321 @@ function Test-FairyGuiNativeEntryGuard {
 	if ($violations.Count -gt 0) {
 		throw "FGUI manager modules must use FairyGuiNativeApi instead of GameManager directly:`n$($violations -join "`n")"
 	}
+}
+
+function Test-FairyGuiGameManagerLegacyBindingGuard {
+	Write-Host "[FGUI-CHECK] GameManager legacy binding guard"
+
+	$gameManagerHeaderPath = Join-Path $RepoRoot "src\HelloOgre3D\game\GameManager.h"
+	$gameToLuaPath = Join-Path $RepoRoot "src\HelloOgre3D\game\GameToLua.cpp"
+
+	$headerText = Get-Content -LiteralPath $gameManagerHeaderPath -Raw
+	$beginIndex = $headerText.IndexOf("//tolua_begin")
+	$endIndex = $headerText.IndexOf("//tolua_end", $beginIndex)
+	if ($beginIndex -lt 0 -or $endIndex -lt 0 -or $endIndex -lt $beginIndex) {
+		throw "GameManager.h tolua export block not found"
+	}
+
+	$exportBlock = $headerText.Substring($beginIndex, $endIndex - $beginIndex)
+	if ($exportBlock.IndexOf("FairyGui") -ge 0) {
+		throw "GameManager tolua export block must not expose FairyGUI APIs; use RuntimeToLua/FairyGuiRuntime"
+	}
+
+	if (-not (Test-Path -LiteralPath $gameToLuaPath)) {
+		throw "GameToLua.cpp not found"
+	}
+
+	$bindingViolations = Select-String -LiteralPath $gameToLuaPath -Pattern 'tolua_function\(tolua_S,".*FairyGui'
+	if ($bindingViolations.Count -gt 0) {
+		$lines = $bindingViolations | ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" }
+		throw "GameToLua.cpp must not register FairyGUI APIs on GameManager:`n$($lines -join "`n")"
+	}
+}
+
+function Test-FairyGuiRuntimeOwnershipGuard {
+	Write-Host "[FGUI-CHECK] Runtime ownership guard"
+
+	$runtimeFairyGuiRoot = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui"
+	$runtimeToLuaPkgPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\RuntimeToLua.pkg"
+	$violations = @()
+
+	$runtimeFiles = Get-ChildItem -Recurse -File $runtimeFairyGuiRoot -Include "*.h", "*.cpp", "*.pkg"
+	if (Test-Path -LiteralPath $runtimeToLuaPkgPath) {
+		$runtimeFiles += Get-Item -LiteralPath $runtimeToLuaPkgPath
+	}
+
+	foreach ($file in $runtimeFiles) {
+		$matches = Select-String -LiteralPath $file.FullName -Pattern "GameManager", "ClientManager" -SimpleMatch
+		foreach ($match in $matches) {
+			$violations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+		}
+	}
+
+	if ($violations.Count -gt 0) {
+		throw "FairyGUI runtime code must not depend on game/client manager layers:`n$($violations -join "`n")"
+	}
+}
+
+function Test-FairyGuiPublicHeaderFacadeGuard {
+	Write-Host "[FGUI-CHECK] Public header facade guard"
+
+	$headerPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui\FairyGuiSystem.h"
+	if (-not (Test-Path -LiteralPath $headerPath)) {
+		throw "FairyGuiSystem.h not found"
+	}
+
+	$headerText = Get-Content -LiteralPath $headerPath -Raw
+	$forbiddenPatterns = @(
+		"namespace Ogre",
+		"Ogre::",
+		"#include ""Ogre",
+		"#include <Ogre",
+		"cocos2d",
+		"fairygui::",
+		"RenderCommandSink",
+		"GObject",
+		"GRoot"
+	)
+
+	$violations = @()
+	foreach ($pattern in $forbiddenPatterns) {
+		if ($headerText.IndexOf($pattern) -ge 0) {
+			$violations += $pattern
+		}
+	}
+
+	if ($violations.Count -gt 0) {
+		throw "FairyGuiSystem.h must stay a runtime facade and not expose engine/UI implementation details: $($violations -join ', ')"
+	}
+	if ($headerText.IndexOf("struct FairyGuiSystemStartupContext") -lt 0) {
+		throw "FairyGuiSystem.h must expose FairyGuiSystemStartupContext as the opaque startup boundary"
+	}
+	if ($headerText.IndexOf("bool Initialize(const FairyGuiSystemStartupContext& context)") -lt 0) {
+		throw "FairyGuiSystem.h must initialize through FairyGuiSystemStartupContext"
+	}
+	if ($headerText.IndexOf("FairyGuiSystemImpl* m_impl") -lt 0) {
+		throw "FairyGuiSystem.h must keep implementation details behind FairyGuiSystemImpl"
+	}
+}
+
+function Test-FairyGuiLuaFrameworkGuard {
+	Write-Host "[FGUI-CHECK] Lua framework facade guard"
+
+	$compatManagerPath = Join-Path $RepoRoot "bin\res\scripts\manager\FairyGuiManager.lua"
+	$fguiLuaRoot = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui"
+	$uiRoot = Join-Path $RepoRoot "bin\res\scripts\ui"
+
+	if (-not (Test-Path -LiteralPath $compatManagerPath)) {
+		throw "Compatibility FairyGuiManager.lua not found"
+	}
+	$compatText = (Get-Content -LiteralPath $compatManagerPath -Raw).Trim()
+	if ($compatText -ne 'return require("res.scripts.manager.fairygui.FairyGuiManager")') {
+		throw "bin/res/scripts/manager/FairyGuiManager.lua must remain a compatibility facade"
+	}
+
+	$managerFacadePath = Join-Path $fguiLuaRoot "FairyGuiManager.lua"
+	$managerText = Get-Content -LiteralPath $managerFacadePath -Raw
+	$requiredModules = @(
+		"FairyGuiProfiler",
+		"FairyGuiLifecycle",
+		"FairyGuiPackage",
+		"FairyGuiServices",
+		"FairyGuiLayers",
+		"FairyGuiEvents",
+		"FairyGuiLists",
+		"FairyGuiControls",
+		"FairyGuiProbes"
+	)
+	foreach ($module in $requiredModules) {
+		$requireText = "require(""res.scripts.manager.fairygui.$module"")"
+		if ($managerText.IndexOf($requireText) -lt 0) {
+			throw "FairyGuiManager.lua must load $module through the central facade"
+		}
+	}
+
+	$uiViolations = @()
+	if (Test-Path -LiteralPath $uiRoot) {
+		$uiFiles = Get-ChildItem -Recurse -File $uiRoot -Filter "*.lua"
+		foreach ($file in $uiFiles) {
+			$matches = Select-String -LiteralPath $file.FullName -Pattern "FairyGuiNativeApi", "NativeApi", "FairyGuiRuntime", "GameManager" -SimpleMatch
+			foreach ($match in $matches) {
+				$uiViolations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+			}
+		}
+	}
+	if ($uiViolations.Count -gt 0) {
+		throw "Business UI scripts must not call native backends directly; use FairyGuiManager/Ctrl/View/Model:`n$($uiViolations -join "`n")"
+	}
+
+	$viewRoot = Join-Path $uiRoot "views"
+	$viewViolations = @()
+	if (Test-Path -LiteralPath $viewRoot) {
+		$viewFiles = Get-ChildItem -Recurse -File $viewRoot -Filter "*.lua"
+		foreach ($file in $viewFiles) {
+			$matches = Select-String -LiteralPath $file.FullName -Pattern "FairyGuiManager:CreateObject", "FairyGuiManager.CreateObject", "FairyGuiManager:LoadPackage", "FairyGuiManager.LoadPackage" -SimpleMatch
+			foreach ($match in $matches) {
+				$viewViolations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+			}
+		}
+	}
+	if ($viewViolations.Count -gt 0) {
+		throw "Business view scripts must enter through registry/Open/Ctrl/View flow instead of manual package/object creation:`n$($viewViolations -join "`n")"
+	}
+
+	$profilerPath = Join-Path $fguiLuaRoot "FairyGuiProfiler.lua"
+	$profilerText = Get-Content -LiteralPath $profilerPath -Raw
+	$requiredSnapshotFields = @(
+		"health = health",
+		"perf = perf",
+		"render = render",
+		"eventStats = eventStats",
+		"resourceWarnings = warnings",
+		"resourceFallbacks = fallbacks",
+		"layerSummary = self:CollectLayerSummary()",
+		"bindingSummary = self:CollectBindingSummary",
+		"packageSummary = self:CollectPackageSummary",
+		"function FairyGuiProfiler:BuildAiDebugPanelLines",
+		"function FairyGuiProfiler:ShowAiDebugPanel"
+	)
+	foreach ($field in $requiredSnapshotFields) {
+		if ($profilerText.IndexOf($field) -lt 0) {
+			throw "FairyGuiProfiler.lua debug snapshot/panel is missing required production diagnostic field: $field"
+		}
+	}
+}
+
+function Assert-TextContains {
+	param(
+		[string]$Title,
+		[string]$Text,
+		[string[]]$Needles
+	)
+
+	foreach ($needle in $Needles) {
+		if ($Text.IndexOf($needle) -lt 0) {
+			throw "$Title missing required marker: $needle"
+		}
+	}
+}
+
+function Test-FairyGuiProductionFeatureGuard {
+	Write-Host "[FGUI-CHECK] Production feature coverage guard"
+
+	$selfTestPath = Join-Path $RepoRoot "tools\run_fgui_selftest.ps1"
+	$samplePath = Join-Path $RepoRoot "bin\res\scripts\samples\fgui_init.lua"
+	$managerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiManager.lua"
+	$controlsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiControls.lua"
+	$listsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLists.lua"
+	$packagePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiPackage.lua"
+	$profilerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiProfiler.lua"
+	$renderPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui\FairyGuiSystemRender.cpp"
+
+	$selfTestText = Get-Content -LiteralPath $selfTestPath -Raw
+	Assert-TextContains "run_fgui_selftest.ps1" $selfTestText @(
+		'"BusinessFlow"',
+		'"ComplexControls"',
+		'"VirtualList"',
+		'"Tree"',
+		'"ResourcePolicy"',
+		'"ResourceFallback"',
+		'"TextInputPolicy"',
+		'"Pressure"',
+		'"LayerBoundary"',
+		'"Mask"',
+		'"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"',
+		'"HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST"',
+		'"HELLO_FGUI_VIRTUAL_LIST_SELF_TEST"',
+		'"HELLO_FGUI_TREE_SELF_TEST"',
+		'"HELLO_FGUI_RESOURCE_POLICY_SELF_TEST"',
+		'"HELLO_FGUI_RESOURCE_FALLBACK_SELF_TEST"',
+		'"HELLO_FGUI_TEXT_INPUT_POLICY_SELF_TEST"',
+		'"HELLO_FGUI_PRESSURE_SELF_TEST"',
+		'"HELLO_FGUI_LAYER_BOUNDARY_SELF_TEST"',
+		'"HELLO_FGUI_MASK_SELF_TEST"'
+	)
+
+	$sampleText = Get-Content -LiteralPath $samplePath -Raw
+	Assert-TextContains "fgui_init.lua" $sampleText @(
+		"function FGUI_RunComplexControlsSelfTest",
+		"function FGUI_RunVirtualListSelfTest",
+		"function FGUI_RunTreeSelfTest",
+		"function FGUI_RunBusinessFlowSelfTest",
+		"function FGUI_RunResourcePolicySelfTest",
+		"function FGUI_RunResourceFallbackSelfTest",
+		"function FGUI_RunTextInputPolicySelfTest",
+		"function FGUI_RunPressureSelfTest",
+		"function FGUI_RunLayerBoundarySelfTest",
+		"FGUI_RunDebugPanelSelfTest",
+		"FGUI_RunAiDebugPanelSelfTest",
+		"cpuClipSourceTriangleCount",
+		"stencilClipPolygonCount",
+		"stencilBackend"
+	)
+
+	$managerText = Get-Content -LiteralPath $managerPath -Raw
+	Assert-TextContains "FairyGuiManager.lua" $managerText @(
+		"function FairyGuiManager:Open",
+		"function FairyGuiManager:OpenMvcUI",
+		"function FairyGuiManager:OpenView",
+		"function FairyGuiManager:CloseByFilter",
+		"function FairyGuiManager:CloseScene",
+		"function FairyGuiManager:SetCurrentScene",
+		"function FairyGuiManager:PreloadScene",
+		"function FairyGuiManager:UnloadPackageGroup",
+		"function FairyGuiManager:UnloadPackageTag",
+		"function FairyGuiManager:SetCachePolicy",
+		"function FairyGuiManager:RecordResourceFallback",
+		"function FairyGuiManager:GetResourceFallbacks",
+		"function FairyGuiManager:SetTextInputPolicy",
+		"function FairyGuiManager:RegisterFocusOrder",
+		"function FairyGuiManager:FocusNext",
+		"function FairyGuiManager:ShowDebugPanel",
+		"function FairyGuiManager:ShowAiDebugPanel"
+	)
+
+	$controlsText = Get-Content -LiteralPath $controlsPath -Raw
+	Assert-TextContains "FairyGuiControls.lua" $controlsText @(
+		"function FairyGuiControls:SetSliderValue",
+		"function FairyGuiControls:SetProgressBarValue",
+		"function FairyGuiControls:SetComboBoxSelectedIndex",
+		"function FairyGuiControls:SetComboBoxValue",
+		"function FairyGuiControls:SetTextInputPolicy",
+		"function FairyGuiControls:RegisterFocusOrder",
+		"function FairyGuiControls:FocusNext"
+	)
+
+	$listsText = Get-Content -LiteralPath $listsPath -Raw
+	Assert-TextContains "FairyGuiLists.lua" $listsText @(
+		"function FairyGuiLists:SetVirtualListData",
+		"function FairyGuiLists:SetTreeData",
+		"function FairyGuiLists:GetListDebugStats"
+	)
+
+	$packageText = Get-Content -LiteralPath $packagePath -Raw
+	Assert-TextContains "FairyGuiPackage.lua" $packageText @(
+		"function FairyGuiPackage:PreloadScene",
+		"function FairyGuiPackage:UnloadPackageGroup",
+		"function FairyGuiPackage:UnloadPackageTag",
+		"function FairyGuiPackage:RecordResourceFallback"
+	)
+
+	$profilerText = Get-Content -LiteralPath $profilerPath -Raw
+	Assert-TextContains "FairyGuiProfiler.lua" $profilerText @(
+		"stencilBackend",
+		"hardwareStencilSupported",
+		"cpuClipSourceTriangleCount",
+		"stencilClipPolygonCount",
+		"function FairyGuiProfiler:BuildDebugPanelLines",
+		"function FairyGuiProfiler:BuildAiDebugPanelLines"
+	)
+
+	$renderText = Get-Content -LiteralPath $renderPath -Raw
+	Assert-TextContains "FairyGuiSystemRender.cpp" $renderText @(
+		"RecordCpuClipWork",
+		"BuildFrameRenderDetailString",
+		"GetStencilBackendString",
+		"IsHardwareStencilSupported"
+	)
 }
 
 Push-Location $RepoRoot
@@ -92,6 +405,11 @@ try {
 	}
 
 	Test-FairyGuiNativeEntryGuard
+	Test-FairyGuiGameManagerLegacyBindingGuard
+	Test-FairyGuiRuntimeOwnershipGuard
+	Test-FairyGuiPublicHeaderFacadeGuard
+	Test-FairyGuiLuaFrameworkGuard
+	Test-FairyGuiProductionFeatureGuard
 
 	Write-Host "[FGUI-CHECK] static checks passed."
 } finally {

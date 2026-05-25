@@ -325,8 +325,9 @@ Lua Binding Adapter
 - [x] 2026-05-25：`FairyGuiLuaApi` 构造依赖从 `ClientManager*` 收缩为 `FairyGuiSystem*`，runtime Lua bridge 不再反向认识 game manager 汇聚对象。
 - [x] 2026-05-25：真实键鼠输入链路改为 `GameManager -> FairyGuiSystem`，Lua 注入、自测和兼容 tolua API 继续走 `FairyGuiLuaApi`，避免 runtime 输入被 Lua bridge 概念污染。
 - [x] 2026-05-25：Lua 侧新增 `FairyGuiNativeApi` 作为唯一 native facade，`manager/fairygui` 子模块不再直接依赖 `GameManager:*FairyGui*`，后续切换到 `RuntimeToLua` 只需替换 facade 后端。
-- [x] 2026-05-25：`RuntimeToLua.pkg` 生成 `RuntimeToLua.cpp`，`GameManager::InitLuaEnv` 注册 `FairyGuiRuntime` 全局对象；Lua facade 默认优先走 runtime 后端，`GameManager` 仅作为旧接口 fallback。
+- [x] 2026-05-25：`RuntimeToLua.pkg` 生成 `RuntimeToLua.cpp`，`GameManager::InitLuaEnv` 注册 `FairyGuiRuntime` 全局对象；Lua facade 默认只走 runtime 后端，`GameManager` 不再作为 FGUI Lua fallback。
 - [x] 2026-05-25：FGUI Health/DebugPanel/selftest 显式检查 native backend 为 `FairyGuiRuntime`，`tools/check_fgui_static.ps1` 增加入口护栏，阻止 `manager/fairygui` 子模块直接回退 `GameManager`。
+- [x] 2026-05-25：`GameManager` tolua 导出移除 `*FairyGui*` API，旧函数仅保留为 C++ 内部过渡转发；新增 FGUI Lua API 必须走 `RuntimeToLua.pkg`。
 - [ ] 后续新增 FGUI Lua API 继续按分组落到 adapter 对应文件；Lua 导出名和 generated binding 边界保持兼容。
 
 ### 2026-05-25 FairyGuiSystem 内部实现拆分
@@ -337,6 +338,8 @@ Lua Binding Adapter
 - [x] 新增 `FairyGuiSystemInput.cpp`，承接鼠标、键盘、TextInput caret、IME hook、候选窗定位和输入坐标转换。
 - [x] 新增 `FairyGuiSystemRender.cpp`，承接 Ogre manual object 渲染、scissor/stencil、CPU clip、frame render stats、material/texture 管理和资源销毁。
 - [x] 新增 `FairyGuiSystemInternal.h` 收口拆分后共享的 FairyGUI/Ogre include 与内部 helper，避免 public facade 继续膨胀。
+- [x] 2026-05-25：`FairyGuiSystem.h` 收缩为纯 runtime facade，初始化改走 `FairyGuiSystemStartupContext`，public header 不再暴露 FairyGUI/cocos/Ogre 细节类型。
+- [x] 2026-05-25：`tools/check_fgui_static.ps1` 增加 public header facade guard、Lua framework facade guard 和 production feature coverage guard，防止 C++/Lua 入口边界回流。
 - [x] 重新生成 VS2017 工程，确认新增 cpp 已进入 `HelloOgre3D.vcxproj`。
 - [x] VS2017 Debug|x64 编译通过。
 

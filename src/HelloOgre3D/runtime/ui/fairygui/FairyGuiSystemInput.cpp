@@ -1,6 +1,6 @@
-#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
 
-bool FairyGuiSystem::InjectMouseMove(int x, int y)
+bool FairyGuiSystemImpl::InjectMouseMove(int x, int y)
 {
 	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
 		return false;
@@ -21,7 +21,7 @@ bool FairyGuiSystem::InjectMouseMove(int x, int y)
 	return IsMouseOnUi(mouseX, mouseY) || m_leftMouseDownOnUi;
 }
 
-bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
+bool FairyGuiSystemImpl::InjectMouseDown(int x, int y, int button)
 {
 	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
 		return false;
@@ -52,7 +52,7 @@ bool FairyGuiSystem::InjectMouseDown(int x, int y, int button)
 	return mouseOnUi;
 }
 
-bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
+bool FairyGuiSystemImpl::InjectMouseUp(int x, int y, int button)
 {
 	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr)
 		return false;
@@ -92,7 +92,7 @@ bool FairyGuiSystem::InjectMouseUp(int x, int y, int button)
 	return consumed;
 }
 
-bool FairyGuiSystem::InjectMouseWheel(int x, int y, int wheelDelta)
+bool FairyGuiSystemImpl::InjectMouseWheel(int x, int y, int wheelDelta)
 {
 	if (!m_initialized || m_pRoot == nullptr || m_pRoot->getInputProcessor() == nullptr || wheelDelta == 0)
 		return false;
@@ -118,27 +118,27 @@ bool FairyGuiSystem::InjectMouseWheel(int x, int y, int wheelDelta)
 	return mouseOnUi;
 }
 
-bool FairyGuiSystem::InjectLogicalMouseMove(int x, int y)
+bool FairyGuiSystemImpl::InjectLogicalMouseMove(int x, int y)
 {
 	return InjectMouseMove(ToRawInputX(x), ToRawInputY(y));
 }
 
-bool FairyGuiSystem::InjectLogicalMouseDown(int x, int y, int button)
+bool FairyGuiSystemImpl::InjectLogicalMouseDown(int x, int y, int button)
 {
 	return InjectMouseDown(ToRawInputX(x), ToRawInputY(y), button);
 }
 
-bool FairyGuiSystem::InjectLogicalMouseUp(int x, int y, int button)
+bool FairyGuiSystemImpl::InjectLogicalMouseUp(int x, int y, int button)
 {
 	return InjectMouseUp(ToRawInputX(x), ToRawInputY(y), button);
 }
 
-bool FairyGuiSystem::InjectLogicalMouseWheel(int x, int y, int wheelDelta)
+bool FairyGuiSystemImpl::InjectLogicalMouseWheel(int x, int y, int wheelDelta)
 {
 	return InjectMouseWheel(ToRawInputX(x), ToRawInputY(y), wheelDelta);
 }
 
-bool FairyGuiSystem::InjectKeyPressed(int keyCode, int keyText)
+bool FairyGuiSystemImpl::InjectKeyPressed(int keyCode, int keyText)
 {
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input == nullptr)
@@ -158,7 +158,7 @@ bool FairyGuiSystem::InjectKeyPressed(int keyCode, int keyText)
 	return ApplyTextInputKey(input, keyCode, keyText);
 }
 
-bool FairyGuiSystem::InjectKeyReleased(int keyCode, int keyText)
+bool FairyGuiSystemImpl::InjectKeyReleased(int keyCode, int keyText)
 {
 	(void)keyText;
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
@@ -172,7 +172,7 @@ bool FairyGuiSystem::InjectKeyReleased(int keyCode, int keyText)
 	return true;
 }
 
-bool FairyGuiSystem::FocusTextInput(fairygui::GTextInput* input)
+bool FairyGuiSystemImpl::FocusTextInput(fairygui::GTextInput* input)
 {
 	if (input == nullptr)
 	{
@@ -197,7 +197,7 @@ bool FairyGuiSystem::FocusTextInput(fairygui::GTextInput* input)
 	return true;
 }
 
-bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText)
+bool FairyGuiSystemImpl::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode, int keyText)
 {
 	if (input == nullptr)
 		return false;
@@ -257,7 +257,7 @@ bool FairyGuiSystem::ApplyTextInputKey(fairygui::GTextInput* input, int keyCode,
 	return true;
 }
 
-bool FairyGuiSystem::ApplyTextInputUtf8Text(fairygui::GTextInput* input, const std::string& committedText)
+bool FairyGuiSystemImpl::ApplyTextInputUtf8Text(fairygui::GTextInput* input, const std::string& committedText)
 {
 	if (input == nullptr || committedText.empty())
 		return false;
@@ -278,7 +278,7 @@ bool FairyGuiSystem::ApplyTextInputUtf8Text(fairygui::GTextInput* input, const s
 	return true;
 }
 
-void FairyGuiSystem::EndImeComposition(bool countEnd)
+void FairyGuiSystemImpl::EndImeComposition(bool countEnd)
 {
 	if (countEnd && (m_imeStats.compositionActive || !m_imeStats.compositionText.empty() || m_imeStats.candidateOpen))
 		++m_imeStats.compositionEndCount;
@@ -289,7 +289,7 @@ void FairyGuiSystem::EndImeComposition(bool countEnd)
 	m_imeStats.candidateSelection = -1;
 }
 
-bool FairyGuiSystem::InjectImeCompositionText(const std::string& text)
+bool FairyGuiSystemImpl::InjectImeCompositionText(const std::string& text)
 {
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input == nullptr)
@@ -307,7 +307,7 @@ bool FairyGuiSystem::InjectImeCompositionText(const std::string& text)
 	return true;
 }
 
-bool FairyGuiSystem::InjectImeCommitText(const std::string& text)
+bool FairyGuiSystemImpl::InjectImeCommitText(const std::string& text)
 {
 	fairygui::GTextInput* input = FindTextInput(m_focusedObjectHandle);
 	if (input == nullptr)
@@ -324,14 +324,14 @@ bool FairyGuiSystem::InjectImeCommitText(const std::string& text)
 	return ApplyTextInputUtf8Text(input, text);
 }
 
-bool FairyGuiSystem::ClearImeCompositionText()
+bool FairyGuiSystemImpl::ClearImeCompositionText()
 {
 	CancelNativeImeComposition();
 	EndImeComposition(true);
 	return true;
 }
 
-std::string FairyGuiSystem::GetImeDebugString() const
+std::string FairyGuiSystemImpl::GetImeDebugString() const
 {
 	std::ostringstream stream;
 	stream << "active=" << (m_imeStats.compositionActive ? 1 : 0)
@@ -351,7 +351,7 @@ std::string FairyGuiSystem::GetImeDebugString() const
 	return stream.str();
 }
 
-void FairyGuiSystem::InstallNativeImeHook()
+void FairyGuiSystemImpl::InstallNativeImeHook()
 {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	if (m_nativeImeHookInstalled || m_pRenderWindow == nullptr)
@@ -384,14 +384,14 @@ void FairyGuiSystem::InstallNativeImeHook()
 #endif
 }
 
-void FairyGuiSystem::RemoveNativeImeHook()
+void FairyGuiSystemImpl::RemoveNativeImeHook()
 {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	if (!m_nativeImeHookInstalled || m_nativeWindowHandle == nullptr)
 		return;
 
 	HWND hwnd = m_nativeWindowHandle;
-	std::map<HWND, FairyGuiSystem*>::iterator systemIt = g_nativeImeSystemsByWindow.find(hwnd);
+	std::map<HWND, FairyGuiSystemImpl*>::iterator systemIt = g_nativeImeSystemsByWindow.find(hwnd);
 	if (systemIt != g_nativeImeSystemsByWindow.end() && systemIt->second != this)
 	{
 		m_nativeWindowHandle = nullptr;
@@ -414,7 +414,7 @@ void FairyGuiSystem::RemoveNativeImeHook()
 #endif
 }
 
-bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result)
+bool FairyGuiSystemImpl::HandleNativeImeMessage(unsigned int message, unsigned long long wParam, long long lParam, long long& result)
 {
 	result = 0;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -507,7 +507,7 @@ bool FairyGuiSystem::HandleNativeImeMessage(unsigned int message, unsigned long 
 #endif
 }
 
-void FairyGuiSystem::CancelNativeImeComposition()
+void FairyGuiSystemImpl::CancelNativeImeComposition()
 {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	if (m_nativeWindowHandle == nullptr)
@@ -523,7 +523,7 @@ void FairyGuiSystem::CancelNativeImeComposition()
 #endif
 }
 
-void FairyGuiSystem::UpdateNativeImeCandidatePosition()
+void FairyGuiSystemImpl::UpdateNativeImeCandidatePosition()
 {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	if (m_nativeWindowHandle == nullptr)
@@ -560,7 +560,7 @@ void FairyGuiSystem::UpdateNativeImeCandidatePosition()
 #endif
 }
 
-void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY) const
+void FairyGuiSystemImpl::ConvertMousePosition(int x, int y, float& outX, float& outY) const
 {
 	const float scaleX = GetInputScaleX();
 	const float scaleY = GetInputScaleY();
@@ -569,27 +569,27 @@ void FairyGuiSystem::ConvertMousePosition(int x, int y, float& outX, float& outY
 	outY = m_screenHeight > 0 ? static_cast<float>(m_screenHeight) - logicalY : logicalY;
 }
 
-float FairyGuiSystem::GetInputScaleX() const
+float FairyGuiSystemImpl::GetInputScaleX() const
 {
 	return GetWindowInputScale(m_pRenderWindow, m_screenWidth, true);
 }
 
-float FairyGuiSystem::GetInputScaleY() const
+float FairyGuiSystemImpl::GetInputScaleY() const
 {
 	return GetWindowInputScale(m_pRenderWindow, m_screenHeight, false);
 }
 
-int FairyGuiSystem::ToRawInputX(int x) const
+int FairyGuiSystemImpl::ToRawInputX(int x) const
 {
 	return ToRawInputCoordinate(x, GetInputScaleX());
 }
 
-int FairyGuiSystem::ToRawInputY(int y) const
+int FairyGuiSystemImpl::ToRawInputY(int y) const
 {
 	return ToRawInputCoordinate(y, GetInputScaleY());
 }
 
-bool FairyGuiSystem::IsMouseOnUi(float x, float y) const
+bool FairyGuiSystemImpl::IsMouseOnUi(float x, float y) const
 {
 	if (m_pRoot == nullptr)
 		return false;
