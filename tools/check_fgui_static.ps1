@@ -259,6 +259,8 @@ function Test-FairyGuiProductionFeatureGuard {
 	$controlsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiControls.lua"
 	$listsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLists.lua"
 	$baseCtrlPath = Join-Path $RepoRoot "bin\res\scripts\ui\FairyGuiBaseCtrl.lua"
+	$servicesPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiServices.lua"
+	$layersPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLayers.lua"
 	$packagePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiPackage.lua"
 	$profilerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiProfiler.lua"
 	$renderPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui\FairyGuiSystemRender.cpp"
@@ -334,8 +336,29 @@ function Test-FairyGuiProductionFeatureGuard {
 		"function FairyGuiManager:SetTextInputPolicy",
 		"function FairyGuiManager:RegisterFocusOrder",
 		"function FairyGuiManager:FocusNext",
+		"function FairyGuiManager:GetGuideMaskRects",
+		"function FairyGuiManager:ShowHoverTip",
+		"function FairyGuiManager:HideTip",
 		"function FairyGuiManager:ShowDebugPanel",
 		"function FairyGuiManager:ShowAiDebugPanel"
+	)
+
+	$servicesText = Get-Content -LiteralPath $servicesPath -Raw
+	Assert-TextContains "FairyGuiServices.lua" $servicesText @(
+		"function FairyGuiServices:ShowHoverTip",
+		"function FairyGuiServices:HideTip",
+		"popupMenuAnchorRect",
+		"popupMenuLayoutRect",
+		"tipAnchorRect",
+		"tipLayoutRect"
+	)
+
+	$layersText = Get-Content -LiteralPath $layersPath -Raw
+	Assert-TextContains "FairyGuiLayers.lua" $layersText @(
+		"function FairyGuiLayers:GetGuideMaskRects",
+		"function FairyGuiLayers:NormalizeGuideMaskRect",
+		"objectInfo.guideMaskRects",
+		"mergeIntervals"
 	)
 
 	$controlsText = Get-Content -LiteralPath $controlsPath -Raw

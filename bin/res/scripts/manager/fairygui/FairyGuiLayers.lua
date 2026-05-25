@@ -778,13 +778,18 @@ end
 
 function FairyGuiLayers:GetGuideMaskRect(param)
 	local self = self.owner
-	if self == nil then
+	local rects = self ~= nil and self:GetGuideMaskRects(param) or nil
+	return rects ~= nil and rects[1] or nil
+end
+
+function FairyGuiLayers:NormalizeGuideMaskRect(rect, param)
+	local self = self.owner
+	if self == nil or type(rect) ~= "table" then
 		return nil
 	end
 
-	param = param or {}
-	local rect = self:ApplyDesignRect(param.clickThroughRect or param.highlightRect or param.highlight or param.rect, param)
-	if rect == nil then
+	local applied = self:ApplyDesignRect(rect, param or {})
+	if applied == nil then
 		return nil
 	end
 
@@ -794,10 +799,10 @@ function FairyGuiLayers:GetGuideMaskRect(param)
 		return nil
 	end
 
-	local x = math.max(math.min(rect.x, screenWidth), 0)
-	local y = math.max(math.min(rect.y, screenHeight), 0)
-	local width = math.max(math.min(rect.width, screenWidth - x), 0)
-	local height = math.max(math.min(rect.height, screenHeight - y), 0)
+	local x = math.max(math.min(applied.x, screenWidth), 0)
+	local y = math.max(math.min(applied.y, screenHeight), 0)
+	local width = math.max(math.min(applied.width, screenWidth - x), 0)
+	local height = math.max(math.min(applied.height, screenHeight - y), 0)
 	if width <= 0 or height <= 0 then
 		return nil
 	end
@@ -807,6 +812,64 @@ function FairyGuiLayers:GetGuideMaskRect(param)
 		width = width,
 		height = height,
 	}
+end
+
+function FairyGuiLayers:GetGuideMaskRects(param)
+	local self = self.owner
+	if self == nil then
+		return nil
+	end
+
+	param = param or {}
+	local sourceRects = param.clickThroughRects or param.highlightRects or param.highlights or param.rects
+	if sourceRects == nil then
+		sourceRects = { param.clickThroughRect or param.highlightRect or param.highlight or param.rect }
+	end
+
+	local rects = {}
+	for _, rect in ipairs(sourceRects or {}) do
+		local normalized = self:NormalizeGuideMaskRect(rect, param)
+		if normalized ~= nil then
+			table.insert(rects, normalized)
+		end
+	end
+	return #rects > 0 and rects or nil
+end
+
+local function pushUniqueSorted(values, value)
+	if value == nil then
+		return
+	end
+	value = math.floor(value + 0.5)
+	if value < 0 then
+		value = 0
+	end
+	for _, existing in ipairs(values) do
+		if existing == value then
+			return
+		end
+	end
+	table.insert(values, value)
+	table.sort(values)
+end
+
+local function mergeIntervals(intervals)
+	table.sort(intervals, function(a, b)
+		return a.x < b.x
+	end)
+	local merged = {}
+	for _, interval in ipairs(intervals) do
+		if interval.width > 0 then
+			local last = merged[#merged]
+			local right = interval.x + interval.width
+			if last ~= nil and interval.x <= last.x + last.width then
+				last.width = math.max(last.x + last.width, right) - last.x
+			else
+				table.insert(merged, { x = interval.x, width = interval.width })
+			end
+		end
+	end
+	return merged
 end
 
 function FairyGuiLayers:SetGuideMaskVisible(objectInfo, visible)
@@ -834,6 +897,7 @@ function FairyGuiLayers:ClearGuideMaskHandles(objectInfo)
 	end
 	objectInfo.guideMaskHandles = nil
 	objectInfo.guideMaskRect = nil
+	objectInfo.guideMaskRects = nil
 	return true
 end
 
@@ -896,8 +960,8 @@ function FairyGuiLayers:CreateGuideMaskSegments(objectInfo, param)
 	end
 	self:ClearGuideMaskHandles(objectInfo)
 
-	local rect = self:GetGuideMaskRect(param or objectInfo.param)
-	if rect == nil then
+	local rects = self:GetGuideMaskRects(param or objectInfo.param)
+	if rects == nil then
 		return false
 	end
 
@@ -905,14 +969,43 @@ function FairyGuiLayers:CreateGuideMaskSegments(objectInfo, param)
 	local screenHeight = self:GetScreenHeight()
 	local alpha = (param or objectInfo.param or {}).modalAlpha or 0.55
 	local closeOnClick = (param or objectInfo.param or {}).closeOnMaskClick == true
-	local right = rect.x + rect.width
-	local bottom = rect.y + rect.height
 
-	objectInfo.guideMaskRect = rect
-	self:AddGuideMaskSegment(objectInfo, 0, 0, screenWidth, rect.y, alpha, closeOnClick)
-	self:AddGuideMaskSegment(objectInfo, 0, bottom, screenWidth, math.max(screenHeight - bottom, 0), alpha, closeOnClick)
-	self:AddGuideMaskSegment(objectInfo, 0, rect.y, rect.x, rect.height, alpha, closeOnClick)
-	self:AddGuideMaskSegment(objectInfo, right, rect.y, math.max(screenWidth - right, 0), rect.height, alpha, closeOnClick)
+	objectInfo.guideMaskRect = rects[1]
+	objectInfo.guideMaskRects = rects
+	local yCuts = { 0, screenHeight }
+	for _, rect in ipairs(rects) do
+		pushUniqueSorted(yCuts, rect.y)
+		pushUniqueSorted(yCuts, rect.y + rect.height)
+	end
+
+	for index = 1, #yCuts - 1 do
+		local bandTop = yCuts[index]
+		local bandBottom = yCuts[index + 1]
+		local bandHeight = bandBottom - bandTop
+		if bandHeight > 0 then
+			local intervals = {}
+			for _, rect in ipairs(rects) do
+				local rectBottom = rect.y + rect.height
+				if rect.y < bandBottom and rectBottom > bandTop then
+					table.insert(intervals, {
+						x = rect.x,
+						width = rect.width,
+					})
+				end
+			end
+			local merged = mergeIntervals(intervals)
+			local cursorX = 0
+			for _, interval in ipairs(merged) do
+				if interval.x > cursorX then
+					self:AddGuideMaskSegment(objectInfo, cursorX, bandTop, interval.x - cursorX, bandHeight, alpha, closeOnClick)
+				end
+				cursorX = math.max(cursorX, interval.x + interval.width)
+			end
+			if cursorX < screenWidth then
+				self:AddGuideMaskSegment(objectInfo, cursorX, bandTop, screenWidth - cursorX, bandHeight, alpha, closeOnClick)
+			end
+		end
+	end
 	self:UpdateGuideMaskSorting(objectInfo)
 	return type(objectInfo.guideMaskHandles) == "table" and #objectInfo.guideMaskHandles > 0
 end

@@ -876,6 +876,14 @@ function FairyGuiManager:GetGuideMaskRect(param)
 	return self:GetLayers():GetGuideMaskRect(param)
 end
 
+function FairyGuiManager:GetGuideMaskRects(param)
+	return self:GetLayers():GetGuideMaskRects(param)
+end
+
+function FairyGuiManager:NormalizeGuideMaskRect(rect, param)
+	return self:GetLayers():NormalizeGuideMaskRect(rect, param)
+end
+
 function FairyGuiManager:SetGuideMaskVisible(objectInfo, visible)
 	return self:GetLayers():SetGuideMaskVisible(objectInfo, visible)
 end
@@ -1151,6 +1159,14 @@ end
 
 function FairyGuiManager:ShowTip(text, x, y, duration, param)
 	return self:GetServices():ShowTip(text, x, y, duration, param)
+end
+
+function FairyGuiManager:ShowHoverTip(text, anchorRect, param)
+	return self:GetServices():ShowHoverTip(text, anchorRect, param)
+end
+
+function FairyGuiManager:HideTip(reason)
+	return self:GetServices():HideTip(reason)
 end
 
 function FairyGuiManager:ShowLoading(text, param)

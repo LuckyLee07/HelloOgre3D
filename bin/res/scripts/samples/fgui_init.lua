@@ -209,8 +209,13 @@ local function tryRunFairyGuiCommonServiceSelfTest()
 		return
 	end
 
-	threadpool:delay(12, function()
-		print("[FGUI] common service self test result:", FGUI_RunCommonServiceSelfTest())
+	print("[FGUI] common service self test scheduled")
+	threadpool:delay(2, function()
+		local ok, result = pcall(FGUI_RunCommonServiceSelfTest)
+		if not ok then
+			print("[FGUI] common service self test error:", result)
+		end
+		print("[FGUI] common service self test result:", ok == true and result == true)
 		FairyGuiManager:DumpServices()
 		FairyGuiManager:DumpHealth(true)
 	end)
@@ -233,8 +238,13 @@ local function tryRunFairyGuiGuideMaskSelfTest()
 		return
 	end
 
-	threadpool:delay(14, function()
-		print("[FGUI] guide mask self test result:", FGUI_RunGuideMaskSelfTest())
+	print("[FGUI] guide mask self test scheduled")
+	threadpool:delay(2, function()
+		local ok, result = pcall(FGUI_RunGuideMaskSelfTest)
+		if not ok then
+			print("[FGUI] guide mask self test error:", result)
+		end
+		print("[FGUI] guide mask self test result:", ok == true and result == true)
 		FairyGuiManager:DumpHealth(true)
 	end)
 end
@@ -1114,6 +1124,14 @@ function FGUI_ShowTip(text, x, y, duration)
 	return FairyGuiManager:ShowTip(text, x, y, duration)
 end
 
+function FGUI_ShowHoverTip(text, x, y, width, height)
+	return FairyGuiManager:ShowHoverTip(text, { x = x or 20, y = y or 20, width = width or 120, height = height or 32 })
+end
+
+function FGUI_HideTip()
+	return FairyGuiManager:HideTip("manualHideTip")
+end
+
 function FGUI_ShowGuideMask(text)
 	return FairyGuiManager:ShowGuideMask({
 		text = text or "GuideMask",
@@ -1230,13 +1248,30 @@ function FGUI_RunCommonServiceSelfTest()
 	local toastDedupeHandle = FairyGuiManager:ShowToast("Toast service", 0)
 	local toastQueuedId = FairyGuiManager:ShowToast("Toast service queued", 0)
 	local toastQueueOk = toastDedupeHandle == toastHandle and FairyGuiManager:GetToastQueueCount() == 1 and toastQueuedId ~= nil
-	local tipHandle = FairyGuiManager:ShowTip("Tip service", 40, 80, 0)
+	local tipHandle = FairyGuiManager:ShowHoverTip("Tip service", { x = 40, y = 80, width = 120, height = 24 }, {
+		hoverDelay = 0,
+		duration = 0,
+		placement = "bottomLeft",
+	})
+	local tipInfo = FairyGuiManager:GetObjectInfo("__Tip")
+	local tipLayoutOk = tipInfo ~= nil and tipInfo.tipAnchorRect ~= nil and tipInfo.tipLayoutRect ~= nil and tipInfo.tipLayoutRect.y >= 100
 	local loadingHandle = FairyGuiManager:ShowLoading("Loading service", { refKey = "SelfTest" })
 	local loadingHandle2 = FairyGuiManager:ShowLoading("Loading service updated", { refKey = "SelfTest" })
 	local loadingRefOk = loadingHandle ~= nil and loadingHandle2 == loadingHandle and FairyGuiManager:GetLoadingRefCount() == 2
-	local guideHandle = FairyGuiManager:ShowGuideMask({ text = "Guide service" })
+	local guideHandle = FairyGuiManager:ShowGuideMask({
+		text = "Guide service",
+		highlightRects = {
+			{ x = 160, y = 160, width = 160, height = 120 },
+			{ x = 420, y = 220, width = 140, height = 100 },
+		},
+	})
 	local messageHandle = FairyGuiManager:ShowMessageBox("Message", "Common service probe", { "OK", "Cancel" })
-	local popupHandle = FairyGuiManager:ShowPopupMenu({ "One", "Two" }, 100, 120)
+	local popupHandle = FairyGuiManager:ShowPopupMenu({ "One", "Two" }, nil, nil, nil, {
+		anchorRect = { x = 100, y = 120, width = 80, height = 24 },
+		placement = "bottomLeft",
+	})
+	local popupInfo = FairyGuiManager:GetObjectInfo("__PopupMenu")
+	local popupLayoutOk = popupInfo ~= nil and popupInfo.popupMenuAnchorRect ~= nil and popupInfo.popupMenuLayoutRect ~= nil and popupInfo.popupMenuLayoutRect.y >= 144
 	local serviceStats = FairyGuiManager:GetServiceStats()
 	local serviceMeta = serviceStats.__meta or {}
 	local serviceStatsOk = (serviceMeta.serviceOpenTotal or 0) >= 6
@@ -1259,6 +1294,8 @@ function FGUI_RunCommonServiceSelfTest()
 		and serviceStats.MessageBox ~= nil
 		and serviceStats.PopupMenu ~= nil
 		and toastQueueOk == true
+		and tipLayoutOk == true
+		and popupLayoutOk == true
 		and loadingRefOk == true
 		and serviceStatsOk == true
 
@@ -1268,7 +1305,7 @@ function FGUI_RunCommonServiceSelfTest()
 	local loadingClosed = FairyGuiManager:GetObjectInfo("__Loading") == nil and FairyGuiManager:GetLoadingRefCount() == 0
 
 	FairyGuiManager:Close("__Toast", true, "serviceSelfTestCleanup")
-	FairyGuiManager:Close("__Tip", true, "serviceSelfTestCleanup")
+	FairyGuiManager:HideTip("serviceSelfTestCleanup")
 	FairyGuiManager:HideLoading({ force = true, reason = "serviceSelfTestCleanup" })
 	FairyGuiManager:Close("__GuideMask", true, "serviceSelfTestCleanup")
 	FairyGuiManager:Close("__MessageBox", true, "serviceSelfTestCleanup")
@@ -1291,12 +1328,14 @@ function FGUI_RunCommonServiceSelfTest()
 		"toast=", toastHandle,
 		"toastQueueOk=", toastQueueOk,
 		"tip=", tipHandle,
+		"tipLayoutOk=", tipLayoutOk,
 		"loading=", loadingHandle,
 		"loadingRefOk=", loadingRefOk,
 		"loadingHide=", loadingHideOnce, loadingStillOpen, loadingHideTwice, loadingClosed,
 		"guide=", guideHandle,
 		"message=", messageHandle,
 		"popup=", popupHandle,
+		"popupLayoutOk=", popupLayoutOk,
 		"serviceStatsOk=", serviceStatsOk,
 		"service=", tostring(serviceMeta.serviceOpenTotal or 0) .. "/" .. tostring(serviceMeta.serviceKindCount or 0) .. "/" .. tostring(serviceMeta.peakOpen or 0),
 		"serviceTotals=", tostring(cleanupMeta.createdTotal or 0) .. "/" .. tostring(cleanupMeta.closedTotal or 0) .. "/" .. tostring(cleanupMeta.failedTotal or 0),
@@ -1339,18 +1378,24 @@ function FGUI_RunGuideMaskSelfTest()
 		text = "GuideMask self test",
 		textX = 80,
 		textY = 120,
-		highlightRect = { x = 160, y = 160, width = 240, height = 150 },
+		highlightRects = {
+			{ x = 160, y = 160, width = 240, height = 150 },
+			{ x = 520, y = 180, width = 180, height = 120 },
+		},
 		closeOnMaskClick = true,
 	})
 	local objectInfo = FairyGuiManager:GetObjectInfo("__GuideMask")
 	local maskCount = objectInfo ~= nil and type(objectInfo.guideMaskHandles) == "table" and #objectInfo.guideMaskHandles or 0
+	local rectCount = objectInfo ~= nil and type(objectInfo.guideMaskRects) == "table" and #objectInfo.guideMaskRects or 0
 	local insideClick = FairyGuiManager:DebugInjectClick(220, 220, 0)
 	local stillOpen = FairyGuiManager:GetObjectInfo("__GuideMask") ~= nil
+	local insideSecondClick = FairyGuiManager:DebugInjectClick(560, 220, 0)
+	local stillOpenSecond = FairyGuiManager:GetObjectInfo("__GuideMask") ~= nil
 	local outsideClick = FairyGuiManager:DebugInjectClick(20, 20, 0)
 	local closed = FairyGuiManager:GetObjectInfo("__GuideMask") == nil
 	FairyGuiManager:HideGuideMask("guideMaskSelfTestCleanup")
-	print("[FGUI] guide mask self test detail:", handle, "maskCount=", maskCount, "insideClick=", insideClick, "stillOpen=", stillOpen, "outsideClick=", outsideClick, "closed=", closed)
-	return handle ~= nil and maskCount > 0 and stillOpen == true and outsideClick == true and closed == true
+	print("[FGUI] guide mask self test detail:", handle, "maskCount=", maskCount, "rectCount=", rectCount, "insideClick=", insideClick, insideSecondClick, "stillOpen=", stillOpen, stillOpenSecond, "outsideClick=", outsideClick, "closed=", closed)
+	return handle ~= nil and maskCount > 0 and rectCount == 2 and stillOpen == true and stillOpenSecond == true and outsideClick == true and closed == true
 end
 
 function FGUI_RunEventPayloadSelfTest()

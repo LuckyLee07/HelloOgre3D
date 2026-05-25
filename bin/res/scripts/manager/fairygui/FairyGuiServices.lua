@@ -115,6 +115,95 @@ local function recordServicePerf(owner, startMs, serviceType, success)
 	end
 end
 
+local function normalizeRect(owner, rect, param)
+	if owner == nil or type(rect) ~= "table" then
+		return nil
+	end
+
+	local applied = owner.ApplyDesignRect ~= nil and owner:ApplyDesignRect(rect, param or {}) or rect
+	if type(applied) ~= "table" then
+		return nil
+	end
+
+	local x = tonumber(applied.x) or 0
+	local y = tonumber(applied.y) or 0
+	local width = math.max(tonumber(applied.width) or 0, 0)
+	local height = math.max(tonumber(applied.height) or 0, 0)
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+	}
+end
+
+local function resolveAnchorRect(owner, param, fallbackX, fallbackY)
+	param = param or {}
+	local rect = normalizeRect(owner, param.anchorRect or param.followRect or param.targetRect or param.rect, param)
+	if rect ~= nil then
+		return rect
+	end
+	if fallbackX ~= nil or fallbackY ~= nil or param.x ~= nil or param.y ~= nil then
+		return {
+			x = tonumber(fallbackX or param.x) or 0,
+			y = tonumber(fallbackY or param.y) or 0,
+			width = tonumber(param.anchorWidth or param.targetWidth) or 0,
+			height = tonumber(param.anchorHeight or param.targetHeight) or 0,
+		}
+	end
+	return nil
+end
+
+local function buildAnchoredRect(owner, anchorRect, width, height, param)
+	param = param or {}
+	width = math.max(tonumber(width) or 0, 0)
+	height = math.max(tonumber(height) or 0, 0)
+	local screenWidth = owner ~= nil and owner:GetScreenWidth() or 0
+	local screenHeight = owner ~= nil and owner:GetScreenHeight() or 0
+	local gap = tonumber(param.anchorGap or param.gap) or 6
+	local offsetX = tonumber(param.offsetX) or 0
+	local offsetY = tonumber(param.offsetY) or 0
+	local placement = param.placement or param.followPlacement or "bottomLeft"
+	local x = tonumber(param.x) or 0
+	local y = tonumber(param.y) or 0
+
+	if anchorRect ~= nil then
+		if placement == "bottomRight" then
+			x = anchorRect.x + anchorRect.width - width
+			y = anchorRect.y + anchorRect.height + gap
+		elseif placement == "topLeft" then
+			x = anchorRect.x
+			y = anchorRect.y - height - gap
+		elseif placement == "topRight" then
+			x = anchorRect.x + anchorRect.width - width
+			y = anchorRect.y - height - gap
+		elseif placement == "right" then
+			x = anchorRect.x + anchorRect.width + gap
+			y = anchorRect.y
+		elseif placement == "left" then
+			x = anchorRect.x - width - gap
+			y = anchorRect.y
+		elseif placement == "center" then
+			x = anchorRect.x + (anchorRect.width - width) * 0.5
+			y = anchorRect.y + (anchorRect.height - height) * 0.5
+		else
+			x = anchorRect.x
+			y = anchorRect.y + anchorRect.height + gap
+		end
+	end
+
+	local rect = {
+		x = x + offsetX,
+		y = y + offsetY,
+		width = width,
+		height = height,
+	}
+	if owner ~= nil and param.fitInScreen ~= false and owner.ClampLayoutRect ~= nil and screenWidth > 0 and screenHeight > 0 then
+		owner:ClampLayoutRect(rect, screenWidth, screenHeight)
+	end
+	return rect
+end
+
 local function bindOwnerState(owner, state)
 	if owner == nil or state == nil then
 		return
@@ -368,6 +457,26 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 		self:SetSize(objectInfo.loadingTextHandle, rect.width, rect.height)
 		objectInfo.loadingLayoutRect = rect
 		return true
+	elseif objectInfo.serviceType == "Tip" and objectInfo.tipTextHandle ~= nil then
+		local width = param.width or 320
+		local height = param.height or 36
+		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
+		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
+		self:SetPosition(objectInfo.tipTextHandle, rect.x, rect.y)
+		self:SetSize(objectInfo.tipTextHandle, rect.width, rect.height)
+		objectInfo.tipAnchorRect = anchorRect
+		objectInfo.tipLayoutRect = rect
+		return true
+	elseif objectInfo.serviceType == "PopupMenu" then
+		local width = param.width or 220
+		local height = param.height or 34
+		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
+		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
+		self:SetPosition(objectInfo.handle, rect.x, rect.y)
+		self:SetSize(objectInfo.handle, rect.width, rect.height)
+		objectInfo.popupMenuAnchorRect = anchorRect
+		objectInfo.popupMenuLayoutRect = rect
+		return true
 	end
 	return false
 end
@@ -606,12 +715,29 @@ function FairyGuiServices:ShowTip(text, x, y, duration, param)
 	param.fullScreen = true
 	param.touchable = false
 	param.serviceType = "Tip"
+	param.x = x or param.x or 20
+	param.y = y or param.y or 20
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
 		return nil
 	end
-	self:AddServiceText(objectInfo, "tip_text", text or "", x or 20, y or 20, param.width or 320, param.height or 36, param.fontSize or 20, 180, 230, 255)
+	objectInfo.tipText = text or ""
+	objectInfo.tipTextHandle = self:AddServiceText(objectInfo, "tip_text", objectInfo.tipText, param.x, param.y, param.width or 320, param.height or 36, param.fontSize or 20, 180, 230, 255)
+	self:ApplyServiceLayout(objectInfo)
+
+	local delay = tonumber(param.delay or param.hoverDelay) or 0
+	if delay > 0 then
+		objectInfo.tipPending = true
+		self:SetVisible(objectInfo.handle, false)
+		self:Delay(objectInfo.key, delay, function()
+			local tipInfo = self:GetObjectInfo(objectInfo.key)
+			if tipInfo ~= nil then
+				tipInfo.tipPending = false
+				self:SetVisible(tipInfo.handle, true)
+			end
+		end)
+	end
 
 	local timeout = tonumber(duration or param.duration) or 2
 	if timeout > 0 then
@@ -620,6 +746,29 @@ function FairyGuiServices:ShowTip(text, x, y, duration, param)
 		end)
 	end
 	return objectInfo.handle
+end
+
+function FairyGuiServices:ShowHoverTip(text, anchorRect, param)
+	local self = self.owner
+	if self == nil then
+		return nil
+	end
+
+	param = copyTable(param)
+	param.anchorRect = param.anchorRect or anchorRect
+	if param.delay == nil and param.hoverDelay == nil then
+		param.hoverDelay = 0.25
+	end
+	param.placement = param.placement or "topLeft"
+	return self:ShowTip(text, nil, nil, param.duration, param)
+end
+
+function FairyGuiServices:HideTip(reason)
+	local self = self.owner
+	if self == nil then
+		return false
+	end
+	return self:Close("__Tip", true, reason or "hideTip")
 end
 
 function FairyGuiServices:ShowLoading(text, param)
@@ -729,14 +878,14 @@ function FairyGuiServices:ShowGuideMask(param)
 	end
 
 	param = copyTable(param)
-	local highlightRect = self:GetGuideMaskRect(param)
+	local highlightRects = self:GetGuideMaskRects(param)
 	param.key = param.key or "__GuideMask"
 	param.layer = param.layer or "Guide"
 	param.stackMode = param.stackMode or "Popup"
 	param.popupGroup = param.popupGroup or "GuideMask"
 	param.popupMode = param.popupMode or "replace"
 	param.fullScreen = true
-	param.modal = highlightRect == nil
+	param.modal = highlightRects == nil
 	param.modalAlpha = param.modalAlpha or 0.55
 	param.closeOnMaskClick = param.closeOnMaskClick == true
 	param.touchable = false
@@ -746,7 +895,7 @@ function FairyGuiServices:ShowGuideMask(param)
 	if objectInfo == nil then
 		return nil
 	end
-	if highlightRect ~= nil then
+	if highlightRects ~= nil then
 		self:CreateGuideMaskSegments(objectInfo, param)
 	end
 	if not isBlank(param.text) then
@@ -848,14 +997,18 @@ function FairyGuiServices:ShowPopupMenu(items, x, y, callback, param)
 	local itemHeight = param.itemHeight or 34
 	param.width = param.width or 220
 	param.height = param.height or math.max(#items * itemHeight, itemHeight)
-	param.x = x or param.x or 0
-	param.y = y or param.y or 0
 	param.fitInScreen = param.fitInScreen ~= false
+	local anchorRect = resolveAnchorRect(self, param, x, y)
+	local layoutRect = buildAnchoredRect(self, anchorRect, param.width, param.height, param)
+	param.x = layoutRect.x
+	param.y = layoutRect.y
 
 	local objectInfo = self:OpenServiceContainer(param.key, param)
 	if objectInfo == nil then
 		return nil
 	end
+	objectInfo.popupMenuAnchorRect = anchorRect
+	objectInfo.popupMenuLayoutRect = layoutRect
 	for index, item in ipairs(items) do
 		local label = type(item) == "table" and (item.text or item.label or tostring(index)) or tostring(item)
 		self:AddServiceButton(objectInfo, "popup_item_" .. tostring(index), label, 0, (index - 1) * itemHeight, param.width, itemHeight, function()
