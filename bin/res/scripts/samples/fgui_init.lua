@@ -2306,6 +2306,7 @@ function FGUI_RunBusinessBenchmarkSelfTest(config)
 
 	closeFairyGuiBusinessFlowObjects("businessBenchmarkReset")
 	FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkReset")
+	FairyGuiManager:Close("BusinessBenchmarkPage", true, "businessBenchmarkReset")
 	FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkReset")
 	FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
 
@@ -2314,24 +2315,25 @@ function FGUI_RunBusinessBenchmarkSelfTest(config)
 	local passCount = 0
 	local failDetail = ""
 	for index = 1, iterations do
-		FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkIterationReset")
+		FairyGuiManager:Close("BusinessBenchmarkPage", true, "businessBenchmarkIterationReset")
 		FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkIterationReset")
 		FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
 
-		local ctrl = FGUI_OpenAct38Sample({
-			key = "BusinessBenchmarkAct38",
+		local ctrl = FairyGuiManager:Open("BusinessBenchmark", {
+			key = "BusinessBenchmarkPage",
 			scene = "BusinessBenchmark",
 			group = "BusinessBenchmark",
-			dateText = "Business Benchmark " .. tostring(index),
+			title = "Business Benchmark " .. tostring(index),
+			scale = index,
 		})
-		local listOk = ctrl ~= nil and ctrl.RunListApiSelfTest ~= nil and ctrl:RunListApiSelfTest() or false
+		local benchmarkOk = ctrl ~= nil and ctrl.RunBenchmarkSelfTest ~= nil and ctrl:RunBenchmarkSelfTest() or false
 		local debugHandle = FairyGuiManager:ShowDebugPanel({
 			key = "BusinessBenchmarkDebug",
 			scene = "BusinessBenchmark",
 			title = "Business Benchmark",
 			autoRefresh = false,
 			lineCount = 16,
-			debugTarget = "BusinessBenchmarkAct38",
+			debugTarget = "BusinessBenchmarkPage",
 		})
 		local debugOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("BusinessBenchmarkDebug") == true
 		local textHandle, inputHandle = FGUI_OpenTextInputProbe({
@@ -2349,16 +2351,16 @@ function FGUI_RunBusinessBenchmarkSelfTest(config)
 			FairyGuiManager:ApplyTextInputPolicy(inputHandle, nil)
 			textOk = FairyGuiManager:GetText(inputHandle) == "1234"
 		end
-		local iterationOk = ctrl ~= nil and listOk == true and debugOk == true and textHandle ~= nil and textOk == true
+		local iterationOk = ctrl ~= nil and benchmarkOk == true and debugOk == true and textHandle ~= nil and textOk == true
 		if iterationOk then
 			passCount = passCount + 1
 		else
-			failDetail = failDetail .. string.format("[#%s ctrl=%s list=%s debug=%s text=%s]", tostring(index), tostring(ctrl ~= nil), tostring(listOk), tostring(debugOk), tostring(textOk))
+			failDetail = failDetail .. string.format("[#%s ctrl=%s benchmark=%s debug=%s text=%s]", tostring(index), tostring(ctrl ~= nil), tostring(benchmarkOk), tostring(debugOk), tostring(textOk))
 		end
 
 		FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkIterationCleanup")
 		FairyGuiManager:HideDebugPanel("BusinessBenchmarkDebug")
-		FairyGuiManager:Close("BusinessBenchmarkAct38", true, "businessBenchmarkIterationCleanup")
+		FairyGuiManager:Close("BusinessBenchmarkPage", true, "businessBenchmarkIterationCleanup")
 	end
 
 	FairyGuiManager:CloseScene("BusinessBenchmark", true)

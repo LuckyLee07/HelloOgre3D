@@ -17,6 +17,77 @@ function FairyGuiBaseCtrl:SetAutoGen(autoGen)
 	self.autoGen = autoGen
 end
 
+function FairyGuiBaseCtrl:GetAutoGen()
+	return self.autoGen
+end
+
+function FairyGuiBaseCtrl:GetControlPath(name)
+	if self.autoGen ~= nil and self.autoGen.GetControlPath ~= nil then
+		return self.autoGen:GetControlPath(name) or name
+	end
+	return name
+end
+
+function FairyGuiBaseCtrl:GetControlType(name)
+	if self.autoGen ~= nil and self.autoGen.GetControlType ~= nil then
+		return self.autoGen:GetControlType(name)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:GetListItemDefine(listName)
+	if self.autoGen ~= nil and self.autoGen.GetListItemDefine ~= nil then
+		return self.autoGen:GetListItemDefine(listName)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:GetListItemControlPath(listName, controlName)
+	if self.autoGen ~= nil and self.autoGen.GetListItemControlPath ~= nil then
+		return self.autoGen:GetListItemControlPath(listName, controlName)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:GetListItemControlType(listName, controlName)
+	if self.autoGen ~= nil and self.autoGen.GetListItemControlType ~= nil then
+		return self.autoGen:GetListItemControlType(listName, controlName)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:BindListItemControls(listName, item)
+	local define = self:GetListItemDefine(listName)
+	if define == nil or item == nil then
+		return {}
+	end
+	if item.BindControls ~= nil then
+		return item:BindControls(define.controls)
+	end
+	return {}
+end
+
+function FairyGuiBaseCtrl:GetComponentDefine(componentName)
+	if self.autoGen ~= nil and self.autoGen.GetComponentDefine ~= nil then
+		return self.autoGen:GetComponentDefine(componentName)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:GetComponentControlPath(componentName, controlName)
+	if self.autoGen ~= nil and self.autoGen.GetComponentControlPath ~= nil then
+		return self.autoGen:GetComponentControlPath(componentName, controlName)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:GetComponentControlType(componentName, controlName)
+	if self.autoGen ~= nil and self.autoGen.GetComponentControlType ~= nil then
+		return self.autoGen:GetComponentControlType(componentName, controlName)
+	end
+	return nil
+end
+
 function FairyGuiBaseCtrl:Start()
 	if self.model ~= nil and self.model.SetIncomingParam ~= nil then
 		self.model:SetIncomingParam(self.param)

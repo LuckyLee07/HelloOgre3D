@@ -1,5 +1,7 @@
 # FairyGUI AutoGen Workflow
 
+补充说明：新增业务 UI 的完整接入流程已经单独沉淀到 `docs/fairygui-business-ui-standard-flow.md`。当前生产级样例是 `BusinessBenchmark`，用于验证 AutoGen 子结构、列表 item 绑定、Benchmark 自测和 registry 生成一致性。
+
 ## Goal
 
 新增 `.fui` 后，优先走工具生成 MVC 骨架和 registry 片段，手写业务只放在 Ctrl / Model 中。

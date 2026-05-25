@@ -258,6 +258,7 @@ function Test-FairyGuiProductionFeatureGuard {
 	$managerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiManager.lua"
 	$controlsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiControls.lua"
 	$listsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLists.lua"
+	$baseCtrlPath = Join-Path $RepoRoot "bin\res\scripts\ui\FairyGuiBaseCtrl.lua"
 	$packagePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiPackage.lua"
 	$profilerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiProfiler.lua"
 	$renderPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui\FairyGuiSystemRender.cpp"
@@ -274,7 +275,9 @@ function Test-FairyGuiProductionFeatureGuard {
 		'"Pressure"',
 		'"LayerBoundary"',
 		'"Mask"',
+		'"BusinessBenchmark"',
 		'"HELLO_FGUI_BUSINESS_FLOW_SELF_TEST"',
+		'"HELLO_FGUI_BUSINESS_BENCHMARK_SELF_TEST"',
 		'"HELLO_FGUI_COMPLEX_CONTROLS_SELF_TEST"',
 		'"HELLO_FGUI_VIRTUAL_LIST_SELF_TEST"',
 		'"HELLO_FGUI_TREE_SELF_TEST"',
@@ -292,6 +295,7 @@ function Test-FairyGuiProductionFeatureGuard {
 		"function FGUI_RunVirtualListSelfTest",
 		"function FGUI_RunTreeSelfTest",
 		"function FGUI_RunBusinessFlowSelfTest",
+		"function FGUI_RunBusinessBenchmarkSelfTest",
 		"function FGUI_RunResourcePolicySelfTest",
 		"function FGUI_RunResourceFallbackSelfTest",
 		"function FGUI_RunTextInputPolicySelfTest",
@@ -302,6 +306,15 @@ function Test-FairyGuiProductionFeatureGuard {
 		"cpuClipSourceTriangleCount",
 		"stencilClipPolygonCount",
 		"stencilBackend"
+	)
+
+	$baseCtrlText = Get-Content -LiteralPath $baseCtrlPath -Raw
+	Assert-TextContains "FairyGuiBaseCtrl.lua" $baseCtrlText @(
+		"function FairyGuiBaseCtrl:GetListItemDefine",
+		"function FairyGuiBaseCtrl:GetListItemControlPath",
+		"function FairyGuiBaseCtrl:BindListItemControls",
+		"function FairyGuiBaseCtrl:GetComponentDefine",
+		"function FairyGuiBaseCtrl:GetComponentControlPath"
 	)
 
 	$managerText = Get-Content -LiteralPath $managerPath -Raw
@@ -340,7 +353,9 @@ function Test-FairyGuiProductionFeatureGuard {
 	Assert-TextContains "FairyGuiLists.lua" $listsText @(
 		"function FairyGuiLists:SetVirtualListData",
 		"function FairyGuiLists:SetTreeData",
-		"function FairyGuiLists:GetListDebugStats"
+		"function FairyGuiLists:GetListDebugStats",
+		"function LIST_ITEM_METHODS:GetChild",
+		"function LIST_ITEM_METHODS:BindControls"
 	)
 
 	$packageText = Get-Content -LiteralPath $packagePath -Raw
@@ -399,6 +414,36 @@ try {
 		Invoke-Checked "AutoGen batch check" "python" @(
 			"-B",
 			"tools\fgui_autogen\fairygui_batch_generate.py",
+			"--check",
+			"--strict"
+		)
+		Invoke-Checked "AutoGen BusinessBenchmark check" "python" @(
+			"-B",
+			"tools\fgui_autogen\fairygui_generate_ui.py",
+			"--asset-dir",
+			"bin\res\assets\act_38",
+			"--package",
+			"act_38_test",
+			"--component",
+			"QingLuanActMain",
+			"--ui-name",
+			"BusinessBenchmark",
+			"--manifest-output",
+			"bin\res\assets\fairygui_manifests\business_benchmark.json",
+			"--registry-output",
+			"bin\res\assets\fairygui_manifests\business_benchmark.registry.lua",
+			"--registry-aggregate-output",
+			"bin\res\scripts\ui\GeneratedUIRegistry.lua",
+			"--layer",
+			"Popup",
+			"--group",
+			"Benchmark",
+			"--scene",
+			"BusinessBenchmark",
+			"--cache",
+			"false",
+			"--full-screen",
+			"--close-on-escape",
 			"--check",
 			"--strict"
 		)

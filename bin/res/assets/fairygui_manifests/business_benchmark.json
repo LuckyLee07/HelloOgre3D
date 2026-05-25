@@ -1,0 +1,666 @@
+{
+	"manifestVersion": 1,
+	"generatedBy": "tools/fgui_autogen/fairygui_asset_manifest.py",
+	"uiName": "BusinessBenchmark",
+	"package": "act_38_test",
+	"component": "QingLuanActMain",
+	"assetDir": "bin/res/assets/act_38",
+	"runtimePackage": "bin/res/fuires/act_38_test.fui",
+	"packageId": "6wyxp7be",
+	"controllers": [
+		{
+			"name": "m2_menuCtrl",
+			"path": "m2_menuCtrl",
+			"type": "GController"
+		}
+	],
+	"transitions": [],
+	"controls": [
+		{
+			"name": "mask",
+			"path": "mask",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "loader_img_bg",
+			"path": "loader_img_bg",
+			"type": "GLoader",
+			"xmlTag": "loader"
+		},
+		{
+			"name": "t_date",
+			"path": "t_date",
+			"type": "GTextField",
+			"xmlTag": "text"
+		},
+		{
+			"name": "btn_help",
+			"path": "btn_help",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "btn_close",
+			"path": "btn_close",
+			"type": "GComponent",
+			"xmlTag": "component"
+		},
+		{
+			"name": "menu_bgimg",
+			"path": "menu_bgimg",
+			"type": "GImage",
+			"xmlTag": "image"
+		},
+		{
+			"name": "MenuTab",
+			"path": "MenuTab",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 3,
+			"defaultItem": "ui://6wyxp7beij2835",
+			"defaultItemResourceId": "ij2835",
+			"defaultItemComponent": "tab_btn",
+			"selectionController": "m2_menuCtrl"
+		},
+		{
+			"name": "m2_dayTaskList",
+			"path": "m2_dayTaskList",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 4,
+			"defaultItem": "ui://6wyxp7beij2838",
+			"defaultItemResourceId": "ij2838",
+			"defaultItemComponent": "task_item"
+		},
+		{
+			"name": "m2_spcTaskList",
+			"path": "m2_spcTaskList",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 2,
+			"defaultItem": "ui://6wyxp7beij2838",
+			"defaultItemResourceId": "ij2838",
+			"defaultItemComponent": "task_item"
+		},
+		{
+			"name": "m2_excShopList",
+			"path": "m2_excShopList",
+			"type": "GList",
+			"xmlTag": "list",
+			"itemCount": 4,
+			"defaultItem": "ui://6wyxp7beij283h",
+			"defaultItemResourceId": "ij283h",
+			"defaultItemComponent": "shop_item"
+		}
+	],
+	"resources": [
+		{
+			"kind": "component",
+			"id": "ij280",
+			"name": "QingLuanActMain.xml",
+			"path": "/",
+			"exported": true
+		},
+		{
+			"kind": "component",
+			"id": "ij281",
+			"name": "mask.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij282",
+			"name": "img_mask.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij2817",
+			"name": "青鸾宫地图-每日任务.png",
+			"path": "/_exBg/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij2818",
+			"name": "board_prop.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij2819",
+			"name": "board_tab_handoff.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281a",
+			"name": "board_task.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281b",
+			"name": "btn_Claimed.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281c",
+			"name": "btn_green.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281d",
+			"name": "btn_head_for.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281e",
+			"name": "button_close.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281f",
+			"name": "icon_？.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281g",
+			"name": "icon_prop.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281i",
+			"name": "item_msk.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij281j",
+			"name": "menu_bg.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij2835",
+			"name": "tab_btn.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij2838",
+			"name": "task_item.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283b",
+			"name": "btn_task1.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283d",
+			"name": "btn_task2.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283f",
+			"name": "btn_task3.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283h",
+			"name": "shop_item.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283i",
+			"name": "btn_exchange.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283j",
+			"name": "btn_close.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij283l",
+			"name": "board_prop_exchange.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ij283m",
+			"name": "icon_arrowhead.png",
+			"path": "/_imgs/",
+			"exported": false
+		},
+		{
+			"kind": "component",
+			"id": "ij283n",
+			"name": "btn_help.xml",
+			"path": "/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "nve93o",
+			"name": "act_42_img_bg.png",
+			"path": "/_loaderimgs/",
+			"exported": false
+		},
+		{
+			"kind": "image",
+			"id": "ohf63p",
+			"name": "青鸾宫地图-活动商店.png",
+			"path": "/_exBg/",
+			"exported": false
+		}
+	],
+	"componentControls": {
+		"QingLuanActMain": {
+			"controllers": [
+				{
+					"name": "m2_menuCtrl",
+					"path": "m2_menuCtrl",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "mask",
+					"path": "mask",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "loader_img_bg",
+					"path": "loader_img_bg",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "t_date",
+					"path": "t_date",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "btn_help",
+					"path": "btn_help",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_close",
+					"path": "btn_close",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "menu_bgimg",
+					"path": "menu_bgimg",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "MenuTab",
+					"path": "MenuTab",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 3,
+					"defaultItem": "ui://6wyxp7beij2835",
+					"defaultItemResourceId": "ij2835",
+					"defaultItemComponent": "tab_btn",
+					"selectionController": "m2_menuCtrl"
+				},
+				{
+					"name": "m2_dayTaskList",
+					"path": "m2_dayTaskList",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 4,
+					"defaultItem": "ui://6wyxp7beij2838",
+					"defaultItemResourceId": "ij2838",
+					"defaultItemComponent": "task_item"
+				},
+				{
+					"name": "m2_spcTaskList",
+					"path": "m2_spcTaskList",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 2,
+					"defaultItem": "ui://6wyxp7beij2838",
+					"defaultItemResourceId": "ij2838",
+					"defaultItemComponent": "task_item"
+				},
+				{
+					"name": "m2_excShopList",
+					"path": "m2_excShopList",
+					"type": "GList",
+					"xmlTag": "list",
+					"itemCount": 4,
+					"defaultItem": "ui://6wyxp7beij283h",
+					"defaultItemResourceId": "ij283h",
+					"defaultItemComponent": "shop_item"
+				}
+			]
+		},
+		"mask": {
+			"controllers": [],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "img_mask",
+					"path": "img_mask",
+					"type": "GImage",
+					"xmlTag": "image"
+				}
+			]
+		},
+		"tab_btn": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "title",
+					"path": "title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"task_item": {
+			"controllers": [
+				{
+					"name": "c1",
+					"path": "c1",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "icon",
+					"path": "icon",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "num",
+					"path": "num",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "desc",
+					"path": "desc",
+					"type": "GRichTextField",
+					"xmlTag": "richtext"
+				},
+				{
+					"name": "btn_go",
+					"path": "btn_go",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_get",
+					"path": "btn_get",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_alrget",
+					"path": "btn_alrget",
+					"type": "GComponent",
+					"xmlTag": "component"
+				}
+			]
+		},
+		"btn_task1": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "title",
+					"path": "title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"btn_task2": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "title",
+					"path": "title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"btn_task3": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "title",
+					"path": "title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"shop_item": {
+			"controllers": [
+				{
+					"name": "c1",
+					"path": "c1",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "bgimg",
+					"path": "bgimg",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "itembg1",
+					"path": "itembg1",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "itemicon1",
+					"path": "itemicon1",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "itemmsk1",
+					"path": "itemmsk1",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "num1",
+					"path": "num1",
+					"type": "GRichTextField",
+					"xmlTag": "richtext"
+				},
+				{
+					"name": "item1",
+					"path": "item1",
+					"type": "GGroup",
+					"xmlTag": "group"
+				},
+				{
+					"name": "itembg2",
+					"path": "itembg2",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "itemicon2",
+					"path": "itemicon2",
+					"type": "GLoader",
+					"xmlTag": "loader"
+				},
+				{
+					"name": "itemmsk2",
+					"path": "itemmsk2",
+					"type": "GImage",
+					"xmlTag": "image"
+				},
+				{
+					"name": "num2",
+					"path": "num2",
+					"type": "GTextField",
+					"xmlTag": "text"
+				},
+				{
+					"name": "itembtn",
+					"path": "itembtn",
+					"type": "GGraph",
+					"xmlTag": "graph"
+				},
+				{
+					"name": "item2",
+					"path": "item2",
+					"type": "GGroup",
+					"xmlTag": "group"
+				},
+				{
+					"name": "desc",
+					"path": "desc",
+					"type": "GRichTextField",
+					"xmlTag": "richtext"
+				},
+				{
+					"name": "btn_exchange",
+					"path": "btn_exchange",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_alrowned",
+					"path": "btn_alrowned",
+					"type": "GComponent",
+					"xmlTag": "component"
+				},
+				{
+					"name": "btn_alrfinish",
+					"path": "btn_alrfinish",
+					"type": "GComponent",
+					"xmlTag": "component"
+				}
+			]
+		},
+		"btn_exchange": {
+			"controllers": [
+				{
+					"name": "c1",
+					"path": "c1",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": [
+				{
+					"name": "title",
+					"path": "title",
+					"type": "GTextField",
+					"xmlTag": "text"
+				}
+			]
+		},
+		"btn_close": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		},
+		"btn_help": {
+			"controllers": [
+				{
+					"name": "button",
+					"path": "button",
+					"type": "GController"
+				}
+			],
+			"transitions": [],
+			"controls": []
+		}
+	}
+}

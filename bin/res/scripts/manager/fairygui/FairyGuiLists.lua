@@ -33,6 +33,45 @@ function LIST_ITEM_METHODS:GetHandle()
 	return self.handle
 end
 
+function LIST_ITEM_METHODS:GetChild(childPath)
+	local manager = getCurrentManager()
+	return manager ~= nil and manager:GetChild(self.handle, childPath) or nil
+end
+
+function LIST_ITEM_METHODS:GetChildByDefine(controlDefines, fieldName)
+	if type(controlDefines) ~= "table" then
+		return nil
+	end
+
+	local define = controlDefines[fieldName]
+	if define == nil then
+		for _, item in pairs(controlDefines) do
+			if type(item) == "table" and item.path == fieldName then
+				define = item
+				break
+			end
+		end
+	end
+
+	local childPath = type(define) == "table" and define.path or define
+	return childPath ~= nil and self:GetChild(childPath) or nil
+end
+
+function LIST_ITEM_METHODS:BindControls(controlDefines)
+	local controls = {}
+	if type(controlDefines) ~= "table" then
+		return controls
+	end
+
+	for fieldName, define in pairs(controlDefines) do
+		local childPath = type(define) == "table" and define.path or define
+		if childPath ~= nil then
+			controls[fieldName] = self:GetChild(childPath)
+		end
+	end
+	return controls
+end
+
 function LIST_ITEM_METHODS:SetText(childPath, text)
 	local manager = getCurrentManager()
 	return manager ~= nil and manager:SetText(self.handle, childPath, text) or false

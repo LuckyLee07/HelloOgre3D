@@ -250,6 +250,35 @@ def append_lua_list_item_map(lines, ui_name, controls, component_controls, field
 	lines.append("")
 
 
+def append_lua_define_map(lines, values, field_style, indent):
+	for item in values or []:
+		if not item.get("name"):
+			continue
+		item_field = get_field_name(item, field_style)
+		lines.append("{0}{1} = {{ path = {2}, type = {3} }},".format(indent, item_field, lua_string(item.get("path")), lua_string(item.get("type") or "GObject")))
+
+
+def append_lua_component_map(lines, ui_name, component_controls, field_style):
+	lines.append("{0}AutoGen.Component = {{".format(ui_name))
+	for component_name in sorted(component_controls.keys()):
+		component_info = component_controls.get(component_name) or {}
+		field_name = get_field_name({"name": component_name, "path": component_name}, field_style)
+		lines.append("\t{0} = {{".format(field_name))
+		lines.append("\t\tname = {0},".format(lua_string(component_name)))
+		lines.append("\t\tcontrols = {")
+		append_lua_define_map(lines, component_info.get("controls"), field_style, "\t\t\t")
+		lines.append("\t\t},")
+		lines.append("\t\tcontrollers = {")
+		append_lua_define_map(lines, component_info.get("controllers"), field_style, "\t\t\t")
+		lines.append("\t\t},")
+		lines.append("\t\ttransitions = {")
+		append_lua_define_map(lines, component_info.get("transitions"), field_style, "\t\t\t")
+		lines.append("\t\t},")
+		lines.append("\t},")
+	lines.append("}")
+	lines.append("")
+
+
 def render_autogen(ui_name, controls=None, controllers=None, transitions=None, component_controls=None, field_style="camel"):
 	controls = controls or []
 	controllers = controllers or []
@@ -266,6 +295,7 @@ def render_autogen(ui_name, controls=None, controllers=None, transitions=None, c
 	append_lua_string_map(lines, (ui_name, "ControllerPath"), [(get_field_name(controller, field_style), controller.get("path")) for controller in controllers])
 	append_lua_string_map(lines, (ui_name, "TransitionName"), [(get_field_name(transition, field_style), transition.get("path")) for transition in transitions])
 	append_lua_list_item_map(lines, ui_name, controls, component_controls, field_style)
+	append_lua_component_map(lines, ui_name, component_controls, field_style)
 	lines.extend([
 		"function {0}AutoGen:Create(param)".format(ui_name),
 		"\treturn ClassList.{0}AutoGen.new(param)".format(ui_name),
@@ -288,7 +318,89 @@ def render_autogen(ui_name, controls=None, controllers=None, transitions=None, c
 		"end",
 		"",
 		"function {0}AutoGen:GetListItemDefine(name)".format(ui_name),
-		"\treturn {0}AutoGen.ListItem[name]".format(ui_name),
+		"\tlocal define = {0}AutoGen.ListItem[name]".format(ui_name),
+		"\tif define ~= nil then",
+		"\t\treturn define",
+		"\tend",
+		"\tfor _, item in pairs({0}AutoGen.ListItem) do".format(ui_name),
+		"\t\tif item.path == name or item.component == name or item.resourceId == name then",
+		"\t\t\treturn item",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
+		"end",
+		"",
+		"function {0}AutoGen:GetListItemControlPath(listName, controlName)".format(ui_name),
+		"\tlocal define = self:GetListItemDefine(listName)",
+		"\tlocal controls = define ~= nil and define.controls or nil",
+		"\tlocal control = controls ~= nil and controls[controlName] or nil",
+		"\tif control ~= nil then",
+		"\t\treturn control.path",
+		"\tend",
+		"\tfor _, item in pairs(controls or {}) do",
+		"\t\tif item.path == controlName then",
+		"\t\t\treturn item.path",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
+		"end",
+		"",
+		"function {0}AutoGen:GetListItemControlType(listName, controlName)".format(ui_name),
+		"\tlocal define = self:GetListItemDefine(listName)",
+		"\tlocal controls = define ~= nil and define.controls or nil",
+		"\tlocal control = controls ~= nil and controls[controlName] or nil",
+		"\tif control ~= nil then",
+		"\t\treturn control.type",
+		"\tend",
+		"\tfor _, item in pairs(controls or {}) do",
+		"\t\tif item.path == controlName then",
+		"\t\t\treturn item.type",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
+		"end",
+		"",
+		"function {0}AutoGen:GetComponentDefine(name)".format(ui_name),
+		"\tlocal define = {0}AutoGen.Component[name]".format(ui_name),
+		"\tif define ~= nil then",
+		"\t\treturn define",
+		"\tend",
+		"\tfor _, item in pairs({0}AutoGen.Component) do".format(ui_name),
+		"\t\tif item.name == name then",
+		"\t\t\treturn item",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
+		"end",
+		"",
+		"function {0}AutoGen:GetComponentControlPath(componentName, controlName)".format(ui_name),
+		"\tlocal define = self:GetComponentDefine(componentName)",
+		"\tlocal controls = define ~= nil and define.controls or nil",
+		"\tlocal control = controls ~= nil and controls[controlName] or nil",
+		"\tif control ~= nil then",
+		"\t\treturn control.path",
+		"\tend",
+		"\tfor _, item in pairs(controls or {}) do",
+		"\t\tif item.path == controlName then",
+		"\t\t\treturn item.path",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
+		"end",
+		"",
+		"function {0}AutoGen:GetComponentControlType(componentName, controlName)".format(ui_name),
+		"\tlocal define = self:GetComponentDefine(componentName)",
+		"\tlocal controls = define ~= nil and define.controls or nil",
+		"\tlocal control = controls ~= nil and controls[controlName] or nil",
+		"\tif control ~= nil then",
+		"\t\treturn control.type",
+		"\tend",
+		"\tfor _, item in pairs(controls or {}) do",
+		"\t\tif item.path == controlName then",
+		"\t\t\treturn item.type",
+		"\t\tend",
+		"\tend",
+		"\treturn nil",
 		"end",
 		"",
 		"return {0}AutoGen".format(ui_name),

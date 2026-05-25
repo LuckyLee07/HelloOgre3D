@@ -34,6 +34,25 @@ local GeneratedUIRegistry = {
 		},
 	},
 -- </FairyGUIAutoGen:Act37TestMvc>
+-- <FairyGUIAutoGen:BusinessBenchmark>
+	BusinessBenchmark = {
+		package = "act_38_test",
+		component = "QingLuanActMain",
+		classlua = "BusinessBenchmarkAutoGen",
+		layer = "Popup",
+		group = "Benchmark",
+		scene = "BusinessBenchmark",
+		cache = false,
+		fullScreen = true,
+		closeOnEscape = true,
+		requires = {
+			"res.scripts.ui.views.BusinessBenchmarkCtrl",
+			"res.scripts.ui.views.BusinessBenchmarkModel",
+			"res.scripts.ui.views.BusinessBenchmarkView",
+			"res.scripts.ui.views.BusinessBenchmarkAutoGen",
+		},
+	},
+-- </FairyGUIAutoGen:BusinessBenchmark>
 }
 
 return GeneratedUIRegistry

@@ -63,6 +63,119 @@ Act37TestMvcAutoGen.ListItem = {
 	},
 }
 
+Act37TestMvcAutoGen.Component = {
+	btnClose06 = {
+		name = "btn_close06",
+		controls = {
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	btnHelp02 = {
+		name = "btn_help02",
+		controls = {
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	btnLingqu = {
+		name = "btn_lingqu",
+		controls = {
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+			c1 = { path = "c1", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	btnList = {
+		name = "btn_list",
+		controls = {
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	btnNumber = {
+		name = "btn_number",
+		controls = {
+			icon = { path = "icon", type = "GLoader" },
+			price = { path = "price", type = "GTextField" },
+			buyTips = { path = "buyTips", type = "GTextField" },
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+			c1 = { path = "c1", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	btnSanliou = {
+		name = "btn_sanliou",
+		controls = {
+			redTag = { path = "redTag", type = "GImage" },
+		},
+		controllers = {
+			button = { path = "button", type = "GController" },
+		},
+		transitions = {
+		},
+	},
+	itemReward = {
+		name = "item_reward",
+		controls = {
+			icon = { path = "icon", type = "GLoader" },
+			num = { path = "num", type = "GTextField" },
+		},
+		controllers = {
+		},
+		transitions = {
+		},
+	},
+	mainPifushoumai = {
+		name = "main_pifushoumai",
+		controls = {
+			imgMask = { path = "img_mask", type = "GImage" },
+			tabList = { path = "tab_list", type = "GList" },
+			loaderImgBg04 = { path = "loader_img_bg_04", type = "GLoader" },
+			rewardList = { path = "reward_list", type = "GList" },
+			avatarLoader = { path = "avatarLoader", type = "GObject" },
+			btnGet = { path = "btn_get", type = "GComponent" },
+			btnBuy = { path = "btn_buy", type = "GComponent" },
+			btnRule = { path = "btn_rule", type = "GComponent" },
+			btnDetail = { path = "btn_detail", type = "GComponent" },
+			btnClose = { path = "btn_close", type = "GComponent" },
+			txtTitle = { path = "txt_title", type = "GTextField" },
+			txtRule = { path = "txt_rule", type = "GTextField" },
+			txtDesc = { path = "txt_desc", type = "GTextField" },
+			txtTime = { path = "txt_time", type = "GTextField" },
+		},
+		controllers = {
+		},
+		transitions = {
+		},
+	},
+	scrollText = {
+		name = "scroll_text",
+		controls = {
+			text = { path = "text", type = "GTextField" },
+		},
+		controllers = {
+		},
+		transitions = {
+		},
+	},
+}
+
 function Act37TestMvcAutoGen:Create(param)
 	return ClassList.Act37TestMvcAutoGen.new(param)
 end
@@ -84,7 +197,89 @@ function Act37TestMvcAutoGen:GetTransitionName(name)
 end
 
 function Act37TestMvcAutoGen:GetListItemDefine(name)
-	return Act37TestMvcAutoGen.ListItem[name]
+	local define = Act37TestMvcAutoGen.ListItem[name]
+	if define ~= nil then
+		return define
+	end
+	for _, item in pairs(Act37TestMvcAutoGen.ListItem) do
+		if item.path == name or item.component == name or item.resourceId == name then
+			return item
+		end
+	end
+	return nil
+end
+
+function Act37TestMvcAutoGen:GetListItemControlPath(listName, controlName)
+	local define = self:GetListItemDefine(listName)
+	local controls = define ~= nil and define.controls or nil
+	local control = controls ~= nil and controls[controlName] or nil
+	if control ~= nil then
+		return control.path
+	end
+	for _, item in pairs(controls or {}) do
+		if item.path == controlName then
+			return item.path
+		end
+	end
+	return nil
+end
+
+function Act37TestMvcAutoGen:GetListItemControlType(listName, controlName)
+	local define = self:GetListItemDefine(listName)
+	local controls = define ~= nil and define.controls or nil
+	local control = controls ~= nil and controls[controlName] or nil
+	if control ~= nil then
+		return control.type
+	end
+	for _, item in pairs(controls or {}) do
+		if item.path == controlName then
+			return item.type
+		end
+	end
+	return nil
+end
+
+function Act37TestMvcAutoGen:GetComponentDefine(name)
+	local define = Act37TestMvcAutoGen.Component[name]
+	if define ~= nil then
+		return define
+	end
+	for _, item in pairs(Act37TestMvcAutoGen.Component) do
+		if item.name == name then
+			return item
+		end
+	end
+	return nil
+end
+
+function Act37TestMvcAutoGen:GetComponentControlPath(componentName, controlName)
+	local define = self:GetComponentDefine(componentName)
+	local controls = define ~= nil and define.controls or nil
+	local control = controls ~= nil and controls[controlName] or nil
+	if control ~= nil then
+		return control.path
+	end
+	for _, item in pairs(controls or {}) do
+		if item.path == controlName then
+			return item.path
+		end
+	end
+	return nil
+end
+
+function Act37TestMvcAutoGen:GetComponentControlType(componentName, controlName)
+	local define = self:GetComponentDefine(componentName)
+	local controls = define ~= nil and define.controls or nil
+	local control = controls ~= nil and controls[controlName] or nil
+	if control ~= nil then
+		return control.type
+	end
+	for _, item in pairs(controls or {}) do
+		if item.path == controlName then
+			return item.type
+		end
+	end
+	return nil
 end
 
 return Act37TestMvcAutoGen
