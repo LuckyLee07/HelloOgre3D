@@ -35,11 +35,51 @@ function FairyGuiBaseCtrl:GetControlType(name)
 	return nil
 end
 
+function FairyGuiBaseCtrl:GetControlDefine(name)
+	if self.autoGen ~= nil and self.autoGen.GetControlDefine ~= nil then
+		return self.autoGen:GetControlDefine(name)
+	end
+	return nil
+end
+
+function FairyGuiBaseCtrl:RequireControlPath(name)
+	if self.autoGen ~= nil and self.autoGen.RequireControlPath ~= nil then
+		return self.autoGen:RequireControlPath(name)
+	end
+	local path = self:GetControlPath(name)
+	if path == nil then
+		error("[FGUI] Missing control path: " .. tostring(name), 2)
+	end
+	return path
+end
+
+function FairyGuiBaseCtrl:RequireControlType(name)
+	if self.autoGen ~= nil and self.autoGen.RequireControlType ~= nil then
+		return self.autoGen:RequireControlType(name)
+	end
+	local controlType = self:GetControlType(name)
+	if controlType == nil then
+		error("[FGUI] Missing control type: " .. tostring(name), 2)
+	end
+	return controlType
+end
+
 function FairyGuiBaseCtrl:GetListItemDefine(listName)
 	if self.autoGen ~= nil and self.autoGen.GetListItemDefine ~= nil then
 		return self.autoGen:GetListItemDefine(listName)
 	end
 	return nil
+end
+
+function FairyGuiBaseCtrl:RequireListItemDefine(listName)
+	if self.autoGen ~= nil and self.autoGen.RequireListItemDefine ~= nil then
+		return self.autoGen:RequireListItemDefine(listName)
+	end
+	local define = self:GetListItemDefine(listName)
+	if define == nil then
+		error("[FGUI] Missing list item define: " .. tostring(listName), 2)
+	end
+	return define
 end
 
 function FairyGuiBaseCtrl:GetListItemControlPath(listName, controlName)
@@ -49,11 +89,33 @@ function FairyGuiBaseCtrl:GetListItemControlPath(listName, controlName)
 	return nil
 end
 
+function FairyGuiBaseCtrl:RequireListItemControlPath(listName, controlName)
+	if self.autoGen ~= nil and self.autoGen.RequireListItemControlPath ~= nil then
+		return self.autoGen:RequireListItemControlPath(listName, controlName)
+	end
+	local path = self:GetListItemControlPath(listName, controlName)
+	if path == nil then
+		error("[FGUI] Missing list item control path: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function FairyGuiBaseCtrl:GetListItemControlType(listName, controlName)
 	if self.autoGen ~= nil and self.autoGen.GetListItemControlType ~= nil then
 		return self.autoGen:GetListItemControlType(listName, controlName)
 	end
 	return nil
+end
+
+function FairyGuiBaseCtrl:RequireListItemControlType(listName, controlName)
+	if self.autoGen ~= nil and self.autoGen.RequireListItemControlType ~= nil then
+		return self.autoGen:RequireListItemControlType(listName, controlName)
+	end
+	local controlType = self:GetListItemControlType(listName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing list item control type: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
 end
 
 function FairyGuiBaseCtrl:BindListItemControls(listName, item)
@@ -74,6 +136,17 @@ function FairyGuiBaseCtrl:GetComponentDefine(componentName)
 	return nil
 end
 
+function FairyGuiBaseCtrl:RequireComponentDefine(componentName)
+	if self.autoGen ~= nil and self.autoGen.RequireComponentDefine ~= nil then
+		return self.autoGen:RequireComponentDefine(componentName)
+	end
+	local define = self:GetComponentDefine(componentName)
+	if define == nil then
+		error("[FGUI] Missing component define: " .. tostring(componentName), 2)
+	end
+	return define
+end
+
 function FairyGuiBaseCtrl:GetComponentControlPath(componentName, controlName)
 	if self.autoGen ~= nil and self.autoGen.GetComponentControlPath ~= nil then
 		return self.autoGen:GetComponentControlPath(componentName, controlName)
@@ -81,11 +154,40 @@ function FairyGuiBaseCtrl:GetComponentControlPath(componentName, controlName)
 	return nil
 end
 
+function FairyGuiBaseCtrl:RequireComponentControlPath(componentName, controlName)
+	if self.autoGen ~= nil and self.autoGen.RequireComponentControlPath ~= nil then
+		return self.autoGen:RequireComponentControlPath(componentName, controlName)
+	end
+	local path = self:GetComponentControlPath(componentName, controlName)
+	if path == nil then
+		error("[FGUI] Missing component control path: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function FairyGuiBaseCtrl:GetComponentControlType(componentName, controlName)
 	if self.autoGen ~= nil and self.autoGen.GetComponentControlType ~= nil then
 		return self.autoGen:GetComponentControlType(componentName, controlName)
 	end
 	return nil
+end
+
+function FairyGuiBaseCtrl:RequireComponentControlType(componentName, controlName)
+	if self.autoGen ~= nil and self.autoGen.RequireComponentControlType ~= nil then
+		return self.autoGen:RequireComponentControlType(componentName, controlName)
+	end
+	local controlType = self:GetComponentControlType(componentName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing component control type: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
+end
+
+function FairyGuiBaseCtrl:ValidateAutoGenContract(required)
+	if self.autoGen ~= nil and self.autoGen.ValidateContract ~= nil then
+		return self.autoGen:ValidateContract(required)
+	end
+	return false, "missingAutoGenValidator"
 end
 
 function FairyGuiBaseCtrl:Start()
@@ -190,6 +292,18 @@ end
 
 function FairyGuiBaseCtrl:GetTextInputPolicy(childPath)
 	return self.view ~= nil and self.view:GetTextInputPolicy(childPath) or nil
+end
+
+function FairyGuiBaseCtrl:ConfigureTextInput(childPath, policy)
+	return self.view ~= nil and self.view:ConfigureTextInput(childPath, policy) or false
+end
+
+function FairyGuiBaseCtrl:GetTextInputDisplayText(childPath)
+	return self.view ~= nil and self.view:GetTextInputDisplayText(childPath) or ""
+end
+
+function FairyGuiBaseCtrl:GetTextInputDebugInfo(childPath)
+	return self.view ~= nil and self.view:GetTextInputDebugInfo(childPath) or nil
 end
 
 function FairyGuiBaseCtrl:Focus(childPath)
@@ -426,6 +540,14 @@ end
 
 function FairyGuiBaseCtrl:AddChanged(childPath, callback)
 	return self.view ~= nil and self.view:AddChanged(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddFocusIn(childPath, callback)
+	return self.view ~= nil and self.view:AddFocusIn(childPath, callback) or nil
+end
+
+function FairyGuiBaseCtrl:AddFocusOut(childPath, callback)
+	return self.view ~= nil and self.view:AddFocusOut(childPath, callback) or nil
 end
 
 function FairyGuiBaseCtrl:AddControllerChanged(controllerName, callback)

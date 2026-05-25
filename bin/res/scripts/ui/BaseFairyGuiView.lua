@@ -104,6 +104,27 @@ function BaseFairyGuiView:GetTextInputPolicy(childPath)
 	return FairyGuiManager:GetTextInputPolicy(self.handle, childPath)
 end
 
+function BaseFairyGuiView:ConfigureTextInput(childPath, policy)
+	if FairyGuiManager == nil or self.handle == nil then
+		return false
+	end
+	return FairyGuiManager:ConfigureTextInput(self.handle, childPath, policy)
+end
+
+function BaseFairyGuiView:GetTextInputDisplayText(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return ""
+	end
+	return FairyGuiManager:GetTextInputDisplayText(self.handle, childPath)
+end
+
+function BaseFairyGuiView:GetTextInputDebugInfo(childPath)
+	if FairyGuiManager == nil or self.handle == nil then
+		return nil
+	end
+	return FairyGuiManager:GetTextInputDebugInfo(self.handle, childPath)
+end
+
 function BaseFairyGuiView:Focus(childPath)
 	if FairyGuiManager == nil or self.handle == nil then
 		return false
@@ -627,6 +648,14 @@ end
 
 function BaseFairyGuiView:AddChanged(childPath, callback)
 	return self:AddEvent(childPath, "Changed", callback)
+end
+
+function BaseFairyGuiView:AddFocusIn(childPath, callback)
+	return self:AddEvent(childPath, "Enter", callback)
+end
+
+function BaseFairyGuiView:AddFocusOut(childPath, callback)
+	return self:AddEvent(childPath, "Exit", callback)
 end
 
 function BaseFairyGuiView:AddControllerChanged(controllerName, callback)

@@ -33,6 +33,136 @@ local function tableCount(source)
 	return count
 end
 
+local DEFAULT_SERVICE_SKINS = {
+	Toast = {
+		Default = {
+			minWidth = 240,
+			height = 44,
+			paddingX = 80,
+			charWidth = 14,
+			fontSize = 22,
+			bottom = 120,
+			textColor = { 255, 244, 200 },
+			resource = { mode = "dynamic" },
+		},
+	},
+	Tip = {
+		Default = {
+			width = 320,
+			height = 36,
+			fontSize = 20,
+			anchorGap = 6,
+			textColor = { 180, 230, 255 },
+			resource = { mode = "dynamic" },
+		},
+	},
+	Loading = {
+		Default = {
+			width = 280,
+			height = 36,
+			fontSize = 24,
+			textColor = { 255, 255, 255 },
+			modalAlpha = 0.45,
+			resource = { mode = "dynamic" },
+		},
+	},
+	GuideMask = {
+		Default = {
+			fontSize = 24,
+			textX = 80,
+			textY = 80,
+			textWidth = 520,
+			textHeight = 48,
+			modalAlpha = 0.55,
+			textColor = { 255, 255, 255 },
+			resource = { mode = "dynamic" },
+		},
+	},
+	MessageBox = {
+		Default = {
+			width = 460,
+			height = 240,
+			titleFontSize = 24,
+			bodyFontSize = 20,
+			buttonFontSize = 22,
+			buttonWidth = 110,
+			buttonHeight = 44,
+			buttonGap = 16,
+			modalAlpha = 0.45,
+			titleColor = { 255, 236, 180 },
+			bodyColor = { 230, 230, 230 },
+			buttonTextColor = { 255, 255, 255 },
+			resource = { mode = "dynamic" },
+		},
+	},
+	PopupMenu = {
+		Default = {
+			width = 220,
+			itemHeight = 34,
+			fontSize = 22,
+			anchorGap = 6,
+			modalAlpha = 0.05,
+			itemTextColor = { 255, 255, 255 },
+			resource = { mode = "dynamic" },
+		},
+	},
+}
+
+local function cloneValue(source)
+	if type(source) ~= "table" then
+		return source
+	end
+
+	local result = {}
+	for key, value in pairs(source) do
+		result[key] = cloneValue(value)
+	end
+	return result
+end
+
+local function mergeTable(base, override)
+	local result = cloneValue(base) or {}
+	if type(override) ~= "table" then
+		return result
+	end
+
+	for key, value in pairs(override) do
+		if type(value) == "table" and type(result[key]) == "table" then
+			result[key] = mergeTable(result[key], value)
+		else
+			result[key] = cloneValue(value)
+		end
+	end
+	return result
+end
+
+local function ensureServiceSkins(owner)
+	if owner == nil then
+		return cloneValue(DEFAULT_SERVICE_SKINS)
+	end
+
+	owner.serviceSkins = owner.serviceSkins or {}
+	for serviceType, skins in pairs(DEFAULT_SERVICE_SKINS) do
+		owner.serviceSkins[serviceType] = owner.serviceSkins[serviceType] or {}
+		for skinName, skin in pairs(skins) do
+			if owner.serviceSkins[serviceType][skinName] == nil then
+				owner.serviceSkins[serviceType][skinName] = cloneValue(skin)
+			end
+		end
+	end
+	return owner.serviceSkins
+end
+
+local function getColor(style, key, red, green, blue)
+	local color = style ~= nil and style[key] or nil
+	if type(color) == "table" then
+		return tonumber(color.r or color.red or color[1]) or red,
+			tonumber(color.g or color.green or color[2]) or green,
+			tonumber(color.b or color.blue or color[3]) or blue
+	end
+	return red, green, blue
+end
+
 local function ensureServiceStats(owner)
 	if owner.serviceStats == nil then
 		owner.serviceStats = {
@@ -241,10 +371,69 @@ function FairyGuiServices:Init(owner)
 	self.loadingRefs = owner ~= nil and owner.loadingRefs or self.loadingRefs or {}
 	self.loadingRefTotal = owner ~= nil and owner.loadingRefTotal or self.loadingRefTotal or 0
 	if owner ~= nil then
+		ensureServiceSkins(owner)
 		self.serviceStats = owner.serviceStats or self.serviceStats or ensureServiceStats(owner)
 		bindOwnerState(owner, self)
 		ensureServiceStats(owner)
 	end
+end
+
+function FairyGuiServices:RegisterServiceSkin(serviceType, skinName, skin)
+	local self = self.owner
+	if self == nil or isBlank(serviceType) or isBlank(skinName) or type(skin) ~= "table" then
+		return false
+	end
+
+	local skins = ensureServiceSkins(self)
+	skins[serviceType] = skins[serviceType] or {}
+	local base = skins[serviceType][skinName] or skins[serviceType].Default or {}
+	local merged = mergeTable(base, skin)
+	merged.name = skinName
+	merged.serviceType = serviceType
+	skins[serviceType][skinName] = merged
+	return true
+end
+
+function FairyGuiServices:GetServiceSkin(serviceType, skinName)
+	local self = self.owner
+	if self == nil or isBlank(serviceType) then
+		return nil
+	end
+
+	local skins = ensureServiceSkins(self)
+	local skinSet = skins[serviceType]
+	if skinSet == nil then
+		return nil
+	end
+	local name = isBlank(skinName) and "Default" or skinName
+	local skin = skinSet[name] or skinSet.Default
+	return cloneValue(skin)
+end
+
+function FairyGuiServices:ResolveServiceSkin(serviceType, param)
+	local self = self.owner
+	param = param or {}
+	local skinName = param.serviceSkinName or param.skinName
+	local inlineSkin = nil
+	if type(param.serviceSkin) == "table" then
+		inlineSkin = param.serviceSkin
+	elseif type(param.skin) == "table" then
+		inlineSkin = param.skin
+	else
+		skinName = skinName or param.serviceSkin or param.skin
+	end
+	skinName = isBlank(skinName) and "Default" or tostring(skinName)
+
+	local skins = ensureServiceSkins(self)
+	local skinSet = skins[serviceType] or {}
+	local actualSkinName = skinSet[skinName] ~= nil and skinName or "Default"
+	local base = skinSet[actualSkinName] or skinSet.Default or {}
+	local resolved = mergeTable(base, inlineSkin)
+	resolved.name = actualSkinName
+	resolved.requestedName = skinName
+	resolved.serviceType = serviceType
+	resolved.resource = resolved.resource or { mode = "dynamic" }
+	return resolved
 end
 
 function FairyGuiServices:OpenServiceContainer(key, param)
@@ -265,6 +454,8 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 	self:CloseUI(key, true, "serviceReplace")
 	param.key = key
 	param.serviceType = param.serviceType or key
+	param.resolvedServiceSkin = param.resolvedServiceSkin or self:ResolveServiceSkin(param.serviceType, param)
+	param.serviceSkinName = param.serviceSkinName or (param.resolvedServiceSkin and param.resolvedServiceSkin.name) or "Default"
 	param.layer = param.layer or "Top"
 	param.scene = param.scene or param.sceneName or self.currentSceneName
 	param.closeOnSceneChange = param.closeOnSceneChange ~= false
@@ -310,6 +501,9 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
 		ownedHandles = {},
 		serviceType = param.serviceType,
+		serviceSkinName = param.serviceSkinName,
+		serviceSkin = param.resolvedServiceSkin,
+		serviceResource = param.resolvedServiceSkin and param.resolvedServiceSkin.resource or nil,
 		parentHandle = param.parentHandle or param.rootHandle,
 		rootLayer = param.rootLayer,
 		focusOrder = param.focusOrder,
@@ -370,7 +564,7 @@ function FairyGuiServices:AddServiceImage(objectInfo, name, url, x, y, width, he
 	return self:AddOwnedHandle(objectInfo, imageHandle)
 end
 
-function FairyGuiServices:AddServiceButton(objectInfo, name, text, x, y, width, height, callback)
+function FairyGuiServices:AddServiceButton(objectInfo, name, text, x, y, width, height, callback, style)
 	local self = self.owner
 	if self == nil or objectInfo == nil then
 		return nil
@@ -388,7 +582,8 @@ function FairyGuiServices:AddServiceButton(objectInfo, name, text, x, y, width, 
 		return nil
 	end
 	self:AddOwnedHandle(objectInfo, buttonHandle)
-	self:AddServiceText(objectInfo, (name or "") .. "_text", text or "", x or 0, y or 0, width or 120, height or 44, 22, 255, 255, 255)
+	local red, green, blue = getColor(style, "textColor", 255, 255, 255)
+	self:AddServiceText(objectInfo, (name or "") .. "_text", text or "", x or 0, y or 0, width or 120, height or 44, style and style.fontSize or 22, red, green, blue)
 	if type(callback) == "function" then
 		self:AddClick(buttonHandle, "", callback)
 	end
@@ -402,6 +597,7 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 	end
 
 	local param = objectInfo.param or {}
+	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin(objectInfo.serviceType, param)
 	local screenWidth = self:GetScreenWidth()
 	local screenHeight = self:GetScreenHeight()
 	if screenWidth <= 0 or screenHeight <= 0 then
@@ -429,11 +625,14 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 
 	if objectInfo.serviceType == "Toast" and objectInfo.toastTextHandle ~= nil then
 		local text = tostring(objectInfo.toastText or "")
-		local width = param.width or math.min(math.max(string.len(text) * 14 + 80, 240), math.max(screenWidth - 80, 240))
-		local height = param.height or 44
+		local minWidth = tonumber(skin.minWidth) or 240
+		local paddingX = tonumber(skin.paddingX) or 80
+		local charWidth = tonumber(skin.charWidth) or 14
+		local width = param.width or math.min(math.max(string.len(text) * charWidth + paddingX, minWidth), math.max(screenWidth - 80, minWidth))
+		local height = param.height or skin.height or 44
 		local rect = {
 			x = param.x or math.max((screenWidth - width) * 0.5, 0),
-			y = param.y or math.max(screenHeight - (param.bottom or 120), 0),
+			y = param.y or math.max(screenHeight - (param.bottom or skin.bottom or 120), 0),
 			width = width,
 			height = height,
 		}
@@ -445,8 +644,8 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 		objectInfo.toastLayoutRect = rect
 		return true
 	elseif objectInfo.serviceType == "Loading" and objectInfo.loadingTextHandle ~= nil then
-		local width = param.width or 280
-		local height = param.height or 36
+		local width = param.width or skin.width or 280
+		local height = param.height or skin.height or 36
 		local rect = {
 			x = param.x or math.max(screenWidth * 0.5 - width * 0.5, 0),
 			y = param.y or math.max(screenHeight * 0.5 - height * 0.5, 0),
@@ -458,8 +657,9 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 		objectInfo.loadingLayoutRect = rect
 		return true
 	elseif objectInfo.serviceType == "Tip" and objectInfo.tipTextHandle ~= nil then
-		local width = param.width or 320
-		local height = param.height or 36
+		local width = param.width or skin.width or 320
+		local height = param.height or skin.height or 36
+		param.anchorGap = param.anchorGap or skin.anchorGap
 		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
 		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
 		self:SetPosition(objectInfo.tipTextHandle, rect.x, rect.y)
@@ -468,8 +668,9 @@ function FairyGuiServices:ApplyServiceLayout(objectInfo)
 		objectInfo.tipLayoutRect = rect
 		return true
 	elseif objectInfo.serviceType == "PopupMenu" then
-		local width = param.width or 220
-		local height = param.height or 34
+		local width = param.width or skin.width or 220
+		local height = param.height or skin.itemHeight or 34
+		param.anchorGap = param.anchorGap or skin.anchorGap
 		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
 		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
 		self:SetPosition(objectInfo.handle, rect.x, rect.y)
@@ -631,7 +832,9 @@ function FairyGuiServices:OpenToastRequest(request)
 
 	objectInfo.toastRequestId = request.id
 	objectInfo.toastText = request.text or ""
-	objectInfo.toastTextHandle = self:AddServiceText(objectInfo, "toast_text", objectInfo.toastText, 0, 0, param.width or 240, param.height or 44, param.fontSize or 22, 255, 244, 200)
+	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin("Toast", param)
+	local red, green, blue = getColor(skin, "textColor", 255, 244, 200)
+	objectInfo.toastTextHandle = self:AddServiceText(objectInfo, "toast_text", objectInfo.toastText, 0, 0, param.width or skin.minWidth or 240, param.height or skin.height or 44, param.fontSize or skin.fontSize or 22, red, green, blue)
 	self:ApplyServiceLayout(objectInfo)
 	local stats = ensureServiceStats(self)
 	stats.toastShownTotal = (stats.toastShownTotal or 0) + 1
@@ -723,7 +926,9 @@ function FairyGuiServices:ShowTip(text, x, y, duration, param)
 		return nil
 	end
 	objectInfo.tipText = text or ""
-	objectInfo.tipTextHandle = self:AddServiceText(objectInfo, "tip_text", objectInfo.tipText, param.x, param.y, param.width or 320, param.height or 36, param.fontSize or 20, 180, 230, 255)
+	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin("Tip", param)
+	local red, green, blue = getColor(skin, "textColor", 180, 230, 255)
+	objectInfo.tipTextHandle = self:AddServiceText(objectInfo, "tip_text", objectInfo.tipText, param.x, param.y, param.width or skin.width or 320, param.height or skin.height or 36, param.fontSize or skin.fontSize or 20, red, green, blue)
 	self:ApplyServiceLayout(objectInfo)
 
 	local delay = tonumber(param.delay or param.hoverDelay) or 0
@@ -803,6 +1008,10 @@ function FairyGuiServices:ShowLoading(text, param)
 	param.popupMode = param.popupMode or "replace"
 	param.fullScreen = true
 	param.modal = param.modal ~= false
+	local skin = self:ResolveServiceSkin("Loading", param)
+	param.resolvedServiceSkin = skin
+	param.serviceSkinName = param.serviceSkinName or skin.name
+	param.modalAlpha = param.modalAlpha or skin.modalAlpha
 	param.closeOnMaskClick = false
 	param.touchable = false
 	param.serviceType = "Loading"
@@ -815,7 +1024,8 @@ function FairyGuiServices:ShowLoading(text, param)
 		return nil
 	end
 	objectInfo.loadingText = text or "Loading..."
-	objectInfo.loadingTextHandle = self:AddServiceText(objectInfo, "loading_text", text or "Loading...", 0, 0, param.width or 280, param.height or 36, param.fontSize or 24, 255, 255, 255)
+	local red, green, blue = getColor(objectInfo.serviceSkin or skin, "textColor", 255, 255, 255)
+	objectInfo.loadingTextHandle = self:AddServiceText(objectInfo, "loading_text", text or "Loading...", 0, 0, param.width or skin.width or 280, param.height or skin.height or 36, param.fontSize or skin.fontSize or 24, red, green, blue)
 	self:ApplyServiceLayout(objectInfo)
 	local timeout = tonumber(param.timeout)
 	if timeout ~= nil and timeout > 0 then
@@ -879,6 +1089,7 @@ function FairyGuiServices:ShowGuideMask(param)
 
 	param = copyTable(param)
 	local highlightRects = self:GetGuideMaskRects(param)
+	local skin = self:ResolveServiceSkin("GuideMask", param)
 	param.key = param.key or "__GuideMask"
 	param.layer = param.layer or "Guide"
 	param.stackMode = param.stackMode or "Popup"
@@ -886,7 +1097,9 @@ function FairyGuiServices:ShowGuideMask(param)
 	param.popupMode = param.popupMode or "replace"
 	param.fullScreen = true
 	param.modal = highlightRects == nil
-	param.modalAlpha = param.modalAlpha or 0.55
+	param.resolvedServiceSkin = skin
+	param.serviceSkinName = param.serviceSkinName or skin.name
+	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.55
 	param.closeOnMaskClick = param.closeOnMaskClick == true
 	param.touchable = false
 	param.serviceType = "GuideMask"
@@ -899,7 +1112,8 @@ function FairyGuiServices:ShowGuideMask(param)
 		self:CreateGuideMaskSegments(objectInfo, param)
 	end
 	if not isBlank(param.text) then
-		self:AddServiceText(objectInfo, "guide_text", param.text, param.textX or 80, param.textY or 80, param.textWidth or 520, param.textHeight or 48, param.fontSize or 24, 255, 255, 255)
+		local red, green, blue = getColor(objectInfo.serviceSkin or skin, "textColor", 255, 255, 255)
+		self:AddServiceText(objectInfo, "guide_text", param.text, param.textX or skin.textX or 80, param.textY or skin.textY or 80, param.textWidth or skin.textWidth or 520, param.textHeight or skin.textHeight or 48, param.fontSize or skin.fontSize or 24, red, green, blue)
 	end
 	return objectInfo.handle
 end
@@ -919,15 +1133,18 @@ function FairyGuiServices:ShowMessageBox(title, message, buttons, callback, para
 	end
 
 	param = copyTable(param)
+	local skin = self:ResolveServiceSkin("MessageBox", param)
 	param.key = param.key or "__MessageBox"
 	param.layer = param.layer or "Top"
 	param.stackMode = param.stackMode or "Popup"
 	param.popupGroup = param.popupGroup or "MessageBox"
 	param.popupMode = param.popupMode or "replace"
-	param.width = param.width or 460
-	param.height = param.height or 240
+	param.width = param.width or skin.width or 460
+	param.height = param.height or skin.height or 240
 	param.modal = param.modal ~= false
-	param.modalAlpha = param.modalAlpha or 0.45
+	param.resolvedServiceSkin = skin
+	param.serviceSkinName = param.serviceSkinName or skin.name
+	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.45
 	param.closeOnMaskClick = param.closeOnMaskClick == true
 	param.closeOnEscape = param.closeOnEscape ~= false
 	param.touchable = true
@@ -948,21 +1165,29 @@ function FairyGuiServices:ShowMessageBox(title, message, buttons, callback, para
 	if objectInfo == nil then
 		return nil
 	end
-	self:AddServiceText(objectInfo, "message_title", title or "", 24, 24, param.width - 48, 34, 24, 255, 236, 180)
-	self:AddServiceText(objectInfo, "message_body", message or "", 24, 72, param.width - 48, 80, 20, 230, 230, 230)
+	local titleRed, titleGreen, titleBlue = getColor(objectInfo.serviceSkin or skin, "titleColor", 255, 236, 180)
+	local bodyRed, bodyGreen, bodyBlue = getColor(objectInfo.serviceSkin or skin, "bodyColor", 230, 230, 230)
+	self:AddServiceText(objectInfo, "message_title", title or "", 24, 24, param.width - 48, 34, param.titleFontSize or skin.titleFontSize or 24, titleRed, titleGreen, titleBlue)
+	self:AddServiceText(objectInfo, "message_body", message or "", 24, 72, param.width - 48, 80, param.bodyFontSize or skin.bodyFontSize or 20, bodyRed, bodyGreen, bodyBlue)
 
-	local buttonWidth = param.buttonWidth or 110
-	local buttonGap = param.buttonGap or 16
+	local buttonWidth = param.buttonWidth or skin.buttonWidth or 110
+	local buttonHeight = param.buttonHeight or skin.buttonHeight or 44
+	local buttonGap = param.buttonGap or skin.buttonGap or 16
 	local totalWidth = #buttons * buttonWidth + math.max(#buttons - 1, 0) * buttonGap
 	local startX = math.max((param.width - totalWidth) * 0.5, 0)
+	local buttonRed, buttonGreen, buttonBlue = getColor(objectInfo.serviceSkin or skin, "buttonTextColor", 255, 255, 255)
+	local buttonStyle = {
+		fontSize = param.buttonFontSize or skin.buttonFontSize or 22,
+		textColor = { buttonRed, buttonGreen, buttonBlue },
+	}
 	for index, buttonText in ipairs(buttons) do
 		local label = type(buttonText) == "table" and (buttonText.text or buttonText.label or tostring(index)) or tostring(buttonText)
-		self:AddServiceButton(objectInfo, "message_button_" .. tostring(index), label, startX + (index - 1) * (buttonWidth + buttonGap), param.height - 68, buttonWidth, 44, function()
+		self:AddServiceButton(objectInfo, "message_button_" .. tostring(index), label, startX + (index - 1) * (buttonWidth + buttonGap), param.height - buttonHeight - 24, buttonWidth, buttonHeight, function()
 			if type(callback) == "function" then
 				callback(index, label)
 			end
 			self:CloseUI(objectInfo.key, true, "messageBoxButton")
-		end)
+		end, buttonStyle)
 	end
 	return objectInfo.handle
 end
@@ -982,22 +1207,26 @@ function FairyGuiServices:ShowPopupMenu(items, x, y, callback, param)
 	end
 
 	param = copyTable(param)
+	local skin = self:ResolveServiceSkin("PopupMenu", param)
 	param.key = param.key or "__PopupMenu"
 	param.layer = param.layer or "Top"
 	param.stackMode = param.stackMode or "Popup"
 	param.popupGroup = param.popupGroup or "PopupMenu"
 	param.popupMode = param.popupMode or "replace"
 	param.modal = param.modal ~= false
-	param.modalAlpha = param.modalAlpha or 0.05
+	param.resolvedServiceSkin = skin
+	param.serviceSkinName = param.serviceSkinName or skin.name
+	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.05
 	param.closeOnMaskClick = param.closeOnMaskClick ~= false
 	param.touchable = true
 	param.serviceType = "PopupMenu"
 
 	items = type(items) == "table" and items or {}
-	local itemHeight = param.itemHeight or 34
-	param.width = param.width or 220
+	local itemHeight = param.itemHeight or skin.itemHeight or 34
+	param.width = param.width or skin.width or 220
 	param.height = param.height or math.max(#items * itemHeight, itemHeight)
 	param.fitInScreen = param.fitInScreen ~= false
+	param.anchorGap = param.anchorGap or skin.anchorGap
 	local anchorRect = resolveAnchorRect(self, param, x, y)
 	local layoutRect = buildAnchoredRect(self, anchorRect, param.width, param.height, param)
 	param.x = layoutRect.x
@@ -1009,6 +1238,11 @@ function FairyGuiServices:ShowPopupMenu(items, x, y, callback, param)
 	end
 	objectInfo.popupMenuAnchorRect = anchorRect
 	objectInfo.popupMenuLayoutRect = layoutRect
+	local red, green, blue = getColor(objectInfo.serviceSkin or skin, "itemTextColor", 255, 255, 255)
+	local itemStyle = {
+		fontSize = param.fontSize or skin.fontSize or 22,
+		textColor = { red, green, blue },
+	}
 	for index, item in ipairs(items) do
 		local label = type(item) == "table" and (item.text or item.label or tostring(index)) or tostring(item)
 		self:AddServiceButton(objectInfo, "popup_item_" .. tostring(index), label, 0, (index - 1) * itemHeight, param.width, itemHeight, function()
@@ -1016,7 +1250,7 @@ function FairyGuiServices:ShowPopupMenu(items, x, y, callback, param)
 				callback(index, item)
 			end
 			self:CloseUI(objectInfo.key, true, "popupMenuSelect")
-		end)
+		end, itemStyle)
 	end
 	return objectInfo.handle
 end

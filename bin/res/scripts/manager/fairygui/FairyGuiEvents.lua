@@ -356,6 +356,14 @@ function FairyGuiEvents:AddChanged(handle, childPath, callback)
 	return self:AddEvent(handle, childPath, "Changed", callback)
 end
 
+function FairyGuiEvents:AddFocusIn(handle, childPath, callback)
+	return self:AddEvent(handle, childPath, "Enter", callback)
+end
+
+function FairyGuiEvents:AddFocusOut(handle, childPath, callback)
+	return self:AddEvent(handle, childPath, "Exit", callback)
+end
+
 function FairyGuiEvents:AddControllerChanged(handle, controllerName, callback)
 	local self = self.owner
 	if self == nil or NativeApi == nil or NativeApi.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then

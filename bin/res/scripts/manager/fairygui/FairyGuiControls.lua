@@ -113,6 +113,42 @@ local function applyTextInputPolicy(text, policy)
 	return normalized
 end
 
+local function normalizeTextInputPolicy(policy)
+	local policyCopy = copyTable(policy)
+	policyCopy.inputType = tostring(policyCopy.inputType or policyCopy.type or "")
+	if policyCopy.maxLength == nil and policyCopy.maxLen ~= nil then
+		policyCopy.maxLength = policyCopy.maxLen
+	end
+	if policyCopy.restrict == nil and policyCopy.allowedChars ~= nil then
+		policyCopy.restrict = policyCopy.allowedChars
+	end
+	if policyCopy.placeholder ~= nil then
+		policyCopy.placeholder = tostring(policyCopy.placeholder)
+	end
+	if policyCopy.maskChar ~= nil then
+		policyCopy.maskChar = tostring(policyCopy.maskChar)
+	end
+	if policyCopy.maskChar == "" then
+		policyCopy.maskChar = nil
+	end
+	return policyCopy
+end
+
+local function getTextInputDisplayText(text, policy)
+	text = tostring(text or "")
+	if type(policy) ~= "table" then
+		return text
+	end
+	if text == "" and not isBlank(policy.placeholder) then
+		return tostring(policy.placeholder)
+	end
+	if policy.password == true and text ~= "" then
+		local maskChar = tostring(policy.maskChar or "*")
+		return string.rep(maskChar, utf8CodepointCount(text))
+	end
+	return text
+end
+
 function FairyGuiControls:Init(owner)
 	self.owner = owner
 	self.textInputPoliciesByHandle = owner ~= nil and owner.textInputPoliciesByHandle or self.textInputPoliciesByHandle or {}
@@ -168,7 +204,7 @@ function FairyGuiControls:SetTextInputPolicy(handle, childPath, policy)
 		return true
 	end
 
-	local policyCopy = copyTable(policy)
+	local policyCopy = normalizeTextInputPolicy(policy)
 	self.textInputPoliciesByHandle[targetHandle] = policyCopy
 	if self.textInputPolicyBindingsByHandle[targetHandle] == nil then
 		local bindingId = self:AddChanged(handle, childPath, function()
@@ -193,6 +229,52 @@ function FairyGuiControls:GetTextInputPolicy(handle, childPath)
 		return nil
 	end
 	return copyTable(policy)
+end
+
+function FairyGuiControls:ConfigureTextInput(handle, childPath, policy)
+	local self = self.owner
+	local configured = self:SetTextInputPolicy(handle, childPath, policy)
+	if configured ~= true then
+		return false
+	end
+	if type(policy) == "table" and policy.autoFocus == true then
+		self:Focus(handle, childPath)
+	end
+	return true
+end
+
+function FairyGuiControls:GetTextInputRawText(handle, childPath)
+	local self = self.owner
+	return self:GetText(handle, childPath)
+end
+
+function FairyGuiControls:GetTextInputDisplayText(handle, childPath)
+	local self = self.owner
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		return ""
+	end
+	local text = self:GetText(targetHandle, nil)
+	local policy = self.textInputPoliciesByHandle[targetHandle]
+	return getTextInputDisplayText(text, policy)
+end
+
+function FairyGuiControls:GetTextInputDebugInfo(handle, childPath)
+	local self = self.owner
+	local targetHandle = self:GetTargetHandle(handle, childPath)
+	if targetHandle == nil then
+		return nil
+	end
+
+	local text = self:GetText(targetHandle, nil)
+	local policy = self.textInputPoliciesByHandle[targetHandle]
+	return {
+		handle = targetHandle,
+		policy = type(policy) == "table" and copyTable(policy) or nil,
+		text = text,
+		displayText = getTextInputDisplayText(text, policy),
+		focused = self:GetFocusedHandle() == targetHandle,
+	}
 end
 
 function FairyGuiControls:ClearTextInputPoliciesForHandles(handles)
@@ -370,6 +452,9 @@ end
 function FairyGuiControls:ClearFocus()
 	if NativeApi == nil or NativeApi.clearFairyGuiFocus == nil then
 		return false
+	end
+	if NativeApi.clearFairyGuiImeComposition ~= nil then
+		NativeApi:clearFairyGuiImeComposition()
 	end
 	return NativeApi:clearFairyGuiFocus()
 end

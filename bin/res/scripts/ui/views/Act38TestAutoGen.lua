@@ -3,6 +3,26 @@
 
 local Act38TestAutoGen = Class("Act38TestAutoGen", ClassList.FairyGuiAutoGen)
 
+Act38TestAutoGen.Control = {
+	mask = { path = "mask", type = "GComponent" },
+	loaderImgBg = { path = "loader_img_bg", type = "GLoader" },
+	tDate = { path = "t_date", type = "GTextField" },
+	btnHelp = { path = "btn_help", type = "GComponent" },
+	btnClose = { path = "btn_close", type = "GComponent" },
+	menuBgimg = { path = "menu_bgimg", type = "GImage" },
+	menuTab = { path = "MenuTab", type = "GList" },
+	m2DayTaskList = { path = "m2_dayTaskList", type = "GList" },
+	m2SpcTaskList = { path = "m2_spcTaskList", type = "GList" },
+	m2ExcShopList = { path = "m2_excShopList", type = "GList" },
+}
+
+Act38TestAutoGen.Controller = {
+	m2MenuCtrl = { path = "m2_menuCtrl", type = "GController" },
+}
+
+Act38TestAutoGen.Transition = {
+}
+
 Act38TestAutoGen.ControlPath = {
 	mask = "mask",
 	loaderImgBg = "loader_img_bg",
@@ -251,20 +271,69 @@ function Act38TestAutoGen:Create(param)
 	return ClassList.Act38TestAutoGen.new(param)
 end
 
+function Act38TestAutoGen:GetControlDefine(name)
+	local define = Act38TestAutoGen.Control[name]
+	if define ~= nil then
+		return define
+	end
+	for _, item in pairs(Act38TestAutoGen.Control) do
+		if item.path == name then
+			return item
+		end
+	end
+	return nil
+end
+
 function Act38TestAutoGen:GetControlPath(name)
-	return Act38TestAutoGen.ControlPath[name]
+	local define = self:GetControlDefine(name)
+	return define ~= nil and define.path or Act38TestAutoGen.ControlPath[name]
+end
+
+function Act38TestAutoGen:RequireControlPath(name)
+	local path = self:GetControlPath(name)
+	if path == nil then
+		error("[FGUI] Missing AutoGen control: " .. tostring(name), 2)
+	end
+	return path
 end
 
 function Act38TestAutoGen:GetControlType(name)
-	return Act38TestAutoGen.ControlType[name]
+	local define = self:GetControlDefine(name)
+	return define ~= nil and define.type or Act38TestAutoGen.ControlType[name]
+end
+
+function Act38TestAutoGen:RequireControlType(name)
+	local controlType = self:GetControlType(name)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen control type: " .. tostring(name), 2)
+	end
+	return controlType
 end
 
 function Act38TestAutoGen:GetControllerPath(name)
-	return Act38TestAutoGen.ControllerPath[name]
+	local define = Act38TestAutoGen.Controller[name]
+	return define ~= nil and define.path or Act38TestAutoGen.ControllerPath[name]
+end
+
+function Act38TestAutoGen:RequireControllerPath(name)
+	local path = self:GetControllerPath(name)
+	if path == nil then
+		error("[FGUI] Missing AutoGen controller: " .. tostring(name), 2)
+	end
+	return path
 end
 
 function Act38TestAutoGen:GetTransitionName(name)
-	return Act38TestAutoGen.TransitionName[name]
+	local define = Act38TestAutoGen.Transition[name]
+	return define ~= nil and define.path or Act38TestAutoGen.TransitionName[name]
+end
+
+function Act38TestAutoGen:RequireTransitionName(name)
+	local transitionName = self:GetTransitionName(name)
+	if transitionName == nil then
+		error("[FGUI] Missing AutoGen transition: " .. tostring(name), 2)
+	end
+	return transitionName
 end
 
 function Act38TestAutoGen:GetListItemDefine(name)
@@ -278,6 +347,14 @@ function Act38TestAutoGen:GetListItemDefine(name)
 		end
 	end
 	return nil
+end
+
+function Act38TestAutoGen:RequireListItemDefine(name)
+	local define = self:GetListItemDefine(name)
+	if define == nil then
+		error("[FGUI] Missing AutoGen list item: " .. tostring(name), 2)
+	end
+	return define
 end
 
 function Act38TestAutoGen:GetListItemControlPath(listName, controlName)
@@ -295,6 +372,14 @@ function Act38TestAutoGen:GetListItemControlPath(listName, controlName)
 	return nil
 end
 
+function Act38TestAutoGen:RequireListItemControlPath(listName, controlName)
+	local path = self:GetListItemControlPath(listName, controlName)
+	if path == nil then
+		error("[FGUI] Missing AutoGen list item control: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function Act38TestAutoGen:GetListItemControlType(listName, controlName)
 	local define = self:GetListItemDefine(listName)
 	local controls = define ~= nil and define.controls or nil
@@ -310,6 +395,14 @@ function Act38TestAutoGen:GetListItemControlType(listName, controlName)
 	return nil
 end
 
+function Act38TestAutoGen:RequireListItemControlType(listName, controlName)
+	local controlType = self:GetListItemControlType(listName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen list item control type: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
+end
+
 function Act38TestAutoGen:GetComponentDefine(name)
 	local define = Act38TestAutoGen.Component[name]
 	if define ~= nil then
@@ -321,6 +414,14 @@ function Act38TestAutoGen:GetComponentDefine(name)
 		end
 	end
 	return nil
+end
+
+function Act38TestAutoGen:RequireComponentDefine(name)
+	local define = self:GetComponentDefine(name)
+	if define == nil then
+		error("[FGUI] Missing AutoGen component: " .. tostring(name), 2)
+	end
+	return define
 end
 
 function Act38TestAutoGen:GetComponentControlPath(componentName, controlName)
@@ -338,6 +439,14 @@ function Act38TestAutoGen:GetComponentControlPath(componentName, controlName)
 	return nil
 end
 
+function Act38TestAutoGen:RequireComponentControlPath(componentName, controlName)
+	local path = self:GetComponentControlPath(componentName, controlName)
+	if path == nil then
+		error("[FGUI] Missing AutoGen component control: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function Act38TestAutoGen:GetComponentControlType(componentName, controlName)
 	local define = self:GetComponentDefine(componentName)
 	local controls = define ~= nil and define.controls or nil
@@ -351,6 +460,50 @@ function Act38TestAutoGen:GetComponentControlType(componentName, controlName)
 		end
 	end
 	return nil
+end
+
+function Act38TestAutoGen:RequireComponentControlType(componentName, controlName)
+	local controlType = self:GetComponentControlType(componentName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen component control type: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
+end
+
+function Act38TestAutoGen:ValidateContract(required)
+	required = required or {}
+	local missing = {}
+	local function requireValue(label, value)
+		if value == nil then
+			table.insert(missing, label)
+		end
+	end
+	for _, name in ipairs(required.controls or {}) do
+		requireValue("control:" .. tostring(name), self:GetControlPath(name))
+	end
+	for _, name in ipairs(required.controllers or {}) do
+		requireValue("controller:" .. tostring(name), self:GetControllerPath(name))
+	end
+	for _, name in ipairs(required.transitions or {}) do
+		requireValue("transition:" .. tostring(name), self:GetTransitionName(name))
+	end
+	for _, name in ipairs(required.listItems or {}) do
+		requireValue("listItem:" .. tostring(name), self:GetListItemDefine(name))
+	end
+	for listName, controls in pairs(required.listItemControls or {}) do
+		for _, controlName in ipairs(controls or {}) do
+			requireValue("listItemControl:" .. tostring(listName) .. "." .. tostring(controlName), self:GetListItemControlPath(listName, controlName))
+		end
+	end
+	for _, name in ipairs(required.components or {}) do
+		requireValue("component:" .. tostring(name), self:GetComponentDefine(name))
+	end
+	for componentName, controls in pairs(required.componentControls or {}) do
+		for _, controlName in ipairs(controls or {}) do
+			requireValue("componentControl:" .. tostring(componentName) .. "." .. tostring(controlName), self:GetComponentControlPath(componentName, controlName))
+		end
+	end
+	return #missing == 0, table.concat(missing, ",")
 end
 
 return Act38TestAutoGen

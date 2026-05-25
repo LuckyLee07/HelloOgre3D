@@ -162,8 +162,32 @@ function BusinessBenchmarkCtrl:OnShopItemClick(evt)
 end
 
 function BusinessBenchmarkCtrl:RunBenchmarkSelfTest()
-	local listDefine = self:GetListItemDefine("m2_dayTaskList")
-	local componentDefine = self:GetComponentDefine("task_item")
+	local contractOk, contractDetail = self:ValidateAutoGenContract({
+		controls = { "tDate", "btnHelp", "btnClose", "menuTab", "m2DayTaskList", "m2SpcTaskList", "m2ExcShopList" },
+		controllers = { "m2MenuCtrl" },
+		listItems = { "MenuTab", "m2_dayTaskList", "m2_spcTaskList", "m2_excShopList" },
+		listItemControls = {
+			m2_dayTaskList = { "desc", "num", "btnGo", "btnGet", "btnAlrget" },
+			m2_spcTaskList = { "desc", "num", "btnGo", "btnGet", "btnAlrget" },
+			m2_excShopList = { "num1", "num2", "desc", "btnExchange", "btnAlrowned", "btnAlrfinish" },
+		},
+		components = { "task_item", "shop_item" },
+		componentControls = {
+			task_item = { "desc", "num", "btnGet" },
+			shop_item = { "desc", "num1", "num2", "btnExchange" },
+		},
+	})
+	local strictOk = false
+	local strictCallOk = pcall(function()
+		strictOk = self:RequireControlPath("m2DayTaskList") == "m2_dayTaskList"
+			and self:RequireControlType("m2DayTaskList") == "GList"
+			and self:RequireListItemControlPath("m2_dayTaskList", "btnGo") == "btn_go"
+			and self:RequireListItemControlType("m2_dayTaskList", "desc") == "GRichTextField"
+			and self:RequireComponentControlPath("task_item", "desc") == "desc"
+			and self:RequireComponentControlType("task_item", "btnGet") == "GComponent"
+	end)
+	local listDefine = self:RequireListItemDefine("m2_dayTaskList")
+	local componentDefine = self:RequireComponentDefine("task_item")
 	local listPathOk = self:GetListItemControlPath("m2_dayTaskList", "btnGo") == "btn_go"
 		and self:GetListItemControlType("m2_dayTaskList", "desc") == "GRichTextField"
 	local componentPathOk = self:GetComponentControlPath("task_item", "desc") == "desc"
@@ -188,6 +212,9 @@ function BusinessBenchmarkCtrl:RunBenchmarkSelfTest()
 	local statsOk = stats ~= nil and stats.virtual == true and stats.dataCount >= 36 and stats.renderCount > 0
 	print(
 		"[FGUI] BusinessBenchmark self test:",
+		"contract=", contractOk,
+		"contractDetail=", contractDetail,
+		"strict=", strictCallOk and strictOk,
 		"listPath=", listPathOk,
 		"componentPath=", componentPathOk,
 		"bind=", bindOk,
@@ -195,7 +222,10 @@ function BusinessBenchmarkCtrl:RunBenchmarkSelfTest()
 		"update=", updateOk,
 		"virtual=", virtualOk,
 		"stats=", stats and stats.renderCount, stats and stats.itemHandleCount)
-	return listPathOk == true
+	return contractOk == true
+		and strictCallOk == true
+		and strictOk == true
+		and listPathOk == true
 		and componentPathOk == true
 		and bindOk == true
 		and listOk == true

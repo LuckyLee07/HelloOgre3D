@@ -165,7 +165,7 @@ runtime/ui/fairygui/FairyGuiSystem
 - 复杂事件的事件数据透传已补第一版，当前 `itemHandle / itemIndex / x / y / button / touchId / wheelDelta / dragDeltaX / dragDeltaY` 可到 Lua；后续继续补更复杂的 item 数据与焦点场景。
 - UI 栈、弹窗栈和 layer root 已具备第一版，已支持 ESC 关闭顶层弹窗、`single / replace / stack` 打开策略、按 layer/group/scene 统一清理、priority 置顶和 modal 空白关闭；后续仍需更多真实弹窗样例。
 - reopen / cache / hide / destroy 已补 cache 自测和 `Close(reason)`，后续继续沉淀业务规范。
-- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补矩形高亮和点击穿透，后续补资源化样式。
+- Dialog / Toast / Loading / MessageBox / Tip / GuideMask 等通用 UI 能力已有动态第一版；Toast 已补排队/去重，Loading 已补引用计数/超时清理，GuideMask 已补多矩形高亮和点击穿透，通用服务已接入 `service skin` 样式注册入口，后续可继续映射真实 FGUI 通用控件包。
 - 屏幕适配已有第一版统一布局规则：居中弹窗、贴边 popup、Toast/Loading 文案区域和设计坐标 GuideMask 会在 resize 后重算；可用 `HELLO_FGUI_SCREEN_ADAPT_SELF_TEST=1` 与 `HELLO_FGUI_SCREEN_ADAPT_DEMO=1` 验证。
 - package 预加载、场景级清理和资源泄漏 Dump 仍需继续补；调试面板已升级为 DebugPanel snapshot，可显示 UI/layer/binding/package/event/resource/render/perf/service 概要。
 - AutoGen 已能从 FairyGUI 导出 XML 生成 manifest、MVC 骨架和生成 registry；后续要补 CI 化检查、批量生成入口和更完整的控件类型覆盖。

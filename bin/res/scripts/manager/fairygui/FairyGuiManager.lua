@@ -1105,8 +1105,8 @@ function FairyGuiManager:AddServiceImage(objectInfo, name, url, x, y, width, hei
 	return self:GetServices():AddServiceImage(objectInfo, name, url, x, y, width, height, alpha)
 end
 
-function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, height, callback)
-	return self:GetServices():AddServiceButton(objectInfo, name, text, x, y, width, height, callback)
+function FairyGuiManager:AddServiceButton(objectInfo, name, text, x, y, width, height, callback, style)
+	return self:GetServices():AddServiceButton(objectInfo, name, text, x, y, width, height, callback, style)
 end
 
 function FairyGuiManager:ApplyServiceLayout(objectInfo)
@@ -1123,6 +1123,18 @@ end
 
 function FairyGuiManager:CloseServices(serviceType, reason)
 	return self:GetServices():CloseServices(serviceType, reason)
+end
+
+function FairyGuiManager:RegisterServiceSkin(serviceType, skinName, skin)
+	return self:GetServices():RegisterServiceSkin(serviceType, skinName, skin)
+end
+
+function FairyGuiManager:GetServiceSkin(serviceType, skinName)
+	return self:GetServices():GetServiceSkin(serviceType, skinName)
+end
+
+function FairyGuiManager:ResolveServiceSkin(serviceType, param)
+	return self:GetServices():ResolveServiceSkin(serviceType, param)
 end
 
 function FairyGuiManager:HandleServiceClosed(objectInfo, reason)
@@ -1764,6 +1776,22 @@ function FairyGuiManager:GetTextInputPolicy(handle, childPath)
 	return self:GetControls():GetTextInputPolicy(handle, childPath)
 end
 
+function FairyGuiManager:ConfigureTextInput(handle, childPath, policy)
+	return self:GetControls():ConfigureTextInput(handle, childPath, policy)
+end
+
+function FairyGuiManager:GetTextInputRawText(handle, childPath)
+	return self:GetControls():GetTextInputRawText(handle, childPath)
+end
+
+function FairyGuiManager:GetTextInputDisplayText(handle, childPath)
+	return self:GetControls():GetTextInputDisplayText(handle, childPath)
+end
+
+function FairyGuiManager:GetTextInputDebugInfo(handle, childPath)
+	return self:GetControls():GetTextInputDebugInfo(handle, childPath)
+end
+
 function FairyGuiManager:ClearTextInputPoliciesForHandles(handles)
 	return self:GetControls():ClearTextInputPoliciesForHandles(handles)
 end
@@ -1953,6 +1981,14 @@ end
 
 function FairyGuiManager:AddChanged(handle, childPath, callback)
 	return self:GetEvents():AddChanged(handle, childPath, callback)
+end
+
+function FairyGuiManager:AddFocusIn(handle, childPath, callback)
+	return self:GetEvents():AddFocusIn(handle, childPath, callback)
+end
+
+function FairyGuiManager:AddFocusOut(handle, childPath, callback)
+	return self:GetEvents():AddFocusOut(handle, childPath, callback)
 end
 
 function FairyGuiManager:AddControllerChanged(handle, controllerName, callback)

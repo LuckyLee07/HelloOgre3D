@@ -3,6 +3,29 @@
 
 local Act37TestMvcAutoGen = Class("Act37TestMvcAutoGen", ClassList.FairyGuiAutoGen)
 
+Act37TestMvcAutoGen.Control = {
+	imgMask = { path = "img_mask", type = "GImage" },
+	tabList = { path = "tab_list", type = "GList" },
+	loaderImgBg04 = { path = "loader_img_bg_04", type = "GLoader" },
+	rewardList = { path = "reward_list", type = "GList" },
+	avatarLoader = { path = "avatarLoader", type = "GObject" },
+	btnGet = { path = "btn_get", type = "GComponent" },
+	btnBuy = { path = "btn_buy", type = "GComponent" },
+	btnRule = { path = "btn_rule", type = "GComponent" },
+	btnDetail = { path = "btn_detail", type = "GComponent" },
+	btnClose = { path = "btn_close", type = "GComponent" },
+	txtTitle = { path = "txt_title", type = "GTextField" },
+	txtRule = { path = "txt_rule", type = "GTextField" },
+	txtDesc = { path = "txt_desc", type = "GTextField" },
+	txtTime = { path = "txt_time", type = "GTextField" },
+}
+
+Act37TestMvcAutoGen.Controller = {
+}
+
+Act37TestMvcAutoGen.Transition = {
+}
+
 Act37TestMvcAutoGen.ControlPath = {
 	imgMask = "img_mask",
 	tabList = "tab_list",
@@ -180,20 +203,69 @@ function Act37TestMvcAutoGen:Create(param)
 	return ClassList.Act37TestMvcAutoGen.new(param)
 end
 
+function Act37TestMvcAutoGen:GetControlDefine(name)
+	local define = Act37TestMvcAutoGen.Control[name]
+	if define ~= nil then
+		return define
+	end
+	for _, item in pairs(Act37TestMvcAutoGen.Control) do
+		if item.path == name then
+			return item
+		end
+	end
+	return nil
+end
+
 function Act37TestMvcAutoGen:GetControlPath(name)
-	return Act37TestMvcAutoGen.ControlPath[name]
+	local define = self:GetControlDefine(name)
+	return define ~= nil and define.path or Act37TestMvcAutoGen.ControlPath[name]
+end
+
+function Act37TestMvcAutoGen:RequireControlPath(name)
+	local path = self:GetControlPath(name)
+	if path == nil then
+		error("[FGUI] Missing AutoGen control: " .. tostring(name), 2)
+	end
+	return path
 end
 
 function Act37TestMvcAutoGen:GetControlType(name)
-	return Act37TestMvcAutoGen.ControlType[name]
+	local define = self:GetControlDefine(name)
+	return define ~= nil and define.type or Act37TestMvcAutoGen.ControlType[name]
+end
+
+function Act37TestMvcAutoGen:RequireControlType(name)
+	local controlType = self:GetControlType(name)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen control type: " .. tostring(name), 2)
+	end
+	return controlType
 end
 
 function Act37TestMvcAutoGen:GetControllerPath(name)
-	return Act37TestMvcAutoGen.ControllerPath[name]
+	local define = Act37TestMvcAutoGen.Controller[name]
+	return define ~= nil and define.path or Act37TestMvcAutoGen.ControllerPath[name]
+end
+
+function Act37TestMvcAutoGen:RequireControllerPath(name)
+	local path = self:GetControllerPath(name)
+	if path == nil then
+		error("[FGUI] Missing AutoGen controller: " .. tostring(name), 2)
+	end
+	return path
 end
 
 function Act37TestMvcAutoGen:GetTransitionName(name)
-	return Act37TestMvcAutoGen.TransitionName[name]
+	local define = Act37TestMvcAutoGen.Transition[name]
+	return define ~= nil and define.path or Act37TestMvcAutoGen.TransitionName[name]
+end
+
+function Act37TestMvcAutoGen:RequireTransitionName(name)
+	local transitionName = self:GetTransitionName(name)
+	if transitionName == nil then
+		error("[FGUI] Missing AutoGen transition: " .. tostring(name), 2)
+	end
+	return transitionName
 end
 
 function Act37TestMvcAutoGen:GetListItemDefine(name)
@@ -207,6 +279,14 @@ function Act37TestMvcAutoGen:GetListItemDefine(name)
 		end
 	end
 	return nil
+end
+
+function Act37TestMvcAutoGen:RequireListItemDefine(name)
+	local define = self:GetListItemDefine(name)
+	if define == nil then
+		error("[FGUI] Missing AutoGen list item: " .. tostring(name), 2)
+	end
+	return define
 end
 
 function Act37TestMvcAutoGen:GetListItemControlPath(listName, controlName)
@@ -224,6 +304,14 @@ function Act37TestMvcAutoGen:GetListItemControlPath(listName, controlName)
 	return nil
 end
 
+function Act37TestMvcAutoGen:RequireListItemControlPath(listName, controlName)
+	local path = self:GetListItemControlPath(listName, controlName)
+	if path == nil then
+		error("[FGUI] Missing AutoGen list item control: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function Act37TestMvcAutoGen:GetListItemControlType(listName, controlName)
 	local define = self:GetListItemDefine(listName)
 	local controls = define ~= nil and define.controls or nil
@@ -239,6 +327,14 @@ function Act37TestMvcAutoGen:GetListItemControlType(listName, controlName)
 	return nil
 end
 
+function Act37TestMvcAutoGen:RequireListItemControlType(listName, controlName)
+	local controlType = self:GetListItemControlType(listName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen list item control type: " .. tostring(listName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
+end
+
 function Act37TestMvcAutoGen:GetComponentDefine(name)
 	local define = Act37TestMvcAutoGen.Component[name]
 	if define ~= nil then
@@ -250,6 +346,14 @@ function Act37TestMvcAutoGen:GetComponentDefine(name)
 		end
 	end
 	return nil
+end
+
+function Act37TestMvcAutoGen:RequireComponentDefine(name)
+	local define = self:GetComponentDefine(name)
+	if define == nil then
+		error("[FGUI] Missing AutoGen component: " .. tostring(name), 2)
+	end
+	return define
 end
 
 function Act37TestMvcAutoGen:GetComponentControlPath(componentName, controlName)
@@ -267,6 +371,14 @@ function Act37TestMvcAutoGen:GetComponentControlPath(componentName, controlName)
 	return nil
 end
 
+function Act37TestMvcAutoGen:RequireComponentControlPath(componentName, controlName)
+	local path = self:GetComponentControlPath(componentName, controlName)
+	if path == nil then
+		error("[FGUI] Missing AutoGen component control: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return path
+end
+
 function Act37TestMvcAutoGen:GetComponentControlType(componentName, controlName)
 	local define = self:GetComponentDefine(componentName)
 	local controls = define ~= nil and define.controls or nil
@@ -280,6 +392,50 @@ function Act37TestMvcAutoGen:GetComponentControlType(componentName, controlName)
 		end
 	end
 	return nil
+end
+
+function Act37TestMvcAutoGen:RequireComponentControlType(componentName, controlName)
+	local controlType = self:GetComponentControlType(componentName, controlName)
+	if controlType == nil then
+		error("[FGUI] Missing AutoGen component control type: " .. tostring(componentName) .. "." .. tostring(controlName), 2)
+	end
+	return controlType
+end
+
+function Act37TestMvcAutoGen:ValidateContract(required)
+	required = required or {}
+	local missing = {}
+	local function requireValue(label, value)
+		if value == nil then
+			table.insert(missing, label)
+		end
+	end
+	for _, name in ipairs(required.controls or {}) do
+		requireValue("control:" .. tostring(name), self:GetControlPath(name))
+	end
+	for _, name in ipairs(required.controllers or {}) do
+		requireValue("controller:" .. tostring(name), self:GetControllerPath(name))
+	end
+	for _, name in ipairs(required.transitions or {}) do
+		requireValue("transition:" .. tostring(name), self:GetTransitionName(name))
+	end
+	for _, name in ipairs(required.listItems or {}) do
+		requireValue("listItem:" .. tostring(name), self:GetListItemDefine(name))
+	end
+	for listName, controls in pairs(required.listItemControls or {}) do
+		for _, controlName in ipairs(controls or {}) do
+			requireValue("listItemControl:" .. tostring(listName) .. "." .. tostring(controlName), self:GetListItemControlPath(listName, controlName))
+		end
+	end
+	for _, name in ipairs(required.components or {}) do
+		requireValue("component:" .. tostring(name), self:GetComponentDefine(name))
+	end
+	for componentName, controls in pairs(required.componentControls or {}) do
+		for _, controlName in ipairs(controls or {}) do
+			requireValue("componentControl:" .. tostring(componentName) .. "." .. tostring(controlName), self:GetComponentControlPath(componentName, controlName))
+		end
+	end
+	return #missing == 0, table.concat(missing, ",")
 end
 
 return Act37TestMvcAutoGen

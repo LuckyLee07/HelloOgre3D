@@ -1244,34 +1244,82 @@ function FGUI_RunCommonServiceSelfTest()
 	FairyGuiManager:Close("__MessageBox", true, "serviceSelfTestReset")
 	FairyGuiManager:Close("__PopupMenu", true, "serviceSelfTestReset")
 
-	local toastHandle = FairyGuiManager:ShowToast("Toast service", 0)
-	local toastDedupeHandle = FairyGuiManager:ShowToast("Toast service", 0)
-	local toastQueuedId = FairyGuiManager:ShowToast("Toast service queued", 0)
+	local selfTestSkin = {
+		fontSize = 18,
+		titleFontSize = 21,
+		bodyFontSize = 18,
+		buttonFontSize = 18,
+		textColor = { 210, 240, 255 },
+		titleColor = { 255, 230, 160 },
+		bodyColor = { 225, 230, 235 },
+		itemTextColor = { 235, 245, 255 },
+		buttonTextColor = { 255, 255, 255 },
+		resource = {
+			mode = "dynamic",
+			source = "commonServiceSelfTest",
+		},
+	}
+	for _, serviceType in ipairs({ "Toast", "Tip", "Loading", "GuideMask", "MessageBox", "PopupMenu" }) do
+		FairyGuiManager:RegisterServiceSkin(serviceType, "SelfTest", selfTestSkin)
+	end
+	local skinLookup = FairyGuiManager:GetServiceSkin("Toast", "SelfTest")
+	local inlineSkin = FairyGuiManager:ResolveServiceSkin("Tip", {
+		skin = {
+			fontSize = 17,
+			textColor = { 1, 2, 3 },
+		},
+	})
+	local skinRegistryOk = skinLookup ~= nil
+		and skinLookup.name == "SelfTest"
+		and skinLookup.resource ~= nil
+		and skinLookup.resource.source == "commonServiceSelfTest"
+		and inlineSkin ~= nil
+		and inlineSkin.name == "Default"
+		and inlineSkin.fontSize == 17
+
+	local toastHandle = FairyGuiManager:ShowToast("Toast service", 0, { skin = "SelfTest" })
+	local toastDedupeHandle = FairyGuiManager:ShowToast("Toast service", 0, { skin = "SelfTest" })
+	local toastQueuedId = FairyGuiManager:ShowToast("Toast service queued", 0, { skin = "SelfTest" })
 	local toastQueueOk = toastDedupeHandle == toastHandle and FairyGuiManager:GetToastQueueCount() == 1 and toastQueuedId ~= nil
 	local tipHandle = FairyGuiManager:ShowHoverTip("Tip service", { x = 40, y = 80, width = 120, height = 24 }, {
+		skin = "SelfTest",
 		hoverDelay = 0,
 		duration = 0,
 		placement = "bottomLeft",
 	})
+	local toastInfo = FairyGuiManager:GetObjectInfo("__Toast")
 	local tipInfo = FairyGuiManager:GetObjectInfo("__Tip")
 	local tipLayoutOk = tipInfo ~= nil and tipInfo.tipAnchorRect ~= nil and tipInfo.tipLayoutRect ~= nil and tipInfo.tipLayoutRect.y >= 100
-	local loadingHandle = FairyGuiManager:ShowLoading("Loading service", { refKey = "SelfTest" })
-	local loadingHandle2 = FairyGuiManager:ShowLoading("Loading service updated", { refKey = "SelfTest" })
+	local loadingHandle = FairyGuiManager:ShowLoading("Loading service", { refKey = "SelfTest", skin = "SelfTest" })
+	local loadingHandle2 = FairyGuiManager:ShowLoading("Loading service updated", { refKey = "SelfTest", skin = "SelfTest" })
 	local loadingRefOk = loadingHandle ~= nil and loadingHandle2 == loadingHandle and FairyGuiManager:GetLoadingRefCount() == 2
 	local guideHandle = FairyGuiManager:ShowGuideMask({
+		skin = "SelfTest",
 		text = "Guide service",
 		highlightRects = {
 			{ x = 160, y = 160, width = 160, height = 120 },
 			{ x = 420, y = 220, width = 140, height = 100 },
 		},
 	})
-	local messageHandle = FairyGuiManager:ShowMessageBox("Message", "Common service probe", { "OK", "Cancel" })
+	local messageHandle = FairyGuiManager:ShowMessageBox("Message", "Common service probe", { "OK", "Cancel" }, nil, { skin = "SelfTest" })
 	local popupHandle = FairyGuiManager:ShowPopupMenu({ "One", "Two" }, nil, nil, nil, {
+		skin = "SelfTest",
 		anchorRect = { x = 100, y = 120, width = 80, height = 24 },
 		placement = "bottomLeft",
 	})
+	local loadingInfo = FairyGuiManager:GetObjectInfo("__Loading")
+	local guideInfo = FairyGuiManager:GetObjectInfo("__GuideMask")
+	local messageInfo = FairyGuiManager:GetObjectInfo("__MessageBox")
 	local popupInfo = FairyGuiManager:GetObjectInfo("__PopupMenu")
 	local popupLayoutOk = popupInfo ~= nil and popupInfo.popupMenuAnchorRect ~= nil and popupInfo.popupMenuLayoutRect ~= nil and popupInfo.popupMenuLayoutRect.y >= 144
+	local serviceSkinOk = skinRegistryOk == true
+		and toastInfo ~= nil and toastInfo.serviceSkinName == "SelfTest"
+		and tipInfo ~= nil and tipInfo.serviceSkinName == "SelfTest"
+		and loadingInfo ~= nil and loadingInfo.serviceSkinName == "SelfTest"
+		and guideInfo ~= nil and guideInfo.serviceSkinName == "SelfTest"
+		and messageInfo ~= nil and messageInfo.serviceSkinName == "SelfTest"
+		and popupInfo ~= nil and popupInfo.serviceSkinName == "SelfTest"
+		and popupInfo.serviceResource ~= nil and popupInfo.serviceResource.source == "commonServiceSelfTest"
 	local serviceStats = FairyGuiManager:GetServiceStats()
 	local serviceMeta = serviceStats.__meta or {}
 	local serviceStatsOk = (serviceMeta.serviceOpenTotal or 0) >= 6
@@ -1297,6 +1345,7 @@ function FGUI_RunCommonServiceSelfTest()
 		and tipLayoutOk == true
 		and popupLayoutOk == true
 		and loadingRefOk == true
+		and serviceSkinOk == true
 		and serviceStatsOk == true
 
 	local loadingHideOnce = FairyGuiManager:HideLoading({ refKey = "SelfTest", reason = "serviceSelfTestHideOnce" })
@@ -1336,6 +1385,7 @@ function FGUI_RunCommonServiceSelfTest()
 		"message=", messageHandle,
 		"popup=", popupHandle,
 		"popupLayoutOk=", popupLayoutOk,
+		"serviceSkinOk=", serviceSkinOk,
 		"serviceStatsOk=", serviceStatsOk,
 		"service=", tostring(serviceMeta.serviceOpenTotal or 0) .. "/" .. tostring(serviceMeta.serviceKindCount or 0) .. "/" .. tostring(serviceMeta.peakOpen or 0),
 		"serviceTotals=", tostring(cleanupMeta.createdTotal or 0) .. "/" .. tostring(cleanupMeta.closedTotal or 0) .. "/" .. tostring(cleanupMeta.failedTotal or 0),
@@ -2304,18 +2354,51 @@ end
 function FGUI_RunTextInputPolicySelfTest()
 	FairyGuiManager:Close("TextInputProbe", true, "textInputPolicyReset")
 
-	local handle, inputHandle = FGUI_OpenTextInputProbe({
-		textInputPolicy = {
-			inputType = "integer",
-			maxLength = 3,
-		},
-	})
+	local handle, inputHandle = FGUI_OpenTextInputProbe()
 	local opened = handle ~= nil and inputHandle ~= nil
+	local focusInCount = 0
+	local focusOutCount = 0
+	local changedCount = 0
+	local submitCount = 0
+	if inputHandle ~= nil then
+		FairyGuiManager:AddFocusIn(inputHandle, nil, function()
+			focusInCount = focusInCount + 1
+		end)
+		FairyGuiManager:AddFocusOut(inputHandle, nil, function()
+			focusOutCount = focusOutCount + 1
+		end)
+		FairyGuiManager:AddChanged(inputHandle, nil, function()
+			changedCount = changedCount + 1
+		end)
+		FairyGuiManager:AddSubmit(inputHandle, nil, function()
+			submitCount = submitCount + 1
+		end)
+	end
+	local configured = inputHandle ~= nil and FairyGuiManager:ConfigureTextInput(inputHandle, nil, {
+		inputType = "integer",
+		maxLength = 3,
+		placeholder = "Enter code",
+		password = true,
+		maskChar = "*",
+	}) or false
 	local policy = inputHandle ~= nil and FairyGuiManager:GetTextInputPolicy(inputHandle) or nil
-	local policyOk = policy ~= nil and policy.inputType == "integer" and tonumber(policy.maxLength) == 3
+	local policyOk = policy ~= nil
+		and policy.inputType == "integer"
+		and tonumber(policy.maxLength) == 3
+		and policy.placeholder == "Enter code"
+		and policy.password == true
+		and policy.maskChar == "*"
+	local placeholderDisplay = inputHandle ~= nil and FairyGuiManager:GetTextInputDisplayText(inputHandle) or ""
+	local focused = inputHandle ~= nil and FairyGuiManager:Focus(inputHandle) or false
+	local imeCompose = inputHandle ~= nil and FairyGuiManager:DebugInjectImeCompositionText("pending") or false
 	local setText = inputHandle ~= nil and FairyGuiManager:SetText(inputHandle, nil, "a1b2\228\184\1733") or false
 	local applied = inputHandle ~= nil and FairyGuiManager:ApplyTextInputPolicy(inputHandle, nil) or false
-	local text = inputHandle ~= nil and FairyGuiManager:GetText(inputHandle) or ""
+	local text = inputHandle ~= nil and FairyGuiManager:GetTextInputRawText(inputHandle) or ""
+	local displayText = inputHandle ~= nil and FairyGuiManager:GetTextInputDisplayText(inputHandle) or ""
+	local debugInfo = inputHandle ~= nil and FairyGuiManager:GetTextInputDebugInfo(inputHandle) or nil
+	local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
+	local focusCleared = FairyGuiManager:ClearFocus()
+	local imeDebug = FairyGuiManager:GetImeDebugString()
 	local cleared = inputHandle ~= nil and FairyGuiManager:SetTextInputPolicy(inputHandle, nil, nil) or false
 	local clearedPolicy = inputHandle ~= nil and FairyGuiManager:GetTextInputPolicy(inputHandle) or nil
 	local snapshot = FairyGuiManager:CaptureCloseSnapshot("TextInputProbe")
@@ -2325,19 +2408,46 @@ function FGUI_RunTextInputPolicySelfTest()
 	print(
 		"[FGUI] text input policy self test detail:",
 		"opened=", opened,
+		"configured=", configured,
 		"policy=", policyOk,
+		"placeholder=", placeholderDisplay,
+		"focused=", focused,
+		"focusIn=", focusInCount,
+		"imeCompose=", imeCompose,
 		"setText=", setText,
 		"applied=", applied,
 		"text=", text,
+		"display=", displayText,
+		"debug=", debugInfo ~= nil and debugInfo.displayText or "",
+		"submit=", submit,
+		"submitCount=", submitCount,
+		"focusCleared=", focusCleared,
+		"focusOut=", focusOutCount,
+		"changed=", changedCount,
+		"ime=", imeDebug,
 		"cleared=", cleared,
 		"clearedPolicy=", clearedPolicy == nil,
 		"closed=", closed,
 		"clean=", clean)
 	return opened == true
+		and configured == true
 		and policyOk == true
+		and placeholderDisplay == "Enter code"
+		and focused == true
+		and focusInCount >= 1
+		and imeCompose == true
 		and setText == true
 		and applied == true
 		and text == "123"
+		and displayText == "***"
+		and debugInfo ~= nil
+		and debugInfo.text == "123"
+		and debugInfo.displayText == "***"
+		and submit == true
+		and submitCount >= 1
+		and focusCleared == true
+		and focusOutCount >= 1
+		and string.find(imeDebug, "active=0", 1, true) ~= nil
 		and cleared == true
 		and clearedPolicy == nil
 		and closed == true
@@ -2381,26 +2491,137 @@ function FGUI_RunBusinessBenchmarkSelfTest(config)
 			debugTarget = "BusinessBenchmarkPage",
 		})
 		local debugOk = debugHandle ~= nil and FairyGuiManager:RefreshDebugPanel("BusinessBenchmarkDebug") == true
+		local debugSnapshot = FairyGuiManager:GetDebugPanelSnapshot({
+			debugTarget = "BusinessBenchmarkPage",
+		})
+		local debugSnapshotOk = debugSnapshot ~= nil
+			and debugSnapshot.health ~= nil
+			and debugSnapshot.render ~= nil
+			and debugSnapshot.packageSummary ~= nil
+
+		local serviceToast = FairyGuiManager:ShowToast("Business benchmark toast", 0, {
+			scene = "BusinessBenchmark",
+			queue = false,
+			dedupeKey = "BusinessBenchmarkToast",
+		})
+		local serviceLoading = FairyGuiManager:ShowLoading("Business benchmark loading", {
+			scene = "BusinessBenchmark",
+			refKey = "BusinessBenchmark",
+		})
+		local serviceGuide = FairyGuiManager:ShowGuideMask({
+			scene = "BusinessBenchmark",
+			text = "Business benchmark guide",
+			textX = 80,
+			textY = 120,
+			highlightRect = { x = 220, y = 160, width = 220, height = 120 },
+			closeOnMaskClick = false,
+		})
+		local serviceMessage = FairyGuiManager:ShowMessageBox("Benchmark", "Business service sample.", { "OK", "Cancel" }, nil, {
+			scene = "BusinessBenchmark",
+			closeOnMaskClick = true,
+		})
+		local serviceTip = FairyGuiManager:ShowHoverTip("Benchmark hover tip", {
+			x = 320,
+			y = 160,
+			width = 160,
+			height = 40,
+		}, {
+			scene = "BusinessBenchmark",
+			duration = 0,
+			hoverDelay = 0,
+		})
+		local serviceStats = FairyGuiManager:GetServiceStats()
+		local serviceOpenOk = serviceToast ~= nil
+			and serviceLoading ~= nil
+			and serviceGuide ~= nil
+			and serviceMessage ~= nil
+			and serviceTip ~= nil
+			and FairyGuiManager:GetLoadingRefCount() > 0
+			and serviceStats ~= nil
+		local closeToastOk = FairyGuiManager:CloseToast("businessBenchmarkServiceCleanup") == true
+		local hideLoadingOk = FairyGuiManager:HideLoading({ refKey = "BusinessBenchmark", force = true, reason = "businessBenchmarkServiceCleanup" }) == true
+		local hideGuideOk = FairyGuiManager:HideGuideMask("businessBenchmarkServiceCleanup") == true
+		local closeMessageOk = FairyGuiManager:Close("__MessageBox", true, "businessBenchmarkServiceCleanup") == true
+		local hideTipOk = FairyGuiManager:HideTip("businessBenchmarkServiceCleanup") == true
+		local serviceCloseOk = closeToastOk == true
+			and hideLoadingOk == true
+			and hideGuideOk == true
+			and closeMessageOk == true
+			and hideTipOk == true
+
+		local topPopupHandle = FairyGuiManager:ShowPopupMenu({ "Inspect", "Refresh", "Close" }, 120, 180, nil, {
+			scene = "BusinessBenchmark",
+			key = "BusinessBenchmarkTopPopup",
+		})
+		local closeTopOk = topPopupHandle ~= nil and FairyGuiManager:CloseTopPopup(true) == true
+
 		local textHandle, inputHandle = FGUI_OpenTextInputProbe({
 			key = "BusinessBenchmarkTextInput",
 			scene = "BusinessBenchmark",
 			group = "BusinessBenchmark",
-			textInputPolicy = {
-				inputType = "integer",
-				maxLength = 4,
-			},
 		})
 		local textOk = false
+		local focusInCount = 0
+		local focusOutCount = 0
+		local submitCount = 0
 		if inputHandle ~= nil then
+			FairyGuiManager:AddFocusIn(inputHandle, nil, function()
+				focusInCount = focusInCount + 1
+			end)
+			FairyGuiManager:AddFocusOut(inputHandle, nil, function()
+				focusOutCount = focusOutCount + 1
+			end)
+			FairyGuiManager:AddSubmit(inputHandle, nil, function()
+				submitCount = submitCount + 1
+			end)
+			local configured = FairyGuiManager:ConfigureTextInput(inputHandle, nil, {
+				inputType = "integer",
+				maxLength = 4,
+				placeholder = "Benchmark code",
+				password = true,
+			})
+			local placeholder = FairyGuiManager:GetTextInputDisplayText(inputHandle)
+			local focused = FairyGuiManager:Focus(inputHandle)
 			FairyGuiManager:SetText(inputHandle, nil, "A12B34")
 			FairyGuiManager:ApplyTextInputPolicy(inputHandle, nil)
-			textOk = FairyGuiManager:GetText(inputHandle) == "1234"
+			local rawText = FairyGuiManager:GetTextInputRawText(inputHandle)
+			local displayText = FairyGuiManager:GetTextInputDisplayText(inputHandle)
+			local submit = FairyGuiManager:DebugInjectKeyPressed(28, 0)
+			local clearedFocus = FairyGuiManager:ClearFocus()
+			textOk = configured == true
+				and placeholder == "Benchmark code"
+				and focused == true
+				and rawText == "1234"
+				and displayText == "****"
+				and submit == true
+				and submitCount >= 1
+				and clearedFocus == true
+				and focusInCount >= 1
+				and focusOutCount >= 1
 		end
-		local iterationOk = ctrl ~= nil and benchmarkOk == true and debugOk == true and textHandle ~= nil and textOk == true
+		local iterationOk = ctrl ~= nil
+			and benchmarkOk == true
+			and debugOk == true
+			and debugSnapshotOk == true
+			and serviceOpenOk == true
+			and serviceCloseOk == true
+			and closeTopOk == true
+			and textHandle ~= nil
+			and textOk == true
 		if iterationOk then
 			passCount = passCount + 1
 		else
-			failDetail = failDetail .. string.format("[#%s ctrl=%s benchmark=%s debug=%s text=%s]", tostring(index), tostring(ctrl ~= nil), tostring(benchmarkOk), tostring(debugOk), tostring(textOk))
+			failDetail = failDetail .. string.format(
+				"[#%s ctrl=%s benchmark=%s debug=%s snapshot=%s service=%s/%s closeTop=%s text=%s]",
+				tostring(index),
+				tostring(ctrl ~= nil),
+				tostring(benchmarkOk),
+				tostring(debugOk),
+				tostring(debugSnapshotOk),
+				tostring(serviceOpenOk),
+				tostring(serviceCloseOk),
+				tostring(closeTopOk),
+				tostring(textOk))
 		end
 
 		FairyGuiManager:Close("BusinessBenchmarkTextInput", true, "businessBenchmarkIterationCleanup")

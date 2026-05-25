@@ -257,12 +257,15 @@ function Test-FairyGuiProductionFeatureGuard {
 	$samplePath = Join-Path $RepoRoot "bin\res\scripts\samples\fgui_init.lua"
 	$managerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiManager.lua"
 	$controlsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiControls.lua"
+	$eventsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiEvents.lua"
 	$listsPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLists.lua"
+	$baseViewPath = Join-Path $RepoRoot "bin\res\scripts\ui\BaseFairyGuiView.lua"
 	$baseCtrlPath = Join-Path $RepoRoot "bin\res\scripts\ui\FairyGuiBaseCtrl.lua"
 	$servicesPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiServices.lua"
 	$layersPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLayers.lua"
 	$packagePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiPackage.lua"
 	$profilerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiProfiler.lua"
+	$autogenScriptPath = Join-Path $RepoRoot "tools\fgui_autogen\fairygui_autogen.py"
 	$renderPath = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui\FairyGuiSystemRender.cpp"
 
 	$selfTestText = Get-Content -LiteralPath $selfTestPath -Raw
@@ -298,9 +301,16 @@ function Test-FairyGuiProductionFeatureGuard {
 		"function FGUI_RunTreeSelfTest",
 		"function FGUI_RunBusinessFlowSelfTest",
 		"function FGUI_RunBusinessBenchmarkSelfTest",
+		"GetDebugPanelSnapshot",
+		"ShowGuideMask",
+		"ConfigureTextInput",
+		"CloseTopPopup",
 		"function FGUI_RunResourcePolicySelfTest",
 		"function FGUI_RunResourceFallbackSelfTest",
 		"function FGUI_RunTextInputPolicySelfTest",
+		"GetTextInputDisplayText",
+		"AddFocusIn",
+		"AddFocusOut",
 		"function FGUI_RunPressureSelfTest",
 		"function FGUI_RunLayerBoundarySelfTest",
 		"FGUI_RunDebugPanelSelfTest",
@@ -312,11 +322,39 @@ function Test-FairyGuiProductionFeatureGuard {
 
 	$baseCtrlText = Get-Content -LiteralPath $baseCtrlPath -Raw
 	Assert-TextContains "FairyGuiBaseCtrl.lua" $baseCtrlText @(
+		"function FairyGuiBaseCtrl:RequireControlPath",
+		"function FairyGuiBaseCtrl:RequireControlType",
 		"function FairyGuiBaseCtrl:GetListItemDefine",
+		"function FairyGuiBaseCtrl:RequireListItemDefine",
 		"function FairyGuiBaseCtrl:GetListItemControlPath",
+		"function FairyGuiBaseCtrl:RequireListItemControlPath",
 		"function FairyGuiBaseCtrl:BindListItemControls",
 		"function FairyGuiBaseCtrl:GetComponentDefine",
-		"function FairyGuiBaseCtrl:GetComponentControlPath"
+		"function FairyGuiBaseCtrl:RequireComponentDefine",
+		"function FairyGuiBaseCtrl:GetComponentControlPath",
+		"function FairyGuiBaseCtrl:RequireComponentControlPath",
+		"function FairyGuiBaseCtrl:ValidateAutoGenContract",
+		"function FairyGuiBaseCtrl:ConfigureTextInput",
+		"function FairyGuiBaseCtrl:AddFocusIn",
+		"function FairyGuiBaseCtrl:AddFocusOut"
+	)
+
+	$baseViewText = Get-Content -LiteralPath $baseViewPath -Raw
+	Assert-TextContains "BaseFairyGuiView.lua" $baseViewText @(
+		"function BaseFairyGuiView:ConfigureTextInput",
+		"function BaseFairyGuiView:GetTextInputDisplayText",
+		"function BaseFairyGuiView:GetTextInputDebugInfo",
+		"function BaseFairyGuiView:AddFocusIn",
+		"function BaseFairyGuiView:AddFocusOut"
+	)
+
+	$autogenScriptText = Get-Content -LiteralPath $autogenScriptPath -Raw
+	Assert-TextContains "fairygui_autogen.py" $autogenScriptText @(
+		"def append_lua_define_table",
+		"RequireControlPath",
+		"RequireListItemControlPath",
+		"RequireComponentControlPath",
+		"ValidateContract"
 	)
 
 	$managerText = Get-Content -LiteralPath $managerPath -Raw
@@ -334,9 +372,17 @@ function Test-FairyGuiProductionFeatureGuard {
 		"function FairyGuiManager:RecordResourceFallback",
 		"function FairyGuiManager:GetResourceFallbacks",
 		"function FairyGuiManager:SetTextInputPolicy",
+		"function FairyGuiManager:ConfigureTextInput",
+		"function FairyGuiManager:GetTextInputDisplayText",
+		"function FairyGuiManager:GetTextInputDebugInfo",
 		"function FairyGuiManager:RegisterFocusOrder",
 		"function FairyGuiManager:FocusNext",
+		"function FairyGuiManager:AddFocusIn",
+		"function FairyGuiManager:AddFocusOut",
 		"function FairyGuiManager:GetGuideMaskRects",
+		"function FairyGuiManager:RegisterServiceSkin",
+		"function FairyGuiManager:GetServiceSkin",
+		"function FairyGuiManager:ResolveServiceSkin",
 		"function FairyGuiManager:ShowHoverTip",
 		"function FairyGuiManager:HideTip",
 		"function FairyGuiManager:ShowDebugPanel",
@@ -345,6 +391,11 @@ function Test-FairyGuiProductionFeatureGuard {
 
 	$servicesText = Get-Content -LiteralPath $servicesPath -Raw
 	Assert-TextContains "FairyGuiServices.lua" $servicesText @(
+		"DEFAULT_SERVICE_SKINS",
+		"function FairyGuiServices:RegisterServiceSkin",
+		"function FairyGuiServices:ResolveServiceSkin",
+		"serviceSkinName",
+		"serviceResource",
 		"function FairyGuiServices:ShowHoverTip",
 		"function FairyGuiServices:HideTip",
 		"popupMenuAnchorRect",
@@ -368,8 +419,22 @@ function Test-FairyGuiProductionFeatureGuard {
 		"function FairyGuiControls:SetComboBoxSelectedIndex",
 		"function FairyGuiControls:SetComboBoxValue",
 		"function FairyGuiControls:SetTextInputPolicy",
+		"function FairyGuiControls:ConfigureTextInput",
+		"function FairyGuiControls:GetTextInputDisplayText",
+		"function FairyGuiControls:GetTextInputDebugInfo",
+		"placeholder",
+		"password",
+		"maskChar",
 		"function FairyGuiControls:RegisterFocusOrder",
 		"function FairyGuiControls:FocusNext"
+	)
+
+	$eventsText = Get-Content -LiteralPath $eventsPath -Raw
+	Assert-TextContains "FairyGuiEvents.lua" $eventsText @(
+		"function FairyGuiEvents:AddFocusIn",
+		"function FairyGuiEvents:AddFocusOut",
+		'"Enter"',
+		'"Exit"'
 	)
 
 	$listsText = Get-Content -LiteralPath $listsPath -Raw
