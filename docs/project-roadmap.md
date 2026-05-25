@@ -46,10 +46,10 @@
 
 ### 完成标准
 
-- [ ] 常用控件 API 能支撑一个接近真实业务的复合页面。
-- [ ] `HELLO_FGUI_SELF_TEST_ALL=1` 覆盖主要生命周期和资源清理。
-- [ ] UI 关闭后 binding、timer、cache、package refCount 能回到预期状态。
-- [ ] 有一个面向业务开发的 FGUI 接入示例和开发约定。
+- [x] 常用控件 API 能支撑一个接近真实业务的复合页面；当前由 Act38/BusinessFlow/BusinessBenchmark 覆盖。
+- [x] `HELLO_FGUI_SELF_TEST_ALL=1` 覆盖主要生命周期和资源清理，当前纳入 production gate。
+- [x] UI 关闭后 binding、timer、cache、package refCount 能回到预期状态，当前由 `ValidateCleanState`、LongLoop 和 Pressure 覆盖。
+- [~] 有一个面向业务开发的 FGUI 接入示例和开发约定；AutoGen 工作流和 production gate 已具备，新增 UI 标准流程文档仍可继续细化。
 
 ## 4. P0：Runtime 适配层解耦
 

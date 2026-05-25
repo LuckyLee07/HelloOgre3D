@@ -23,6 +23,40 @@ function Invoke-Checked {
 	}
 }
 
+function Test-FairyGuiNativeEntryGuard {
+	Write-Host "[FGUI-CHECK] Native entry guard"
+
+	$fguiLuaRoot = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui"
+	$nativeApiPath = Join-Path $fguiLuaRoot "FairyGuiNativeApi.lua"
+	if (-not (Test-Path -LiteralPath $nativeApiPath)) {
+		throw "FairyGuiNativeApi.lua not found"
+	}
+
+	$nativeApiText = Get-Content -LiteralPath $nativeApiPath -Raw
+	$runtimeIndex = $nativeApiText.IndexOf('"FairyGuiRuntime"')
+	$gameManagerIndex = $nativeApiText.IndexOf('"GameManager"')
+	if ($runtimeIndex -lt 0 -or $gameManagerIndex -lt 0 -or $runtimeIndex -gt $gameManagerIndex) {
+		throw "FairyGuiNativeApi.lua must resolve FairyGuiRuntime before GameManager"
+	}
+
+	$violations = @()
+	$fguiLuaFiles = Get-ChildItem -Recurse -File $fguiLuaRoot -Filter "*.lua"
+	foreach ($file in $fguiLuaFiles) {
+		if ($file.Name -eq "FairyGuiNativeApi.lua") {
+			continue
+		}
+
+		$matches = Select-String -LiteralPath $file.FullName -Pattern "GameManager" -SimpleMatch
+		foreach ($match in $matches) {
+			$violations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+		}
+	}
+
+	if ($violations.Count -gt 0) {
+		throw "FGUI manager modules must use FairyGuiNativeApi instead of GameManager directly:`n$($violations -join "`n")"
+	}
+}
+
 Push-Location $RepoRoot
 try {
 	if (-not $SkipLua) {
@@ -56,6 +90,8 @@ try {
 			"--strict"
 		)
 	}
+
+	Test-FairyGuiNativeEntryGuard
 
 	Write-Host "[FGUI-CHECK] static checks passed."
 } finally {

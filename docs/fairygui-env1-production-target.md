@@ -52,13 +52,14 @@ ctrl:RefreshGoods(goodsList)
 
 - [ ] 新增一个业务 UI 时，有固定流程：导出 FairyGUI 资源、生成 AutoGen/View/Model/Ctrl、注册 UI、补业务逻辑、跑本地检查。
 - [ ] 业务侧通过 `FairyGuiManager:Open/Get/Close` 或 Ctrl API 完成常规交互，不需要直接依赖底层对象指针。
+- [x] Lua native 入口默认优先 runtime-owned `FairyGuiRuntime`，并有 Health/DebugPanel、自测和静态检查防止 `manager/fairygui` 子模块绕回 `GameManager`。
 - [ ] 页面、弹窗、Toast、Loading、MessageBox、PopupMenu、GuideMask、DebugPanel 可以共存，层级和关闭顺序稳定。
 - [ ] TextInput 支持中文 IME、普通英文输入、数字输入、密码输入、长度限制、输入限制、focus/killFocus、submit/change 事件。
 - [ ] List 支持 itemRenderer、item reuse、virtual list、selectedIndex、scrollToIndex、clickItem payload 和复杂 item AutoGen 绑定。
 - [~] Tree/TreeNode、GGraph/DrawNode、ComboBox、Slider、ProgressBar、Transition、Controller 等常用控件具备业务可用 API；Tree 最小封装已具备，复杂 Tree item AutoGen 仍待补。
 - [ ] fullscreen、center、fit、margin、safe area、异形屏适配在 resize 后统一重算。
-- [~] package、texture、material、render command、triangle、event binding、timer、handle、cache UI 都有可 dump 的观测数据；当前已覆盖 package、texture/material source 与尺寸、render/draw/clip/stencil/switch、event binding、timer、handle、cache UI，引用 UI/package 明细仍可继续细化。
-- [ ] 大量 UI 长循环打开关闭后，资源、事件、timer、focus、controller、view/model/ctrl 引用能稳定回零。
+- [~] package、texture、material、render command、triangle、event binding、timer、handle、native backend、cache UI 都有可 dump 的观测数据；当前已覆盖 package、texture/material source 与尺寸、render/draw/clip/stencil/switch、event binding、timer、handle、native backend、cache UI，引用 UI/package 明细仍可继续细化。
+- [~] 大量 UI 长循环打开关闭后，资源、事件、timer、focus、controller、view/model/ctrl 引用能稳定回零；当前已有 `ValidateCleanState` 统一校验和 LongLoop/Pressure 自测，仍需继续扩大真实业务 UI 规模。
 - [ ] 有至少一个接近真实业务规模的 benchmark UI，长期作为 FGUI 回归基准。
 
 ## P0：业务可用闭环
@@ -237,12 +238,14 @@ ctrl:RefreshGoods(goodsList)
 
 ### 3. 本地检查 / CI 化
 
-- [ ] Lua 语法检查。
-- [ ] AutoGen Python 编译检查。
-- [ ] AutoGen `--check --strict`。
+- [x] Lua 语法检查。
+- [x] AutoGen Python 编译检查。
+- [x] AutoGen `--check --strict`。
+- [x] FGUI native 入口静态防回退检查。
+- [x] FGUI production gate 一键入口，见 `docs/fairygui-production-gate.md`。
 - [ ] FGUI selftest all。
 - [ ] FGUI long loop。
-- [ ] 资源和生命周期泄露检查。
+- [x] 资源和生命周期泄露检查。
 
 ## 推荐迁移顺序
 

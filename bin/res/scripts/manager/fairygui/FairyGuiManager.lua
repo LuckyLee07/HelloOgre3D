@@ -240,6 +240,10 @@ function FairyGuiManager:IsAvailable()
 	return NativeApi:Call("isFairyGuiAvailable", false) == true
 end
 
+function FairyGuiManager:GetNativeBackendName()
+	return NativeApi ~= nil and NativeApi.GetBackendName ~= nil and NativeApi:GetBackendName() or ""
+end
+
 function FairyGuiManager:GetPackageNameByPath(packagePath)
 	return self:GetPackageManager():GetPackageNameByPath(packagePath)
 end
@@ -378,6 +382,14 @@ end
 
 function FairyGuiManager:GetHealthStats()
 	return self:GetProfiler():GetHealthStats()
+end
+
+function FairyGuiManager:GetCleanState(options)
+	return self:GetProfiler():GetCleanState(options)
+end
+
+function FairyGuiManager:ValidateCleanState(label, options)
+	return self:GetProfiler():ValidateCleanState(label, options)
 end
 
 function FairyGuiManager:DumpHealth(verbose)

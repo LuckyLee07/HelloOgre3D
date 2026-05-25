@@ -326,6 +326,7 @@ Lua Binding Adapter
 - [x] 2026-05-25：真实键鼠输入链路改为 `GameManager -> FairyGuiSystem`，Lua 注入、自测和兼容 tolua API 继续走 `FairyGuiLuaApi`，避免 runtime 输入被 Lua bridge 概念污染。
 - [x] 2026-05-25：Lua 侧新增 `FairyGuiNativeApi` 作为唯一 native facade，`manager/fairygui` 子模块不再直接依赖 `GameManager:*FairyGui*`，后续切换到 `RuntimeToLua` 只需替换 facade 后端。
 - [x] 2026-05-25：`RuntimeToLua.pkg` 生成 `RuntimeToLua.cpp`，`GameManager::InitLuaEnv` 注册 `FairyGuiRuntime` 全局对象；Lua facade 默认优先走 runtime 后端，`GameManager` 仅作为旧接口 fallback。
+- [x] 2026-05-25：FGUI Health/DebugPanel/selftest 显式检查 native backend 为 `FairyGuiRuntime`，`tools/check_fgui_static.ps1` 增加入口护栏，阻止 `manager/fairygui` 子模块直接回退 `GameManager`。
 - [ ] 后续新增 FGUI Lua API 继续按分组落到 adapter 对应文件；Lua 导出名和 generated binding 边界保持兼容。
 
 ### 2026-05-25 FairyGuiSystem 内部实现拆分

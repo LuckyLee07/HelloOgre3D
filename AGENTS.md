@@ -28,6 +28,7 @@
 | 重新生成 Lua 绑定 | `src\HelloOgre3D\tolua.bat` | 修改 `.pkg` 或暴露给 Lua 的 C++ API 后执行。 |
 | FGUI 集中自测 | `cd bin; $env:HELLO_FGUI_SELF_TEST_ALL="1"; .\HelloOgre3D.exe` | 用于 FGUI 打开、关闭、输入、生命周期、资源清理回归。 |
 | FGUI 长循环自测 | `cd bin; $env:HELLO_FGUI_LONG_LOOP_SELF_TEST="1"; .\HelloOgre3D.exe` | 用于重复打开关闭 UI，观察资源和生命周期问题。 |
+| FGUI 生产验收 | `powershell -ExecutionPolicy Bypass -File tools\run_fgui_production_gate.ps1 -Mode Full -StopExisting` | 一键串联 VS2017 Debug/Release x64、静态检查、All、LongLoop、Pressure 和 `git diff --check`。 |
 
 构建配置：
 - Premake solution：`HelloOgre3D`
@@ -100,6 +101,7 @@ src/Engine + src/External
 - AI 后续方向：以 `docs/ai-roadmap.md` 为事实来源。
 - 非 AI 后续方向：以 `docs/project-roadmap.md` 为事实来源。
 - FGUI 后续方向：优先参考 `docs/fairygui-final-roadmap.md`、`docs/fairygui-business-framework-todo.md`、`docs/fairygui-autogen-workflow.md`。
+- FGUI 阶段性生产验收：以 `docs/fairygui-production-gate.md` 和 `tools/run_fgui_production_gate.ps1` 为准。
 
 ## 中长期规划
 
@@ -160,6 +162,7 @@ src/Engine + src/External
 - Lua 不长期直接持有 FairyGUI / Cocos 底层对象指针，优先通过 handle 和 binding id 通信。
 - 复杂 UI 默认走 Ctrl / Model / View / AutoGen 结构；简单调试 UI 可用轻量 View。
 - 改 FGUI 输入、生命周期、资源、layer、cache 时，优先跑对应 `HELLO_FGUI_*_SELF_TEST`。
+- FGUI 阶段性收口优先跑 `tools\run_fgui_production_gate.ps1`；该脚本会启动 D3D9 窗口，需在可创建图形设备的桌面会话中运行。
 
 ## 平台约束
 

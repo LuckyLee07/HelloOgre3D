@@ -91,7 +91,20 @@ function Get-DefaultWaitSeconds {
 		"ResourcePolicy" { return 34 }
 		"ResourceFallback" { return 34 }
 		"TextInputPolicy" { return 30 }
-		"Pressure" { return 180 }
+		"Pressure" {
+			$popupCount = $PressurePopupCount
+			if ($popupCount -le 0 -and $LoopCount -gt 3) {
+				$popupCount = $LoopCount
+			}
+			if ($popupCount -le 0) {
+				$popupCount = 50
+			}
+			$listCount = $PressureListCount
+			if ($listCount -le 0) {
+				$listCount = [Math]::Max($popupCount, 50)
+			}
+			return [Math]::Max(120, 48 + $popupCount * 2 + [Math]::Ceiling($listCount / 2))
+		}
 		"EventPayload" { return 32 }
 		"Input" { return 18 }
 		"Mask" { return 18 }
@@ -219,7 +232,7 @@ $KnownEnvNames = @(
 )
 
 if ($Seconds -le 0) {
-	$Seconds = Get-DefaultWaitSeconds -SelfTestMode $Mode -LoopCount $Count
+	$Seconds = Get-DefaultWaitSeconds -SelfTestMode $Mode -LoopCount $Count -PressurePopupCount $PressurePopupCount -PressureListCount $PressureListCount
 }
 
 $SelectedEnv = Get-FairyGuiEnv -SelfTestMode $Mode -LoopCount $Count -PressurePopupCount $PressurePopupCount -PressureListCount $PressureListCount

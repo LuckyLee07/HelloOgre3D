@@ -523,12 +523,14 @@ function FairyGuiProfiler:GetHealthStats()
 	local perfStats = self:GetPerfStats()
 	local serviceStats = owner ~= nil and owner:GetServiceStats() or { __meta = {} }
 	local serviceMeta = serviceStats.__meta or {}
+	local nativeBackend = NativeApi ~= nil and NativeApi.GetBackendName ~= nil and NativeApi:GetBackendName() or ""
 	local threadTimerCount = 0
 	if threadpool ~= nil and threadpool.get_timer_count ~= nil then
 		threadTimerCount = threadpool:get_timer_count()
 	end
 
 	local stats = {
+		nativeBackend = nativeBackend,
 		openUI = debugStats.openUI,
 		hiddenUI = debugStats.hiddenUI,
 		package = debugStats.package,
@@ -597,6 +599,109 @@ function FairyGuiProfiler:GetHealthStats()
 	}
 	self:PublishTracyCounters(stats, serviceMeta)
 	return stats
+end
+
+function FairyGuiProfiler:GetCleanState(options)
+	local owner = self.owner
+	options = options or {}
+	local stats = self:GetHealthStats()
+	local warnings = owner ~= nil and owner:GetResourceWarnings() or {}
+	local fallbacks = owner ~= nil and owner:GetResourceFallbacks() or {}
+	local packageRefCount = 0
+	local packageDetails = {}
+	local refsByPackage = owner ~= nil and owner:GetPackageRefs() or {}
+	for packageKey, ref in pairs(refsByPackage or {}) do
+		local refCount = tonumber(ref.refCount) or 0
+		local openCount = tonumber(ref.openCount) or 0
+		local hiddenCount = tonumber(ref.hiddenCount) or 0
+		packageRefCount = packageRefCount + refCount
+		if refCount > 0 or openCount > 0 or hiddenCount > 0 then
+			packageDetails[#packageDetails + 1] = tostring(packageKey)
+				.. ":ref=" .. tostring(refCount)
+				.. ",open=" .. tostring(openCount)
+				.. ",hidden=" .. tostring(hiddenCount)
+		end
+	end
+
+	local requiredZeroFields = {
+		"openUI",
+		"hiddenUI",
+		"binding",
+		"transitionCallback",
+		"timer",
+		"objectHandle",
+		"childCache",
+		"childUI",
+		"view",
+		"controller",
+	}
+	local dirtyFields = {}
+	for _, fieldName in ipairs(requiredZeroFields) do
+		local value = tonumber(stats[fieldName]) or 0
+		if value ~= 0 then
+			dirtyFields[#dirtyFields + 1] = fieldName .. "=" .. tostring(value)
+		end
+	end
+	if packageRefCount ~= 0 then
+		dirtyFields[#dirtyFields + 1] = "packageRef=" .. tostring(packageRefCount)
+	end
+	if options.requireNoPackages == true and (tonumber(stats.package) or 0) ~= 0 then
+		dirtyFields[#dirtyFields + 1] = "package=" .. tostring(stats.package)
+	end
+	if #warnings ~= 0 then
+		dirtyFields[#dirtyFields + 1] = "warnings=" .. tostring(#warnings)
+	end
+	if options.requireNoFallbacks == true and #fallbacks ~= 0 then
+		dirtyFields[#dirtyFields + 1] = "fallbacks=" .. tostring(#fallbacks)
+	end
+
+	local detailFields = {
+		"openUI=" .. tostring(stats.openUI),
+		"hiddenUI=" .. tostring(stats.hiddenUI),
+		"package=" .. tostring(stats.package),
+		"binding=" .. tostring(stats.binding),
+		"transition=" .. tostring(stats.transitionCallback),
+		"timer=" .. tostring(stats.timer),
+		"objectHandle=" .. tostring(stats.objectHandle),
+		"childCache=" .. tostring(stats.childCache),
+		"childUI=" .. tostring(stats.childUI),
+		"view=" .. tostring(stats.view),
+		"controller=" .. tostring(stats.controller),
+		"packageRef=" .. tostring(packageRefCount),
+		"warnings=" .. tostring(#warnings),
+		"fallbacks=" .. tostring(#fallbacks),
+	}
+	if #packageDetails > 0 then
+		detailFields[#detailFields + 1] = "packages=" .. table.concat(packageDetails, "|")
+	end
+
+	return {
+		clean = #dirtyFields == 0,
+		detail = table.concat(detailFields, " "),
+		dirtyFields = dirtyFields,
+		health = stats,
+		resourceWarnings = warnings,
+		resourceFallbacks = fallbacks,
+		packageRefCount = packageRefCount,
+		packageDetails = packageDetails,
+	}
+end
+
+function FairyGuiProfiler:ValidateCleanState(label, options)
+	local owner = self.owner
+	local state = self:GetCleanState(options)
+	if state.clean ~= true then
+		print("[FGUI] clean state dirty:", label or "", table.concat(state.dirtyFields or {}, ", "), state.detail or "")
+		for _, warning in ipairs(state.resourceWarnings or {}) do
+			print("[FGUI] clean state warning:", warning.kind, "package=", warning.packageKey, warning.detail or "")
+		end
+		if owner ~= nil and options ~= nil and options.dumpWhenDirty == true then
+			self:DumpHealth(true)
+		end
+	elseif options ~= nil and options.printWhenClean == true then
+		print("[FGUI] clean state ok:", label or "", state.detail or "")
+	end
+	return state.clean == true, state.detail, state
 end
 
 function FairyGuiProfiler:FindFocusOwner(focusedHandle)
@@ -815,7 +920,7 @@ end
 
 function FairyGuiProfiler:DumpHealth(verbose)
 	local stats = self:GetHealthStats()
-	print("[FGUI] Health openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
+	print("[FGUI] Health backend=", stats.nativeBackend, "openUI=", stats.openUI, "hiddenUI=", stats.hiddenUI, "package=", stats.package, "layerRoot=", stats.layerRoot, "binding=", stats.binding, "transitionCallback=", stats.transitionCallback, "timer=", stats.timer, "threadTimer=", stats.threadTimer, "objectHandle=", stats.objectHandle, "childCache=", stats.childCache, "childUI=", stats.childUI, "view=", stats.view, "controller=", stats.controller, "focusedHandle=", stats.focusedHandle, "runtimeObjectHandle=", stats.runtimeObjectHandle, "runtimeBinding=", stats.runtimeBinding, "eventTotal=", stats.eventDispatchTotal, "material=", stats.materialCount, "texture=", stats.textureCount, "materialAlias=", stats.materialAliasCount, "textureAlias=", stats.textureAliasCount, "commandCount=", stats.commandCount, "triangleCount=", stats.triangleCount, "draw=", tostring(stats.drawCommandCount) .. "/" .. tostring(stats.drawTriangleCount), "switch=", tostring(stats.materialSwitchCount) .. "/" .. tostring(stats.textureSwitchCount), "service=", tostring(stats.serviceOpenTotal) .. "/" .. tostring(stats.serviceKindCount) .. "/" .. tostring(stats.servicePeakOpen), "toastQueue=", stats.toastQueue, "loadingRefs=", stats.loadingRefTotal, "openPerf=", tostring(stats.openPerfCount) .. "/" .. formatMs(stats.openAvgMs) .. "/" .. formatMs(stats.openMaxMs), "closePerf=", tostring(stats.closePerfCount) .. "/" .. formatMs(stats.closeAvgMs) .. "/" .. formatMs(stats.closeMaxMs), "eventMs=", formatMs(stats.eventAvgMs) .. "/" .. formatMs(stats.eventMaxMs), "loadPackageMs=", formatMs(stats.loadPackageAvgMs) .. "/" .. formatMs(stats.loadPackageMaxMs), "serviceMs=", formatMs(stats.serviceAvgMs) .. "/" .. formatMs(stats.serviceMaxMs))
 	local owner = self.owner
 	if verbose == true and owner ~= nil then
 		self:DumpPerfStats()
@@ -838,7 +943,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 	local lastEvent = eventStats.lastEvent
 	local ime = health.ime or {}
 	local lines = {
-		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot)),
+		string.format("UI open=%s hidden=%s pkg=%s obj=%s layer=%s backend=%s", tostring(health.openUI), tostring(health.hiddenUI), tostring(health.package), tostring(health.objectHandle), tostring(health.layerRoot), tostring(health.nativeBackend or "-")),
 		string.format("Top ui=%s popup=%s focus=%s owner=%s", objectBrief(owner, snapshot.topUI), objectBrief(owner, snapshot.topPopup), tostring(health.focusedHandle or 0), snapshot.focusOwner ~= nil and tostring(snapshot.focusOwner.key or snapshot.focusOwner.uiName or "") or "-"),
 		string.format("IME active=%s cand=%s focus=%s upd/commit/end=%s/%s/%s cand=%s/%s/%s pos=%s", tostring(ime.active == true and 1 or 0), tostring(ime.candidate == true and 1 or 0), tostring(ime.focus or 0), tostring(ime.compUpdates or 0), tostring(ime.commits or 0), tostring(ime.ends or 0), tostring(ime.candOpen or 0), tostring(ime.candClose or 0), tostring(ime.candChange or 0), tostring(ime.pos or "-")),
 		string.format("Life binding=%s timer=%s thread=%s child=%s/%s ctrl=%s view=%s", tostring(health.binding), tostring(health.timer), tostring(health.threadTimer), tostring(health.childCache), tostring(health.childUI), tostring(health.controller), tostring(health.view)),
