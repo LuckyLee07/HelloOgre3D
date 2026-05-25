@@ -15,6 +15,8 @@ public:
 	explicit FairyGuiLuaApi(ClientManager* clientManager);
 
 	bool IsAvailable() const;
+
+	// Package and object creation.
 	const char* LoadPackage(const char* packagePath);
 	bool RemovePackage(const char* packageName) const;
 	int CreateObject(const char* packageName, const char* objectName) const;
@@ -27,6 +29,7 @@ public:
 	int CreateGraphRegularPolygon(int ownerHandle, const char* name, float width, float height, int sides, float red, float green, float blue, float alpha) const;
 	int CreateModalMask(float red, float green, float blue, float alpha) const;
 
+	// Render, resource, and service diagnostics.
 	int GetLastRenderCommandCount() const;
 	int GetLastTriangleCount() const;
 	int GetScreenWidth() const;
@@ -61,6 +64,8 @@ public:
 	const char* GetTextureDetailString();
 	const char* GetFrameRenderDetailString();
 	bool PlotServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen) const;
+
+	// Object handle access and properties.
 	int GetChild(int objectHandle, const char* childPath) const;
 	int GetListItem(int objectHandle, int itemIndex) const;
 	int GetListItemCount(int objectHandle) const;
@@ -107,6 +112,8 @@ public:
 	bool RefreshList(int objectHandle) const;
 	bool ScrollListToView(int objectHandle, int itemIndex) const;
 	bool CenterObject(int objectHandle, bool restraint) const;
+
+	// Input and IME bridge.
 	bool InjectMouseMove(int x, int y) const;
 	bool InjectMouseDown(int x, int y, int button) const;
 	bool InjectMouseUp(int x, int y, int button) const;
@@ -122,6 +129,8 @@ public:
 	bool InjectImeCommitText(const char* text) const;
 	bool ClearImeComposition() const;
 	const char* GetImeDebugString();
+
+	// Event bindings and object lifetime.
 	int AddEventListener(int objectHandle, const char* childPath, int eventType, int callbackId) const;
 	int AddClickListener(int objectHandle, const char* childPath, int callbackId) const;
 	int AddControllerChangedListener(int objectHandle, const char* controllerName, int callbackId) const;
@@ -133,6 +142,7 @@ private:
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* GetSystem() const;
 #endif
+	static const char* SafeString(const char* value);
 
 	ClientManager* m_clientManager;
 	std::string m_lastPackageName;

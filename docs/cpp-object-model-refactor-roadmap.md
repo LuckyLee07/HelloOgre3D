@@ -319,7 +319,8 @@ Lua Binding Adapter
 - [x] package 名、stencil/material/texture/frame render 等临时字符串缓存从 `GameManager` 移到 adapter，减少 manager 状态膨胀。
 - [x] 输入注入、IME debug、事件监听接口迁移到 `FairyGuiLuaApi`，并让 `GameManager` 的真实键鼠输入入口复用同一条 adapter 路径。
 - [x] 对象属性、controller、列表、focus、transition、删除清理等 FGUI Lua 接口迁移到 `FairyGuiLuaApi`，`GameManager` 不再直接 include `FairyGuiSystem`。
-- [ ] 后续继续整理 FGUI Lua API 分组、命名和 generated binding 边界，必要时再拆细 facade 文件。
+- [x] 2026-05-25：`FairyGuiLuaApi` 实现按 package/create、diagnostics、object、input、event/lifetime 拆分到独立 cpp，并新增 private internal include 收口 `FairyGuiSystem` 依赖。
+- [ ] 后续新增 FGUI Lua API 继续按分组落到 adapter 对应文件；Lua 导出名和 generated binding 边界保持兼容。
 
 ## 10. 验证策略
 
@@ -336,7 +337,7 @@ Lua Binding Adapter
 
 - [ ] Phase 0：关键对象所有权注释和 Lua 兼容边界梳理。
 - [ ] Phase 1：组件生命周期和 typed access 规则落地。
-- [ ] Phase 2：`GameManager` FGUI binding adapter 拆分。
+- [x] Phase 2：`GameManager` FGUI binding adapter 拆分。
 - [ ] Phase 3：`FairyGuiSystem` diagnostics / input / event / renderer 分拆。
 - [ ] Phase 4：`HealthComponent`、`WeaponComponent`、`AnimComponent`、`AiDriverComponent` 分阶段接入。
 - [ ] Phase 5：`ObjectManager` registry 化，跨对象逻辑 system 化。
