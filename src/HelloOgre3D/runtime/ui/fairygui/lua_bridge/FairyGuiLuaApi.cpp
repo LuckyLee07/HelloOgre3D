@@ -1,8 +1,7 @@
 #include "FairyGuiLuaApiInternal.h"
-#include "ClientManager.h"
 
-FairyGuiLuaApi::FairyGuiLuaApi(ClientManager* clientManager)
-	: m_clientManager(clientManager),
+FairyGuiLuaApi::FairyGuiLuaApi(FairyGuiSystem* system)
+	: m_system(system),
 	m_lastPackageName(), m_lastStencilBackend(), m_lastStencilBackendDetail(),
 	m_lastMaterialDetail(), m_lastTextureDetail(), m_lastFrameRenderDetail(),
 	m_lastObjectText(), m_lastObjectValue(), m_lastControllerString(), m_lastImeDebug()
@@ -12,7 +11,7 @@ FairyGuiLuaApi::FairyGuiLuaApi(ClientManager* clientManager)
 #if defined(HELLO_ENABLE_FGUI)
 FairyGuiSystem* FairyGuiLuaApi::GetSystem() const
 {
-	return m_clientManager != nullptr ? m_clientManager->getFairyGuiSystem() : nullptr;
+	return m_system;
 }
 #endif
 

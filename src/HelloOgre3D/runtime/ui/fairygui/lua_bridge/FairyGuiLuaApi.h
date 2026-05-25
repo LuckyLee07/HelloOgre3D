@@ -3,17 +3,14 @@
 
 #include <string>
 
-class ClientManager;
-
-#if defined(HELLO_ENABLE_FGUI)
 class FairyGuiSystem;
-#endif
 
-class FairyGuiLuaApi
-{
+class FairyGuiLuaApi //tolua_exports
+{ //tolua_exports
 public:
-	explicit FairyGuiLuaApi(ClientManager* clientManager);
+	explicit FairyGuiLuaApi(FairyGuiSystem* system);
 
+	//tolua_begin
 	bool IsAvailable() const;
 
 	// Package and object creation.
@@ -137,6 +134,7 @@ public:
 	bool RemoveListener(int bindingId) const;
 	bool RemoveObject(int objectHandle) const;
 	void ClearObjects() const;
+	//tolua_end
 
 private:
 #if defined(HELLO_ENABLE_FGUI)
@@ -144,7 +142,7 @@ private:
 #endif
 	static const char* SafeString(const char* value);
 
-	ClientManager* m_clientManager;
+	FairyGuiSystem* m_system;
 	std::string m_lastPackageName;
 	std::string m_lastStencilBackend;
 	std::string m_lastStencilBackendDetail;
@@ -155,6 +153,6 @@ private:
 	std::string m_lastObjectValue;
 	std::string m_lastControllerString;
 	std::string m_lastImeDebug;
-};
+}; //tolua_exports
 
 #endif // __FAIRY_GUI_LUA_API_H__

@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiProbes = Class("FairyGuiProbes")
 
 local function isBlank(value)
@@ -44,8 +46,8 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		if alpha ~= nil then
 			self:SetAlpha(childHandle, alpha)
 		end
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
+		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			NativeApi:removeFairyGuiObject(childHandle)
 			return nil
 		end
 		return childHandle
@@ -59,8 +61,8 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		self:SetPosition(childHandle, x, y)
 		self:SetSize(childHandle, width, height)
 		self:SetTouchable(childHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
+		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			NativeApi:removeFairyGuiObject(childHandle)
 			return nil
 		end
 		return childHandle
@@ -73,8 +75,8 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		end
 		self:SetPosition(childHandle, x, y)
 		self:SetSize(childHandle, width, height)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(childHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(childHandle)
+		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
+			NativeApi:removeFairyGuiObject(childHandle)
 			return nil
 		end
 		return childHandle
@@ -88,8 +90,8 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		self:SetPosition(nestedHandle, 94, 82)
 		self:SetSize(nestedHandle, 132, 74)
 		self:SetTouchable(nestedHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(nestedHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(nestedHandle)
+		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(nestedHandle, parentHandle) then
+			NativeApi:removeFairyGuiObject(nestedHandle)
 			return nil
 		end
 
@@ -102,7 +104,7 @@ function FairyGuiProbes:OpenMaskProbe(param)
 			nestedMask = addImage(nestedHandle, "nested_mask", maskPath, 14, 8, 104, 58)
 		end
 		if nestedContent == nil or nestedAccent == nil or nestedMask == nil or not self:SetMask(nestedHandle, nestedMask, inverted == true) then
-			GameManager:removeFairyGuiObject(nestedHandle)
+			NativeApi:removeFairyGuiObject(nestedHandle)
 			return nil
 		end
 		return nestedHandle
@@ -116,8 +118,8 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		self:SetPosition(panelHandle, x, y)
 		self:SetSize(panelHandle, 320, 210)
 		self:SetTouchable(panelHandle, false)
-		if GameManager.addFairyGuiObjectToParent == nil or not GameManager:addFairyGuiObjectToParent(panelHandle, parentHandle) then
-			GameManager:removeFairyGuiObject(panelHandle)
+		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(panelHandle, parentHandle) then
+			NativeApi:removeFairyGuiObject(panelHandle)
 			return nil
 		end
 
@@ -132,11 +134,11 @@ function FairyGuiProbes:OpenMaskProbe(param)
 			mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
 		end
 		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
-			GameManager:removeFairyGuiObject(panelHandle)
+			NativeApi:removeFairyGuiObject(panelHandle)
 			return nil
 		end
 		if useNestedMask and createNestedPanel(panelHandle, inverted) == nil then
-			GameManager:removeFairyGuiObject(panelHandle)
+			NativeApi:removeFairyGuiObject(panelHandle)
 			return nil
 		end
 		return panelHandle
@@ -165,20 +167,20 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		invertedOverlay = addImage(handle, "inverted_mask_overlay", maskPath, 476, 116, 176, 118, 0.35)
 	end
 	if background == nil or title == nil or normalLabel == nil or invertedLabel == nil or normalPanel == nil or invertedPanel == nil or normalOverlay == nil or invertedOverlay == nil then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	local layerName = param.layer or "Top"
 	if not self:AttachToLayer(handle, layerName, param) then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	if param.x ~= nil and param.y ~= nil then
 		self:SetPosition(handle, param.x, param.y)
 	elseif param.center ~= false then
-		GameManager:centerFairyGuiObject(handle, param.restraint == true)
+		NativeApi:centerFairyGuiObject(handle, param.restraint == true)
 	end
 
 	local objectInfo = {
@@ -233,7 +235,7 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 	local inputHandle = self:CreateTextInput(handle, "probe_input", param.text or "", 20, 230, 255, 235)
 	local hintHandle = self:CreateText(handle, "probe_hint", "type, backspace, enter", 16, 190, 210, 230)
 	if titleHandle == nil or titleHandle <= 0 or inputHandle == nil or inputHandle <= 0 or hintHandle == nil or hintHandle <= 0 then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
@@ -243,24 +245,24 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 	self:SetSize(inputHandle, 420, 42)
 	self:SetPosition(hintHandle, 0, 104)
 	self:SetSize(hintHandle, 420, 28)
-	if GameManager.addFairyGuiObjectToParent == nil
-		or not GameManager:addFairyGuiObjectToParent(titleHandle, handle)
-		or not GameManager:addFairyGuiObjectToParent(inputHandle, handle)
-		or not GameManager:addFairyGuiObjectToParent(hintHandle, handle) then
-		GameManager:removeFairyGuiObject(handle)
+	if NativeApi.addFairyGuiObjectToParent == nil
+		or not NativeApi:addFairyGuiObjectToParent(titleHandle, handle)
+		or not NativeApi:addFairyGuiObjectToParent(inputHandle, handle)
+		or not NativeApi:addFairyGuiObjectToParent(hintHandle, handle) then
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	local layerName = param.layer or "Top"
 	if not self:AttachToLayer(handle, layerName, param) then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	if param.x ~= nil and param.y ~= nil then
 		self:SetPosition(handle, param.x, param.y)
 	elseif param.center ~= false then
-		GameManager:centerFairyGuiObject(handle, param.restraint == true)
+		NativeApi:centerFairyGuiObject(handle, param.restraint == true)
 	end
 
 	local objectInfo = {

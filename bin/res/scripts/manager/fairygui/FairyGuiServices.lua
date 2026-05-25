@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiServices = Class("FairyGuiServices")
 
 local function isBlank(value)
@@ -185,7 +187,7 @@ function FairyGuiServices:OpenServiceContainer(key, param)
 		return nil
 	end
 	if not self:AttachToLayer(handle, param.layer, param) then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		recordServiceStat(self, "failed", param.serviceType, key, "attachLayer")
 		recordServicePerf(self, startMs, param.serviceType, false)
 		return nil
@@ -250,7 +252,7 @@ function FairyGuiServices:AddServiceText(objectInfo, name, text, x, y, width, he
 	self:SetPosition(textHandle, x or 0, y or 0)
 	self:SetSize(textHandle, width or 120, height or 32)
 	if not self:AddObjectHandleToParent(textHandle, objectInfo.handle) then
-		GameManager:removeFairyGuiObject(textHandle)
+		NativeApi:removeFairyGuiObject(textHandle)
 		return nil
 	end
 	return self:AddOwnedHandle(objectInfo, textHandle)
@@ -273,7 +275,7 @@ function FairyGuiServices:AddServiceImage(objectInfo, name, url, x, y, width, he
 		self:SetAlpha(imageHandle, alpha)
 	end
 	if not self:AddObjectHandleToParent(imageHandle, objectInfo.handle) then
-		GameManager:removeFairyGuiObject(imageHandle)
+		NativeApi:removeFairyGuiObject(imageHandle)
 		return nil
 	end
 	return self:AddOwnedHandle(objectInfo, imageHandle)
@@ -293,7 +295,7 @@ function FairyGuiServices:AddServiceButton(objectInfo, name, text, x, y, width, 
 	self:SetSize(buttonHandle, width or 120, height or 44)
 	self:SetTouchable(buttonHandle, true)
 	if not self:AddObjectHandleToParent(buttonHandle, objectInfo.handle) then
-		GameManager:removeFairyGuiObject(buttonHandle)
+		NativeApi:removeFairyGuiObject(buttonHandle)
 		return nil
 	end
 	self:AddOwnedHandle(objectInfo, buttonHandle)

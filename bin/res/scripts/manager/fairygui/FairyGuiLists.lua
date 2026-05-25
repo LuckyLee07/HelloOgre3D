@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiLists = Class("FairyGuiLists")
 
 local LIST_ITEM_METHODS = {}
@@ -281,7 +283,7 @@ end
 
 function FairyGuiLists:GetChild(handle, childPath)
 	local self = self.owner
-	if self == nil or GameManager == nil or handle == nil or isBlank(childPath) then
+	if self == nil or NativeApi == nil or handle == nil or isBlank(childPath) then
 		return handle
 	end
 
@@ -290,7 +292,7 @@ function FairyGuiLists:GetChild(handle, childPath)
 		return childHandles[childPath]
 	end
 
-	local childHandle = GameManager:getFairyGuiChild(handle, childPath)
+	local childHandle = NativeApi:getFairyGuiChild(handle, childPath)
 	if childHandle == nil or childHandle <= 0 then
 		local policy = self.resourceFallbackPolicy or {}
 		if policy.recordMissingChild == true then
@@ -397,7 +399,7 @@ end
 
 function FairyGuiLists:GetListItemByHandle(listHandle, index, data)
 	local self = self.owner
-	if self == nil or GameManager == nil or listHandle == nil or index == nil then
+	if self == nil or NativeApi == nil or listHandle == nil or index == nil then
 		return nil
 	end
 
@@ -409,7 +411,7 @@ function FairyGuiLists:GetListItemByHandle(listHandle, index, data)
 
 	local itemHandle = itemHandles[index]
 	if itemHandle == nil then
-		itemHandle = GameManager:getFairyGuiListItem(listHandle, index - 1)
+		itemHandle = NativeApi:getFairyGuiListItem(listHandle, index - 1)
 		if itemHandle == nil or itemHandle <= 0 then
 			return nil
 		end
@@ -497,7 +499,7 @@ end
 
 function FairyGuiLists:SetListItemCount(handle, childPath, itemCount)
 	local self = self.owner
-	if self == nil or GameManager == nil then
+	if self == nil or NativeApi == nil then
 		return false
 	end
 
@@ -507,12 +509,12 @@ function FairyGuiLists:SetListItemCount(handle, childPath, itemCount)
 	end
 
 	self:ClearListItemHandleCache(listHandle)
-	return GameManager:setFairyGuiListItemCount(listHandle, itemCount or 0)
+	return NativeApi:setFairyGuiListItemCount(listHandle, itemCount or 0)
 end
 
 function FairyGuiLists:GetListItemCount(handle, childPath)
 	local self = self.owner
-	if self == nil or GameManager == nil then
+	if self == nil or NativeApi == nil then
 		return 0
 	end
 
@@ -520,7 +522,7 @@ function FairyGuiLists:GetListItemCount(handle, childPath)
 	if listHandle == nil then
 		return 0
 	end
-	return GameManager:getFairyGuiListItemCount(listHandle)
+	return NativeApi:getFairyGuiListItemCount(listHandle)
 end
 
 function FairyGuiLists:GetListItem(handle, childPath, index)
@@ -584,15 +586,15 @@ function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer,
 	self.listVirtualOptionsByHandle[listHandle] = options or {}
 
 	local virtualEnabled = false
-	if GameManager ~= nil and GameManager.setFairyGuiListVirtual ~= nil then
-		virtualEnabled = GameManager:setFairyGuiListVirtual(listHandle, options ~= nil and options.loop == true) == true
+	if NativeApi ~= nil and NativeApi.setFairyGuiListVirtual ~= nil then
+		virtualEnabled = NativeApi:setFairyGuiListVirtual(listHandle, options ~= nil and options.loop == true) == true
 	end
 	self.listVirtualByHandle[listHandle] = virtualEnabled
 	lists:ResetVirtualStats(listHandle, #dataList, options, virtualEnabled)
 	if virtualEnabled then
-		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
-		if countOk and GameManager.refreshFairyGuiList ~= nil then
-			GameManager:refreshFairyGuiList(listHandle)
+		local countOk = NativeApi:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and NativeApi.refreshFairyGuiList ~= nil then
+			NativeApi:refreshFairyGuiList(listHandle)
 		end
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return countOk == true
@@ -834,8 +836,8 @@ function FairyGuiLists:SetTreeNodeSelected(handle, childPath, nodeKey)
 	local flat = self:GetLists():BuildTreeFlatData(listHandle)
 	for index, row in ipairs(flat) do
 		if tostring(row.key) == tostring(nodeKey) then
-			if GameManager ~= nil and GameManager.setFairyGuiListSelectedIndex ~= nil then
-				GameManager:setFairyGuiListSelectedIndex(listHandle, index - 1)
+			if NativeApi ~= nil and NativeApi.setFairyGuiListSelectedIndex ~= nil then
+				NativeApi:setFairyGuiListSelectedIndex(listHandle, index - 1)
 			end
 			break
 		end
@@ -917,7 +919,7 @@ function FairyGuiLists:RefreshListItem(handle, childPath, index)
 		if itemHandle ~= nil then
 			return self:RenderListItemByHandle(listHandle, index, itemHandle)
 		end
-		return GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil and GameManager:refreshFairyGuiList(listHandle) == true
+		return NativeApi ~= nil and NativeApi.refreshFairyGuiList ~= nil and NativeApi:refreshFairyGuiList(listHandle) == true
 	end
 	return self:RenderListItemByHandle(listHandle, index)
 end
@@ -934,8 +936,8 @@ function FairyGuiLists:RefreshList(handle, childPath)
 		return false
 	end
 
-	if self.listVirtualByHandle[listHandle] == true and GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil then
-		local refreshOk = GameManager:refreshFairyGuiList(listHandle)
+	if self.listVirtualByHandle[listHandle] == true and NativeApi ~= nil and NativeApi.refreshFairyGuiList ~= nil then
+		local refreshOk = NativeApi:refreshFairyGuiList(listHandle)
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return refreshOk
 	end
@@ -969,7 +971,7 @@ function FairyGuiLists:UpdateListItem(handle, childPath, index, data)
 		local itemHandles = self.listItemHandlesByHandle[listHandle]
 		local itemHandle = itemHandles ~= nil and itemHandles[index] or nil
 		local renderOk = itemHandle ~= nil and self:RenderListItemByHandle(listHandle, index, itemHandle) or false
-		local refreshOk = GameManager ~= nil and GameManager.refreshFairyGuiList ~= nil and GameManager:refreshFairyGuiList(listHandle) == true
+		local refreshOk = NativeApi ~= nil and NativeApi.refreshFairyGuiList ~= nil and NativeApi:refreshFairyGuiList(listHandle) == true
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return renderOk == true or refreshOk == true
 	end
@@ -995,12 +997,12 @@ function FairyGuiLists:AppendListItem(handle, childPath, data)
 	end
 	table.insert(dataList, data)
 	if self.listVirtualByHandle[listHandle] == true then
-		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+		if NativeApi == nil or NativeApi.setFairyGuiListItemCount == nil then
 			return false
 		end
-		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
-		if countOk and GameManager.refreshFairyGuiList ~= nil then
-			GameManager:refreshFairyGuiList(listHandle)
+		local countOk = NativeApi:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and NativeApi.refreshFairyGuiList ~= nil then
+			NativeApi:refreshFairyGuiList(listHandle)
 		end
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return countOk == true
@@ -1030,12 +1032,12 @@ function FairyGuiLists:RemoveListItem(handle, childPath, index)
 	table.remove(dataList, index)
 	if self.listVirtualByHandle[listHandle] == true then
 		self:ClearListItemHandleCache(listHandle)
-		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+		if NativeApi == nil or NativeApi.setFairyGuiListItemCount == nil then
 			return false
 		end
-		local countOk = GameManager:setFairyGuiListItemCount(listHandle, #dataList)
-		if countOk and GameManager.refreshFairyGuiList ~= nil then
-			GameManager:refreshFairyGuiList(listHandle)
+		local countOk = NativeApi:setFairyGuiListItemCount(listHandle, #dataList)
+		if countOk and NativeApi.refreshFairyGuiList ~= nil then
+			NativeApi:refreshFairyGuiList(listHandle)
 		end
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return countOk == true
@@ -1062,12 +1064,12 @@ function FairyGuiLists:ClearList(handle, childPath)
 	if self.listVirtualByHandle[listHandle] == true then
 		self.listDataByHandle[listHandle] = {}
 		self:ClearListItemHandleCache(listHandle)
-		if GameManager == nil or GameManager.setFairyGuiListItemCount == nil then
+		if NativeApi == nil or NativeApi.setFairyGuiListItemCount == nil then
 			return false
 		end
-		local countOk = GameManager:setFairyGuiListItemCount(listHandle, 0)
-		if countOk and GameManager.refreshFairyGuiList ~= nil then
-			GameManager:refreshFairyGuiList(listHandle)
+		local countOk = NativeApi:setFairyGuiListItemCount(listHandle, 0)
+		if countOk and NativeApi.refreshFairyGuiList ~= nil then
+			NativeApi:refreshFairyGuiList(listHandle)
 		end
 		lists:UpdateVirtualStatsCounts(listHandle)
 		return countOk == true
@@ -1098,7 +1100,7 @@ function FairyGuiLists:GetListDebugStats(handle, childPath)
 		itemHandleCount = tableCount(itemHandles),
 		realizedCount = tableCount(itemIndexes),
 		renderer = type(self.listRenderersByHandle[listHandle]) == "function",
-		backendItemCount = GameManager ~= nil and GameManager.getFairyGuiListItemCount ~= nil and GameManager:getFairyGuiListItemCount(listHandle) or 0,
+		backendItemCount = NativeApi ~= nil and NativeApi.getFairyGuiListItemCount ~= nil and NativeApi:getFairyGuiListItemCount(listHandle) or 0,
 		renderCount = 0,
 		reuseCount = 0,
 		lastIndex = 0,
@@ -1144,7 +1146,7 @@ end
 
 function FairyGuiLists:SetListSelectedIndex(handle, childPath, selectedIndex)
 	local self = self.owner
-	if self == nil or GameManager == nil then
+	if self == nil or NativeApi == nil then
 		return false
 	end
 
@@ -1152,12 +1154,12 @@ function FairyGuiLists:SetListSelectedIndex(handle, childPath, selectedIndex)
 	if listHandle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiListSelectedIndex(listHandle, (selectedIndex or 1) - 1)
+	return NativeApi:setFairyGuiListSelectedIndex(listHandle, (selectedIndex or 1) - 1)
 end
 
 function FairyGuiLists:GetListSelectedIndex(handle, childPath)
 	local self = self.owner
-	if self == nil or GameManager == nil then
+	if self == nil or NativeApi == nil then
 		return 0
 	end
 
@@ -1166,13 +1168,13 @@ function FairyGuiLists:GetListSelectedIndex(handle, childPath)
 		return 0
 	end
 
-	local selectedIndex = GameManager:getFairyGuiListSelectedIndex(listHandle)
+	local selectedIndex = NativeApi:getFairyGuiListSelectedIndex(listHandle)
 	return selectedIndex >= 0 and selectedIndex + 1 or 0
 end
 
 function FairyGuiLists:ScrollListToView(handle, childPath, index)
 	local self = self.owner
-	if self == nil or GameManager == nil then
+	if self == nil or NativeApi == nil then
 		return false
 	end
 
@@ -1180,7 +1182,7 @@ function FairyGuiLists:ScrollListToView(handle, childPath, index)
 	if listHandle == nil then
 		return false
 	end
-	return GameManager:scrollFairyGuiListToView(listHandle, (index or 1) - 1)
+	return NativeApi:scrollFairyGuiListToView(listHandle, (index or 1) - 1)
 end
 
 return FairyGuiLists

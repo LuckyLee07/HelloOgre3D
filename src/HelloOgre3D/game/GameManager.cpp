@@ -12,7 +12,10 @@
 #include <sys/time.h>
 #endif
 #include "ClientManager.h"
-#include "FairyGuiLuaApi.h"
+#include "ui/fairygui/lua_bridge/FairyGuiLuaApi.h"
+#if defined(HELLO_ENABLE_FGUI)
+#include "ui/fairygui/FairyGuiSystem.h"
+#endif
 #include "systems/ui/UIManager.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -26,6 +29,7 @@ using namespace Ogre;
 
 extern int tolua_SandboxToLua_open(lua_State* tolua_S);
 extern int tolua_GameToLua_open(lua_State* tolua_S);
+extern int tolua_RuntimeToLua_open(lua_State* tolua_S);
 extern int tolua_SandboxToLua_Manual(lua_State* tolua_S);
 
 GameManager* g_GameManager = nullptr;
@@ -34,10 +38,23 @@ GameManager* GetGameManager()
 	return g_GameManager;
 }
 
+namespace
+{
+FairyGuiSystem* ResolveFairyGuiSystem(ClientManager* clientManager)
+{
+#if defined(HELLO_ENABLE_FGUI)
+	return clientManager != nullptr ? clientManager->getFairyGuiSystem() : nullptr;
+#else
+	(void)clientManager;
+	return nullptr;
+#endif
+}
+}
+
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
 	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
-	m_pFairyGuiLuaApi(new FairyGuiLuaApi(pClientMgr))
+	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr)))
 {
 	
 }
@@ -635,11 +652,13 @@ void GameManager::InitLuaEnv()
 	// 设置ToLua对象 
 	tolua_SandboxToLua_open(m_pScriptVM->getLuaState());
 	tolua_GameToLua_open(m_pScriptVM->getLuaState());
+	tolua_RuntimeToLua_open(m_pScriptVM->getLuaState());
 	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
+	m_pScriptVM->setUserTypePointer("FairyGuiRuntime", "FairyGuiLuaApi", m_pFairyGuiLuaApi);
 	m_pScriptVM->setUserTypePointer("ObjectManager", "ObjectManager", m_pObjectManager);
 	m_pScriptVM->setUserTypePointer("DebugDrawer", "DebugDrawer", DebugDrawer::GetInstance());
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
@@ -762,8 +781,11 @@ void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 
 bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
-	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
+	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
 		return true;
+#endif
 
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyPressed", "ii>b", keycode, static_cast<int>(key), &consumed);
@@ -776,8 +798,11 @@ bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 {
-	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyReleased(static_cast<int>(keycode), static_cast<int>(key)))
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
+	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectKeyReleased(static_cast<int>(keycode), static_cast<int>(key)))
 		return true;
+#endif
 
 	bool consumed = false;
 	m_pScriptVM->callFunction("FairyGuiManager_HandleKeyReleased", "ii>b", keycode, static_cast<int>(key), &consumed);
@@ -792,27 +817,36 @@ bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
-	if (m_pFairyGuiLuaApi != nullptr)
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
+	if (fairyGuiSystem != nullptr)
 	{
-		if (evt.state.Z.rel != 0 && m_pFairyGuiLuaApi->InjectMouseWheel(evt.state.X.abs, evt.state.Y.abs, evt.state.Z.rel))
+		if (evt.state.Z.rel != 0 && fairyGuiSystem->InjectMouseWheel(evt.state.X.abs, evt.state.Y.abs, evt.state.Z.rel))
 			return true;
-		if (m_pFairyGuiLuaApi->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
+		if (fairyGuiSystem->InjectMouseMove(evt.state.X.abs, evt.state.Y.abs))
 			return true;
 	}
+#endif
 	return false;
 }
 
 bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
+	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
+#endif
 	return false;
 }
 
 bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
-	if (m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
+#if defined(HELLO_ENABLE_FGUI)
+	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
+	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
+#endif
 	return false;
 }
 

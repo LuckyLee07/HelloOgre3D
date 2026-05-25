@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiEvents = Class("FairyGuiEvents")
 
 local EVENT_TYPES = {
@@ -89,52 +91,52 @@ function FairyGuiEvents:Init(owner)
 end
 
 function FairyGuiEvents:DebugInjectMouseMove(x, y)
-	if GameManager == nil or GameManager.injectFairyGuiMouseMove == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiMouseMove == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiMouseMove(tonumber(x) or 0, tonumber(y) or 0)
+	return NativeApi:injectFairyGuiMouseMove(tonumber(x) or 0, tonumber(y) or 0)
 end
 
 function FairyGuiEvents:DebugInjectMouseDown(x, y, button)
-	if GameManager == nil or GameManager.injectFairyGuiMouseDown == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiMouseDown == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiMouseDown(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+	return NativeApi:injectFairyGuiMouseDown(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
 end
 
 function FairyGuiEvents:DebugInjectMouseUp(x, y, button)
-	if GameManager == nil or GameManager.injectFairyGuiMouseUp == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiMouseUp == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiMouseUp(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+	return NativeApi:injectFairyGuiMouseUp(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
 end
 
 function FairyGuiEvents:DebugInjectMouseWheel(x, y, wheelDelta)
-	if GameManager == nil or GameManager.injectFairyGuiMouseWheel == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiMouseWheel == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiMouseWheel(tonumber(x) or 0, tonumber(y) or 0, tonumber(wheelDelta) or 0)
+	return NativeApi:injectFairyGuiMouseWheel(tonumber(x) or 0, tonumber(y) or 0, tonumber(wheelDelta) or 0)
 end
 
 function FairyGuiEvents:DebugInjectClick(x, y, button)
-	if GameManager == nil or GameManager.injectFairyGuiClick == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiClick == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiClick(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
+	return NativeApi:injectFairyGuiClick(tonumber(x) or 0, tonumber(y) or 0, tonumber(button) or 0)
 end
 
 function FairyGuiEvents:DebugInjectKeyPressed(keyCode, keyText)
-	if GameManager == nil or GameManager.injectFairyGuiKeyPressed == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiKeyPressed == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiKeyPressed(tonumber(keyCode) or 0, tonumber(keyText) or 0)
+	return NativeApi:injectFairyGuiKeyPressed(tonumber(keyCode) or 0, tonumber(keyText) or 0)
 end
 
 function FairyGuiEvents:DebugInjectKeyReleased(keyCode, keyText)
-	if GameManager == nil or GameManager.injectFairyGuiKeyReleased == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiKeyReleased == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiKeyReleased(tonumber(keyCode) or 0, tonumber(keyText) or 0)
+	return NativeApi:injectFairyGuiKeyReleased(tonumber(keyCode) or 0, tonumber(keyText) or 0)
 end
 
 function FairyGuiEvents:RegisterTransitionCallback(handle, transitionName, callback)
@@ -228,13 +230,13 @@ function FairyGuiEvents:PlayTransition(handle, transitionName, times, delay, cal
 		delay = nil
 	end
 
-	if GameManager == nil or GameManager.playFairyGuiTransition == nil or handle == nil then
+	if NativeApi == nil or NativeApi.playFairyGuiTransition == nil or handle == nil then
 		return false
 	end
 
 	transitionName = transitionName or ""
 	local callbackId = self:RegisterTransitionCallback(handle, transitionName, callback)
-	local played = GameManager:playFairyGuiTransition(handle, transitionName, times or 1, delay or 0, callbackId or 0)
+	local played = NativeApi:playFairyGuiTransition(handle, transitionName, times or 1, delay or 0, callbackId or 0)
 	if not played and callbackId ~= nil and callbackId > 0 then
 		self:RemoveTransitionCallback(callbackId)
 	end
@@ -253,7 +255,7 @@ function FairyGuiEvents:StopTransition(handle, transitionName, setToComplete, pr
 		setToComplete = options.setToComplete
 		processCallback = options.processCallback
 	end
-	if GameManager == nil or GameManager.stopFairyGuiTransition == nil or handle == nil then
+	if NativeApi == nil or NativeApi.stopFairyGuiTransition == nil or handle == nil then
 		return false
 	end
 
@@ -261,7 +263,7 @@ function FairyGuiEvents:StopTransition(handle, transitionName, setToComplete, pr
 	if processCallback == nil then
 		processCallback = true
 	end
-	local stopped = GameManager:stopFairyGuiTransition(handle, transitionName, setToComplete == true, processCallback == true)
+	local stopped = NativeApi:stopFairyGuiTransition(handle, transitionName, setToComplete == true, processCallback == true)
 	if stopped and processCallback ~= true then
 		self:ClearTransitionCallbacksForHandle(handle, transitionName)
 	end
@@ -294,7 +296,7 @@ end
 
 function FairyGuiEvents:AddEvent(handle, childPath, eventType, callback)
 	local self = self.owner
-	if self == nil or GameManager == nil or handle == nil or type(callback) ~= "function" then
+	if self == nil or NativeApi == nil or handle == nil or type(callback) ~= "function" then
 		return nil
 	end
 
@@ -308,10 +310,10 @@ function FairyGuiEvents:AddEvent(handle, childPath, eventType, callback)
 	self.callbacks[callbackId] = callback
 
 	local bindingId = nil
-	if GameManager.addFairyGuiEventListener ~= nil then
-		bindingId = GameManager:addFairyGuiEventListener(handle, childPath or "", resolvedEventType, callbackId)
+	if NativeApi.addFairyGuiEventListener ~= nil then
+		bindingId = NativeApi:addFairyGuiEventListener(handle, childPath or "", resolvedEventType, callbackId)
 	elseif resolvedEventType == EVENT_TYPES.Click then
-		bindingId = GameManager:addFairyGuiClickListener(handle, childPath or "", callbackId)
+		bindingId = NativeApi:addFairyGuiClickListener(handle, childPath or "", callbackId)
 	end
 	if bindingId == nil or bindingId <= 0 then
 		self.callbacks[callbackId] = nil
@@ -356,7 +358,7 @@ end
 
 function FairyGuiEvents:AddControllerChanged(handle, controllerName, callback)
 	local self = self.owner
-	if self == nil or GameManager == nil or GameManager.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then
+	if self == nil or NativeApi == nil or NativeApi.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then
 		return nil
 	end
 
@@ -364,7 +366,7 @@ function FairyGuiEvents:AddControllerChanged(handle, controllerName, callback)
 	self.nextCallbackId = self.nextCallbackId + 1
 	self.callbacks[callbackId] = callback
 
-	local bindingId = GameManager:addFairyGuiControllerChangedListener(handle, controllerName or "", callbackId)
+	local bindingId = NativeApi:addFairyGuiControllerChangedListener(handle, controllerName or "", callbackId)
 	if bindingId == nil or bindingId <= 0 then
 		self.callbacks[callbackId] = nil
 		return nil
@@ -443,8 +445,8 @@ function FairyGuiEvents:RemoveBinding(bindingId)
 		return false
 	end
 
-	if GameManager ~= nil then
-		GameManager:removeFairyGuiListener(bindingId)
+	if NativeApi ~= nil then
+		NativeApi:removeFairyGuiListener(bindingId)
 	end
 	self.callbacks[binding.callbackId] = nil
 	self.bindings[bindingId] = nil

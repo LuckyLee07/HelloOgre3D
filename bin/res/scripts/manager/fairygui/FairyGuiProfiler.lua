@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiProfiler = Class("FairyGuiProfiler")
 
 local function isBlank(value)
@@ -79,8 +81,8 @@ local function getImeStats(owner)
 	if owner ~= nil and owner.GetImeDebugString ~= nil then
 		return parseImeDebugString(owner:GetImeDebugString())
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiImeDebugString ~= nil then
-		return parseImeDebugString(GameManager:getFairyGuiImeDebugString())
+	if NativeApi ~= nil and NativeApi.getFairyGuiImeDebugString ~= nil then
+		return parseImeDebugString(NativeApi:getFairyGuiImeDebugString())
 	end
 	return parseImeDebugString("")
 end
@@ -212,98 +214,98 @@ function FairyGuiProfiler:GetRenderStats()
 	local materialDetail = ""
 	local textureDetail = ""
 	local frameRenderDetail = ""
-	if GameManager ~= nil and GameManager.getFairyGuiLastRenderCommandCount ~= nil then
-		commandCount = GameManager:getFairyGuiLastRenderCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastRenderCommandCount ~= nil then
+		commandCount = NativeApi:getFairyGuiLastRenderCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastTriangleCount ~= nil then
-		triangleCount = GameManager:getFairyGuiLastTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastTriangleCount ~= nil then
+		triangleCount = NativeApi:getFairyGuiLastTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiMaterialCount ~= nil then
-		materialCount = GameManager:getFairyGuiMaterialCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiMaterialCount ~= nil then
+		materialCount = NativeApi:getFairyGuiMaterialCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiTextureCount ~= nil then
-		textureCount = GameManager:getFairyGuiTextureCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiTextureCount ~= nil then
+		textureCount = NativeApi:getFairyGuiTextureCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiMaterialAliasCount ~= nil then
-		materialAliasCount = GameManager:getFairyGuiMaterialAliasCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiMaterialAliasCount ~= nil then
+		materialAliasCount = NativeApi:getFairyGuiMaterialAliasCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiTextureAliasCount ~= nil then
-		textureAliasCount = GameManager:getFairyGuiTextureAliasCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiTextureAliasCount ~= nil then
+		textureAliasCount = NativeApi:getFairyGuiTextureAliasCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastDrawCommandCount ~= nil then
-		drawCommandCount = GameManager:getFairyGuiLastDrawCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastDrawCommandCount ~= nil then
+		drawCommandCount = NativeApi:getFairyGuiLastDrawCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastDrawTriangleCount ~= nil then
-		drawTriangleCount = GameManager:getFairyGuiLastDrawTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastDrawTriangleCount ~= nil then
+		drawTriangleCount = NativeApi:getFairyGuiLastDrawTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastMaterialSwitchCount ~= nil then
-		materialSwitchCount = GameManager:getFairyGuiLastMaterialSwitchCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastMaterialSwitchCount ~= nil then
+		materialSwitchCount = NativeApi:getFairyGuiLastMaterialSwitchCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastTextureSwitchCount ~= nil then
-		textureSwitchCount = GameManager:getFairyGuiLastTextureSwitchCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastTextureSwitchCount ~= nil then
+		textureSwitchCount = NativeApi:getFairyGuiLastTextureSwitchCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastClippedCommandCount ~= nil then
-		clippedCommandCount = GameManager:getFairyGuiLastClippedCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastClippedCommandCount ~= nil then
+		clippedCommandCount = NativeApi:getFairyGuiLastClippedCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastClippedTriangleCount ~= nil then
-		clippedTriangleCount = GameManager:getFairyGuiLastClippedTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastClippedTriangleCount ~= nil then
+		clippedTriangleCount = NativeApi:getFairyGuiLastClippedTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastCulledCommandCount ~= nil then
-		culledCommandCount = GameManager:getFairyGuiLastCulledCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastCulledCommandCount ~= nil then
+		culledCommandCount = NativeApi:getFairyGuiLastCulledCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastStencilCommandCount ~= nil then
-		stencilCommandCount = GameManager:getFairyGuiLastStencilCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastStencilCommandCount ~= nil then
+		stencilCommandCount = NativeApi:getFairyGuiLastStencilCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastStencilTriangleCount ~= nil then
-		stencilTriangleCount = GameManager:getFairyGuiLastStencilTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastStencilTriangleCount ~= nil then
+		stencilTriangleCount = NativeApi:getFairyGuiLastStencilTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipSourceTriangleCount ~= nil then
-		cpuClipSourceTriangleCount = GameManager:getFairyGuiLastCpuClipSourceTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastCpuClipSourceTriangleCount ~= nil then
+		cpuClipSourceTriangleCount = NativeApi:getFairyGuiLastCpuClipSourceTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipOutputTriangleCount ~= nil then
-		cpuClipOutputTriangleCount = GameManager:getFairyGuiLastCpuClipOutputTriangleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastCpuClipOutputTriangleCount ~= nil then
+		cpuClipOutputTriangleCount = NativeApi:getFairyGuiLastCpuClipOutputTriangleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastCpuClipFragmentCount ~= nil then
-		cpuClipFragmentCount = GameManager:getFairyGuiLastCpuClipFragmentCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastCpuClipFragmentCount ~= nil then
+		cpuClipFragmentCount = NativeApi:getFairyGuiLastCpuClipFragmentCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastStencilClipScopeCount ~= nil then
-		stencilClipScopeCount = GameManager:getFairyGuiLastStencilClipScopeCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastStencilClipScopeCount ~= nil then
+		stencilClipScopeCount = NativeApi:getFairyGuiLastStencilClipScopeCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastStencilClipPolygonCount ~= nil then
-		stencilClipPolygonCount = GameManager:getFairyGuiLastStencilClipPolygonCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastStencilClipPolygonCount ~= nil then
+		stencilClipPolygonCount = NativeApi:getFairyGuiLastStencilClipPolygonCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastCustomCommandCount ~= nil then
-		customCommandCount = GameManager:getFairyGuiLastCustomCommandCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastCustomCommandCount ~= nil then
+		customCommandCount = NativeApi:getFairyGuiLastCustomCommandCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastMaxBatchTriangles ~= nil then
-		maxBatchTriangles = GameManager:getFairyGuiLastMaxBatchTriangles()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastMaxBatchTriangles ~= nil then
+		maxBatchTriangles = NativeApi:getFairyGuiLastMaxBatchTriangles()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiLastMaxBatchVertices ~= nil then
-		maxBatchVertices = GameManager:getFairyGuiLastMaxBatchVertices()
+	if NativeApi ~= nil and NativeApi.getFairyGuiLastMaxBatchVertices ~= nil then
+		maxBatchVertices = NativeApi:getFairyGuiLastMaxBatchVertices()
 	end
-	if GameManager ~= nil and GameManager.isFairyGuiHardwareStencilSupported ~= nil then
-		hardwareStencilSupported = GameManager:isFairyGuiHardwareStencilSupported() == true
+	if NativeApi ~= nil and NativeApi.isFairyGuiHardwareStencilSupported ~= nil then
+		hardwareStencilSupported = NativeApi:isFairyGuiHardwareStencilSupported() == true
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiStencilBackendString ~= nil then
-		stencilBackend = GameManager:getFairyGuiStencilBackendString() or ""
+	if NativeApi ~= nil and NativeApi.getFairyGuiStencilBackendString ~= nil then
+		stencilBackend = NativeApi:getFairyGuiStencilBackendString() or ""
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiStencilBackendDetailString ~= nil then
-		stencilBackendDetail = GameManager:getFairyGuiStencilBackendDetailString() or ""
+	if NativeApi ~= nil and NativeApi.getFairyGuiStencilBackendDetailString ~= nil then
+		stencilBackendDetail = NativeApi:getFairyGuiStencilBackendDetailString() or ""
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiRuntimeObjectHandleCount ~= nil then
-		runtimeObjectHandle = GameManager:getFairyGuiRuntimeObjectHandleCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiRuntimeObjectHandleCount ~= nil then
+		runtimeObjectHandle = NativeApi:getFairyGuiRuntimeObjectHandleCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiRuntimeListenerBindingCount ~= nil then
-		runtimeBinding = GameManager:getFairyGuiRuntimeListenerBindingCount()
+	if NativeApi ~= nil and NativeApi.getFairyGuiRuntimeListenerBindingCount ~= nil then
+		runtimeBinding = NativeApi:getFairyGuiRuntimeListenerBindingCount()
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiMaterialDetailString ~= nil then
-		materialDetail = GameManager:getFairyGuiMaterialDetailString() or ""
+	if NativeApi ~= nil and NativeApi.getFairyGuiMaterialDetailString ~= nil then
+		materialDetail = NativeApi:getFairyGuiMaterialDetailString() or ""
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiTextureDetailString ~= nil then
-		textureDetail = GameManager:getFairyGuiTextureDetailString() or ""
+	if NativeApi ~= nil and NativeApi.getFairyGuiTextureDetailString ~= nil then
+		textureDetail = NativeApi:getFairyGuiTextureDetailString() or ""
 	end
-	if GameManager ~= nil and GameManager.getFairyGuiFrameRenderDetailString ~= nil then
-		frameRenderDetail = GameManager:getFairyGuiFrameRenderDetailString() or ""
+	if NativeApi ~= nil and NativeApi.getFairyGuiFrameRenderDetailString ~= nil then
+		frameRenderDetail = NativeApi:getFairyGuiFrameRenderDetailString() or ""
 	end
 	return {
 		commandCount = commandCount or 0,
@@ -497,13 +499,13 @@ function FairyGuiProfiler:DumpDebugStats()
 end
 
 function FairyGuiProfiler:PublishTracyCounters(healthStats, serviceMeta)
-	if GameManager == nil or GameManager.plotFairyGuiServiceStats == nil then
+	if NativeApi == nil or NativeApi.plotFairyGuiServiceStats == nil then
 		return false
 	end
 
 	healthStats = healthStats or {}
 	serviceMeta = serviceMeta or {}
-	return GameManager:plotFairyGuiServiceStats(
+	return NativeApi:plotFairyGuiServiceStats(
 		tonumber(serviceMeta.serviceOpenTotal) or 0,
 		tonumber(serviceMeta.serviceKindCount) or 0,
 		tonumber(serviceMeta.toastQueue) or 0,

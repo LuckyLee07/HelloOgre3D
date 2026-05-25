@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiPackage = Class("FairyGuiPackage")
 
 local function isBlank(value)
@@ -213,7 +215,7 @@ function FairyGuiPackage:LoadPackage(packagePath, packageName, meta)
 	end
 
 	local startMs = nowMs()
-	local loadedPackageName = GameManager:loadFairyGuiPackage(packagePath)
+	local loadedPackageName = NativeApi:loadFairyGuiPackage(packagePath)
 	owner:RecordPerf("loadPackage", nowMs() - startMs, packagePath, not isBlank(loadedPackageName))
 	if isBlank(loadedPackageName) then
 		owner:RecordResourceFallback("missingPackage", {
@@ -275,8 +277,8 @@ function FairyGuiPackage:RemovePackageInfo(packageInfo)
 		return false
 	end
 
-	if GameManager ~= nil and GameManager.removeFairyGuiPackage ~= nil then
-		GameManager:removeFairyGuiPackage(packageInfo.loadedPackageName or packageInfo.packageName or "")
+	if NativeApi ~= nil and NativeApi.removeFairyGuiPackage ~= nil then
+		NativeApi:removeFairyGuiPackage(packageInfo.loadedPackageName or packageInfo.packageName or "")
 	end
 	owner.packages[packageInfo.packagePath] = nil
 	owner.packages[packageInfo.packageName] = nil
@@ -405,7 +407,7 @@ function FairyGuiPackage:CreateObject(packageName, objectName)
 		return 0
 	end
 	local startMs = nowMs()
-	local handle = GameManager:createFairyGuiObject(packageName, objectName)
+	local handle = NativeApi:createFairyGuiObject(packageName, objectName)
 	owner:RecordPerf("createObject", nowMs() - startMs, tostring(packageName) .. "/" .. tostring(objectName), handle ~= nil and handle > 0)
 	if handle == nil or handle <= 0 then
 		owner:RecordResourceFallback("missingComponent", {

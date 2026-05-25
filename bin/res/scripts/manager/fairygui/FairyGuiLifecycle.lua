@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiLifecycle = Class("FairyGuiLifecycle")
 
 local function tableCount(source)
@@ -531,10 +533,10 @@ function FairyGuiLifecycle:AddObjectHandleToParent(childHandle, parentHandle)
 	if childHandle == nil or childHandle <= 0 or parentHandle == nil or parentHandle <= 0 then
 		return false
 	end
-	if GameManager == nil or GameManager.addFairyGuiObjectToParent == nil then
+	if NativeApi == nil or NativeApi.addFairyGuiObjectToParent == nil then
 		return false
 	end
-	return GameManager:addFairyGuiObjectToParent(childHandle, parentHandle)
+	return NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle)
 end
 
 return FairyGuiLifecycle

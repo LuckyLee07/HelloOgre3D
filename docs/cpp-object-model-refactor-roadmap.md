@@ -317,10 +317,27 @@ Lua Binding Adapter
 - [x] 新增 `FairyGuiLuaApi`，作为 `GameManager` 与 `FairyGuiSystem` 之间的 Lua binding adapter。
 - [x] `GameManager` 保留原有 tolua 导出函数名，首批将 FGUI availability、package、基础对象创建和渲染 diagnostics 接口转发到 `FairyGuiLuaApi`。
 - [x] package 名、stencil/material/texture/frame render 等临时字符串缓存从 `GameManager` 移到 adapter，减少 manager 状态膨胀。
-- [x] 输入注入、IME debug、事件监听接口迁移到 `FairyGuiLuaApi`，并让 `GameManager` 的真实键鼠输入入口复用同一条 adapter 路径。
-- [x] 对象属性、controller、列表、focus、transition、删除清理等 FGUI Lua 接口迁移到 `FairyGuiLuaApi`，`GameManager` 不再直接 include `FairyGuiSystem`。
+- [x] 输入注入、IME debug、事件监听接口迁移到 `FairyGuiLuaApi`，形成 Lua / 自测桥接层。
+- [x] 对象属性、controller、列表、focus、transition、删除清理等 FGUI Lua 接口迁移到 `FairyGuiLuaApi`，`GameManager` 不再直接承接 `FairyGuiSystem` 细节实现。
 - [x] 2026-05-25：`FairyGuiLuaApi` 实现按 package/create、diagnostics、object、input、event/lifetime 拆分到独立 cpp，并新增 private internal include 收口 `FairyGuiSystem` 依赖。
+- [x] 2026-05-25：`FairyGuiLuaApi*` 从 `game` 迁移到 `runtime/ui/fairygui/lua_bridge`，物理位置贴近 `FairyGuiSystem`，`GameManager` 仅保留旧 tolua API 转发兼容层。
+- [x] 2026-05-25：新增 `runtime/RuntimeToLua.pkg` 作为 runtime 侧 tolua 绑定入口，后续 runtime-owned API 不再继续堆到 `game/GameToLua.pkg`。
+- [x] 2026-05-25：`FairyGuiLuaApi` 构造依赖从 `ClientManager*` 收缩为 `FairyGuiSystem*`，runtime Lua bridge 不再反向认识 game manager 汇聚对象。
+- [x] 2026-05-25：真实键鼠输入链路改为 `GameManager -> FairyGuiSystem`，Lua 注入、自测和兼容 tolua API 继续走 `FairyGuiLuaApi`，避免 runtime 输入被 Lua bridge 概念污染。
+- [x] 2026-05-25：Lua 侧新增 `FairyGuiNativeApi` 作为唯一 native facade，`manager/fairygui` 子模块不再直接依赖 `GameManager:*FairyGui*`，后续切换到 `RuntimeToLua` 只需替换 facade 后端。
+- [x] 2026-05-25：`RuntimeToLua.pkg` 生成 `RuntimeToLua.cpp`，`GameManager::InitLuaEnv` 注册 `FairyGuiRuntime` 全局对象；Lua facade 默认优先走 runtime 后端，`GameManager` 仅作为旧接口 fallback。
 - [ ] 后续新增 FGUI Lua API 继续按分组落到 adapter 对应文件；Lua 导出名和 generated binding 边界保持兼容。
+
+### 2026-05-25 FairyGuiSystem 内部实现拆分
+
+- [x] `FairyGuiSystem.cpp` 收缩为 facade / lifecycle / update / render / resize 主流程。
+- [x] 新增 `FairyGuiSystemObjects.cpp`，承接 package、object handle、控件属性、controller、transition、list、对象 alias 和配置化 package object 创建。
+- [x] 新增 `FairyGuiSystemEvents.cpp`，承接事件监听注册、解绑、事件目标查找和 Lua event dispatch。
+- [x] 新增 `FairyGuiSystemInput.cpp`，承接鼠标、键盘、TextInput caret、IME hook、候选窗定位和输入坐标转换。
+- [x] 新增 `FairyGuiSystemRender.cpp`，承接 Ogre manual object 渲染、scissor/stencil、CPU clip、frame render stats、material/texture 管理和资源销毁。
+- [x] 新增 `FairyGuiSystemInternal.h` 收口拆分后共享的 FairyGUI/Ogre include 与内部 helper，避免 public facade 继续膨胀。
+- [x] 重新生成 VS2017 工程，确认新增 cpp 已进入 `HelloOgre3D.vcxproj`。
+- [x] VS2017 Debug|x64 编译通过。
 
 ## 10. 验证策略
 
@@ -338,7 +355,7 @@ Lua Binding Adapter
 - [ ] Phase 0：关键对象所有权注释和 Lua 兼容边界梳理。
 - [ ] Phase 1：组件生命周期和 typed access 规则落地。
 - [x] Phase 2：`GameManager` FGUI binding adapter 拆分。
-- [ ] Phase 3：`FairyGuiSystem` diagnostics / input / event / renderer 分拆。
+- [x] Phase 3：`FairyGuiSystem` diagnostics / input / event / renderer 分拆。
 - [ ] Phase 4：`HealthComponent`、`WeaponComponent`、`AnimComponent`、`AiDriverComponent` 分阶段接入。
 - [ ] Phase 5：`ObjectManager` registry 化，跨对象逻辑 system 化。
 - [ ] Phase 6：核心所有权逐步迁移到 `std::unique_ptr` 或明确非拥有指针。

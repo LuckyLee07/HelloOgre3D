@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiLayers = Class("FairyGuiLayers")
 
 local DEFAULT_LAYER_ORDER = {
@@ -237,17 +239,17 @@ function FairyGuiLayers:EnsureLayerRoot(layerName)
 	if rootHandle ~= nil then
 		return rootHandle
 	end
-	if GameManager == nil or GameManager.createFairyGuiContainer == nil then
+	if NativeApi == nil or NativeApi.createFairyGuiContainer == nil then
 		return nil
 	end
 
-	rootHandle = GameManager:createFairyGuiContainer("Layer_" .. layerName)
+	rootHandle = NativeApi:createFairyGuiContainer("Layer_" .. layerName)
 	if rootHandle == nil or rootHandle <= 0 then
 		return nil
 	end
-	if GameManager.addFairyGuiObjectToRoot == nil or not GameManager:addFairyGuiObjectToRoot(rootHandle) then
-		if GameManager.removeFairyGuiObject ~= nil then
-			GameManager:removeFairyGuiObject(rootHandle)
+	if NativeApi.addFairyGuiObjectToRoot == nil or not NativeApi:addFairyGuiObjectToRoot(rootHandle) then
+		if NativeApi.removeFairyGuiObject ~= nil then
+			NativeApi:removeFairyGuiObject(rootHandle)
 		end
 		return nil
 	end
@@ -255,8 +257,8 @@ function FairyGuiLayers:EnsureLayerRoot(layerName)
 	self.layerRoots[layerName] = rootHandle
 	self:SetPosition(rootHandle, 0, 0)
 	self:SetSize(rootHandle, self:GetScreenWidth(), self:GetScreenHeight())
-	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		GameManager:setFairyGuiObjectSortingOrder(rootHandle, self:GetLayerBaseOrder(layerName))
+	if NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+		NativeApi:setFairyGuiObjectSortingOrder(rootHandle, self:GetLayerBaseOrder(layerName))
 	end
 	return rootHandle
 end
@@ -292,11 +294,11 @@ function FairyGuiLayers:AttachToLayer(handle, layerName, param)
 	end
 
 	local rootHandle = self:ResolveAttachParent(layerName, param)
-	if rootHandle ~= nil and GameManager.addFairyGuiObjectToParent ~= nil then
-		return GameManager:addFairyGuiObjectToParent(handle, rootHandle)
+	if rootHandle ~= nil and NativeApi.addFairyGuiObjectToParent ~= nil then
+		return NativeApi:addFairyGuiObjectToParent(handle, rootHandle)
 	end
-	if GameManager ~= nil and GameManager.addFairyGuiObjectToRoot ~= nil then
-		return GameManager:addFairyGuiObjectToRoot(handle)
+	if NativeApi ~= nil and NativeApi.addFairyGuiObjectToRoot ~= nil then
+		return NativeApi:addFairyGuiObjectToRoot(handle)
 	end
 	return false
 end
@@ -312,8 +314,8 @@ function FairyGuiLayers:ResizeLayerRoots()
 	for layerName, handle in pairs(self.layerRoots) do
 		self:SetPosition(handle, 0, 0)
 		self:SetSize(handle, screenWidth, screenHeight)
-		if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
-			GameManager:setFairyGuiObjectSortingOrder(handle, self:GetLayerBaseOrder(layerName))
+		if NativeApi ~= nil and NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+			NativeApi:setFairyGuiObjectSortingOrder(handle, self:GetLayerBaseOrder(layerName))
 		end
 	end
 end
@@ -677,8 +679,8 @@ function FairyGuiLayers:UpdateModalMaskSorting(objectInfo)
 	end
 	local updated = false
 	if objectInfo.modalMaskHandle ~= nil then
-		if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
-			GameManager:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+		if NativeApi ~= nil and NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+			NativeApi:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
 		end
 		if self.hiddenObjects[objectInfo.key] == nil then
 			self:SetVisible(objectInfo.modalMaskHandle, true)
@@ -711,8 +713,8 @@ function FairyGuiLayers:AssignLayer(objectInfo, layerName, forceNextOrder)
 	end
 	self.layerObjects[layerName][objectInfo.handle] = true
 
-	if GameManager ~= nil and GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		local result = GameManager:setFairyGuiObjectSortingOrder(objectInfo.handle, objectInfo.sortingOrder)
+	if NativeApi ~= nil and NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+		local result = NativeApi:setFairyGuiObjectSortingOrder(objectInfo.handle, objectInfo.sortingOrder)
 		self:UpdateModalMaskSorting(objectInfo)
 		return result
 	end
@@ -826,8 +828,8 @@ function FairyGuiLayers:ClearGuideMaskHandles(objectInfo)
 
 	for _, handle in ipairs(objectInfo.guideMaskHandles) do
 		self:ClearBindingsForHandle(handle)
-		if GameManager ~= nil and GameManager.removeFairyGuiObject ~= nil then
-			GameManager:removeFairyGuiObject(handle)
+		if NativeApi ~= nil and NativeApi.removeFairyGuiObject ~= nil then
+			NativeApi:removeFairyGuiObject(handle)
 		end
 	end
 	objectInfo.guideMaskHandles = nil
@@ -840,13 +842,13 @@ function FairyGuiLayers:UpdateGuideMaskSorting(objectInfo)
 	if self == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
 		return false
 	end
-	if GameManager == nil or GameManager.setFairyGuiObjectSortingOrder == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiObjectSortingOrder == nil then
 		return false
 	end
 
 	local sortingOrder = (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1
 	for _, handle in ipairs(objectInfo.guideMaskHandles) do
-		GameManager:setFairyGuiObjectSortingOrder(handle, sortingOrder)
+		NativeApi:setFairyGuiObjectSortingOrder(handle, sortingOrder)
 	end
 	return true
 end
@@ -856,24 +858,24 @@ function FairyGuiLayers:AddGuideMaskSegment(objectInfo, x, y, width, height, alp
 	if self == nil or objectInfo == nil or width <= 0 or height <= 0 then
 		return nil
 	end
-	if GameManager == nil or GameManager.createFairyGuiModalMask == nil then
+	if NativeApi == nil or NativeApi.createFairyGuiModalMask == nil then
 		return nil
 	end
 
-	local maskHandle = GameManager:createFairyGuiModalMask(0, 0, 0, alpha or 0.55)
+	local maskHandle = NativeApi:createFairyGuiModalMask(0, 0, 0, alpha or 0.55)
 	if maskHandle == nil or maskHandle <= 0 then
 		return nil
 	end
 	if not self:AttachToLayer(maskHandle, objectInfo.layer) then
-		GameManager:removeFairyGuiObject(maskHandle)
+		NativeApi:removeFairyGuiObject(maskHandle)
 		return nil
 	end
 
 	self:SetPosition(maskHandle, x, y)
 	self:SetSize(maskHandle, width, height)
 	self:SetTouchable(maskHandle, true)
-	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		GameManager:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+	if NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+		NativeApi:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
 	end
 	if closeOnClick == true then
 		local closeKey = objectInfo.key
@@ -928,22 +930,22 @@ function FairyGuiLayers:CreateModalMask(objectInfo, param)
 	if self == nil or objectInfo == nil or objectInfo.handle == nil or param == nil or param.modal ~= true then
 		return nil
 	end
-	if GameManager == nil or GameManager.createFairyGuiModalMask == nil then
+	if NativeApi == nil or NativeApi.createFairyGuiModalMask == nil then
 		return nil
 	end
 
 	local alpha = param.modalAlpha or 0.45
-	local maskHandle = GameManager:createFairyGuiModalMask(0, 0, 0, alpha)
+	local maskHandle = NativeApi:createFairyGuiModalMask(0, 0, 0, alpha)
 	if maskHandle == nil or maskHandle <= 0 then
 		return nil
 	end
 
 	if not self:AttachToLayer(maskHandle, objectInfo.layer) then
-		GameManager:removeFairyGuiObject(maskHandle)
+		NativeApi:removeFairyGuiObject(maskHandle)
 		return nil
 	end
-	if GameManager.setFairyGuiObjectSortingOrder ~= nil then
-		GameManager:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
+	if NativeApi.setFairyGuiObjectSortingOrder ~= nil then
+		NativeApi:setFairyGuiObjectSortingOrder(maskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
 	end
 	self:SetSize(maskHandle, self:GetScreenWidth(), self:GetScreenHeight())
 	self:SetPosition(maskHandle, 0, 0)
@@ -958,27 +960,27 @@ function FairyGuiLayers:CreateModalMask(objectInfo, param)
 end
 
 function FairyGuiLayers:GetScreenWidth()
-	if GameManager ~= nil and GameManager.getFairyGuiScreenWidth ~= nil then
-		local width = GameManager:getFairyGuiScreenWidth()
+	if NativeApi ~= nil and NativeApi.getFairyGuiScreenWidth ~= nil then
+		local width = NativeApi:getFairyGuiScreenWidth()
 		if width ~= nil and width > 0 then
 			return width
 		end
 	end
-	if GameManager ~= nil and GameManager.getScreenWidth ~= nil then
-		return GameManager:getScreenWidth()
+	if NativeApi ~= nil and NativeApi.getScreenWidth ~= nil then
+		return NativeApi:getScreenWidth()
 	end
 	return 0
 end
 
 function FairyGuiLayers:GetScreenHeight()
-	if GameManager ~= nil and GameManager.getFairyGuiScreenHeight ~= nil then
-		local height = GameManager:getFairyGuiScreenHeight()
+	if NativeApi ~= nil and NativeApi.getFairyGuiScreenHeight ~= nil then
+		local height = NativeApi:getFairyGuiScreenHeight()
 		if height ~= nil and height > 0 then
 			return height
 		end
 	end
-	if GameManager ~= nil and GameManager.getScreenHeight ~= nil then
-		return GameManager:getScreenHeight()
+	if NativeApi ~= nil and NativeApi.getScreenHeight ~= nil then
+		return NativeApi:getScreenHeight()
 	end
 	return 0
 end

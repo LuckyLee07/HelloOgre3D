@@ -1,3 +1,5 @@
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiControls = Class("FairyGuiControls")
 
 local function isBlank(value)
@@ -209,7 +211,7 @@ end
 
 function FairyGuiControls:SetText(handle, childPath, text)
 	local self = self.owner
-	if GameManager == nil then
+	if NativeApi == nil then
 		return false
 	end
 
@@ -217,12 +219,12 @@ function FairyGuiControls:SetText(handle, childPath, text)
 	if targetHandle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectText(targetHandle, tostring(text or ""))
+	return NativeApi:setFairyGuiObjectText(targetHandle, tostring(text or ""))
 end
 
 function FairyGuiControls:GetText(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiObjectText == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectText == nil then
 		return ""
 	end
 
@@ -230,12 +232,12 @@ function FairyGuiControls:GetText(handle, childPath)
 	if targetHandle == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiObjectText(targetHandle) or ""
+	return NativeApi:getFairyGuiObjectText(targetHandle) or ""
 end
 
 function FairyGuiControls:Focus(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.focusFairyGuiObject == nil then
+	if NativeApi == nil or NativeApi.focusFairyGuiObject == nil then
 		return false
 	end
 
@@ -243,7 +245,7 @@ function FairyGuiControls:Focus(handle, childPath)
 	if targetHandle == nil then
 		return false
 	end
-	return GameManager:focusFairyGuiObject(targetHandle)
+	return NativeApi:focusFairyGuiObject(targetHandle)
 end
 
 function FairyGuiControls:ResolveFocusHandle(objectInfo, target)
@@ -366,22 +368,22 @@ function FairyGuiControls:FocusNext(reverse)
 end
 
 function FairyGuiControls:ClearFocus()
-	if GameManager == nil or GameManager.clearFairyGuiFocus == nil then
+	if NativeApi == nil or NativeApi.clearFairyGuiFocus == nil then
 		return false
 	end
-	return GameManager:clearFairyGuiFocus()
+	return NativeApi:clearFairyGuiFocus()
 end
 
 function FairyGuiControls:GetFocusedHandle()
-	if GameManager == nil or GameManager.getFairyGuiFocusedObject == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiFocusedObject == nil then
 		return 0
 	end
-	return GameManager:getFairyGuiFocusedObject()
+	return NativeApi:getFairyGuiFocusedObject()
 end
 
 function FairyGuiControls:SetIcon(handle, childPath, icon)
 	local self = self.owner
-	if GameManager == nil then
+	if NativeApi == nil then
 		return false
 	end
 
@@ -389,12 +391,12 @@ function FairyGuiControls:SetIcon(handle, childPath, icon)
 	if targetHandle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectIcon(targetHandle, tostring(icon or ""))
+	return NativeApi:setFairyGuiObjectIcon(targetHandle, tostring(icon or ""))
 end
 
 function FairyGuiControls:SetLoaderUrl(handle, childPath, url)
 	local self = self.owner
-	if GameManager == nil then
+	if NativeApi == nil then
 		return false
 	end
 
@@ -402,7 +404,7 @@ function FairyGuiControls:SetLoaderUrl(handle, childPath, url)
 	if targetHandle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectLoaderUrl(targetHandle, tostring(url or ""))
+	return NativeApi:setFairyGuiObjectLoaderUrl(targetHandle, tostring(url or ""))
 end
 
 function FairyGuiControls:SetChildVisible(handle, childPath, visible)
@@ -433,64 +435,64 @@ function FairyGuiControls:SetChildSize(handle, childPath, width, height)
 end
 
 function FairyGuiControls:SetControllerIndex(handle, controllerName, selectedIndex)
-	if GameManager == nil or handle == nil then
+	if NativeApi == nil or handle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectControllerIndex(handle, controllerName or "", selectedIndex or 0)
+	return NativeApi:setFairyGuiObjectControllerIndex(handle, controllerName or "", selectedIndex or 0)
 end
 
 function FairyGuiControls:GetControllerIndex(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerIndex == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerIndex == nil or handle == nil then
 		return -1
 	end
-	return GameManager:getFairyGuiObjectControllerIndex(handle, controllerName or "")
+	return NativeApi:getFairyGuiObjectControllerIndex(handle, controllerName or "")
 end
 
 function FairyGuiControls:SetControllerPage(handle, controllerName, pageName)
-	if GameManager == nil or GameManager.setFairyGuiObjectControllerPage == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiObjectControllerPage == nil or handle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectControllerPage(handle, controllerName or "", pageName or "")
+	return NativeApi:setFairyGuiObjectControllerPage(handle, controllerName or "", pageName or "")
 end
 
 function FairyGuiControls:GetControllerPage(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPage == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerPage == nil or handle == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiObjectControllerPage(handle, controllerName or "")
+	return NativeApi:getFairyGuiObjectControllerPage(handle, controllerName or "")
 end
 
 function FairyGuiControls:GetControllerPageId(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageId == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerPageId == nil or handle == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiObjectControllerPageId(handle, controllerName or "")
+	return NativeApi:getFairyGuiObjectControllerPageId(handle, controllerName or "")
 end
 
 function FairyGuiControls:GetControllerPageCount(handle, controllerName)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageCount == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerPageCount == nil or handle == nil then
 		return 0
 	end
-	return GameManager:getFairyGuiObjectControllerPageCount(handle, controllerName or "")
+	return NativeApi:getFairyGuiObjectControllerPageCount(handle, controllerName or "")
 end
 
 function FairyGuiControls:GetControllerPageNameAt(handle, controllerName, pageIndex)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageNameAt == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerPageNameAt == nil or handle == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiObjectControllerPageNameAt(handle, controllerName or "", pageIndex or 0)
+	return NativeApi:getFairyGuiObjectControllerPageNameAt(handle, controllerName or "", pageIndex or 0)
 end
 
 function FairyGuiControls:GetControllerPageIdAt(handle, controllerName, pageIndex)
-	if GameManager == nil or GameManager.getFairyGuiObjectControllerPageIdAt == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectControllerPageIdAt == nil or handle == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiObjectControllerPageIdAt(handle, controllerName or "", pageIndex or 0)
+	return NativeApi:getFairyGuiObjectControllerPageIdAt(handle, controllerName or "", pageIndex or 0)
 end
 
 function FairyGuiControls:SetValue(handle, childPathOrValue, value)
 	local self = self.owner
-	if GameManager == nil or GameManager.setFairyGuiObjectValue == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiObjectValue == nil or handle == nil then
 		return false
 	end
 	local childPath = childPathOrValue
@@ -499,21 +501,21 @@ function FairyGuiControls:SetValue(handle, childPathOrValue, value)
 		childPath = nil
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectValue(targetHandle, value or 0) or false
+	return targetHandle ~= nil and NativeApi:setFairyGuiObjectValue(targetHandle, value or 0) or false
 end
 
 function FairyGuiControls:GetValue(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiObjectValue == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectValue == nil or handle == nil then
 		return 0
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectValue(targetHandle) or 0
+	return targetHandle ~= nil and NativeApi:getFairyGuiObjectValue(targetHandle) or 0
 end
 
 function FairyGuiControls:SetMin(handle, childPathOrValue, minValue)
 	local self = self.owner
-	if GameManager == nil or GameManager.setFairyGuiObjectMin == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiObjectMin == nil or handle == nil then
 		return false
 	end
 	local childPath = childPathOrValue
@@ -522,21 +524,21 @@ function FairyGuiControls:SetMin(handle, childPathOrValue, minValue)
 		childPath = nil
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectMin(targetHandle, minValue or 0) or false
+	return targetHandle ~= nil and NativeApi:setFairyGuiObjectMin(targetHandle, minValue or 0) or false
 end
 
 function FairyGuiControls:GetMin(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiObjectMin == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectMin == nil or handle == nil then
 		return 0
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectMin(targetHandle) or 0
+	return targetHandle ~= nil and NativeApi:getFairyGuiObjectMin(targetHandle) or 0
 end
 
 function FairyGuiControls:SetMax(handle, childPathOrValue, maxValue)
 	local self = self.owner
-	if GameManager == nil or GameManager.setFairyGuiObjectMax == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiObjectMax == nil or handle == nil then
 		return false
 	end
 	local childPath = childPathOrValue
@@ -545,16 +547,16 @@ function FairyGuiControls:SetMax(handle, childPathOrValue, maxValue)
 		childPath = nil
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiObjectMax(targetHandle, maxValue or 0) or false
+	return targetHandle ~= nil and NativeApi:setFairyGuiObjectMax(targetHandle, maxValue or 0) or false
 end
 
 function FairyGuiControls:GetMax(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiObjectMax == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiObjectMax == nil or handle == nil then
 		return 0
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiObjectMax(targetHandle) or 0
+	return targetHandle ~= nil and NativeApi:getFairyGuiObjectMax(targetHandle) or 0
 end
 
 function FairyGuiControls:SetProgress(handle, childPathOrValue, value, maxValue, minValue)
@@ -603,7 +605,7 @@ end
 
 function FairyGuiControls:SetComboBoxSelectedIndex(handle, childPathOrSelectedIndex, selectedIndex)
 	local self = self.owner
-	if GameManager == nil or GameManager.setFairyGuiComboBoxSelectedIndex == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiComboBoxSelectedIndex == nil or handle == nil then
 		return false
 	end
 	local childPath = childPathOrSelectedIndex
@@ -612,21 +614,21 @@ function FairyGuiControls:SetComboBoxSelectedIndex(handle, childPathOrSelectedIn
 		childPath = nil
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxSelectedIndex(targetHandle, selectedIndex or 0) or false
+	return targetHandle ~= nil and NativeApi:setFairyGuiComboBoxSelectedIndex(targetHandle, selectedIndex or 0) or false
 end
 
 function FairyGuiControls:GetComboBoxSelectedIndex(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiComboBoxSelectedIndex == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiComboBoxSelectedIndex == nil or handle == nil then
 		return -1
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxSelectedIndex(targetHandle) or -1
+	return targetHandle ~= nil and NativeApi:getFairyGuiComboBoxSelectedIndex(targetHandle) or -1
 end
 
 function FairyGuiControls:SetComboBoxValue(handle, childPathOrValue, value)
 	local self = self.owner
-	if GameManager == nil or GameManager.setFairyGuiComboBoxValue == nil or handle == nil then
+	if NativeApi == nil or NativeApi.setFairyGuiComboBoxValue == nil or handle == nil then
 		return false
 	end
 	local childPath = childPathOrValue
@@ -635,16 +637,16 @@ function FairyGuiControls:SetComboBoxValue(handle, childPathOrValue, value)
 		childPath = nil
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:setFairyGuiComboBoxValue(targetHandle, value or "") or false
+	return targetHandle ~= nil and NativeApi:setFairyGuiComboBoxValue(targetHandle, value or "") or false
 end
 
 function FairyGuiControls:GetComboBoxValue(handle, childPath)
 	local self = self.owner
-	if GameManager == nil or GameManager.getFairyGuiComboBoxValue == nil or handle == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiComboBoxValue == nil or handle == nil then
 		return ""
 	end
 	local targetHandle = self:GetTargetHandle(handle, childPath)
-	return targetHandle ~= nil and GameManager:getFairyGuiComboBoxValue(targetHandle) or ""
+	return targetHandle ~= nil and NativeApi:getFairyGuiComboBoxValue(targetHandle) or ""
 end
 
 return FairyGuiControls

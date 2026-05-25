@@ -8,6 +8,8 @@ require("res.scripts.manager.fairygui.FairyGuiLists")
 require("res.scripts.manager.fairygui.FairyGuiControls")
 require("res.scripts.manager.fairygui.FairyGuiProbes")
 
+local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+
 local FairyGuiManager = Class("FairyGuiManager")
 
 local instance = nil
@@ -235,10 +237,7 @@ function FairyGuiManager:GetProbes()
 end
 
 function FairyGuiManager:IsAvailable()
-	if GameManager == nil then
-		return false
-	end
-	return GameManager:isFairyGuiAvailable()
+	return NativeApi:Call("isFairyGuiAvailable", false) == true
 end
 
 function FairyGuiManager:GetPackageNameByPath(packagePath)
@@ -301,48 +300,48 @@ function FairyGuiManager:CreateContainer(name, ownerHandle)
 	if not self:IsAvailable() then
 		return 0
 	end
-	if ownerHandle ~= nil and GameManager.createFairyGuiChildContainer ~= nil then
-		return GameManager:createFairyGuiChildContainer(ownerHandle, name or "")
+	if ownerHandle ~= nil and NativeApi.createFairyGuiChildContainer ~= nil then
+		return NativeApi:createFairyGuiChildContainer(ownerHandle, name or "")
 	end
-	if GameManager.createFairyGuiContainer == nil then
+	if NativeApi.createFairyGuiContainer == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiContainer(name or "")
+	return NativeApi:createFairyGuiContainer(name or "")
 end
 
 function FairyGuiManager:CreateLoader(ownerHandle, name, url)
-	if not self:IsAvailable() or GameManager.createFairyGuiLoader == nil then
+	if not self:IsAvailable() or NativeApi.createFairyGuiLoader == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiLoader(ownerHandle or 0, name or "", url or "")
+	return NativeApi:createFairyGuiLoader(ownerHandle or 0, name or "", url or "")
 end
 
 function FairyGuiManager:CreateText(ownerHandle, name, text, fontSize, red, green, blue)
-	if not self:IsAvailable() or GameManager.createFairyGuiText == nil then
+	if not self:IsAvailable() or NativeApi.createFairyGuiText == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiText(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
+	return NativeApi:createFairyGuiText(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
 end
 
 function FairyGuiManager:CreateTextInput(ownerHandle, name, text, fontSize, red, green, blue)
-	if not self:IsAvailable() or GameManager.createFairyGuiTextInput == nil then
+	if not self:IsAvailable() or NativeApi.createFairyGuiTextInput == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiTextInput(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
+	return NativeApi:createFairyGuiTextInput(ownerHandle or 0, name or "", text or "", fontSize or 18, red or 255, green or 255, blue or 255)
 end
 
 function FairyGuiManager:CreateGraphRect(ownerHandle, name, width, height, red, green, blue, alpha)
-	if not self:IsAvailable() or GameManager.createFairyGuiGraphRect == nil then
+	if not self:IsAvailable() or NativeApi.createFairyGuiGraphRect == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiGraphRect(ownerHandle or 0, name or "", width or 1, height or 1, red or 1, green or 1, blue or 1, alpha or 1)
+	return NativeApi:createFairyGuiGraphRect(ownerHandle or 0, name or "", width or 1, height or 1, red or 1, green or 1, blue or 1, alpha or 1)
 end
 
 function FairyGuiManager:CreateGraphRegularPolygon(ownerHandle, name, width, height, sides, red, green, blue, alpha)
-	if not self:IsAvailable() or GameManager.createFairyGuiGraphRegularPolygon == nil then
+	if not self:IsAvailable() or NativeApi.createFairyGuiGraphRegularPolygon == nil then
 		return 0
 	end
-	return GameManager:createFairyGuiGraphRegularPolygon(ownerHandle or 0, name or "", width or 1, height or 1, sides or 6, red or 1, green or 1, blue or 1, alpha or 1)
+	return NativeApi:createFairyGuiGraphRegularPolygon(ownerHandle or 0, name or "", width or 1, height or 1, sides or 6, red or 1, green or 1, blue or 1, alpha or 1)
 end
 
 function FairyGuiManager:GetRenderStats()
@@ -1000,22 +999,22 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 	end
 
 	if not self:AttachToLayer(handle, param.layer or "Normal", param) then
-		GameManager:removeFairyGuiObject(handle)
+		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	if param.width ~= nil and param.height ~= nil then
-		GameManager:setFairyGuiObjectSize(handle, param.width, param.height)
+		NativeApi:setFairyGuiObjectSize(handle, param.width, param.height)
 	end
 
 	if param.x ~= nil and param.y ~= nil then
-		GameManager:setFairyGuiObjectPosition(handle, param.x, param.y)
+		NativeApi:setFairyGuiObjectPosition(handle, param.x, param.y)
 	elseif param.center then
-		GameManager:centerFairyGuiObject(handle, param.restraint == true)
+		NativeApi:centerFairyGuiObject(handle, param.restraint == true)
 	end
 
 	if param.visible ~= nil then
-		GameManager:setFairyGuiObjectVisible(handle, param.visible == true)
+		NativeApi:setFairyGuiObjectVisible(handle, param.visible == true)
 	end
 
 	local key = param.key or name or tostring(handle)
@@ -1674,31 +1673,31 @@ function FairyGuiManager:DebugInjectKeyReleased(keyCode, keyText)
 end
 
 function FairyGuiManager:DebugInjectImeCommitText(text)
-	if GameManager == nil or GameManager.injectFairyGuiImeCommitText == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiImeCommitText == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiImeCommitText(text or "")
+	return NativeApi:injectFairyGuiImeCommitText(text or "")
 end
 
 function FairyGuiManager:DebugInjectImeCompositionText(text)
-	if GameManager == nil or GameManager.injectFairyGuiImeCompositionText == nil then
+	if NativeApi == nil or NativeApi.injectFairyGuiImeCompositionText == nil then
 		return false
 	end
-	return GameManager:injectFairyGuiImeCompositionText(text or "")
+	return NativeApi:injectFairyGuiImeCompositionText(text or "")
 end
 
 function FairyGuiManager:DebugClearImeComposition()
-	if GameManager == nil or GameManager.clearFairyGuiImeComposition == nil then
+	if NativeApi == nil or NativeApi.clearFairyGuiImeComposition == nil then
 		return false
 	end
-	return GameManager:clearFairyGuiImeComposition()
+	return NativeApi:clearFairyGuiImeComposition()
 end
 
 function FairyGuiManager:GetImeDebugString()
-	if GameManager == nil or GameManager.getFairyGuiImeDebugString == nil then
+	if NativeApi == nil or NativeApi.getFairyGuiImeDebugString == nil then
 		return ""
 	end
-	return GameManager:getFairyGuiImeDebugString() or ""
+	return NativeApi:getFairyGuiImeDebugString() or ""
 end
 
 function FairyGuiManager:RecordResourceFallback(kind, context, detail)
@@ -1992,42 +1991,42 @@ function FairyGuiManager:SetPosition(handle, x, y)
 	if handle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectPosition(handle, x, y)
+	return NativeApi:setFairyGuiObjectPosition(handle, x, y)
 end
 
 function FairyGuiManager:SetSize(handle, width, height)
 	if handle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectSize(handle, width, height)
+	return NativeApi:setFairyGuiObjectSize(handle, width, height)
 end
 
 function FairyGuiManager:SetVisible(handle, visible)
 	if handle == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectVisible(handle, visible == true)
+	return NativeApi:setFairyGuiObjectVisible(handle, visible == true)
 end
 
 function FairyGuiManager:SetAlpha(handle, alpha)
-	if handle == nil or GameManager == nil or GameManager.setFairyGuiObjectAlpha == nil then
+	if handle == nil or NativeApi == nil or NativeApi.setFairyGuiObjectAlpha == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectAlpha(handle, alpha or 1)
+	return NativeApi:setFairyGuiObjectAlpha(handle, alpha or 1)
 end
 
 function FairyGuiManager:SetTouchable(handle, touchable)
-	if handle == nil or GameManager == nil or GameManager.setFairyGuiObjectTouchable == nil then
+	if handle == nil or NativeApi == nil or NativeApi.setFairyGuiObjectTouchable == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectTouchable(handle, touchable == true)
+	return NativeApi:setFairyGuiObjectTouchable(handle, touchable == true)
 end
 
 function FairyGuiManager:SetMask(handle, maskHandle, inverted)
-	if handle == nil or maskHandle == nil or GameManager == nil or GameManager.setFairyGuiObjectMask == nil then
+	if handle == nil or maskHandle == nil or NativeApi == nil or NativeApi.setFairyGuiObjectMask == nil then
 		return false
 	end
-	return GameManager:setFairyGuiObjectMask(handle, maskHandle, inverted == true)
+	return NativeApi:setFairyGuiObjectMask(handle, maskHandle, inverted == true)
 end
 
 function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
@@ -2087,9 +2086,9 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	end
 	self:ClearGuideMaskHandles(objectInfo)
 	if objectInfo.modalMaskHandle ~= nil then
-		GameManager:removeFairyGuiObject(objectInfo.modalMaskHandle)
+		NativeApi:removeFairyGuiObject(objectInfo.modalMaskHandle)
 	end
-	local removed = GameManager:removeFairyGuiObject(handle)
+	local removed = NativeApi:removeFairyGuiObject(handle)
 	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
 		self.uiNameToKey[objectInfo.uiName] = nil
 	end
