@@ -58,7 +58,7 @@ public:
 	Ogre::Real GetSpeed() const;
 	Ogre::Real GetHeight() const { return m_height; }
 	Ogre::Real GetRadius() const { return m_radius; }
-	Ogre::Real GetHealth() const { return m_health; }
+	Ogre::Real GetHealth() const;
 
 	void SetMaxForce(Ogre::Real maxForce);
 	void SetMaxSpeed(Ogre::Real maxSpeed);

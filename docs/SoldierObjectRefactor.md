@@ -536,8 +536,8 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-01a | 新建 AIController 包住 driver / AI 字段 | 1 | ☑ | 2026-05-26 | |
 | T-01b | ObjectManager 调度面向 AIController | 1 | ☑ | 2026-05-26 | |
 | T-02 | PhysicsComponent owner 字段清理 | 1 | ☑ | 2026-05-26 | |
-| T-03 | HealthComponent/AgentAttrib 承接属性 | 2 | ☐ | | |
-| T-04 | WeaponComponent 承接武器 | 2 | ☐ | | |
+| T-03 | HealthComponent/AgentAttrib 承接属性 | 2 | ☑ | 2026-05-26 | |
+| T-04 | WeaponComponent 承接武器 | 2 | ☑ | 2026-05-26 | |
 | T-05 | 删除组件化字段冗余备份 | 2 | ☐ | | |
 | T-06 | RenderComponent : IComponent + facade 化 | 2 | ☐ | | |
 | T-07 | driver 注入方式重构 | 3 | ☐ | | |

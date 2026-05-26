@@ -8,6 +8,7 @@
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "components/agent/AgentLocomotion.h"
+#include "components/agent/AgentAttrib.h"
 #include "components/physics/PhysicsComponent.h"
 #include "event/SandboxEventPayload.h"
 #include "object/GameObject.h"
@@ -204,15 +205,31 @@ void VehicleObject::SetSpeed(Ogre::Real speed)
 
 void VehicleObject::SetHealth(Ogre::Real health)
 {
-	if (m_health == health || m_health <= 0.0f) 
+	AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	const Ogre::Real currentHealth = attrib != nullptr ? attrib->GetHealth() : m_health;
+	if (currentHealth == health || currentHealth <= 0.0f)
 		return;
 
-	m_health = health;
+	if (attrib != nullptr)
+	{
+		attrib->SetHealth(health);
+		m_health = attrib->GetHealth();
+	}
+	else
+	{
+		m_health = health;
+	}
 
 	SandboxContext context = SandboxEventPayload::Make(SandboxEventTypes::HealthChanged(), SandboxEventScope::Local, this);
 	SandboxEventPayload::SetPosition(context, GetPosition());
 	context.Set_Number("health", health);
 	Event()->Emit("HEALTH_CHANGE", context);
+}
+
+Ogre::Real VehicleObject::GetHealth() const
+{
+	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	return attrib != nullptr ? attrib->GetHealth() : m_health;
 }
 
 void VehicleObject::SetMaxForce(Ogre::Real maxForce)

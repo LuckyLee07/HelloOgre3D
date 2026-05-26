@@ -6,6 +6,8 @@
 class IPlayerInput;
 class SoldierAnimController;
 class AIController;
+class AgentAttrib;
+class WeaponComponent;
 class DecisionTreeDriver;
 class BehaviorTreeDriver;
 class AgentStateController;
@@ -22,10 +24,10 @@ public:
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
-	RenderableObject* getWeapon() { return m_pWeapon; }
+	RenderableObject* getWeapon();
 
 	void changeStanceType(int stanceType);
-	int getStanceType() { return m_stanceType; }
+	int getStanceType() const;
 
 	void ShootBullet();
 
@@ -39,13 +41,13 @@ public:
 	AIController* GetAIController() const { return m_ai; }
 
 	void SetMaxHealth(Ogre::Real maxHealth);
-	Ogre::Real GetMaxHealth() const { return m_maxHealth; }
+	Ogre::Real GetMaxHealth() const;
 
 	void SetAmmo(int ammo);
-	int GetAmmo() const { return m_ammo; }
+	int GetAmmo() const;
 	void SetMaxAmmo(int maxAmmo);
-	int GetMaxAmmo() const { return m_maxAmmo; }
-	bool HasAmmo() const { return m_ammo > 0; }
+	int GetMaxAmmo() const;
+	bool HasAmmo() const;
 	void ConsumeAmmo(int amount);
 	void RestoreAmmo();
 
@@ -104,6 +106,8 @@ private:
 	int m_ammo = 10;
 	int m_maxAmmo = 10;
 
+	AgentAttrib* m_attrib;
+	WeaponComponent* m_weaponComp;
 	AIController* m_ai;
 	IPlayerInput* m_inputInfo;
 	SoldierAnimController* m_animController;

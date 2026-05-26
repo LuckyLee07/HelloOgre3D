@@ -17,7 +17,9 @@
 #include "animation/SoldierAnimProfile.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
+#include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
+#include "components/combat/WeaponComponent.h"
 #include "profiling/Profile.h"
 #include <algorithm>
 
@@ -32,13 +34,35 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
 	m_maxHealth = std::max<Ogre::Real>(GetHealth(), 1.0f);
 	m_maxAmmo = std::max(1, m_maxAmmo);
 	m_ammo = std::min(std::max(0, m_ammo), m_maxAmmo);
+
+	AgentAttrib* attrib = new AgentAttrib(GetHealth(), m_maxHealth, m_stanceType, m_pendingStanceType);
+	if (AddComponent("attrib", attrib))
+	{
+		m_attrib = attrib;
+	}
+	else
+	{
+		SAFE_DELETE(attrib);
+	}
+
+	WeaponComponent* weapon = new WeaponComponent(this);
+	weapon->SetMaxAmmo(m_maxAmmo);
+	weapon->SetAmmo(m_ammo);
+	if (AddComponent("weapon", weapon))
+	{
+		m_weaponComp = weapon;
+	}
+	else
+	{
+		SAFE_DELETE(weapon);
+	}
 
 	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
 
@@ -65,7 +89,6 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 SoldierObject::~SoldierObject()
 {
 	this->RemoveEventDispatcher();
-	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_animController);
 }
@@ -126,20 +149,23 @@ void SoldierObject::Init()
 
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
 {
-	if (m_pWeapon != nullptr)
+	if (m_weaponComp != nullptr)
 	{
-		SAFE_DELETE(m_pWeapon);
+		m_weaponComp->Init(meshFile);
+		m_pWeapon = m_weaponComp->GetWeapon();
+		m_weaponHandOffsetPos = m_weaponComp->GetHandOffsetPos();
+		m_weaponHandOffsetOrientation = m_weaponComp->GetHandOffsetOrientation();
 	}
-	m_pWeapon = new RenderableObject(meshFile);
-	m_pWeapon->InitAsmWithOwner(this, false);
-	if (m_pWeapon->GetObjectASM())
-	{
-		m_pWeapon->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
-	}
+}
 
-	m_weaponHandOffsetPos = Ogre::Vector3(0.04f, 0.05f, -0.01f);
-	m_weaponHandOffsetOrientation = QuaternionFromRotationDegrees(98.0f, 97.0f, 0.0f);
-	SyncWeaponToHandBone();
+RenderableObject* SoldierObject::getWeapon()
+{
+	return m_weaponComp != nullptr ? m_weaponComp->GetWeapon() : m_pWeapon;
+}
+
+int SoldierObject::getStanceType() const
+{
+	return m_attrib != nullptr ? m_attrib->GetStanceType() : m_stanceType;
 }
 
 void SoldierObject::Update(int deltaMilisec)
@@ -161,11 +187,10 @@ void SoldierObject::Update(int deltaMilisec)
 		H3D_PROFILE_SCOPE("AgentBody::Update");
 		m_pAgentBody->Update(deltaMilisec);
 	}
-	SyncWeaponToHandBone();
-	if (m_pWeapon)
+	if (m_weaponComp)
 	{
 		H3D_PROFILE_SCOPE("Weapon::Update");
-		m_pWeapon->Update(deltaMilisec);
+		m_weaponComp->update(deltaMilisec);
 	}
 
 	TryApplyPendingStance();
@@ -185,165 +210,112 @@ void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
 
 void SoldierObject::SyncWeaponToHandBone()
 {
-	if (m_pWeapon == nullptr || m_pAgentBody == nullptr)
-	{
-		return;
-	}
-
-	Ogre::SceneNode* soldierNode = m_pAgentBody->GetSceneNode();
-	if (soldierNode == nullptr)
-	{
-		return;
-	}
-
-	Ogre::Vector3 handPosition;
-	Ogre::Quaternion handOrientation;
-	if (!SceneFactory::GetBonePosition(*soldierNode, "b_RightHand", handPosition))
-	{
-		return;
-	}
-	if (!SceneFactory::GetBoneOrientation(*soldierNode, "b_RightHand", handOrientation))
-	{
-		return;
-	}
-
-	m_pWeapon->SetPosition(handPosition + (handOrientation * m_weaponHandOffsetPos));
-	m_pWeapon->SetOrientation(handOrientation * m_weaponHandOffsetOrientation);
+	if (m_weaponComp != nullptr)
+		m_weaponComp->SyncToHandBone();
 }
 
 void SoldierObject::ShootBullet()
 {
-	if (m_pAgentBody == nullptr)
-	{
-		return;
-	}
-
-	Ogre::SceneNode* soldierNode = m_pAgentBody->GetSceneNode();
-	if (soldierNode == nullptr)
-	{
-		return;
-	}
-
-	Ogre::Vector3 position = soldierNode->_getDerivedPosition();
-	Ogre::Quaternion orientation = soldierNode->_getDerivedOrientation();
-	bool hasPosition = false;
-	bool hasOrientation = false;
-
-	// Preferred path: fire from muzzle bone on soldier mesh.
-	hasPosition = SceneFactory::GetBonePosition(*soldierNode, "b_muzzle", position);
-	hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_muzzle", orientation);
-
-	// Fallback: some assets keep muzzle data on weapon mesh.
-	if ((!hasPosition || !hasOrientation) && m_pWeapon != nullptr)
-	{
-		Ogre::SceneNode* weaponNode = m_pWeapon->GetSceneNode();
-		if (weaponNode != nullptr)
-		{
-			if (!hasPosition)
-			{
-				hasPosition = SceneFactory::GetBonePosition(*weaponNode, "b_muzzle", position);
-				if (!hasPosition)
-				{
-					position = weaponNode->_getDerivedPosition();
-					hasPosition = true;
-				}
-			}
-			if (!hasOrientation)
-			{
-				hasOrientation = SceneFactory::GetBoneOrientation(*weaponNode, "b_muzzle", orientation);
-				if (!hasOrientation)
-				{
-					orientation = weaponNode->_getDerivedOrientation();
-					hasOrientation = true;
-				}
-			}
-		}
-	}
-
-	// Last fallback: hand bone usually exists even if muzzle does not.
-	if (!hasPosition)
-	{
-		hasPosition = SceneFactory::GetBonePosition(*soldierNode, "b_RightHand", position);
-	}
-	if (!hasOrientation)
-	{
-		hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_RightHand", orientation);
-	}
-
-	this->DoShootBullet(position, orientation);
+	if (m_weaponComp != nullptr)
+		m_weaponComp->ShootBullet();
 }
 
 void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
-	Ogre::Quaternion qRotation = orientation;
-	qRotation.normalise();
-
-	Vector3 forward = qRotation * Vector3::UNIT_X;
-	Vector3 up = qRotation * Vector3::UNIT_Y;
-	Vector3 left = qRotation * (-Vector3::UNIT_Z);
-
-	if (forward.isNaN() || forward.isZeroLength())
-	{
-		forward = GetForward();
-	}
-	forward.normalise();
-	if (up.isNaN() || up.isZeroLength())
-	{
-		up = Vector3::UNIT_Y;
-	}
-	up.normalise();
-	left = up.crossProduct(forward);
-	if (left.isNaN() || left.isZeroLength())
-	{
-		left = Vector3::UNIT_X;
-	}
-	left.normalise();
-
-	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
-	bullet->SetOwner(this);
-	bullet->SetMass(0.1f);
-	bullet->setPosition(position + forward * 0.2f);
-	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
-	bullet->setOrientation(axisRot);
-	
-	Ogre::SceneNode* bulletParticle = SceneFactory::CreateParticle(bullet->GetSceneNode(), "Bullet");
-	bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
-	bullet->addParticleNode(bulletParticle);
-
-	bullet->applyImpulse(forward * 750);
+	if (m_weaponComp != nullptr)
+		m_weaponComp->DoShootBullet(position, orientation);
 }
 
 void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
 {
-	m_maxHealth = std::max<Ogre::Real>(maxHealth, 1.0f);
+	if (m_attrib != nullptr)
+	{
+		m_attrib->SetMaxHealth(maxHealth);
+		m_maxHealth = m_attrib->GetMaxHealth();
+	}
+	else
+	{
+		m_maxHealth = std::max<Ogre::Real>(maxHealth, 1.0f);
+	}
+}
+
+Ogre::Real SoldierObject::GetMaxHealth() const
+{
+	return m_attrib != nullptr ? m_attrib->GetMaxHealth() : m_maxHealth;
 }
 
 void SoldierObject::SetAmmo(int ammo)
 {
-	m_ammo = std::min(std::max(0, ammo), m_maxAmmo);
+	if (m_weaponComp != nullptr)
+	{
+		m_weaponComp->SetAmmo(ammo);
+		m_ammo = m_weaponComp->GetAmmo();
+	}
+	else
+	{
+		m_ammo = std::min(std::max(0, ammo), m_maxAmmo);
+	}
+}
+
+int SoldierObject::GetAmmo() const
+{
+	return m_weaponComp != nullptr ? m_weaponComp->GetAmmo() : m_ammo;
 }
 
 void SoldierObject::SetMaxAmmo(int maxAmmo)
 {
-	m_maxAmmo = std::max(1, maxAmmo);
-	if (m_ammo > m_maxAmmo)
+	if (m_weaponComp != nullptr)
 	{
-		m_ammo = m_maxAmmo;
+		m_weaponComp->SetMaxAmmo(maxAmmo);
+		m_maxAmmo = m_weaponComp->GetMaxAmmo();
+		m_ammo = m_weaponComp->GetAmmo();
 	}
+	else
+	{
+		m_maxAmmo = std::max(1, maxAmmo);
+		if (m_ammo > m_maxAmmo)
+		{
+			m_ammo = m_maxAmmo;
+		}
+	}
+}
+
+int SoldierObject::GetMaxAmmo() const
+{
+	return m_weaponComp != nullptr ? m_weaponComp->GetMaxAmmo() : m_maxAmmo;
+}
+
+bool SoldierObject::HasAmmo() const
+{
+	return m_weaponComp != nullptr ? m_weaponComp->HasAmmo() : m_ammo > 0;
 }
 
 void SoldierObject::ConsumeAmmo(int amount)
 {
+	if (m_weaponComp != nullptr)
+	{
+		m_weaponComp->ConsumeAmmo(amount);
+		m_ammo = m_weaponComp->GetAmmo();
+		return;
+	}
+
 	if (amount <= 0)
 	{
 		return;
 	}
-
 	SetAmmo(m_ammo - amount);
 }
 
 void SoldierObject::RestoreAmmo()
 {
+	if (m_weaponComp != nullptr)
+	{
+		m_weaponComp->RestoreAmmo();
+		m_ammo = m_weaponComp->GetAmmo();
+		m_maxAmmo = m_weaponComp->GetMaxAmmo();
+		return;
+	}
+
 	m_ammo = m_maxAmmo;
 }
 
@@ -404,6 +376,10 @@ void SoldierObject::changeStanceType(int stanceType)
 	{
 		return;
 	}
+	if (m_attrib != nullptr)
+	{
+		m_attrib->SetPendingStanceType(m_pendingStanceType);
+	}
 
 	TryApplyPendingStance();
 }
@@ -415,12 +391,16 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 	if (stanceType == SOLDIER_STAND)
 	{
 		m_stanceType = SOLDIER_STAND;
+		if (m_attrib != nullptr)
+			m_attrib->SetStanceType(SOLDIER_STAND);
 		soldier_height = SOLDIER_STAND_HEIGHT;
 		soldier_speed = SOLDIER_STAND_SPEED;
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
 		m_stanceType = SOLDIER_CROUCH;
+		if (m_attrib != nullptr)
+			m_attrib->SetStanceType(SOLDIER_CROUCH);
 		soldier_height = SOLDIER_CROUCH_HEIGHT;
 		soldier_speed = SOLDIER_CROUCH_SPEED;
 	}
@@ -443,7 +423,8 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 void SoldierObject::TryApplyPendingStance()
 {
-	if (m_pendingStanceType < 0 || m_onPlayDeathAnim)
+	const int pendingStanceType = m_attrib != nullptr ? m_attrib->GetPendingStanceType() : m_pendingStanceType;
+	if (pendingStanceType < 0 || m_onPlayDeathAnim)
 	{
 		return;
 	}
@@ -463,20 +444,22 @@ void SoldierObject::TryApplyPendingStance()
 	bool isCrouchState = IsCrouchAnimState(currState);
 	if (!pAsm->HasNextState())
 	{
-		if ((m_pendingStanceType == SOLDIER_CROUCH && isCrouchState) ||
-			(m_pendingStanceType == SOLDIER_STAND && !isCrouchState))
+		if ((pendingStanceType == SOLDIER_CROUCH && isCrouchState) ||
+			(pendingStanceType == SOLDIER_STAND && !isCrouchState))
 		{
-			ApplyStanceParams(m_pendingStanceType);
+			ApplyStanceParams(pendingStanceType);
 			m_pendingStanceType = -1;
+			if (m_attrib != nullptr)
+				m_attrib->ClearPendingStanceType();
 			return;
 		}
 
-		SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(currState, m_pendingStanceType);
+		SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(currState, pendingStanceType);
 		if (requestState != currState)
 		{
 			pAsm->RequestState(requestState);
 		}
-		else if (m_pendingStanceType == SOLDIER_CROUCH)
+		else if (pendingStanceType == SOLDIER_CROUCH)
 		{
 			pAsm->RequestState("crouch_idle_aim");
 		}
