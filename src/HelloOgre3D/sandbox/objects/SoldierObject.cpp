@@ -34,15 +34,11 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
-	m_maxHealth = std::max<Ogre::Real>(GetHealth(), 1.0f);
-	m_maxAmmo = std::max(1, m_maxAmmo);
-	m_ammo = std::min(std::max(0, m_ammo), m_maxAmmo);
-
-	AgentAttrib* attrib = new AgentAttrib(GetHealth(), m_maxHealth, m_stanceType, m_pendingStanceType);
+	AgentAttrib* attrib = new AgentAttrib(GetHealth(), std::max<Ogre::Real>(GetHealth(), 1.0f), SOLDIER_STAND, -1);
 	if (AddComponent("attrib", attrib))
 	{
 		m_attrib = attrib;
@@ -53,8 +49,6 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 	}
 
 	WeaponComponent* weapon = new WeaponComponent(this);
-	weapon->SetMaxAmmo(m_maxAmmo);
-	weapon->SetAmmo(m_ammo);
 	if (AddComponent("weapon", weapon))
 	{
 		m_weaponComp = weapon;
@@ -152,20 +146,17 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	if (m_weaponComp != nullptr)
 	{
 		m_weaponComp->Init(meshFile);
-		m_pWeapon = m_weaponComp->GetWeapon();
-		m_weaponHandOffsetPos = m_weaponComp->GetHandOffsetPos();
-		m_weaponHandOffsetOrientation = m_weaponComp->GetHandOffsetOrientation();
 	}
 }
 
 RenderableObject* SoldierObject::getWeapon()
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetWeapon() : m_pWeapon;
+	return m_weaponComp != nullptr ? m_weaponComp->GetWeapon() : nullptr;
 }
 
 int SoldierObject::getStanceType() const
 {
-	return m_attrib != nullptr ? m_attrib->GetStanceType() : m_stanceType;
+	return m_attrib != nullptr ? m_attrib->GetStanceType() : SOLDIER_STAND;
 }
 
 void SoldierObject::Update(int deltaMilisec)
@@ -231,17 +222,12 @@ void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
 	if (m_attrib != nullptr)
 	{
 		m_attrib->SetMaxHealth(maxHealth);
-		m_maxHealth = m_attrib->GetMaxHealth();
-	}
-	else
-	{
-		m_maxHealth = std::max<Ogre::Real>(maxHealth, 1.0f);
 	}
 }
 
 Ogre::Real SoldierObject::GetMaxHealth() const
 {
-	return m_attrib != nullptr ? m_attrib->GetMaxHealth() : m_maxHealth;
+	return m_attrib != nullptr ? m_attrib->GetMaxHealth() : std::max<Ogre::Real>(GetHealth(), 1.0f);
 }
 
 void SoldierObject::SetAmmo(int ammo)
@@ -249,17 +235,12 @@ void SoldierObject::SetAmmo(int ammo)
 	if (m_weaponComp != nullptr)
 	{
 		m_weaponComp->SetAmmo(ammo);
-		m_ammo = m_weaponComp->GetAmmo();
-	}
-	else
-	{
-		m_ammo = std::min(std::max(0, ammo), m_maxAmmo);
 	}
 }
 
 int SoldierObject::GetAmmo() const
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetAmmo() : m_ammo;
+	return m_weaponComp != nullptr ? m_weaponComp->GetAmmo() : 0;
 }
 
 void SoldierObject::SetMaxAmmo(int maxAmmo)
@@ -267,27 +248,17 @@ void SoldierObject::SetMaxAmmo(int maxAmmo)
 	if (m_weaponComp != nullptr)
 	{
 		m_weaponComp->SetMaxAmmo(maxAmmo);
-		m_maxAmmo = m_weaponComp->GetMaxAmmo();
-		m_ammo = m_weaponComp->GetAmmo();
-	}
-	else
-	{
-		m_maxAmmo = std::max(1, maxAmmo);
-		if (m_ammo > m_maxAmmo)
-		{
-			m_ammo = m_maxAmmo;
-		}
 	}
 }
 
 int SoldierObject::GetMaxAmmo() const
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetMaxAmmo() : m_maxAmmo;
+	return m_weaponComp != nullptr ? m_weaponComp->GetMaxAmmo() : 0;
 }
 
 bool SoldierObject::HasAmmo() const
 {
-	return m_weaponComp != nullptr ? m_weaponComp->HasAmmo() : m_ammo > 0;
+	return m_weaponComp != nullptr && m_weaponComp->HasAmmo();
 }
 
 void SoldierObject::ConsumeAmmo(int amount)
@@ -295,15 +266,7 @@ void SoldierObject::ConsumeAmmo(int amount)
 	if (m_weaponComp != nullptr)
 	{
 		m_weaponComp->ConsumeAmmo(amount);
-		m_ammo = m_weaponComp->GetAmmo();
-		return;
 	}
-
-	if (amount <= 0)
-	{
-		return;
-	}
-	SetAmmo(m_ammo - amount);
 }
 
 void SoldierObject::RestoreAmmo()
@@ -311,12 +274,7 @@ void SoldierObject::RestoreAmmo()
 	if (m_weaponComp != nullptr)
 	{
 		m_weaponComp->RestoreAmmo();
-		m_ammo = m_weaponComp->GetAmmo();
-		m_maxAmmo = m_weaponComp->GetMaxAmmo();
-		return;
 	}
-
-	m_ammo = m_maxAmmo;
 }
 
 AgentObject* SoldierObject::GetEnemy() const
@@ -356,6 +314,9 @@ bool SoldierObject::IsTargetReached(float threshold) const
 }
 void SoldierObject::changeStanceType(int stanceType)
 {
+	if (m_attrib == nullptr)
+		return;
+
 	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
 	if (pAsm == nullptr) return;
 
@@ -366,19 +327,15 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	if (stanceType == SOLDIER_STAND)
 	{
-		m_pendingStanceType = SOLDIER_STAND;
+		m_attrib->SetPendingStanceType(SOLDIER_STAND);
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
-		m_pendingStanceType = SOLDIER_CROUCH;
+		m_attrib->SetPendingStanceType(SOLDIER_CROUCH);
 	}
 	else
 	{
 		return;
-	}
-	if (m_attrib != nullptr)
-	{
-		m_attrib->SetPendingStanceType(m_pendingStanceType);
 	}
 
 	TryApplyPendingStance();
@@ -390,7 +347,6 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
 	{
-		m_stanceType = SOLDIER_STAND;
 		if (m_attrib != nullptr)
 			m_attrib->SetStanceType(SOLDIER_STAND);
 		soldier_height = SOLDIER_STAND_HEIGHT;
@@ -398,7 +354,6 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
-		m_stanceType = SOLDIER_CROUCH;
 		if (m_attrib != nullptr)
 			m_attrib->SetStanceType(SOLDIER_CROUCH);
 		soldier_height = SOLDIER_CROUCH_HEIGHT;
@@ -423,7 +378,12 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 void SoldierObject::TryApplyPendingStance()
 {
-	const int pendingStanceType = m_attrib != nullptr ? m_attrib->GetPendingStanceType() : m_pendingStanceType;
+	if (m_attrib == nullptr)
+	{
+		return;
+	}
+
+	const int pendingStanceType = m_attrib->GetPendingStanceType();
 	if (pendingStanceType < 0 || m_onPlayDeathAnim)
 	{
 		return;
@@ -448,9 +408,7 @@ void SoldierObject::TryApplyPendingStance()
 			(pendingStanceType == SOLDIER_STAND && !isCrouchState))
 		{
 			ApplyStanceParams(pendingStanceType);
-			m_pendingStanceType = -1;
-			if (m_attrib != nullptr)
-				m_attrib->ClearPendingStanceType();
+			m_attrib->ClearPendingStanceType();
 			return;
 		}
 

@@ -1,6 +1,7 @@
 #ifndef __RENDER_COMPONENT_H__
 #define __RENDER_COMPONENT_H__
 
+#include "component/IComponent.h"
 #include "OgreVector3.h"
 #include <string>
 #include <unordered_map>
@@ -13,13 +14,13 @@ namespace Ogre {
 class AgentAnim;
 class BaseObject;
 
-class RenderComponent
+class RenderComponent : public IComponent
 {
 public:
 	RenderComponent(const Ogre::String& meshFile);
 	RenderComponent(const Ogre::MeshPtr& meshPtr);
 	RenderComponent(Ogre::SceneNode* pSceneNode);
-	~RenderComponent();
+	virtual ~RenderComponent();
 	
 	Ogre::Entity* GetEntity() const { return m_pEntity; }
 	Ogre::Entity* GetDetachEntity();
@@ -45,6 +46,7 @@ public:
 	Ogre::Quaternion GetDerivedOrientation() const;
 
 	void Update(int deltaInMillis);
+	virtual void update(int deltaInMillis) override;
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 private:

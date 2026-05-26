@@ -5,6 +5,7 @@
 #include "OgreString.h"
 #include "OgreMath.h"
 #include "OgreVector3.h"
+#include <string>
 #include <unordered_map>
 
 namespace Ogre {
@@ -27,6 +28,8 @@ public:
 
 	//BaseObject* getOwner() { return m_owner; }
 	void InitAsmWithOwner(BaseObject* owner, bool canFireEvent = true);
+	bool AttachRenderComponent(BaseObject* owner, const std::string& key = "render");
+	RenderComponent* GetRenderComponent() const { return m_renderComp; }
 	
 	Ogre::Vector3 GetOriginPos() const;
 	void SetOriginPos(const Ogre::Vector3& position);
@@ -59,6 +62,7 @@ public:
 
 protected:
 	RenderComponent* m_renderComp = nullptr;
+	bool m_ownsRenderComp = true;
 
 	std::unordered_map<std::string, AgentAnim*> m_animations;
 	AgentAnimStateMachine* m_pAnimateStateMachine = nullptr;

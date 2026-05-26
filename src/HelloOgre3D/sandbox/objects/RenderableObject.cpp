@@ -9,6 +9,7 @@
 #include "animation/AgentAnimStateMachine.h"
 #include "game/GameManager.h"
 #include "components/render/RenderComponent.h"
+#include "component/IComponent.h"
 
 using namespace Ogre;
 
@@ -36,7 +37,14 @@ RenderableObject::~RenderableObject()
 	}
 	m_animations.clear();
 
-	SAFE_DELETE(m_renderComp);
+	if (m_ownsRenderComp)
+	{
+		SAFE_DELETE(m_renderComp);
+	}
+	else
+	{
+		m_renderComp = nullptr;
+	}
 	SAFE_DELETE(m_pAnimateStateMachine);
 }
 
@@ -44,6 +52,32 @@ void RenderableObject::InitAsmWithOwner(BaseObject *owner, bool canFireEvent)
 {
 	assert(owner != nullptr);
 	m_pAnimateStateMachine = new AgentAnimStateMachine(owner, canFireEvent);
+}
+
+bool RenderableObject::AttachRenderComponent(BaseObject* owner, const std::string& key)
+{
+	if (owner == nullptr || m_renderComp == nullptr)
+	{
+		return false;
+	}
+
+	if (m_renderComp->getOwner() == owner)
+	{
+		return true;
+	}
+
+	if (m_renderComp->getGameObject() != nullptr)
+	{
+		return false;
+	}
+
+	if (!owner->AddComponent(key, m_renderComp))
+	{
+		return false;
+	}
+
+	m_ownsRenderComp = false;
+	return true;
 }
 
 void RenderableObject::Update(int deltaInMillis)

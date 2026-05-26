@@ -301,7 +301,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **[Stage 2]** [对应 T-03/T-04 收尾]
 - **现状**：T-03/T-04 暂时保留了字段冗余备份。
 - **目标**：删除 SoldierObject 的 m_maxHealth / m_ammo / m_maxAmmo / m_stanceType / m_pendingStanceType / m_pWeapon 等字段。
-- **关键约束**：T-03/T-04 完整稳定运行至少 1 周后再做。
+- **关键约束**：原计划要求 T-03/T-04 稳定运行至少 1 周；当前项目仍处于沙盒重构期，本轮改为以 Sandbox1-8 全量 smoke 通过作为放行条件。
 - **落地动作**：删字段，所有 getter/setter 仍保留为 forwarder（只是不再有本地缓存）。
 - **风险**：低（前置任务已经验证）。
 - **工时**：半天。
@@ -538,8 +538,8 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-02 | PhysicsComponent owner 字段清理 | 1 | ☑ | 2026-05-26 | |
 | T-03 | HealthComponent/AgentAttrib 承接属性 | 2 | ☑ | 2026-05-26 | |
 | T-04 | WeaponComponent 承接武器 | 2 | ☑ | 2026-05-26 | |
-| T-05 | 删除组件化字段冗余备份 | 2 | ☐ | | |
-| T-06 | RenderComponent : IComponent + facade 化 | 2 | ☐ | | |
+| T-05 | 删除组件化字段冗余备份 | 2 | ☑ | 2026-05-26 | |
+| T-06 | RenderComponent : IComponent + facade 化 | 2 | ☑ | 2026-05-26 | |
 | T-07 | driver 注入方式重构 | 3 | ☐ | | |
 | T-08 | AnimComponent + IAnimController | 3 | ☐ | | |
 | T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☐ | | |

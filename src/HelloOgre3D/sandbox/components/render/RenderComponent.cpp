@@ -162,4 +162,10 @@ void RenderComponent::AttachToBone(const Ogre::String& boneName, Ogre::Entity* e
 
 void RenderComponent::Update(int deltaInMillis)
 {
+	update(deltaInMillis);
+}
+
+void RenderComponent::update(int deltaInMillis)
+{
+	(void)deltaInMillis;
 }

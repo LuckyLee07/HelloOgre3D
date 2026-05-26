@@ -96,16 +96,6 @@ protected:
 	void RemoveEventDispatcher();
 
 private:
-	RenderableObject* m_pWeapon;
-	Ogre::Vector3 m_weaponHandOffsetPos = Ogre::Vector3::ZERO;
-	Ogre::Quaternion m_weaponHandOffsetOrientation = Ogre::Quaternion::IDENTITY;
-	SOLDIER_STANCE_TYPE m_stanceType;
-	int m_pendingStanceType = -1;
-
-	Ogre::Real m_maxHealth = 100.0f;
-	int m_ammo = 10;
-	int m_maxAmmo = 10;
-
 	AgentAttrib* m_attrib;
 	WeaponComponent* m_weaponComp;
 	AIController* m_ai;

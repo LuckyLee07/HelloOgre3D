@@ -24,6 +24,7 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
 	m_pEntity = new RenderableObject(meshFile);
+	m_pEntity->AttachRenderComponent(this);
 
 	if (pRigidBody == nullptr)
 	{
@@ -40,7 +41,10 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 
 BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 {
+	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
+
 	m_pEntity = new RenderableObject(meshPtr);
+	m_pEntity->AttachRenderComponent(this);
 
 	if (pRigidBody == nullptr)
 		pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr.get(), 1.0f);
@@ -51,7 +55,10 @@ BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 
 BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 {
+	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
+
 	m_pEntity = new RenderableObject(pSceneNode);
+	m_pEntity->AttachRenderComponent(this);
 	
 	m_physicsComp = new PhysicsComponent(pRigidBody);
 	this->AddComponent("physics", m_physicsComp);

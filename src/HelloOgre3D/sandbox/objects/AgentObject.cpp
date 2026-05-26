@@ -22,6 +22,10 @@ AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/*
 	: VehicleObject(pRigidBody), m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
 {
 	m_objType = OBJ_TYPE_AGENT;
+	if (m_pAgentBody != nullptr)
+	{
+		m_pAgentBody->AttachRenderComponent(this);
+	}
 
 	SetForward(Ogre::Vector3::UNIT_Z);
 
@@ -61,9 +65,11 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 {
 	if (m_pAgentBody != nullptr)
 	{
+		RemoveComponent("render");
 		delete m_pAgentBody;
 	}
 	m_pAgentBody = new RenderableObject(meshFile);
+	m_pAgentBody->AttachRenderComponent(this);
 	m_pAgentBody->InitAsmWithOwner(this, true);
 }
 
