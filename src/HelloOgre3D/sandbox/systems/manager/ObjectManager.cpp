@@ -13,7 +13,8 @@
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
-#include "objects/components/PhysicsComponent.h"
+#include "components/ai/AIController.h"
+#include "components/physics/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
 #include "profiling/Profile.h"
 
@@ -143,17 +144,17 @@ void ObjectManager::Update(int deltaMilliseconds)
 		}
 		else
 		{
-			SoldierObject* soldier = dynamic_cast<SoldierObject*>(pObject);
-			if (soldier != nullptr && useAiScheduler)
+			AIController* ai = pObject->FindComponent<AIController>();
+			if (ai != nullptr && useAiScheduler)
 			{
-				soldier->SetAiTickInUpdateEnabled(false);
+				ai->SetTickInOwnerUpdateEnabled(false);
 				int aiDeltaMs = 0;
-				if (m_aiScheduler->ShouldTick(soldier->GetObjId(), deltaMilliseconds, &aiDeltaMs))
-					soldier->TickAi(aiDeltaMs);
+				if (m_aiScheduler->ShouldTick(ai->GetAgentId(), deltaMilliseconds, &aiDeltaMs))
+					ai->TickAI(aiDeltaMs);
 			}
-			else if (soldier != nullptr)
+			else if (ai != nullptr)
 			{
-				soldier->SetAiTickInUpdateEnabled(true);
+				ai->SetTickInOwnerUpdateEnabled(true);
 			}
 
 			pObject->Update(deltaMilliseconds);
@@ -235,9 +236,9 @@ int ObjectManager::getAiAgentCount() const
 int ObjectManager::getAiSoldierCount() const
 {
 	int count = 0;
-	for (std::vector<AgentObject*>::const_iterator it = m_agents.begin(); it != m_agents.end(); ++it)
+	for (std::unordered_map<int, BaseObject*>::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it)
 	{
-		if (dynamic_cast<SoldierObject*>(*it) != nullptr)
+		if (it->second != nullptr && it->second->FindComponent<AIController>() != nullptr)
 			++count;
 	}
 	return count;
@@ -291,10 +292,10 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 	if (maxAgents > 32)
 		maxAgents = 32;
 
-	const int soldierCount = getAiSoldierCount();
+	const int aiControllerCount = getAiSoldierCount();
 	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
 	std::ostringstream stream;
-	stream << "AI agents=" << m_agents.size() << " soldiers=" << soldierCount << " showing=" << showingCount;
+	stream << "AI agents=" << m_agents.size() << " controllers=" << aiControllerCount << " showing=" << showingCount;
 
 	for (int index = 0; index < showingCount; ++index)
 	{
@@ -303,6 +304,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 			continue;
 
 		SoldierObject* soldier = dynamic_cast<SoldierObject*>(agent);
+		AIController* ai = agent->FindComponent<AIController>();
 		stream << "\n#" << index
 			<< " id=" << agent->GetObjId()
 			<< " team=" << agent->GetTeamId()
@@ -310,17 +312,20 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 			<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")"
 			<< " hp=" << static_cast<int>(agent->GetHealth());
 
-		if (soldier == nullptr)
+		if (ai == nullptr)
 		{
 			stream << " driver=Agent";
 			continue;
 		}
 
-		stream << "/" << static_cast<int>(soldier->GetMaxHealth())
-			<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo();
+		if (soldier != nullptr)
+		{
+			stream << "/" << static_cast<int>(soldier->GetMaxHealth())
+				<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo();
+		}
 
-		BehaviorTreeDriver* behaviorDriver = soldier->GetBehaviorTreeDriver();
-		DecisionTreeDriver* decisionDriver = soldier->GetDecisionTreeDriver();
+		BehaviorTreeDriver* behaviorDriver = ai->GetBehaviorTreeDriver();
+		DecisionTreeDriver* decisionDriver = ai->GetDecisionTreeDriver();
 		if (behaviorDriver != nullptr)
 		{
 			if (!behaviorDriver->IsDebugTraceEnabled())
@@ -340,7 +345,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		}
 		else
 		{
-			stream << " driver=" << (soldier->GetFsmController() != nullptr ? "FSM" : "None");
+			stream << " driver=" << (ai->GetFsmController() != nullptr ? "FSM" : "None");
 		}
 	}
 	return stream.str();
@@ -410,12 +415,13 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 
 		if (SoldierObject* soldier = dynamic_cast<SoldierObject*>(object))
 		{
+			AIController* ai = soldier->GetAIController();
 			const char* driverName = "None";
-			if (soldier->GetBehaviorTreeDriver() != nullptr)
+			if (ai != nullptr && ai->GetBehaviorTreeDriver() != nullptr)
 				driverName = "BT";
-			else if (soldier->GetDecisionTreeDriver() != nullptr)
+			else if (ai != nullptr && ai->GetDecisionTreeDriver() != nullptr)
 				driverName = "DT";
-			else if (soldier->GetFsmController() != nullptr)
+			else if (ai != nullptr && ai->GetFsmController() != nullptr)
 				driverName = "FSM";
 
 			stream << " soldierHpMax=" << static_cast<int>(soldier->GetMaxHealth())

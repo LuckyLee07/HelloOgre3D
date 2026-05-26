@@ -5,9 +5,9 @@
 
 class IPlayerInput;
 class SoldierAnimController;
+class AIController;
 class DecisionTreeDriver;
 class BehaviorTreeDriver;
-class IDecisionDriver;
 class AgentStateController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
@@ -36,6 +36,7 @@ public:
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
 	SoldierAnimController* GetAnimController() const { return m_animController; }
+	AIController* GetAIController() const { return m_ai; }
 
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const { return m_maxHealth; }
@@ -87,9 +88,6 @@ private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
-	void SetEnemy(AgentObject* enemy);
-	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
-	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 
 protected:
 	void CreateEventDispatcher();
@@ -106,18 +104,10 @@ private:
 	int m_ammo = 10;
 	int m_maxAmmo = 10;
 
-	AgentObject* m_enemy = nullptr;
-	int m_enemyId = -1;
-	bool m_hasMovePos = false;
-	Ogre::Vector3 m_movePos = Ogre::Vector3::ZERO;
-
+	AIController* m_ai;
 	IPlayerInput* m_inputInfo;
 	SoldierAnimController* m_animController;
 
-	// One driver to rule them all (FSM / DT / future BT). All implement IDecisionDriver
-	// so Update() just calls m_driver->Tick(); typed accessors above downcast on demand.
-	IDecisionDriver* m_driver = nullptr;
-	bool m_aiTickInUpdateEnabled = true;
 	int m_asmStateChangeEventToken = 0;
 	int m_asmNotifyEventToken = 0;
 

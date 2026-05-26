@@ -1,0 +1,71 @@
+#ifndef __AI_CONTROLLER_H__
+#define __AI_CONTROLLER_H__
+
+#include "OgreString.h"
+#include "OgreVector3.h"
+#include "component/IComponent.h"
+#include "script/LuaClassNameTraits.h"
+
+class AgentObject;
+class AgentStateController;
+class BehaviorTreeDriver;
+class Blackboard;
+class DecisionTreeDriver;
+class IDecisionDriver;
+class SoldierObject;
+
+class AIController : public IComponent //tolua_exports
+{ //tolua_exports
+public:
+	explicit AIController(SoldierObject* owner = nullptr);
+	virtual ~AIController();
+
+	virtual void onAttach(GameObject* owner) override;
+	virtual void onDetach() override;
+
+	//tolua_begin
+	SoldierObject* GetOwner() const { return m_owner; }
+	Blackboard* GetBlackboard() const;
+
+	AgentObject* GetEnemy() const;
+	bool HasEnemy(const Ogre::String& navMeshName = "default");
+	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
+
+	bool HasMovePosition(float reachDistance = 1.5f) const;
+	void SetMovePosition(const Ogre::Vector3& movePos);
+	void ClearMovePosition();
+	bool IsTargetReached(float threshold) const;
+
+	void UseDecisionTreeDriver();
+	DecisionTreeDriver* GetDecisionTreeDriver() const;
+
+	void UseBehaviorTreeDriver();
+	BehaviorTreeDriver* GetBehaviorTreeDriver() const;
+	//tolua_end
+
+	AgentStateController* GetFsmController() const;
+
+	unsigned int GetAgentId() const;
+	void TickAI(int deltaMs);
+	void SetTickInOwnerUpdateEnabled(bool enabled);
+	bool IsTickInOwnerUpdateEnabled() const { return m_tickInOwnerUpdateEnabled; }
+
+private:
+	void InitDefaultDriver();
+	void SetEnemy(AgentObject* enemy);
+	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
+	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
+
+private:
+	SoldierObject* m_owner;
+	IDecisionDriver* m_driver;
+	AgentObject* m_enemy;
+	int m_enemyId;
+	bool m_hasMovePos;
+	Ogre::Vector3 m_movePos;
+	bool m_tickInOwnerUpdateEnabled;
+}; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(AIController);
+
+#endif // __AI_CONTROLLER_H__

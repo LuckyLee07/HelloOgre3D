@@ -1,5 +1,5 @@
 #include "OpenSteerAdapter.h"
-#include "objects/components/AgentLocomotion.h"
+#include "components/agent/AgentLocomotion.h"
 #include "GameFunction.h"
 
 OpenSteerAdapter::OpenSteerAdapter(AgentLocomotion* owner) : m_owner(owner)

@@ -1,8 +1,9 @@
 #ifndef __AGENT_BODY_H__
 #define __AGENT_BODY_H__
 
-class GameObject;
-class AgentBody
+#include "component/IComponent.h"
+
+class AgentBody : public IComponent
 {
 public:
 	AgentBody() {}

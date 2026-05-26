@@ -12,7 +12,7 @@
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleSystem.h"
 #include "OgreParticleEmitter.h"
-#include "components/PhysicsComponent.h"
+#include "components/physics/PhysicsComponent.h"
 #include "systems/service/SceneFactory.h"
 #include "systems/service/PhysicsFactory.h"
 #include "RenderableObject.h"

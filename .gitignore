@@ -4,3 +4,15 @@
 /bin/*.pdb
 /libs/*.lib
 /libs/*.pdb
+
+# Local agent / IDE state
+/.claude/
+/.vscode/
+/vs2017-profile.bat
+
+# Generated Python cache
+__pycache__/
+
+# Local Tracy viewer downloads
+/tools/tracy-viewer/tracy-csvexport.exe
+/tools/tracy-viewer/tracy-windows-*.zip

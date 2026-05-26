@@ -8,9 +8,8 @@
 #include "systems/service/PhysicsFactory.h"
 
 PhysicsComponent::PhysicsComponent(btRigidBody* body)
-	: m_body(body), m_owner(nullptr)
+	: m_body(body)
 {
-	//if (m_body) m_body->setUserPointer(m_owner);
 }
 
 PhysicsComponent::~PhysicsComponent()
@@ -22,13 +21,12 @@ void PhysicsComponent::onAttach(GameObject* owner)
 {
 	IComponent::onAttach(owner);
 
-	auto* pObject = getOwner();
+	BaseObject* pObject = getOwner();
 	assert(pObject != nullptr);
-	m_owner = dynamic_cast<BaseObject*>(pObject);
 
 	if (m_body != nullptr)
 	{
-		m_body->setUserPointer(m_owner);
+		m_body->setUserPointer(pObject);
 	}
 
 	AddToWorld();
@@ -37,7 +35,6 @@ void PhysicsComponent::onAttach(GameObject* owner)
 void PhysicsComponent::onDetach()
 {
 	RemoveFromWorld();
-	m_owner = nullptr;
 
 	IComponent::onDetach();
 }
@@ -93,7 +90,7 @@ void PhysicsComponent::ResetRigidBody(btRigidBody* newBody)
 
 	m_body = newBody;
 	if (!m_body) return;
-	m_body->setUserPointer(m_owner);
+	m_body->setUserPointer(getOwner());
 
 	// Keep dynamic/kinematic nature consistent across capsule rebuilds.
 	// NOTE: BaseObject::GetMass() returns 0 by default; using previous rigid-body mass is required.

@@ -8,7 +8,7 @@
 #include "animation/AgentAnim.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "game/GameManager.h"
-#include "components/RenderComponent.h"
+#include "components/render/RenderComponent.h"
 
 using namespace Ogre;
 

@@ -17,10 +17,9 @@
 #include "animation/SoldierAnimProfile.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
+#include "components/ai/AIController.h"
 #include "profiling/Profile.h"
 #include <algorithm>
-#include <limits>
-#include <vector>
 
 using namespace Ogre;
 
@@ -33,7 +32,7 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_enemy(nullptr), m_hasMovePos(false), m_movePos(Ogre::Vector3::ZERO), m_inputInfo(nullptr), m_animController(nullptr), m_aiTickInUpdateEnabled(true)
+	: AgentObject(pAgentBody, pRigidBody), m_pWeapon(nullptr), m_stanceType(SOLDIER_STAND), m_maxHealth(100.0f), m_ammo(10), m_maxAmmo(10), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -50,11 +49,14 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 		getBody()->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
 	}
 
-	if (GetUseCppFSM()) // 使用C++或者lua的FSM
+	AIController* ai = new AIController(this);
+	if (AddComponent("ai", ai))
 	{
-		AgentStateController* fsm = new AgentStateController(this);
-		fsm->Init();
-		m_driver = fsm;
+		m_ai = ai;
+	}
+	else
+	{
+		SAFE_DELETE(ai);
 	}
 
 	m_animController = new SoldierAnimController(*this);
@@ -66,7 +68,6 @@ SoldierObject::~SoldierObject()
 	SAFE_DELETE(m_pWeapon);
 	SAFE_DELETE(m_inputInfo);
 	SAFE_DELETE(m_animController);
-	SAFE_DELETE(m_driver);
 }
 
 void SoldierObject::CreateEventDispatcher()
@@ -147,7 +148,7 @@ void SoldierObject::Update(int deltaMilisec)
 	// Keep body transform in sync with physics before animation/bone evaluation.
 	this->updateWorldTransform();
 
-	if (m_aiTickInUpdateEnabled)
+	if (m_ai != nullptr && m_ai->IsTickInOwnerUpdateEnabled())
 		TickAi(deltaMilisec);
 
 	if (m_animController && GetUseCppFSM())
@@ -172,29 +173,14 @@ void SoldierObject::Update(int deltaMilisec)
 
 void SoldierObject::TickAi(int deltaMilisec)
 {
-	H3D_PROFILE_SCOPE("SoldierObject::TickAi");
-	static int totalMilisec = 0;
-	totalMilisec += deltaMilisec;
-
-	bool forceUpdate = true;
-	if (forceUpdate || totalMilisec > 1000)
-	{
-		totalMilisec = 0;
-		H3D_PROFILE_SCOPE("Lua::Agent_Update");
-		this->callFunction("Agent_Update", "u[SoldierObject]i", this, deltaMilisec);
-	}
-
-	// Single driver path could be FSM, DT, or future BT (all IDecisionDriver).
-	if (m_driver)
-	{
-		H3D_PROFILE_SCOPE("IDecisionDriver::Tick");
-		m_driver->Tick((float)deltaMilisec);
-	}
+	if (m_ai != nullptr)
+		m_ai->TickAI(deltaMilisec);
 }
 
 void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
 {
-	m_aiTickInUpdateEnabled = enabled;
+	if (m_ai != nullptr)
+		m_ai->SetTickInOwnerUpdateEnabled(enabled);
 }
 
 void SoldierObject::SyncWeaponToHandBone()
@@ -361,155 +347,40 @@ void SoldierObject::RestoreAmmo()
 	m_ammo = m_maxAmmo;
 }
 
-bool SoldierObject::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
-{
-	if (!enemy || enemy == this)
-	{
-		return false;
-	}
-
-	if (enemy->GetHealth() <= 0.0f)
-	{
-		return false;
-	}
-
-	unsigned int enemyTeamId = enemy->GetTeamId();
-	if (enemyTeamId == GetTeamId())
-	{
-		return false;
-	}
-
-	if (!requirePath || !g_SandboxMgr)
-	{
-		return true;
-	}
-
-	std::vector<Ogre::Vector3> path;
-	return g_SandboxMgr->FindPath(navMeshName, GetPosition(), enemy->GetPosition(), path) && !path.empty();
-}
-
-AgentObject* SoldierObject::FindNearestEnemy(const Ogre::String& navMeshName)
-{
-	if (!g_ObjectManager)
-	{
-		return nullptr;
-	}
-
-	const std::vector<AgentObject*>& agents = g_ObjectManager->getAllAgents();
-
-	AgentObject* nearestEnemy = nullptr;
-	float nearestDistance = std::numeric_limits<float>::max();
-
-	for (AgentObject* candidate : agents)
-	{
-		if (!IsEnemyValid(candidate, navMeshName, true))
-		{
-			continue;
-		}
-
-		const float distSquared = GetPosition().squaredDistance(candidate->GetPosition());
-		if (distSquared >= nearestDistance)
-		{
-			continue;
-		}
-
-		nearestEnemy = candidate;
-		nearestDistance = distSquared;
-	}
-
-	return nearestEnemy;
-}
-
-void SoldierObject::SetEnemy(AgentObject* enemy)
-{
-	m_enemy = enemy;
-	m_enemyId = enemy ? static_cast<int>(enemy->GetObjId()) : -1;
-}
-
 AgentObject* SoldierObject::GetEnemy() const
 {
-	if (m_enemy == nullptr || m_enemyId < 0 || !g_ObjectManager)
-	{
-		return m_enemy;
-	}
-
-	BaseObject* object = g_ObjectManager->getObjectById(m_enemyId);
-	return object == m_enemy ? dynamic_cast<AgentObject*>(object) : nullptr;
+	return m_ai != nullptr ? m_ai->GetEnemy() : nullptr;
 }
 
 bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
 {
-	AgentObject* enemy = GetEnemy();
-	if (IsEnemyValid(enemy, navMeshName, true))
-	{
-		return true;
-	}
-
-	SetEnemy(FindNearestEnemy(navMeshName));
-	return GetEnemy() != nullptr;
+	return m_ai != nullptr && m_ai->HasEnemy(navMeshName);
 }
 
 bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
-	AgentObject* enemy = GetEnemy();
-	if (!IsEnemyValid(enemy, navMeshName, false))
-	{
-		return false;
-	}
-
-	const float distance = std::max(0.0f, shootDistance);
-	const float shootSquared = distance * distance;
-	const float distSquared = GetPosition().squaredDistance(enemy->GetPosition());
-	return distSquared < shootSquared;
+	return m_ai != nullptr && m_ai->CanShootEnemy(navMeshName, shootDistance);
 }
 bool SoldierObject::HasMovePosition(float reachDistance) const
 {
-	const float distance = std::max(0.0f, reachDistance);
-	const float reachSquared = distance * distance;
-
-	if (m_hasMovePos)
-	{
-		return GetPosition().squaredDistance(m_movePos) > reachSquared;
-	}
-
-	if (!HasPath())
-	{
-		return false;
-	}
-
-	const Ogre::Vector3 target = GetTarget();
-	return GetPosition().squaredDistance(target) > reachSquared;
+	return m_ai != nullptr && m_ai->HasMovePosition(reachDistance);
 }
 
 void SoldierObject::SetMovePosition(const Ogre::Vector3& movePos)
 {
-	m_movePos = movePos;
-	m_hasMovePos = true;
+	if (m_ai != nullptr)
+		m_ai->SetMovePosition(movePos);
 }
 
 void SoldierObject::ClearMovePosition()
 {
-	m_hasMovePos = false;
-	m_movePos = Ogre::Vector3::ZERO;
+	if (m_ai != nullptr)
+		m_ai->ClearMovePosition();
 }
 
 bool SoldierObject::IsTargetReached(float threshold) const
 {
-	const float distance = std::max(0.0f, threshold);
-	const float thresholdSquared = distance * distance;
-
-	if (m_hasMovePos)
-	{
-		return GetPosition().squaredDistance(m_movePos) < thresholdSquared;
-	}
-
-	if (!HasPath())
-	{
-		return false;
-	}
-
-	const Ogre::Vector3 target = GetTarget();
-	return GetPosition().squaredDistance(target) < thresholdSquared;
+	return m_ai != nullptr && m_ai->IsTargetReached(threshold);
 }
 void SoldierObject::changeStanceType(int stanceType)
 {
@@ -660,43 +531,29 @@ void SoldierObject::UseDecisionTreeDriver()
 {
 	// Swap out whatever driver is currently installed (typically the FSM
 	// controller created in the ctor) — DT-driven soldiers author behavior in Lua.
-	if (dynamic_cast<DecisionTreeDriver*>(m_driver) != nullptr)
-	{
-		return;  // already DT-driven
-	}
-	SAFE_DELETE(m_driver);
-
-	DecisionTreeDriver* dt = new DecisionTreeDriver(this);
-	dt->Init();
-	m_driver = dt;
+	if (m_ai != nullptr)
+		m_ai->UseDecisionTreeDriver();
 }
 
 DecisionTreeDriver* SoldierObject::GetDecisionTreeDriver() const
 {
-	return dynamic_cast<DecisionTreeDriver*>(m_driver);
+	return m_ai != nullptr ? m_ai->GetDecisionTreeDriver() : nullptr;
 }
 
 void SoldierObject::UseBehaviorTreeDriver()
 {
-	if (dynamic_cast<BehaviorTreeDriver*>(m_driver) != nullptr)
-	{
-		return;  // already BT-driven
-	}
-	SAFE_DELETE(m_driver);
-
-	BehaviorTreeDriver* bt = new BehaviorTreeDriver(this);
-	bt->Init();
-	m_driver = bt;
+	if (m_ai != nullptr)
+		m_ai->UseBehaviorTreeDriver();
 }
 
 BehaviorTreeDriver* SoldierObject::GetBehaviorTreeDriver() const
 {
-	return dynamic_cast<BehaviorTreeDriver*>(m_driver);
+	return m_ai != nullptr ? m_ai->GetBehaviorTreeDriver() : nullptr;
 }
 
 AgentStateController* SoldierObject::GetFsmController() const
 {
-	return dynamic_cast<AgentStateController*>(m_driver);
+	return m_ai != nullptr ? m_ai->GetFsmController() : nullptr;
 }
 
 void SoldierObject::EnterIdleAnim()

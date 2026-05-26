@@ -7,8 +7,8 @@
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
-#include "components/AgentLocomotion.h"
-#include "components/PhysicsComponent.h"
+#include "components/agent/AgentLocomotion.h"
+#include "components/physics/PhysicsComponent.h"
 #include "event/SandboxEventPayload.h"
 #include "object/GameObject.h"
 
