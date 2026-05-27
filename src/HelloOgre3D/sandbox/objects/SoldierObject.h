@@ -15,7 +15,7 @@ class AgentStateController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
-	SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
+	SoldierObject(RenderComponent* renderComp, btRigidBody* pRigidBody = nullptr);
 	virtual ~SoldierObject();
 
 	virtual void Init() override;
@@ -25,7 +25,7 @@ public:
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
-	RenderableObject* getWeapon();
+	WeaponComponent* getWeapon();
 
 	void changeStanceType(int stanceType);
 	int getStanceType() const;
@@ -83,6 +83,7 @@ public:
 	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
+	AnimComponent* GetAnimComponent() const { return m_animComp; }
 
 	// Typed accessor for the FSM driver, when soldier is FSM-driven.
 	// Returns nullptr when running under a DT (or future BT) driver.

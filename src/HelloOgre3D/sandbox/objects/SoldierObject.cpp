@@ -1,5 +1,4 @@
 #include "SoldierObject.h"
-#include "RenderableObject.h"
 #include "GameManager.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -22,6 +21,7 @@
 #include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
+#include "components/render/RenderComponent.h"
 #include "profiling/Profile.h"
 #include <algorithm>
 
@@ -35,8 +35,8 @@ namespace
 	}
 }
 
-SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_animComp(nullptr), m_inputInfo(nullptr)
+SoldierObject::SoldierObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* = nullptr*/)
+	: AgentObject(renderComp, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_animComp(nullptr), m_inputInfo(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 	this->SetLuaScriptClassName(LuaClassNameTraits<SoldierObject>::value);
@@ -63,11 +63,6 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 
 	// 将 soldier 专属的 state name -> id 映射注入 body ASM；以前这张表由通用 AgentAnimState 持有，
 	// 现在收敛到 SoldierAnimProfile，ASM 侧仅通过 resolver 访问。
-	if (getBody() && getBody()->GetObjectASM())
-	{
-		getBody()->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
-	}
-
 	AIController* ai = new AIController(this);
 	if (AddComponent("ai", ai))
 	{
@@ -82,6 +77,10 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 	if (AddComponent("anim", anim))
 	{
 		m_animComp = anim;
+		if (m_renderComp != nullptr)
+		{
+			m_animComp->InitBodyAnimations(m_renderComp->GetEntity(), true);
+		}
 	}
 	else
 	{
@@ -111,9 +110,9 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 	}
 }
 
-RenderableObject* SoldierObject::getWeapon()
+WeaponComponent* SoldierObject::getWeapon()
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetWeapon() : nullptr;
+	return m_weaponComp;
 }
 
 int SoldierObject::getStanceType() const
@@ -131,11 +130,14 @@ void SoldierObject::Update(int deltaMilisec)
 		TickAi(deltaMilisec);
 
 	if (m_animComp != nullptr)
-		m_animComp->update(deltaMilisec);
+		m_animComp->UpdateController(deltaMilisec);
 
 	{
 		H3D_PROFILE_SCOPE("AgentBody::Update");
-		m_pAgentBody->Update(deltaMilisec);
+		if (m_renderComp != nullptr)
+			m_renderComp->Update(deltaMilisec);
+		if (m_animComp != nullptr)
+			m_animComp->UpdateBodyAnimations(deltaMilisec);
 	}
 	if (m_weaponComp)
 	{
@@ -276,7 +278,7 @@ void SoldierObject::changeStanceType(int stanceType)
 	if (m_attrib == nullptr)
 		return;
 
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	AgentAnimStateMachine* pAsm = GetObjectASM();
 	if (pAsm == nullptr) return;
 
 	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
@@ -325,7 +327,8 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 	if (soldier_height <= 0.0f || soldier_speed <= 0.0f) return;
 
-	m_pAgentBody->SetVisualOffset(Ogre::Vector3(0, -soldier_height / 2, 0));
+	if (m_renderComp != nullptr)
+		m_renderComp->SetVisualOffset(Ogre::Vector3(0, -soldier_height / 2, 0));
 
 	Ogre::Real newPosY = (this->GetHeight() - soldier_height) / 2;
 	this->setPosition((GetPosition() - Ogre::Vector3(0, newPosY, 0)));
@@ -348,7 +351,7 @@ void SoldierObject::TryApplyPendingStance()
 		return;
 	}
 
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	AgentAnimStateMachine* pAsm = GetObjectASM();
 	if (pAsm == nullptr)
 	{
 		return;
@@ -391,7 +394,7 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 	//闁圭虎鍘介弬浣割潰鐠佹娊顎楅柛鏂诲妿閺侀箖寮張鐢电憹闁告劕绉电敮鎾矗濡や焦鐓€闁汇劌瀚慨鎼佸箑?
 	if (m_onPlayDeathAnim) return;
 
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
+	AgentAnimStateMachine* pAsm = GetObjectASM();
 	if (pAsm == nullptr) return;
 
 	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();

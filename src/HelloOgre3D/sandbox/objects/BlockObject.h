@@ -13,8 +13,8 @@ namespace Ogre {
 }
 
 class btRigidBody;
-class RenderableObject;
 class PhysicsComponent;
+class RenderComponent;
 
 class BlockObject : public BaseObject //tolua_exports
 	, public OpenSteer::SphericalObstacle
@@ -69,7 +69,7 @@ public:
 		const float minTimeToCollision) const;
 
 private:
-	RenderableObject* m_pEntity = nullptr;
+	RenderComponent* m_renderComp = nullptr;
 	PhysicsComponent* m_physicsComp = nullptr;
 	std::vector<Ogre::SceneNode*> m_particleNodes;
 	BaseObject* m_ownerObject = nullptr;

@@ -2,8 +2,8 @@
 
 #include "AgentAnimStateMachine.h"
 #include "SoldierAnimProfile.h"
-#include "objects/RenderableObject.h"
 #include "objects/SoldierObject.h"
+#include "components/combat/WeaponComponent.h"
 #include "GameFunction.h"
 
 namespace
@@ -200,13 +200,12 @@ bool SoldierAnimController::HasPendingPresentation() const
 
 AgentAnimStateMachine* SoldierAnimController::GetBodyAsm() const
 {
-	RenderableObject* body = m_owner ? m_owner->getBody() : nullptr;
-	return body ? body->GetObjectASM() : nullptr;
+	return m_owner ? m_owner->GetObjectASM() : nullptr;
 }
 
 AgentAnimStateMachine* SoldierAnimController::GetWeaponAsm() const
 {
-	RenderableObject* weapon = m_owner ? m_owner->getWeapon() : nullptr;
+	WeaponComponent* weapon = m_owner ? m_owner->getWeapon() : nullptr;
 	return weapon ? weapon->GetObjectASM() : nullptr;
 }
 

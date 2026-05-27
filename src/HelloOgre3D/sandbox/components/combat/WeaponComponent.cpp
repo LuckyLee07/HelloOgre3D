@@ -6,16 +6,17 @@
 #include "SandboxMacros.h"
 #include "OgreSceneNode.h"
 #include "objects/BlockObject.h"
-#include "objects/RenderableObject.h"
 #include "objects/SoldierObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimProfile.h"
+#include "components/anim/AnimComponent.h"
+#include "components/render/RenderComponent.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/service/SceneFactory.h"
 
 WeaponComponent::WeaponComponent(SoldierObject* owner)
 	: m_owner(owner)
-	, m_weaponBody(nullptr)
+	, m_weaponRender(nullptr)
 	, m_ammo(10)
 	, m_maxAmmo(10)
 	, m_handOffsetPos(Ogre::Vector3::ZERO)
@@ -25,7 +26,7 @@ WeaponComponent::WeaponComponent(SoldierObject* owner)
 
 WeaponComponent::~WeaponComponent()
 {
-	SAFE_DELETE(m_weaponBody);
+	SAFE_DELETE(m_weaponRender);
 }
 
 void WeaponComponent::onAttach(BaseObject* owner)
@@ -46,21 +47,26 @@ void WeaponComponent::onDetach()
 void WeaponComponent::update(int deltaMs)
 {
 	SyncToHandBone();
-	if (m_weaponBody != nullptr)
+	if (m_weaponRender != nullptr)
 	{
-		m_weaponBody->Update(deltaMs);
+		m_weaponRender->Update(deltaMs);
+	}
+	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	if (anim != nullptr)
+	{
+		anim->UpdateWeaponAnimations(deltaMs);
 	}
 }
 
 void WeaponComponent::Init(const Ogre::String& meshFile)
 {
-	SAFE_DELETE(m_weaponBody);
+	SAFE_DELETE(m_weaponRender);
 
-	m_weaponBody = new RenderableObject(meshFile);
-	m_weaponBody->InitAsmWithOwner(m_owner, false);
-	if (m_weaponBody->GetObjectASM())
+	m_weaponRender = new RenderComponent(meshFile);
+	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	if (anim != nullptr)
 	{
-		m_weaponBody->GetObjectASM()->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
+		anim->InitWeaponAnimations(m_weaponRender->GetEntity(), false);
 	}
 
 	m_handOffsetPos = Ogre::Vector3(0.04f, 0.05f, -0.01f);
@@ -70,12 +76,12 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 
 void WeaponComponent::SyncToHandBone()
 {
-	if (m_owner == nullptr || m_weaponBody == nullptr || m_owner->getBody() == nullptr)
+	if (m_owner == nullptr || m_weaponRender == nullptr || m_owner->GetRenderComponent() == nullptr)
 	{
 		return;
 	}
 
-	Ogre::SceneNode* soldierNode = m_owner->getBody()->GetSceneNode();
+	Ogre::SceneNode* soldierNode = m_owner->GetRenderComponent()->GetSceneNode();
 	if (soldierNode == nullptr)
 	{
 		return;
@@ -92,18 +98,18 @@ void WeaponComponent::SyncToHandBone()
 		return;
 	}
 
-	m_weaponBody->SetPosition(handPosition + (handOrientation * m_handOffsetPos));
-	m_weaponBody->SetOrientation(handOrientation * m_handOffsetOrientation);
+	m_weaponRender->SetPosition(handPosition + (handOrientation * m_handOffsetPos));
+	m_weaponRender->SetOrientation(handOrientation * m_handOffsetOrientation);
 }
 
 void WeaponComponent::ShootBullet()
 {
-	if (m_owner == nullptr || m_owner->getBody() == nullptr)
+	if (m_owner == nullptr || m_owner->GetRenderComponent() == nullptr)
 	{
 		return;
 	}
 
-	Ogre::SceneNode* soldierNode = m_owner->getBody()->GetSceneNode();
+	Ogre::SceneNode* soldierNode = m_owner->GetRenderComponent()->GetSceneNode();
 	if (soldierNode == nullptr)
 	{
 		return;
@@ -117,9 +123,9 @@ void WeaponComponent::ShootBullet()
 	hasPosition = SceneFactory::GetBonePosition(*soldierNode, "b_muzzle", position);
 	hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_muzzle", orientation);
 
-	if ((!hasPosition || !hasOrientation) && m_weaponBody != nullptr)
+	if ((!hasPosition || !hasOrientation) && m_weaponRender != nullptr)
 	{
-		Ogre::SceneNode* weaponNode = m_weaponBody->GetSceneNode();
+		Ogre::SceneNode* weaponNode = m_weaponRender->GetSceneNode();
 		if (weaponNode != nullptr)
 		{
 			if (!hasPosition)
@@ -153,6 +159,18 @@ void WeaponComponent::ShootBullet()
 	}
 
 	DoShootBullet(position, orientation);
+}
+
+AgentAnim* WeaponComponent::GetAnimation(const char* animationName)
+{
+	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	return anim != nullptr ? anim->GetWeaponAnimation(animationName) : nullptr;
+}
+
+AgentAnimStateMachine* WeaponComponent::GetObjectASM() const
+{
+	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	return anim != nullptr ? anim->GetWeaponAsm() : nullptr;
 }
 
 void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)

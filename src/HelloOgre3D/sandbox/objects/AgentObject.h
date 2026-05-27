@@ -18,17 +18,20 @@ class btRigidBody;
 struct lua_State;
 class ScriptLuaVM;
 class BlockObject;
-class RenderableObject;
+class AgentAnim;
+class AgentAnimStateMachine;
 class AgentLocomotion;
+class AnimComponent;
 class LuaScriptComponent;
 class AgentPath;
 class OpenSteerAdapter;
+class RenderComponent;
 struct Collision;
 
 class AgentObject : public BaseObject //tolua_exports
 { //tolua_exports
 public:
-	AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
+	AgentObject(RenderComponent* renderComp, btRigidBody* pRigidBody = nullptr);
 	virtual ~AgentObject();
 
 	virtual void Init() override;
@@ -36,7 +39,9 @@ public:
 
 	//tolua_begin
 	void initBody(const Ogre::String& meshFile);
-	RenderableObject* getBody() { return m_pAgentBody; }
+	AgentObject* getBody() { return this; }
+	AgentAnim* GetAnimation(const char* animationName);
+	AgentAnimStateMachine* GetObjectASM() const;
 
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }
@@ -138,9 +143,10 @@ public:
 	LuaScriptComponent* GetLuaScript();
 	const LuaScriptComponent* GetLuaScript() const;
 	OpenSteerAdapter* GetAdapter() const;
+	RenderComponent* GetRenderComponent() const { return m_renderComp; }
 
 protected:
-	RenderableObject* m_pAgentBody;
+	RenderComponent* m_renderComp;
 	bool m_onPlayDeathAnim = false;
 
 private:

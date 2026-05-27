@@ -2,7 +2,6 @@
 
 #include "GameDefine.h"
 #include "objects/AgentObject.h"
-#include "objects/RenderableObject.h"
 #include "objects/SoldierObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimController.h"
@@ -63,8 +62,7 @@ std::string DeathState::OnUpdate(float dt)
 	if (soldier)
 	{
 		deathStateId = SoldierAnimProfile::ResolveBodyActionState(soldier->getStanceType(), SoldierActionIntent::Death);
-		RenderableObject* body = soldier->getBody();
-		bodyAsm = body ? body->GetObjectASM() : nullptr;
+		bodyAsm = soldier->GetObjectASM();
 		if (soldier->GetAnimController())
 		{
 			soldier->GetAnimController()->RequestAction(SoldierActionIntent::Death, false);

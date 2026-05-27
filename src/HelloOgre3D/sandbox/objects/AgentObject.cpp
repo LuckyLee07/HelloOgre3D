@@ -4,14 +4,15 @@
 #include "btBulletDynamicsCommon.h"
 #include "GameManager.h"
 #include "BlockObject.h"
-#include "RenderableObject.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "components/agent/AgentAttrib.h"
 #include "components/agent/AgentLocomotion.h"
+#include "components/anim/AnimComponent.h"
 #include "components/physics/PhysicsComponent.h"
+#include "components/render/RenderComponent.h"
 #include "components/script/LuaScriptComponent.h"
 #include "event/SandboxEventPayload.h"
 #include "objects/steer/AgentPath.h"
@@ -25,8 +26,8 @@ static std::string g_EmptyStr = "";
 static const Ogre::Real DEFAULT_AGENT_HEALTH = 100.0f;
 
 
-AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: m_pAgentBody(pAgentBody), m_agentType(AGENT_OBJ_NONE)
+AgentObject::AgentObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* = nullptr*/)
+	: m_renderComp(renderComp), m_agentType(AGENT_OBJ_NONE)
 {
 	m_objType = OBJ_TYPE_AGENT;
 
@@ -54,9 +55,12 @@ AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/*
 
 	this->SetMass(AgentLocomotion::DEFAULT_AGENT_MASS);
 
-	if (m_pAgentBody != nullptr)
+	if (m_renderComp != nullptr)
 	{
-		m_pAgentBody->AttachRenderComponent(this);
+		if (!AddComponent("render", m_renderComp))
+		{
+			SAFE_DELETE(m_renderComp);
+		}
 	}
 
 	SetForward(Ogre::Vector3::UNIT_Z);
@@ -65,26 +69,47 @@ AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/*
 AgentObject::~AgentObject()
 {
 	RemoveComponent("attrib");
-
-	SAFE_DELETE(m_pAgentBody);
+	m_renderComp = nullptr;
 }
 
 void AgentObject::Init()
 {
-	m_pAgentBody->InitAsmWithOwner(this, true);
 	this->callFunction("Agent_Initialize", "u[AgentObject]", this);
 }
 
 void AgentObject::initBody(const Ogre::String& meshFile)
 {
-	if (m_pAgentBody != nullptr)
+	if (m_renderComp != nullptr)
 	{
 		RemoveComponent("render");
-		delete m_pAgentBody;
+		m_renderComp = nullptr;
 	}
-	m_pAgentBody = new RenderableObject(meshFile);
-	m_pAgentBody->AttachRenderComponent(this);
-	m_pAgentBody->InitAsmWithOwner(this, true);
+	RenderComponent* renderComp = new RenderComponent(meshFile);
+	if (AddComponent("render", renderComp))
+	{
+		m_renderComp = renderComp;
+		AnimComponent* anim = FindComponent<AnimComponent>();
+		if (anim != nullptr)
+		{
+			anim->InitBodyAnimations(m_renderComp->GetEntity(), true);
+		}
+	}
+	else
+	{
+		SAFE_DELETE(renderComp);
+	}
+}
+
+AgentAnim* AgentObject::GetAnimation(const char* animationName)
+{
+	AnimComponent* anim = FindComponent<AnimComponent>();
+	return anim != nullptr ? anim->GetBodyAnimation(animationName) : nullptr;
+}
+
+AgentAnimStateMachine* AgentObject::GetObjectASM() const
+{
+	const AnimComponent* anim = FindComponent<AnimComponent>();
+	return anim != nullptr ? anim->GetBodyAsm() : nullptr;
 }
 
 btRigidBody* AgentObject::getRigidBody() const
@@ -137,9 +162,9 @@ Ogre::Vector3 AgentObject::GetPosition() const
 	{
 		return physicsComp->GetPosition();
 	}
-	else if (m_pAgentBody != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		return m_pAgentBody->GetDerivedPosition();
+		return m_renderComp->GetDerivedPosition();
 	}
 
 	return Ogre::Vector3::ZERO;
@@ -152,9 +177,9 @@ Ogre::Quaternion AgentObject::GetOrientation() const
 	{
 		return physicsComp->GetOrientation();
 	}
-	else if (m_pAgentBody != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		return m_pAgentBody->GetDerivedOrientation();
+		return m_renderComp->GetDerivedOrientation();
 	}
 
 	return Ogre::Quaternion::ZERO;
@@ -167,9 +192,9 @@ Ogre::Vector3 AgentObject::GetUp() const
 	{
 		return physicsComp->GetUp();
 	}
-	else if (m_pAgentBody != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		return m_pAgentBody->GetOrientation().yAxis();
+		return m_renderComp->GetOrientation().yAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Y;
@@ -182,9 +207,9 @@ Ogre::Vector3 AgentObject::GetLeft() const
 	{
 		return physicsComp->GetLeft();
 	}
-	else if (m_pAgentBody != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		return m_pAgentBody->GetOrientation().xAxis();
+		return m_renderComp->GetOrientation().xAxis();
 	}
 
 	return Ogre::Vector3::UNIT_X;
@@ -197,9 +222,9 @@ Ogre::Vector3 AgentObject::GetForward() const
 	{
 		return physicsComp->GetForward();
 	}
-	else if (m_pAgentBody != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		return m_pAgentBody->GetOrientation().zAxis();
+		return m_renderComp->GetOrientation().zAxis();
 	}
 
 	return Ogre::Vector3::UNIT_Z;
@@ -510,14 +535,17 @@ void AgentObject::Update(int deltaMilisec)
 		this->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 	}
 
-	m_pAgentBody->Update(deltaMilisec);
+	if (m_renderComp != nullptr)
+	{
+		m_renderComp->Update(deltaMilisec);
+	}
 }
 
 void AgentObject::updateWorldTransform()
 {
-	if (m_pAgentBody != nullptr)
+	if (m_renderComp != nullptr)
 	{
-		m_pAgentBody->SyncWorldTransform();
+		m_renderComp->SyncFromOwnerTransform();
 	}
 }
 
@@ -544,14 +572,14 @@ bool AgentObject::OnGround()
 
 int AgentObject::GetCurStateId()
 {
-	auto pAsm = m_pAgentBody->GetObjectASM();
+	auto pAsm = GetObjectASM();
 	if (pAsm) return pAsm->GetCurrStateID();
 	return -1;
 }
 
 std::string AgentObject::GetCurStateName()
 {
-	auto pAsm = m_pAgentBody->GetObjectASM();
+	auto pAsm = GetObjectASM();
 	if (pAsm) return pAsm->GetCurrStateName();
 	
 	return g_EmptyStr;
@@ -612,8 +640,8 @@ void AgentObject::setPosition(const Ogre::Vector3& position)
 	this->updateWorldTransform();
 	// Physics-driven agents must keep render transform sourced from rigid body.
 	// Otherwise we can momentarily overwrite origin-offset corrections (e.g. crouch/stand).
-	if (m_pAgentBody && getRigidBody() == nullptr)
-		m_pAgentBody->SetPosition(position);
+	if (m_renderComp && getRigidBody() == nullptr)
+		m_renderComp->SetPosition(position);
 }
 
 void AgentObject::setRotation(const Ogre::Vector3& rotation)
@@ -632,8 +660,8 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 		physicsComp->SetOrientation(quaternion);
 
 	this->updateWorldTransform();
-	if (m_pAgentBody && getRigidBody() == nullptr)
-		m_pAgentBody->SetOrientation(quaternion);
+	if (m_renderComp && getRigidBody() == nullptr)
+		m_renderComp->SetOrientation(quaternion);
 }
 
 void AgentObject::SetPath(const AgentPath& agentPath)

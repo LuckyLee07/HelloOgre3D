@@ -13,9 +13,9 @@
 #include "OgreParticleSystem.h"
 #include "OgreParticleEmitter.h"
 #include "components/physics/PhysicsComponent.h"
+#include "components/render/RenderComponent.h"
 #include "systems/service/SceneFactory.h"
 #include "systems/service/PhysicsFactory.h"
-#include "RenderableObject.h"
 
 using namespace Ogre;
 
@@ -23,12 +23,12 @@ BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 {
 	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-	m_pEntity = new RenderableObject(meshFile);
-	m_pEntity->AttachRenderComponent(this);
+	m_renderComp = new RenderComponent(meshFile);
+	this->AddComponent("render", m_renderComp);
 
 	if (pRigidBody == nullptr)
 	{
-		Ogre::Entity* pEntity = m_pEntity->GetEntity();
+		Ogre::Entity* pEntity = m_renderComp->GetEntity();
 		if (!pEntity) return;
 		
 		Ogre::Mesh* meshPtr = pEntity->getMesh().getPointer();
@@ -43,8 +43,8 @@ BlockObject::BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody)
 {
 	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-	m_pEntity = new RenderableObject(meshPtr);
-	m_pEntity->AttachRenderComponent(this);
+	m_renderComp = new RenderComponent(meshPtr);
+	this->AddComponent("render", m_renderComp);
 
 	if (pRigidBody == nullptr)
 		pRigidBody = PhysicsFactory::CreateRigidBodyBox(meshPtr.get(), 1.0f);
@@ -57,8 +57,8 @@ BlockObject::BlockObject(Ogre::SceneNode* pSceneNode, btRigidBody* pRigidBody)
 {
 	SetObjType(BaseObject::OBJ_TYPE_BLOCK);
 
-	m_pEntity = new RenderableObject(pSceneNode);
-	m_pEntity->AttachRenderComponent(this);
+	m_renderComp = new RenderComponent(pSceneNode);
+	this->AddComponent("render", m_renderComp);
 	
 	m_physicsComp = new PhysicsComponent(pRigidBody);
 	this->AddComponent("physics", m_physicsComp);
@@ -75,7 +75,7 @@ BlockObject::~BlockObject()
 	}
 	m_particleNodes.clear();
 
-	SAFE_DELETE(m_pEntity);
+	m_renderComp = nullptr;
 }
 
 void BlockObject::Init()
@@ -91,9 +91,9 @@ void BlockObject::Update(int deltaMsec)
 
 void BlockObject::updateWorldTransform()
 {
-	if (m_pEntity != nullptr)
+	if (m_renderComp != nullptr)
 	{
-		m_pEntity->SyncWorldTransform();
+		m_renderComp->SyncFromOwnerTransform();
 	}
 }
 
@@ -114,9 +114,9 @@ void BlockObject::setPosition(const Ogre::Vector3& position)
 	{
 		m_physicsComp->SetPosition(position);
 	}
-	else if (m_pEntity != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		m_pEntity->SetPosition(position);
+		m_renderComp->SetPosition(position);
 	}
 
 	this->updateWorldTransform();
@@ -126,7 +126,7 @@ Ogre::Vector3 BlockObject::GetPosition() const
 {
 	if (m_physicsComp != nullptr && m_physicsComp->GetRigidBody() != nullptr)
 		return m_physicsComp->GetPosition();
-	return m_pEntity != nullptr ? m_pEntity->GetDerivedPosition() : Ogre::Vector3::ZERO;
+	return m_renderComp != nullptr ? m_renderComp->GetDerivedPosition() : Ogre::Vector3::ZERO;
 }
 
 Ogre::Real BlockObject::GetRadius() const
@@ -155,9 +155,9 @@ void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 	{
 		m_physicsComp->SetOrientation(quaternion);
 	}
-	else if (m_pEntity != nullptr)
+	else if (m_renderComp != nullptr)
 	{
-		m_pEntity->SetOrientation(quaternion);
+		m_renderComp->SetOrientation(quaternion);
 	}
 
 	this->updateWorldTransform();
@@ -165,7 +165,8 @@ void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 
 void BlockObject::setMaterial(const Ogre::String& materialName)
 {
-	m_pEntity->SetMaterial(materialName);
+	if (m_renderComp != nullptr)
+		m_renderComp->SetMaterial(materialName);
 }
 
 void BlockObject::applyImpulse(const Ogre::Vector3& impulse)
@@ -275,10 +276,10 @@ OpenSteer::Vec3 BlockObject::steerToAvoid(const OpenSteer::AbstractVehicle& vehi
 
 Ogre::Entity* BlockObject::GetEntity() const
 {
-	return m_pEntity->GetEntity();
+	return m_renderComp != nullptr ? m_renderComp->GetEntity() : nullptr;
 }
 
 Ogre::SceneNode* BlockObject::GetSceneNode()
 {
-	return m_pEntity->GetSceneNode();
+	return m_renderComp != nullptr ? m_renderComp->GetSceneNode() : nullptr;
 }

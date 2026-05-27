@@ -4,8 +4,8 @@
 #include "objects/BlockObject.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
-#include "objects/RenderableObject.h"
 #include "components/agent/AgentLocomotion.h"
+#include "components/render/RenderComponent.h"
 #include "systems/manager/ObjectManager.h"
 #include "scripting/LuaPluginMgr.h"
 #include "Ogre.h"
@@ -84,13 +84,13 @@ AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* fi
 	Ogre::Real radius = AgentLocomotion::DEFAULT_AGENT_RADIUS;
 
 	Ogre::SceneNode* capsuleNode = SceneFactory::CreateNodeCapsule(height, radius);
-	RenderableObject* pEntityObj = new RenderableObject(capsuleNode);
-	pEntityObj->SetMaterial("Ground2");
+	RenderComponent* renderComp = new RenderComponent(capsuleNode);
+	renderComp->SetMaterial("Ground2");
 
 	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
-	AgentObject* pObject = new AgentObject(pEntityObj, capsuleRigidBody);
+	AgentObject* pObject = new AgentObject(renderComp, capsuleRigidBody);
 	pObject->setAgentType(agentType);
 	if (filepath != nullptr)
 		LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, filepath);
@@ -105,13 +105,13 @@ SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const 
 	Ogre::Real height = AgentLocomotion::DEFAULT_AGENT_HEIGHT;
 	Ogre::Real radius = AgentLocomotion::DEFAULT_AGENT_RADIUS;
 
-	RenderableObject* pEntityObj = new RenderableObject(meshFile);
-	pEntityObj->SetOriginPos(Ogre::Vector3(0.0f, -height * 0.5f, 0.0f));
+	RenderComponent* renderComp = new RenderComponent(meshFile);
+	renderComp->SetVisualOffset(Ogre::Vector3(0.0f, -height * 0.5f, 0.0f));
 
 	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
 	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
 
-	SoldierObject* pObject = new SoldierObject(pEntityObj, capsuleRigidBody);
+	SoldierObject* pObject = new SoldierObject(renderComp, capsuleRigidBody);
 	if (filepath != nullptr)
 		LuaPluginMgr::BindLuaPluginByFile<SoldierObject>(pObject, filepath);
 

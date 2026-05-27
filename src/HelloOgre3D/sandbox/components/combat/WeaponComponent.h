@@ -5,12 +5,15 @@
 #include "OgreQuaternion.h"
 #include "OgreString.h"
 #include "OgreVector3.h"
+#include "script/LuaClassNameTraits.h"
 
-class RenderableObject;
+class AgentAnim;
+class AgentAnimStateMachine;
+class RenderComponent;
 class SoldierObject;
 
-class WeaponComponent : public IComponent
-{
+class WeaponComponent : public IComponent //tolua_exports
+{ //tolua_exports
 public:
 	explicit WeaponComponent(SoldierObject* owner = nullptr);
 	virtual ~WeaponComponent();
@@ -20,7 +23,12 @@ public:
 	virtual void update(int deltaMs) override;
 
 	void Init(const Ogre::String& meshFile);
-	RenderableObject* GetWeapon() const { return m_weaponBody; }
+	RenderComponent* GetRenderComponent() const { return m_weaponRender; }
+
+	//tolua_begin
+	AgentAnim* GetAnimation(const char* animationName);
+	AgentAnimStateMachine* GetObjectASM() const;
+	//tolua_end
 
 	void SyncToHandBone();
 	void ShootBullet();
@@ -39,11 +47,13 @@ public:
 
 private:
 	SoldierObject* m_owner;
-	RenderableObject* m_weaponBody;
+	RenderComponent* m_weaponRender;
 	int m_ammo;
 	int m_maxAmmo;
 	Ogre::Vector3 m_handOffsetPos;
 	Ogre::Quaternion m_handOffsetOrientation;
-};
+}; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(WeaponComponent);
 
 #endif // __WEAPON_COMPONENT_H__

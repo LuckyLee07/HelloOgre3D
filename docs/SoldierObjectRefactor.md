@@ -479,6 +479,18 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **[Stage 4]** [P-04 收尾]
 - **目标**：RenderableObject facade 删除，全部走 RenderComponent + AnimComponent。
 - **关键约束**：BlockObject 的渲染路径要先改完。
+- **落地动作**：
+  1. [x] `AgentObject::m_pAgentBody` 改为 `RenderComponent* m_renderComp`，`render` 组件由 `BaseObject` 容器持有。
+  2. [x] `BlockObject` 直接持有 `RenderComponent`，无刚体路径继续遵守 T-14 的位置真源规则。
+  3. [x] body / weapon 的 `AgentAnimStateMachine` 和 `AgentAnim` 缓存迁到 `AnimComponent`，`WeaponComponent` 只持武器 `RenderComponent` 并转发动画入口。
+  4. [x] Lua 兼容面保留：`agent:getBody():GetObjectASM()/GetAnimation()` 返回 `AgentObject` 自身入口；`soldier:getWeapon()` 返回 `WeaponComponent`，继续提供 `GetObjectASM()/GetAnimation()`。
+  5. [x] 删除 `RenderableObject.cpp/.h`，`SandboxToLua.pkg` 不再包含 `RenderableObject`，`SandboxToLua.cpp` 已重新生成。
+- **验收**：
+  - [x] `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017 --with-fairygui` 已刷新工程。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox6 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox7 -Seconds 65 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox8 -Seconds 65 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
 - **工时**：1-2 天。
 
 #### T-16 删除 driver Lua forwarder
@@ -605,7 +617,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☑ | 2026-05-27 | AgentObject 解除 LuaEnvObject 多继承，新增 LuaScriptComponent；Debug x64 构建通过。 |
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☑ | 2026-05-27 | BaseObject 直接持组件容器，GameObject 类删除；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-14 | 位置真源统一 | 4 | ☑ | 2026-05-27 | RenderComponent 统一 physics/no-physics 同步，BlockObject 无刚体路径补齐；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
-| T-15 | 删除 RenderableObject | 4 | ☐ | | |
+| T-15 | 删除 RenderableObject | 4 | ☑ | 2026-05-27 | AgentObject/BlockObject 直接走 RenderComponent，body/weapon ASM 迁入 AnimComponent；RenderableObject 类与 Lua 绑定删除，Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-16 | 删除 driver Lua forwarder | 4 | ☐ | | |
 | T-17 | SoldierObject 改 SoldierFactory | 4 | ☐ | | |
 
