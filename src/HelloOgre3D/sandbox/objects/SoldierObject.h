@@ -5,6 +5,7 @@
 
 class IPlayerInput;
 class SoldierAnimController;
+class AnimComponent;
 class AIController;
 class AgentAttrib;
 class WeaponComponent;
@@ -37,8 +38,9 @@ public:
 	virtual bool HasNextAnim();
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
-	SoldierAnimController* GetAnimController() const { return m_animController; }
+	SoldierAnimController* GetAnimController() const;
 	AIController* GetAIController() const { return m_ai; }
+	AIController* GetAI() const { return m_ai; }
 
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const;
@@ -91,19 +93,12 @@ private:
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
 
-protected:
-	void CreateEventDispatcher();
-	void RemoveEventDispatcher();
-
 private:
 	AgentAttrib* m_attrib;
 	WeaponComponent* m_weaponComp;
 	AIController* m_ai;
+	AnimComponent* m_animComp;
 	IPlayerInput* m_inputInfo;
-	SoldierAnimController* m_animController;
-
-	int m_asmStateChangeEventToken = 0;
-	int m_asmNotifyEventToken = 0;
 
 }; //tolua_exports
 

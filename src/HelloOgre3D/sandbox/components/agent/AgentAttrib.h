@@ -12,6 +12,9 @@ public:
 	AgentAttrib(Ogre::Real health, Ogre::Real maxHealth, int stanceType, int pendingStanceType = -1);
 	virtual ~AgentAttrib() {}
 
+	virtual void onAttach(GameObject* owner) override;
+	virtual void onDetach() override;
+
 	void SetHealth(Ogre::Real health);
 	Ogre::Real GetHealth() const { return m_health; }
 
@@ -32,6 +35,7 @@ private:
 	Ogre::Real m_maxHealth;
 	int m_stanceType;
 	int m_pendingStanceType;
+	int m_healthChangeEventToken;
 };
 
 #endif // __AGENT_ATTRIB_H__

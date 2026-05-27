@@ -15,6 +15,8 @@
 #include "animation/AgentAnimState.h"
 #include "animation/SoldierAnimController.h"
 #include "animation/SoldierAnimProfile.h"
+#include "components/anim/AnimComponent.h"
+#include "components/anim/IAnimController.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "components/agent/AgentAttrib.h"
@@ -34,7 +36,7 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(pAgentBody, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_inputInfo(nullptr), m_animController(nullptr)
+	: AgentObject(pAgentBody, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_animComp(nullptr), m_inputInfo(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 
@@ -58,8 +60,6 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 		SAFE_DELETE(weapon);
 	}
 
-	this->CreateEventDispatcher(); // 构造函数里使用虚函数会导致未定义
-
 	// 将 soldier 专属的 state name -> id 映射注入 body ASM；以前这张表由通用 AgentAnimState 持有，
 	// 现在收敛到 SoldierAnimProfile，ASM 侧仅通过 resolver 访问。
 	if (getBody() && getBody()->GetObjectASM())
@@ -77,60 +77,21 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 		SAFE_DELETE(ai);
 	}
 
-	m_animController = new SoldierAnimController(*this);
+	AnimComponent* anim = new AnimComponent(this);
+	if (AddComponent("anim", anim))
+	{
+		m_animComp = anim;
+	}
+	else
+	{
+		SAFE_DELETE(anim);
+	}
 }
 
 SoldierObject::~SoldierObject()
 {
-	this->RemoveEventDispatcher();
+	RemoveComponent("anim");
 	SAFE_DELETE(m_inputInfo);
-	SAFE_DELETE(m_animController);
-}
-
-void SoldierObject::CreateEventDispatcher()
-{
-	Event()->CreateDispatcher("ASM_STATE_CHANGE");
-	Event()->CreateDispatcher("ASM_NOTIFY");
-	m_asmStateChangeEventToken = Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
-		int stateId = (int)context.Get_Number("StateId");
-		if (!GetUseCppFSM() && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
-		{
-			this->ShootBullet();
-		}
-		if (m_animController)
-		{
-			m_animController->OnBodyStateChanged(stateId);
-		}
-		AgentStateController* fsm = GetFsmController();
-		if (!fsm) return;
-
-		AgentState* pState = fsm->GetCurrState();
-		if (!pState) return;
-		pState->Event()->Emit("FSM_STATE_CHANGE", context);
-	});
-	m_asmNotifyEventToken = Event()->Subscribe("ASM_NOTIFY", [&](const SandboxContext& context) -> void {
-		const std::string eventName = context.Get_String("EventName");
-		const int stateId = (int)context.Get_Number("StateId");
-		const float normalizedTime = (float)context.Get_Number("NormalizedTime");
-		if (GetUseCppFSM() && eventName == "shoot_fire")
-		{
-			this->ShootBullet();
-		}
-		if (m_animController)
-		{
-			m_animController->OnBodyNotify(eventName, stateId, normalizedTime);
-		}
-	});
-}
-
-void SoldierObject::RemoveEventDispatcher()
-{
-	Event()->Unsubscribe("ASM_STATE_CHANGE", m_asmStateChangeEventToken);
-	Event()->Unsubscribe("ASM_NOTIFY", m_asmNotifyEventToken);
-	m_asmStateChangeEventToken = 0;
-	m_asmNotifyEventToken = 0;
-	Event()->RemoveDispatcher("ASM_STATE_CHANGE");
-	Event()->RemoveDispatcher("ASM_NOTIFY");
 }
 
 void SoldierObject::Init()
@@ -168,11 +129,8 @@ void SoldierObject::Update(int deltaMilisec)
 	if (m_ai != nullptr && m_ai->IsTickInOwnerUpdateEnabled())
 		TickAi(deltaMilisec);
 
-	if (m_animController && GetUseCppFSM())
-	{
-		H3D_PROFILE_SCOPE("SoldierAnimController::Update");
-		m_animController->Update((float)deltaMilisec);
-	}
+	if (m_animComp != nullptr)
+		m_animComp->update(deltaMilisec);
 
 	{
 		H3D_PROFILE_SCOPE("AgentBody::Update");
@@ -444,28 +402,22 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 }
 bool SoldierObject::HasNextAnim()
 {
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return false;
-
-	return pAsm->HasNextState();
+	return m_animComp != nullptr && m_animComp->HasNextAnim();
 }
 
 bool SoldierObject::IsAnimReadyForMove()
 {
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return false;
-
-	const std::string moveStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_RUN_FORWARD, getStanceType()));
-	return pAsm->IsCurrentState(moveStateName) || pAsm->IsNextState(moveStateName);
+	return m_animComp != nullptr && m_animComp->IsAnimReadyForMove();
 }
 
 bool SoldierObject::IsAnimReadyForShoot()
 {
-	AgentAnimStateMachine* pAsm = getBody()->GetObjectASM();
-	if (pAsm == nullptr) return false;
+	return m_animComp != nullptr && m_animComp->IsAnimReadyForShoot();
+}
 
-	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, getStanceType()));
-	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
+SoldierAnimController* SoldierObject::GetAnimController() const
+{
+	return m_animComp != nullptr ? m_animComp->GetSoldierController() : nullptr;
 }
 
 void SoldierObject::UseDecisionTreeDriver()
@@ -473,7 +425,7 @@ void SoldierObject::UseDecisionTreeDriver()
 	// Swap out whatever driver is currently installed (typically the FSM
 	// controller created in the ctor) — DT-driven soldiers author behavior in Lua.
 	if (m_ai != nullptr)
-		m_ai->UseDecisionTreeDriver();
+		m_ai->SetDriverByType("dt");
 }
 
 DecisionTreeDriver* SoldierObject::GetDecisionTreeDriver() const
@@ -484,7 +436,7 @@ DecisionTreeDriver* SoldierObject::GetDecisionTreeDriver() const
 void SoldierObject::UseBehaviorTreeDriver()
 {
 	if (m_ai != nullptr)
-		m_ai->UseBehaviorTreeDriver();
+		m_ai->SetDriverByType("bt");
 }
 
 BehaviorTreeDriver* SoldierObject::GetBehaviorTreeDriver() const
@@ -499,34 +451,39 @@ AgentStateController* SoldierObject::GetFsmController() const
 
 void SoldierObject::EnterIdleAnim()
 {
-	if (!m_animController) return;
-	m_animController->ClearAllActions();
-	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	if (!controller) return;
+	controller->ClearAllActions();
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 }
 
 void SoldierObject::EnterMoveAnim()
 {
-	if (!m_animController) return;
-	m_animController->ClearAllActions();
-	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Move);
+	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	if (!controller) return;
+	controller->ClearAllActions();
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Move);
 }
 
 void SoldierObject::EnterShootAnim()
 {
-	if (!m_animController) return;
-	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
-	m_animController->RequestAction(SoldierActionIntent::Shoot, true);
+	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	if (!controller) return;
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	controller->RequestAction(SoldierActionIntent::Shoot, true);
 }
 
 void SoldierObject::EnterReloadAnim()
 {
-	if (!m_animController) return;
-	m_animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
-	m_animController->RequestAction(SoldierActionIntent::Reload, true);
+	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	if (!controller) return;
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	controller->RequestAction(SoldierActionIntent::Reload, true);
 }
 
 void SoldierObject::EnterDeathAnim()
 {
-	if (!m_animController) return;
-	m_animController->RequestAction(SoldierActionIntent::Death, true);
+	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	if (!controller) return;
+	controller->RequestAction(SoldierActionIntent::Death, true);
 }

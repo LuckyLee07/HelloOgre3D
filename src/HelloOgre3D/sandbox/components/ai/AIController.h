@@ -36,6 +36,7 @@ public:
 	void ClearMovePosition();
 	bool IsTargetReached(float threshold) const;
 
+	void SetDriverByType(const char* type);
 	void UseDecisionTreeDriver();
 	DecisionTreeDriver* GetDecisionTreeDriver() const;
 
@@ -52,6 +53,9 @@ public:
 
 private:
 	void InitDefaultDriver();
+	void SetFsmDriver();
+	void SetDecisionTreeDriver();
+	void SetBehaviorTreeDriver();
 	void SetEnemy(AgentObject* enemy);
 	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;

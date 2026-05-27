@@ -1,7 +1,9 @@
 #include "AIController.h"
 
 #include <algorithm>
+#include <cctype>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "GameFunction.h"
@@ -287,6 +289,75 @@ bool AIController::IsTargetReached(float threshold) const
 
 void AIController::UseDecisionTreeDriver()
 {
+	SetDriverByType("dt");
+}
+
+DecisionTreeDriver* AIController::GetDecisionTreeDriver() const
+{
+	return dynamic_cast<DecisionTreeDriver*>(m_driver);
+}
+
+void AIController::UseBehaviorTreeDriver()
+{
+	SetDriverByType("bt");
+}
+
+BehaviorTreeDriver* AIController::GetBehaviorTreeDriver() const
+{
+	return dynamic_cast<BehaviorTreeDriver*>(m_driver);
+}
+
+AgentStateController* AIController::GetFsmController() const
+{
+	return dynamic_cast<AgentStateController*>(m_driver);
+}
+
+void AIController::SetDriverByType(const char* type)
+{
+	if (m_owner == nullptr || type == nullptr)
+	{
+		return;
+	}
+
+	std::string key(type);
+	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) {
+		return static_cast<char>(std::tolower(c));
+	});
+
+	if (key == "fsm")
+	{
+		SetFsmDriver();
+	}
+	else if (key == "dt")
+	{
+		SetDecisionTreeDriver();
+	}
+	else if (key == "bt")
+	{
+		SetBehaviorTreeDriver();
+	}
+}
+
+void AIController::SetFsmDriver()
+{
+	if (m_owner == nullptr)
+	{
+		return;
+	}
+
+	if (dynamic_cast<AgentStateController*>(m_driver) != nullptr)
+	{
+		return;
+	}
+	SAFE_DELETE(m_driver);
+
+	AgentStateController* fsm = new AgentStateController(m_owner);
+	fsm->Init();
+	m_driver = fsm;
+}
+
+void AIController::SetDecisionTreeDriver()
+{
 	if (m_owner == nullptr)
 	{
 		return;
@@ -303,12 +374,7 @@ void AIController::UseDecisionTreeDriver()
 	m_driver = dt;
 }
 
-DecisionTreeDriver* AIController::GetDecisionTreeDriver() const
-{
-	return dynamic_cast<DecisionTreeDriver*>(m_driver);
-}
-
-void AIController::UseBehaviorTreeDriver()
+void AIController::SetBehaviorTreeDriver()
 {
 	if (m_owner == nullptr)
 	{
@@ -324,14 +390,4 @@ void AIController::UseBehaviorTreeDriver()
 	BehaviorTreeDriver* bt = new BehaviorTreeDriver(m_owner);
 	bt->Init();
 	m_driver = bt;
-}
-
-BehaviorTreeDriver* AIController::GetBehaviorTreeDriver() const
-{
-	return dynamic_cast<BehaviorTreeDriver*>(m_driver);
-}
-
-AgentStateController* AIController::GetFsmController() const
-{
-	return dynamic_cast<AgentStateController*>(m_driver);
 }

@@ -9,6 +9,7 @@
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "animation/AgentAnimStateMachine.h"
+#include "components/agent/AgentLocomotion.h"
 #include "systems/physics/Collision.h"
 #include "BlockObject.h"
 #include <algorithm>
@@ -28,31 +29,17 @@ AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/*
 	}
 
 	SetForward(Ogre::Vector3::UNIT_Z);
-
-	this->CreateEventDispatcher();
+	if (GetLocomotion() != nullptr)
+	{
+		GetLocomotion()->SetOwner(this);
+	}
 }
 
 AgentObject::~AgentObject()
 {
-	this->RemoveEventDispatcher();
+	RemoveComponent("attrib");
 
 	SAFE_DELETE(m_pAgentBody);
-}
-
-void AgentObject::CreateEventDispatcher()
-{
-	Event()->CreateDispatcher("HEALTH_CHANGE");
-	m_healthChangeEventToken = Event()->Subscribe("HEALTH_CHANGE", [&](const SandboxContext& context) -> void {
-		double health = context.Get_Number("health");
-		if (health <= 0.0 && !GetUseCppFSM()) this->OnDeath(3.5f);
-	});
-}
-
-void AgentObject::RemoveEventDispatcher()
-{
-	Event()->Unsubscribe("HEALTH_CHANGE", m_healthChangeEventToken);
-	m_healthChangeEventToken = 0;
-	Event()->RemoveDispatcher("HEALTH_CHANGE");
 }
 
 void AgentObject::Init()

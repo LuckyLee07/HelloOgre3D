@@ -17,6 +17,7 @@ public:
 
 	virtual void onAttach(GameObject* owner);
 	virtual void onDetach();
+	void SetOwner(AgentObject* owner) { m_owner = owner; }
 
 	// 位置设置
 	void SetPosition(const Ogre::Vector3& position);
@@ -90,7 +91,7 @@ public:
 	static const float DEFAULT_AGENT_TARGET_RADIUS;
 
 private:
-	VehicleObject* m_owner = nullptr;
+	AgentObject* m_owner = nullptr;
 
 	// Path 路径
 	std::vector<Ogre::Vector3> m_points;

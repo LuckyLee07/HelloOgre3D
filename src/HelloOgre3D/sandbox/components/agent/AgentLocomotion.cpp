@@ -32,7 +32,7 @@ void AgentLocomotion::onAttach(GameObject* owner)
 
 	auto* pObject = getOwner();
 	assert(pObject != nullptr);
-	m_owner = dynamic_cast<VehicleObject*>(pObject);
+	m_owner = dynamic_cast<AgentObject*>(pObject);
 }
 
 void AgentLocomotion::onDetach()

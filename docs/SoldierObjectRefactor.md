@@ -384,10 +384,10 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 #### Stage 3 验收
 
-- [ ] T-07 ~ T-10 全部 merge。
+- [x] T-07 ~ T-10 全部 merge。
 - [ ] SoldierObject 行数从 ~400 降到 ~250。
-- [ ] Lua 侧既能用 `UseDecisionTreeDriver()` 老 API，也能用 `GetAI():SetDriverByType("dt")` 新 API。
-- [ ] AnimController 接口化，理论上能挂在 Monster/NPC 上。
+- [x] Lua 侧既能用 `UseDecisionTreeDriver()` 老 API，也能用 `GetAI():SetDriverByType("dt")` 新 API。
+- [x] AnimController 接口化，理论上能挂在 Monster/NPC 上。
 
 ### Stage 4：终态收尾（最大改动，最后做）
 
@@ -540,10 +540,10 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-04 | WeaponComponent 承接武器 | 2 | ☑ | 2026-05-26 | |
 | T-05 | 删除组件化字段冗余备份 | 2 | ☑ | 2026-05-26 | |
 | T-06 | RenderComponent : IComponent + facade 化 | 2 | ☑ | 2026-05-26 | |
-| T-07 | driver 注入方式重构 | 3 | ☐ | | |
-| T-08 | AnimComponent + IAnimController | 3 | ☐ | | |
-| T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☐ | | |
-| T-10 | 事件 token 挂组件 onAttach | 3 | ☐ | | |
+| T-07 | driver 注入方式重构 | 3 | ☑ | 2026-05-27 | 新增 `AIController::SetDriverByType("fsm"|"dt"|"bt")`，旧 SoldierObject API 保留 forwarder。 |
+| T-08 | AnimComponent + IAnimController | 3 | ☑ | 2026-05-27 | 新增 AnimComponent / IAnimController / IAnimProfile，SoldierObject 动画入口改 forwarder。 |
+| T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☑ | 2026-05-27 | `m_owner` 泛化为 AgentObject*，AgentObject 构造后显式注入 owner。 |
+| T-10 | 事件 token 挂组件 onAttach | 3 | ☑ | 2026-05-27 | ASM token 下沉 AnimComponent，HEALTH_CHANGE token 下沉 AgentAttrib。 |
 | T-11 | VehicleObject 解构 | 4 | ☐ | | |
 | T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☐ | | |
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☐ | | |

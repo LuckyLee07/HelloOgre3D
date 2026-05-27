@@ -1,36 +1,35 @@
 #ifndef __SOLDIER_ANIM_CONTROLLER_H__
 #define __SOLDIER_ANIM_CONTROLLER_H__
 
-#include <string>
 #include "GameDefine.h"
-#include "SoldierAnimTypes.h"
+#include "components/anim/IAnimController.h"
 
 class SoldierObject;
 class AgentAnimStateMachine;
 
-class SoldierAnimController
+class SoldierAnimController : public IAnimController
 {
 public:
 	explicit SoldierAnimController(SoldierObject& owner);
 
-	void Update(float deltaTimeInMillis);
-	void OnBodyStateChanged(int stateId);
-	void OnBodyNotify(const std::string& eventName, int stateId, float normalizedTime);
+	virtual void Update(float deltaTimeInMillis) override;
+	virtual void OnBodyStateChanged(int stateId) override;
+	virtual void OnBodyNotify(const std::string& eventName, int stateId, float normalizedTime) override;
 
-	void SetLocomotionIntent(SoldierLocomotionIntent intent);
-	SoldierLocomotionIntent GetLocomotionIntent() const { return m_locomotionIntent; }
+	virtual void SetLocomotionIntent(SoldierLocomotionIntent intent) override;
+	virtual SoldierLocomotionIntent GetLocomotionIntent() const override { return m_locomotionIntent; }
 
-	bool RequestAction(SoldierActionIntent intent, bool forceRestart = false);
-	void ClearAction(SoldierActionIntent intent);
-	void ClearAllActions();
-	SoldierActionIntent GetActionIntent() const { return m_actionIntent; }
+	virtual bool RequestAction(SoldierActionIntent intent, bool forceRestart = false) override;
+	virtual void ClearAction(SoldierActionIntent intent) override;
+	virtual void ClearAllActions() override;
+	virtual SoldierActionIntent GetActionIntent() const override { return m_actionIntent; }
 
-	bool ConsumeShootExecution();
-	bool IsMovePresentationReady() const;
-	bool IsShootPresentationReady() const;
-	bool IsShootPresentationFinished() const;
-	bool IsReloadPresentationFinished() const;
-	bool HasPendingPresentation() const;
+	virtual bool ConsumeShootExecution() override;
+	virtual bool IsMovePresentationReady() const override;
+	virtual bool IsShootPresentationReady() const override;
+	virtual bool IsShootPresentationFinished() const override;
+	virtual bool IsReloadPresentationFinished() const override;
+	virtual bool HasPendingPresentation() const override;
 
 private:
 	SoldierObject* GetOwner() const { return m_owner; }

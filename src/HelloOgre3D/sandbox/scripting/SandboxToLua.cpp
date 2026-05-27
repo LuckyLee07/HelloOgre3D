@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Tue May 26 20:09:31 2026.
+** Generated automatically by tolua++-1.0.92 on Wed May 27 09:31:00 2026.
 */
 
 #ifndef __cplusplus
@@ -4730,14 +4730,14 @@ static int tolua_SandboxToLua_SoldierObject_getStanceType00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_Error tolua_err;
  if (
-     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
      !tolua_isnoobj(tolua_S,2,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
-  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getStanceType'", NULL);
 #endif
@@ -5008,6 +5008,38 @@ static int tolua_SandboxToLua_SoldierObject_GetAIController00(lua_State* tolua_S
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetAIController'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetAI of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetAI00
+static int tolua_SandboxToLua_SoldierObject_GetAI00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetAI'", NULL);
+#endif
+  {
+   AIController* tolua_ret = (AIController*)  self->GetAI();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"AIController");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetAI'.",&tolua_err);
  return 0;
 #endif
 }
@@ -6224,6 +6256,39 @@ static int tolua_SandboxToLua_AIController_IsTargetReached00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'IsTargetReached'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetDriverByType of class  AIController */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIController_SetDriverByType00
+static int tolua_SandboxToLua_AIController_SetDriverByType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AIController",0,&tolua_err) ||
+     !tolua_isstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AIController* self = (AIController*)  tolua_tousertype(tolua_S,1,0);
+  const char* type = ((const char*)  tolua_tostring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetDriverByType'", NULL);
+#endif
+  {
+   self->SetDriverByType(type);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetDriverByType'.",&tolua_err);
  return 0;
 #endif
 }
@@ -10466,6 +10531,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_SoldierObject_IsAnimReadyForShoot00);
    tolua_function(tolua_S,"GetAnimController",tolua_SandboxToLua_SoldierObject_GetAnimController00);
    tolua_function(tolua_S,"GetAIController",tolua_SandboxToLua_SoldierObject_GetAIController00);
+   tolua_function(tolua_S,"GetAI",tolua_SandboxToLua_SoldierObject_GetAI00);
    tolua_function(tolua_S,"SetMaxHealth",tolua_SandboxToLua_SoldierObject_SetMaxHealth00);
    tolua_function(tolua_S,"GetMaxHealth",tolua_SandboxToLua_SoldierObject_GetMaxHealth00);
    tolua_function(tolua_S,"SetAmmo",tolua_SandboxToLua_SoldierObject_SetAmmo00);
@@ -10507,6 +10573,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetMovePosition",tolua_SandboxToLua_AIController_SetMovePosition00);
    tolua_function(tolua_S,"ClearMovePosition",tolua_SandboxToLua_AIController_ClearMovePosition00);
    tolua_function(tolua_S,"IsTargetReached",tolua_SandboxToLua_AIController_IsTargetReached00);
+   tolua_function(tolua_S,"SetDriverByType",tolua_SandboxToLua_AIController_SetDriverByType00);
    tolua_function(tolua_S,"UseDecisionTreeDriver",tolua_SandboxToLua_AIController_UseDecisionTreeDriver00);
    tolua_function(tolua_S,"GetDecisionTreeDriver",tolua_SandboxToLua_AIController_GetDecisionTreeDriver00);
    tolua_function(tolua_S,"UseBehaviorTreeDriver",tolua_SandboxToLua_AIController_UseBehaviorTreeDriver00);
