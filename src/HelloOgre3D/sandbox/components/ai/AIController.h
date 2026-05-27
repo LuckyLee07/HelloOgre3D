@@ -37,10 +37,8 @@ public:
 	bool IsTargetReached(float threshold) const;
 
 	void SetDriverByType(const char* type);
-	void UseDecisionTreeDriver();
 	DecisionTreeDriver* GetDecisionTreeDriver() const;
 
-	void UseBehaviorTreeDriver();
 	BehaviorTreeDriver* GetBehaviorTreeDriver() const;
 	//tolua_end
 

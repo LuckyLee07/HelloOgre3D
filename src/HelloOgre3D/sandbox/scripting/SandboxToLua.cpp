@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Wed May 27 16:16:12 2026.
+** Generated automatically by tolua++-1.0.92 on Wed May 27 17:00:33 2026.
 */
 
 #ifndef __cplusplus
@@ -5414,132 +5414,6 @@ static int tolua_SandboxToLua_SoldierObject_IsTargetReached00(lua_State* tolua_S
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: UseDecisionTreeDriver of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_UseDecisionTreeDriver00
-static int tolua_SandboxToLua_SoldierObject_UseDecisionTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'UseDecisionTreeDriver'", NULL);
-#endif
-  {
-   self->UseDecisionTreeDriver();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'UseDecisionTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetDecisionTreeDriver of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetDecisionTreeDriver00
-static int tolua_SandboxToLua_SoldierObject_GetDecisionTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetDecisionTreeDriver'", NULL);
-#endif
-  {
-   DecisionTreeDriver* tolua_ret = (DecisionTreeDriver*)  self->GetDecisionTreeDriver();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"DecisionTreeDriver");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetDecisionTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: UseBehaviorTreeDriver of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_UseBehaviorTreeDriver00
-static int tolua_SandboxToLua_SoldierObject_UseBehaviorTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'UseBehaviorTreeDriver'", NULL);
-#endif
-  {
-   self->UseBehaviorTreeDriver();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'UseBehaviorTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: GetBehaviorTreeDriver of class  SoldierObject */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetBehaviorTreeDriver00
-static int tolua_SandboxToLua_SoldierObject_GetBehaviorTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetBehaviorTreeDriver'", NULL);
-#endif
-  {
-   BehaviorTreeDriver* tolua_ret = (BehaviorTreeDriver*)  self->GetBehaviorTreeDriver();
-    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorTreeDriver");
-  }
- }
- return 1;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'GetBehaviorTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: EnterIdleAnim of class  SoldierObject */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_EnterIdleAnim00
 static int tolua_SandboxToLua_SoldierObject_EnterIdleAnim00(lua_State* tolua_S)
@@ -6082,37 +5956,6 @@ static int tolua_SandboxToLua_AIController_SetDriverByType00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
-/* method: UseDecisionTreeDriver of class  AIController */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIController_UseDecisionTreeDriver00
-static int tolua_SandboxToLua_AIController_UseDecisionTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AIController",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AIController* self = (AIController*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'UseDecisionTreeDriver'", NULL);
-#endif
-  {
-   self->UseDecisionTreeDriver();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'UseDecisionTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
 /* method: GetDecisionTreeDriver of class  AIController */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIController_GetDecisionTreeDriver00
 static int tolua_SandboxToLua_AIController_GetDecisionTreeDriver00(lua_State* tolua_S)
@@ -6140,37 +5983,6 @@ static int tolua_SandboxToLua_AIController_GetDecisionTreeDriver00(lua_State* to
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetDecisionTreeDriver'.",&tolua_err);
- return 0;
-#endif
-}
-#endif //#ifndef TOLUA_DISABLE
-
-/* method: UseBehaviorTreeDriver of class  AIController */
-#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIController_UseBehaviorTreeDriver00
-static int tolua_SandboxToLua_AIController_UseBehaviorTreeDriver00(lua_State* tolua_S)
-{
-#ifndef TOLUA_RELEASE
- tolua_Error tolua_err;
- if (
-     !tolua_isusertype(tolua_S,1,"AIController",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
- )
-  goto tolua_lerror;
- else
-#endif
- {
-  AIController* self = (AIController*)  tolua_tousertype(tolua_S,1,0);
-#ifndef TOLUA_RELEASE
-  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'UseBehaviorTreeDriver'", NULL);
-#endif
-  {
-   self->UseBehaviorTreeDriver();
-  }
- }
- return 0;
-#ifndef TOLUA_RELEASE
- tolua_lerror:
- tolua_error(tolua_S,"#ferror in function 'UseBehaviorTreeDriver'.",&tolua_err);
  return 0;
 #endif
 }
@@ -10330,10 +10142,6 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetMovePosition",tolua_SandboxToLua_SoldierObject_SetMovePosition00);
    tolua_function(tolua_S,"ClearMovePosition",tolua_SandboxToLua_SoldierObject_ClearMovePosition00);
    tolua_function(tolua_S,"IsTargetReached",tolua_SandboxToLua_SoldierObject_IsTargetReached00);
-   tolua_function(tolua_S,"UseDecisionTreeDriver",tolua_SandboxToLua_SoldierObject_UseDecisionTreeDriver00);
-   tolua_function(tolua_S,"GetDecisionTreeDriver",tolua_SandboxToLua_SoldierObject_GetDecisionTreeDriver00);
-   tolua_function(tolua_S,"UseBehaviorTreeDriver",tolua_SandboxToLua_SoldierObject_UseBehaviorTreeDriver00);
-   tolua_function(tolua_S,"GetBehaviorTreeDriver",tolua_SandboxToLua_SoldierObject_GetBehaviorTreeDriver00);
    tolua_function(tolua_S,"EnterIdleAnim",tolua_SandboxToLua_SoldierObject_EnterIdleAnim00);
    tolua_function(tolua_S,"EnterMoveAnim",tolua_SandboxToLua_SoldierObject_EnterMoveAnim00);
    tolua_function(tolua_S,"EnterShootAnim",tolua_SandboxToLua_SoldierObject_EnterShootAnim00);
@@ -10354,9 +10162,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"ClearMovePosition",tolua_SandboxToLua_AIController_ClearMovePosition00);
    tolua_function(tolua_S,"IsTargetReached",tolua_SandboxToLua_AIController_IsTargetReached00);
    tolua_function(tolua_S,"SetDriverByType",tolua_SandboxToLua_AIController_SetDriverByType00);
-   tolua_function(tolua_S,"UseDecisionTreeDriver",tolua_SandboxToLua_AIController_UseDecisionTreeDriver00);
    tolua_function(tolua_S,"GetDecisionTreeDriver",tolua_SandboxToLua_AIController_GetDecisionTreeDriver00);
-   tolua_function(tolua_S,"UseBehaviorTreeDriver",tolua_SandboxToLua_AIController_UseBehaviorTreeDriver00);
    tolua_function(tolua_S,"GetBehaviorTreeDriver",tolua_SandboxToLua_AIController_GetBehaviorTreeDriver00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SandboxMgr","SandboxMgr","",NULL);

@@ -46,6 +46,7 @@ _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 
 require("res.scripts.samples.fgui_init")
 local RuntimeDiagnostics = require("res.scripts.samples.runtime_diagnostics")
+local VisualTraceGate = require("res.scripts.samples.visual_trace_gate")
 
 local function isEnvEnabled(name)
 	return isTruthyEnvValue(getEnvValue(name))
@@ -114,6 +115,16 @@ local function tryRunRuntimeDiagnosticSelfTest()
 	end)
 end
 
+local function tryRunVisualTraceGate()
+	if not isEnvEnabled("HELLO_VISUAL_TRACE_GATE") then
+		return
+	end
+
+	if VisualTraceGate ~= nil and VisualTraceGate.Start ~= nil then
+		VisualTraceGate.Start()
+	end
+end
+
 local function tryConfigureAiScheduler()
 	if ConfigManager ~= nil and ConfigManager.ConfigureAiScheduler ~= nil then
 		ConfigManager:ConfigureAiScheduler(ObjectManager, _G.HELLO_SANDBOX_SAMPLE_NAME)
@@ -161,10 +172,14 @@ _G.__init__ = function(sec, msec)
 	FGUI_Init()
 	tryConfigureAiScheduler()
 	tryRunRuntimeDiagnosticSelfTest()
+	tryRunVisualTraceGate()
 end
 
 _G.__tick__ = function(detalMsec)
 	threadpool:update(detalMsec)
+	if VisualTraceGate ~= nil and VisualTraceGate.Update ~= nil then
+		VisualTraceGate.Update(detalMsec)
+	end
 end
 
 _G.__gc__ = function()

@@ -16,8 +16,6 @@
 #include "animation/SoldierAnimProfile.h"
 #include "components/anim/AnimComponent.h"
 #include "components/anim/IAnimController.h"
-#include "ai/decision/DecisionTreeDriver.h"
-#include "ai/behavior/BehaviorTreeDriver.h"
 #include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
@@ -422,30 +420,6 @@ bool SoldierObject::IsAnimReadyForShoot()
 SoldierAnimController* SoldierObject::GetAnimController() const
 {
 	return m_animComp != nullptr ? m_animComp->GetSoldierController() : nullptr;
-}
-
-void SoldierObject::UseDecisionTreeDriver()
-{
-	// Swap out whatever driver is currently installed (typically the FSM
-	// controller created in the ctor) — DT-driven soldiers author behavior in Lua.
-	if (m_ai != nullptr)
-		m_ai->SetDriverByType("dt");
-}
-
-DecisionTreeDriver* SoldierObject::GetDecisionTreeDriver() const
-{
-	return m_ai != nullptr ? m_ai->GetDecisionTreeDriver() : nullptr;
-}
-
-void SoldierObject::UseBehaviorTreeDriver()
-{
-	if (m_ai != nullptr)
-		m_ai->SetDriverByType("bt");
-}
-
-BehaviorTreeDriver* SoldierObject::GetBehaviorTreeDriver() const
-{
-	return m_ai != nullptr ? m_ai->GetBehaviorTreeDriver() : nullptr;
 }
 
 AgentStateController* SoldierObject::GetFsmController() const

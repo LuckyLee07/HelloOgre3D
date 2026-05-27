@@ -3,7 +3,7 @@
 --
 -- 流程：
 --   1. C++ 创建 SoldierObject 后绑定本脚本到该对象的 plugin env
---   2. agent:UseBehaviorTreeDriver() 拆掉 FSM controller、建出 BehaviorTreeDriver + Blackboard
+--   2. agent:GetAI():SetDriverByType("bt") 拆掉 FSM controller、建出 BehaviorTreeDriver + Blackboard
 --   3. BehaviorTreeLoader loads SoldierBT.lua and builds the C++ BT via driver factories
 --   4. driver 持有所有节点的所有权，agent 销毁时统一释放
 --   5. C++ 每帧 tick driver，driver 走 tree:Tick → 各节点逐级 Tick → action lua 回调
@@ -17,10 +17,16 @@ function Agent_Initialize(agent)
 
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-    agent:UseBehaviorTreeDriver()
-    local driver = agent:GetBehaviorTreeDriver()
+    local ai = agent:GetAI()
+    if ai == nil then
+        print("Error: AIController not available")
+        return
+    end
+
+    ai:SetDriverByType("bt")
+    local driver = ai:GetBehaviorTreeDriver()
     if driver == nil then
-        print("Error: BehaviorTreeDriver not available after UseBehaviorTreeDriver()")
+        print("Error: BehaviorTreeDriver not available after SetDriverByType(bt)")
         return
     end
 

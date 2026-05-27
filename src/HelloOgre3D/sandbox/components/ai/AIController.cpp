@@ -287,19 +287,9 @@ bool AIController::IsTargetReached(float threshold) const
 	return m_owner->GetPosition().squaredDistance(target) < thresholdSquared;
 }
 
-void AIController::UseDecisionTreeDriver()
-{
-	SetDriverByType("dt");
-}
-
 DecisionTreeDriver* AIController::GetDecisionTreeDriver() const
 {
 	return dynamic_cast<DecisionTreeDriver*>(m_driver);
-}
-
-void AIController::UseBehaviorTreeDriver()
-{
-	SetDriverByType("bt");
 }
 
 BehaviorTreeDriver* AIController::GetBehaviorTreeDriver() const

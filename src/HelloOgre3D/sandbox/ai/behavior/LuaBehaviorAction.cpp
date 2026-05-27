@@ -1,5 +1,6 @@
 ﻿#include "LuaBehaviorAction.h"
 
+#include "components/ai/AIController.h"
 #include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
@@ -23,7 +24,8 @@ bool LuaBehaviorAction::BindToScript(const std::string& filepath)
 static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
 {
 	if (!owner) return nullptr;
-	BehaviorTreeDriver* driver = owner->GetBehaviorTreeDriver();
+	AIController* ai = owner->GetAIController();
+	BehaviorTreeDriver* driver = ai ? ai->GetBehaviorTreeDriver() : nullptr;
 	return driver ? driver->GetBlackboard() : nullptr;
 }
 

@@ -1,5 +1,6 @@
 #include "LuaDecisionAction.h"
 
+#include "components/ai/AIController.h"
 #include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
 #include "ai/decision/DecisionTreeDriver.h"
@@ -23,7 +24,8 @@ bool LuaDecisionAction::BindToScript(const std::string& filepath)
 static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
 {
 	if (!owner) return nullptr;
-	DecisionTreeDriver* driver = owner->GetDecisionTreeDriver();
+	AIController* ai = owner->GetAIController();
+	DecisionTreeDriver* driver = ai ? ai->GetDecisionTreeDriver() : nullptr;
 	return driver ? driver->GetBlackboard() : nullptr;
 }
 

@@ -4,7 +4,7 @@
 -- 流程：
 --   1. C++ 创建 SoldierObject 后绑定本脚本到该对象的 plugin env
 --   2. C++ 调用 Agent_Initialize(agent)
---   3. agent:UseDecisionTreeDriver() 拆掉 FSM controller、建出 DecisionTreeDriver + Blackboard
+--   3. agent:GetAI():SetDriverByType("dt") 拆掉 FSM controller、建出 DecisionTreeDriver + Blackboard
 --   4. 用 SoldierDecisionTreeBuilder + driver 工厂方法拼装 DT
 --   5. driver 持有所有节点的所有权，agent 销毁时统一释放（无需 Lua 端保活）
 --   6. C++ 每帧 tick driver，driver 走 tree.Tick → resolve action → action lua 回调
@@ -16,10 +16,16 @@ function Agent_Initialize(agent)
 
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-    agent:UseDecisionTreeDriver()
-    local driver = agent:GetDecisionTreeDriver()
+    local ai = agent:GetAI()
+    if ai == nil then
+        print("Error: AIController not available")
+        return
+    end
+
+    ai:SetDriverByType("dt")
+    local driver = ai:GetDecisionTreeDriver()
     if driver == nil then
-        print("Error: DecisionTreeDriver not available after UseDecisionTreeDriver()")
+        print("Error: DecisionTreeDriver not available after SetDriverByType(dt)")
         return
     end
 

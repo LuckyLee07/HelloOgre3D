@@ -9,8 +9,6 @@ class AnimComponent;
 class AIController;
 class AgentAttrib;
 class WeaponComponent;
-class DecisionTreeDriver;
-class BehaviorTreeDriver;
 class AgentStateController;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
@@ -61,16 +59,6 @@ public:
 	void SetMovePosition(const Ogre::Vector3& movePos);
 	void ClearMovePosition();
 	bool IsTargetReached(float threshold) const;
-
-	// Decision tree wiring. When UseDecisionTreeDriver() is called, the existing
-	// FSM state controller is torn down and the soldier is driven by a DT instead.
-	// Lua then builds the tree and attaches it via GetDecisionTreeDriver()->SetTree(...).
-	void UseDecisionTreeDriver();
-	DecisionTreeDriver* GetDecisionTreeDriver() const;
-
-	// Behavior tree wiring — mirror of UseDecisionTreeDriver。
-	void UseBehaviorTreeDriver();
-	BehaviorTreeDriver* GetBehaviorTreeDriver() const;
 
 	// High-level anim intents for Lua actions. SoldierAnimController re-evaluates
 	// intent each frame, so using these (rather than RequestState(SSTATE_*)) is

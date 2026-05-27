@@ -73,11 +73,11 @@ SoldierObject
 
 **含义**：AI 低频调度的基础设施**已经有了**。任何 "GameManager 增加 AI 累加器" 的方案都是重复造轮子。正确做法是 **ObjectManager 调度从 `dynamic_cast<SoldierObject*>` 改为查 AIController 接口，复用现有 AIScheduler**。
 
-#### 1.4.2 UseDecisionTreeDriver / UseBehaviorTreeDriver 是有意为之的 Lua 入口
+#### 1.4.2 Driver 切换入口已迁移到 AIController
 
-[SoldierObject.cpp:659](../src/HelloOgre3D/sandbox/objects/SoldierObject.cpp#L659) `UseDecisionTreeDriver` 和 [L679](../src/HelloOgre3D/sandbox/objects/SoldierObject.cpp#L679) `UseBehaviorTreeDriver` 还在用。它们是为了**规避 tolua 直接 new C++ Driver 的所有权问题**——Lua 不能直接 `DecisionTreeDriver:new()`，因为 driver 持有节点和 blackboard 的所有权，跨语言所有权很难处理。
+T-07 阶段曾保留 `SoldierObject::UseDecisionTreeDriver / UseBehaviorTreeDriver` thin forwarder，用来规避 tolua 直接 new C++ Driver 的所有权问题。T-16 已把 Lua 调用点迁移为 `agent:GetAI():SetDriverByType("dt"|"bt")`，并删除 SoldierObject / AIController 上的 `Use*Driver` convenience wrapper。
 
-**含义**：第一步抽 AIController 时**不能删这两个接口**。"让 Lua 改用 SetDriver(...) 注入"是要先解决 tolua 所有权坑之后才能做的，属于中期工作。
+**含义**：Lua 仍然不能直接 `DecisionTreeDriver:new()`；driver 创建入口收口在 `AIController::SetDriverByType(const char* type)`。Lua 构建树时只保留 `AIController::GetDecisionTreeDriver()` / `GetBehaviorTreeDriver()` 作为拿 typed driver 的后续配置入口。
 
 #### 1.4.3 AgentLocomotion::m_owner 是反向转发结构，不是字段冗余
 
@@ -400,7 +400,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 - [x] T-07 ~ T-10 全部 merge。
 - [ ] SoldierObject 行数从 ~400 降到 ~250。
-- [x] Lua 侧既能用 `UseDecisionTreeDriver()` 老 API，也能用 `GetAI():SetDriverByType("dt")` 新 API。
+- [x] T-07 阶段 Lua 侧曾同时支持 `UseDecisionTreeDriver()` 老 API 与 `GetAI():SetDriverByType("dt")` 新 API；T-16 已删除老 API。
 - [x] AnimController 接口化，理论上能挂在 Monster/NPC 上。
 
 ### Stage 4：终态收尾（最大改动，最后做）
@@ -497,6 +497,17 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **[Stage 4]** [P-09 收尾]
 - **目标**：删除 SoldierObject::UseDecisionTreeDriver / UseBehaviorTreeDriver，全部走 AIController::SetDriverByType。
 - **关键约束**：Lua 侧所有调用点先改完。
+- **落地动作**：
+  1. [x] `DecisionSoldierAgent.lua` / `BehaviorSoldierAgent.lua` 改为 `agent:GetAI():SetDriverByType("dt"|"bt")`。
+  2. [x] 删除 `SoldierObject::UseDecisionTreeDriver / UseBehaviorTreeDriver / GetDecisionTreeDriver / GetBehaviorTreeDriver` 及 tolua 导出。
+  3. [x] 删除 `AIController::UseDecisionTreeDriver / UseBehaviorTreeDriver` convenience wrapper，仅保留 `SetDriverByType`。
+  4. [x] Lua action 通过 `owner->GetAIController()->Get*Driver()` 取得 blackboard。
+  5. [x] `SandboxToLua.cpp` 已重新生成。
+- **验收**：
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `Sandbox6` RuntimeDiag 通过。
+  - [x] `Sandbox7` VisualTraceGate + RuntimeDiag 通过。
+  - [x] `Sandbox8` VisualTraceGate + RuntimeDiag 通过。
 - **工时**：半天。
 
 #### T-17 SoldierObject 改 SoldierFactory（终态）
@@ -609,7 +620,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-04 | WeaponComponent 承接武器 | 2 | ☑ | 2026-05-26 | |
 | T-05 | 删除组件化字段冗余备份 | 2 | ☑ | 2026-05-26 | |
 | T-06 | RenderComponent : IComponent + facade 化 | 2 | ☑ | 2026-05-26 | |
-| T-07 | driver 注入方式重构 | 3 | ☑ | 2026-05-27 | 新增 `AIController::SetDriverByType("fsm"|"dt"|"bt")`，旧 SoldierObject API 保留 forwarder。 |
+| T-07 | driver 注入方式重构 | 3 | ☑ | 2026-05-27 | 新增 `AIController::SetDriverByType("fsm"|"dt"|"bt")`，旧 SoldierObject API 曾保留 forwarder；T-16 已删除。 |
 | T-08 | AnimComponent + IAnimController | 3 | ☑ | 2026-05-27 | 新增 AnimComponent / IAnimController / IAnimProfile，SoldierObject 动画入口改 forwarder。 |
 | T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☑ | 2026-05-27 | `m_owner` 泛化为 AgentObject*，AgentObject 构造后显式注入 owner。 |
 | T-10 | 事件 token 挂组件 onAttach | 3 | ☑ | 2026-05-27 | ASM token 下沉 AnimComponent，HEALTH_CHANGE token 下沉 AgentAttrib。 |
@@ -618,7 +629,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☑ | 2026-05-27 | BaseObject 直接持组件容器，GameObject 类删除；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-14 | 位置真源统一 | 4 | ☑ | 2026-05-27 | RenderComponent 统一 physics/no-physics 同步，BlockObject 无刚体路径补齐；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-15 | 删除 RenderableObject | 4 | ☑ | 2026-05-27 | AgentObject/BlockObject 直接走 RenderComponent，body/weapon ASM 迁入 AnimComponent；RenderableObject 类与 Lua 绑定删除，Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
-| T-16 | 删除 driver Lua forwarder | 4 | ☐ | | |
+| T-16 | 删除 driver Lua forwarder | 4 | ☑ | 2026-05-27 | Lua 改走 `agent:GetAI():SetDriverByType("dt"|"bt")`，SoldierObject driver forwarder 与 AIController `Use*Driver` wrapper 删除；Debug x64 构建与 Sandbox7/8 smoke 通过。 |
 | T-17 | SoldierObject 改 SoldierFactory | 4 | ☐ | | |
 
 ---

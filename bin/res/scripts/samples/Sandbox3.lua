@@ -211,10 +211,6 @@ function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 
-    if soldierAsm == nil or weaponAsm == nil then
-        return
-    end
-
     if soldierAsm:GetCurrStateName() ~= "idle_aim" then
         soldierAsm:RequestState("idle_aim")
     end
@@ -231,9 +227,6 @@ function Sandbox_Update(deltaTimeInMillis)
     end
 end
 
-
-function Agent_Initialize(agent)
-end
 
 function Agent_EventHandle(agent, keycode)
 end
