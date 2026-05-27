@@ -131,6 +131,11 @@ void RenderableObject::SetDerivedOrientation(const Ogre::Quaternion& quaternion)
 	m_renderComp->SetDerivedOrientation(quaternion);
 }
 
+void RenderableObject::SyncWorldTransform()
+{
+	m_renderComp->SyncFromOwnerTransform();
+}
+
 Ogre::Vector3 RenderableObject::GetDerivedPosition() const
 {
 	return m_renderComp->GetDerivedPosition();
@@ -149,6 +154,16 @@ Ogre::Vector3 RenderableObject::GetOriginPos() const
 void RenderableObject::SetOriginPos(const Ogre::Vector3& position)
 {
 	m_renderComp->SetOriginPos(position);
+}
+
+Ogre::Vector3 RenderableObject::GetVisualOffset() const
+{
+	return m_renderComp->GetVisualOffset();
+}
+
+void RenderableObject::SetVisualOffset(const Ogre::Vector3& offset)
+{
+	m_renderComp->SetVisualOffset(offset);
 }
 
 void RenderableObject::SetMaterial(const Ogre::String& materialName)

@@ -85,48 +85,56 @@ void BlockObject::Init()
 
 void BlockObject::Update(int deltaMsec)
 {
+	(void)deltaMsec;
 	this->updateWorldTransform();
 }
 
 void BlockObject::updateWorldTransform()
 {
-	btRigidBody* pRigidBody = m_physicsComp->GetRigidBody();
-	assert(pRigidBody != nullptr);
-	if (!pRigidBody) return;
-
-	const btVector3& rigidBodyPos = pRigidBody->getWorldTransform().getOrigin();
-	m_pEntity->SetPosition(BtVector3ToVector3(rigidBodyPos));
-
-	const btQuaternion& rigidBodyRotation = pRigidBody->getWorldTransform().getRotation();
-	m_pEntity->SetOrientation(BtQuaternionToQuaternion(rigidBodyRotation));;
+	if (m_pEntity != nullptr)
+	{
+		m_pEntity->SyncWorldTransform();
+	}
 }
 
 void BlockObject::SetMass(const Ogre::Real mass)
 {
-	m_physicsComp->SetMass(mass);
+	if (m_physicsComp != nullptr)
+		m_physicsComp->SetMass(mass);
 }
 
 Ogre::Real BlockObject::GetMass() const
 {
-	return m_physicsComp->GetMass();
+	return m_physicsComp != nullptr ? m_physicsComp->GetMass() : Ogre::Real(0.0f);
 }
 
 void BlockObject::setPosition(const Ogre::Vector3& position)
 {
-	m_physicsComp->SetPosition(position);
+	if (m_physicsComp != nullptr && m_physicsComp->GetRigidBody() != nullptr)
+	{
+		m_physicsComp->SetPosition(position);
+	}
+	else if (m_pEntity != nullptr)
+	{
+		m_pEntity->SetPosition(position);
+	}
 
 	this->updateWorldTransform();
 }
 
 Ogre::Vector3 BlockObject::GetPosition() const
 {
-	return m_physicsComp->GetPosition();
+	if (m_physicsComp != nullptr && m_physicsComp->GetRigidBody() != nullptr)
+		return m_physicsComp->GetPosition();
+	return m_pEntity != nullptr ? m_pEntity->GetDerivedPosition() : Ogre::Vector3::ZERO;
 }
 
 Ogre::Real BlockObject::GetRadius() const
 {
+	if (m_physicsComp == nullptr || m_physicsComp->GetRigidBody() == nullptr)
+		return Ogre::Real(0.0f);
+
 	btRigidBody* pRigidBody = m_physicsComp->GetRigidBody();
-	assert(pRigidBody != nullptr);
 
 	btVector3 aabbMin;
 	btVector3 aabbMax;
@@ -143,7 +151,14 @@ void BlockObject::setRotation(const Ogre::Vector3& rotation)
 
 void BlockObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
-	m_physicsComp->SetOrientation(quaternion);
+	if (m_physicsComp != nullptr && m_physicsComp->GetRigidBody() != nullptr)
+	{
+		m_physicsComp->SetOrientation(quaternion);
+	}
+	else if (m_pEntity != nullptr)
+	{
+		m_pEntity->SetOrientation(quaternion);
+	}
 
 	this->updateWorldTransform();
 }
@@ -155,12 +170,14 @@ void BlockObject::setMaterial(const Ogre::String& materialName)
 
 void BlockObject::applyImpulse(const Ogre::Vector3& impulse)
 {
-	m_physicsComp->ApplyForce(impulse);
+	if (m_physicsComp != nullptr)
+		m_physicsComp->ApplyForce(impulse);
 }
 
 void BlockObject::applyAngularImpulse(const Ogre::Vector3& aImpulse)
 {
-	m_physicsComp->ApplyAngularForce(aImpulse);
+	if (m_physicsComp != nullptr)
+		m_physicsComp->ApplyAngularForce(aImpulse);
 }
 
 void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& collision)

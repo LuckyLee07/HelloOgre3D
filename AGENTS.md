@@ -15,6 +15,14 @@
 - 尽量把“引擎耦合逻辑”和“玩法规则逻辑”继续拆开。
 - 结构性改动应服务于解耦、缩短继承链、便于后续 AI / UI / 工具 / 调试扩展。
 
+## 位置真源规则
+
+对象位置 / 朝向按组件条件判定权威来源：
+- 挂有 `PhysicsComponent` 且存在有效 `btRigidBody` 时，`PhysicsComponent` / Bullet 刚体是位置与朝向权威，渲染层只能从它同步。
+- 没有 `PhysicsComponent`，或 `PhysicsComponent` 没有有效刚体时，`RenderComponent` 自身 transform 是权威，不能为了复用逻辑创建假刚体。
+- `RenderComponent::Update` 负责执行上述同步判断；对象层如 `AgentObject`、`BlockObject` 只触发同步，不重复手写 Bullet → SceneNode 转换。
+- 需要对物理对象施加视觉偏移时，使用 `SetVisualOffset(...)`；不要直接改写物理对象的 RenderComponent 世界位置。
+
 ## 快速命令
 
 常用命令以仓库根目录为工作目录执行。

@@ -26,8 +26,10 @@ public:
 	Ogre::Entity* GetDetachEntity();
 	Ogre::SceneNode* GetSceneNode() const { return m_pSceneNode; }
 
-	void SetOriginPos(const Ogre::Vector3& position) { m_originPos = position; }
-	const Ogre::Vector3& GetOriginPos() const { return m_originPos; };
+	void SetVisualOffset(const Ogre::Vector3& offset) { m_visualOffset = offset; }
+	const Ogre::Vector3& GetVisualOffset() const { return m_visualOffset; };
+	void SetOriginPos(const Ogre::Vector3& position) { SetVisualOffset(position); }
+	const Ogre::Vector3& GetOriginPos() const { return GetVisualOffset(); };
 	
 	void SetMaterial(const Ogre::String& materialName);
 
@@ -47,12 +49,13 @@ public:
 
 	void Update(int deltaInMillis);
 	virtual void update(int deltaInMillis) override;
+	void SyncFromOwnerTransform();
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 private:
 	Ogre::SceneNode* m_pSceneNode = nullptr;
 	Ogre::Entity* m_pEntity = nullptr;
-	Ogre::Vector3 m_originPos = Ogre::Vector3::ZERO;
+	Ogre::Vector3 m_visualOffset = Ogre::Vector3::ZERO;
 };
 
 #endif // __RENDER_COMPONENT_H__

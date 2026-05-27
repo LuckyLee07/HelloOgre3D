@@ -462,9 +462,16 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **目标**：明确"**有 PhysicsComponent 时 physics 权威，无 physics 时 RenderComponent 自身权威**"，写进 AGENTS.md。
 - **关键约束**：BlockObject 部分实例没刚体，UI/特效/调试对象也不该挂假刚体凑数。
 - **落地动作**：
-  1. 写 AGENTS.md "位置真源" 规则。
-  2. RenderComponent::Update 检测：有 PhysicsComponent 时从它 sync，无则保持自身 transform。
-  3. 直接改 RenderComponent 位置的代码（root motion）走特殊接口 `SetVisualOffset(...)`。
+  1. [x] 写 AGENTS.md "位置真源" 规则。
+  2. [x] `RenderComponent::Update` 检测：有有效 `PhysicsComponent` / `btRigidBody` 时从它 sync，无则保持自身 transform。
+  3. [x] `AgentObject::updateWorldTransform` / `BlockObject::updateWorldTransform` 改为触发 `RenderComponent` 统一同步，不再手写 Bullet → SceneNode。
+  4. [x] `BlockObject` 无刚体路径补齐：`setPosition` / `setOrientation` 直接写 RenderComponent，`GetPosition` 读 RenderComponent。
+  5. [x] 视觉偏移改走 `SetVisualOffset(...)`，旧 `SetOriginPos(...)` 只作为兼容入口保留。
+- **验收**：
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox6 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox7 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox8 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
 - **风险**：root motion / 物理 push 同时发生的情况测试。
 - **工时**：1 天。
 
@@ -597,7 +604,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-11 | VehicleObject 解构 | 4 | ☑ | 2026-05-27 | AgentObject 直接继承 BaseObject，VehicleObject 类与 Lua 继承关系删除；Debug x64 构建通过。 |
 | T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☑ | 2026-05-27 | AgentObject 解除 LuaEnvObject 多继承，新增 LuaScriptComponent；Debug x64 构建通过。 |
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☑ | 2026-05-27 | BaseObject 直接持组件容器，GameObject 类删除；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
-| T-14 | 位置真源统一 | 4 | ☐ | | |
+| T-14 | 位置真源统一 | 4 | ☑ | 2026-05-27 | RenderComponent 统一 physics/no-physics 同步，BlockObject 无刚体路径补齐；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-15 | 删除 RenderableObject | 4 | ☐ | | |
 | T-16 | 删除 driver Lua forwarder | 4 | ☐ | | |
 | T-17 | SoldierObject 改 SoldierFactory | 4 | ☐ | | |

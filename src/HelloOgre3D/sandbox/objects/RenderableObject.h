@@ -33,6 +33,8 @@ public:
 	
 	Ogre::Vector3 GetOriginPos() const;
 	void SetOriginPos(const Ogre::Vector3& position);
+	Ogre::Vector3 GetVisualOffset() const;
+	void SetVisualOffset(const Ogre::Vector3& offset);
 	void SetMaterial(const Ogre::String& materialName);
 	
 	virtual void SetPosition(const Ogre::Vector3& position);
@@ -52,6 +54,7 @@ public:
 	void SetDerivedPosition(const Ogre::Vector3& position);
 	void SetDerivedRotation(const Ogre::Vector3& position);
 	void SetDerivedOrientation(const Ogre::Quaternion& quaternion);
+	void SyncWorldTransform();
 
 	Ogre::Vector3 GetDerivedPosition() const;
 	Ogre::Quaternion GetDerivedOrientation() const;

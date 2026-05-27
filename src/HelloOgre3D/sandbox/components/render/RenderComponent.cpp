@@ -6,13 +6,14 @@
 #include "OgreManualObject.h"
 #include "GameManager.h"
 #include "object/BaseObject.h"
+#include "components/physics/PhysicsComponent.h"
 #include "objects/animation/AgentAnim.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 
 using namespace Ogre;
 
 RenderComponent::RenderComponent(const Ogre::String& meshFile)
-	: m_originPos(Ogre::Vector3::ZERO)
+	: m_visualOffset(Ogre::Vector3::ZERO)
 {
 	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	m_pSceneNode = pRootScene->createChildSceneNode();
@@ -22,7 +23,7 @@ RenderComponent::RenderComponent(const Ogre::String& meshFile)
 }
 
 RenderComponent::RenderComponent(const Ogre::MeshPtr& meshPtr)
-	: m_originPos(Ogre::Vector3::ZERO)
+	: m_visualOffset(Ogre::Vector3::ZERO)
 {
 	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	m_pSceneNode = pRootScene->createChildSceneNode();
@@ -32,7 +33,7 @@ RenderComponent::RenderComponent(const Ogre::MeshPtr& meshPtr)
 }
 
 RenderComponent::RenderComponent(Ogre::SceneNode* pSceneNode)
-	: m_originPos(Ogre::Vector3::ZERO)
+	: m_visualOffset(Ogre::Vector3::ZERO)
 {
 	m_pSceneNode = pSceneNode;
 	unsigned short attachNum = m_pSceneNode->numAttachedObjects();
@@ -168,4 +169,28 @@ void RenderComponent::Update(int deltaInMillis)
 void RenderComponent::update(int deltaInMillis)
 {
 	(void)deltaInMillis;
+	SyncFromOwnerTransform();
+}
+
+void RenderComponent::SyncFromOwnerTransform()
+{
+	if (m_pSceneNode == nullptr)
+	{
+		return;
+	}
+
+	BaseObject* owner = getOwner();
+	if (owner == nullptr)
+	{
+		return;
+	}
+
+	const PhysicsComponent* physics = owner->FindComponent<PhysicsComponent>();
+	if (physics == nullptr || physics->GetRigidBody() == nullptr)
+	{
+		return;
+	}
+
+	m_pSceneNode->_setDerivedPosition(physics->GetPosition() + m_visualOffset);
+	m_pSceneNode->_setDerivedOrientation(physics->GetOrientation());
 }

@@ -515,17 +515,10 @@ void AgentObject::Update(int deltaMilisec)
 
 void AgentObject::updateWorldTransform()
 {
-	const btRigidBody* pRigidBody = getRigidBody();
-	if (pRigidBody == nullptr) return;
-	
-	const btVector3& rigidBodyPos = pRigidBody->getWorldTransform().getOrigin();
-	Ogre::Vector3 position(rigidBodyPos.m_floats[0], rigidBodyPos.m_floats[1], rigidBodyPos.m_floats[2]);
-	m_pAgentBody->SetDerivedPosition(position + m_pAgentBody->GetOriginPos());
-
-	const btQuaternion& rigidBodyRotation = pRigidBody->getWorldTransform().getRotation();
-	Ogre::Quaternion rotation(rigidBodyRotation.w(), rigidBodyRotation.x(),
-								rigidBodyRotation.y(), rigidBodyRotation.z());
-	m_pAgentBody->SetDerivedOrientation(rotation);
+	if (m_pAgentBody != nullptr)
+	{
+		m_pAgentBody->SyncWorldTransform();
+	}
 }
 
 void AgentObject::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)

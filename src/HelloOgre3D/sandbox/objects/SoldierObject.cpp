@@ -325,7 +325,7 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 	if (soldier_height <= 0.0f || soldier_speed <= 0.0f) return;
 
-	m_pAgentBody->SetOriginPos(Ogre::Vector3(0, -soldier_height / 2, 0));
+	m_pAgentBody->SetVisualOffset(Ogre::Vector3(0, -soldier_height / 2, 0));
 
 	Ogre::Real newPosY = (this->GetHeight() - soldier_height) / 2;
 	this->setPosition((GetPosition() - Ogre::Vector3(0, newPosY, 0)));
