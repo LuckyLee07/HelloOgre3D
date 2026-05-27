@@ -9,6 +9,7 @@
 #include "GameFunction.h"
 #include "SandboxMacros.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
+#include "ai/common/AICommand.h"
 #include "ai/common/Blackboard.h"
 #include "ai/common/IDecisionDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
@@ -315,6 +316,16 @@ void AIController::IssueCommand(const AICommand& command)
 {
 	if (m_owner != nullptr)
 	{
+		if (command.kind == AICommand::COMMAND_MOVE_TO)
+		{
+			SetMovePosition(command.targetPosition);
+			m_blackboard.SetVec3("movePos", command.targetPosition);
+		}
+		else if (command.kind == AICommand::COMMAND_STOP)
+		{
+			ClearMovePosition();
+			m_blackboard.Remove("movePos");
+		}
 		m_owner->ApplyCommand(command);
 	}
 }

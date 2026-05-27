@@ -114,6 +114,39 @@ struct AICommand
 		return command;
 	}
 
+	static const char* KindToString(Kind kind)
+	{
+		switch (kind)
+		{
+		case COMMAND_NONE:
+			return "None";
+		case COMMAND_IDLE:
+			return "Idle";
+		case COMMAND_MOVE:
+			return "Move";
+		case COMMAND_ATTACK:
+			return "Attack";
+		case COMMAND_RELOAD:
+			return "Reload";
+		case COMMAND_DIE:
+			return "Die";
+		case COMMAND_FIRE_WEAPON:
+			return "FireWeapon";
+		case COMMAND_REQUEST_STATE:
+			return "RequestState";
+		case COMMAND_STOP:
+			return "Stop";
+		case COMMAND_MOVE_TO:
+			return "MoveTo";
+		case COMMAND_USE_SKILL:
+			return "UseSkill";
+		case COMMAND_INTERACT:
+			return "Interact";
+		default:
+			return "Unknown";
+		}
+	}
+
 	Kind kind;
 	int stateId;
 	bool forceUpdate;

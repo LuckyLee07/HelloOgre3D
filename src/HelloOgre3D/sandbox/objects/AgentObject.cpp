@@ -4,6 +4,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "GameManager.h"
 #include "BlockObject.h"
+#include "ai/common/AICommand.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -18,6 +19,7 @@
 #include "objects/steer/AgentPath.h"
 #include "systems/physics/Collision.h"
 #include "BlockObject.h"
+#include "LogSystem.h"
 #include <algorithm>
 
 using namespace Ogre;
@@ -112,8 +114,23 @@ AgentAnimStateMachine* AgentObject::GetObjectASM() const
 	return anim != nullptr ? anim->GetBodyAsm() : nullptr;
 }
 
-void AgentObject::ApplyCommand(const AICommand&)
+void AgentObject::ApplyCommand(const AICommand& command)
 {
+	switch (command.kind)
+	{
+	case AICommand::COMMAND_NONE:
+		break;
+	case AICommand::COMMAND_MOVE_TO:
+		SetTarget(command.targetPosition);
+		break;
+	case AICommand::COMMAND_STOP:
+		SetVelocity(Ogre::Vector3::ZERO);
+		SetTarget(GetPosition());
+		break;
+	default:
+		CCLOG_INFO("AgentObject::ApplyCommand unsupported command: %s", AICommand::KindToString(command.kind));
+		break;
+	}
 }
 
 btRigidBody* AgentObject::getRigidBody() const

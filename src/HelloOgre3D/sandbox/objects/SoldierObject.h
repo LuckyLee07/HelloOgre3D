@@ -89,6 +89,9 @@ private:
 	void ApplyDeathCommand();
 	void ApplyFireWeaponCommand();
 	void ApplyRequestStateCommand(int soldierState, bool forceUpdate);
+	void ApplyMoveToCommand(const Ogre::Vector3& targetPosition);
+	void ApplyStopCommand();
+	void ReportUnsupportedCommand(const AICommand& command) const;
 
 	IPlayerInput* m_inputInfo;
 

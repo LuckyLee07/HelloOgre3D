@@ -21,8 +21,10 @@
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
 #include "components/render/RenderComponent.h"
+#include "LogSystem.h"
 #include "profiling/Profile.h"
 #include <algorithm>
+#include <vector>
 
 using namespace Ogre;
 
@@ -96,7 +98,20 @@ void SoldierObject::ApplyCommand(const AICommand& command)
 	case AICommand::COMMAND_REQUEST_STATE:
 		ApplyRequestStateCommand(command.stateId, command.forceUpdate);
 		break;
+	case AICommand::COMMAND_MOVE_TO:
+		ApplyMoveToCommand(command.targetPosition);
+		break;
+	case AICommand::COMMAND_STOP:
+		ApplyStopCommand();
+		break;
+	case AICommand::COMMAND_USE_SKILL:
+	case AICommand::COMMAND_INTERACT:
+		ReportUnsupportedCommand(command);
+		break;
+	case AICommand::COMMAND_NONE:
+		break;
 	default:
+		ReportUnsupportedCommand(command);
 		break;
 	}
 }
@@ -539,4 +554,48 @@ void SoldierObject::ApplyFireWeaponCommand()
 	WeaponComponent* weaponComp = getWeapon();
 	if (weaponComp != nullptr)
 		weaponComp->ShootBullet();
+}
+
+void SoldierObject::ApplyMoveToCommand(const Ogre::Vector3& targetPosition)
+{
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+	{
+		ai->SetMovePosition(targetPosition);
+		Blackboard* blackboard = ai->GetBlackboard();
+		if (blackboard != nullptr)
+			blackboard->SetVec3("movePos", targetPosition);
+	}
+
+	bool plannedPath = false;
+	AgentStateController* fsm = ai != nullptr ? ai->GetFsmController() : nullptr;
+	if (fsm != nullptr)
+		plannedPath = fsm->PlanPathTo(targetPosition, false);
+	if (!plannedPath)
+		SetTarget(targetPosition);
+
+	ApplyMoveCommand();
+}
+
+void SoldierObject::ApplyStopCommand()
+{
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+	{
+		ai->ClearMovePosition();
+		Blackboard* blackboard = ai->GetBlackboard();
+		if (blackboard != nullptr)
+			blackboard->Remove("movePos");
+	}
+
+	std::vector<Ogre::Vector3> emptyPath;
+	SetPath(emptyPath, false);
+	SetVelocity(Ogre::Vector3::ZERO);
+	SetTarget(GetPosition());
+	ApplyIdleCommand();
+}
+
+void SoldierObject::ReportUnsupportedCommand(const AICommand& command) const
+{
+	CCLOG_INFO("SoldierObject::ApplyCommand unsupported command: %s", AICommand::KindToString(command.kind));
 }

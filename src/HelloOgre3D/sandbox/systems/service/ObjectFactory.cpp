@@ -3,11 +3,9 @@
 #include "PhysicsFactory.h"
 #include "objects/BlockObject.h"
 #include "objects/AgentObject.h"
-#include "components/agent/AgentLocomotion.h"
-#include "components/render/RenderComponent.h"
 #include "systems/manager/ObjectManager.h"
+#include "systems/service/AgentFactory.h"
 #include "systems/service/SoldierFactory.h"
-#include "scripting/LuaPluginMgr.h"
 #include "Ogre.h"
 #include "Procedural.h"
 #include "btBulletDynamicsCommon.h"
@@ -80,24 +78,7 @@ BlockObject* ObjectFactory::CreateBullet(Ogre::Real height, Ogre::Real radius)
 
 AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath)
 {
-	Ogre::Real height = AgentLocomotion::DEFAULT_AGENT_HEIGHT;
-	Ogre::Real radius = AgentLocomotion::DEFAULT_AGENT_RADIUS;
-
-	Ogre::SceneNode* capsuleNode = SceneFactory::CreateNodeCapsule(height, radius);
-	RenderComponent* renderComp = new RenderComponent(capsuleNode);
-	renderComp->SetMaterial("Ground2");
-
-	btRigidBody* capsuleRigidBody = PhysicsFactory::CreateRigidBodyCapsule(height, radius);
-	capsuleRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
-
-	AgentObject* pObject = new AgentObject(renderComp, capsuleRigidBody);
-	pObject->setAgentType(agentType);
-	if (filepath != nullptr)
-		LuaPluginMgr::BindLuaPluginByFile<AgentObject>(pObject, filepath);
-
-	m_objectManager->addNewObject(pObject);
-
-	return pObject;
+	return AgentFactory::CreateAgent(m_objectManager, agentType, filepath);
 }
 
 SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const char* filepath)

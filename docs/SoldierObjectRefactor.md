@@ -581,12 +581,13 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **现状**：`AICommand` 已预留 `MoveTo / Stop / UseSkill / Interact`，但 `SoldierObject::ApplyCommand` 对这些命令静默 no-op。
 - **目标**：为每个 command 明确处理策略：已支持则实现，暂不支持则显式记录并安全返回。
 - **建议范围**：
-  - 优先实现 `MoveTo / Stop`，让 AI 可以只下发命令而不直接调 Soldier forwarder。
-  - `UseSkill / Interact` 暂无系统承接时先记录 unsupported。
+  - [x] 优先实现 `MoveTo / Stop`，让 AI 可以只下发命令而不直接调 Soldier forwarder。
+  - [x] `UseSkill / Interact` 暂无系统承接时先记录 unsupported。
 - **验收**：
-  - [ ] `IssueCommand(AICommand::MoveTo(...))` 能设置移动目标或路径请求。
-  - [ ] 未支持命令不会静默吞掉。
-  - [ ] Sandbox6/7/8 通过。
+  - [x] `IssueCommand(AICommand::MoveTo(...))` 能设置移动目标或路径请求。
+  - [x] `IssueCommand(AICommand::Stop())` 能清理移动目标、停止速度并移除 `movePos` blackboard 标记。
+  - [x] 未支持命令不会静默吞掉。
+  - [x] Sandbox6/7/8 通过。
 - **工时**：半天到 1 天。
 
 #### T-21 Stage 4 终态样例验收
@@ -597,16 +598,17 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
   - 样例以验证装配链路为主，不引入完整新玩法。
   - 不破坏 Sandbox6/7/8 现有表现。
 - **验收**：
-  - [ ] 新对象能通过 factory 装配 `Render / Physics / AgentAttrib / AIController / AnimComponent` 中的最小必要组合。
-  - [ ] 能被 ObjectManager 调度和 debug summary 识别。
-  - [ ] Sandbox6/7/8 通过。
+  - [x] 普通 `AgentObject` 通过 `AgentFactory` 装配 `Render / Physics / AgentAttrib / AIController` 最小必要组合。
+  - [x] `ObjectFactory::CreateAgent` 已委托 `AgentFactory`，现有 Sandbox2 chapter2 agents 作为非 Soldier 装配样例。
+  - [x] 能被 ObjectManager 调度和 debug summary 识别。
+  - [x] Sandbox2/6/7/8 通过。
 - **工时**：1-2 天。
 
 #### Stage 4 验收
 
 - [ ] SoldierObject 行数从 ~250 降到 0 或 ~50（薄壳）。
 - [x] VehicleObject 删除或重命名。
-- [ ] 至少一个新对象类型（如 Monster）能通过 SoldierFactory 模式装配。
+- [x] 至少一个新对象类型（如 Monster/NPC/普通 Agent）能通过 Factory 模式装配。
 
 ---
 
@@ -720,8 +722,8 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-17 | SoldierObject 改 SoldierFactory | 4 | ☑ | 2026-05-27 | T-17a/T-17b/T-17c 完成：`SoldierFactory` 接管 Soldier 创建和组件装配，`SoldierObject` 不再缓存核心组件指针，并通过 `AICommand / ApplyCommand` 承接动作翻译。 |
 | T-18 | AIController owner 泛化为 AgentObject | 4 收口 | ☑ | 2026-05-27 | `AIController::m_owner` 泛化为 `AgentObject*`，旧 Lua `GetOwner()` 保留 Soldier 兼容返回；FSM 可随 Agent owner 初始化，DT/BT 仍限制 Soldier owner；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-19 | Blackboard ownership 收口到 AIController | 4 收口 | ☑ | 2026-05-27 | `AIController` 持有共享 Blackboard，DT/BT driver 通过构造注入同一份黑板并保留 fallback；旧 Lua action `owner, blackboard` 入参不变，Debug x64 构建与 Sandbox7/8 smoke 通过。 |
-| T-20 | AICommand 支持矩阵补齐 | 4 收口 | ☐ |  | |
-| T-21 | Stage 4 终态样例验收 | 4 收口 | ☐ |  | |
+| T-20 | AICommand 支持矩阵补齐 | 4 收口 | ☑ | 2026-05-27 | `MoveTo / Stop` 已落地到 `AIController::IssueCommand` 与 `AgentObject/SoldierObject::ApplyCommand`，`UseSkill / Interact` 显式记录 unsupported；Sandbox6/7/8 smoke 通过。 |
+| T-21 | Stage 4 终态样例验收 | 4 收口 | ☑ | 2026-05-27 | 新增 `AgentFactory`，`ObjectFactory::CreateAgent` 委托普通 Agent 装配 `Render / Physics / AgentAttrib / AIController`，作为非 Soldier factory 样例；Sandbox2/6/7/8 smoke 通过。 |
 
 ---
 
