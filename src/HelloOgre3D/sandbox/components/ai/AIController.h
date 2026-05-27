@@ -20,7 +20,7 @@ public:
 	explicit AIController(SoldierObject* owner = nullptr);
 	virtual ~AIController();
 
-	virtual void onAttach(GameObject* owner) override;
+	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 
 	//tolua_begin

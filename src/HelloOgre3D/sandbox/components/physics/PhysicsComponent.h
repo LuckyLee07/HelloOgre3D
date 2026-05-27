@@ -11,7 +11,7 @@ public:
 	explicit PhysicsComponent(btRigidBody* body);
 	virtual ~PhysicsComponent();
 
-	virtual void onAttach(GameObject* owner);
+	virtual void onAttach(BaseObject* owner);
 	virtual void onDetach();
 	
 	// RigidBody ops

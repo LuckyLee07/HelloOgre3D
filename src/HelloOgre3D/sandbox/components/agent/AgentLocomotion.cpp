@@ -36,7 +36,7 @@ AgentLocomotion::~AgentLocomotion()
 	SAFE_DELETE(m_adapter);
 }
 
-void AgentLocomotion::onAttach(GameObject* owner)
+void AgentLocomotion::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 

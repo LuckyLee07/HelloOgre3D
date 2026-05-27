@@ -26,7 +26,7 @@ AnimComponent::~AnimComponent()
 	SAFE_DELETE(m_controller);
 }
 
-void AnimComponent::onAttach(GameObject* owner)
+void AnimComponent::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 	if (m_owner == nullptr)

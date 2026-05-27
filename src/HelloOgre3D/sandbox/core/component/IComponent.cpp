@@ -1,20 +1,17 @@
 #include "IComponent.h"
-#include "object/GameObject.h"
 
-void IComponent::onAttach(GameObject* gameobj)
+void IComponent::onAttach(BaseObject* owner)
 {
-	m_gameobj = gameobj;
+	m_owner = owner;
 }
 
 void IComponent::onDetach()
 {
-	m_gameobj = nullptr;
+	m_owner = nullptr;
 	m_componentKey.clear();
 }
 
 BaseObject* IComponent::getOwner() const
 {
-	if (m_gameobj == nullptr)
-		return nullptr;
-	return static_cast<BaseObject*>(m_gameobj->getUserData());
+	return m_owner;
 }

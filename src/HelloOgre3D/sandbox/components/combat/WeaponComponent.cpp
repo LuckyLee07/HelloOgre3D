@@ -28,7 +28,7 @@ WeaponComponent::~WeaponComponent()
 	SAFE_DELETE(m_weaponBody);
 }
 
-void WeaponComponent::onAttach(GameObject* owner)
+void WeaponComponent::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 	if (m_owner == nullptr)

@@ -1,18 +1,33 @@
 #include "BaseObject.h"
-#include "GameObject.h"
 #include "SandboxMacros.h"
+#include <sstream>
+
+namespace
+{
+	void DestroyComponent(IComponent* component)
+	{
+		if (component == nullptr)
+			return;
+
+		component->onDestroy();
+		component->onDetach();
+		SAFE_DELETE(component);
+	}
+}
 
 BaseObject::BaseObject()
 	: m_objId(0), m_teamId(0), m_liveTicks(0), m_needClearTicks(-1)
 {
 	m_objType = OBJ_TYPE_NONE;
-	m_pGameObjet = new GameObject();
-	m_pGameObjet->setUserData(this);
 }
 
 BaseObject::~BaseObject()
 {
-	SAFE_DELETE(m_pGameObjet);
+	for (std::map<std::string, IComponent*>::iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+	{
+		DestroyComponent(iter->second);
+	}
+	m_components.clear();
 }
 
 unsigned int BaseObject::GetObjId() const
@@ -79,45 +94,110 @@ void BaseObject::SetNeedClear(int delay_ticks, bool force)
 
 void BaseObject::CollideWithObject(BaseObject* pCollideObj, const Collision& collision)
 {
+	(void)pCollideObj;
+	(void)collision;
 	// CollideWithObject
 }
 
 bool BaseObject::AddComponent(const std::string& key, IComponent* comp)
 {
-	return m_pGameObjet->addComponent(key, comp);
+	if (!comp) return false;
+
+	if (m_components.find(key) != m_components.end())
+		return false;
+
+	if (comp->getOwner() != nullptr)
+		return false;
+
+	m_components[key] = comp;
+	comp->setComponentKey(key);
+	comp->onAttach(this);
+	comp->start();
+	return true;
 }
 
 bool BaseObject::HasComponent(const std::string& key) const
 {
-	return m_pGameObjet != nullptr && m_pGameObjet->hasComponent(key);
+	return m_components.find(key) != m_components.end();
 }
 
 bool BaseObject::RemoveComponent(const std::string& key)
 {
-	return m_pGameObjet != nullptr && m_pGameObjet->removeComponent(key);
+	std::map<std::string, IComponent*>::iterator iter = m_components.find(key);
+	if (iter == m_components.end())
+		return false;
+
+	DestroyComponent(iter->second);
+	m_components.erase(iter);
+	return true;
 }
 
 bool BaseObject::RemoveComponent(IComponent* comp)
 {
-	return m_pGameObjet != nullptr && m_pGameObjet->removeComponent(comp);
+	if (!comp) return false;
+
+	std::map<std::string, IComponent*>::iterator iter = m_components.begin();
+	for (; iter != m_components.end(); ++iter)
+	{
+		if (iter->second == comp)
+		{
+			DestroyComponent(iter->second);
+			m_components.erase(iter);
+			return true;
+		}
+	}
+	return false;
 }
 
 IComponent* BaseObject::GetComponent(const std::string& key)
 {
-	return m_pGameObjet != nullptr ? m_pGameObjet->getComponent(key) : nullptr;
+	std::map<std::string, IComponent*>::iterator iter = m_components.find(key);
+	if (iter != m_components.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
 }
 
 const IComponent* BaseObject::GetComponent(const std::string& key) const
 {
-	return m_pGameObjet != nullptr ? m_pGameObjet->getComponent(key) : nullptr;
+	std::map<std::string, IComponent*>::const_iterator iter = m_components.find(key);
+	if (iter != m_components.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
 }
 
 int BaseObject::GetComponentCount() const
 {
-	return m_pGameObjet != nullptr ? m_pGameObjet->getComponentCount() : 0;
+	return static_cast<int>(m_components.size());
+}
+
+std::vector<std::string> BaseObject::GetComponentKeys() const
+{
+	std::vector<std::string> keys;
+	keys.reserve(m_components.size());
+	for (std::map<std::string, IComponent*>::const_iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+	{
+		keys.push_back(iter->first);
+	}
+	return keys;
 }
 
 std::string BaseObject::BuildComponentDebugString() const
 {
-	return m_pGameObjet != nullptr ? m_pGameObjet->buildComponentDebugString() : "-";
+	if (m_components.empty())
+		return "-";
+
+	std::ostringstream stream;
+	bool first = true;
+	for (std::map<std::string, IComponent*>::const_iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+	{
+		if (!first)
+			stream << ",";
+		stream << iter->first << (iter->second != nullptr ? "" : ":null");
+		first = false;
+	}
+	return stream.str();
 }

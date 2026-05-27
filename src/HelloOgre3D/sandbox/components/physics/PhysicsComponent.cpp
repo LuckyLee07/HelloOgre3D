@@ -16,7 +16,7 @@ PhysicsComponent::~PhysicsComponent()
 	DeleteRigidBody();
 }
 
-void PhysicsComponent::onAttach(GameObject* owner)
+void PhysicsComponent::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 

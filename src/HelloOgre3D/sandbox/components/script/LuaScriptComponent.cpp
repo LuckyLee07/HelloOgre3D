@@ -19,7 +19,7 @@ LuaScriptComponent::~LuaScriptComponent()
 	ReleaseLuaEnv();
 }
 
-void LuaScriptComponent::onAttach(GameObject* owner)
+void LuaScriptComponent::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 

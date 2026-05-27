@@ -36,7 +36,7 @@ AIController::~AIController()
 	SAFE_DELETE(m_driver);
 }
 
-void AIController::onAttach(GameObject* owner)
+void AIController::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 	if (m_owner == nullptr)

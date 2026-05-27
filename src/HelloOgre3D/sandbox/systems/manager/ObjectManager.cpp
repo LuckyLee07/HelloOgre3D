@@ -18,6 +18,7 @@
 #include "profiling/Profile.h"
 
 #include <sstream>
+#include <iomanip>
 #include <algorithm>
 #include <vector>
 
@@ -49,6 +50,21 @@ namespace
 	{
 		std::ostringstream stream;
 		stream << static_cast<int>(value.x) << "," << static_cast<int>(value.y) << "," << static_cast<int>(value.z);
+		return stream.str();
+	}
+
+	std::string FormatReal(Ogre::Real value)
+	{
+		std::ostringstream stream;
+		stream << std::fixed << std::setprecision(2) << value;
+		return stream.str();
+	}
+
+	std::string FormatVec3Precise(const Ogre::Vector3& value)
+	{
+		std::ostringstream stream;
+		stream << std::fixed << std::setprecision(2)
+			<< value.x << "," << value.y << "," << value.z;
 		return stream.str();
 	}
 
@@ -309,7 +325,11 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 			<< " team=" << agent->GetTeamId()
 			<< " type=" << agent->getAgentType()
 			<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")"
-			<< " hp=" << static_cast<int>(agent->GetHealth());
+			<< " hp=" << static_cast<int>(agent->GetHealth())
+			<< " pos=" << FormatVec3Precise(agent->GetPosition())
+			<< " vel=" << FormatVec3Precise(agent->GetVelocity())
+			<< " speed=" << FormatReal(agent->GetSpeed())
+			<< " target=" << FormatVec3Precise(agent->GetTarget());
 
 		if (ai == nullptr)
 		{

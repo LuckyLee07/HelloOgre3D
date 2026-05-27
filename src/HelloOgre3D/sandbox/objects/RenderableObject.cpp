@@ -66,7 +66,7 @@ bool RenderableObject::AttachRenderComponent(BaseObject* owner, const std::strin
 		return true;
 	}
 
-	if (m_renderComp->getGameObject() != nullptr)
+	if (m_renderComp->getOwner() != nullptr)
 	{
 		return false;
 	}

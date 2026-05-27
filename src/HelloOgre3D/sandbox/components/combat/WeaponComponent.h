@@ -15,7 +15,7 @@ public:
 	explicit WeaponComponent(SoldierObject* owner = nullptr);
 	virtual ~WeaponComponent();
 
-	virtual void onAttach(GameObject* owner) override;
+	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 	virtual void update(int deltaMs) override;
 

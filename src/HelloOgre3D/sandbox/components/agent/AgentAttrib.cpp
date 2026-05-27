@@ -19,7 +19,7 @@ AgentAttrib::AgentAttrib(Ogre::Real health, Ogre::Real maxHealth, int stanceType
 {
 }
 
-void AgentAttrib::onAttach(GameObject* owner)
+void AgentAttrib::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 

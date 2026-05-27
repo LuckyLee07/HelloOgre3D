@@ -2,12 +2,13 @@
 #define __BASE_OBJECT__
 
 #include <string>
+#include <map>
+#include <vector>
 #include "SandboxMacros.h"
+#include "component/IComponent.h"
 #include "object/SandboxObject.h"
-#include "object/GameObject.h"
 #include "script/LuaClassNameTraits.h"
 
-class IComponent;
 struct Collision;
 
 class BaseObject : public SandboxObject //tolua_exports
@@ -64,34 +65,47 @@ public:
 	template<typename T>
 	T* GetComponentAs(const std::string& key)
 	{
-		return m_pGameObjet != nullptr ? m_pGameObjet->getComponentAs<T>(key) : nullptr;
+		return dynamic_cast<T*>(GetComponent(key));
 	}
 
 	template<typename T>
 	const T* GetComponentAs(const std::string& key) const
 	{
-		return m_pGameObjet != nullptr ? m_pGameObjet->getComponentAs<T>(key) : nullptr;
+		return dynamic_cast<const T*>(GetComponent(key));
 	}
 
 	template<typename T>
 	T* FindComponent()
 	{
-		return m_pGameObjet != nullptr ? m_pGameObjet->findComponent<T>() : nullptr;
+		for (std::map<std::string, IComponent*>::iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+		{
+			T* component = dynamic_cast<T*>(iter->second);
+			if (component != nullptr)
+				return component;
+		}
+		return nullptr;
 	}
 
 	template<typename T>
 	const T* FindComponent() const
 	{
-		return m_pGameObjet != nullptr ? m_pGameObjet->findComponent<T>() : nullptr;
+		for (std::map<std::string, IComponent*>::const_iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+		{
+			const T* component = dynamic_cast<const T*>(iter->second);
+			if (component != nullptr)
+				return component;
+		}
+		return nullptr;
 	}
 
 	int GetComponentCount() const;
+	std::vector<std::string> GetComponentKeys() const;
 	std::string BuildComponentDebugString() const;
 
 protected:
 	ObjectType m_objType;
-	// Historical name kept to avoid a broad rename. Owns the component container.
-	GameObject* m_pGameObjet;
+	// BaseObject owns every component inserted through AddComponent.
+	std::map<std::string, IComponent*> m_components;
 
 private:
 	unsigned int m_objId;

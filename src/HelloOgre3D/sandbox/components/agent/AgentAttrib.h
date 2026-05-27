@@ -12,7 +12,7 @@ public:
 	AgentAttrib(Ogre::Real health, Ogre::Real maxHealth, int stanceType, int pendingStanceType = -1);
 	virtual ~AgentAttrib() {}
 
-	virtual void onAttach(GameObject* owner) override;
+	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 
 	void SetHealth(Ogre::Real health);

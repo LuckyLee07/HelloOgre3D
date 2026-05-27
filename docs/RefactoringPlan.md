@@ -410,7 +410,7 @@ public:
 
 ### 目标
 
-合并为 `sandbox/components/render/RenderComponent`，`RenderableObject` 删除。所有持有它的对象改成持有 `RenderComponent`（通过 GameObject 组件容器）。
+合并为 `sandbox/components/render/RenderComponent`，`RenderableObject` 删除。所有持有它的对象改成持有 `RenderComponent`（通过 BaseObject 组件容器）。
 
 ### 难点
 
@@ -419,7 +419,7 @@ public:
 ### 落地动作（分两步）
 
 1. **Stage 3 第 1 步**：让 `RenderComponent` 接口对齐 `RenderableObject`，所有 Lua API 都能在 RenderComponent 上调用。
-2. **Stage 3 第 2 步**：把 SoldierObject / BlockObject / AgentObject 改为通过 GameObject 拿 RenderComponent，删除 `m_pAgentBody`、`m_pBody` 等成员。
+2. **Stage 3 第 2 步**：把 SoldierObject / BlockObject / AgentObject 改为通过 BaseObject 拿 RenderComponent，删除 `m_pAgentBody`、`m_pBody` 等成员。
 3. **Stage 3 第 3 步**：删除 `RenderableObject.{cpp,h}`，重生成 tolua。
 
 ### 工时：1 天
@@ -433,6 +433,8 @@ public:
 ### 现状
 
 `BaseObject` 持有 `GameObject* m_pGameObjet`，且 `BaseObject::AddComponent / GetComponent` 是 thin forwarder 到 GameObject。两层包装两套接口，让新人困惑。
+
+> 2026-05-27：S-10 已按方案 B 完成。`GameObject` 类已删除，组件容器并入 `BaseObject`，`IComponent::onAttach` 改为接收 `BaseObject*`。
 
 ### 目标
 
@@ -451,7 +453,7 @@ GameObject 在 Unity 里是 entity 概念，但这里的 GameObject 是组件容
 1. 把 GameObject 的组件 map / Add / Get / Update 全部并入 BaseObject。
 2. 删除 GameObject 类。
 3. Lua 侧 `BaseObject:GetComponent(...)` 接口保持不变。
-4. tolua 重生成。
+4. tolua 重生成。（若 `tolua_begin` 暴露面未变化，可仅做编译和运行验收。）
 
 ### 风险
 
@@ -556,19 +558,15 @@ function BehaviorSoldierAgent:SetupDriver() ... end
 #### 现状
 
 ```cpp
-class PhysicsComponent : public IComponent {
-    // IComponent 已有 GameObject* m_gameobj
-    BaseObject* m_owner = nullptr;   ← 重复
-};
-
 class AgentLocomotion : public IComponent {
-    VehicleObject* m_owner = nullptr;  ← 重复 + 类型绑死
+    // IComponent 已有 BaseObject* m_owner
+    AgentObject* m_owner = nullptr;  ← 重复 + 类型仍偏窄
 };
 ```
 
 #### 目标
 
-删除子类的 `m_owner`，统一用基类 `m_gameobj`；需要 BaseObject 引用时通过 `m_gameobj->getOwner()` 或类似 accessor 获取。
+删除子类的 `m_owner`，统一用 `IComponent::getOwner()` 取得宿主 `BaseObject`；需要更窄类型时在局部 `dynamic_cast` 或由组件初始化时缓存，但不再重复维护通用 owner 字段。
 
 #### 工时：1 小时
 

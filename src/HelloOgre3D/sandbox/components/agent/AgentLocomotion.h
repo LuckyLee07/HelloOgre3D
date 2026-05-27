@@ -14,7 +14,7 @@ public:
 	AgentLocomotion();
 	virtual ~AgentLocomotion();
 
-	virtual void onAttach(GameObject* owner);
+	virtual void onAttach(BaseObject* owner);
 	virtual void onDetach();
 	void SetOwner(AgentObject* owner) { m_owner = owner; }
 

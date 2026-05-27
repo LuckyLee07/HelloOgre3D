@@ -15,7 +15,7 @@ public:
 	LuaScriptComponent();
 	virtual ~LuaScriptComponent();
 
-	virtual void onAttach(GameObject* owner) override;
+	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 
 	void SetLocalEnvOwner(void* object, const char* luaClassName);

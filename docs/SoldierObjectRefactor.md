@@ -28,19 +28,19 @@ AgentObject : LuaEnvObject (多继承)                 (m_pAgentBody: Renderable
 SoldierObject                                        ~716 行
 ```
 
-T-11/T-12 已完成后，当前主链已经收敛为：
+T-11/T-12/T-13 已完成后，当前主链已经收敛为：
 
 ```
 SandboxObject
   ↓
-BaseObject                                          (id/teamId/objType + GameObject* 组件容器)
+BaseObject                                          (id/teamId/objType + 组件容器)
   ↓
 AgentObject                                         (AgentLocomotion / PhysicsComponent / LuaScriptComponent)
   ↓
 SoldierObject
 ```
 
-`VehicleObject` 已删除；`AgentObject` 不再继承 `LuaEnvObject`，Lua 脚本环境改由 `LuaScriptComponent` 挂载。
+`VehicleObject` 已删除；`AgentObject` 不再继承 `LuaEnvObject`，Lua 脚本环境改由 `LuaScriptComponent` 挂载；`GameObject` wrapper 已删除，组件容器由 `BaseObject` 直接持有。
 
 ### 1.2 SoldierObject 初始持有 / 继承的"准组件"
 
@@ -53,7 +53,7 @@ SoldierObject
 | 直接持有 | `m_enemy / m_movePos / m_hasMovePos` | 散字段 | 应属 AIController/Blackboard |
 | 继承自 AgentObject | `m_pAgentBody` | `RenderableObject*` | 走继承字段而不挂组件 |
 | 当前由 AgentObject 挂载（T-11 前继承自 VehicleObject） | `m_locomotion / m_physicsComp` | 组件指针 | ✓ 已组件化 |
-| 继承自 BaseObject | `m_pGameObjet` | `GameObject*` | 组件容器（拼写错） |
+| 继承自 BaseObject | `m_components` | `std::map<std::string, IComponent*>` | ✓ 组件容器已内聚 |
 
 ### 1.3 初始数值"多份"的字段
 
@@ -444,6 +444,17 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 #### T-13 BaseObject ↔ GameObject 合并 + 拼写纠正
 - **[Stage 4]** [P-10] [对应 [RefactoringPlan.md S-10](RefactoringPlan.md)]
 - **目标**：BaseObject 直接持组件容器，删除 GameObject 类，顺手改对 `m_pGameObjet` 拼写。
+- **落地动作**：
+  1. [x] `GameObject` 的组件 map / Add / Get / Remove / debug string 逻辑并入 `BaseObject`。
+  2. [x] `IComponent::onAttach` 改为接收 `BaseObject*`，`getOwner()` 直接返回宿主对象。
+  3. [x] 删除 `GameObject.cpp/.h`，清理 `m_pGameObjet` / `m_gameobj` / `getGameObject()` 残留引用。
+  4. [x] 刷新 VS2017 工程，确认工程文件不再引用 `GameObject.cpp`。
+- **验收**：
+  - [x] `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017 --with-fairygui` 通过。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过，0 error（仍有既有 Bullet / navigation warning）。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox6 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox7 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox8 -VisualTraceGate -RuntimeDiag -StopExisting` 通过。
 - **工时**：2-3 天。
 
 #### T-14 位置真源统一（含条件规则）
@@ -585,7 +596,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-10 | 事件 token 挂组件 onAttach | 3 | ☑ | 2026-05-27 | ASM token 下沉 AnimComponent，HEALTH_CHANGE token 下沉 AgentAttrib。 |
 | T-11 | VehicleObject 解构 | 4 | ☑ | 2026-05-27 | AgentObject 直接继承 BaseObject，VehicleObject 类与 Lua 继承关系删除；Debug x64 构建通过。 |
 | T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☑ | 2026-05-27 | AgentObject 解除 LuaEnvObject 多继承，新增 LuaScriptComponent；Debug x64 构建通过。 |
-| T-13 | BaseObject ↔ GameObject 合并 | 4 | ☐ | | |
+| T-13 | BaseObject ↔ GameObject 合并 | 4 | ☑ | 2026-05-27 | BaseObject 直接持组件容器，GameObject 类删除；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-14 | 位置真源统一 | 4 | ☐ | | |
 | T-15 | 删除 RenderableObject | 4 | ☐ | | |
 | T-16 | 删除 driver Lua forwarder | 4 | ☐ | | |
