@@ -4,7 +4,7 @@
 >
 > **核心原则**：**目标可激进，动作必保守**。每一步只在**保留旧 API**的前提下叠加新结构，确认 Sandbox6/7/8 行为稳定后才删字段。绝不允许"先删字段再补组件"。
 >
-> **使用规则**：每个任务（T-00 ~ T-17）独立可执行、独立 PR、独立可回滚。完成后回填 §8 进度表。新发现问题追加 T-18+，不要散落 commit。
+> **使用规则**：每个任务（T-00 ~ T-21）独立可执行、独立 PR、独立可回滚。完成后回填 §8 进度表。新发现问题追加 T-22+，不要散落 commit。
 
 ---
 
@@ -203,7 +203,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 ---
 
-## 4. 分阶段重构任务（17 项，已按"保守原则"重排）
+## 4. 分阶段重构任务（17 项 + 收口追加，已按"保守原则"重排）
 
 > **每个 Task 通用约束**：
 > - 必须保留 SoldierObject 旧 Lua API 为 thin forwarder，不破坏 Sandbox6/7/8 调用面。
@@ -512,8 +512,95 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 #### T-17 SoldierObject 改 SoldierFactory（终态）
 - **[Stage 4]** [P-04/P-05/P-07 收尾]
-- **目标**：SoldierObject 类缩成"动作命令翻译器"或删除，实体创建走 SoldierFactory。
+- **决策**：保留 `SoldierObject` 为薄壳，不直接删除；后续 `AICommand / ApplyCommand` 需要一个角色特化翻译面。
+- **目标**：SoldierObject 类缩成"动作命令翻译器"，实体创建和组件装配走 SoldierFactory。
+- **拆分**：
+  1. [x] T-17a：新增 `SoldierFactory`，`ObjectFactory::CreateSoldier` 委托给它；Render / Physics / AgentAttrib / WeaponComponent / AIController / AnimComponent 装配从 `SoldierObject` 构造函数迁出。
+  2. [x] T-17b：`SoldierObject` 字段去缓存化，优先从组件容器查询 `AgentAttrib / WeaponComponent / AIController / AnimComponent`。
+  3. [x] T-17c：引入 `AICommand / ApplyCommand` 薄壳接口，逐步把 `Enter*Anim / ShootBullet / RequestState` 收敛成命令翻译。
+- **验收（T-17a）**：
+  - [x] 重新生成 VS2017 工程，确保 `SoldierFactory.cpp/.h` 纳入工程。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `Sandbox6` RuntimeDiag 通过。
+  - [x] `Sandbox7` VisualTraceGate + RuntimeDiag 通过。
+  - [x] `Sandbox8` VisualTraceGate + RuntimeDiag 通过。
+- **验收（T-17b）**：
+  - [x] `SoldierObject` 不再缓存 `AgentAttrib / WeaponComponent / AIController / AnimComponent` 指针。
+  - [x] `SoldierFactory` 只负责装配组件，不再回填 `SoldierObject` 私有字段。
+  - [x] Lua 侧旧入口 `GetAI() / GetAIController() / getWeapon()` 与 C++ 侧 `GetAnimComponent()` 保持可用。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `Sandbox6` RuntimeDiag 通过。
+  - [x] `Sandbox7` VisualTraceGate + RuntimeDiag 通过。
+  - [x] `Sandbox8` VisualTraceGate + RuntimeDiag 通过，`maxHorizontalSpeed=2.82 / maxStepDistance=1.27 / healthDrops=6 / maxHitStepDistance=0.05`。
+- **验收（T-17c）**：
+  - [x] 新增 `AICommand` 值对象，预留 `Idle / Move / Attack / Reload / Die / FireWeapon / RequestState / MoveTo / UseSkill / Stop / Interact` 指令类型。
+  - [x] `AgentObject` 提供 `ApplyCommand(const AICommand&)` 默认入口，`SoldierObject` 覆盖并做角色特化翻译。
+  - [x] `AIController::IssueCommand(const AICommand&)` 已接入到 owner `ApplyCommand`，后续 DT/BT/FSM 可逐步改为下发命令。
+  - [x] `SoldierObject::Enter*Anim / ShootBullet / RequestState` 保持 Lua API 不变，内部转为 `ApplyCommand(...)`。
+  - [x] 重新生成 VS2017 工程，确保 `AICommand.h` 纳入工程。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `Sandbox6` RuntimeDiag 通过。
+  - [x] `Sandbox7` VisualTraceGate + RuntimeDiag 通过。
+  - [x] `Sandbox8` VisualTraceGate + RuntimeDiag 通过，`maxHorizontalSpeed=2.82 / maxStepDistance=1.27 / healthDrops=6 / maxHitStepDistance=0.05`。
 - **工时**：3-5 天。
+
+#### T-18 AIController owner 泛化为 AgentObject
+- **[Stage 4 收口]** [复盘追加]
+- **现状**：`ObjectManager` 已按 `AIController` 组件调度，但 `AIController` 内部 owner 仍是 `SoldierObject*`。未来 Monster/NPC 挂 AIController 会被调度器识别，却无法正常初始化 owner / driver。
+- **目标**：`AIController` 内部 owner 改为 `AgentObject*`，保留 Soldier 兼容面。
+- **关键约束**：
+  - Lua 旧接口 `AIController::GetOwner()` 暂保留返回 `SoldierObject*`，避免扩大绑定和脚本改动面。
+  - FSM driver 已支持 `AgentObject*`，可随 owner 泛化；DT/BT driver 仍依赖 Soldier Lua action，本任务只在 Soldier owner 下允许创建。
+  - `Agent_Update` 调用根据 owner 类型选择 `u[SoldierObject]` 或 `u[AgentObject]`。
+- **落地动作**：
+  1. `AIController::m_owner` / 构造参数改为 `AgentObject*`。
+  2. 新增内部 `GetSoldierOwner()`，DT/BT / 旧 Lua `GetOwner()` 走该兼容入口。
+  3. `onAttach` 从组件宿主动态取得 `AgentObject*`。
+  4. Debug / scheduler 路径保持按组件查询，不再隐含 Soldier-only。
+- **验收**：
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `Sandbox6` RuntimeDiag 通过。
+  - [x] `Sandbox7` VisualTraceGate + RuntimeDiag 通过。
+  - [x] `Sandbox8` VisualTraceGate + RuntimeDiag 通过。
+- **工时**：半天。
+
+#### T-19 Blackboard ownership 收口到 AIController
+- **[Stage 4 收口]** [复盘追加]
+- **现状**：`DecisionTreeDriver / BehaviorTreeDriver` 各自持有 Blackboard，`AIController::GetBlackboard()` 只转发 active driver。
+- **目标**：AIController 持有共享 Blackboard，drivers 从 AIController 注入 / 读取同一份 Blackboard，为 SensorComponent / MemoryComponent 共享黑板铺路。
+- **关键约束**：
+  - 先保持 Lua action 入参 `owner, blackboard` 不变。
+  - driver 切换时 Blackboard 指针稳定，避免 Lua 缓存指针失效。
+- **验收**：
+  - [x] DT / BT 切换后 `AIController::GetBlackboard()` 返回同一份 Blackboard。
+  - [x] Sandbox7 / Sandbox8 行为和 visual trace gate 稳定。
+- **工时**：1 天。
+
+#### T-20 AICommand 支持矩阵补齐
+- **[Stage 4 收口]** [复盘追加]
+- **现状**：`AICommand` 已预留 `MoveTo / Stop / UseSkill / Interact`，但 `SoldierObject::ApplyCommand` 对这些命令静默 no-op。
+- **目标**：为每个 command 明确处理策略：已支持则实现，暂不支持则显式记录并安全返回。
+- **建议范围**：
+  - 优先实现 `MoveTo / Stop`，让 AI 可以只下发命令而不直接调 Soldier forwarder。
+  - `UseSkill / Interact` 暂无系统承接时先记录 unsupported。
+- **验收**：
+  - [ ] `IssueCommand(AICommand::MoveTo(...))` 能设置移动目标或路径请求。
+  - [ ] 未支持命令不会静默吞掉。
+  - [ ] Sandbox6/7/8 通过。
+- **工时**：半天到 1 天。
+
+#### T-21 Stage 4 终态样例验收
+- **[Stage 4 收口]** [复盘追加]
+- **现状**：Stage 4 验收仍缺"至少一个新对象类型能通过 Factory 模式装配"。
+- **目标**：增加一个最小 Monster/NPC 或轻量 AgentFactory 样例，验证 `BaseObject + AgentObject + 组件装配` 不再只服务 Soldier。
+- **关键约束**：
+  - 样例以验证装配链路为主，不引入完整新玩法。
+  - 不破坏 Sandbox6/7/8 现有表现。
+- **验收**：
+  - [ ] 新对象能通过 factory 装配 `Render / Physics / AgentAttrib / AIController / AnimComponent` 中的最小必要组合。
+  - [ ] 能被 ObjectManager 调度和 debug summary 识别。
+  - [ ] Sandbox6/7/8 通过。
+- **工时**：1-2 天。
 
 #### Stage 4 验收
 
@@ -630,7 +717,11 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-14 | 位置真源统一 | 4 | ☑ | 2026-05-27 | RenderComponent 统一 physics/no-physics 同步，BlockObject 无刚体路径补齐；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-15 | 删除 RenderableObject | 4 | ☑ | 2026-05-27 | AgentObject/BlockObject 直接走 RenderComponent，body/weapon ASM 迁入 AnimComponent；RenderableObject 类与 Lua 绑定删除，Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
 | T-16 | 删除 driver Lua forwarder | 4 | ☑ | 2026-05-27 | Lua 改走 `agent:GetAI():SetDriverByType("dt"|"bt")`，SoldierObject driver forwarder 与 AIController `Use*Driver` wrapper 删除；Debug x64 构建与 Sandbox7/8 smoke 通过。 |
-| T-17 | SoldierObject 改 SoldierFactory | 4 | ☐ | | |
+| T-17 | SoldierObject 改 SoldierFactory | 4 | ☑ | 2026-05-27 | T-17a/T-17b/T-17c 完成：`SoldierFactory` 接管 Soldier 创建和组件装配，`SoldierObject` 不再缓存核心组件指针，并通过 `AICommand / ApplyCommand` 承接动作翻译。 |
+| T-18 | AIController owner 泛化为 AgentObject | 4 收口 | ☑ | 2026-05-27 | `AIController::m_owner` 泛化为 `AgentObject*`，旧 Lua `GetOwner()` 保留 Soldier 兼容返回；FSM 可随 Agent owner 初始化，DT/BT 仍限制 Soldier owner；Debug x64 构建与 Sandbox6/7/8 smoke 通过。 |
+| T-19 | Blackboard ownership 收口到 AIController | 4 收口 | ☑ | 2026-05-27 | `AIController` 持有共享 Blackboard，DT/BT driver 通过构造注入同一份黑板并保留 fallback；旧 Lua action `owner, blackboard` 入参不变，Debug x64 构建与 Sandbox7/8 smoke 通过。 |
+| T-20 | AICommand 支持矩阵补齐 | 4 收口 | ☐ |  | |
+| T-21 | Stage 4 终态样例验收 | 4 收口 | ☐ |  | |
 
 ---
 
@@ -640,4 +731,4 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - 全工程结构重构总账：[RefactoringPlan.md](RefactoringPlan.md)（本文档 T-00/T-02/T-06/T-08/T-09/T-13 跟其中 S-xx 一一映射）
 - 项目协作约定 / 命名规则：AGENTS.md（每 Task 完成同步更新）
 
-> **维护**：完成 Task 在 §8 表格回填日期和 commit。新发现问题追加为 T-18+ 并补 §2 问题清单。决策点（§6）有变更直接更新本文档，不要散在 commit。
+> **维护**：完成 Task 在 §8 表格回填日期和 commit。新发现问题追加为 T-22+ 并补 §2 问题清单。决策点（§6）有变更直接更新本文档，不要散在 commit。

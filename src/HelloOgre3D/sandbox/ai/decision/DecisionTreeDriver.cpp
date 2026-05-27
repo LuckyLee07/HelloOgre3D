@@ -5,8 +5,11 @@
 #include "LuaDecisionAction.h"
 #include "profiling/Profile.h"
 
-DecisionTreeDriver::DecisionTreeDriver(SoldierObject* owner)
-	: m_owner(owner), m_blackboard(owner), m_tree(nullptr)
+DecisionTreeDriver::DecisionTreeDriver(SoldierObject* owner, Blackboard* blackboard)
+	: m_owner(owner)
+	, m_fallbackBlackboard(owner)
+	, m_blackboard(blackboard != nullptr ? blackboard : &m_fallbackBlackboard)
+	, m_tree(nullptr)
 {
 }
 

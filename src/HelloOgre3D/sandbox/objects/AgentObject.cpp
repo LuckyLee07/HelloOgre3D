@@ -112,6 +112,10 @@ AgentAnimStateMachine* AgentObject::GetObjectASM() const
 	return anim != nullptr ? anim->GetBodyAsm() : nullptr;
 }
 
+void AgentObject::ApplyCommand(const AICommand&)
+{
+}
+
 btRigidBody* AgentObject::getRigidBody() const
 {
 	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();

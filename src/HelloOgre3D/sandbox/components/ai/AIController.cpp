@@ -19,8 +19,9 @@
 #include "systems/manager/ObjectManager.h"
 #include "systems/manager/SandboxMgr.h"
 
-AIController::AIController(SoldierObject* owner)
+AIController::AIController(AgentObject* owner)
 	: m_owner(owner)
+	, m_blackboard(dynamic_cast<SoldierObject*>(owner))
 	, m_driver(nullptr)
 	, m_enemy(nullptr)
 	, m_enemyId(-1)
@@ -41,13 +42,15 @@ void AIController::onAttach(BaseObject* owner)
 	IComponent::onAttach(owner);
 	if (m_owner == nullptr)
 	{
-		m_owner = dynamic_cast<SoldierObject*>(getOwner());
+		m_owner = dynamic_cast<AgentObject*>(getOwner());
 	}
+	m_blackboard.SetOwner(GetSoldierOwner());
 	InitDefaultDriver();
 }
 
 void AIController::onDetach()
 {
+	m_blackboard.SetOwner(nullptr);
 	m_owner = nullptr;
 	IComponent::onDetach();
 }
@@ -88,7 +91,15 @@ void AIController::TickAI(int deltaMs)
 	{
 		totalMilisec = 0;
 		H3D_PROFILE_SCOPE("Lua::Agent_Update");
-		m_owner->callFunction("Agent_Update", "u[SoldierObject]i", m_owner, deltaMs);
+		SoldierObject* soldier = GetSoldierOwner();
+		if (soldier != nullptr)
+		{
+			m_owner->callFunction("Agent_Update", "u[SoldierObject]i", soldier, deltaMs);
+		}
+		else
+		{
+			m_owner->callFunction("Agent_Update", "u[AgentObject]i", m_owner, deltaMs);
+		}
 	}
 
 	if (m_driver)
@@ -105,19 +116,17 @@ void AIController::SetTickInOwnerUpdateEnabled(bool enabled)
 
 Blackboard* AIController::GetBlackboard() const
 {
-	BehaviorTreeDriver* behaviorDriver = GetBehaviorTreeDriver();
-	if (behaviorDriver != nullptr)
-	{
-		return behaviorDriver->GetBlackboard();
-	}
+	return const_cast<Blackboard*>(&m_blackboard);
+}
 
-	DecisionTreeDriver* decisionDriver = GetDecisionTreeDriver();
-	if (decisionDriver != nullptr)
-	{
-		return decisionDriver->GetBlackboard();
-	}
+SoldierObject* AIController::GetOwner() const
+{
+	return GetSoldierOwner();
+}
 
-	return nullptr;
+SoldierObject* AIController::GetSoldierOwner() const
+{
+	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
@@ -302,6 +311,14 @@ AgentStateController* AIController::GetFsmController() const
 	return dynamic_cast<AgentStateController*>(m_driver);
 }
 
+void AIController::IssueCommand(const AICommand& command)
+{
+	if (m_owner != nullptr)
+	{
+		m_owner->ApplyCommand(command);
+	}
+}
+
 void AIController::SetDriverByType(const char* type)
 {
 	if (m_owner == nullptr || type == nullptr)
@@ -348,7 +365,8 @@ void AIController::SetFsmDriver()
 
 void AIController::SetDecisionTreeDriver()
 {
-	if (m_owner == nullptr)
+	SoldierObject* soldier = GetSoldierOwner();
+	if (soldier == nullptr)
 	{
 		return;
 	}
@@ -359,14 +377,15 @@ void AIController::SetDecisionTreeDriver()
 	}
 	SAFE_DELETE(m_driver);
 
-	DecisionTreeDriver* dt = new DecisionTreeDriver(m_owner);
+	DecisionTreeDriver* dt = new DecisionTreeDriver(soldier, &m_blackboard);
 	dt->Init();
 	m_driver = dt;
 }
 
 void AIController::SetBehaviorTreeDriver()
 {
-	if (m_owner == nullptr)
+	SoldierObject* soldier = GetSoldierOwner();
+	if (soldier == nullptr)
 	{
 		return;
 	}
@@ -377,7 +396,7 @@ void AIController::SetBehaviorTreeDriver()
 	}
 	SAFE_DELETE(m_driver);
 
-	BehaviorTreeDriver* bt = new BehaviorTreeDriver(m_owner);
+	BehaviorTreeDriver* bt = new BehaviorTreeDriver(soldier, &m_blackboard);
 	bt->Init();
 	m_driver = bt;
 }

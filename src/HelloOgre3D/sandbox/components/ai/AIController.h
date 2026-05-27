@@ -3,28 +3,29 @@
 
 #include "OgreString.h"
 #include "OgreVector3.h"
+#include "ai/common/Blackboard.h"
 #include "component/IComponent.h"
 #include "script/LuaClassNameTraits.h"
 
 class AgentObject;
 class AgentStateController;
 class BehaviorTreeDriver;
-class Blackboard;
 class DecisionTreeDriver;
 class IDecisionDriver;
 class SoldierObject;
+struct AICommand;
 
 class AIController : public IComponent //tolua_exports
 { //tolua_exports
 public:
-	explicit AIController(SoldierObject* owner = nullptr);
+	explicit AIController(AgentObject* owner = nullptr);
 	virtual ~AIController();
 
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 
 	//tolua_begin
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 	Blackboard* GetBlackboard() const;
 
 	AgentObject* GetEnemy() const;
@@ -44,12 +45,14 @@ public:
 
 	AgentStateController* GetFsmController() const;
 
+	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
 	void TickAI(int deltaMs);
 	void SetTickInOwnerUpdateEnabled(bool enabled);
 	bool IsTickInOwnerUpdateEnabled() const { return m_tickInOwnerUpdateEnabled; }
 
 private:
+	SoldierObject* GetSoldierOwner() const;
 	void InitDefaultDriver();
 	void SetFsmDriver();
 	void SetDecisionTreeDriver();
@@ -59,7 +62,8 @@ private:
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 
 private:
-	SoldierObject* m_owner;
+	AgentObject* m_owner;
+	Blackboard m_blackboard;
 	IDecisionDriver* m_driver;
 	AgentObject* m_enemy;
 	int m_enemyId;

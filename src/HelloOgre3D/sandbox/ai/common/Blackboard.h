@@ -21,6 +21,8 @@ public:
 	explicit Blackboard(SoldierObject* owner);
 	~Blackboard();
 
+	void SetOwner(SoldierObject* owner);
+
 	//tolua_begin
 	SoldierObject* GetOwner() const { return m_owner; }
 

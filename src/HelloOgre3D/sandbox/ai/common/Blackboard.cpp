@@ -13,6 +13,11 @@ Blackboard::~Blackboard()
 	Clear();
 }
 
+void Blackboard::SetOwner(SoldierObject* owner)
+{
+	m_owner = owner;
+}
+
 void Blackboard::SetAgent(const std::string& key, AgentObject* value)
 {
 	m_agents[key] = value;

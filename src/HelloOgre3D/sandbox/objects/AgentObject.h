@@ -27,6 +27,7 @@ class AgentPath;
 class OpenSteerAdapter;
 class RenderComponent;
 struct Collision;
+struct AICommand;
 
 class AgentObject : public BaseObject //tolua_exports
 { //tolua_exports
@@ -125,6 +126,8 @@ public:
 	virtual bool IsAnimReadyForShoot() { return false; }
 
 	//tolua_end
+
+	virtual void ApplyCommand(const AICommand& command);
 	
 	virtual void OnDeath(float lastSec);
 	virtual void SlowMoving(float rate = 1.0f);

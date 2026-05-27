@@ -10,9 +10,10 @@
 #include "LuaCondition.h"
 #include "profiling/Profile.h"
 
-BehaviorTreeDriver::BehaviorTreeDriver(SoldierObject* owner)
+BehaviorTreeDriver::BehaviorTreeDriver(SoldierObject* owner, Blackboard* blackboard)
 	: m_owner(owner)
-	, m_blackboard(owner)
+	, m_fallbackBlackboard(owner)
+	, m_blackboard(blackboard != nullptr ? blackboard : &m_fallbackBlackboard)
 	, m_tree(nullptr)
 	, m_debugTraceEnabled(false)
 	, m_debugTracePrintEnabled(false)
@@ -103,9 +104,9 @@ void BehaviorTreeDriver::SetDebugTraceEnabled(bool enabled)
 	if (!enabled)
 	{
 		m_lastDebugTrace.clear();
-		m_blackboard.Remove("__bt.trace");
-		m_blackboard.Remove("__bt.traceFrame");
-		m_blackboard.Remove("__bt.traceEventCount");
+		m_blackboard->Remove("__bt.trace");
+		m_blackboard->Remove("__bt.traceFrame");
+		m_blackboard->Remove("__bt.traceEventCount");
 	}
 }
 
@@ -141,9 +142,9 @@ void BehaviorTreeDriver::Tick(float deltaMs)
 	BehaviorTrace::SetCurrentFrame(prevFrame);
 
 	m_lastDebugTrace = m_traceFrame.Format();
-	m_blackboard.SetString("__bt.trace", m_lastDebugTrace);
-	m_blackboard.SetInt("__bt.traceFrame", m_debugTraceFrameIndex);
-	m_blackboard.SetInt("__bt.traceEventCount", m_traceFrame.GetEventCount());
+	m_blackboard->SetString("__bt.trace", m_lastDebugTrace);
+	m_blackboard->SetInt("__bt.traceFrame", m_debugTraceFrameIndex);
+	m_blackboard->SetInt("__bt.traceEventCount", m_traceFrame.GetEventCount());
 
 	if (m_debugTracePrintEnabled)
 	{

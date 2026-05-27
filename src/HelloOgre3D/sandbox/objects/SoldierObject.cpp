@@ -4,6 +4,7 @@
 #include "systems/manager/ObjectManager.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"
+#include "ai/common/AICommand.h"
 #include "ai/fsm/AgentStateController.h"
 #include "systems/input/PlayerInput.h"
 #include "ai/fsm/states/AgentState.h"
@@ -34,56 +35,10 @@ namespace
 }
 
 SoldierObject::SoldierObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* = nullptr*/)
-	: AgentObject(renderComp, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_animComp(nullptr), m_inputInfo(nullptr)
+	: AgentObject(renderComp, pRigidBody), m_inputInfo(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
 	this->SetLuaScriptClassName(LuaClassNameTraits<SoldierObject>::value);
-
-	AgentAttrib* attrib = new AgentAttrib(GetHealth(), std::max<Ogre::Real>(GetHealth(), 1.0f), SOLDIER_STAND, -1);
-	if (AddComponent("attrib", attrib))
-	{
-		m_attrib = attrib;
-	}
-	else
-	{
-		SAFE_DELETE(attrib);
-	}
-
-	WeaponComponent* weapon = new WeaponComponent(this);
-	if (AddComponent("weapon", weapon))
-	{
-		m_weaponComp = weapon;
-	}
-	else
-	{
-		SAFE_DELETE(weapon);
-	}
-
-	// 将 soldier 专属的 state name -> id 映射注入 body ASM；以前这张表由通用 AgentAnimState 持有，
-	// 现在收敛到 SoldierAnimProfile，ASM 侧仅通过 resolver 访问。
-	AIController* ai = new AIController(this);
-	if (AddComponent("ai", ai))
-	{
-		m_ai = ai;
-	}
-	else
-	{
-		SAFE_DELETE(ai);
-	}
-
-	AnimComponent* anim = new AnimComponent(this);
-	if (AddComponent("anim", anim))
-	{
-		m_animComp = anim;
-		if (m_renderComp != nullptr)
-		{
-			m_animComp->InitBodyAnimations(m_renderComp->GetEntity(), true);
-		}
-	}
-	else
-	{
-		SAFE_DELETE(anim);
-	}
 }
 
 SoldierObject::~SoldierObject()
@@ -100,22 +55,70 @@ void SoldierObject::Init()
 	m_inputInfo = new PlayerInput(inputMgr);
 }
 
+AIController* SoldierObject::GetAIController() const
+{
+	return const_cast<AIController*>(GetComponentAs<AIController>("ai"));
+}
+
+AIController* SoldierObject::GetAI() const
+{
+	return GetAIController();
+}
+
+AnimComponent* SoldierObject::GetAnimComponent() const
+{
+	return const_cast<AnimComponent*>(GetComponentAs<AnimComponent>("anim"));
+}
+
+void SoldierObject::ApplyCommand(const AICommand& command)
+{
+	H3D_PROFILE_SCOPE("AICommand::Apply");
+	switch (command.kind)
+	{
+	case AICommand::COMMAND_IDLE:
+		ApplyIdleCommand();
+		break;
+	case AICommand::COMMAND_MOVE:
+		ApplyMoveCommand();
+		break;
+	case AICommand::COMMAND_ATTACK:
+		ApplyAttackCommand();
+		break;
+	case AICommand::COMMAND_RELOAD:
+		ApplyReloadCommand();
+		break;
+	case AICommand::COMMAND_DIE:
+		ApplyDeathCommand();
+		break;
+	case AICommand::COMMAND_FIRE_WEAPON:
+		ApplyFireWeaponCommand();
+		break;
+	case AICommand::COMMAND_REQUEST_STATE:
+		ApplyRequestStateCommand(command.stateId, command.forceUpdate);
+		break;
+	default:
+		break;
+	}
+}
+
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
 {
-	if (m_weaponComp != nullptr)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
 	{
-		m_weaponComp->Init(meshFile);
+		weaponComp->Init(meshFile);
 	}
 }
 
 WeaponComponent* SoldierObject::getWeapon()
 {
-	return m_weaponComp;
+	return GetComponentAs<WeaponComponent>("weapon");
 }
 
 int SoldierObject::getStanceType() const
 {
-	return m_attrib != nullptr ? m_attrib->GetStanceType() : SOLDIER_STAND;
+	const AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	return attrib != nullptr ? attrib->GetStanceType() : SOLDIER_STAND;
 }
 
 void SoldierObject::Update(int deltaMilisec)
@@ -124,23 +127,26 @@ void SoldierObject::Update(int deltaMilisec)
 	// Keep body transform in sync with physics before animation/bone evaluation.
 	this->updateWorldTransform();
 
-	if (m_ai != nullptr && m_ai->IsTickInOwnerUpdateEnabled())
+	AIController* ai = GetAIController();
+	if (ai != nullptr && ai->IsTickInOwnerUpdateEnabled())
 		TickAi(deltaMilisec);
 
-	if (m_animComp != nullptr)
-		m_animComp->UpdateController(deltaMilisec);
+	AnimComponent* animComp = GetAnimComponent();
+	if (animComp != nullptr)
+		animComp->UpdateController(deltaMilisec);
 
 	{
 		H3D_PROFILE_SCOPE("AgentBody::Update");
 		if (m_renderComp != nullptr)
 			m_renderComp->Update(deltaMilisec);
-		if (m_animComp != nullptr)
-			m_animComp->UpdateBodyAnimations(deltaMilisec);
+		if (animComp != nullptr)
+			animComp->UpdateBodyAnimations(deltaMilisec);
 	}
-	if (m_weaponComp)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp)
 	{
 		H3D_PROFILE_SCOPE("Weapon::Update");
-		m_weaponComp->update(deltaMilisec);
+		weaponComp->update(deltaMilisec);
 	}
 
 	TryApplyPendingStance();
@@ -148,132 +154,152 @@ void SoldierObject::Update(int deltaMilisec)
 
 void SoldierObject::TickAi(int deltaMilisec)
 {
-	if (m_ai != nullptr)
-		m_ai->TickAI(deltaMilisec);
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+		ai->TickAI(deltaMilisec);
 }
 
 void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
 {
-	if (m_ai != nullptr)
-		m_ai->SetTickInOwnerUpdateEnabled(enabled);
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+		ai->SetTickInOwnerUpdateEnabled(enabled);
 }
 
 void SoldierObject::SyncWeaponToHandBone()
 {
-	if (m_weaponComp != nullptr)
-		m_weaponComp->SyncToHandBone();
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
+		weaponComp->SyncToHandBone();
 }
 
 void SoldierObject::ShootBullet()
 {
-	if (m_weaponComp != nullptr)
-		m_weaponComp->ShootBullet();
+	ApplyCommand(AICommand::FireWeapon());
 }
 
 void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
-	if (m_weaponComp != nullptr)
-		m_weaponComp->DoShootBullet(position, orientation);
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
+		weaponComp->DoShootBullet(position, orientation);
 }
 
 void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
 {
-	if (m_attrib != nullptr)
+	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	if (attrib != nullptr)
 	{
-		m_attrib->SetMaxHealth(maxHealth);
+		attrib->SetMaxHealth(maxHealth);
 	}
 }
 
 Ogre::Real SoldierObject::GetMaxHealth() const
 {
-	return m_attrib != nullptr ? m_attrib->GetMaxHealth() : std::max<Ogre::Real>(GetHealth(), 1.0f);
+	const AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	return attrib != nullptr ? attrib->GetMaxHealth() : std::max<Ogre::Real>(GetHealth(), 1.0f);
 }
 
 void SoldierObject::SetAmmo(int ammo)
 {
-	if (m_weaponComp != nullptr)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
 	{
-		m_weaponComp->SetAmmo(ammo);
+		weaponComp->SetAmmo(ammo);
 	}
 }
 
 int SoldierObject::GetAmmo() const
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetAmmo() : 0;
+	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	return weaponComp != nullptr ? weaponComp->GetAmmo() : 0;
 }
 
 void SoldierObject::SetMaxAmmo(int maxAmmo)
 {
-	if (m_weaponComp != nullptr)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
 	{
-		m_weaponComp->SetMaxAmmo(maxAmmo);
+		weaponComp->SetMaxAmmo(maxAmmo);
 	}
 }
 
 int SoldierObject::GetMaxAmmo() const
 {
-	return m_weaponComp != nullptr ? m_weaponComp->GetMaxAmmo() : 0;
+	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	return weaponComp != nullptr ? weaponComp->GetMaxAmmo() : 0;
 }
 
 bool SoldierObject::HasAmmo() const
 {
-	return m_weaponComp != nullptr && m_weaponComp->HasAmmo();
+	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	return weaponComp != nullptr && weaponComp->HasAmmo();
 }
 
 void SoldierObject::ConsumeAmmo(int amount)
 {
-	if (m_weaponComp != nullptr)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
 	{
-		m_weaponComp->ConsumeAmmo(amount);
+		weaponComp->ConsumeAmmo(amount);
 	}
 }
 
 void SoldierObject::RestoreAmmo()
 {
-	if (m_weaponComp != nullptr)
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
 	{
-		m_weaponComp->RestoreAmmo();
+		weaponComp->RestoreAmmo();
 	}
 }
 
 AgentObject* SoldierObject::GetEnemy() const
 {
-	return m_ai != nullptr ? m_ai->GetEnemy() : nullptr;
+	AIController* ai = GetAIController();
+	return ai != nullptr ? ai->GetEnemy() : nullptr;
 }
 
 bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
 {
-	return m_ai != nullptr && m_ai->HasEnemy(navMeshName);
+	AIController* ai = GetAIController();
+	return ai != nullptr && ai->HasEnemy(navMeshName);
 }
 
 bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
-	return m_ai != nullptr && m_ai->CanShootEnemy(navMeshName, shootDistance);
+	AIController* ai = GetAIController();
+	return ai != nullptr && ai->CanShootEnemy(navMeshName, shootDistance);
 }
 bool SoldierObject::HasMovePosition(float reachDistance) const
 {
-	return m_ai != nullptr && m_ai->HasMovePosition(reachDistance);
+	AIController* ai = GetAIController();
+	return ai != nullptr && ai->HasMovePosition(reachDistance);
 }
 
 void SoldierObject::SetMovePosition(const Ogre::Vector3& movePos)
 {
-	if (m_ai != nullptr)
-		m_ai->SetMovePosition(movePos);
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+		ai->SetMovePosition(movePos);
 }
 
 void SoldierObject::ClearMovePosition()
 {
-	if (m_ai != nullptr)
-		m_ai->ClearMovePosition();
+	AIController* ai = GetAIController();
+	if (ai != nullptr)
+		ai->ClearMovePosition();
 }
 
 bool SoldierObject::IsTargetReached(float threshold) const
 {
-	return m_ai != nullptr && m_ai->IsTargetReached(threshold);
+	AIController* ai = GetAIController();
+	return ai != nullptr && ai->IsTargetReached(threshold);
 }
 void SoldierObject::changeStanceType(int stanceType)
 {
-	if (m_attrib == nullptr)
+	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	if (attrib == nullptr)
 		return;
 
 	AgentAnimStateMachine* pAsm = GetObjectASM();
@@ -286,11 +312,11 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	if (stanceType == SOLDIER_STAND)
 	{
-		m_attrib->SetPendingStanceType(SOLDIER_STAND);
+		attrib->SetPendingStanceType(SOLDIER_STAND);
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
-		m_attrib->SetPendingStanceType(SOLDIER_CROUCH);
+		attrib->SetPendingStanceType(SOLDIER_CROUCH);
 	}
 	else
 	{
@@ -302,19 +328,20 @@ void SoldierObject::changeStanceType(int stanceType)
 
 void SoldierObject::ApplyStanceParams(int stanceType)
 {
+	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
 	float soldier_height = 0.0f;
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
 	{
-		if (m_attrib != nullptr)
-			m_attrib->SetStanceType(SOLDIER_STAND);
+		if (attrib != nullptr)
+			attrib->SetStanceType(SOLDIER_STAND);
 		soldier_height = SOLDIER_STAND_HEIGHT;
 		soldier_speed = SOLDIER_STAND_SPEED;
 	}
 	else if (stanceType == SOLDIER_CROUCH)
 	{
-		if (m_attrib != nullptr)
-			m_attrib->SetStanceType(SOLDIER_CROUCH);
+		if (attrib != nullptr)
+			attrib->SetStanceType(SOLDIER_CROUCH);
 		soldier_height = SOLDIER_CROUCH_HEIGHT;
 		soldier_speed = SOLDIER_CROUCH_SPEED;
 	}
@@ -338,12 +365,13 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 void SoldierObject::TryApplyPendingStance()
 {
-	if (m_attrib == nullptr)
+	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	if (attrib == nullptr)
 	{
 		return;
 	}
 
-	const int pendingStanceType = m_attrib->GetPendingStanceType();
+	const int pendingStanceType = attrib->GetPendingStanceType();
 	if (pendingStanceType < 0 || m_onPlayDeathAnim)
 	{
 		return;
@@ -368,7 +396,7 @@ void SoldierObject::TryApplyPendingStance()
 			(pendingStanceType == SOLDIER_STAND && !isCrouchState))
 		{
 			ApplyStanceParams(pendingStanceType);
-			m_attrib->ClearPendingStanceType();
+			attrib->ClearPendingStanceType();
 			return;
 		}
 
@@ -389,6 +417,11 @@ void SoldierObject::TryApplyPendingStance()
 }
 void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 {
+	ApplyCommand(AICommand::RequestState(soldierState, forceUpdate));
+}
+
+void SoldierObject::ApplyRequestStateCommand(int soldierState, bool forceUpdate)
+{
 	//闁圭虎鍘介弬浣割潰鐠佹娊顎楅柛鏂诲妿閺侀箖寮張鐢电憹闁告劕绉电敮鎾矗濡や焦鐓€闁汇劌瀚慨鎼佸箑?
 	if (m_onPlayDeathAnim) return;
 
@@ -404,32 +437,43 @@ void SoldierObject::RequestState(int soldierState, bool forceUpdate /*= false*/)
 }
 bool SoldierObject::HasNextAnim()
 {
-	return m_animComp != nullptr && m_animComp->HasNextAnim();
+	AnimComponent* animComp = GetAnimComponent();
+	return animComp != nullptr && animComp->HasNextAnim();
 }
 
 bool SoldierObject::IsAnimReadyForMove()
 {
-	return m_animComp != nullptr && m_animComp->IsAnimReadyForMove();
+	AnimComponent* animComp = GetAnimComponent();
+	return animComp != nullptr && animComp->IsAnimReadyForMove();
 }
 
 bool SoldierObject::IsAnimReadyForShoot()
 {
-	return m_animComp != nullptr && m_animComp->IsAnimReadyForShoot();
+	AnimComponent* animComp = GetAnimComponent();
+	return animComp != nullptr && animComp->IsAnimReadyForShoot();
 }
 
 SoldierAnimController* SoldierObject::GetAnimController() const
 {
-	return m_animComp != nullptr ? m_animComp->GetSoldierController() : nullptr;
+	AnimComponent* animComp = GetAnimComponent();
+	return animComp != nullptr ? animComp->GetSoldierController() : nullptr;
 }
 
 AgentStateController* SoldierObject::GetFsmController() const
 {
-	return m_ai != nullptr ? m_ai->GetFsmController() : nullptr;
+	AIController* ai = GetAIController();
+	return ai != nullptr ? ai->GetFsmController() : nullptr;
 }
 
 void SoldierObject::EnterIdleAnim()
 {
-	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	ApplyCommand(AICommand::Idle());
+}
+
+void SoldierObject::ApplyIdleCommand()
+{
+	AnimComponent* animComp = GetAnimComponent();
+	IAnimController* controller = animComp != nullptr ? animComp->GetController() : nullptr;
 	if (!controller) return;
 	controller->ClearAllActions();
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
@@ -437,7 +481,13 @@ void SoldierObject::EnterIdleAnim()
 
 void SoldierObject::EnterMoveAnim()
 {
-	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	ApplyCommand(AICommand::Move());
+}
+
+void SoldierObject::ApplyMoveCommand()
+{
+	AnimComponent* animComp = GetAnimComponent();
+	IAnimController* controller = animComp != nullptr ? animComp->GetController() : nullptr;
 	if (!controller) return;
 	controller->ClearAllActions();
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Move);
@@ -445,7 +495,13 @@ void SoldierObject::EnterMoveAnim()
 
 void SoldierObject::EnterShootAnim()
 {
-	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	ApplyCommand(AICommand::Attack());
+}
+
+void SoldierObject::ApplyAttackCommand()
+{
+	AnimComponent* animComp = GetAnimComponent();
+	IAnimController* controller = animComp != nullptr ? animComp->GetController() : nullptr;
 	if (!controller) return;
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 	controller->RequestAction(SoldierActionIntent::Shoot, true);
@@ -453,7 +509,13 @@ void SoldierObject::EnterShootAnim()
 
 void SoldierObject::EnterReloadAnim()
 {
-	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	ApplyCommand(AICommand::Reload());
+}
+
+void SoldierObject::ApplyReloadCommand()
+{
+	AnimComponent* animComp = GetAnimComponent();
+	IAnimController* controller = animComp != nullptr ? animComp->GetController() : nullptr;
 	if (!controller) return;
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 	controller->RequestAction(SoldierActionIntent::Reload, true);
@@ -461,7 +523,20 @@ void SoldierObject::EnterReloadAnim()
 
 void SoldierObject::EnterDeathAnim()
 {
-	IAnimController* controller = m_animComp != nullptr ? m_animComp->GetController() : nullptr;
+	ApplyCommand(AICommand::Die());
+}
+
+void SoldierObject::ApplyDeathCommand()
+{
+	AnimComponent* animComp = GetAnimComponent();
+	IAnimController* controller = animComp != nullptr ? animComp->GetController() : nullptr;
 	if (!controller) return;
 	controller->RequestAction(SoldierActionIntent::Death, true);
+}
+
+void SoldierObject::ApplyFireWeaponCommand()
+{
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
+		weaponComp->ShootBullet();
 }

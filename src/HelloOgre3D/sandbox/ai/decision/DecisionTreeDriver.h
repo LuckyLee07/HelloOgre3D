@@ -15,8 +15,8 @@ class LuaDecisionAction;
 class DecisionNode;
 
 // Decision-tree flavour of IDecisionDriver. Each SoldierObject that uses DT
-// holds one of these; each instance bundles its own Blackboard and points at
-// a DecisionTree built from Lua.
+// holds one of these; the active Blackboard is injected by AIController and
+// remains stable across driver switches.
 //
 // Ownership: every node created via the New*() factory below is owned by the
 // driver. The driver deletes them in its destructor. This matches the project
@@ -25,12 +25,12 @@ class DecisionNode;
 class DecisionTreeDriver : public IDecisionDriver //tolua_exports
 { //tolua_exports
 public:
-	explicit DecisionTreeDriver(SoldierObject* owner);
+	explicit DecisionTreeDriver(SoldierObject* owner, Blackboard* blackboard = nullptr);
 	virtual ~DecisionTreeDriver();
 
 	//tolua_begin
 	SoldierObject* GetOwner() const { return m_owner; }
-	Blackboard*    GetBlackboard() { return &m_blackboard; }
+	Blackboard*    GetBlackboard() { return m_blackboard; }
 
 	// Factories — driver retains ownership of every returned pointer.
 	DecisionTree*      NewTree();
@@ -47,7 +47,8 @@ public:
 
 private:
 	SoldierObject*               m_owner;
-	Blackboard                   m_blackboard;
+	Blackboard                   m_fallbackBlackboard;
+	Blackboard*                  m_blackboard;
 	DecisionTree*                m_tree;            // points into m_ownedTrees
 	std::vector<DecisionNode*>   m_ownedNodes;      // branches + actions
 	std::vector<DecisionTree*>   m_ownedTrees;

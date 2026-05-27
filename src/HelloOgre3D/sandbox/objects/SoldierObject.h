@@ -7,9 +7,9 @@ class IPlayerInput;
 class SoldierAnimController;
 class AnimComponent;
 class AIController;
-class AgentAttrib;
 class WeaponComponent;
 class AgentStateController;
+struct AICommand;
 class SoldierObject : public AgentObject //tolua_exports
 { //tolua_exports
 public:
@@ -37,8 +37,8 @@ public:
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
 	SoldierAnimController* GetAnimController() const;
-	AIController* GetAIController() const { return m_ai; }
-	AIController* GetAI() const { return m_ai; }
+	AIController* GetAIController() const;
+	AIController* GetAI() const;
 
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const;
@@ -71,7 +71,8 @@ public:
 	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
-	AnimComponent* GetAnimComponent() const { return m_animComp; }
+	AnimComponent* GetAnimComponent() const;
+	virtual void ApplyCommand(const AICommand& command) override;
 
 	// Typed accessor for the FSM driver, when soldier is FSM-driven.
 	// Returns nullptr when running under a DT (or future BT) driver.
@@ -81,12 +82,14 @@ private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
 	void SyncWeaponToHandBone();
+	void ApplyIdleCommand();
+	void ApplyMoveCommand();
+	void ApplyAttackCommand();
+	void ApplyReloadCommand();
+	void ApplyDeathCommand();
+	void ApplyFireWeaponCommand();
+	void ApplyRequestStateCommand(int soldierState, bool forceUpdate);
 
-private:
-	AgentAttrib* m_attrib;
-	WeaponComponent* m_weaponComp;
-	AIController* m_ai;
-	AnimComponent* m_animComp;
 	IPlayerInput* m_inputInfo;
 
 }; //tolua_exports
