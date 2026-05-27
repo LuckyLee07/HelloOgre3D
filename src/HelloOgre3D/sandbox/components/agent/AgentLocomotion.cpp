@@ -1,7 +1,9 @@
 #include "AgentLocomotion.h"
+
+#include <algorithm>
+
 #include "SandboxMacros.h"
 #include "GameFunction.h"
-#include "objects/VehicleObject.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
 #include "objects/steer/AgentPath.h"
@@ -11,9 +13,17 @@
 const float AgentLocomotion::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^2)
 const float AgentLocomotion::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
 const float AgentLocomotion::DEFAULT_AGENT_TARGET_RADIUS = 0.5f;	// meters (1.64 feet)
+const float AgentLocomotion::DEFAULT_AGENT_MASS = 90.7f;			// kilograms (200 lbs)
+const float AgentLocomotion::DEFAULT_AGENT_HEIGHT = 1.6f;			// meters (5.2 feet)
+const float AgentLocomotion::DEFAULT_AGENT_RADIUS = 0.3f;			// meters (1.97 feet)
+const float AgentLocomotion::DEFAULT_AGENT_SPEED = 0.0f;			// m/s (0 ft/s)
 
 AgentLocomotion::AgentLocomotion() 
 	: m_owner(nullptr),
+	m_mass(DEFAULT_AGENT_MASS),
+	m_height(DEFAULT_AGENT_HEIGHT),
+	m_radius(DEFAULT_AGENT_RADIUS),
+	m_speed(DEFAULT_AGENT_SPEED),
 	m_maxForce(DEFAULT_AGENT_MAX_FORCE),
 	m_maxSpeed(DEFAULT_AGENT_MAX_SPEED),
 	m_targetRadius(DEFAULT_AGENT_TARGET_RADIUS)
@@ -54,27 +64,22 @@ Ogre::Vector3 AgentLocomotion::GetPosition() const
 
 void AgentLocomotion::SetMass(Ogre::Real mass)
 {
-	m_owner->SetMass(mass);
+	m_mass = std::max(Ogre::Real(0), mass);
 }
 
 void AgentLocomotion::SetHeight(Ogre::Real height)
 {
-	m_owner->SetHeight(height);
+	m_height = std::max(Ogre::Real(0), height);
 }
 
 void AgentLocomotion::SetRadius(Ogre::Real radius)
 {
-	m_owner->SetRadius(radius);
+	m_radius = std::max(Ogre::Real(0), radius);
 }
 
 void AgentLocomotion::SetSpeed(Ogre::Real speed)
 {
-	m_owner->SetSpeed(speed);
-}
-
-void AgentLocomotion::SetHealth(Ogre::Real health)
-{
-	m_owner->SetHealth(health);
+	m_speed = std::max(Ogre::Real(0), speed);
 }
 
 // 内聚：MaxForce/MaxSpeed
@@ -90,27 +95,22 @@ void AgentLocomotion::SetMaxSpeed(Ogre::Real maxSpeed)
 
 Ogre::Real AgentLocomotion::GetMass() const
 {
-	return m_owner->GetMass();
+	return m_mass;
 }
 
 Ogre::Real AgentLocomotion::GetSpeed() const
 {
-	return m_owner->GetSpeed();
+	return m_speed;
 }
 
 Ogre::Real AgentLocomotion::GetHeight() const
 {
-	return m_owner->GetHeight();
+	return m_height;
 }
 
 Ogre::Real AgentLocomotion::GetRadius() const
 {
-	return m_owner->GetRadius();
-}
-
-Ogre::Real AgentLocomotion::GetHealth() const
-{
-	return m_owner->GetHealth();
+	return m_radius;
 }
 
 Ogre::Real AgentLocomotion::GetMaxForce() const
@@ -185,7 +185,7 @@ Ogre::Real AgentLocomotion::GetDistanceAlongPath(const Ogre::Vector3& position) 
 {
 	if (!m_points.empty())
 	{
-		AgentPath local(m_points, m_owner->GetRadius(), m_pathCyclic);
+		AgentPath local(m_points, GetRadius(), m_pathCyclic);
 		return local.GetDistanceAlongPath(position);
 	}
 	return 0.0f;
@@ -195,7 +195,7 @@ Ogre::Vector3 AgentLocomotion::GetNearestPointOnPath(const Ogre::Vector3& positi
 {
 	if (!m_points.empty())
 	{
-		AgentPath local(m_points, m_owner->GetRadius(), m_pathCyclic);
+		AgentPath local(m_points, GetRadius(), m_pathCyclic);
 		return local.GetNearestPointOnPath(position);
 	}
 	return Ogre::Vector3::ZERO;
@@ -205,7 +205,7 @@ Ogre::Vector3 AgentLocomotion::GetPointOnPath(const Ogre::Real distance) const
 {
 	if (!m_points.empty())
 	{
-		AgentPath local(m_points, m_owner->GetRadius(), m_pathCyclic);
+		AgentPath local(m_points, GetRadius(), m_pathCyclic);
 		return local.GetPointOnPath(distance);
 	}
 	return Ogre::Vector3::ZERO;
@@ -223,7 +223,7 @@ Ogre::Vector3 AgentLocomotion::ForceToFollowPath(Ogre::Real predictionTime)
 {
 	if (!m_adapter) return Ogre::Vector3::ZERO;
 	// 用当前路径点构建 Pathway 并调用 OpenSteer 行为
-	AgentPath local(m_points, m_owner->GetRadius(), m_pathCyclic);
+	AgentPath local(m_points, GetRadius(), m_pathCyclic);
 	const int FORWARD = 1; // 沿路径前进
 	const float pt = std::max(0.1f, static_cast<float>(predictionTime)); // 秒
 
@@ -238,7 +238,7 @@ Ogre::Vector3 AgentLocomotion::ForceToStayOnPath(Ogre::Real predictionTime)
 
 	const float pt = std::max(0.1f, static_cast<float>(predictionTime)); // 秒
 
-	AgentPath local(m_points, m_owner->GetRadius(), m_pathCyclic);
+	AgentPath local(m_points, GetRadius(), m_pathCyclic);
 	const OpenSteer::Vec3 steer = m_adapter->steerToStayOnPath(pt, local);
 
 	return Vec3ToVector3(steer);

@@ -5,6 +5,7 @@
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "objects/RenderableObject.h"
+#include "components/agent/AgentLocomotion.h"
 #include "systems/manager/ObjectManager.h"
 #include "scripting/LuaPluginMgr.h"
 #include "Ogre.h"
@@ -79,8 +80,8 @@ BlockObject* ObjectFactory::CreateBullet(Ogre::Real height, Ogre::Real radius)
 
 AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath)
 {
-	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
-	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
+	Ogre::Real height = AgentLocomotion::DEFAULT_AGENT_HEIGHT;
+	Ogre::Real radius = AgentLocomotion::DEFAULT_AGENT_RADIUS;
 
 	Ogre::SceneNode* capsuleNode = SceneFactory::CreateNodeCapsule(height, radius);
 	RenderableObject* pEntityObj = new RenderableObject(capsuleNode);
@@ -101,8 +102,8 @@ AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* fi
 
 SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const char* filepath)
 {
-	Ogre::Real height = AgentObject::DEFAULT_AGENT_HEIGHT;
-	Ogre::Real radius = AgentObject::DEFAULT_AGENT_RADIUS;
+	Ogre::Real height = AgentLocomotion::DEFAULT_AGENT_HEIGHT;
+	Ogre::Real radius = AgentLocomotion::DEFAULT_AGENT_RADIUS;
 
 	RenderableObject* pEntityObj = new RenderableObject(meshFile);
 	pEntityObj->SetOriginPos(Ogre::Vector3(0.0f, -height * 0.5f, 0.0f));

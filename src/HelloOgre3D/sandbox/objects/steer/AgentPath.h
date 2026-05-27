@@ -7,7 +7,6 @@
 
 class AgentPath : public OpenSteer::PolylinePathway
 {
-	friend class VehicleObject;
 public:
 	const static size_t MAX_PATH_POINTS = 255;
 

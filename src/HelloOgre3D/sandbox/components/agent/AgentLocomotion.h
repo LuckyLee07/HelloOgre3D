@@ -6,7 +6,6 @@
 #include "component/IComponent.h"
 
 class AgentObject;
-class VehicleObject;
 class OpenSteerAdapter;
 
 class AgentLocomotion : public IComponent
@@ -28,7 +27,6 @@ public:
 	void SetHeight(Ogre::Real height);
 	void SetRadius(Ogre::Real radius);
 	void SetSpeed(Ogre::Real speed);
-	void SetHealth(Ogre::Real health);
 	void SetMaxForce(Ogre::Real maxForce);
 	void SetMaxSpeed(Ogre::Real maxSpeed);
 
@@ -36,7 +34,6 @@ public:
 	Ogre::Real GetSpeed() const;
 	Ogre::Real GetHeight() const;
 	Ogre::Real GetRadius() const;
-	Ogre::Real GetHealth() const;
 	Ogre::Real GetMaxForce() const;
 	Ogre::Real GetMaxSpeed() const;
 
@@ -89,6 +86,10 @@ public:
 	static const float DEFAULT_AGENT_MAX_FORCE;
 	static const float DEFAULT_AGENT_MAX_SPEED;
 	static const float DEFAULT_AGENT_TARGET_RADIUS;
+	static const float DEFAULT_AGENT_MASS;
+	static const float DEFAULT_AGENT_HEIGHT;
+	static const float DEFAULT_AGENT_RADIUS;
+	static const float DEFAULT_AGENT_SPEED;
 
 private:
 	AgentObject* m_owner = nullptr;
@@ -98,12 +99,15 @@ private:
 	bool m_pathCyclic = false;
 
 	// 运动/策略参数
+	Ogre::Real m_mass = 0.0f;
+	Ogre::Real m_height = 0.0f;
+	Ogre::Real m_radius = 0.0f;
+	Ogre::Real m_speed = 0.0f;
 	Ogre::Real m_maxForce = 0.0f;
 	Ogre::Real m_maxSpeed = 0.0f;
 	Ogre::Real m_targetRadius = 0.0f;
 	Ogre::Vector3 m_targetPos = Ogre::Vector3::ZERO;
 
-	VehicleObject* m_targetAgent = nullptr; // 非拥有
 	OpenSteerAdapter* m_adapter = nullptr;  // OpenSteer 适配
 };
 

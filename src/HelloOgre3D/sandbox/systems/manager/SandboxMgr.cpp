@@ -11,10 +11,16 @@
 #include "OgreSceneNode.h"
 #include "recast/include/Recast.h"
 #include "ai/navigation/NavigationMesh.h"
+#include "components/agent/AgentLocomotion.h"
 #include "ObjectManager.h"
-#include "objects/VehicleObject.h"
 
 SandboxMgr* g_SandboxMgr = nullptr;
+
+namespace
+{
+	const float DEFAULT_AGENT_WALKABLE_CLIMB = AgentLocomotion::DEFAULT_AGENT_RADIUS / 2.0f;
+	const float DEFAULT_AGENT_WALKABLE_SLOPE = 45.0f;
+}
 
 SandboxMgr::SandboxMgr(UIService& uiService,
 	CameraService& cameraService,
@@ -242,13 +248,13 @@ void SandboxMgr::DefaultConfig(rcConfig& config)
 {
     config.cs = 0.1f;
     config.ch = 0.1f;
-    config.walkableSlopeAngle = VehicleObject::DEFAULT_AGENT_WALKABLE_SLOPE;
+    config.walkableSlopeAngle = DEFAULT_AGENT_WALKABLE_SLOPE;
     config.walkableHeight = static_cast<int>(
-        ceilf(VehicleObject::DEFAULT_AGENT_HEIGHT / config.ch));
+        ceilf(AgentLocomotion::DEFAULT_AGENT_HEIGHT / config.ch));
     config.walkableClimb = static_cast<int>(
-        floorf(VehicleObject::DEFAULT_AGENT_WALKABLE_CLIMB / config.ch));
+        floorf(DEFAULT_AGENT_WALKABLE_CLIMB / config.ch));
     config.walkableRadius = static_cast<int>(
-        ceilf(VehicleObject::DEFAULT_AGENT_RADIUS * 1.25f / config.cs));
+        ceilf(AgentLocomotion::DEFAULT_AGENT_RADIUS * 1.25f / config.cs));
     config.maxEdgeLen = static_cast<int>(20.0f / config.cs);
     config.maxSimplificationError = 1.0f;
     config.minRegionArea = static_cast<int>(pow(50.0f, 2));

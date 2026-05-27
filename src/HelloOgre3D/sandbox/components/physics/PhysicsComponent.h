@@ -5,7 +5,6 @@
 #include "component/IComponent.h"
 
 class btRigidBody;
-class VehicleObject;
 class PhysicsComponent : public IComponent
 {
 public:

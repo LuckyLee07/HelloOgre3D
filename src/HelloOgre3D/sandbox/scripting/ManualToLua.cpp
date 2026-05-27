@@ -219,7 +219,6 @@ tolua_lerror:
 static void tolua_reg_types(lua_State* tolua_S)
 {
 	tolua_usertype(tolua_S, "LuaEnvObject");
-    tolua_usertype(tolua_S, "VehicleObject");
 	tolua_usertype(tolua_S, "AgentObject");
     tolua_usertype(tolua_S, "AgentLuaState");
     tolua_usertype(tolua_S, "DecisionBranch");
@@ -235,7 +234,7 @@ TOLUA_API int tolua_SandboxToLua_Manual(lua_State* tolua_S)
  tolua_reg_types(tolua_S);
  tolua_module(tolua_S,NULL,0);
  tolua_beginmodule(tolua_S,NULL);
-  tolua_cclass(tolua_S,"AgentObject","AgentObject","VehicleObject",NULL);
+  tolua_cclass(tolua_S,"AgentObject","AgentObject","BaseObject",NULL);
   tolua_beginmodule(tolua_S,"AgentObject");
    tolua_function(tolua_S,"setPluginEnv",tolua_ClientToLua_AgentObject_setPluginEnv00);
   tolua_endmodule(tolua_S);

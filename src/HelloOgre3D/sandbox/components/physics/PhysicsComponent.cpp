@@ -1,5 +1,4 @@
 #include "PhysicsComponent.h"
-#include "objects/VehicleObject.h"
 #include "GameManager.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "btBulletDynamicsCommon.h"

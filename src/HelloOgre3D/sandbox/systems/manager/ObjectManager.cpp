@@ -2,7 +2,6 @@
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
 #include "objects/SoldierObject.h"
-#include "objects/VehicleObject.h"
 #include "ai/common/AIScheduler.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
@@ -388,14 +387,16 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 			<< " liveTicks=" << object->GetLiveTicks()
 			<< " components=" << object->BuildComponentDebugString();
 
-		if (VehicleObject* vehicle = dynamic_cast<VehicleObject*>(object))
+		if (AgentObject* agent = dynamic_cast<AgentObject*>(object))
 		{
-			stream << " pos=" << FormatVec3(vehicle->GetPosition())
-				<< " vel=" << FormatVec3(vehicle->GetVelocity())
-				<< " hp=" << static_cast<int>(vehicle->GetHealth())
-				<< " speed=" << static_cast<int>(vehicle->GetSpeed())
-				<< " target=" << FormatVec3(vehicle->GetTarget())
-				<< " hasPath=" << (vehicle->HasPath() ? "true" : "false");
+			stream << " pos=" << FormatVec3(agent->GetPosition())
+				<< " vel=" << FormatVec3(agent->GetVelocity())
+				<< " hp=" << static_cast<int>(agent->GetHealth())
+				<< " speed=" << static_cast<int>(agent->GetSpeed())
+				<< " target=" << FormatVec3(agent->GetTarget())
+				<< " hasPath=" << (agent->HasPath() ? "true" : "false")
+				<< " agentType=" << agent->getAgentType()
+				<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")";
 		}
 		else if (BlockObject* block = dynamic_cast<BlockObject*>(object))
 		{
@@ -405,12 +406,6 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 			{
 				stream << " radius=" << static_cast<int>(block->GetRadius());
 			}
-		}
-
-		if (AgentObject* agent = dynamic_cast<AgentObject*>(object))
-		{
-			stream << " agentType=" << agent->getAgentType()
-				<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")";
 		}
 
 		if (SoldierObject* soldier = dynamic_cast<SoldierObject*>(object))
@@ -500,12 +495,6 @@ std::vector<BlockObject*> ObjectManager::getFixedObjects()
 	}
 
 	return objects;
-}
-
-std::vector<VehicleObject*> ObjectManager::getAllVehicles()
-{
-	std::vector<VehicleObject*> vehicleVec(m_agents.begin(), m_agents.end());
-	return vehicleVec;
 }
 
 void ObjectManager::addNewObject(BaseObject* pObject)

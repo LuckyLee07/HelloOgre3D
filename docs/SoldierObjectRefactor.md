@@ -395,6 +395,17 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **[Stage 4]** [P-01]
 - **目标**：steering 能力下沉到 AgentLocomotion 组件，删除 VehicleObject 类；AgentObject 直接继承 BaseObject。
 - **关键约束**：分多个 PR 推进，先消除反向转发，再删字段，最后删类。
+- **进度**：
+  1. [x] AgentLocomotion 接管 mass / height / radius / speed 标量状态；health 保持由 AgentAttrib 负责。
+  2. [x] 删除 VehicleObject 内重复的 mass / height / radius / speed / health 字段，旧 API 读取组件状态。
+  3. [x] ObjectManager debug / getAllVehicles 外围依赖改为面向 AgentObject。
+  4. [x] AgentObject 显式承接 locomotion / physics facade，C++ 侧不再调用 VehicleObject 门面实现。
+  5. [x] 删除 VehicleObject 类文件和 Lua 继承关系。
+- **验收**：
+  - [x] `VehicleObject.cpp/.h` 已删除，`AgentObject` 直接继承 `BaseObject`。
+  - [x] `SandboxToLua.cpp` 已重新生成，`AgentObject` Lua 继承关系改为 `BaseObject`，原移动 / 路径 / steering API 直接注册到 `AgentObject`。
+  - [x] `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017 --with-fairygui` 已刷新工程。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
 - **工时**：2-3 天。
 
 #### T-12 LuaEnvObject 改 LuaScriptComponent
@@ -438,7 +449,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 #### Stage 4 验收
 
 - [ ] SoldierObject 行数从 ~250 降到 0 或 ~50（薄壳）。
-- [ ] VehicleObject 删除或重命名。
+- [x] VehicleObject 删除或重命名。
 - [ ] 至少一个新对象类型（如 Monster）能通过 SoldierFactory 模式装配。
 
 ---
@@ -544,7 +555,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-08 | AnimComponent + IAnimController | 3 | ☑ | 2026-05-27 | 新增 AnimComponent / IAnimController / IAnimProfile，SoldierObject 动画入口改 forwarder。 |
 | T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☑ | 2026-05-27 | `m_owner` 泛化为 AgentObject*，AgentObject 构造后显式注入 owner。 |
 | T-10 | 事件 token 挂组件 onAttach | 3 | ☑ | 2026-05-27 | ASM token 下沉 AnimComponent，HEALTH_CHANGE token 下沉 AgentAttrib。 |
-| T-11 | VehicleObject 解构 | 4 | ☐ | | |
+| T-11 | VehicleObject 解构 | 4 | ☑ | 2026-05-27 | AgentObject 直接继承 BaseObject，VehicleObject 类与 Lua 继承关系删除；Debug x64 构建通过。 |
 | T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☐ | | |
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☐ | | |
 | T-14 | 位置真源统一 | 4 | ☐ | | |

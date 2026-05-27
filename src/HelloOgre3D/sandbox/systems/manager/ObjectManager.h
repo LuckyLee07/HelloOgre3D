@@ -16,7 +16,6 @@ namespace Ogre
 class BaseObject;
 class AgentObject;
 class BlockObject;
-class VehicleObject;
 class ScriptLuaVM;
 class PhysicsWorld;
 class NavigationMesh;
@@ -63,7 +62,6 @@ public:
 	//tolua_end
 
 	std::vector<BlockObject*> getFixedObjects();
-	std::vector<VehicleObject*> getAllVehicles();
 
 	void addNewObject(BaseObject* pObject);
 

@@ -19,7 +19,6 @@ class PhysicsComponent;
 class BlockObject : public BaseObject //tolua_exports
 	, public OpenSteer::SphericalObstacle
 { //tolua_exports
-	friend class VehicleObject;
 public:
 	BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody = nullptr);
 	BlockObject(const Ogre::MeshPtr& meshPtr, btRigidBody* pRigidBody = nullptr);
