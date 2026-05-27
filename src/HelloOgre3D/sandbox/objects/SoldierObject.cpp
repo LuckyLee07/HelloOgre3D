@@ -39,6 +39,7 @@ SoldierObject::SoldierObject(RenderableObject* pAgentBody, btRigidBody* pRigidBo
 	: AgentObject(pAgentBody, pRigidBody), m_attrib(nullptr), m_weaponComp(nullptr), m_ai(nullptr), m_animComp(nullptr), m_inputInfo(nullptr)
 {
 	this->SetObjType(OBJ_TYPE_SOLDIER);
+	this->SetLuaScriptClassName(LuaClassNameTraits<SoldierObject>::value);
 
 	AgentAttrib* attrib = new AgentAttrib(GetHealth(), std::max<Ogre::Real>(GetHealth(), 1.0f), SOLDIER_STAND, -1);
 	if (AddComponent("attrib", attrib))

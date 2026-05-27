@@ -8,9 +8,9 @@
 
 ---
 
-## 1. 现状画像
+## 1. 初始画像与当前快照
 
-### 1.1 继承链
+### 1.1 初始继承链（T-11/T-12 前）
 
 ```
 SandboxObject                                       (~50 行, 仅 Event() 接口)
@@ -28,7 +28,21 @@ AgentObject : LuaEnvObject (多继承)                 (m_pAgentBody: Renderable
 SoldierObject                                        ~716 行
 ```
 
-### 1.2 SoldierObject 持有 / 继承的"准组件"
+T-11/T-12 已完成后，当前主链已经收敛为：
+
+```
+SandboxObject
+  ↓
+BaseObject                                          (id/teamId/objType + GameObject* 组件容器)
+  ↓
+AgentObject                                         (AgentLocomotion / PhysicsComponent / LuaScriptComponent)
+  ↓
+SoldierObject
+```
+
+`VehicleObject` 已删除；`AgentObject` 不再继承 `LuaEnvObject`，Lua 脚本环境改由 `LuaScriptComponent` 挂载。
+
+### 1.2 SoldierObject 初始持有 / 继承的"准组件"
 
 | 入口 | 字段 | 类型 | 持有方式 |
 |---|---|---|---|
@@ -38,10 +52,10 @@ SoldierObject                                        ~716 行
 | 直接持有 | `m_driver` | `IDecisionDriver*` | ✓ 已抽象 |
 | 直接持有 | `m_enemy / m_movePos / m_hasMovePos` | 散字段 | 应属 AIController/Blackboard |
 | 继承自 AgentObject | `m_pAgentBody` | `RenderableObject*` | 走继承字段而不挂组件 |
-| 继承自 VehicleObject | `m_locomotion / m_physicsComp` | 组件指针 | ✓ 已组件化 |
+| 当前由 AgentObject 挂载（T-11 前继承自 VehicleObject） | `m_locomotion / m_physicsComp` | 组件指针 | ✓ 已组件化 |
 | 继承自 BaseObject | `m_pGameObjet` | `GameObject*` | 组件容器（拼写错） |
 
-### 1.3 数值"多份"的字段
+### 1.3 初始数值"多份"的字段
 
 | 概念 | 出处 1 | 出处 2 | 出处 3 |
 |---|---|---|---|
@@ -411,6 +425,20 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 #### T-12 LuaEnvObject 改 LuaScriptComponent
 - **[Stage 4]** [P-06]
 - **目标**：拆出 AgentObject 的多继承，做成组件。
+- **关键约束**：本任务只解除 `AgentObject : LuaEnvObject` 多继承；`AgentLuaState` / `LuaDecisionAction` / `LuaBehaviorAction` 仍暂用 `LuaEnvObject`，后续可单独组件化或轻量化。
+- **进度**：
+  1. [x] 新增 `LuaScriptComponent`，承接 Lua registry ref、`setPluginEnv`、`callFunction` 和 local env 清理。
+  2. [x] `AgentObject` 删除 `LuaEnvObject` 多继承，构造时挂载 `script` 组件。
+  3. [x] `AgentObject` 保留 `setPluginEnv` / `callFunction` facade，Lua 侧 `object:setPluginEnv(pluginEnv)` 和 C++ 侧 `Agent_Update` 调用保持兼容。
+  4. [x] `SoldierObject` 将脚本 local env owner 类型切到 `SoldierObject`，避免组件析构时用旧 `LuaEnvObject` 子对象清理。
+  5. [x] `LuaPluginMgr::RemoveLocalEnvForObject` 支持指定 tolua 类型名，旧 `LuaEnvObject` 调用保持兼容。
+- **验收**：
+  - [x] `SandboxToLua.cpp` 已重新生成。
+  - [x] `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017 --with-fairygui` 已刷新工程。
+  - [x] VS2017 Debug x64 `HelloOgre3D` 构建通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox6 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox7 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
+  - [x] `tools\run_sandbox_smoke.ps1 -Sample Sandbox8 -Seconds 65 -RuntimeDiag -StopExisting` 通过。
 - **工时**：1-2 天。
 
 #### T-13 BaseObject ↔ GameObject 合并 + 拼写纠正
@@ -556,7 +584,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-09 | AgentLocomotion::m_owner 泛化 | 3 | ☑ | 2026-05-27 | `m_owner` 泛化为 AgentObject*，AgentObject 构造后显式注入 owner。 |
 | T-10 | 事件 token 挂组件 onAttach | 3 | ☑ | 2026-05-27 | ASM token 下沉 AnimComponent，HEALTH_CHANGE token 下沉 AgentAttrib。 |
 | T-11 | VehicleObject 解构 | 4 | ☑ | 2026-05-27 | AgentObject 直接继承 BaseObject，VehicleObject 类与 Lua 继承关系删除；Debug x64 构建通过。 |
-| T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☐ | | |
+| T-12 | LuaEnvObject 改 LuaScriptComponent | 4 | ☑ | 2026-05-27 | AgentObject 解除 LuaEnvObject 多继承，新增 LuaScriptComponent；Debug x64 构建通过。 |
 | T-13 | BaseObject ↔ GameObject 合并 | 4 | ☐ | | |
 | T-14 | 位置真源统一 | 4 | ☐ | | |
 | T-15 | 删除 RenderableObject | 4 | ☐ | | |

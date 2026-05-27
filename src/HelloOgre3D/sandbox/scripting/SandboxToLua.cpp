@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Wed May 27 11:40:15 2026.
+** Generated automatically by tolua++-1.0.92 on Wed May 27 12:10:03 2026.
 */
 
 #ifndef __cplusplus

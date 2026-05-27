@@ -28,7 +28,14 @@ public:
 
 	static void RemoveLocalEnvForObject(void* obj)
 	{
-		GetScriptLuaVM()->callModuleFunc("LuaPluginMgr", "RemLocalGt", "u[LuaEnvObject]", obj);
+		RemoveLocalEnvForObject(obj, "LuaEnvObject");
+	}
+
+	static void RemoveLocalEnvForObject(void* obj, const char* className)
+	{
+		char formatStr[128];
+		::sprintf(formatStr, "u[%s]", className != nullptr ? className : "LuaEnvObject");
+		GetScriptLuaVM()->callModuleFunc("LuaPluginMgr", "RemLocalGt", formatStr, obj);
 	}
 };
 

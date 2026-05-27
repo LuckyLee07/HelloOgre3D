@@ -7,7 +7,6 @@
 #include "OgreVector3.h"
 #include "OISKeyboard.h"
 #include "object/BaseObject.h"
-#include "object/LuaEnvObject.h"
 #include "GameDefine.h"
 #include "systems/input/IPlayerInput.h"
 
@@ -16,16 +15,17 @@ namespace Ogre {
 }
 
 class btRigidBody;
+struct lua_State;
 class ScriptLuaVM;
 class BlockObject;
 class RenderableObject;
 class AgentLocomotion;
+class LuaScriptComponent;
 class AgentPath;
 class OpenSteerAdapter;
 struct Collision;
 
 class AgentObject : public BaseObject //tolua_exports
-	, public LuaEnvObject
 { //tolua_exports
 public:
 	AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody = nullptr);
@@ -127,11 +127,16 @@ public:
 	
 	btRigidBody* getRigidBody() const;
 	void ResetRigidBody(btRigidBody* pRigidBody);
+	bool setPluginEnv(lua_State* L);
+	bool callFunction(const char* funcname, const char* format, ...);
+	void SetLuaScriptClassName(const char* className);
 	void updateWorldTransform();
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 	void SetPath(const AgentPath& agentPath);
 	AgentLocomotion* GetLocomotion();
 	const AgentLocomotion* GetLocomotion() const;
+	LuaScriptComponent* GetLuaScript();
+	const LuaScriptComponent* GetLuaScript() const;
 	OpenSteerAdapter* GetAdapter() const;
 
 protected:

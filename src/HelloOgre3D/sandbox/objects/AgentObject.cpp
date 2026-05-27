@@ -12,6 +12,7 @@
 #include "components/agent/AgentAttrib.h"
 #include "components/agent/AgentLocomotion.h"
 #include "components/physics/PhysicsComponent.h"
+#include "components/script/LuaScriptComponent.h"
 #include "event/SandboxEventPayload.h"
 #include "objects/steer/AgentPath.h"
 #include "systems/physics/Collision.h"
@@ -40,6 +41,18 @@ AgentObject::AgentObject(RenderableObject* pAgentBody, btRigidBody* pRigidBody/*
 	{
 		SAFE_DELETE(physics);
 	}
+
+	LuaScriptComponent* script = new LuaScriptComponent();
+	if (AddComponent("script", script))
+	{
+		script->SetLocalEnvOwner(this, LuaClassNameTraits<AgentObject>::value);
+	}
+	else
+	{
+		SAFE_DELETE(script);
+	}
+
+	this->SetMass(AgentLocomotion::DEFAULT_AGENT_MASS);
 
 	if (m_pAgentBody != nullptr)
 	{
@@ -85,6 +98,36 @@ void AgentObject::ResetRigidBody(btRigidBody* pRigidBody)
 	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
 	if (physicsComp != nullptr)
 		physicsComp->ResetRigidBody(pRigidBody);
+}
+
+bool AgentObject::setPluginEnv(lua_State* L)
+{
+	LuaScriptComponent* script = GetLuaScript();
+	return script != nullptr ? script->setPluginEnv(L) : false;
+}
+
+bool AgentObject::callFunction(const char* funcname, const char* format, ...)
+{
+	LuaScriptComponent* script = GetLuaScript();
+	if (script == nullptr)
+	{
+		return false;
+	}
+
+	va_list vl;
+	va_start(vl, format);
+	bool result = script->callFunctionV(funcname, format, vl);
+	va_end(vl);
+	return result;
+}
+
+void AgentObject::SetLuaScriptClassName(const char* className)
+{
+	LuaScriptComponent* script = GetLuaScript();
+	if (script != nullptr)
+	{
+		script->SetLocalEnvOwner(this, className);
+	}
 }
 
 Ogre::Vector3 AgentObject::GetPosition() const
@@ -619,6 +662,16 @@ AgentLocomotion* AgentObject::GetLocomotion()
 const AgentLocomotion* AgentObject::GetLocomotion() const
 {
 	return FindComponent<AgentLocomotion>();
+}
+
+LuaScriptComponent* AgentObject::GetLuaScript()
+{
+	return FindComponent<LuaScriptComponent>();
+}
+
+const LuaScriptComponent* AgentObject::GetLuaScript() const
+{
+	return FindComponent<LuaScriptComponent>();
 }
 
 OpenSteerAdapter* AgentObject::GetAdapter() const
