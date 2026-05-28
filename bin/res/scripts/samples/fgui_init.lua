@@ -1412,7 +1412,7 @@ function FGUI_RunPopupRuleSelfTest()
 		priority = 0,
 		closeOnMaskClick = true,
 	})
-	local topPopup = FairyGuiManager:GetTopStackObject(FairyGuiManager.popupStack)
+	local topPopup = FairyGuiManager:GetTopStackObject(FairyGuiManager:GetStore():GetPopupStack())
 	local priorityOk = topPopup ~= nil and topPopup.key == "PopupRuleHigh"
 	local maskClick = FairyGuiManager:DebugInjectClick(20, 20, 0)
 	local highClosed = FairyGuiManager:GetObjectInfo("PopupRuleHigh") == nil

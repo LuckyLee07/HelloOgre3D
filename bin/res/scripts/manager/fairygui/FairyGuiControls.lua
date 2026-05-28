@@ -151,21 +151,44 @@ end
 
 function FairyGuiControls:Init(owner)
 	self.owner = owner
-	self.textInputPoliciesByHandle = owner ~= nil and owner.textInputPoliciesByHandle or self.textInputPoliciesByHandle or {}
-	self.textInputPolicyBindingsByHandle = owner ~= nil and owner.textInputPolicyBindingsByHandle or self.textInputPolicyBindingsByHandle or {}
-	if owner ~= nil then
-		owner.textInputPoliciesByHandle = self.textInputPoliciesByHandle
-		owner.textInputPolicyBindingsByHandle = self.textInputPolicyBindingsByHandle
+	local controlsState = owner ~= nil and owner:GetStore():GetControlsState() or {}
+	self.textInputPoliciesByHandle = controlsState.textInputPoliciesByHandle or {}
+	self.textInputPolicyBindingsByHandle = controlsState.textInputPolicyBindingsByHandle or {}
+	controlsState.textInputPoliciesByHandle = self.textInputPoliciesByHandle
+	controlsState.textInputPolicyBindingsByHandle = self.textInputPolicyBindingsByHandle
+end
+
+local MANAGER_PROXY_METHODS = {
+	"AddChanged",
+	"GetObjectInfo",
+	"GetStore",
+	"GetTargetHandle",
+	"RecordResourceFallback",
+	"RemoveBinding",
+	"SetPosition",
+	"SetSize",
+	"SetVisible",
+}
+
+for _, methodName in ipairs(MANAGER_PROXY_METHODS) do
+	FairyGuiControls[methodName] = FairyGuiControls[methodName] or function(self, ...)
+		local owner = self.owner
+		local method = owner ~= nil and owner[methodName] or nil
+		if method == nil then
+			return nil
+		end
+		return method(owner, ...)
 	end
 end
 
 function FairyGuiControls:ApplyTextInputPolicy(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return false
 	end
-	local policy = self.textInputPoliciesByHandle[targetHandle]
+	local controlsState = self:GetStore():GetControlsState()
+	local policy = controlsState.textInputPoliciesByHandle[targetHandle]
 	if type(policy) ~= "table" then
 		return true
 	end
@@ -184,7 +207,7 @@ function FairyGuiControls:ApplyTextInputPolicy(handle, childPath)
 end
 
 function FairyGuiControls:SetTextInputPolicy(handle, childPath, policy)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		self:RecordResourceFallback("missingTextInputPolicyTarget", {
@@ -195,23 +218,25 @@ function FairyGuiControls:SetTextInputPolicy(handle, childPath, policy)
 	end
 
 	if type(policy) ~= "table" then
-		local bindingId = self.textInputPolicyBindingsByHandle[targetHandle]
+		local controlsState = self:GetStore():GetControlsState()
+		local bindingId = controlsState.textInputPolicyBindingsByHandle[targetHandle]
 		if bindingId ~= nil then
 			self:RemoveBinding(bindingId)
 		end
-		self.textInputPoliciesByHandle[targetHandle] = nil
-		self.textInputPolicyBindingsByHandle[targetHandle] = nil
+		controlsState.textInputPoliciesByHandle[targetHandle] = nil
+		controlsState.textInputPolicyBindingsByHandle[targetHandle] = nil
 		return true
 	end
 
 	local policyCopy = normalizeTextInputPolicy(policy)
-	self.textInputPoliciesByHandle[targetHandle] = policyCopy
-	if self.textInputPolicyBindingsByHandle[targetHandle] == nil then
+	local controlsState = self:GetStore():GetControlsState()
+	controlsState.textInputPoliciesByHandle[targetHandle] = policyCopy
+	if controlsState.textInputPolicyBindingsByHandle[targetHandle] == nil then
 		local bindingId = self:AddChanged(handle, childPath, function()
 			self:ApplyTextInputPolicy(targetHandle, nil)
 		end)
 		if bindingId ~= nil then
-			self.textInputPolicyBindingsByHandle[targetHandle] = bindingId
+			controlsState.textInputPolicyBindingsByHandle[targetHandle] = bindingId
 		end
 	end
 	self:ApplyTextInputPolicy(targetHandle, nil)
@@ -219,12 +244,12 @@ function FairyGuiControls:SetTextInputPolicy(handle, childPath, policy)
 end
 
 function FairyGuiControls:GetTextInputPolicy(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return nil
 	end
-	local policy = self.textInputPoliciesByHandle[targetHandle]
+	local policy = self:GetStore():GetControlsState().textInputPoliciesByHandle[targetHandle]
 	if type(policy) ~= "table" then
 		return nil
 	end
@@ -232,7 +257,7 @@ function FairyGuiControls:GetTextInputPolicy(handle, childPath)
 end
 
 function FairyGuiControls:ConfigureTextInput(handle, childPath, policy)
-	local self = self.owner
+	local owner = self.owner
 	local configured = self:SetTextInputPolicy(handle, childPath, policy)
 	if configured ~= true then
 		return false
@@ -244,30 +269,30 @@ function FairyGuiControls:ConfigureTextInput(handle, childPath, policy)
 end
 
 function FairyGuiControls:GetTextInputRawText(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	return self:GetText(handle, childPath)
 end
 
 function FairyGuiControls:GetTextInputDisplayText(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return ""
 	end
 	local text = self:GetText(targetHandle, nil)
-	local policy = self.textInputPoliciesByHandle[targetHandle]
+	local policy = self:GetStore():GetControlsState().textInputPoliciesByHandle[targetHandle]
 	return getTextInputDisplayText(text, policy)
 end
 
 function FairyGuiControls:GetTextInputDebugInfo(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return nil
 	end
 
 	local text = self:GetText(targetHandle, nil)
-	local policy = self.textInputPoliciesByHandle[targetHandle]
+	local policy = self:GetStore():GetControlsState().textInputPoliciesByHandle[targetHandle]
 	return {
 		handle = targetHandle,
 		policy = type(policy) == "table" and copyTable(policy) or nil,
@@ -278,21 +303,22 @@ function FairyGuiControls:GetTextInputDebugInfo(handle, childPath)
 end
 
 function FairyGuiControls:ClearTextInputPoliciesForHandles(handles)
-	local self = self.owner
+	local owner = self.owner
 	if type(handles) ~= "table" then
 		return
 	end
+	local controlsState = self:GetStore():GetControlsState()
 	for _, handle in ipairs(handles) do
-		local bindingId = self.textInputPolicyBindingsByHandle[handle]
+		local bindingId = controlsState.textInputPolicyBindingsByHandle[handle]
 		if bindingId ~= nil then
-			self.textInputPolicyBindingsByHandle[handle] = nil
+			controlsState.textInputPolicyBindingsByHandle[handle] = nil
 		end
-		self.textInputPoliciesByHandle[handle] = nil
+		controlsState.textInputPoliciesByHandle[handle] = nil
 	end
 end
 
 function FairyGuiControls:SetText(handle, childPath, text)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil then
 		return false
 	end
@@ -305,7 +331,7 @@ function FairyGuiControls:SetText(handle, childPath, text)
 end
 
 function FairyGuiControls:GetText(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiObjectText == nil then
 		return ""
 	end
@@ -318,7 +344,7 @@ function FairyGuiControls:GetText(handle, childPath)
 end
 
 function FairyGuiControls:Focus(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.focusFairyGuiObject == nil then
 		return false
 	end
@@ -331,7 +357,7 @@ function FairyGuiControls:Focus(handle, childPath)
 end
 
 function FairyGuiControls:ResolveFocusHandle(objectInfo, target)
-	local self = self.owner
+	local owner = self.owner
 	if objectInfo == nil then
 		return nil
 	end
@@ -353,7 +379,7 @@ function FairyGuiControls:ResolveFocusHandle(objectInfo, target)
 end
 
 function FairyGuiControls:GetFocusHandles(objectInfo)
-	local self = self.owner
+	local owner = self.owner
 	if objectInfo == nil or objectInfo.tabFocus == false then
 		return {}
 	end
@@ -377,7 +403,7 @@ function FairyGuiControls:GetFocusHandles(objectInfo)
 end
 
 function FairyGuiControls:RegisterFocusOrder(keyOrHandle, focusOrder)
-	local self = self.owner
+	local owner = self.owner
 	local objectInfo = self:GetObjectInfo(keyOrHandle)
 	if objectInfo == nil or type(focusOrder) ~= "table" then
 		return 0
@@ -388,11 +414,13 @@ function FairyGuiControls:RegisterFocusOrder(keyOrHandle, focusOrder)
 end
 
 function FairyGuiControls:CollectFocusHandles()
-	local self = self.owner
+	local owner = self.owner
 	local entries = {}
-	for _, entry in ipairs(self.uiStack or {}) do
-		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
-		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil then
+	local store = owner ~= nil and self:GetStore() or nil
+	local objects = store ~= nil and store:GetObjects() or {}
+	for _, entry in ipairs(store ~= nil and store:GetUIStack() or {}) do
+		local objectInfo = entry ~= nil and objects[entry.key] or nil
+		if objectInfo ~= nil and store:IsHidden(entry.key) ~= true then
 			table.insert(entries, {
 				objectInfo = objectInfo,
 				serial = entry.serial or 0,
@@ -417,7 +445,7 @@ function FairyGuiControls:CollectFocusHandles()
 end
 
 function FairyGuiControls:FocusNext(reverse)
-	local self = self.owner
+	local owner = self.owner
 	local handles = self:CollectFocusHandles()
 	if #handles == 0 then
 		return false
@@ -467,7 +495,7 @@ function FairyGuiControls:GetFocusedHandle()
 end
 
 function FairyGuiControls:SetIcon(handle, childPath, icon)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil then
 		return false
 	end
@@ -480,7 +508,7 @@ function FairyGuiControls:SetIcon(handle, childPath, icon)
 end
 
 function FairyGuiControls:SetLoaderUrl(handle, childPath, url)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil then
 		return false
 	end
@@ -493,7 +521,7 @@ function FairyGuiControls:SetLoaderUrl(handle, childPath, url)
 end
 
 function FairyGuiControls:SetChildVisible(handle, childPath, visible)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return false
@@ -502,7 +530,7 @@ function FairyGuiControls:SetChildVisible(handle, childPath, visible)
 end
 
 function FairyGuiControls:SetChildPosition(handle, childPath, x, y)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return false
@@ -511,7 +539,7 @@ function FairyGuiControls:SetChildPosition(handle, childPath, x, y)
 end
 
 function FairyGuiControls:SetChildSize(handle, childPath, width, height)
-	local self = self.owner
+	local owner = self.owner
 	local targetHandle = self:GetTargetHandle(handle, childPath)
 	if targetHandle == nil then
 		return false
@@ -576,7 +604,7 @@ function FairyGuiControls:GetControllerPageIdAt(handle, controllerName, pageInde
 end
 
 function FairyGuiControls:SetValue(handle, childPathOrValue, value)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.setFairyGuiObjectValue == nil or handle == nil then
 		return false
 	end
@@ -590,7 +618,7 @@ function FairyGuiControls:SetValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiControls:GetValue(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiObjectValue == nil or handle == nil then
 		return 0
 	end
@@ -599,7 +627,7 @@ function FairyGuiControls:GetValue(handle, childPath)
 end
 
 function FairyGuiControls:SetMin(handle, childPathOrValue, minValue)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.setFairyGuiObjectMin == nil or handle == nil then
 		return false
 	end
@@ -613,7 +641,7 @@ function FairyGuiControls:SetMin(handle, childPathOrValue, minValue)
 end
 
 function FairyGuiControls:GetMin(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiObjectMin == nil or handle == nil then
 		return 0
 	end
@@ -622,7 +650,7 @@ function FairyGuiControls:GetMin(handle, childPath)
 end
 
 function FairyGuiControls:SetMax(handle, childPathOrValue, maxValue)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.setFairyGuiObjectMax == nil or handle == nil then
 		return false
 	end
@@ -636,7 +664,7 @@ function FairyGuiControls:SetMax(handle, childPathOrValue, maxValue)
 end
 
 function FairyGuiControls:GetMax(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiObjectMax == nil or handle == nil then
 		return 0
 	end
@@ -645,7 +673,7 @@ function FairyGuiControls:GetMax(handle, childPath)
 end
 
 function FairyGuiControls:SetProgress(handle, childPathOrValue, value, maxValue, minValue)
-	local self = self.owner
+	local owner = self.owner
 	local childPath = childPathOrValue
 	if type(childPathOrValue) ~= "string" then
 		minValue = maxValue
@@ -669,27 +697,27 @@ function FairyGuiControls:SetProgress(handle, childPathOrValue, value, maxValue,
 end
 
 function FairyGuiControls:SetSliderValue(handle, childPathOrValue, value)
-	local self = self.owner
+	local owner = self.owner
 	return self:SetValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiControls:GetSliderValue(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	return self:GetValue(handle, childPath)
 end
 
 function FairyGuiControls:SetProgressBarValue(handle, childPathOrValue, value)
-	local self = self.owner
+	local owner = self.owner
 	return self:SetValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiControls:GetProgressBarValue(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	return self:GetValue(handle, childPath)
 end
 
 function FairyGuiControls:SetComboBoxSelectedIndex(handle, childPathOrSelectedIndex, selectedIndex)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.setFairyGuiComboBoxSelectedIndex == nil or handle == nil then
 		return false
 	end
@@ -703,7 +731,7 @@ function FairyGuiControls:SetComboBoxSelectedIndex(handle, childPathOrSelectedIn
 end
 
 function FairyGuiControls:GetComboBoxSelectedIndex(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiComboBoxSelectedIndex == nil or handle == nil then
 		return -1
 	end
@@ -712,7 +740,7 @@ function FairyGuiControls:GetComboBoxSelectedIndex(handle, childPath)
 end
 
 function FairyGuiControls:SetComboBoxValue(handle, childPathOrValue, value)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.setFairyGuiComboBoxValue == nil or handle == nil then
 		return false
 	end
@@ -726,7 +754,7 @@ function FairyGuiControls:SetComboBoxValue(handle, childPathOrValue, value)
 end
 
 function FairyGuiControls:GetComboBoxValue(handle, childPath)
-	local self = self.owner
+	local owner = self.owner
 	if NativeApi == nil or NativeApi.getFairyGuiComboBoxValue == nil or handle == nil then
 		return ""
 	end

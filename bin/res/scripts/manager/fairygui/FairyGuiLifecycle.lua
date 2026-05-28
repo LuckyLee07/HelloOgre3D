@@ -40,46 +40,22 @@ local function containsHandle(handles, targetHandle)
 	return false
 end
 
-local function bindOwnerState(owner, state)
-	if owner == nil or state == nil then
-		return
+local function getObjectState(owner)
+	if owner ~= nil and owner.GetStore ~= nil then
+		local store = owner:GetStore()
+		if store ~= nil and store.GetObjectState ~= nil then
+			return store:GetObjectState()
+		end
 	end
-
-	owner.objects = state.objects
-	owner.objectsByHandle = state.objectsByHandle
-	owner.uiRegistry = state.uiRegistry
-	owner.uiNameToKey = state.uiNameToKey
-	owner.hiddenObjects = state.hiddenObjects
-	owner.views = state.views
-	owner.viewsByHandle = state.viewsByHandle
-	owner.controllers = state.controllers
-	owner.controllersByHandle = state.controllersByHandle
-	owner.childKeysByParentKey = state.childKeysByParentKey
-	owner.parentKeyByChildKey = state.parentKeyByChildKey
+	return nil
 end
 
 function FairyGuiLifecycle:Init(owner)
 	self.owner = owner
 
-	self.objects = owner ~= nil and owner.objects or {}
-	self.objectsByHandle = owner ~= nil and owner.objectsByHandle or {}
-	self.uiRegistry = owner ~= nil and owner.uiRegistry or {}
-	self.uiNameToKey = owner ~= nil and owner.uiNameToKey or {}
-	self.hiddenObjects = owner ~= nil and owner.hiddenObjects or {}
-	self.views = owner ~= nil and owner.views or {}
-	self.viewsByHandle = owner ~= nil and owner.viewsByHandle or {}
-	self.controllers = owner ~= nil and owner.controllers or {}
-	self.controllersByHandle = owner ~= nil and owner.controllersByHandle or {}
-	self.childKeysByParentKey = owner ~= nil and owner.childKeysByParentKey or {}
-	self.parentKeyByChildKey = owner ~= nil and owner.parentKeyByChildKey or {}
-
-	bindOwnerState(owner, self)
+	local objectState = getObjectState(owner)
+	self.objectState = objectState
 end
-
-function FairyGuiLifecycle:BindOwnerState()
-	bindOwnerState(self.owner, self)
-end
-
 
 function FairyGuiLifecycle:CollectOwnedHandles(objectInfo)
 	local self = self.owner
@@ -105,17 +81,18 @@ function FairyGuiLifecycle:CollectOwnedHandles(objectInfo)
 		end
 	end
 
+	local listState = self:GetStore():GetListState()
 	local index = 1
 	while index <= #handles do
 		local handle = handles[index]
-		local childHandles = self.childrenByHandle[handle]
+		local childHandles = listState.childrenByHandle[handle]
 		if childHandles ~= nil then
 			for _, childHandle in pairs(childHandles) do
 				pushUniqueHandle(handles, handleSet, childHandle)
 			end
 		end
 
-		local itemHandles = self.listItemHandlesByHandle[handle]
+		local itemHandles = listState.listItemHandlesByHandle[handle]
 		if itemHandles ~= nil then
 			for _, itemHandle in pairs(itemHandles) do
 				pushUniqueHandle(handles, handleSet, itemHandle)
@@ -168,6 +145,11 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 		table.insert(issues, "objectInfo=nil")
 		return issues
 	end
+	local store = self:GetStore()
+	local objectState = store:GetObjectState()
+	local layerState = store:GetLayerState()
+	local eventState = store:GetEventState()
+	local listState = store:GetListState()
 
 	local key = objectInfo.key
 	local handle = objectInfo.handle
@@ -185,31 +167,31 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 		handleSet[objectInfo.modalMaskHandle] = true
 	end
 
-	if key ~= nil and self.objects[key] ~= nil then
+	if key ~= nil and objectState.objects[key] ~= nil then
 		table.insert(issues, "objects[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.hiddenObjects[key] ~= nil then
+	if key ~= nil and objectState.hiddenObjects[key] ~= nil then
 		table.insert(issues, "hiddenObjects[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.views[key] ~= nil then
+	if key ~= nil and objectState.views[key] ~= nil then
 		table.insert(issues, "views[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.controllers[key] ~= nil then
+	if key ~= nil and objectState.controllers[key] ~= nil then
 		table.insert(issues, "controllers[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.childKeysByParentKey[key] ~= nil then
+	if key ~= nil and objectState.childKeysByParentKey[key] ~= nil then
 		table.insert(issues, "childKeysByParentKey[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.parentKeyByChildKey[key] ~= nil then
+	if key ~= nil and objectState.parentKeyByChildKey[key] ~= nil then
 		table.insert(issues, "parentKeyByChildKey[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.stackEntriesByKey[key] ~= nil then
+	if key ~= nil and layerState.stackEntriesByKey[key] ~= nil then
 		table.insert(issues, "stackEntriesByKey[" .. tostring(key) .. "]")
 	end
-	if key ~= nil and self.timersByKey[key] ~= nil and tableCount(self.timersByKey[key]) > 0 then
+	if key ~= nil and eventState.timersByKey[key] ~= nil and tableCount(eventState.timersByKey[key]) > 0 then
 		table.insert(issues, "timersByKey[" .. tostring(key) .. "]")
 	end
-	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == key then
+	if objectInfo.uiName ~= nil and objectState.uiNameToKey[objectInfo.uiName] == key then
 		table.insert(issues, "uiNameToKey[" .. tostring(objectInfo.uiName) .. "]")
 	end
 	if objectInfo.viewRef ~= nil and objectInfo.viewRef.GetTimerCount ~= nil and objectInfo.viewRef:GetTimerCount() > 0 then
@@ -220,84 +202,84 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 	end
 
 	for ownedHandle, _ in pairs(handleSet) do
-		if self.objectsByHandle[ownedHandle] ~= nil then
+		if objectState.objectsByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "objectsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.viewsByHandle[ownedHandle] ~= nil then
+		if objectState.viewsByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "viewsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.controllersByHandle[ownedHandle] ~= nil then
+		if objectState.controllersByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "controllersByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.bindingsByHandle[ownedHandle] ~= nil and tableCount(self.bindingsByHandle[ownedHandle]) > 0 then
+		if eventState.bindingsByHandle[ownedHandle] ~= nil and tableCount(eventState.bindingsByHandle[ownedHandle]) > 0 then
 			table.insert(issues, "bindingsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.transitionCallbacksByHandle[ownedHandle] ~= nil and tableCount(self.transitionCallbacksByHandle[ownedHandle]) > 0 then
+		if eventState.transitionCallbacksByHandle[ownedHandle] ~= nil and tableCount(eventState.transitionCallbacksByHandle[ownedHandle]) > 0 then
 			table.insert(issues, "transitionCallbacksByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.childrenByHandle[ownedHandle] ~= nil and tableCount(self.childrenByHandle[ownedHandle]) > 0 then
+		if listState.childrenByHandle[ownedHandle] ~= nil and tableCount(listState.childrenByHandle[ownedHandle]) > 0 then
 			table.insert(issues, "childrenByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listItemHandlesByHandle[ownedHandle] ~= nil then
+		if listState.listItemHandlesByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listItemHandlesByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listItemIndexByHandle[ownedHandle] ~= nil then
+		if listState.listItemIndexByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listItemIndexByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listDataByHandle[ownedHandle] ~= nil then
+		if listState.listDataByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listDataByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listRenderersByHandle[ownedHandle] ~= nil then
+		if listState.listRenderersByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listRenderersByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listVirtualByHandle[ownedHandle] ~= nil then
+		if listState.listVirtualByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listVirtualByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listVirtualOptionsByHandle[ownedHandle] ~= nil then
+		if listState.listVirtualOptionsByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listVirtualOptionsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.listVirtualStatsByHandle[ownedHandle] ~= nil then
+		if listState.listVirtualStatsByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "listVirtualStatsByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.treeDataByHandle[ownedHandle] ~= nil then
+		if listState.treeDataByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "treeDataByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.treeStateByHandle[ownedHandle] ~= nil then
+		if listState.treeStateByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "treeStateByHandle[" .. tostring(ownedHandle) .. "]")
 		end
-		if self.treeRenderersByHandle[ownedHandle] ~= nil then
+		if listState.treeRenderersByHandle[ownedHandle] ~= nil then
 			table.insert(issues, "treeRenderersByHandle[" .. tostring(ownedHandle) .. "]")
 		end
 	end
 
-	for bindingId, binding in pairs(self.bindings) do
+	for bindingId, binding in pairs(eventState.bindings) do
 		if binding ~= nil and binding.handle ~= nil and handleSet[binding.handle] == true then
 			table.insert(issues, "bindings[" .. tostring(bindingId) .. "]")
 		end
 	end
-	for parentKey, childMap in pairs(self.childKeysByParentKey) do
+	for parentKey, childMap in pairs(objectState.childKeysByParentKey) do
 		if parentKey == key then
 			table.insert(issues, "childKeysParent[" .. tostring(parentKey) .. "]")
 		elseif type(childMap) == "table" and childMap[key] == true then
 			table.insert(issues, "childKeysRef[" .. tostring(parentKey) .. ":" .. tostring(key) .. "]")
 		end
 	end
-	for childKey, parentKey in pairs(self.parentKeyByChildKey) do
+	for childKey, parentKey in pairs(objectState.parentKeyByChildKey) do
 		if childKey == key or parentKey == key then
 			table.insert(issues, "parentKeyRef[" .. tostring(childKey) .. ":" .. tostring(parentKey) .. "]")
 		end
 	end
-	for callbackId, callbackInfo in pairs(self.transitionCallbacks) do
+	for callbackId, callbackInfo in pairs(eventState.transitionCallbacks) do
 		if callbackInfo ~= nil and callbackInfo.handle ~= nil and handleSet[callbackInfo.handle] == true then
 			table.insert(issues, "transitionCallbacks[" .. tostring(callbackId) .. "]")
 		end
 	end
-	for timerId, timerInfo in pairs(self.timers) do
+	for timerId, timerInfo in pairs(eventState.timers) do
 		if timerInfo ~= nil and timerInfo.key == key then
 			table.insert(issues, "timers[" .. tostring(timerId) .. "]")
 		end
 	end
-	for parentHandle, childHandles in pairs(self.childrenByHandle) do
+	for parentHandle, childHandles in pairs(listState.childrenByHandle) do
 		if handleSet[parentHandle] == true then
 			table.insert(issues, "childrenByHandleParent[" .. tostring(parentHandle) .. "]")
 		elseif type(childHandles) == "table" then
@@ -308,7 +290,7 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 			end
 		end
 	end
-	for listHandle, itemHandles in pairs(self.listItemHandlesByHandle) do
+	for listHandle, itemHandles in pairs(listState.listItemHandlesByHandle) do
 		if handleSet[listHandle] == true then
 			table.insert(issues, "listItemHandlesParent[" .. tostring(listHandle) .. "]")
 		elseif type(itemHandles) == "table" then
@@ -319,7 +301,7 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 			end
 		end
 	end
-	for listHandle, itemIndexes in pairs(self.listItemIndexByHandle) do
+	for listHandle, itemIndexes in pairs(listState.listItemIndexByHandle) do
 		if handleSet[listHandle] == true then
 			table.insert(issues, "listItemIndexParent[" .. tostring(listHandle) .. "]")
 		elseif type(itemIndexes) == "table" then
@@ -330,19 +312,19 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 			end
 		end
 	end
-	for layerName, layerObjects in pairs(self.layerObjects) do
+	for layerName, layerObjects in pairs(layerState.layerObjects) do
 		for ownedHandle, _ in pairs(handleSet) do
 			if layerObjects[ownedHandle] ~= nil then
 				table.insert(issues, "layerObjects[" .. tostring(layerName) .. ":" .. tostring(ownedHandle) .. "]")
 			end
 		end
 	end
-	for index, entry in ipairs(self.uiStack) do
+	for index, entry in ipairs(layerState.uiStack) do
 		if entry ~= nil and entry.key == key then
 			table.insert(issues, "uiStack[" .. tostring(index) .. "]")
 		end
 	end
-	for index, entry in ipairs(self.popupStack) do
+	for index, entry in ipairs(layerState.popupStack) do
 		if entry ~= nil and entry.key == key then
 			table.insert(issues, "popupStack[" .. tostring(index) .. "]")
 		end
@@ -397,6 +379,7 @@ function FairyGuiLifecycle:AddTimer(keyOrHandle, duration, interval, tickFunc, f
 	end
 
 	local key = objectInfo.key
+	local eventState = self:GetStore():GetEventState()
 	local seq = nil
 	local function removeTimerRecord()
 		if seq ~= nil then
@@ -404,7 +387,7 @@ function FairyGuiLifecycle:AddTimer(keyOrHandle, duration, interval, tickFunc, f
 		end
 	end
 	local function isOwnerAlive()
-		return key ~= nil and self.objects[key] ~= nil
+		return key ~= nil and self:GetStore():GetObjectState().objects[key] ~= nil
 	end
 	local function callTimerCallback(callback, ...)
 		if type(callback) ~= "function" then
@@ -438,15 +421,15 @@ function FairyGuiLifecycle:AddTimer(keyOrHandle, duration, interval, tickFunc, f
 		return nil
 	end
 
-	self.timers[seq] = {
+	eventState.timers[seq] = {
 		seq = seq,
 		key = key,
 		handle = objectInfo.handle,
 	}
-	local timerList = self.timersByKey[key]
+	local timerList = eventState.timersByKey[key]
 	if timerList == nil then
 		timerList = {}
-		self.timersByKey[key] = timerList
+		eventState.timersByKey[key] = timerList
 	end
 	timerList[seq] = true
 	return seq
@@ -459,17 +442,18 @@ end
 
 function FairyGuiLifecycle:RemoveTimerRecord(timerId)
 	local self = self.owner
-	local timerInfo = self.timers[timerId]
+	local eventState = self:GetStore():GetEventState()
+	local timerInfo = eventState.timers[timerId]
 	if timerInfo == nil then
 		return false
 	end
 
-	self.timers[timerId] = nil
-	local timerList = self.timersByKey[timerInfo.key]
+	eventState.timers[timerId] = nil
+	local timerList = eventState.timersByKey[timerInfo.key]
 	if timerList ~= nil then
 		timerList[timerId] = nil
 		if tableCount(timerList) <= 0 then
-			self.timersByKey[timerInfo.key] = nil
+			eventState.timersByKey[timerInfo.key] = nil
 		end
 	end
 	return true
@@ -494,7 +478,7 @@ function FairyGuiLifecycle:ClearTimersForKey(key)
 		return 0
 	end
 
-	local timerList = self.timersByKey[key]
+	local timerList = self:GetStore():GetEventState().timersByKey[key]
 	if timerList == nil then
 		return 0
 	end
@@ -514,7 +498,7 @@ end
 
 function FairyGuiLifecycle:GetTimerCountForKey(key)
 	local self = self.owner
-	local timerList = self.timersByKey[key]
+	local timerList = self:GetStore():GetEventState().timersByKey[key]
 	return tableCount(timerList)
 end
 

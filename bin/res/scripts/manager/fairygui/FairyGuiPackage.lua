@@ -116,30 +116,29 @@ end
 
 function FairyGuiPackage:Init(owner)
 	self.owner = owner
-	self.packageRoot = owner ~= nil and owner.packageRoot or self.packageRoot or "res/fuires"
-	self.packages = owner ~= nil and owner.packages or self.packages or {}
-	self.packagesByName = owner ~= nil and owner.packagesByName or self.packagesByName or {}
-	self.resourceFallbacks = owner ~= nil and owner.resourceFallbacks or self.resourceFallbacks or {}
-	self.resourceFallbackKeys = owner ~= nil and owner.resourceFallbackKeys or self.resourceFallbackKeys or {}
-	self.resourceFallbackMaxCount = owner ~= nil and owner.resourceFallbackMaxCount or self.resourceFallbackMaxCount or 128
-	self.resourceFallbackPolicy = owner ~= nil and owner.resourceFallbackPolicy or self.resourceFallbackPolicy or {
+	local packageState = owner ~= nil and owner:GetStore():GetPackageState() or {}
+	self.packageRoot = packageState.packageRoot or "res/fuires"
+	self.packages = packageState.packages or {}
+	self.packagesByName = packageState.packagesByName or {}
+	self.resourceFallbacks = packageState.resourceFallbacks or {}
+	self.resourceFallbackKeys = packageState.resourceFallbackKeys or {}
+	self.resourceFallbackMaxCount = packageState.resourceFallbackMaxCount or 128
+	self.resourceFallbackPolicy = packageState.resourceFallbackPolicy or {
 		recordMissingChild = false,
 	}
-	self.cachePolicy = owner ~= nil and owner.cachePolicy or self.cachePolicy or {
+	self.cachePolicy = packageState.cachePolicy or {
 		maxHiddenPerPackage = 2,
 		maxHiddenTotal = 6,
 		warnHiddenSeconds = 60,
 	}
-	if owner ~= nil then
-		owner.packageRoot = self.packageRoot
-		owner.packages = self.packages
-		owner.packagesByName = self.packagesByName
-		owner.resourceFallbacks = self.resourceFallbacks
-		owner.resourceFallbackKeys = self.resourceFallbackKeys
-		owner.resourceFallbackMaxCount = self.resourceFallbackMaxCount
-		owner.resourceFallbackPolicy = self.resourceFallbackPolicy
-		owner.cachePolicy = self.cachePolicy
-	end
+	packageState.packageRoot = self.packageRoot
+	packageState.packages = self.packages
+	packageState.packagesByName = self.packagesByName
+	packageState.resourceFallbacks = self.resourceFallbacks
+	packageState.resourceFallbackKeys = self.resourceFallbackKeys
+	packageState.resourceFallbackMaxCount = self.resourceFallbackMaxCount
+	packageState.resourceFallbackPolicy = self.resourceFallbackPolicy
+	packageState.cachePolicy = self.cachePolicy
 end
 
 function FairyGuiPackage:GetPackageNameByPath(packagePath)
@@ -159,12 +158,11 @@ function FairyGuiPackage:SetPackageRoot(packageRoot)
 	packageRoot = string.gsub(packageRoot, "/$", "")
 	if not isBlank(packageRoot) then
 		self.packageRoot = packageRoot
-		owner.packageRoot = packageRoot
+		owner:GetStore():GetPackageState().packageRoot = packageRoot
 	end
 end
 
 function FairyGuiPackage:ResolvePackagePath(packagePath)
-	local owner = self.owner
 	packagePath = stripPackageExtension(normalizePath(packagePath))
 	if isBlank(packagePath) then
 		return ""
@@ -172,7 +170,7 @@ function FairyGuiPackage:ResolvePackagePath(packagePath)
 	if string.find(packagePath, "/", 1, true) ~= nil or string.find(packagePath, ":", 1, true) ~= nil then
 		return packagePath
 	end
-	return (owner ~= nil and owner.packageRoot or "res/fuires") .. "/" .. packagePath
+	return (self.packageRoot or "res/fuires") .. "/" .. packagePath
 end
 
 function FairyGuiPackage:AddPackage(packageList)
@@ -208,7 +206,7 @@ function FairyGuiPackage:LoadPackage(packagePath, packageName, meta)
 		return nil
 	end
 
-	local packageInfo = owner.packages[packagePath]
+	local packageInfo = self.packages[packagePath]
 	if packageInfo then
 		mergePackageMeta(packageInfo, meta)
 		return packageInfo.packageName
@@ -249,9 +247,9 @@ function FairyGuiPackage:LoadPackage(packagePath, packageName, meta)
 		preloadCount = 0,
 	}
 	mergePackageMeta(packageInfo, meta)
-	owner.packages[packagePath] = packageInfo
-	owner.packages[resolvedPackageName] = packageInfo
-	owner.packagesByName[resolvedPackageName] = packageInfo
+	self.packages[packagePath] = packageInfo
+	self.packages[resolvedPackageName] = packageInfo
+	self.packagesByName[resolvedPackageName] = packageInfo
 	return resolvedPackageName
 end
 
@@ -262,7 +260,7 @@ function FairyGuiPackage:RetainPackage(packagePath, packageName)
 	end
 
 	packagePath = self:ResolvePackagePath(packagePath)
-	local packageInfo = owner.packages[packagePath] or owner.packages[packageName]
+	local packageInfo = self.packages[packagePath] or self.packages[packageName]
 	if packageInfo == nil then
 		return nil
 	end
@@ -280,9 +278,9 @@ function FairyGuiPackage:RemovePackageInfo(packageInfo)
 	if NativeApi ~= nil and NativeApi.removeFairyGuiPackage ~= nil then
 		NativeApi:removeFairyGuiPackage(packageInfo.loadedPackageName or packageInfo.packageName or "")
 	end
-	owner.packages[packageInfo.packagePath] = nil
-	owner.packages[packageInfo.packageName] = nil
-	owner.packagesByName[packageInfo.packageName] = nil
+	self.packages[packageInfo.packagePath] = nil
+	self.packages[packageInfo.packageName] = nil
+	self.packagesByName[packageInfo.packageName] = nil
 	return true
 end
 
@@ -293,7 +291,7 @@ function FairyGuiPackage:ReleasePackage(packagePath, packageName, unloadWhenZero
 	end
 
 	packagePath = self:ResolvePackagePath(packagePath)
-	local packageInfo = owner.packages[packagePath] or owner.packages[packageName]
+	local packageInfo = self.packages[packagePath] or self.packages[packageName]
 	if packageInfo == nil then
 		return false
 	end
@@ -358,7 +356,7 @@ end
 function FairyGuiPackage:PreloadScene(sceneName, options)
 	local owner = self.owner
 	options = options or {}
-	sceneName = sceneName or owner and owner.currentSceneName or "Default"
+	sceneName = sceneName or owner and owner:GetCurrentScene() or "Default"
 	local stats = {
 		sceneName = sceneName,
 		requested = 0,
@@ -370,7 +368,7 @@ function FairyGuiPackage:PreloadScene(sceneName, options)
 		return stats
 	end
 
-	for uiName, config in pairs(owner.uiRegistry or {}) do
+	for uiName, config in pairs(owner:GetStore():GetUIRegistry() or {}) do
 		if type(config) == "table"
 			and config.preload ~= false
 			and self:MatchesConfigScene(config, sceneName)
@@ -426,7 +424,7 @@ function FairyGuiPackage:DumpPackages()
 
 	print("[FGUI] DumpPackages begin")
 	local printed = {}
-	for _, packageInfo in pairs(owner.packagesByName or {}) do
+	for _, packageInfo in pairs(self.packagesByName or {}) do
 		if packageInfo ~= nil and printed[packageInfo.packageName] ~= true then
 			print("[FGUI] Package", packageInfo.packageName, "path=", packageInfo.packagePath, "refCount=", packageInfo.refCount or 0, "groups=", setToString(packageInfo.groups), "tags=", setToString(packageInfo.tags), "scenes=", setToString(packageInfo.scenes), "preloaded=", packageInfo.preloaded == true)
 			printed[packageInfo.packageName] = true
@@ -502,7 +500,7 @@ function FairyGuiPackage:UnloadPackagesByFilter(filter)
 
 	local packages = {}
 	local printed = {}
-	for _, packageInfo in pairs(owner.packagesByName or {}) do
+	for _, packageInfo in pairs(self.packagesByName or {}) do
 		if packageInfo ~= nil and printed[packageInfo.packageName] ~= true and self:MatchesPackageFilter(packageInfo, filter) then
 			table.insert(packages, packageInfo)
 			printed[packageInfo.packageName] = true
@@ -547,7 +545,7 @@ function FairyGuiPackage:GetPackageRefs()
 	end
 
 	local printed = {}
-	for _, packageInfo in pairs(owner.packagesByName or {}) do
+	for _, packageInfo in pairs(self.packagesByName or {}) do
 		local packageKey = packageInfo ~= nil and (packageInfo.packageName or packageInfo.packagePath) or nil
 		if packageInfo ~= nil and packageKey ~= nil and printed[packageKey] ~= true then
 			refsByPackage[packageKey] = {
@@ -573,9 +571,9 @@ function FairyGuiPackage:GetPackageRefs()
 	local function getRef(objectInfo)
 		local packageName = objectInfo.packageName
 		local packagePath = objectInfo.packagePath
-		local packageInfo = packagePath ~= nil and owner.packages[packagePath] or nil
+		local packageInfo = packagePath ~= nil and self.packages[packagePath] or nil
 		if packageInfo == nil and packageName ~= nil then
-			packageInfo = owner.packagesByName[packageName] or owner.packages[packageName]
+			packageInfo = self.packagesByName[packageName] or self.packages[packageName]
 		end
 		local packageKey = packageInfo ~= nil and (packageInfo.packageName or packageInfo.packagePath) or (packageName or packagePath or "<dynamic>")
 		local ref = refsByPackage[packageKey]
@@ -601,10 +599,13 @@ function FairyGuiPackage:GetPackageRefs()
 		return ref
 	end
 
-	for key, objectInfo in pairs(owner.objects or {}) do
+	local store = owner:GetStore()
+	local objects = store:GetObjects()
+	local hiddenObjects = store:GetHiddenObjects()
+	for key, objectInfo in pairs(objects or {}) do
 		local ref = getRef(objectInfo)
 		ref.openCount = ref.openCount + 1
-		if owner.hiddenObjects[key] ~= nil then
+		if hiddenObjects[key] ~= nil then
 			ref.hiddenCount = ref.hiddenCount + 1
 		end
 		if objectInfo.cache == true then
@@ -613,16 +614,16 @@ function FairyGuiPackage:GetPackageRefs()
 		table.insert(ref.objects, objectInfo)
 	end
 
-	for _, entry in ipairs(owner.uiStack or {}) do
-		local objectInfo = entry ~= nil and owner.objects[entry.key] or nil
+	for _, entry in ipairs(store:GetUIStack() or {}) do
+		local objectInfo = entry ~= nil and objects[entry.key] or nil
 		if objectInfo ~= nil then
 			local ref = getRef(objectInfo)
 			ref.stackCount = ref.stackCount + 1
 			ref.stackedKeys[objectInfo.key] = true
 		end
 	end
-	for _, entry in ipairs(owner.popupStack or {}) do
-		local objectInfo = entry ~= nil and owner.objects[entry.key] or nil
+	for _, entry in ipairs(store:GetPopupStack() or {}) do
+		local objectInfo = entry ~= nil and objects[entry.key] or nil
 		if objectInfo ~= nil then
 			local ref = getRef(objectInfo)
 			ref.stackCount = ref.stackCount + 1
@@ -638,7 +639,7 @@ function FairyGuiPackage:DumpResourceRefs()
 	for packageKey, ref in pairs(refsByPackage) do
 		print("[FGUI] ResourcePackage", packageKey, "path=", ref.packagePath, "refCount=", ref.refCount, "open=", ref.openCount, "hidden=", ref.hiddenCount, "cache=", ref.cacheCount, "stackRefs=", ref.stackCount, "groups=", table.concat(ref.groups or {}, ","), "tags=", table.concat(ref.tags or {}, ","), "scenes=", table.concat(ref.scenes or {}, ","), "preloaded=", ref.preloaded == true, "preloadCount=", ref.preloadCount or 0)
 		for _, objectInfo in ipairs(ref.objects) do
-			print("[FGUI] ResourceUI", packageKey, "key=", objectInfo.key, "handle=", objectInfo.handle, "uiName=", objectInfo.uiName, "object=", objectInfo.objectName, "layer=", objectInfo.layer, "group=", objectInfo.uiGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.owner.hiddenObjects[objectInfo.key] ~= nil)
+			print("[FGUI] ResourceUI", packageKey, "key=", objectInfo.key, "handle=", objectInfo.handle, "uiName=", objectInfo.uiName, "object=", objectInfo.objectName, "layer=", objectInfo.layer, "group=", objectInfo.uiGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.owner:GetStore():IsHidden(objectInfo.key))
 		end
 	end
 	print("[FGUI] DumpResourceRefs end")
@@ -652,7 +653,7 @@ function FairyGuiPackage:GetResourceWarnings()
 	end
 
 	local refsByPackage = self:GetPackageRefs()
-	local policy = owner.cachePolicy or {}
+	local policy = self.cachePolicy or {}
 	local maxHiddenPerPackage = tonumber(policy.maxHiddenPerPackage) or 0
 	local maxHiddenTotal = tonumber(policy.maxHiddenTotal) or 0
 	local warnHiddenMs = (tonumber(policy.warnHiddenSeconds) or 0) * 1000
@@ -697,14 +698,14 @@ function FairyGuiPackage:GetResourceWarnings()
 			})
 		end
 		for _, objectInfo in ipairs(ref.objects) do
-			if owner.hiddenObjects[objectInfo.key] == nil and ref.stackedKeys[objectInfo.key] ~= true and owner:GetStackMode(objectInfo) ~= "None" then
+			if owner:GetStore():IsHidden(objectInfo.key) ~= true and ref.stackedKeys[objectInfo.key] ~= true and owner:GetStackMode(objectInfo) ~= "None" then
 				table.insert(warnings, {
 					kind = "visibleWithoutStack",
 					packageKey = packageKey,
 					detail = "key=" .. tostring(objectInfo.key),
 				})
 			end
-			if owner.hiddenObjects[objectInfo.key] ~= nil and warnHiddenMs > 0 and objectInfo.cacheHiddenAtMs ~= nil and currentMs - objectInfo.cacheHiddenAtMs > warnHiddenMs then
+			if owner:GetStore():IsHidden(objectInfo.key) and warnHiddenMs > 0 and objectInfo.cacheHiddenAtMs ~= nil and currentMs - objectInfo.cacheHiddenAtMs > warnHiddenMs then
 				table.insert(warnings, {
 					kind = "hiddenCacheLongLived",
 					packageKey = packageKey,
@@ -830,9 +831,10 @@ end
 function FairyGuiPackage:ClearResourceFallbacks()
 	self.resourceFallbacks = {}
 	self.resourceFallbackKeys = {}
-	if self.owner ~= nil then
-		self.owner.resourceFallbacks = self.resourceFallbacks
-		self.owner.resourceFallbackKeys = self.resourceFallbackKeys
+	local packageState = self.owner ~= nil and self.owner:GetStore():GetPackageState() or nil
+	if packageState ~= nil then
+		packageState.resourceFallbacks = self.resourceFallbacks
+		packageState.resourceFallbackKeys = self.resourceFallbackKeys
 	end
 end
 
@@ -844,8 +846,9 @@ function FairyGuiPackage:SetResourceFallbackPolicy(policy)
 	for name, value in pairs(policy) do
 		self.resourceFallbackPolicy[name] = value
 	end
-	if self.owner ~= nil then
-		self.owner.resourceFallbackPolicy = self.resourceFallbackPolicy
+	local packageState = self.owner ~= nil and self.owner:GetStore():GetPackageState() or nil
+	if packageState ~= nil then
+		packageState.resourceFallbackPolicy = self.resourceFallbackPolicy
 	end
 	return self.resourceFallbackPolicy
 end

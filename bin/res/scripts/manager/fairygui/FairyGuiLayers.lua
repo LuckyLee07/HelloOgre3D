@@ -88,51 +88,128 @@ local function callView(view, functionName, ...)
 	return nil
 end
 
+local function getLayerState(owner)
+	if owner ~= nil and owner.GetStore ~= nil then
+		local store = owner:GetStore()
+		if store ~= nil and store.GetLayerState ~= nil then
+			return store:GetLayerState()
+		end
+	end
+	return nil
+end
+
+local function getObjectState(owner)
+	if owner ~= nil and owner.GetStore ~= nil then
+		local store = owner:GetStore()
+		if store ~= nil and store.GetObjectState ~= nil then
+			return store:GetObjectState()
+		end
+	end
+	return nil
+end
+
 function FairyGuiLayers:Init(owner)
 	self.owner = owner
-	self.currentSceneName = owner ~= nil and owner.currentSceneName or self.currentSceneName or "Default"
-	self.designWidth = owner ~= nil and owner.designWidth or self.designWidth
-	self.designHeight = owner ~= nil and owner.designHeight or self.designHeight
-	self.scaleMode = owner ~= nil and owner.scaleMode or self.scaleMode or "stretch"
-	self.layers = owner ~= nil and owner.layers or self.layers or copyTable(DEFAULT_LAYER_ORDER)
-	self.layerPolicies = owner ~= nil and owner.layerPolicies or self.layerPolicies or {}
-	self.layerNextOrder = owner ~= nil and owner.layerNextOrder or self.layerNextOrder or {}
-	self.layerObjects = owner ~= nil and owner.layerObjects or self.layerObjects or {}
-	self.layerRoots = owner ~= nil and owner.layerRoots or self.layerRoots or {}
-	self.safeArea = owner ~= nil and owner.safeArea or self.safeArea or normalizeSafeArea(0, 0, 0, 0)
-	self.uiStack = owner ~= nil and owner.uiStack or self.uiStack or {}
-	self.popupStack = owner ~= nil and owner.popupStack or self.popupStack or {}
-	self.stackEntriesByKey = owner ~= nil and owner.stackEntriesByKey or self.stackEntriesByKey or {}
-	self.nextStackSerial = owner ~= nil and owner.nextStackSerial or self.nextStackSerial or 0
+	self.store = owner ~= nil and owner.GetStore ~= nil and owner:GetStore() or nil
+	local objectState = getObjectState(owner)
+	local layerState = getLayerState(owner)
+	self.objects = objectState ~= nil and objectState.objects or self.objects or {}
+	self.hiddenObjects = objectState ~= nil and objectState.hiddenObjects or self.hiddenObjects or {}
+	self.currentSceneName = layerState ~= nil and layerState.currentSceneName or self.currentSceneName or "Default"
+	self.designWidth = layerState ~= nil and layerState.designWidth or self.designWidth
+	self.designHeight = layerState ~= nil and layerState.designHeight or self.designHeight
+	self.scaleMode = layerState ~= nil and layerState.scaleMode or self.scaleMode or "stretch"
+	self.layers = layerState ~= nil and layerState.layers or self.layers or copyTable(DEFAULT_LAYER_ORDER)
+	self.layerPolicies = layerState ~= nil and layerState.layerPolicies or self.layerPolicies or {}
+	self.layerNextOrder = layerState ~= nil and layerState.layerNextOrder or self.layerNextOrder or {}
+	self.layerObjects = layerState ~= nil and layerState.layerObjects or self.layerObjects or {}
+	self.layerRoots = layerState ~= nil and layerState.layerRoots or self.layerRoots or {}
+	self.safeArea = layerState ~= nil and layerState.safeArea or self.safeArea or normalizeSafeArea(0, 0, 0, 0)
+	self.uiStack = layerState ~= nil and layerState.uiStack or self.uiStack or {}
+	self.popupStack = layerState ~= nil and layerState.popupStack or self.popupStack or {}
+	self.stackEntriesByKey = layerState ~= nil and layerState.stackEntriesByKey or self.stackEntriesByKey or {}
+	self.nextStackSerial = layerState ~= nil and layerState.nextStackSerial or self.nextStackSerial or 0
 	for layerName, _ in pairs(self.layers) do
 		self.layerNextOrder[layerName] = self.layerNextOrder[layerName] or 0
 		self.layerObjects[layerName] = self.layerObjects[layerName] or {}
 	end
-	if owner ~= nil then
-		owner.currentSceneName = self.currentSceneName
-		owner.designWidth = self.designWidth
-		owner.designHeight = self.designHeight
-		owner.scaleMode = self.scaleMode
-		owner.layers = self.layers
-		owner.layerPolicies = self.layerPolicies
-		owner.layerNextOrder = self.layerNextOrder
-		owner.layerObjects = self.layerObjects
-		owner.layerRoots = self.layerRoots
-		owner.safeArea = self.safeArea
-		owner.uiStack = self.uiStack
-		owner.popupStack = self.popupStack
-		owner.stackEntriesByKey = self.stackEntriesByKey
-		owner.nextStackSerial = self.nextStackSerial
-		for layerName, policy in pairs(DEFAULT_LAYER_POLICY) do
-			if owner.layerPolicies[layerName] == nil then
-				owner.layerPolicies[layerName] = copyTable(policy)
-			end
+	if layerState ~= nil then
+		layerState.currentSceneName = self.currentSceneName
+		layerState.designWidth = self.designWidth
+		layerState.designHeight = self.designHeight
+		layerState.scaleMode = self.scaleMode
+		layerState.layers = self.layers
+		layerState.layerPolicies = self.layerPolicies
+		layerState.layerNextOrder = self.layerNextOrder
+		layerState.layerObjects = self.layerObjects
+		layerState.layerRoots = self.layerRoots
+		layerState.safeArea = self.safeArea
+		layerState.uiStack = self.uiStack
+		layerState.popupStack = self.popupStack
+		layerState.stackEntriesByKey = self.stackEntriesByKey
+		layerState.nextStackSerial = self.nextStackSerial
+	end
+	for layerName, policy in pairs(DEFAULT_LAYER_POLICY) do
+		if self.layerPolicies[layerName] == nil then
+			self.layerPolicies[layerName] = copyTable(policy)
 		end
 	end
 end
 
+function FairyGuiLayers:GetStore()
+	if self.store == nil and self.owner ~= nil and self.owner.GetStore ~= nil then
+		self.store = self.owner:GetStore()
+	end
+	return self.store
+end
+
+function FairyGuiLayers:GetCurrentSceneName()
+	local store = self:GetStore()
+	return store ~= nil and store:GetCurrentScene() or self.currentSceneName or "Default"
+end
+
+function FairyGuiLayers:GetObjectInfo(keyOrHandle)
+	return self.owner ~= nil and self.owner:GetObjectInfo(keyOrHandle) or nil
+end
+
+function FairyGuiLayers:CloseUI(keyOrHandle, forceDestroy, reason)
+	return self.owner ~= nil and self.owner:CloseUI(keyOrHandle, forceDestroy, reason) or false
+end
+
+function FairyGuiLayers:FocusNext(reverse)
+	return self.owner ~= nil and self.owner:FocusNext(reverse) or false
+end
+
+function FairyGuiLayers:SetPosition(handle, x, y)
+	return self.owner ~= nil and self.owner:SetPosition(handle, x, y) or false
+end
+
+function FairyGuiLayers:SetSize(handle, width, height)
+	return self.owner ~= nil and self.owner:SetSize(handle, width, height) or false
+end
+
+function FairyGuiLayers:SetVisible(handle, visible)
+	return self.owner ~= nil and self.owner:SetVisible(handle, visible) or false
+end
+
+function FairyGuiLayers:SetTouchable(handle, touchable)
+	return self.owner ~= nil and self.owner:SetTouchable(handle, touchable) or false
+end
+
+function FairyGuiLayers:AddClick(handle, childPath, callback)
+	return self.owner ~= nil and self.owner:AddClick(handle, childPath, callback) or nil
+end
+
+function FairyGuiLayers:ClearBindingsForHandle(handle)
+	return self.owner ~= nil and self.owner:ClearBindingsForHandle(handle) or 0
+end
+
+function FairyGuiLayers:ApplyServiceLayout(objectInfo)
+	return self.owner ~= nil and self.owner:ApplyServiceLayout(objectInfo) or false
+end
+
 function FairyGuiLayers:GetLayerPolicy(layerName)
-	local self = self.owner
+	local owner = self.owner
 	layerName = layerName or "Normal"
 	local defaultPolicy = DEFAULT_LAYER_POLICY[layerName] or {
 		baseOrder = DEFAULT_LAYER_ORDER[layerName] or DEFAULT_LAYER_ORDER.Normal,
@@ -140,7 +217,7 @@ function FairyGuiLayers:GetLayerPolicy(layerName)
 		closeOnEscape = false,
 		inputMode = "hitOnly",
 	}
-	if self == nil then
+	if owner == nil then
 		return copyTable(defaultPolicy, { name = layerName })
 	end
 
@@ -160,8 +237,8 @@ function FairyGuiLayers:GetLayerPolicy(layerName)
 end
 
 function FairyGuiLayers:SetLayerPolicy(layerName, policy)
-	local self = self.owner
-	if self == nil or isBlank(layerName) or type(policy) ~= "table" then
+	local owner = self.owner
+	if owner == nil or isBlank(layerName) or type(policy) ~= "table" then
 		return nil
 	end
 
@@ -174,8 +251,8 @@ function FairyGuiLayers:SetLayerPolicy(layerName, policy)
 end
 
 function FairyGuiLayers:GetSafeArea()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return normalizeSafeArea(0, 0, 0, 0)
 	end
 
@@ -184,12 +261,16 @@ function FairyGuiLayers:GetSafeArea()
 end
 
 function FairyGuiLayers:SetSafeArea(leftOrRect, top, right, bottom)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return normalizeSafeArea(0, 0, 0, 0)
 	end
 
 	self.safeArea = normalizeSafeArea(leftOrRect, top, right, bottom)
+	local store = self:GetStore()
+	if store ~= nil then
+		store:GetLayerState().safeArea = self.safeArea
+	end
 	for _, objectInfo in pairs(self.objects or {}) do
 		local param = objectInfo.param or {}
 		if param.useSafeArea == true or param.safeArea == true then
@@ -200,8 +281,8 @@ function FairyGuiLayers:SetSafeArea(leftOrRect, top, right, bottom)
 end
 
 function FairyGuiLayers:GetLayerBaseOrder(layerName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return DEFAULT_LAYER_ORDER.Normal
 	end
 
@@ -215,8 +296,8 @@ function FairyGuiLayers:GetLayerBaseOrder(layerName)
 end
 
 function FairyGuiLayers:GetLayerRoot(layerName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -225,8 +306,8 @@ function FairyGuiLayers:GetLayerRoot(layerName)
 end
 
 function FairyGuiLayers:EnsureLayerRoot(layerName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -264,8 +345,8 @@ function FairyGuiLayers:EnsureLayerRoot(layerName)
 end
 
 function FairyGuiLayers:ResolveAttachParent(layerName, param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -304,8 +385,8 @@ function FairyGuiLayers:AttachToLayer(handle, layerName, param)
 end
 
 function FairyGuiLayers:ResizeLayerRoots()
-	local self = self.owner
-	if self == nil or self.layerRoots == nil then
+	local owner = self.owner
+	if owner == nil or self.layerRoots == nil then
 		return
 	end
 
@@ -321,8 +402,8 @@ function FairyGuiLayers:ResizeLayerRoots()
 end
 
 function FairyGuiLayers:NextLayerSortingOrder(layerName, priority)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return 0
 	end
 
@@ -338,7 +419,7 @@ function FairyGuiLayers:IsPopupLayer(layerName)
 end
 
 function FairyGuiLayers:GetStackMode(objectInfo)
-	local self = self.owner
+	local owner = self.owner
 	if objectInfo == nil then
 		return "None"
 	end
@@ -350,15 +431,15 @@ function FairyGuiLayers:GetStackMode(objectInfo)
 	if param.stackMode ~= nil then
 		return param.stackMode
 	end
-	if self ~= nil and self:IsPopupLayer(objectInfo.layer) then
+	if owner ~= nil and self:IsPopupLayer(objectInfo.layer) then
 		return "Popup"
 	end
 	return "Normal"
 end
 
 function FairyGuiLayers:RemoveStackEntry(key)
-	local self = self.owner
-	if self == nil or key == nil or self.stackEntriesByKey[key] == nil then
+	local owner = self.owner
+	if owner == nil or key == nil or self.stackEntriesByKey[key] == nil then
 		return false
 	end
 
@@ -378,8 +459,8 @@ function FairyGuiLayers:RemoveStackEntry(key)
 end
 
 function FairyGuiLayers:PushStack(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.key == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or objectInfo.key == nil then
 		return false
 	end
 
@@ -391,6 +472,10 @@ function FairyGuiLayers:PushStack(objectInfo)
 	end
 
 	self.nextStackSerial = (self.nextStackSerial or 0) + 1
+	local store = self:GetStore()
+	if store ~= nil then
+		store:GetLayerState().nextStackSerial = self.nextStackSerial
+	end
 	local entry = {
 		key = objectInfo.key,
 		handle = objectInfo.handle,
@@ -413,8 +498,8 @@ function FairyGuiLayers:PushStack(objectInfo)
 end
 
 function FairyGuiLayers:GetTopStackObject(stack, layerName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil, nil
 	end
 
@@ -443,8 +528,8 @@ function FairyGuiLayers:GetObjectResult(objectInfo)
 end
 
 function FairyGuiLayers:GetTopUI(layerName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 	local objectInfo = self:GetTopStackObject(self.uiStack, layerName)
@@ -452,8 +537,8 @@ function FairyGuiLayers:GetTopUI(layerName)
 end
 
 function FairyGuiLayers:GetTopPopup()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 	local objectInfo = self:GetTopStackObject(self.popupStack)
@@ -461,8 +546,8 @@ function FairyGuiLayers:GetTopPopup()
 end
 
 function FairyGuiLayers:CloseTop(layerName, forceDestroy)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	local objectInfo = self:GetTopStackObject(self.uiStack, layerName)
@@ -473,8 +558,8 @@ function FairyGuiLayers:CloseTop(layerName, forceDestroy)
 end
 
 function FairyGuiLayers:CloseTopPopup(forceDestroy)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	local objectInfo = self:GetTopStackObject(self.popupStack)
@@ -485,7 +570,7 @@ function FairyGuiLayers:CloseTopPopup(forceDestroy)
 end
 
 function FairyGuiLayers:IsPopupOpenParam(param)
-	local self = self.owner
+	local owner = self.owner
 	if param == nil then
 		return false
 	end
@@ -495,7 +580,7 @@ function FairyGuiLayers:IsPopupOpenParam(param)
 	if param.stackMode == "Popup" then
 		return true
 	end
-	return self ~= nil and self:IsPopupLayer(param.layer)
+	return owner ~= nil and self:IsPopupLayer(param.layer)
 end
 
 function FairyGuiLayers:GetPopupGroup(param, objectInfo)
@@ -527,20 +612,20 @@ function FairyGuiLayers:GetUIGroup(param, objectInfo)
 end
 
 function FairyGuiLayers:GetSceneName(param, objectInfo)
-	local self = self.owner
+	local owner = self.owner
 	local sceneName = param ~= nil and (param.sceneName or param.scene) or nil
 	if isBlank(sceneName) and objectInfo ~= nil then
 		sceneName = objectInfo.sceneName
 	end
-	if isBlank(sceneName) and self ~= nil then
-		sceneName = self.currentSceneName
+	if isBlank(sceneName) then
+		sceneName = self:GetCurrentSceneName()
 	end
 	return sceneName or "Default"
 end
 
 function FairyGuiLayers:GetTopPopupObjectByGroup(popupGroup)
-	local self = self.owner
-	if self == nil or isBlank(popupGroup) then
+	local owner = self.owner
+	if owner == nil or isBlank(popupGroup) then
 		return nil
 	end
 
@@ -555,8 +640,8 @@ function FairyGuiLayers:GetTopPopupObjectByGroup(popupGroup)
 end
 
 function FairyGuiLayers:ReopenObjectInfo(objectInfo, param)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil then
 		return nil
 	end
 
@@ -588,8 +673,8 @@ function FairyGuiLayers:ReopenObjectInfo(objectInfo, param)
 end
 
 function FairyGuiLayers:ClosePopupGroup(popupGroup, exceptKey, forceDestroy)
-	local self = self.owner
-	if self == nil or isBlank(popupGroup) then
+	local owner = self.owner
+	if owner == nil or isBlank(popupGroup) then
 		return 0
 	end
 
@@ -612,8 +697,8 @@ function FairyGuiLayers:ClosePopupGroup(popupGroup, exceptKey, forceDestroy)
 end
 
 function FairyGuiLayers:ApplyPopupOpenPolicy(param)
-	local self = self.owner
-	if self == nil or param == nil or param.__popupPolicyApplied == true then
+	local owner = self.owner
+	if owner == nil or param == nil or param.__popupPolicyApplied == true then
 		return nil
 	end
 	param.__popupPolicyApplied = true
@@ -652,8 +737,8 @@ function FairyGuiLayers:ShouldLayerCloseOnEscape(layerName)
 end
 
 function FairyGuiLayers:HandleKeyPressed(keyCode, keyText)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	if tonumber(keyCode) == KEY_TAB then
@@ -673,8 +758,8 @@ function FairyGuiLayers:HandleKeyReleased(keyCode, keyText)
 end
 
 function FairyGuiLayers:UpdateModalMaskSorting(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil then
 		return false
 	end
 	local updated = false
@@ -691,8 +776,8 @@ function FairyGuiLayers:UpdateModalMaskSorting(objectInfo)
 end
 
 function FairyGuiLayers:AssignLayer(objectInfo, layerName, forceNextOrder)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.handle == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or objectInfo.handle == nil then
 		return false
 	end
 
@@ -723,8 +808,8 @@ function FairyGuiLayers:AssignLayer(objectInfo, layerName, forceNextOrder)
 end
 
 function FairyGuiLayers:BringToFront(keyOrHandle, priority)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	local objectInfo = self:GetObjectInfo(keyOrHandle)
@@ -740,8 +825,8 @@ function FairyGuiLayers:BringToFront(keyOrHandle, priority)
 end
 
 function FairyGuiLayers:SetSortingPriority(keyOrHandle, priority, bringToFront)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	local objectInfo = self:GetObjectInfo(keyOrHandle)
@@ -757,8 +842,8 @@ function FairyGuiLayers:SetSortingPriority(keyOrHandle, priority, bringToFront)
 end
 
 function FairyGuiLayers:HandleModalMaskClick(key, reason)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 	local objectInfo = self.objects[key]
@@ -777,14 +862,14 @@ function FairyGuiLayers:HandleModalMaskClick(key, reason)
 end
 
 function FairyGuiLayers:GetGuideMaskRect(param)
-	local self = self.owner
-	local rects = self ~= nil and self:GetGuideMaskRects(param) or nil
+	local owner = self.owner
+	local rects = owner ~= nil and self:GetGuideMaskRects(param) or nil
 	return rects ~= nil and rects[1] or nil
 end
 
 function FairyGuiLayers:NormalizeGuideMaskRect(rect, param)
-	local self = self.owner
-	if self == nil or type(rect) ~= "table" then
+	local owner = self.owner
+	if owner == nil or type(rect) ~= "table" then
 		return nil
 	end
 
@@ -815,8 +900,8 @@ function FairyGuiLayers:NormalizeGuideMaskRect(rect, param)
 end
 
 function FairyGuiLayers:GetGuideMaskRects(param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -873,8 +958,8 @@ local function mergeIntervals(intervals)
 end
 
 function FairyGuiLayers:SetGuideMaskVisible(objectInfo, visible)
-	local self = self.owner
-	if self == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
 		return false
 	end
 	for _, handle in ipairs(objectInfo.guideMaskHandles) do
@@ -884,8 +969,8 @@ function FairyGuiLayers:SetGuideMaskVisible(objectInfo, visible)
 end
 
 function FairyGuiLayers:ClearGuideMaskHandles(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
 		return false
 	end
 
@@ -902,8 +987,8 @@ function FairyGuiLayers:ClearGuideMaskHandles(objectInfo)
 end
 
 function FairyGuiLayers:UpdateGuideMaskSorting(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or type(objectInfo.guideMaskHandles) ~= "table" then
 		return false
 	end
 	if NativeApi == nil or NativeApi.setFairyGuiObjectSortingOrder == nil then
@@ -918,8 +1003,8 @@ function FairyGuiLayers:UpdateGuideMaskSorting(objectInfo)
 end
 
 function FairyGuiLayers:AddGuideMaskSegment(objectInfo, x, y, width, height, alpha, closeOnClick)
-	local self = self.owner
-	if self == nil or objectInfo == nil or width <= 0 or height <= 0 then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or width <= 0 or height <= 0 then
 		return nil
 	end
 	if NativeApi == nil or NativeApi.createFairyGuiModalMask == nil then
@@ -954,8 +1039,8 @@ function FairyGuiLayers:AddGuideMaskSegment(objectInfo, x, y, width, height, alp
 end
 
 function FairyGuiLayers:CreateGuideMaskSegments(objectInfo, param)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil then
 		return false
 	end
 	self:ClearGuideMaskHandles(objectInfo)
@@ -1011,16 +1096,16 @@ function FairyGuiLayers:CreateGuideMaskSegments(objectInfo, param)
 end
 
 function FairyGuiLayers:UpdateGuideMaskLayout(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.guideMaskRect == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or objectInfo.guideMaskRect == nil then
 		return false
 	end
 	return self:CreateGuideMaskSegments(objectInfo, objectInfo.param)
 end
 
 function FairyGuiLayers:CreateModalMask(objectInfo, param)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.handle == nil or param == nil or param.modal ~= true then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or objectInfo.handle == nil or param == nil or param.modal ~= true then
 		return nil
 	end
 	if NativeApi == nil or NativeApi.createFairyGuiModalMask == nil then
@@ -1079,8 +1164,8 @@ function FairyGuiLayers:GetScreenHeight()
 end
 
 function FairyGuiLayers:SetDesignResolution(width, height, scaleMode)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 	self.designWidth = tonumber(width)
@@ -1088,11 +1173,18 @@ function FairyGuiLayers:SetDesignResolution(width, height, scaleMode)
 	if scaleMode ~= nil then
 		self.scaleMode = scaleMode
 	end
+	local store = self:GetStore()
+	if store ~= nil then
+		local layerState = store:GetLayerState()
+		layerState.designWidth = self.designWidth
+		layerState.designHeight = self.designHeight
+		layerState.scaleMode = self.scaleMode
+	end
 end
 
 function FairyGuiLayers:GetDesignTransform(param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return 1, 1, 0, 0
 	end
 
@@ -1123,8 +1215,8 @@ function FairyGuiLayers:GetDesignTransform(param)
 end
 
 function FairyGuiLayers:ApplyDesignRect(rect, param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -1161,8 +1253,8 @@ function FairyGuiLayers:ClampLayoutRect(rect, screenWidth, screenHeight, bounds)
 end
 
 function FairyGuiLayers:GetLayoutRect(param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -1246,8 +1338,8 @@ function FairyGuiLayers:GetLayoutRect(param)
 end
 
 function FairyGuiLayers:ApplyScreenAdapt(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.handle == nil then
+	local owner = self.owner
+	if owner == nil or objectInfo == nil or objectInfo.handle == nil then
 		return false
 	end
 
@@ -1274,8 +1366,8 @@ function FairyGuiLayers:ApplyScreenAdapt(objectInfo)
 end
 
 function FairyGuiLayers:HandleWindowResized(width, height)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 	self:ResizeLayerRoots()
@@ -1288,8 +1380,8 @@ function FairyGuiLayers:HandleWindowResized(width, height)
 end
 
 function FairyGuiLayers:DumpLayerRoots()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 	print("[FGUI] DumpLayerRoots begin")
@@ -1303,8 +1395,8 @@ function FairyGuiLayers:DumpLayerRoots()
 end
 
 function FairyGuiLayers:DumpStacks()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 	print("[FGUI] DumpStacks ui count=", #self.uiStack)

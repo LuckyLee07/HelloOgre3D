@@ -203,10 +203,7 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		focusOrder = param.focusOrder,
 		tabFocus = param.tabFocus ~= false,
 	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey[uiName] = key
-	self.hiddenObjects[key] = nil
+	self:RegisterObject(objectInfo)
 	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:ApplyScreenAdapt(objectInfo)
@@ -286,10 +283,7 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 		focusOrder = param.focusOrder or { "probe_input" },
 		tabFocus = param.tabFocus ~= false,
 	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey.TextInputProbe = key
-	self.hiddenObjects[key] = nil
+	self:RegisterObject(objectInfo)
 	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:ApplyScreenAdapt(objectInfo)

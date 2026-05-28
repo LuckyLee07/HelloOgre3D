@@ -1,3 +1,4 @@
+require("res.scripts.manager.fairygui.FairyGuiStore")
 require("res.scripts.manager.fairygui.FairyGuiProfiler")
 require("res.scripts.manager.fairygui.FairyGuiLifecycle")
 require("res.scripts.manager.fairygui.FairyGuiPackage")
@@ -138,17 +139,10 @@ local function detachView(manager, objectInfo, reason)
 		view.handle = nil
 	end
 
-	if manager.views ~= nil then
-		manager.views[objectInfo.key] = nil
-	end
-	if manager.viewsByHandle ~= nil then
-		manager.viewsByHandle[objectInfo.handle] = nil
-	end
-	if manager.controllers ~= nil then
-		manager.controllers[objectInfo.key] = nil
-	end
-	if manager.controllersByHandle ~= nil then
-		manager.controllersByHandle[objectInfo.handle] = nil
+	local store = manager ~= nil and manager.GetStore ~= nil and manager:GetStore() or nil
+	if store ~= nil then
+		store:RemoveView(objectInfo.key, objectInfo.handle)
+		store:RemoveController(objectInfo.key, objectInfo.handle)
 	end
 	objectInfo.ctrl = nil
 	objectInfo.view = nil
@@ -162,6 +156,7 @@ function FairyGuiManager:GetInst()
 end
 
 function FairyGuiManager:Init()
+	self.store = self:GetStore()
 	self.lifecycle = ClassList.FairyGuiLifecycle.new(self)
 	self.profiler = ClassList.FairyGuiProfiler.new(self)
 	self.packageManager = ClassList.FairyGuiPackage.new(self)
@@ -171,6 +166,13 @@ function FairyGuiManager:Init()
 	self.lists = ClassList.FairyGuiLists.new(self)
 	self.controls = ClassList.FairyGuiControls.new(self)
 	self.probes = ClassList.FairyGuiProbes.new(self)
+end
+
+function FairyGuiManager:GetStore()
+	if self.store == nil then
+		self.store = ClassList.FairyGuiStore.new()
+	end
+	return self.store
 end
 
 function FairyGuiManager:GetLifecycle()
@@ -455,13 +457,7 @@ function FairyGuiManager:GetTimerCountForKey(key)
 	return self:GetLifecycle():GetTimerCountForKey(key)
 end
 function FairyGuiManager:RegisterUI(name, config)
-	if isBlank(name) or type(config) ~= "table" then
-		return false
-	end
-
-	self.uiRegistry[name] = config
-	config.name = config.name or name
-	return true
+	return self:GetStore():RegisterUI(name, config)
 end
 
 function FairyGuiManager:RegisterUIRegistry(registry)
@@ -475,10 +471,7 @@ function FairyGuiManager:RegisterUIRegistry(registry)
 end
 
 function FairyGuiManager:GetUIConfig(name)
-	if isBlank(name) then
-		return nil
-	end
-	return self.uiRegistry[name]
+	return self:GetStore():GetUIConfig(name)
 end
 
 function FairyGuiManager:LoadUIRequires(config)
@@ -580,95 +573,62 @@ function FairyGuiManager:BuildOpenParam(uiName, config, param)
 end
 
 function FairyGuiManager:GetRegisteredUIKey(name)
-	if self.uiNameToKey[name] ~= nil then
-		return self.uiNameToKey[name]
-	end
-
-	local config = self:GetUIConfig(name)
-	if config == nil then
-		return name
-	end
-	return config.key or name
+	return self:GetStore():GetRegisteredUIKey(name)
 end
 
 function FairyGuiManager:GetObjectInfo(keyOrHandle)
-	if type(keyOrHandle) == "number" then
-		return self.objectsByHandle[keyOrHandle]
-	end
-
-	local key = self:GetRegisteredUIKey(keyOrHandle)
-	return self.objects[key] or self.objects[keyOrHandle]
+	return self:GetStore():GetObjectInfo(keyOrHandle)
 end
 
 function FairyGuiManager:GetObjectKey(keyOrHandle)
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
-	return objectInfo ~= nil and objectInfo.key or nil
+	return self:GetStore():GetObjectKey(keyOrHandle)
 end
 
-function FairyGuiManager:DetachChildUI(childKeyOrHandle)
-	local childInfo = self:GetObjectInfo(childKeyOrHandle)
-	local childKey = childInfo ~= nil and childInfo.key or childKeyOrHandle
-	if childKey == nil then
+function FairyGuiManager:RegisterObject(objectInfo)
+	return self:GetStore():PutObject(objectInfo)
+end
+
+function FairyGuiManager:UnregisterObject(objectInfo)
+	return self:GetStore():RemoveObject(objectInfo)
+end
+
+function FairyGuiManager:HideObject(objectInfo)
+	return self:GetStore():HideObject(objectInfo)
+end
+
+function FairyGuiManager:ShowObject(objectInfo)
+	return self:GetStore():ShowObject(objectInfo)
+end
+
+function FairyGuiManager:AttachView(objectInfo, view, controller)
+	if objectInfo == nil then
 		return false
 	end
 
-	local parentKey = self.parentKeyByChildKey[childKey]
-	if parentKey == nil and childInfo ~= nil then
-		parentKey = childInfo.parentKey
+	if view ~= nil then
+		self:GetStore():PutView(objectInfo.key, objectInfo.handle, view)
 	end
-	if parentKey ~= nil then
-		local childMap = self.childKeysByParentKey[parentKey]
-		if childMap ~= nil then
-			childMap[childKey] = nil
-			if tableCount(childMap) <= 0 then
-				self.childKeysByParentKey[parentKey] = nil
-			end
-		end
+	if controller ~= nil then
+		self:GetStore():PutController(objectInfo.key, objectInfo.handle, controller)
 	end
-	self.parentKeyByChildKey[childKey] = nil
-	if childInfo ~= nil then
-		childInfo.parentKey = nil
-	end
-	return parentKey ~= nil
-end
-
-function FairyGuiManager:AttachChildUI(parentKeyOrHandle, childKeyOrHandle, options)
-	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
-	local childInfo = self:GetObjectInfo(childKeyOrHandle)
-	if parentInfo == nil or childInfo == nil or parentInfo.key == childInfo.key then
-		return false
-	end
-
-	self:DetachChildUI(childInfo.key)
-	local childMap = self.childKeysByParentKey[parentInfo.key]
-	if childMap == nil then
-		childMap = {}
-		self.childKeysByParentKey[parentInfo.key] = childMap
-	end
-	childMap[childInfo.key] = true
-	self.parentKeyByChildKey[childInfo.key] = parentInfo.key
-	childInfo.parentKey = parentInfo.key
-	childInfo.parentHandle = options ~= nil and options.parentHandle or childInfo.parentHandle or parentInfo.handle
-	childInfo.parentChildPath = options ~= nil and options.parentChildPath or childInfo.parentChildPath
-	childInfo.closeWithParent = options == nil or options.closeWithParent ~= false
 	return true
 end
 
-function FairyGuiManager:GetChildUIKeys(parentKeyOrHandle)
-	local parentInfo = self:GetObjectInfo(parentKeyOrHandle)
-	if parentInfo == nil then
-		return {}
-	end
+function FairyGuiManager:DetachView(objectInfo, reason)
+	detachView(self, objectInfo, reason)
+	return true
+end
 
-	local result = {}
-	local childMap = self.childKeysByParentKey[parentInfo.key]
-	if childMap ~= nil then
-		for childKey, _ in pairs(childMap) do
-			table.insert(result, childKey)
-		end
-	end
-	table.sort(result)
-	return result
+function FairyGuiManager:DetachChildUI(childKeyOrHandle)
+	return self:GetStore():DetachChild(childKeyOrHandle)
+end
+
+function FairyGuiManager:AttachChildUI(parentKeyOrHandle, childKeyOrHandle, options)
+	return self:GetStore():AttachChild(parentKeyOrHandle, childKeyOrHandle, options)
+end
+
+function FairyGuiManager:GetChildUIKeys(parentKeyOrHandle)
+	return self:GetStore():GetChildKeys(parentKeyOrHandle)
 end
 
 function FairyGuiManager:CloseChildUIs(parentKeyOrHandle, forceDestroy, reason)
@@ -680,7 +640,7 @@ function FairyGuiManager:CloseChildUIs(parentKeyOrHandle, forceDestroy, reason)
 	local childKeys = self:GetChildUIKeys(parentInfo.key)
 	local closedCount = 0
 	for _, childKey in ipairs(childKeys) do
-		local childInfo = self.objects[childKey]
+		local childInfo = self:GetObjectInfo(childKey)
 		if childInfo ~= nil and childInfo.closeWithParent ~= false then
 			if self:CloseUI(childKey, forceDestroy, reason or "parentClose") then
 				closedCount = closedCount + 1
@@ -967,7 +927,7 @@ function FairyGuiManager:Open(name, param)
 
 	local openParam = self:BuildOpenParam(name, config, param)
 	openParam.uiName = name
-	self.uiNameToKey[name] = openParam.key
+	self:GetStore():BindUINameToKey(name, openParam.key)
 	local policyResult = self:ApplyPopupOpenPolicy(openParam)
 	if policyResult ~= nil then
 		return finish(policyResult, true)
@@ -1067,9 +1027,7 @@ function FairyGuiManager:OpenObject(name, packagePath, objectName, param)
 		focusOrder = param.focusOrder,
 		tabFocus = param.tabFocus ~= false,
 	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.hiddenObjects[key] = nil
+	self:RegisterObject(objectInfo)
 	objectInfo.cacheHiddenAtMs = nil
 	self:AssignLayer(objectInfo, objectInfo.layer)
 	self:CreateModalMask(objectInfo, param)
@@ -1357,12 +1315,12 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 
 	local className = autoGenClass.className or getViewClassName(classlua)
 	local key = param.key or className or name
-	local objectInfo = self.objects[key]
+	local objectInfo = self:GetObjectInfo(key)
 	if objectInfo ~= nil then
 		objectInfo.param = param
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
 		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
-		self.hiddenObjects[key] = nil
+		self:ShowObject(objectInfo)
 		objectInfo.cacheHiddenAtMs = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
@@ -1408,21 +1366,19 @@ function FairyGuiManager:OpenMvcUI(name, packagePath, classlua, param)
 		autoGen.param = param
 	end
 
-	local openedInfo = self.objectsByHandle[handle]
+	local openedInfo = self:GetObjectInfo(handle)
 	if openedInfo ~= nil then
 		openedInfo.view = autoGen
 		openedInfo.autoGenClass = className
 	end
-	self.views[key] = autoGen
-	self.viewsByHandle[handle] = autoGen
+	self:AttachView(openedInfo, autoGen, nil)
 
 	callView(autoGen, "OnCreate", handle, param)
 	if openedInfo ~= nil and autoGen.ctrl ~= nil then
 		openedInfo.ctrl = autoGen.ctrl
 	end
 	if autoGen.ctrl ~= nil then
-		self.controllers[key] = autoGen.ctrl
-		self.controllersByHandle[handle] = autoGen.ctrl
+		self:AttachView(openedInfo, nil, autoGen.ctrl)
 	end
 	callView(autoGen, "OnOpen", param)
 	callView(autoGen, "OnShow", param)
@@ -1453,12 +1409,12 @@ function FairyGuiManager:OpenView(viewClass, param)
 	end
 	openParam.key = key
 
-	local objectInfo = self.objects[key]
+	local objectInfo = self:GetObjectInfo(key)
 	if objectInfo ~= nil then
 		objectInfo.param = param
 		objectInfo.cache = param.cache == true or objectInfo.cache == true
 		objectInfo.priority = tonumber(param.priority or param.sortingPriority) or objectInfo.priority or 0
-		self.hiddenObjects[key] = nil
+		self:ShowObject(objectInfo)
 		objectInfo.cacheHiddenAtMs = nil
 		self:SetVisible(objectInfo.handle, true)
 		if objectInfo.modalMaskHandle ~= nil then
@@ -1491,12 +1447,11 @@ function FairyGuiManager:OpenView(viewClass, param)
 		view.param = param
 	end
 
-	local objectInfo = self.objectsByHandle[handle]
+	local objectInfo = self:GetObjectInfo(handle)
 	if objectInfo ~= nil then
 		objectInfo.view = view
 	end
-	self.views[key] = view
-	self.viewsByHandle[handle] = view
+	self:AttachView(objectInfo, view, nil)
 
 	callView(view, "OnCreate", handle, param)
 	callView(view, "OnOpen", param)
@@ -1505,31 +1460,16 @@ function FairyGuiManager:OpenView(viewClass, param)
 end
 
 function FairyGuiManager:GetUI(key)
-	local objectInfo = self.objects[key]
+	local objectInfo = self:GetObjectInfo(key)
 	return objectInfo and objectInfo.handle or nil
 end
 
 function FairyGuiManager:GetView(keyOrHandle)
-	if type(keyOrHandle) == "number" then
-		return self.viewsByHandle[keyOrHandle]
-	end
-	local key = self:GetRegisteredUIKey(keyOrHandle)
-	if self.views[key] ~= nil then
-		return self.views[key]
-	end
-	return self.views[keyOrHandle]
+	return self:GetStore():GetView(keyOrHandle)
 end
 
 function FairyGuiManager:GetController(keyOrHandle)
-	if type(keyOrHandle) == "number" then
-		return self.controllersByHandle[keyOrHandle]
-	end
-
-	local key = self:GetRegisteredUIKey(keyOrHandle)
-	if self.controllers[key] ~= nil then
-		return self.controllers[key]
-	end
-	return self.controllers[keyOrHandle]
+	return self:GetStore():GetController(keyOrHandle)
 end
 
 function FairyGuiManager:GetChild(handle, childPath)
@@ -2096,12 +2036,7 @@ end
 function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 	forceDestroy, reason = normalizeCloseArgs(forceDestroy, reason)
 
-	local objectInfo = nil
-	if type(keyOrHandle) == "number" then
-		objectInfo = self.objectsByHandle[keyOrHandle]
-	else
-		objectInfo = self.objects[keyOrHandle]
-	end
+	local objectInfo = self:GetObjectInfo(keyOrHandle)
 
 	if not objectInfo then
 		return false
@@ -2136,12 +2071,12 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		self:SetGuideMaskVisible(objectInfo, false)
 		self:RemoveStackEntry(objectInfo.key)
 		objectInfo.cacheHiddenAtMs = nowMs()
-		self.hiddenObjects[objectInfo.key] = objectInfo
+		self:HideObject(objectInfo)
 		return finish(true, true)
 	end
 
 	self:ClearFocusForHandles(ownedHandles)
-	detachView(self, objectInfo, reason)
+	self:DetachView(objectInfo, reason)
 	self:RemoveStackEntry(objectInfo.key)
 	self:ClearTimersForKey(objectInfo.key)
 	for _, ownedHandle in ipairs(ownedHandles) do
@@ -2153,23 +2088,18 @@ function FairyGuiManager:CloseUI(keyOrHandle, forceDestroy, reason)
 		NativeApi:removeFairyGuiObject(objectInfo.modalMaskHandle)
 	end
 	local removed = NativeApi:removeFairyGuiObject(handle)
-	if objectInfo.uiName ~= nil and self.uiNameToKey[objectInfo.uiName] == objectInfo.key then
-		self.uiNameToKey[objectInfo.uiName] = nil
-	end
+	self:GetStore():ClearUINameToKey(objectInfo.uiName, objectInfo.key)
 	self:ClearListCacheForHandle(handle)
+	local listState = self:GetStore():GetListState()
 	for _, ownedHandle in ipairs(ownedHandles) do
 		self:ClearListCacheByListHandle(ownedHandle)
-		self.childrenByHandle[ownedHandle] = nil
+		listState.childrenByHandle[ownedHandle] = nil
 	end
 	self:ClearTextInputPoliciesForHandles(ownedHandles)
-	if objectInfo.layer ~= nil and self.layerObjects[objectInfo.layer] ~= nil then
-		self.layerObjects[objectInfo.layer][handle] = nil
-	end
+	self:GetStore():RemoveLayerObject(objectInfo.layer, handle)
 	self:DetachChildUI(objectInfo.key)
-	self.childKeysByParentKey[objectInfo.key] = nil
-	self.objects[objectInfo.key] = nil
-	self.objectsByHandle[handle] = nil
-	self.hiddenObjects[objectInfo.key] = nil
+	self:GetStore():ClearChildren(objectInfo.key)
+	self:UnregisterObject(objectInfo)
 	self:ReleasePackage(objectInfo.packagePath, objectInfo.packageName, objectInfo.unloadPackageOnClose == true)
 	self:ValidateClosedObject(closeSnapshot, closeSnapshot and closeSnapshot.ownedHandles or ownedHandles, "CloseUI")
 	self:HandleServiceClosed(objectInfo, reason)
@@ -2232,16 +2162,17 @@ function FairyGuiManager:CollectCloseHandles(filter)
 	local handles = {}
 	local handleSet = {}
 
-	for index = #self.uiStack, 1, -1 do
-		local entry = self.uiStack[index]
-		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
+	local uiStack = self:GetStore():GetUIStack()
+	for index = #uiStack, 1, -1 do
+		local entry = uiStack[index]
+		local objectInfo = entry ~= nil and self:GetObjectInfo(entry.key) or nil
 		if objectInfo ~= nil and self:MatchCloseFilter(objectInfo, filter) then
 			table.insert(handles, objectInfo.handle)
 			handleSet[objectInfo.handle] = true
 		end
 	end
 
-	for handle, objectInfo in pairs(self.objectsByHandle) do
+	for handle, objectInfo in pairs(self:GetStore():GetObjectsByHandle()) do
 		if handleSet[handle] ~= true and self:MatchCloseFilter(objectInfo, filter) then
 			table.insert(handles, handle)
 			handleSet[handle] = true
@@ -2256,7 +2187,7 @@ function FairyGuiManager:CloseByFilter(filter, forceDestroy)
 	local closedCount = 0
 
 	for _, handle in ipairs(handles) do
-		local objectInfo = self.objectsByHandle[handle]
+		local objectInfo = self:GetObjectInfo(handle)
 		local objectForceDestroy = closeForceDestroy
 		if filter ~= nil and filter.sceneCleanup == true and objectInfo ~= nil and objectInfo.destroyOnSceneChange == true then
 			objectForceDestroy = true
@@ -2281,7 +2212,7 @@ function FairyGuiManager:CloseGroup(groupName, forceDestroy)
 end
 
 function FairyGuiManager:CloseScene(sceneName, forceDestroy)
-	local targetSceneName = sceneName or self.currentSceneName or "Default"
+	local targetSceneName = sceneName or self:GetStore():GetCurrentScene()
 	return self:CloseByFilter({ sceneName = targetSceneName, sceneCleanup = true }, forceDestroy)
 end
 
@@ -2289,13 +2220,17 @@ function FairyGuiManager:CleanupScene(sceneName, forceDestroy)
 	return self:CloseScene(sceneName, forceDestroy)
 end
 
+function FairyGuiManager:GetCurrentScene()
+	return self:GetStore():GetCurrentScene()
+end
+
 function FairyGuiManager:SetCurrentScene(sceneName, cleanupPrevious, forceDestroy)
 	local nextSceneName = sceneName or "Default"
-	local previousSceneName = self.currentSceneName or "Default"
+	local previousSceneName = self:GetStore():GetCurrentScene()
 	if cleanupPrevious == true and previousSceneName ~= nextSceneName then
 		self:CloseScene(previousSceneName, forceDestroy)
 	end
-	self.currentSceneName = nextSceneName
+	self:GetStore():SetCurrentScene(nextSceneName)
 	return true
 end
 
@@ -2305,8 +2240,8 @@ end
 
 function FairyGuiManager:DumpOpenUIs()
 	print("[FGUI] DumpOpenUIs begin")
-	for key, objectInfo in pairs(self.objects) do
-		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "layerRoot=", self:GetLayerRoot(objectInfo.layer), "group=", objectInfo.uiGroup, "popupGroup=", objectInfo.popupGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self.hiddenObjects[key] ~= nil)
+	for key, objectInfo in pairs(self:GetStore():GetObjects()) do
+		print("[FGUI] UI", key, "handle=", objectInfo.handle, "layer=", objectInfo.layer, "layerRoot=", self:GetLayerRoot(objectInfo.layer), "group=", objectInfo.uiGroup, "popupGroup=", objectInfo.popupGroup, "scene=", objectInfo.sceneName, "cache=", objectInfo.cache, "hidden=", self:GetStore():IsHidden(key))
 	end
 	print("[FGUI] DumpOpenUIs end")
 end
@@ -2317,7 +2252,7 @@ end
 
 function FairyGuiManager:DumpScenes()
 	local sceneStats = {}
-	for key, objectInfo in pairs(self.objects) do
+	for key, objectInfo in pairs(self:GetStore():GetObjects()) do
 		local sceneName = objectInfo.sceneName or "Default"
 		local stat = sceneStats[sceneName]
 		if stat == nil then
@@ -2325,11 +2260,11 @@ function FairyGuiManager:DumpScenes()
 			sceneStats[sceneName] = stat
 		end
 		stat.total = stat.total + 1
-		if self.hiddenObjects[key] ~= nil then
+		if self:GetStore():IsHidden(key) then
 			stat.hidden = stat.hidden + 1
 		end
 	end
-	print("[FGUI] DumpScenes current=", self.currentSceneName)
+	print("[FGUI] DumpScenes current=", self:GetStore():GetCurrentScene())
 	for sceneName, stat in pairs(sceneStats) do
 		print("[FGUI] Scene", sceneName, "total=", stat.total, "hidden=", stat.hidden)
 	end
@@ -2353,7 +2288,7 @@ function FairyGuiManager:DumpUI(keyOrHandle)
 		print("[FGUI] DumpUI missing:", tostring(keyOrHandle))
 		return false
 	end
-	local hidden = self.hiddenObjects[objectInfo.key] ~= nil
+	local hidden = self:GetStore():IsHidden(objectInfo)
 	local ownedHandles = self:CollectOwnedHandles(objectInfo)
 	print("[FGUI] DumpUI",
 		"key=", tostring(objectInfo.key),
@@ -2368,7 +2303,7 @@ function FairyGuiManager:DumpUI(keyOrHandle)
 		"hidden=", hidden,
 		"stackMode=", tostring(self:GetStackMode(objectInfo)),
 		"owned=", #ownedHandles)
-	local childHandles = self.childrenByHandle[objectInfo.handle] or {}
+	local childHandles = self:GetStore():GetListState().childrenByHandle[objectInfo.handle] or {}
 	for childPath, childHandle in pairs(childHandles) do
 		print("[FGUI] DumpUIChild", tostring(objectInfo.key), "path=", tostring(childPath), "handle=", tostring(childHandle))
 	end
@@ -2420,17 +2355,18 @@ end
 
 function FairyGuiManager:SetCachePolicy(policy)
 	if type(policy) ~= "table" then
-		return self.cachePolicy
+		return self:GetStore():GetPackageState().cachePolicy
 	end
-	self.cachePolicy = self.cachePolicy or {}
+	local cachePolicy = self:GetStore():GetPackageState().cachePolicy or {}
 	for name, value in pairs(policy) do
-		self.cachePolicy[name] = value
+		cachePolicy[name] = value
 	end
-	return self.cachePolicy
+	self:GetStore():GetPackageState().cachePolicy = cachePolicy
+	return cachePolicy
 end
 
 function FairyGuiManager:GetCachePolicy()
-	return copyTable(self.cachePolicy or {})
+	return copyTable(self:GetStore():GetPackageState().cachePolicy or {})
 end
 
 function FairyGuiManager:DumpResourceWarnings()

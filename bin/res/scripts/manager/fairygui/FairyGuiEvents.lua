@@ -64,29 +64,53 @@ end
 
 function FairyGuiEvents:Init(owner)
 	self.owner = owner
-	self.callbacks = owner ~= nil and owner.callbacks or self.callbacks or {}
-	self.bindings = owner ~= nil and owner.bindings or self.bindings or {}
-	self.bindingsByHandle = owner ~= nil and owner.bindingsByHandle or self.bindingsByHandle or {}
-	self.transitionCallbacks = owner ~= nil and owner.transitionCallbacks or self.transitionCallbacks or {}
-	self.transitionCallbacksByHandle = owner ~= nil and owner.transitionCallbacksByHandle or self.transitionCallbacksByHandle or {}
-	self.timers = owner ~= nil and owner.timers or self.timers or {}
-	self.timersByKey = owner ~= nil and owner.timersByKey or self.timersByKey or {}
-	self.eventStats = owner ~= nil and owner.eventStats or self.eventStats or {}
-	self.eventDispatchTotal = owner ~= nil and owner.eventDispatchTotal or self.eventDispatchTotal or 0
-	self.lastEvent = owner ~= nil and owner.lastEvent or self.lastEvent
-	self.nextCallbackId = owner ~= nil and owner.nextCallbackId or self.nextCallbackId or 1
-	if owner ~= nil then
-		owner.callbacks = self.callbacks
-		owner.bindings = self.bindings
-		owner.bindingsByHandle = self.bindingsByHandle
-		owner.transitionCallbacks = self.transitionCallbacks
-		owner.transitionCallbacksByHandle = self.transitionCallbacksByHandle
-		owner.timers = self.timers
-		owner.timersByKey = self.timersByKey
-		owner.eventStats = self.eventStats
-		owner.eventDispatchTotal = self.eventDispatchTotal
-		owner.lastEvent = self.lastEvent
-		owner.nextCallbackId = self.nextCallbackId
+	local eventState = owner ~= nil and owner:GetStore():GetEventState() or {}
+	self.eventState = eventState
+	self.callbacks = eventState.callbacks or {}
+	self.bindings = eventState.bindings or {}
+	self.bindingsByHandle = eventState.bindingsByHandle or {}
+	self.transitionCallbacks = eventState.transitionCallbacks or {}
+	self.transitionCallbacksByHandle = eventState.transitionCallbacksByHandle or {}
+	self.timers = eventState.timers or {}
+	self.timersByKey = eventState.timersByKey or {}
+	self.eventStats = eventState.eventStats or {}
+	self.eventDispatchTotal = eventState.eventDispatchTotal or 0
+	self.lastEvent = eventState.lastEvent
+	self.nextCallbackId = eventState.nextCallbackId or 1
+	eventState.callbacks = self.callbacks
+	eventState.bindings = self.bindings
+	eventState.bindingsByHandle = self.bindingsByHandle
+	eventState.transitionCallbacks = self.transitionCallbacks
+	eventState.transitionCallbacksByHandle = self.transitionCallbacksByHandle
+	eventState.timers = self.timers
+	eventState.timersByKey = self.timersByKey
+	eventState.eventStats = self.eventStats
+	eventState.eventDispatchTotal = self.eventDispatchTotal
+	eventState.lastEvent = self.lastEvent
+	eventState.nextCallbackId = self.nextCallbackId
+end
+
+local MANAGER_PROXY_METHODS = {
+	"GetControllerIndex",
+	"GetControllerPage",
+	"GetControllerPageCount",
+	"GetControllerPageId",
+	"GetObjectInfo",
+	"GetPerfStat",
+	"GetStore",
+	"GetTargetHandle",
+	"RecordPerf",
+	"RecordResourceFallback",
+}
+
+for _, methodName in ipairs(MANAGER_PROXY_METHODS) do
+	FairyGuiEvents[methodName] = FairyGuiEvents[methodName] or function(self, ...)
+		local owner = self.owner
+		local method = owner ~= nil and owner[methodName] or nil
+		if method == nil then
+			return nil
+		end
+		return method(owner, ...)
 	end
 end
 
@@ -140,13 +164,14 @@ function FairyGuiEvents:DebugInjectKeyReleased(keyCode, keyText)
 end
 
 function FairyGuiEvents:RegisterTransitionCallback(handle, transitionName, callback)
-	local self = self.owner
-	if self == nil or handle == nil or type(callback) ~= "function" then
+	local owner = self.owner
+	if owner == nil or handle == nil or type(callback) ~= "function" then
 		return 0
 	end
 
 	local callbackId = self.nextCallbackId
 	self.nextCallbackId = self.nextCallbackId + 1
+	self.eventState.nextCallbackId = self.nextCallbackId
 	self.callbacks[callbackId] = callback
 	self.transitionCallbacks[callbackId] = {
 		callbackId = callbackId,
@@ -164,8 +189,8 @@ function FairyGuiEvents:RegisterTransitionCallback(handle, transitionName, callb
 end
 
 function FairyGuiEvents:RemoveTransitionCallback(callbackId)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -187,8 +212,8 @@ function FairyGuiEvents:RemoveTransitionCallback(callbackId)
 end
 
 function FairyGuiEvents:ClearTransitionCallbacksForHandle(handle, transitionName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 
@@ -210,8 +235,8 @@ function FairyGuiEvents:ClearTransitionCallbacksForHandle(handle, transitionName
 end
 
 function FairyGuiEvents:PlayTransition(handle, transitionName, times, delay, callback)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -244,8 +269,8 @@ function FairyGuiEvents:PlayTransition(handle, transitionName, times, delay, cal
 end
 
 function FairyGuiEvents:StopTransition(handle, transitionName, setToComplete, processCallback)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -271,8 +296,8 @@ function FairyGuiEvents:StopTransition(handle, transitionName, setToComplete, pr
 end
 
 function FairyGuiEvents:_DispatchTransition(callbackId, objectHandle, transitionName)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -295,8 +320,8 @@ function FairyGuiEvents:_DispatchTransition(callbackId, objectHandle, transition
 end
 
 function FairyGuiEvents:AddEvent(handle, childPath, eventType, callback)
-	local self = self.owner
-	if self == nil or NativeApi == nil or handle == nil or type(callback) ~= "function" then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil or handle == nil or type(callback) ~= "function" then
 		return nil
 	end
 
@@ -307,6 +332,7 @@ function FairyGuiEvents:AddEvent(handle, childPath, eventType, callback)
 
 	local callbackId = self.nextCallbackId
 	self.nextCallbackId = self.nextCallbackId + 1
+	self.eventState.nextCallbackId = self.nextCallbackId
 	self.callbacks[callbackId] = callback
 
 	local bindingId = nil
@@ -365,13 +391,14 @@ function FairyGuiEvents:AddFocusOut(handle, childPath, callback)
 end
 
 function FairyGuiEvents:AddControllerChanged(handle, controllerName, callback)
-	local self = self.owner
-	if self == nil or NativeApi == nil or NativeApi.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil or NativeApi.addFairyGuiControllerChangedListener == nil or handle == nil or type(callback) ~= "function" then
 		return nil
 	end
 
 	local callbackId = self.nextCallbackId
 	self.nextCallbackId = self.nextCallbackId + 1
+	self.eventState.nextCallbackId = self.nextCallbackId
 	self.callbacks[callbackId] = callback
 
 	local bindingId = NativeApi:addFairyGuiControllerChangedListener(handle, controllerName or "", callbackId)
@@ -443,8 +470,8 @@ function FairyGuiEvents:AddDragEnd(handle, childPath, callback)
 end
 
 function FairyGuiEvents:RemoveBinding(bindingId)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -467,8 +494,8 @@ function FairyGuiEvents:RemoveBinding(bindingId)
 end
 
 function FairyGuiEvents:ClearBindingsForHandle(handle)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 
@@ -488,8 +515,8 @@ function FairyGuiEvents:ClearBindingsForHandle(handle)
 end
 
 function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindingId, senderHandle, itemHandle, rawItemIndex, x, y, button, touchId, wheelDelta, dragDeltaX, dragDeltaY)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -502,9 +529,10 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 	local itemIndex = rawItemIndex ~= nil and rawItemIndex >= 0 and rawItemIndex + 1 or nil
 	local eventData = nil
 	local eventListHandle = nil
+	local listState = self:GetStore():GetListState()
 	if binding ~= nil and itemIndex ~= nil then
 		eventListHandle = self:GetTargetHandle(binding.handle, binding.childPath)
-		local listData = eventListHandle ~= nil and self.listDataByHandle[eventListHandle] or nil
+		local listData = eventListHandle ~= nil and listState.listDataByHandle[eventListHandle] or nil
 		eventData = listData ~= nil and listData[itemIndex] or nil
 	end
 
@@ -531,6 +559,8 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		eventTypeId = eventType,
 		bindingId = bindingId,
 	}
+	self.eventState.eventDispatchTotal = self.eventDispatchTotal
+	self.eventState.lastEvent = self.lastEvent
 
 	local eventPayload = {
 		callbackId = callbackId,
@@ -551,7 +581,7 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 		eventTypeId = eventType,
 		bindingId = bindingId,
 	}
-	if eventListHandle ~= nil and self.treeDataByHandle[eventListHandle] ~= nil and type(eventData) == "table" then
+	if eventListHandle ~= nil and listState.treeDataByHandle[eventListHandle] ~= nil and type(eventData) == "table" then
 		eventPayload.treeNode = eventData
 		eventPayload.treeSource = eventData.source
 		eventPayload.treeKey = eventData.key
@@ -576,6 +606,7 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 	local elapsedMs = nowMs() - startMs
 	self:RecordPerf("event", elapsedMs, eventName, ok)
 	self.lastEvent.elapsedMs = elapsedMs
+	self.eventState.lastEvent = self.lastEvent
 	if not ok then
 		print("[FGUI] event callback error:", err)
 		return false
@@ -584,8 +615,8 @@ function FairyGuiEvents:_DispatchEvent(callbackId, rootHandle, eventType, bindin
 end
 
 function FairyGuiEvents:DumpBindings()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return
 	end
 
@@ -600,8 +631,8 @@ function FairyGuiEvents:DumpBindings()
 end
 
 function FairyGuiEvents:GetEventStats()
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return {
 			total = 0,
 			events = {},

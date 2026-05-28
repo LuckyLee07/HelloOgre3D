@@ -121,7 +121,8 @@ local function objectBrief(owner, objectInfo)
 	if objectInfo == nil then
 		return "-"
 	end
-	local hidden = owner ~= nil and owner.hiddenObjects ~= nil and owner.hiddenObjects[objectInfo.key] ~= nil
+	local store = owner ~= nil and owner:GetStore() or nil
+	local hidden = store ~= nil and store:IsHidden(objectInfo.key)
 	local state = hidden and "H" or "V"
 	local service = objectInfo.serviceType ~= nil and ":" .. tostring(objectInfo.serviceType) or ""
 	return string.format("%s%s[%s,%s,#%s]", tostring(objectInfo.key or objectInfo.uiName or objectInfo.handle), service, tostring(objectInfo.layer or ""), state, tostring(objectInfo.sortingOrder or 0))
@@ -132,8 +133,9 @@ local function sortedObjectInfos(owner, includeHidden)
 	if owner == nil then
 		return objects
 	end
-	for key, objectInfo in pairs(owner.objects or {}) do
-		if includeHidden == true or owner.hiddenObjects[key] == nil then
+	local store = owner:GetStore()
+	for key, objectInfo in pairs(store:GetObjects() or {}) do
+		if includeHidden == true or store:IsHidden(key) ~= true then
 			table.insert(objects, objectInfo)
 		end
 	end
@@ -176,10 +178,9 @@ end
 
 function FairyGuiProfiler:Init(owner)
 	self.owner = owner
-	self.perfStats = owner ~= nil and owner.perfStats or self.perfStats or {}
-	if owner ~= nil then
-		owner.perfStats = self.perfStats
-	end
+	local profilerState = owner ~= nil and owner:GetStore():GetProfilerState() or {}
+	self.perfStats = profilerState.perfStats or {}
+	profilerState.perfStats = self.perfStats
 end
 
 function FairyGuiProfiler:GetRenderStats()
@@ -367,14 +368,12 @@ function FairyGuiProfiler:RecordPerf(category, elapsedMs, name, success)
 	if owner == nil then
 		return nil
 	end
-	if owner.perfStats == nil then
-		owner.perfStats = {}
-	end
+	local perfStats = owner:GetStore():GetProfilerState().perfStats
 
-	local stat = owner.perfStats[category]
+	local stat = perfStats[category]
 	if stat == nil then
 		stat = createPerfStat()
-		owner.perfStats[category] = stat
+		perfStats[category] = stat
 	end
 
 	elapsedMs = tonumber(elapsedMs) or 0
@@ -396,7 +395,8 @@ end
 
 function FairyGuiProfiler:GetPerfStat(category)
 	local owner = self.owner
-	local stat = owner ~= nil and owner.perfStats ~= nil and owner.perfStats[category] or nil
+	local perfStats = owner ~= nil and owner:GetStore():GetProfilerState().perfStats or nil
+	local stat = perfStats ~= nil and perfStats[category] or nil
 	if stat == nil then
 		stat = createPerfStat()
 	end
@@ -419,8 +419,9 @@ function FairyGuiProfiler:GetPerfStats()
 		stats[category] = self:GetPerfStat(category)
 	end
 	local owner = self.owner
-	if owner ~= nil and owner.perfStats ~= nil then
-		for category, _ in pairs(owner.perfStats) do
+	local perfStats = owner ~= nil and owner:GetStore():GetProfilerState().perfStats or nil
+	if perfStats ~= nil then
+		for category, _ in pairs(perfStats) do
 			if stats[category] == nil then
 				stats[category] = self:GetPerfStat(category)
 			end
@@ -459,36 +460,39 @@ function FairyGuiProfiler:GetDebugStats()
 	end
 
 	local childCacheCount = 0
-	for _, children in pairs(owner.childrenByHandle or {}) do
+	local listState = owner:GetStore():GetListState()
+	for _, children in pairs(listState.childrenByHandle or {}) do
 		childCacheCount = childCacheCount + tableCount(children)
 	end
 	local childUICount = 0
-	for _, children in pairs(owner.childKeysByParentKey or {}) do
+	for _, children in pairs(owner:GetStore():GetObjectState().childKeysByParentKey or {}) do
 		childUICount = childUICount + tableCount(children)
 	end
 
 	local packageCount = 0
 	local printed = {}
-	for _, packageInfo in pairs(owner.packagesByName or {}) do
+	for _, packageInfo in pairs(owner:GetStore():GetPackageState().packagesByName or {}) do
 		if packageInfo ~= nil and printed[packageInfo.packageName] ~= true then
 			packageCount = packageCount + 1
 			printed[packageInfo.packageName] = true
 		end
 	end
 
+	local store = owner:GetStore()
+	local eventState = store:GetEventState()
 	return {
-		openUI = tableCount(owner.objects),
-		hiddenUI = tableCount(owner.hiddenObjects),
+		openUI = tableCount(store:GetObjects()),
+		hiddenUI = tableCount(store:GetHiddenObjects()),
 		package = packageCount,
-		layerRoot = tableCount(owner.layerRoots),
-		binding = tableCount(owner.bindings),
-		transitionCallback = tableCount(owner.transitionCallbacks),
-		timer = tableCount(owner.timers),
-		objectHandle = tableCount(owner.objectsByHandle),
+		layerRoot = tableCount(store:GetLayerRoots()),
+		binding = tableCount(eventState.bindings),
+		transitionCallback = tableCount(eventState.transitionCallbacks),
+		timer = tableCount(eventState.timers),
+		objectHandle = tableCount(store:GetObjectsByHandle()),
 		childCache = childCacheCount,
 		childUI = childUICount,
-		view = tableCount(owner.views),
-		controller = tableCount(owner.controllers),
+		view = tableCount(store:GetObjectState().views),
+		controller = tableCount(store:GetObjectState().controllers),
 		ime = getImeStats(owner),
 	}
 end
@@ -573,7 +577,7 @@ function FairyGuiProfiler:GetHealthStats()
 		textureAliasCount = renderStats.textureAliasCount,
 		runtimeObjectHandle = renderStats.runtimeObjectHandle,
 		runtimeBinding = renderStats.runtimeBinding,
-		eventDispatchTotal = owner ~= nil and owner.eventDispatchTotal or 0,
+		eventDispatchTotal = owner ~= nil and owner:GetStore():GetEventState().eventDispatchTotal or 0,
 		openPerfCount = perfStats.open.count,
 		openAvgMs = perfStats.open.avgMs,
 		openMaxMs = perfStats.open.maxMs,
@@ -710,12 +714,13 @@ function FairyGuiProfiler:FindFocusOwner(focusedHandle)
 		return nil
 	end
 
-	local directOwner = owner.objectsByHandle ~= nil and owner.objectsByHandle[focusedHandle] or nil
+	local store = owner:GetStore()
+	local directOwner = store:GetObjectsByHandle()[focusedHandle]
 	if directOwner ~= nil then
 		return directOwner
 	end
 
-	for _, objectInfo in pairs(owner.objects or {}) do
+	for _, objectInfo in pairs(store:GetObjects() or {}) do
 		local _, handleSet = owner:CollectOwnedHandles(objectInfo)
 		if handleSet ~= nil and handleSet[focusedHandle] == true then
 			return objectInfo
@@ -732,17 +737,18 @@ function FairyGuiProfiler:CollectLayerSummary()
 	end
 
 	local counts = {}
-	for layerName, _ in pairs(owner.layers or {}) do
+	local store = owner:GetStore()
+	for layerName, _ in pairs(store:GetLayers() or {}) do
 		counts[layerName] = counts[layerName] or { visible = 0, hidden = 0, root = owner:GetLayerRoot(layerName) }
 	end
-	for key, objectInfo in pairs(owner.objects or {}) do
+	for key, objectInfo in pairs(store:GetObjects() or {}) do
 		local layerName = objectInfo.layer or "Normal"
 		local info = counts[layerName]
 		if info == nil then
 			info = { visible = 0, hidden = 0, root = owner:GetLayerRoot(layerName) }
 			counts[layerName] = info
 		end
-		if owner.hiddenObjects[key] ~= nil then
+		if store:IsHidden(key) then
 			info.hidden = info.hidden + 1
 		else
 			info.visible = info.visible + 1
@@ -770,7 +776,7 @@ function FairyGuiProfiler:CollectBindingSummary(maxCount)
 	if owner == nil then
 		return {}
 	end
-	for _, binding in pairs(owner.bindings or {}) do
+	for _, binding in pairs(owner:GetStore():GetEventState().bindings or {}) do
 		local eventType = tostring(binding.eventType or "")
 		byType[eventType] = (byType[eventType] or 0) + 1
 	end
@@ -840,14 +846,15 @@ function FairyGuiProfiler:GetDebugPanelSnapshot(options)
 	local warnings = owner ~= nil and owner:GetResourceWarnings() or {}
 	local fallbacks = owner ~= nil and owner:GetResourceFallbacks() or {}
 	local focusOwner = self:FindFocusOwner(health.focusedHandle)
-	local topUI = owner ~= nil and owner:GetTopStackObject(owner.uiStack or {}) or nil
-	local topPopup = owner ~= nil and owner:GetTopStackObject(owner.popupStack or {}) or nil
+	local store = owner ~= nil and owner:GetStore() or nil
+	local topUI = owner ~= nil and owner:GetTopStackObject(store:GetUIStack() or {}) or nil
+	local topPopup = owner ~= nil and owner:GetTopStackObject(store:GetPopupStack() or {}) or nil
 	local openObjects = sortedObjectInfos(owner, false)
 	local allObjects = sortedObjectInfos(owner, true)
 	local hiddenObjects = {}
 	if owner ~= nil then
 		for _, objectInfo in ipairs(allObjects) do
-			if owner.hiddenObjects[objectInfo.key] ~= nil then
+			if store:IsHidden(objectInfo.key) then
 				table.insert(hiddenObjects, objectInfo)
 			end
 		end
@@ -950,7 +957,7 @@ function FairyGuiProfiler:BuildDebugPanelLines(options)
 		string.format("Render cmd=%s tri=%s mat=%s/%s tex=%s/%s", tostring(health.commandCount), tostring(health.triangleCount), tostring(health.materialCount), tostring(health.materialAliasCount), tostring(health.textureCount), tostring(health.textureAliasCount)),
 		string.format("Draw cmd=%s tri=%s switch=%s/%s clip=%s/%s cull=%s stencil=%s/%s max=%s/%s", tostring(render.drawCommandCount), tostring(render.drawTriangleCount), tostring(render.materialSwitchCount), tostring(render.textureSwitchCount), tostring(render.clippedCommandCount), tostring(render.clippedTriangleCount), tostring(render.culledCommandCount), tostring(render.stencilCommandCount), tostring(render.stencilTriangleCount), tostring(render.maxBatchTriangles), tostring(render.maxBatchVertices)),
 		string.format("Stencil backend=%s hw=%s cpuClip=%s/%s/%s mask=%s/%s", tostring(render.stencilBackend or "-"), tostring(render.hardwareStencilSupported == true and 1 or 0), tostring(render.cpuClipSourceTriangleCount), tostring(render.cpuClipOutputTriangleCount), tostring(render.cpuClipFragmentCount), tostring(render.stencilClipScopeCount), tostring(render.stencilClipPolygonCount)),
-		string.format("Stacks ui=%s popup=%s warnings=%s fallback=%s eventTotal=%s", tostring(owner ~= nil and #(owner.uiStack or {}) or 0), tostring(owner ~= nil and #(owner.popupStack or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(#(snapshot.resourceFallbacks or {})), tostring(eventStats.total or 0)),
+		string.format("Stacks ui=%s popup=%s warnings=%s fallback=%s eventTotal=%s", tostring(owner ~= nil and #(owner:GetStore():GetUIStack() or {}) or 0), tostring(owner ~= nil and #(owner:GetStore():GetPopupStack() or {}) or 0), tostring(#(snapshot.resourceWarnings or {})), tostring(#(snapshot.resourceFallbacks or {})), tostring(eventStats.total or 0)),
 		string.format("Last event=%s root=%s sender=%s item=%s xy=%s,%s", lastEvent ~= nil and tostring(lastEvent.eventType) or "-", lastEvent ~= nil and tostring(lastEvent.rootHandle) or "-", lastEvent ~= nil and tostring(lastEvent.senderHandle) or "-", lastEvent ~= nil and tostring(lastEvent.itemHandle or "") or "-", lastEvent ~= nil and tostring(lastEvent.x or "") or "-", lastEvent ~= nil and tostring(lastEvent.y or "") or "-"),
 		string.format("Perf open %s avg/max=%s/%s", tostring(perf.open.count), formatMs(perf.open.avgMs), formatMs(perf.open.maxMs)),
 		string.format("Perf close %s avg/max=%s/%s", tostring(perf.close.count), formatMs(perf.close.avgMs), formatMs(perf.close.maxMs)),

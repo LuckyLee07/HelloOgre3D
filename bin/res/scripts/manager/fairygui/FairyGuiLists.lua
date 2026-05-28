@@ -226,31 +226,49 @@ end
 
 function FairyGuiLists:Init(owner)
 	self.owner = owner
-	self.childrenByHandle = owner ~= nil and owner.childrenByHandle or self.childrenByHandle or {}
-	self.listItemHandlesByHandle = owner ~= nil and owner.listItemHandlesByHandle or self.listItemHandlesByHandle or {}
-	self.listItemIndexByHandle = owner ~= nil and owner.listItemIndexByHandle or self.listItemIndexByHandle or {}
-	self.listDataByHandle = owner ~= nil and owner.listDataByHandle or self.listDataByHandle or {}
-	self.listRenderersByHandle = owner ~= nil and owner.listRenderersByHandle or self.listRenderersByHandle or {}
-	self.listVirtualByHandle = owner ~= nil and owner.listVirtualByHandle or self.listVirtualByHandle or {}
-	self.listVirtualOptionsByHandle = owner ~= nil and owner.listVirtualOptionsByHandle or self.listVirtualOptionsByHandle or {}
-	self.listVirtualStatsByHandle = owner ~= nil and owner.listVirtualStatsByHandle or self.listVirtualStatsByHandle or {}
-	self.treeDataByHandle = owner ~= nil and owner.treeDataByHandle or self.treeDataByHandle or {}
-	self.treeStateByHandle = owner ~= nil and owner.treeStateByHandle or self.treeStateByHandle or {}
-	self.treeRenderersByHandle = owner ~= nil and owner.treeRenderersByHandle or self.treeRenderersByHandle or {}
-	self.treeChildPathByHandle = owner ~= nil and owner.treeChildPathByHandle or self.treeChildPathByHandle or {}
-	if owner ~= nil then
-		owner.childrenByHandle = self.childrenByHandle
-		owner.listItemHandlesByHandle = self.listItemHandlesByHandle
-		owner.listItemIndexByHandle = self.listItemIndexByHandle
-		owner.listDataByHandle = self.listDataByHandle
-		owner.listRenderersByHandle = self.listRenderersByHandle
-		owner.listVirtualByHandle = self.listVirtualByHandle
-		owner.listVirtualOptionsByHandle = self.listVirtualOptionsByHandle
-		owner.listVirtualStatsByHandle = self.listVirtualStatsByHandle
-		owner.treeDataByHandle = self.treeDataByHandle
-		owner.treeStateByHandle = self.treeStateByHandle
-		owner.treeRenderersByHandle = self.treeRenderersByHandle
-		owner.treeChildPathByHandle = self.treeChildPathByHandle
+	local listState = owner ~= nil and owner:GetStore():GetListState() or {}
+	self.childrenByHandle = listState.childrenByHandle or {}
+	self.listItemHandlesByHandle = listState.listItemHandlesByHandle or {}
+	self.listItemIndexByHandle = listState.listItemIndexByHandle or {}
+	self.listDataByHandle = listState.listDataByHandle or {}
+	self.listRenderersByHandle = listState.listRenderersByHandle or {}
+	self.listVirtualByHandle = listState.listVirtualByHandle or {}
+	self.listVirtualOptionsByHandle = listState.listVirtualOptionsByHandle or {}
+	self.listVirtualStatsByHandle = listState.listVirtualStatsByHandle or {}
+	self.treeDataByHandle = listState.treeDataByHandle or {}
+	self.treeStateByHandle = listState.treeStateByHandle or {}
+	self.treeRenderersByHandle = listState.treeRenderersByHandle or {}
+	self.treeChildPathByHandle = listState.treeChildPathByHandle or {}
+	listState.childrenByHandle = self.childrenByHandle
+	listState.listItemHandlesByHandle = self.listItemHandlesByHandle
+	listState.listItemIndexByHandle = self.listItemIndexByHandle
+	listState.listDataByHandle = self.listDataByHandle
+	listState.listRenderersByHandle = self.listRenderersByHandle
+	listState.listVirtualByHandle = self.listVirtualByHandle
+	listState.listVirtualOptionsByHandle = self.listVirtualOptionsByHandle
+	listState.listVirtualStatsByHandle = self.listVirtualStatsByHandle
+	listState.treeDataByHandle = self.treeDataByHandle
+	listState.treeStateByHandle = self.treeStateByHandle
+	listState.treeRenderersByHandle = self.treeRenderersByHandle
+	listState.treeChildPathByHandle = self.treeChildPathByHandle
+end
+
+local MANAGER_PROXY_METHODS = {
+	"GetLists",
+	"GetObjectInfo",
+	"GetResourceFallbackPolicy",
+	"GetStore",
+	"RecordResourceFallback",
+}
+
+for _, methodName in ipairs(MANAGER_PROXY_METHODS) do
+	FairyGuiLists[methodName] = FairyGuiLists[methodName] or function(self, ...)
+		local owner = self.owner
+		local method = owner ~= nil and owner[methodName] or nil
+		if method == nil then
+			return nil
+		end
+		return method(owner, ...)
 	end
 end
 
@@ -260,10 +278,11 @@ function FairyGuiLists:GetOrCreateVirtualStats(listHandle)
 		return nil
 	end
 
-	local stats = owner.listVirtualStatsByHandle[listHandle]
+	local listState = owner:GetStore():GetListState()
+	local stats = listState.listVirtualStatsByHandle[listHandle]
 	if stats == nil then
 		stats = {
-			virtual = owner.listVirtualByHandle[listHandle] == true,
+			virtual = listState.listVirtualByHandle[listHandle] == true,
 			dataCount = 0,
 			renderCount = 0,
 			itemHandleCount = 0,
@@ -275,7 +294,7 @@ function FairyGuiLists:GetOrCreateVirtualStats(listHandle)
 			loop = false,
 			fallback = false,
 		}
-		owner.listVirtualStatsByHandle[listHandle] = stats
+		listState.listVirtualStatsByHandle[listHandle] = stats
 	end
 	return stats
 end
@@ -299,7 +318,7 @@ function FairyGuiLists:ResetVirtualStats(listHandle, dataCount, options, virtual
 		loop = options ~= nil and options.loop == true,
 		fallback = virtualEnabled ~= true,
 	}
-	owner.listVirtualStatsByHandle[listHandle] = stats
+	owner:GetStore():GetListState().listVirtualStatsByHandle[listHandle] = stats
 	return stats
 end
 
@@ -309,20 +328,21 @@ function FairyGuiLists:UpdateVirtualStatsCounts(listHandle)
 		return nil
 	end
 
-	local stats = owner.listVirtualStatsByHandle[listHandle]
+	local listState = owner:GetStore():GetListState()
+	local stats = listState.listVirtualStatsByHandle[listHandle]
 	if stats == nil then
 		return nil
 	end
-	stats.itemHandleCount = tableCount(owner.listItemHandlesByHandle[listHandle])
-	stats.realizedCount = tableCount(owner.listItemIndexByHandle[listHandle])
-	local dataList = owner.listDataByHandle[listHandle]
+	stats.itemHandleCount = tableCount(listState.listItemHandlesByHandle[listHandle])
+	stats.realizedCount = tableCount(listState.listItemIndexByHandle[listHandle])
+	local dataList = listState.listDataByHandle[listHandle]
 	stats.dataCount = type(dataList) == "table" and #dataList or 0
 	return stats
 end
 
 function FairyGuiLists:GetChild(handle, childPath)
-	local self = self.owner
-	if self == nil or NativeApi == nil or handle == nil or isBlank(childPath) then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil or handle == nil or isBlank(childPath) then
 		return handle
 	end
 
@@ -333,7 +353,7 @@ function FairyGuiLists:GetChild(handle, childPath)
 
 	local childHandle = NativeApi:getFairyGuiChild(handle, childPath)
 	if childHandle == nil or childHandle <= 0 then
-		local policy = self.resourceFallbackPolicy or {}
+		local policy = self:GetResourceFallbackPolicy() or {}
 		if policy.recordMissingChild == true then
 			local objectInfo = self:GetObjectInfo(handle)
 			self:RecordResourceFallback("missingChild", {
@@ -366,8 +386,8 @@ end
 
 function FairyGuiLists:ClearListCacheByListHandle(listHandle)
 	local lists = self
-	local self = self.owner
-	if self == nil or listHandle == nil then
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
 		return
 	end
 
@@ -393,8 +413,8 @@ end
 
 function FairyGuiLists:ClearListItemHandleCache(listHandle)
 	local lists = self
-	local self = self.owner
-	if self == nil or listHandle == nil then
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
 		return
 	end
 
@@ -410,8 +430,8 @@ function FairyGuiLists:ClearListItemHandleCache(listHandle)
 end
 
 function FairyGuiLists:ClearListCacheForHandle(handle)
-	local self = self.owner
-	if self == nil or handle == nil then
+	local owner = self.owner
+	if owner == nil or handle == nil then
 		return
 	end
 
@@ -437,8 +457,8 @@ function FairyGuiLists:CreateListItemAdapter(listHandle, itemHandle, index, data
 end
 
 function FairyGuiLists:GetListItemByHandle(listHandle, index, data)
-	local self = self.owner
-	if self == nil or NativeApi == nil or listHandle == nil or index == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil or listHandle == nil or index == nil then
 		return nil
 	end
 
@@ -460,8 +480,8 @@ function FairyGuiLists:GetListItemByHandle(listHandle, index, data)
 end
 
 function FairyGuiLists:RenderListItemByHandle(listHandle, index, itemHandle)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -483,8 +503,8 @@ end
 
 function FairyGuiLists:RenderVirtualListItemByHandle(listHandle, index, itemHandle)
 	local lists = self
-	local self = self.owner
-	if self == nil or listHandle == nil or index == nil or itemHandle == nil or itemHandle <= 0 then
+	local owner = self.owner
+	if owner == nil or listHandle == nil or index == nil or itemHandle == nil or itemHandle <= 0 then
 		return false
 	end
 
@@ -537,8 +557,8 @@ function FairyGuiLists:GetListHandle(handle, childPath)
 end
 
 function FairyGuiLists:SetListItemCount(handle, childPath, itemCount)
-	local self = self.owner
-	if self == nil or NativeApi == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil then
 		return false
 	end
 
@@ -552,8 +572,8 @@ function FairyGuiLists:SetListItemCount(handle, childPath, itemCount)
 end
 
 function FairyGuiLists:GetListItemCount(handle, childPath)
-	local self = self.owner
-	if self == nil or NativeApi == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil then
 		return 0
 	end
 
@@ -565,8 +585,8 @@ function FairyGuiLists:GetListItemCount(handle, childPath)
 end
 
 function FairyGuiLists:GetListItem(handle, childPath, index)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -581,8 +601,8 @@ function FairyGuiLists:GetListItem(handle, childPath, index)
 end
 
 function FairyGuiLists:SetListData(handle, childPath, dataList, renderer)
-	local self = self.owner
-	if self == nil or type(dataList) ~= "table" then
+	local owner = self.owner
+	if owner == nil or type(dataList) ~= "table" then
 		return false
 	end
 
@@ -605,8 +625,8 @@ end
 
 function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer, options)
 	local lists = self
-	local self = self.owner
-	if self == nil or type(dataList) ~= "table" then
+	local owner = self.owner
+	if owner == nil or type(dataList) ~= "table" then
 		return false
 	end
 
@@ -642,8 +662,8 @@ function FairyGuiLists:SetVirtualListData(handle, childPath, dataList, renderer,
 end
 
 function FairyGuiLists:BuildTreeFlatData(listHandle)
-	local self = self.owner
-	if self == nil or listHandle == nil then
+	local owner = self.owner
+	if owner == nil or listHandle == nil then
 		return {}
 	end
 
@@ -655,8 +675,8 @@ function FairyGuiLists:BuildTreeFlatData(listHandle)
 end
 
 function FairyGuiLists:RefreshTree(handle, childPath)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -682,8 +702,8 @@ function FairyGuiLists:RefreshTree(handle, childPath)
 end
 
 function FairyGuiLists:SetTreeData(handle, childPath, treeData, renderer, options)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -714,8 +734,8 @@ function FairyGuiLists:SetTreeData(handle, childPath, treeData, renderer, option
 end
 
 function FairyGuiLists:GetTreeFlatData(handle, childPath)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return {}
 	end
 
@@ -724,8 +744,8 @@ function FairyGuiLists:GetTreeFlatData(handle, childPath)
 end
 
 function FairyGuiLists:GetTreeNode(handle, childPath, nodeKey)
-	local self = self.owner
-	if self == nil or nodeKey == nil then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil then
 		return nil
 	end
 
@@ -738,8 +758,8 @@ function FairyGuiLists:GetTreeNode(handle, childPath, nodeKey)
 end
 
 function FairyGuiLists:AddTreeNode(handle, childPath, parentKey, node, index)
-	local self = self.owner
-	if self == nil or type(node) ~= "table" then
+	local owner = self.owner
+	if owner == nil or type(node) ~= "table" then
 		return false
 	end
 
@@ -773,8 +793,8 @@ function FairyGuiLists:AddTreeNode(handle, childPath, parentKey, node, index)
 end
 
 function FairyGuiLists:RemoveTreeNode(handle, childPath, nodeKey)
-	local self = self.owner
-	if self == nil or nodeKey == nil then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil then
 		return false
 	end
 
@@ -805,8 +825,8 @@ function FairyGuiLists:RemoveTreeNode(handle, childPath, nodeKey)
 end
 
 function FairyGuiLists:ClearTree(handle, childPath)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -821,8 +841,8 @@ function FairyGuiLists:ClearTree(handle, childPath)
 end
 
 function FairyGuiLists:UpdateTreeNode(handle, childPath, nodeKey, data)
-	local self = self.owner
-	if self == nil or nodeKey == nil or type(data) ~= "table" then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil or type(data) ~= "table" then
 		return false
 	end
 
@@ -837,8 +857,8 @@ function FairyGuiLists:UpdateTreeNode(handle, childPath, nodeKey, data)
 end
 
 function FairyGuiLists:SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
-	local self = self.owner
-	if self == nil or nodeKey == nil then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil then
 		return false
 	end
 
@@ -854,8 +874,8 @@ function FairyGuiLists:SetTreeNodeExpanded(handle, childPath, nodeKey, expanded)
 end
 
 function FairyGuiLists:SetTreeNodeSelected(handle, childPath, nodeKey)
-	local self = self.owner
-	if self == nil or nodeKey == nil then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil then
 		return false
 	end
 
@@ -885,8 +905,8 @@ function FairyGuiLists:SetTreeNodeSelected(handle, childPath, nodeKey)
 end
 
 function FairyGuiLists:GetTreeSelectedKey(handle, childPath)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -907,8 +927,8 @@ function FairyGuiLists:GetTreeSelectedNode(handle, childPath)
 end
 
 function FairyGuiLists:ToggleTreeNode(handle, childPath, nodeKey)
-	local self = self.owner
-	if self == nil or nodeKey == nil then
+	local owner = self.owner
+	if owner == nil or nodeKey == nil then
 		return false
 	end
 
@@ -925,8 +945,8 @@ function FairyGuiLists:ToggleTreeNode(handle, childPath, nodeKey)
 end
 
 function FairyGuiLists:GetListData(handle, childPath, index)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
@@ -943,8 +963,8 @@ function FairyGuiLists:GetListData(handle, childPath, index)
 end
 
 function FairyGuiLists:RefreshListItem(handle, childPath, index)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -965,8 +985,8 @@ end
 
 function FairyGuiLists:RefreshList(handle, childPath)
 	local lists = self
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -991,8 +1011,8 @@ end
 
 function FairyGuiLists:UpdateListItem(handle, childPath, index, data)
 	local lists = self
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -1019,8 +1039,8 @@ end
 
 function FairyGuiLists:AppendListItem(handle, childPath, data)
 	local lists = self
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -1054,8 +1074,8 @@ end
 
 function FairyGuiLists:RemoveListItem(handle, childPath, index)
 	local lists = self
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -1089,8 +1109,8 @@ end
 
 function FairyGuiLists:ClearList(handle, childPath)
 	local lists = self
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return false
 	end
 
@@ -1117,8 +1137,8 @@ function FairyGuiLists:ClearList(handle, childPath)
 end
 
 function FairyGuiLists:GetListDebugStats(handle, childPath)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return {}
 	end
 
@@ -1184,8 +1204,8 @@ function FairyGuiLists:DumpListDebugStats(handle, childPath, label)
 end
 
 function FairyGuiLists:SetListSelectedIndex(handle, childPath, selectedIndex)
-	local self = self.owner
-	if self == nil or NativeApi == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil then
 		return false
 	end
 
@@ -1197,8 +1217,8 @@ function FairyGuiLists:SetListSelectedIndex(handle, childPath, selectedIndex)
 end
 
 function FairyGuiLists:GetListSelectedIndex(handle, childPath)
-	local self = self.owner
-	if self == nil or NativeApi == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil then
 		return 0
 	end
 
@@ -1212,8 +1232,8 @@ function FairyGuiLists:GetListSelectedIndex(handle, childPath)
 end
 
 function FairyGuiLists:ScrollListToView(handle, childPath, index)
-	local self = self.owner
-	if self == nil or NativeApi == nil then
+	local owner = self.owner
+	if owner == nil or NativeApi == nil then
 		return false
 	end
 

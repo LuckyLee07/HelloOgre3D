@@ -1,1347 +1,189 @@
-local NativeApi = require("res.scripts.manager.fairygui.FairyGuiNativeApi")
+local FairyGuiServiceCore = require("res.scripts.manager.fairygui.FairyGuiServiceCore")
+local FairyGuiServiceToast = require("res.scripts.manager.fairygui.FairyGuiServiceToast")
+local FairyGuiServiceLoading = require("res.scripts.manager.fairygui.FairyGuiServiceLoading")
+local FairyGuiServiceTip = require("res.scripts.manager.fairygui.FairyGuiServiceTip")
+local FairyGuiServiceGuideMask = require("res.scripts.manager.fairygui.FairyGuiServiceGuideMask")
+local FairyGuiServiceMessageBox = require("res.scripts.manager.fairygui.FairyGuiServiceMessageBox")
+local FairyGuiServicePopupMenu = require("res.scripts.manager.fairygui.FairyGuiServicePopupMenu")
+
+local DEFAULT_SERVICE_SKINS = FairyGuiServiceCore.DEFAULT_SERVICE_SKINS
 
 local FairyGuiServices = Class("FairyGuiServices")
 
-local function isBlank(value)
-	return value == nil or value == ""
-end
-
-local function copyTable(source, target)
-	target = target or {}
-	if type(source) ~= "table" then
-		return target
-	end
-
-	for name, value in pairs(source) do
-		target[name] = value
-	end
-	return target
-end
-
-local function nowMs()
-	return os.clock and os.clock() * 1000 or 0
-end
-
-local function tableCount(source)
-	local count = 0
-	if type(source) ~= "table" then
-		return count
-	end
-	for _, _ in pairs(source) do
-		count = count + 1
-	end
-	return count
-end
-
-local DEFAULT_SERVICE_SKINS = {
-	Toast = {
-		Default = {
-			minWidth = 240,
-			height = 44,
-			paddingX = 80,
-			charWidth = 14,
-			fontSize = 22,
-			bottom = 120,
-			textColor = { 255, 244, 200 },
-			resource = { mode = "dynamic" },
-		},
-	},
-	Tip = {
-		Default = {
-			width = 320,
-			height = 36,
-			fontSize = 20,
-			anchorGap = 6,
-			textColor = { 180, 230, 255 },
-			resource = { mode = "dynamic" },
-		},
-	},
-	Loading = {
-		Default = {
-			width = 280,
-			height = 36,
-			fontSize = 24,
-			textColor = { 255, 255, 255 },
-			modalAlpha = 0.45,
-			resource = { mode = "dynamic" },
-		},
-	},
-	GuideMask = {
-		Default = {
-			fontSize = 24,
-			textX = 80,
-			textY = 80,
-			textWidth = 520,
-			textHeight = 48,
-			modalAlpha = 0.55,
-			textColor = { 255, 255, 255 },
-			resource = { mode = "dynamic" },
-		},
-	},
-	MessageBox = {
-		Default = {
-			width = 460,
-			height = 240,
-			titleFontSize = 24,
-			bodyFontSize = 20,
-			buttonFontSize = 22,
-			buttonWidth = 110,
-			buttonHeight = 44,
-			buttonGap = 16,
-			modalAlpha = 0.45,
-			titleColor = { 255, 236, 180 },
-			bodyColor = { 230, 230, 230 },
-			buttonTextColor = { 255, 255, 255 },
-			resource = { mode = "dynamic" },
-		},
-	},
-	PopupMenu = {
-		Default = {
-			width = 220,
-			itemHeight = 34,
-			fontSize = 22,
-			anchorGap = 6,
-			modalAlpha = 0.05,
-			itemTextColor = { 255, 255, 255 },
-			resource = { mode = "dynamic" },
-		},
-	},
+local MANAGER_PROXY_METHODS = {
+	"AddClick",
+	"AddObjectHandleToParent",
+	"AddOwnedHandle",
+	"ApplyScreenAdapt",
+	"AssignLayer",
+	"AttachToLayer",
+	"ClampLayoutRect",
+	"Close",
+	"CloseUI",
+	"CreateContainer",
+	"CreateGuideMaskSegments",
+	"CreateLoader",
+	"CreateModalMask",
+	"CreateText",
+	"Delay",
+	"GetCurrentScene",
+	"GetGuideMaskRects",
+	"GetObjectInfo",
+	"GetPopupGroup",
+	"GetSceneName",
+	"GetScreenHeight",
+	"GetScreenWidth",
+	"GetStore",
+	"GetUIGroup",
+	"PushStack",
+	"RecordPerf",
+	"RegisterObject",
+	"SetAlpha",
+	"SetPosition",
+	"SetSize",
+	"SetText",
+	"SetTouchable",
+	"SetVisible",
 }
 
-local function cloneValue(source)
-	if type(source) ~= "table" then
-		return source
-	end
-
-	local result = {}
-	for key, value in pairs(source) do
-		result[key] = cloneValue(value)
-	end
-	return result
-end
-
-local function mergeTable(base, override)
-	local result = cloneValue(base) or {}
-	if type(override) ~= "table" then
-		return result
-	end
-
-	for key, value in pairs(override) do
-		if type(value) == "table" and type(result[key]) == "table" then
-			result[key] = mergeTable(result[key], value)
-		else
-			result[key] = cloneValue(value)
+for _, methodName in ipairs(MANAGER_PROXY_METHODS) do
+	FairyGuiServices[methodName] = FairyGuiServices[methodName] or function(self, ...)
+		local owner = self.owner
+		local method = owner ~= nil and owner[methodName] or nil
+		if method == nil then
+			return nil
 		end
-	end
-	return result
-end
-
-local function ensureServiceSkins(owner)
-	if owner == nil then
-		return cloneValue(DEFAULT_SERVICE_SKINS)
-	end
-
-	owner.serviceSkins = owner.serviceSkins or {}
-	for serviceType, skins in pairs(DEFAULT_SERVICE_SKINS) do
-		owner.serviceSkins[serviceType] = owner.serviceSkins[serviceType] or {}
-		for skinName, skin in pairs(skins) do
-			if owner.serviceSkins[serviceType][skinName] == nil then
-				owner.serviceSkins[serviceType][skinName] = cloneValue(skin)
-			end
-		end
-	end
-	return owner.serviceSkins
-end
-
-local function getColor(style, key, red, green, blue)
-	local color = style ~= nil and style[key] or nil
-	if type(color) == "table" then
-		return tonumber(color.r or color.red or color[1]) or red,
-			tonumber(color.g or color.green or color[2]) or green,
-			tonumber(color.b or color.blue or color[3]) or blue
-	end
-	return red, green, blue
-end
-
-local function ensureServiceStats(owner)
-	if owner.serviceStats == nil then
-		owner.serviceStats = {
-			createdTotal = 0,
-			closedTotal = 0,
-			failedTotal = 0,
-			peakOpen = 0,
-			toastQueuedTotal = 0,
-			toastDedupeIgnoredTotal = 0,
-			toastShownTotal = 0,
-			toastTimeoutTotal = 0,
-			loadingShowTotal = 0,
-			loadingHideTotal = 0,
-			loadingForceHideTotal = 0,
-			loadingPeakRefTotal = 0,
-			byType = {},
-		}
-	end
-	if owner.serviceStats.byType == nil then
-		owner.serviceStats.byType = {}
-	end
-	return owner.serviceStats
-end
-
-local function ensureServiceTypeStats(owner, serviceType)
-	local stats = ensureServiceStats(owner)
-	serviceType = isBlank(serviceType) and "<unknown>" or serviceType
-	if stats.byType[serviceType] == nil then
-		stats.byType[serviceType] = {
-			created = 0,
-			closed = 0,
-			failed = 0,
-			lastKey = "",
-			lastReason = "",
-		}
-	end
-	return stats.byType[serviceType], stats
-end
-
-local function getServiceOpenTotal(owner)
-	local count = 0
-	for _, objectInfo in pairs(owner.objects or {}) do
-		if objectInfo.serviceType ~= nil then
-			count = count + 1
-		end
-	end
-	return count
-end
-
-local function recordServiceStat(owner, eventName, serviceType, key, reason)
-	if owner == nil then
-		return nil
-	end
-
-	local typeStats, stats = ensureServiceTypeStats(owner, serviceType)
-	if eventName == "created" then
-		stats.createdTotal = stats.createdTotal + 1
-		typeStats.created = typeStats.created + 1
-	elseif eventName == "closed" then
-		stats.closedTotal = stats.closedTotal + 1
-		typeStats.closed = typeStats.closed + 1
-	elseif eventName == "failed" then
-		stats.failedTotal = stats.failedTotal + 1
-		typeStats.failed = typeStats.failed + 1
-	end
-
-	stats.lastEvent = eventName or ""
-	stats.lastType = serviceType or ""
-	stats.lastKey = key or ""
-	stats.lastReason = reason or ""
-	typeStats.lastKey = key or ""
-	typeStats.lastReason = reason or ""
-	stats.peakOpen = math.max(stats.peakOpen or 0, getServiceOpenTotal(owner))
-	return stats
-end
-
-local function recordServicePerf(owner, startMs, serviceType, success)
-	if owner ~= nil and owner.RecordPerf ~= nil then
-		owner:RecordPerf("service", nowMs() - startMs, tostring(serviceType or ""), success ~= false)
+		return method(owner, ...)
 	end
 end
-
-local function normalizeRect(owner, rect, param)
-	if owner == nil or type(rect) ~= "table" then
-		return nil
-	end
-
-	local applied = owner.ApplyDesignRect ~= nil and owner:ApplyDesignRect(rect, param or {}) or rect
-	if type(applied) ~= "table" then
-		return nil
-	end
-
-	local x = tonumber(applied.x) or 0
-	local y = tonumber(applied.y) or 0
-	local width = math.max(tonumber(applied.width) or 0, 0)
-	local height = math.max(tonumber(applied.height) or 0, 0)
-	return {
-		x = x,
-		y = y,
-		width = width,
-		height = height,
-	}
-end
-
-local function resolveAnchorRect(owner, param, fallbackX, fallbackY)
-	param = param or {}
-	local rect = normalizeRect(owner, param.anchorRect or param.followRect or param.targetRect or param.rect, param)
-	if rect ~= nil then
-		return rect
-	end
-	if fallbackX ~= nil or fallbackY ~= nil or param.x ~= nil or param.y ~= nil then
-		return {
-			x = tonumber(fallbackX or param.x) or 0,
-			y = tonumber(fallbackY or param.y) or 0,
-			width = tonumber(param.anchorWidth or param.targetWidth) or 0,
-			height = tonumber(param.anchorHeight or param.targetHeight) or 0,
-		}
-	end
-	return nil
-end
-
-local function buildAnchoredRect(owner, anchorRect, width, height, param)
-	param = param or {}
-	width = math.max(tonumber(width) or 0, 0)
-	height = math.max(tonumber(height) or 0, 0)
-	local screenWidth = owner ~= nil and owner:GetScreenWidth() or 0
-	local screenHeight = owner ~= nil and owner:GetScreenHeight() or 0
-	local gap = tonumber(param.anchorGap or param.gap) or 6
-	local offsetX = tonumber(param.offsetX) or 0
-	local offsetY = tonumber(param.offsetY) or 0
-	local placement = param.placement or param.followPlacement or "bottomLeft"
-	local x = tonumber(param.x) or 0
-	local y = tonumber(param.y) or 0
-
-	if anchorRect ~= nil then
-		if placement == "bottomRight" then
-			x = anchorRect.x + anchorRect.width - width
-			y = anchorRect.y + anchorRect.height + gap
-		elseif placement == "topLeft" then
-			x = anchorRect.x
-			y = anchorRect.y - height - gap
-		elseif placement == "topRight" then
-			x = anchorRect.x + anchorRect.width - width
-			y = anchorRect.y - height - gap
-		elseif placement == "right" then
-			x = anchorRect.x + anchorRect.width + gap
-			y = anchorRect.y
-		elseif placement == "left" then
-			x = anchorRect.x - width - gap
-			y = anchorRect.y
-		elseif placement == "center" then
-			x = anchorRect.x + (anchorRect.width - width) * 0.5
-			y = anchorRect.y + (anchorRect.height - height) * 0.5
-		else
-			x = anchorRect.x
-			y = anchorRect.y + anchorRect.height + gap
-		end
-	end
-
-	local rect = {
-		x = x + offsetX,
-		y = y + offsetY,
-		width = width,
-		height = height,
-	}
-	if owner ~= nil and param.fitInScreen ~= false and owner.ClampLayoutRect ~= nil and screenWidth > 0 and screenHeight > 0 then
-		owner:ClampLayoutRect(rect, screenWidth, screenHeight)
-	end
-	return rect
-end
-
-local function bindOwnerState(owner, state)
-	if owner == nil or state == nil then
-		return
-	end
-	owner.toastQueue = state.toastQueue
-	owner.toastActive = state.toastActive
-	owner.toastSerial = state.toastSerial
-	owner.toastDedupe = state.toastDedupe
-	owner.loadingRefs = state.loadingRefs
-	owner.loadingRefTotal = state.loadingRefTotal
-	owner.serviceStats = state.serviceStats
-end
-
-local function syncStateFromOwner(owner)
-	local state = owner ~= nil and owner.services or nil
-	if state == nil then
-		return
-	end
-	state.toastQueue = owner.toastQueue or {}
-	state.toastActive = owner.toastActive
-	state.toastSerial = owner.toastSerial or 0
-	state.toastDedupe = owner.toastDedupe or {}
-	state.loadingRefs = owner.loadingRefs or {}
-	state.loadingRefTotal = owner.loadingRefTotal or 0
-	state.serviceStats = owner.serviceStats or state.serviceStats
-	bindOwnerState(owner, state)
-end
-
 function FairyGuiServices:Init(owner)
-	self.owner = owner
-	self.toastQueue = owner ~= nil and owner.toastQueue or self.toastQueue or {}
-	self.toastActive = owner ~= nil and owner.toastActive or self.toastActive
-	self.toastSerial = owner ~= nil and owner.toastSerial or self.toastSerial or 0
-	self.toastDedupe = owner ~= nil and owner.toastDedupe or self.toastDedupe or {}
-	self.loadingRefs = owner ~= nil and owner.loadingRefs or self.loadingRefs or {}
-	self.loadingRefTotal = owner ~= nil and owner.loadingRefTotal or self.loadingRefTotal or 0
-	if owner ~= nil then
-		ensureServiceSkins(owner)
-		self.serviceStats = owner.serviceStats or self.serviceStats or ensureServiceStats(owner)
-		bindOwnerState(owner, self)
-		ensureServiceStats(owner)
-	end
+	return FairyGuiServiceCore.Init(self, owner)
 end
 
 function FairyGuiServices:RegisterServiceSkin(serviceType, skinName, skin)
-	local self = self.owner
-	if self == nil or isBlank(serviceType) or isBlank(skinName) or type(skin) ~= "table" then
-		return false
-	end
-
-	local skins = ensureServiceSkins(self)
-	skins[serviceType] = skins[serviceType] or {}
-	local base = skins[serviceType][skinName] or skins[serviceType].Default or {}
-	local merged = mergeTable(base, skin)
-	merged.name = skinName
-	merged.serviceType = serviceType
-	skins[serviceType][skinName] = merged
-	return true
+	return FairyGuiServiceCore.RegisterServiceSkin(self, serviceType, skinName, skin)
 end
 
 function FairyGuiServices:GetServiceSkin(serviceType, skinName)
-	local self = self.owner
-	if self == nil or isBlank(serviceType) then
-		return nil
-	end
-
-	local skins = ensureServiceSkins(self)
-	local skinSet = skins[serviceType]
-	if skinSet == nil then
-		return nil
-	end
-	local name = isBlank(skinName) and "Default" or skinName
-	local skin = skinSet[name] or skinSet.Default
-	return cloneValue(skin)
+	return FairyGuiServiceCore.GetServiceSkin(self, serviceType, skinName)
 end
 
 function FairyGuiServices:ResolveServiceSkin(serviceType, param)
-	local self = self.owner
-	param = param or {}
-	local skinName = param.serviceSkinName or param.skinName
-	local inlineSkin = nil
-	if type(param.serviceSkin) == "table" then
-		inlineSkin = param.serviceSkin
-	elseif type(param.skin) == "table" then
-		inlineSkin = param.skin
-	else
-		skinName = skinName or param.serviceSkin or param.skin
-	end
-	skinName = isBlank(skinName) and "Default" or tostring(skinName)
-
-	local skins = ensureServiceSkins(self)
-	local skinSet = skins[serviceType] or {}
-	local actualSkinName = skinSet[skinName] ~= nil and skinName or "Default"
-	local base = skinSet[actualSkinName] or skinSet.Default or {}
-	local resolved = mergeTable(base, inlineSkin)
-	resolved.name = actualSkinName
-	resolved.requestedName = skinName
-	resolved.serviceType = serviceType
-	resolved.resource = resolved.resource or { mode = "dynamic" }
-	return resolved
+	return FairyGuiServiceCore.ResolveServiceSkin(self, serviceType, param)
 end
 
 function FairyGuiServices:OpenServiceContainer(key, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	local startMs = nowMs()
-	param = param or {}
-	key = param.key or key
-	if isBlank(key) then
-		recordServiceStat(self, "failed", param.serviceType, key, "emptyKey")
-		recordServicePerf(self, startMs, param.serviceType, false)
-		return nil
-	end
-
-	self:CloseUI(key, true, "serviceReplace")
-	param.key = key
-	param.serviceType = param.serviceType or key
-	param.resolvedServiceSkin = param.resolvedServiceSkin or self:ResolveServiceSkin(param.serviceType, param)
-	param.serviceSkinName = param.serviceSkinName or (param.resolvedServiceSkin and param.resolvedServiceSkin.name) or "Default"
-	param.layer = param.layer or "Top"
-	param.scene = param.scene or param.sceneName or self.currentSceneName
-	param.closeOnSceneChange = param.closeOnSceneChange ~= false
-
-	local handle = self:CreateContainer(param.name or key)
-	if handle == nil or handle <= 0 then
-		recordServiceStat(self, "failed", param.serviceType, key, "createContainer")
-		recordServicePerf(self, startMs, param.serviceType, false)
-		return nil
-	end
-	if not self:AttachToLayer(handle, param.layer, param) then
-		NativeApi:removeFairyGuiObject(handle)
-		recordServiceStat(self, "failed", param.serviceType, key, "attachLayer")
-		recordServicePerf(self, startMs, param.serviceType, false)
-		return nil
-	end
-
-	if param.width ~= nil and param.height ~= nil then
-		self:SetSize(handle, param.width, param.height)
-	elseif param.fullScreen == true or param.adaptScreen == true then
-		self:SetSize(handle, self:GetScreenWidth(), self:GetScreenHeight())
-	end
-	if param.x ~= nil and param.y ~= nil then
-		self:SetPosition(handle, param.x, param.y)
-	end
-	self:SetTouchable(handle, param.touchable == true)
-
-	local objectInfo = {
-		handle = handle,
-		key = key,
-		name = key,
-		objectName = param.serviceType,
-		param = param,
-		uiName = key,
-		cache = false,
-		layer = param.layer,
-		priority = tonumber(param.priority or param.sortingPriority) or 0,
-		popupGroup = self:GetPopupGroup(param),
-		popupMode = param.popupMode or "stack",
-		uiGroup = self:GetUIGroup(param),
-		sceneName = self:GetSceneName(param),
-		closeOnSceneChange = param.closeOnSceneChange ~= false,
-		destroyOnSceneChange = param.destroyOnSceneChange == true,
-		ownedHandles = {},
-		serviceType = param.serviceType,
-		serviceSkinName = param.serviceSkinName,
-		serviceSkin = param.resolvedServiceSkin,
-		serviceResource = param.resolvedServiceSkin and param.resolvedServiceSkin.resource or nil,
-		parentHandle = param.parentHandle or param.rootHandle,
-		rootLayer = param.rootLayer,
-		focusOrder = param.focusOrder,
-		tabFocus = param.tabFocus ~= false,
-	}
-	self.objects[key] = objectInfo
-	self.objectsByHandle[handle] = objectInfo
-	self.uiNameToKey[key] = key
-	self.hiddenObjects[key] = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:CreateModalMask(objectInfo, param)
-	self:ApplyScreenAdapt(objectInfo)
-	self:PushStack(objectInfo)
-	recordServiceStat(self, "created", objectInfo.serviceType, objectInfo.key, "open")
-	recordServicePerf(self, startMs, objectInfo.serviceType, true)
-	return objectInfo
+	return FairyGuiServiceCore.OpenServiceContainer(self, key, param)
 end
 
 function FairyGuiServices:AddServiceText(objectInfo, name, text, x, y, width, height, fontSize, red, green, blue)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
-		return nil
-	end
-
-	local textHandle = self:CreateText(objectInfo.handle, name or "", tostring(text or ""), fontSize or 22, red or 255, green or 255, blue or 255)
-	if textHandle == nil or textHandle <= 0 then
-		return nil
-	end
-	self:SetPosition(textHandle, x or 0, y or 0)
-	self:SetSize(textHandle, width or 120, height or 32)
-	if not self:AddObjectHandleToParent(textHandle, objectInfo.handle) then
-		NativeApi:removeFairyGuiObject(textHandle)
-		return nil
-	end
-	return self:AddOwnedHandle(objectInfo, textHandle)
+	return FairyGuiServiceCore.AddServiceText(self, objectInfo, name, text, x, y, width, height, fontSize, red, green, blue)
 end
 
 function FairyGuiServices:AddServiceImage(objectInfo, name, url, x, y, width, height, alpha)
-	local self = self.owner
-	if self == nil or objectInfo == nil or isBlank(url) then
-		return nil
-	end
-
-	local imageHandle = self:CreateLoader(objectInfo.handle, name or "", url or "")
-	if imageHandle == nil or imageHandle <= 0 then
-		return nil
-	end
-	self:SetPosition(imageHandle, x or 0, y or 0)
-	self:SetSize(imageHandle, width or 120, height or 60)
-	self:SetTouchable(imageHandle, false)
-	if alpha ~= nil then
-		self:SetAlpha(imageHandle, alpha)
-	end
-	if not self:AddObjectHandleToParent(imageHandle, objectInfo.handle) then
-		NativeApi:removeFairyGuiObject(imageHandle)
-		return nil
-	end
-	return self:AddOwnedHandle(objectInfo, imageHandle)
+	return FairyGuiServiceCore.AddServiceImage(self, objectInfo, name, url, x, y, width, height, alpha)
 end
 
 function FairyGuiServices:AddServiceButton(objectInfo, name, text, x, y, width, height, callback, style)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
-		return nil
-	end
-
-	local buttonHandle = self:CreateContainer(name or "", objectInfo.handle)
-	if buttonHandle == nil or buttonHandle <= 0 then
-		return nil
-	end
-	self:SetPosition(buttonHandle, x or 0, y or 0)
-	self:SetSize(buttonHandle, width or 120, height or 44)
-	self:SetTouchable(buttonHandle, true)
-	if not self:AddObjectHandleToParent(buttonHandle, objectInfo.handle) then
-		NativeApi:removeFairyGuiObject(buttonHandle)
-		return nil
-	end
-	self:AddOwnedHandle(objectInfo, buttonHandle)
-	local red, green, blue = getColor(style, "textColor", 255, 255, 255)
-	self:AddServiceText(objectInfo, (name or "") .. "_text", text or "", x or 0, y or 0, width or 120, height or 44, style and style.fontSize or 22, red, green, blue)
-	if type(callback) == "function" then
-		self:AddClick(buttonHandle, "", callback)
-	end
-	return buttonHandle
+	return FairyGuiServiceCore.AddServiceButton(self, objectInfo, name, text, x, y, width, height, callback, style)
 end
 
 function FairyGuiServices:ApplyServiceLayout(objectInfo)
-	local self = self.owner
-	if self == nil or objectInfo == nil then
-		return false
-	end
-
-	local param = objectInfo.param or {}
-	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin(objectInfo.serviceType, param)
-	local screenWidth = self:GetScreenWidth()
-	local screenHeight = self:GetScreenHeight()
-	if screenWidth <= 0 or screenHeight <= 0 then
-		return false
-	end
-
-	if objectInfo.serviceType == "DebugPanel" then
-		local width = param.width or 460
-		local height = param.height or 236
-		local rect = {
-			x = param.x or math.max(screenWidth - width - (param.right or 24), 0),
-			y = param.y or (param.top or 24),
-			width = width,
-			height = height,
-		}
-		self:ClampLayoutRect(rect, screenWidth, screenHeight)
-		self:SetPosition(objectInfo.handle, rect.x, rect.y)
-		self:SetSize(objectInfo.handle, rect.width, rect.height)
-		if objectInfo.debugPanelBackgroundHandle ~= nil then
-			self:SetPosition(objectInfo.debugPanelBackgroundHandle, 0, 0)
-			self:SetSize(objectInfo.debugPanelBackgroundHandle, rect.width, rect.height)
-		end
-		return true
-	end
-
-	if objectInfo.serviceType == "Toast" and objectInfo.toastTextHandle ~= nil then
-		local text = tostring(objectInfo.toastText or "")
-		local minWidth = tonumber(skin.minWidth) or 240
-		local paddingX = tonumber(skin.paddingX) or 80
-		local charWidth = tonumber(skin.charWidth) or 14
-		local width = param.width or math.min(math.max(string.len(text) * charWidth + paddingX, minWidth), math.max(screenWidth - 80, minWidth))
-		local height = param.height or skin.height or 44
-		local rect = {
-			x = param.x or math.max((screenWidth - width) * 0.5, 0),
-			y = param.y or math.max(screenHeight - (param.bottom or skin.bottom or 120), 0),
-			width = width,
-			height = height,
-		}
-		if param.fitInScreen ~= false then
-			self:ClampLayoutRect(rect, screenWidth, screenHeight)
-		end
-		self:SetPosition(objectInfo.toastTextHandle, rect.x, rect.y)
-		self:SetSize(objectInfo.toastTextHandle, rect.width, rect.height)
-		objectInfo.toastLayoutRect = rect
-		return true
-	elseif objectInfo.serviceType == "Loading" and objectInfo.loadingTextHandle ~= nil then
-		local width = param.width or skin.width or 280
-		local height = param.height or skin.height or 36
-		local rect = {
-			x = param.x or math.max(screenWidth * 0.5 - width * 0.5, 0),
-			y = param.y or math.max(screenHeight * 0.5 - height * 0.5, 0),
-			width = width,
-			height = height,
-		}
-		self:SetPosition(objectInfo.loadingTextHandle, rect.x, rect.y)
-		self:SetSize(objectInfo.loadingTextHandle, rect.width, rect.height)
-		objectInfo.loadingLayoutRect = rect
-		return true
-	elseif objectInfo.serviceType == "Tip" and objectInfo.tipTextHandle ~= nil then
-		local width = param.width or skin.width or 320
-		local height = param.height or skin.height or 36
-		param.anchorGap = param.anchorGap or skin.anchorGap
-		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
-		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
-		self:SetPosition(objectInfo.tipTextHandle, rect.x, rect.y)
-		self:SetSize(objectInfo.tipTextHandle, rect.width, rect.height)
-		objectInfo.tipAnchorRect = anchorRect
-		objectInfo.tipLayoutRect = rect
-		return true
-	elseif objectInfo.serviceType == "PopupMenu" then
-		local width = param.width or skin.width or 220
-		local height = param.height or skin.itemHeight or 34
-		param.anchorGap = param.anchorGap or skin.anchorGap
-		local anchorRect = resolveAnchorRect(self, param, param.x, param.y)
-		local rect = buildAnchoredRect(self, anchorRect, width, height, param)
-		self:SetPosition(objectInfo.handle, rect.x, rect.y)
-		self:SetSize(objectInfo.handle, rect.width, rect.height)
-		objectInfo.popupMenuAnchorRect = anchorRect
-		objectInfo.popupMenuLayoutRect = rect
-		return true
-	end
-	return false
+	return FairyGuiServiceCore.ApplyServiceLayout(self, objectInfo)
 end
 
 function FairyGuiServices:GetServiceObject(serviceKey)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-	return self:GetObjectInfo(serviceKey)
+	return FairyGuiServiceCore.GetServiceObject(self, serviceKey)
 end
 
 function FairyGuiServices:CloseService(serviceKey, reason)
-	local self = self.owner
-	if self == nil then
-		return false
-	end
-	return self:Close(serviceKey, true, reason or "closeService")
+	return FairyGuiServiceCore.CloseService(self, serviceKey, reason)
 end
 
 function FairyGuiServices:CloseServices(serviceType, reason)
-	local self = self.owner
-	if self == nil then
-		return 0
-	end
-
-	local keys = {}
-	for key, objectInfo in pairs(self.objects) do
-		if objectInfo.serviceType ~= nil and (serviceType == nil or objectInfo.serviceType == serviceType) then
-			table.insert(keys, key)
-		end
-	end
-
-	local closeCount = 0
-	for _, key in ipairs(keys) do
-		if self:CloseService(key, reason or "closeServices") then
-			closeCount = closeCount + 1
-		end
-	end
-	return closeCount
+	return FairyGuiServiceCore.CloseServices(self, serviceType, reason)
 end
 
 function FairyGuiServices:HandleServiceClosed(objectInfo, reason)
-	local self = self.owner
-	if self == nil or objectInfo == nil or objectInfo.serviceType == nil then
-		return
-	end
-
-	local stats = recordServiceStat(self, "closed", objectInfo.serviceType, objectInfo.key, reason or "close")
-	if objectInfo.serviceType == "Toast" then
-		local active = self.toastActive
-		if active ~= nil and active.key == objectInfo.key then
-			if active.dedupeKey ~= nil then
-				self.toastDedupe[active.dedupeKey] = nil
-			end
-			self.toastActive = nil
-			syncStateFromOwner(self)
-		end
-		if reason == "toastTimeout" then
-			if stats ~= nil then
-				stats.toastTimeoutTotal = (stats.toastTimeoutTotal or 0) + 1
-			end
-			self:ShowNextToast()
-		elseif reason ~= "toastReplace" then
-			self:ClearToastQueue()
-		end
-	elseif objectInfo.serviceType == "Loading" then
-		self.loadingRefs = {}
-		self.loadingRefTotal = 0
-		syncStateFromOwner(self)
-	end
+	return FairyGuiServiceCore.HandleServiceClosed(self, objectInfo, reason)
 end
 
 function FairyGuiServices:ClearToastQueue()
-	local self = self.owner
-	if self == nil then
-		return
-	end
-
-	self.toastQueue = {}
-	self.toastDedupe = {}
-	if self.toastActive ~= nil and self.toastActive.dedupeKey ~= nil then
-		self.toastDedupe[self.toastActive.dedupeKey] = true
-	end
-	syncStateFromOwner(self)
+	return FairyGuiServiceToast.ClearToastQueue(self)
 end
 
 function FairyGuiServices:GetToastQueueCount()
-	local self = self.owner
-	if self == nil then
-		return 0
-	end
-	return #self.toastQueue
+	return FairyGuiServiceToast.GetToastQueueCount(self)
 end
 
 function FairyGuiServices:CreateToastRequest(text, duration, param)
-	local self = self.owner
-	if self == nil then
-		return nil, "manager"
-	end
-
-	param = copyTable(param)
-	local dedupeKey = nil
-	if param.dedupe ~= false then
-		dedupeKey = param.dedupeKey or tostring(text or "")
-		if not isBlank(dedupeKey) and self.toastDedupe[dedupeKey] == true then
-			local stats = ensureServiceStats(self)
-			stats.toastDedupeIgnoredTotal = (stats.toastDedupeIgnoredTotal or 0) + 1
-			stats.lastEvent = "toastDedupe"
-			stats.lastType = "Toast"
-			stats.lastKey = dedupeKey
-			stats.lastReason = "dedupe"
-			return nil, "dedupe"
-		end
-	end
-
-	self.toastSerial = (self.toastSerial or 0) + 1
-	local request = {
-		id = self.toastSerial,
-		text = text or "",
-		duration = tonumber(duration or param.duration) or 2,
-		param = param,
-		dedupeKey = dedupeKey,
-	}
-	if dedupeKey ~= nil then
-		self.toastDedupe[dedupeKey] = true
-	end
-	return request, nil
+	return FairyGuiServiceToast.CreateToastRequest(self, text, duration, param)
 end
 
 function FairyGuiServices:OpenToastRequest(request)
-	local self = self.owner
-	if self == nil or request == nil then
-		return nil
-	end
-
-	local param = copyTable(request.param)
-	param.key = param.key or "__Toast"
-	param.layer = param.layer or "Toast"
-	param.stackMode = param.stackMode or "None"
-	param.fullScreen = true
-	param.touchable = false
-	param.serviceType = "Toast"
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		if request.dedupeKey ~= nil then
-			self.toastDedupe[request.dedupeKey] = nil
-		end
-		return nil
-	end
-
-	objectInfo.toastRequestId = request.id
-	objectInfo.toastText = request.text or ""
-	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin("Toast", param)
-	local red, green, blue = getColor(skin, "textColor", 255, 244, 200)
-	objectInfo.toastTextHandle = self:AddServiceText(objectInfo, "toast_text", objectInfo.toastText, 0, 0, param.width or skin.minWidth or 240, param.height or skin.height or 44, param.fontSize or skin.fontSize or 22, red, green, blue)
-	self:ApplyServiceLayout(objectInfo)
-	local stats = ensureServiceStats(self)
-	stats.toastShownTotal = (stats.toastShownTotal or 0) + 1
-
-	self.toastActive = {
-		id = request.id,
-		key = objectInfo.key,
-		handle = objectInfo.handle,
-		dedupeKey = request.dedupeKey,
-	}
-	syncStateFromOwner(self)
-	if request.duration > 0 then
-		self:Delay(objectInfo.key, request.duration, function()
-			self:CloseUI(objectInfo.key, true, "toastTimeout")
-		end)
-	end
-	return objectInfo.handle
+	return FairyGuiServiceToast.OpenToastRequest(self, request)
 end
 
 function FairyGuiServices:ShowNextToast()
-	local self = self.owner
-	if self == nil or self.toastActive ~= nil or #self.toastQueue <= 0 then
-		return nil
-	end
-	local request = table.remove(self.toastQueue, 1)
-	return self:OpenToastRequest(request)
+	return FairyGuiServiceToast.ShowNextToast(self)
 end
 
 function FairyGuiServices:ShowToast(text, duration, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	local request = nil
-	local ignored = nil
-	request, ignored = self:CreateToastRequest(text, duration, param)
-	if request == nil then
-		return self.toastActive and self.toastActive.handle or true
-	end
-
-	local requestParam = request.param or {}
-	if requestParam.queue == false and self.toastActive ~= nil then
-		self.toastQueue = {}
-		syncStateFromOwner(self)
-		self:CloseUI(self.toastActive.key, true, "toastReplace")
-	end
-	if self.toastActive ~= nil then
-		table.insert(self.toastQueue, request)
-		local stats = ensureServiceStats(self)
-		stats.toastQueuedTotal = (stats.toastQueuedTotal or 0) + 1
-		return request.id
-	end
-	return self:OpenToastRequest(request)
+	return FairyGuiServiceToast.ShowToast(self, text, duration, param)
 end
 
 function FairyGuiServices:CloseToast(reason)
-	local self = self.owner
-	if self == nil then
-		return false
-	end
-
-	local active = self.toastActive
-	if active == nil then
-		self:ClearToastQueue()
-		return false
-	end
-	return self:CloseUI(active.key, true, reason or "closeToast")
+	return FairyGuiServiceToast.CloseToast(self, reason)
 end
 
 function FairyGuiServices:ShowTip(text, x, y, duration, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	param.key = param.key or "__Tip"
-	param.layer = param.layer or "Top"
-	param.stackMode = param.stackMode or "None"
-	param.fullScreen = true
-	param.touchable = false
-	param.serviceType = "Tip"
-	param.x = x or param.x or 20
-	param.y = y or param.y or 20
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		return nil
-	end
-	objectInfo.tipText = text or ""
-	local skin = objectInfo.serviceSkin or self:ResolveServiceSkin("Tip", param)
-	local red, green, blue = getColor(skin, "textColor", 180, 230, 255)
-	objectInfo.tipTextHandle = self:AddServiceText(objectInfo, "tip_text", objectInfo.tipText, param.x, param.y, param.width or skin.width or 320, param.height or skin.height or 36, param.fontSize or skin.fontSize or 20, red, green, blue)
-	self:ApplyServiceLayout(objectInfo)
-
-	local delay = tonumber(param.delay or param.hoverDelay) or 0
-	if delay > 0 then
-		objectInfo.tipPending = true
-		self:SetVisible(objectInfo.handle, false)
-		self:Delay(objectInfo.key, delay, function()
-			local tipInfo = self:GetObjectInfo(objectInfo.key)
-			if tipInfo ~= nil then
-				tipInfo.tipPending = false
-				self:SetVisible(tipInfo.handle, true)
-			end
-		end)
-	end
-
-	local timeout = tonumber(duration or param.duration) or 2
-	if timeout > 0 then
-		self:Delay(objectInfo.key, timeout, function()
-			self:CloseUI(objectInfo.key, true, "tipTimeout")
-		end)
-	end
-	return objectInfo.handle
+	return FairyGuiServiceTip.ShowTip(self, text, x, y, duration, param)
 end
 
 function FairyGuiServices:ShowHoverTip(text, anchorRect, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	param.anchorRect = param.anchorRect or anchorRect
-	if param.delay == nil and param.hoverDelay == nil then
-		param.hoverDelay = 0.25
-	end
-	param.placement = param.placement or "topLeft"
-	return self:ShowTip(text, nil, nil, param.duration, param)
+	return FairyGuiServiceTip.ShowHoverTip(self, text, anchorRect, param)
 end
 
 function FairyGuiServices:HideTip(reason)
-	local self = self.owner
-	if self == nil then
-		return false
-	end
-	return self:Close("__Tip", true, reason or "hideTip")
+	return FairyGuiServiceTip.HideTip(self, reason)
 end
 
 function FairyGuiServices:ShowLoading(text, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	local refKey = param.refKey or "Default"
-	self.loadingRefs[refKey] = (self.loadingRefs[refKey] or 0) + 1
-	self.loadingRefTotal = (self.loadingRefTotal or 0) + 1
-	syncStateFromOwner(self)
-	local stats = ensureServiceStats(self)
-	stats.loadingShowTotal = (stats.loadingShowTotal or 0) + 1
-	stats.loadingPeakRefTotal = math.max(stats.loadingPeakRefTotal or 0, self.loadingRefTotal or 0)
-
-	local existing = self:GetObjectInfo("__Loading")
-	if existing ~= nil then
-		existing.loadingText = text or existing.loadingText
-		if not isBlank(text) then
-			self:SetText(existing.handle, "loading_text", text)
-		end
-		self:ApplyServiceLayout(existing)
-		return existing.handle
-	end
-
-	param.key = param.key or "__Loading"
-	param.layer = param.layer or "Top"
-	param.stackMode = param.stackMode or "Popup"
-	param.popupGroup = param.popupGroup or "Loading"
-	param.popupMode = param.popupMode or "replace"
-	param.fullScreen = true
-	param.modal = param.modal ~= false
-	local skin = self:ResolveServiceSkin("Loading", param)
-	param.resolvedServiceSkin = skin
-	param.serviceSkinName = param.serviceSkinName or skin.name
-	param.modalAlpha = param.modalAlpha or skin.modalAlpha
-	param.closeOnMaskClick = false
-	param.touchable = false
-	param.serviceType = "Loading"
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		self.loadingRefs[refKey] = math.max((self.loadingRefs[refKey] or 1) - 1, 0)
-		self.loadingRefTotal = math.max((self.loadingRefTotal or 1) - 1, 0)
-		syncStateFromOwner(self)
-		return nil
-	end
-	objectInfo.loadingText = text or "Loading..."
-	local red, green, blue = getColor(objectInfo.serviceSkin or skin, "textColor", 255, 255, 255)
-	objectInfo.loadingTextHandle = self:AddServiceText(objectInfo, "loading_text", text or "Loading...", 0, 0, param.width or skin.width or 280, param.height or skin.height or 36, param.fontSize or skin.fontSize or 24, red, green, blue)
-	self:ApplyServiceLayout(objectInfo)
-	local timeout = tonumber(param.timeout)
-	if timeout ~= nil and timeout > 0 then
-		self:Delay(objectInfo.key, timeout, function()
-			self:HideLoading({ force = true, reason = "loadingTimeout" })
-		end)
-	end
-	return objectInfo.handle
+	return FairyGuiServiceLoading.ShowLoading(self, text, param)
 end
 
 function FairyGuiServices:GetLoadingRefCount()
-	local self = self.owner
-	if self == nil then
-		return 0
-	end
-	return self.loadingRefTotal or 0
+	return FairyGuiServiceLoading.GetLoadingRefCount(self)
 end
 
 function FairyGuiServices:HideLoading(paramOrReason)
-	local self = self.owner
-	if self == nil then
-		return false
-	end
-
-	local param = type(paramOrReason) == "table" and paramOrReason or { reason = paramOrReason }
-	local refKey = param.refKey or "Default"
-	local force = param.force == true
-	local reason = param.reason or "hideLoading"
-	local stats = ensureServiceStats(self)
-	stats.loadingHideTotal = (stats.loadingHideTotal or 0) + 1
-	if force then
-		stats.loadingForceHideTotal = (stats.loadingForceHideTotal or 0) + 1
-	end
-
-	if not force then
-		local refCount = self.loadingRefs[refKey] or 0
-		if refCount > 0 then
-			self.loadingRefs[refKey] = refCount - 1
-			self.loadingRefTotal = math.max((self.loadingRefTotal or 1) - 1, 0)
-			if self.loadingRefs[refKey] <= 0 then
-				self.loadingRefs[refKey] = nil
-			end
-			syncStateFromOwner(self)
-		end
-		if (self.loadingRefTotal or 0) > 0 then
-			return true
-		end
-	end
-
-	self.loadingRefs = {}
-	self.loadingRefTotal = 0
-	syncStateFromOwner(self)
-	return self:Close("__Loading", true, reason)
+	return FairyGuiServiceLoading.HideLoading(self, paramOrReason)
 end
 
 function FairyGuiServices:ShowGuideMask(param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	local highlightRects = self:GetGuideMaskRects(param)
-	local skin = self:ResolveServiceSkin("GuideMask", param)
-	param.key = param.key or "__GuideMask"
-	param.layer = param.layer or "Guide"
-	param.stackMode = param.stackMode or "Popup"
-	param.popupGroup = param.popupGroup or "GuideMask"
-	param.popupMode = param.popupMode or "replace"
-	param.fullScreen = true
-	param.modal = highlightRects == nil
-	param.resolvedServiceSkin = skin
-	param.serviceSkinName = param.serviceSkinName or skin.name
-	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.55
-	param.closeOnMaskClick = param.closeOnMaskClick == true
-	param.touchable = false
-	param.serviceType = "GuideMask"
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		return nil
-	end
-	if highlightRects ~= nil then
-		self:CreateGuideMaskSegments(objectInfo, param)
-	end
-	if not isBlank(param.text) then
-		local red, green, blue = getColor(objectInfo.serviceSkin or skin, "textColor", 255, 255, 255)
-		self:AddServiceText(objectInfo, "guide_text", param.text, param.textX or skin.textX or 80, param.textY or skin.textY or 80, param.textWidth or skin.textWidth or 520, param.textHeight or skin.textHeight or 48, param.fontSize or skin.fontSize or 24, red, green, blue)
-	end
-	return objectInfo.handle
+	return FairyGuiServiceGuideMask.ShowGuideMask(self, param)
 end
 
 function FairyGuiServices:HideGuideMask(reason)
-	local self = self.owner
-	if self == nil then
-		return false
-	end
-	return self:Close("__GuideMask", true, reason or "hideGuideMask")
+	return FairyGuiServiceGuideMask.HideGuideMask(self, reason)
 end
 
 function FairyGuiServices:ShowMessageBox(title, message, buttons, callback, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	local skin = self:ResolveServiceSkin("MessageBox", param)
-	param.key = param.key or "__MessageBox"
-	param.layer = param.layer or "Top"
-	param.stackMode = param.stackMode or "Popup"
-	param.popupGroup = param.popupGroup or "MessageBox"
-	param.popupMode = param.popupMode or "replace"
-	param.width = param.width or skin.width or 460
-	param.height = param.height or skin.height or 240
-	param.modal = param.modal ~= false
-	param.resolvedServiceSkin = skin
-	param.serviceSkinName = param.serviceSkinName or skin.name
-	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.45
-	param.closeOnMaskClick = param.closeOnMaskClick == true
-	param.closeOnEscape = param.closeOnEscape ~= false
-	param.touchable = true
-	param.serviceType = "MessageBox"
-	if param.center ~= false then
-		if param.x == nil and param.alignX == nil and param.hAlign == nil then
-			param.alignX = "center"
-		end
-		if param.y == nil and param.alignY == nil and param.vAlign == nil then
-			param.alignY = "middle"
-		end
-	end
-	param.fitInScreen = param.fitInScreen ~= false
-
-	buttons = type(buttons) == "table" and buttons or { "OK" }
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		return nil
-	end
-	local titleRed, titleGreen, titleBlue = getColor(objectInfo.serviceSkin or skin, "titleColor", 255, 236, 180)
-	local bodyRed, bodyGreen, bodyBlue = getColor(objectInfo.serviceSkin or skin, "bodyColor", 230, 230, 230)
-	self:AddServiceText(objectInfo, "message_title", title or "", 24, 24, param.width - 48, 34, param.titleFontSize or skin.titleFontSize or 24, titleRed, titleGreen, titleBlue)
-	self:AddServiceText(objectInfo, "message_body", message or "", 24, 72, param.width - 48, 80, param.bodyFontSize or skin.bodyFontSize or 20, bodyRed, bodyGreen, bodyBlue)
-
-	local buttonWidth = param.buttonWidth or skin.buttonWidth or 110
-	local buttonHeight = param.buttonHeight or skin.buttonHeight or 44
-	local buttonGap = param.buttonGap or skin.buttonGap or 16
-	local totalWidth = #buttons * buttonWidth + math.max(#buttons - 1, 0) * buttonGap
-	local startX = math.max((param.width - totalWidth) * 0.5, 0)
-	local buttonRed, buttonGreen, buttonBlue = getColor(objectInfo.serviceSkin or skin, "buttonTextColor", 255, 255, 255)
-	local buttonStyle = {
-		fontSize = param.buttonFontSize or skin.buttonFontSize or 22,
-		textColor = { buttonRed, buttonGreen, buttonBlue },
-	}
-	for index, buttonText in ipairs(buttons) do
-		local label = type(buttonText) == "table" and (buttonText.text or buttonText.label or tostring(index)) or tostring(buttonText)
-		self:AddServiceButton(objectInfo, "message_button_" .. tostring(index), label, startX + (index - 1) * (buttonWidth + buttonGap), param.height - buttonHeight - 24, buttonWidth, buttonHeight, function()
-			if type(callback) == "function" then
-				callback(index, label)
-			end
-			self:CloseUI(objectInfo.key, true, "messageBoxButton")
-		end, buttonStyle)
-	end
-	return objectInfo.handle
+	return FairyGuiServiceMessageBox.ShowMessageBox(self, title, message, buttons, callback, param)
 end
 
 function FairyGuiServices:ShowDialog(title, message, buttons, callback, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-	return self:ShowMessageBox(title, message, buttons, callback, param)
+	return FairyGuiServiceMessageBox.ShowDialog(self, title, message, buttons, callback, param)
 end
 
 function FairyGuiServices:ShowPopupMenu(items, x, y, callback, param)
-	local self = self.owner
-	if self == nil then
-		return nil
-	end
-
-	param = copyTable(param)
-	local skin = self:ResolveServiceSkin("PopupMenu", param)
-	param.key = param.key or "__PopupMenu"
-	param.layer = param.layer or "Top"
-	param.stackMode = param.stackMode or "Popup"
-	param.popupGroup = param.popupGroup or "PopupMenu"
-	param.popupMode = param.popupMode or "replace"
-	param.modal = param.modal ~= false
-	param.resolvedServiceSkin = skin
-	param.serviceSkinName = param.serviceSkinName or skin.name
-	param.modalAlpha = param.modalAlpha or skin.modalAlpha or 0.05
-	param.closeOnMaskClick = param.closeOnMaskClick ~= false
-	param.touchable = true
-	param.serviceType = "PopupMenu"
-
-	items = type(items) == "table" and items or {}
-	local itemHeight = param.itemHeight or skin.itemHeight or 34
-	param.width = param.width or skin.width or 220
-	param.height = param.height or math.max(#items * itemHeight, itemHeight)
-	param.fitInScreen = param.fitInScreen ~= false
-	param.anchorGap = param.anchorGap or skin.anchorGap
-	local anchorRect = resolveAnchorRect(self, param, x, y)
-	local layoutRect = buildAnchoredRect(self, anchorRect, param.width, param.height, param)
-	param.x = layoutRect.x
-	param.y = layoutRect.y
-
-	local objectInfo = self:OpenServiceContainer(param.key, param)
-	if objectInfo == nil then
-		return nil
-	end
-	objectInfo.popupMenuAnchorRect = anchorRect
-	objectInfo.popupMenuLayoutRect = layoutRect
-	local red, green, blue = getColor(objectInfo.serviceSkin or skin, "itemTextColor", 255, 255, 255)
-	local itemStyle = {
-		fontSize = param.fontSize or skin.fontSize or 22,
-		textColor = { red, green, blue },
-	}
-	for index, item in ipairs(items) do
-		local label = type(item) == "table" and (item.text or item.label or tostring(index)) or tostring(item)
-		self:AddServiceButton(objectInfo, "popup_item_" .. tostring(index), label, 0, (index - 1) * itemHeight, param.width, itemHeight, function()
-			if type(callback) == "function" then
-				callback(index, item)
-			end
-			self:CloseUI(objectInfo.key, true, "popupMenuSelect")
-		end, itemStyle)
-	end
-	return objectInfo.handle
+	return FairyGuiServicePopupMenu.ShowPopupMenu(self, items, x, y, callback, param)
 end
 
 function FairyGuiServices:GetServiceStats()
-	local self = self.owner
-	if self == nil then
-		return {
-			__meta = {
-				toastQueue = 0,
-				toastActive = nil,
-				loadingRefTotal = 0,
-				serviceOpenTotal = 0,
-				serviceHiddenTotal = 0,
-				serviceKindCount = 0,
-				createdTotal = 0,
-				closedTotal = 0,
-				failedTotal = 0,
-				peakOpen = 0,
-			},
-		}
-	end
-
-	local counters = ensureServiceStats(self)
-	local stats = {
-		__meta = {
-			toastQueue = self:GetToastQueueCount(),
-			toastActive = self.toastActive ~= nil and self.toastActive.key or nil,
-			loadingRefTotal = self:GetLoadingRefCount(),
-			createdTotal = counters.createdTotal or 0,
-			closedTotal = counters.closedTotal or 0,
-			failedTotal = counters.failedTotal or 0,
-			peakOpen = counters.peakOpen or 0,
-			toastQueuedTotal = counters.toastQueuedTotal or 0,
-			toastDedupeIgnoredTotal = counters.toastDedupeIgnoredTotal or 0,
-			toastShownTotal = counters.toastShownTotal or 0,
-			toastTimeoutTotal = counters.toastTimeoutTotal or 0,
-			loadingShowTotal = counters.loadingShowTotal or 0,
-			loadingHideTotal = counters.loadingHideTotal or 0,
-			loadingForceHideTotal = counters.loadingForceHideTotal or 0,
-			loadingPeakRefTotal = counters.loadingPeakRefTotal or 0,
-			lastEvent = counters.lastEvent or "",
-			lastType = counters.lastType or "",
-			lastKey = counters.lastKey or "",
-			lastReason = counters.lastReason or "",
-			byType = counters.byType or {},
-		},
-	}
-	local serviceKinds = {}
-	local serviceOpenTotal = 0
-	local serviceHiddenTotal = 0
-	for key, objectInfo in pairs(self.objects) do
-		if objectInfo.serviceType ~= nil then
-			local serviceType = objectInfo.serviceType
-			local history = counters.byType and counters.byType[serviceType] or nil
-			local stat = stats[serviceType] or {
-				open = 0,
-				hidden = 0,
-				keys = {},
-				created = history and history.created or 0,
-				closed = history and history.closed or 0,
-				failed = history and history.failed or 0,
-			}
-			stat.open = stat.open + 1
-			if self.hiddenObjects[key] ~= nil then
-				stat.hidden = stat.hidden + 1
-				serviceHiddenTotal = serviceHiddenTotal + 1
-			end
-			table.insert(stat.keys, key)
-			stats[serviceType] = stat
-			serviceKinds[serviceType] = true
-			serviceOpenTotal = serviceOpenTotal + 1
-		end
-	end
-	stats.__meta.serviceOpenTotal = serviceOpenTotal
-	stats.__meta.serviceHiddenTotal = serviceHiddenTotal
-	stats.__meta.serviceKindCount = tableCount(serviceKinds)
-	counters.peakOpen = math.max(counters.peakOpen or 0, serviceOpenTotal)
-	stats.__meta.peakOpen = counters.peakOpen
-	return stats
+	return FairyGuiServiceCore.GetServiceStats(self)
 end
 
 function FairyGuiServices:DumpServices()
-	print("[FGUI] DumpServices begin")
-	local stats = self:GetServiceStats()
-	local meta = stats.__meta or {}
-	for serviceType, stat in pairs(stats) do
-		if serviceType ~= "__meta" then
-			print("[FGUI] Service", serviceType, "open=", stat.open, "hidden=", stat.hidden, "created=", stat.created or 0, "closed=", stat.closed or 0, "failed=", stat.failed or 0, "keys=", table.concat(stat.keys, ","))
-		end
-	end
-	print("[FGUI] ServiceMeta open=", meta.serviceOpenTotal or 0, "kind=", meta.serviceKindCount or 0, "peak=", meta.peakOpen or 0, "created=", meta.createdTotal or 0, "closed=", meta.closedTotal or 0, "failed=", meta.failedTotal or 0, "toastActive=", meta.toastActive, "toastQueue=", meta.toastQueue, "toastQueuedTotal=", meta.toastQueuedTotal or 0, "toastDedupeIgnored=", meta.toastDedupeIgnoredTotal or 0, "loadingRefs=", meta.loadingRefTotal, "loadingPeakRefs=", meta.loadingPeakRefTotal or 0, "last=", tostring(meta.lastEvent or "") .. "/" .. tostring(meta.lastType or "") .. "/" .. tostring(meta.lastReason or ""))
-	print("[FGUI] DumpServices end")
+	return FairyGuiServiceCore.DumpServices(self)
 end
