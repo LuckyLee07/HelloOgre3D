@@ -1,5 +1,8 @@
 ﻿#include "ui/fairygui/FairyGuiSystemCommonHelpers.h"
 
+#include "ui/fairygui/FairyGuiSystemImpl.h"
+#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
+
 FairyGuiSystem::FairyGuiSystem()
 	: m_impl(new FairyGuiSystemImpl())
 {

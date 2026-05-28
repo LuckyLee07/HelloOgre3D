@@ -108,6 +108,7 @@ FGUI 子系统已经完成过两轮拆分：C++ 侧 `FairyGuiLuaApi*` 拆入 `lu
 | 同上 L407-413 | `FairyGuiLayers.lua` 必须含 `GetGuideMaskRects` / `NormalizeGuideMaskRect` / `mergeIntervals` | R02 / R03 | 状态迁移不动这些方法文本 |
 | 同上 L415-465 | Controls / Events / Lists / Package / Profiler 各自必须含若干方法定义文本 | R05 | 只迁**状态**到 Store，方法定义留在原文件（改为读 store） |
 | 同上 L467-473 | `FairyGuiSystemRender.cpp` 必须含 `RecordCpuClipWork` 等 4 个标记 | R06 | 拆头不动 render 实现文本 |
+| `Test-FairyGuiInternalHeaderGuard` | `FairyGuiSystemImpl.h` 和 `FairyGuiSystemCommonHelpers.h` 不得重新 include FairyGUI/Win32 大头，Input/Object/Render helper 必须显式 include 自己需要的大头 | R06 | Common helper 保持轻量，不再作为重头传递入口 |
 | `Test-FairyGuiPublicHeaderFacadeGuard` L120-150 | `FairyGuiSystem.h` 不得出现 `Ogre::`/`cocos2d`/`fairygui::`/`GObject` 等，且必须保留 `FairyGuiSystemStartupContext`、`Initialize(const FairyGuiSystemStartupContext&)`、`FairyGuiSystemImpl* m_impl` | R06 | 拆 internal 头时**实现类名必须保持 `FairyGuiSystemImpl`**；第三方头不得回流到 public facade |
 | `Test-FairyGuiRuntimeOwnershipGuard` L99-108 | `runtime/ui/fairygui/` 下不得引用 `GameManager`/`ClientManager` | R06 | 新增/拆出的内部头同样受限 |
 | `Test-FairyGuiNativeEntryGuard` L44-55 | `manager/fairygui/` 下每个 `*.lua` 不得出现 `GameManager` | R01 | **新建 `FairyGuiStore.lua` 不得含 `GameManager` 字样**（含注释） |
@@ -340,9 +341,9 @@ end
 | 文件 | 职责 |
 |---|---|
 | `FairyGuiSystemImpl.h` | `FairyGuiSystemImpl` 类声明；允许包含 `cocos2d.h` 支撑基类和值类型，但 Ogre / FairyGUI / Win32 尽量前置声明 |
-| `FairyGuiSystemCommonHelpers.h` | 环境变量、路径、DPI/input scale、UTF-8、统计字符串等跨实现文件工具 |
+| `FairyGuiSystemCommonHelpers.h` | 轻量公共工具：环境变量、DPI/input scale、UTF-8、统计字符串等跨实现文件工具；不得 include `FairyGuiSystemFairyIncludes.h` |
 | `FairyGuiSystemRenderHelpers.h` | Ogre 材质、三角形转换、CPU clip / stencil clip 等渲染 helper |
-| `FairyGuiSystemObjectHelpers.h` | range 控件、transition、package object 创建相关 helper |
+| `FairyGuiSystemObjectHelpers.h` | range 控件、transition、package path/object 创建相关 helper |
 | `FairyGuiSystemInputHelpers.h` | OIS key、输入命中日志、Win32 IME、文本编辑 helper |
 | `FairyGuiSystemFairyIncludes.h` | 只给确实需要 FairyGUI/cocos/Ogre/Win32 完整类型的 `.cpp` 或 helper 使用 |
 | `FairyGuiSystemInternal.h` / `FairyGuiSystemInternalHelpers.h` | 兼容门面；实现 `.cpp` 不再通过它们吃大聚合头 |
@@ -352,6 +353,7 @@ end
 - VS2017 clean rebuild 通过。
 - `FairyGuiSystem.h` 仍保持 public facade，不暴露 Ogre / cocos / FairyGUI 细节。
 - `FairyGuiSystemImpl.h` 不再 include `FairyGuiSystemFairyIncludes.h`、Ogre 头、FairyGUI 控件头或 Win32 头。
+- `FairyGuiSystemCommonHelpers.h` 不再 include `FairyGuiSystemFairyIncludes.h`；Input/Object/Render helper 需要完整 FairyGUI/Ogre/Win32 类型时各自显式 include。
 - `FairyGuiSystem*.cpp` 按需 include 具体 helper，不再 include `FairyGuiSystemInternal.h` / `FairyGuiSystemInternalHelpers.h` 聚合入口。
 - `tools/check_fgui_static.ps1` 通过。
 - `tools/run_fgui_selftest.ps1 -Mode All -StopExisting` 通过。

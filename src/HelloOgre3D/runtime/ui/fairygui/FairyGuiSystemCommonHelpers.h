@@ -1,8 +1,16 @@
 ﻿#ifndef __HELLO_FAIRY_GUI_SYSTEM_COMMON_HELPERS_H__
 #define __HELLO_FAIRY_GUI_SYSTEM_COMMON_HELPERS_H__
 
-#include "ui/fairygui/FairyGuiSystemImpl.h"
-#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
+#include "OgreDpiHelper.h"
+#include "OgreRenderWindow.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <map>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -79,13 +87,6 @@ namespace
 		const float clamped = std::max(0.0f, std::min(maxValue, value));
 		return static_cast<int>(clamped + 0.5f);
 	}
-	bool EndsWith(const std::string& value, const std::string& suffix)
-	{
-		if (value.size() < suffix.size())
-			return false;
-		return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
-	}
-
 	void AppendUtf8Codepoint(std::string& text, unsigned int codepoint)
 	{
 		if (codepoint <= 0x7F)
@@ -214,49 +215,6 @@ namespace
 		text.insert(byteOffset, committedText);
 		caret += CountUtf8CodepointsInString(committedText);
 		return true;
-	}
-
-	std::string NormalizePackagePath(const std::string& packagePath)
-	{
-		std::string normalized = packagePath;
-		for (size_t index = 0; index < normalized.size(); ++index)
-		{
-			if (normalized[index] == '\\')
-				normalized[index] = '/';
-		}
-		if (EndsWith(normalized, ".fui"))
-			normalized = normalized.substr(0, normalized.size() - 4);
-		return normalized;
-	}
-
-	bool ContainsDirectorySeparator(const std::string& packagePath)
-	{
-		return packagePath.find('/') != std::string::npos || packagePath.find(':') != std::string::npos;
-	}
-
-	bool FileExists(const std::string& filePath)
-	{
-		std::ifstream file(filePath.c_str(), std::ios::binary);
-		return file.good();
-	}
-
-	std::string ResolvePackagePath(const std::string& packagePath)
-	{
-		const std::string normalized = NormalizePackagePath(packagePath);
-		if (FileExists(normalized + ".fui"))
-			return normalized;
-		if (!ContainsDirectorySeparator(normalized))
-		{
-			const std::string runtimePath = "res/fuires/" + normalized;
-			if (FileExists(runtimePath + ".fui"))
-				return runtimePath;
-		}
-		return normalized;
-	}
-
-	fairygui::UIPackage* AddPackage(const std::string& packagePath)
-	{
-		return fairygui::UIPackage::addPackage(ResolvePackagePath(packagePath));
 	}
 
 	std::string TrimRenderDetailKey(const std::string& key)

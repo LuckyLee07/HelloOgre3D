@@ -1,7 +1,11 @@
 ﻿#ifndef __HELLO_FAIRY_GUI_SYSTEM_OBJECT_HELPERS_H__
 #define __HELLO_FAIRY_GUI_SYSTEM_OBJECT_HELPERS_H__
 
+#include "ui/fairygui/FairyGuiSystemImpl.h"
 #include "ui/fairygui/FairyGuiSystemCommonHelpers.h"
+#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
+
+#include <fstream>
 
 namespace
 {
@@ -110,6 +114,49 @@ namespace
 			return component->getTransition(transitionName);
 
 		return component->getTransitions().empty() ? nullptr : component->getTransitionAt(0);
+	}
+
+	std::string NormalizePackagePath(const std::string& packagePath)
+	{
+		std::string normalized = packagePath;
+		for (size_t index = 0; index < normalized.size(); ++index)
+		{
+			if (normalized[index] == '\\')
+				normalized[index] = '/';
+		}
+		if (normalized.size() >= 4 && normalized.compare(normalized.size() - 4, 4, ".fui") == 0)
+			normalized = normalized.substr(0, normalized.size() - 4);
+		return normalized;
+	}
+
+	bool ContainsDirectorySeparator(const std::string& packagePath)
+	{
+		return packagePath.find('/') != std::string::npos || packagePath.find(':') != std::string::npos;
+	}
+
+	bool FileExists(const std::string& filePath)
+	{
+		std::ifstream file(filePath.c_str(), std::ios::binary);
+		return file.good();
+	}
+
+	std::string ResolvePackagePath(const std::string& packagePath)
+	{
+		const std::string normalized = NormalizePackagePath(packagePath);
+		if (FileExists(normalized + ".fui"))
+			return normalized;
+		if (!ContainsDirectorySeparator(normalized))
+		{
+			const std::string runtimePath = "res/fuires/" + normalized;
+			if (FileExists(runtimePath + ".fui"))
+				return runtimePath;
+		}
+		return normalized;
+	}
+
+	fairygui::UIPackage* AddPackage(const std::string& packagePath)
+	{
+		return fairygui::UIPackage::addPackage(ResolvePackagePath(packagePath));
 	}
 }
 

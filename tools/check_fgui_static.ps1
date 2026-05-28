@@ -156,8 +156,10 @@ function Test-FairyGuiInternalHeaderGuard {
 	$fguiRuntimeRoot = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui"
 	$implPath = Join-Path $fguiRuntimeRoot "FairyGuiSystemImpl.h"
 	$internalPath = Join-Path $fguiRuntimeRoot "FairyGuiSystemInternal.h"
+	$commonHelpersPath = Join-Path $fguiRuntimeRoot "FairyGuiSystemCommonHelpers.h"
 	$implText = Get-Content -LiteralPath $implPath -Raw
 	$internalText = Get-Content -LiteralPath $internalPath -Raw
+	$commonHelpersText = Get-Content -LiteralPath $commonHelpersPath -Raw
 
 	$implForbiddenPatterns = @(
 		"FairyGuiSystemFairyIncludes.h",
@@ -177,6 +179,19 @@ function Test-FairyGuiInternalHeaderGuard {
 	}
 	if ($internalText.IndexOf("FairyGuiSystemFairyIncludes.h") -ge 0 -or $internalText.IndexOf("FairyGuiSystemInternalHelpers.h") -ge 0) {
 		$violations += "FairyGuiSystemInternal.h must stay a thin compatibility include for FairyGuiSystemImpl.h only"
+	}
+	$commonForbiddenPatterns = @(
+		"FairyGuiSystemFairyIncludes.h",
+		"#include <windows.h>",
+		"#include <imm.h>",
+		"#include ""GObject.h""",
+		"#include ""GRoot.h""",
+		"#include ""UIPackage.h"""
+	)
+	foreach ($pattern in $commonForbiddenPatterns) {
+		if ($commonHelpersText.IndexOf($pattern) -ge 0) {
+			$violations += "FairyGuiSystemCommonHelpers.h must stay light and not include $pattern"
+		}
 	}
 
 	$cppFiles = Get-ChildItem -LiteralPath $fguiRuntimeRoot -File -Filter "FairyGuiSystem*.cpp"
@@ -199,6 +214,18 @@ function Test-FairyGuiInternalHeaderGuard {
 		$text = Get-Content -LiteralPath $filePath -Raw
 		if ($text.IndexOf($requiredIncludes[$fileName]) -lt 0) {
 			$violations += "$fileName must include $($requiredIncludes[$fileName])"
+		}
+	}
+	$helperRequiredIncludes = @{
+		"FairyGuiSystemInputHelpers.h" = "FairyGuiSystemFairyIncludes.h"
+		"FairyGuiSystemObjectHelpers.h" = "FairyGuiSystemFairyIncludes.h"
+		"FairyGuiSystemRenderHelpers.h" = "FairyGuiSystemFairyIncludes.h"
+	}
+	foreach ($fileName in $helperRequiredIncludes.Keys) {
+		$filePath = Join-Path $fguiRuntimeRoot $fileName
+		$text = Get-Content -LiteralPath $filePath -Raw
+		if ($text.IndexOf($helperRequiredIncludes[$fileName]) -lt 0) {
+			$violations += "$fileName must include $($helperRequiredIncludes[$fileName]) directly instead of relying on CommonHelpers"
 		}
 	}
 

@@ -146,6 +146,22 @@ ASM_STATE_CHANGE / ASM_NOTIFY / HEALTH_CHANGE 的 token 分散在 SoldierObject 
 #### P-13：`m_aiTickInUpdateEnabled` 临时标志
 GameManager 调度后这个 flag 没意义。
 
+### 🟢 P3 落地后新发现（2026-05-28 复盘）
+
+> T-00 ~ T-21 落地后重新 grep 当前代码发现的遗留。这些不是原计划疏漏，是 EC 化推进过程中**新引入或未收尾**的问题。
+
+#### P-14：VehicleObject 解构后 AgentObject 成了新肥类
+T-11 删除 VehicleObject 时，把 steering（`ForceToAvoidAgents/ForceToFollowPath/ForceToWander`）、locomotion（`SetMass/SetSpeed/SetPath`）、physics 等接口整体 facade 上移到了 [AgentObject](../src/HelloOgre3D/sandbox/objects/AgentObject.h)（~736 行 cpp / ~60 方法）。肥类问题从 SoldierObject **转移**到 AgentObject，而非消除。多数是转发给 `AgentLocomotion` / `PhysicsComponent` 的 thin forwarder。
+
+#### P-15：Blackboard 类 owner 仍绑死 SoldierObject*
+T-18 把 `AIController::m_owner` 泛化为 `AgentObject*`，但 [Blackboard.h](../src/HelloOgre3D/sandbox/ai/common/Blackboard.h) 的 `m_owner` 仍是 `SoldierObject*`，构造也是 `explicit Blackboard(SoldierObject*)`，AIController 内用 `dynamic_cast<SoldierObject*>` 设置。**非 Soldier 的 agent 挂 AIController 时 blackboard owner 取不到**——这是阻挡"第二种 AI 对象类型完整复用"的真实硬伤。
+
+#### P-16：FSM 不接入共享 Blackboard，driver 数据通道分裂
+T-19 让 DT/BT 通过构造注入 AIController 的共享 Blackboard，但 `IDecisionDriver` 接口至今只有 `Init()/Tick()`，无 `AttachBlackboard`。`AgentStateController`(FSM) 走 `AgentActionContext` 自成一套数据通道。结果：同一 AIController 下 **DT/BT 读 blackboard、FSM 读 AgentActionContext，两套数据源**（RefactoringPlan S-11 的未收尾部分）。
+
+#### P-17：driver 的 `m_fallbackBlackboard` 可能是死重
+DT/BT 各持一个 `Blackboard m_fallbackBlackboard` 作注入为空兜底。但 T-19 设计上 AIController **总是**注入 `&m_blackboard`，fallback 永不命中——每个 driver 白带一个 Blackboard 实例。需确认是长期防御性保留还是可删的死重。
+
 ---
 
 ## 3. 目标形态（终态）
@@ -612,6 +628,42 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - [x] 至少一个新对象类型（如 Monster/NPC/普通 Agent）能通过 Factory 模式装配。
 - [ ] 后续 Stage 5 再考虑把 `SoldierObject` 压缩到 ~150-250 行，前提是先拆出 SoldierCommandHandler / SoldierStanceComponent / SoldierInputComponent 等更细组件。
 
+### Stage 5 收口：落地后复盘新发现（对应 P-14 ~ P-17）
+
+> 这一批都遵循"保守原则"：保留旧 API forward，确认 Sandbox6/7/8 稳定再删字段。按优先级排：T-23 最高（解锁多对象类型），T-24 次之，T-22 / T-25 收尾。
+
+#### T-22 AgentObject 瘦身：locomotion / steering facade 下沉
+- **[Stage 5]** [P-14]
+- **现状**：AgentObject ~736 行，~60 个方法，大半是转发给 AgentLocomotion / PhysicsComponent 的 facade。
+- **目标**：把 steering / locomotion 的 forwarder 从 AgentObject 移除，Lua 改走 `agent:GetLocomotion():SetMass()` 等；AgentObject 只保留实体身份 + 位置朝向 + 组件访问器。
+- **关键约束**：旧 Lua API（`agent:SetMass()` 等）保留一段时间作 forwarder，确认 Sandbox 稳定后再删；非急活。
+- **风险**：Lua 调用面广，需逐个迁移。
+- **工时**：1 天。
+
+#### T-23 Blackboard owner 泛化为 AgentObject*
+- **[Stage 5]** [P-15] **优先级最高**
+- **现状**：`Blackboard::m_owner` 是 `SoldierObject*`，AIController 用 `dynamic_cast<SoldierObject*>` 设置。
+- **目标**：owner 类型改 `AgentObject*`（或 `BaseObject*`），`GetOwner` 返回类型同步；旧 Lua `GetOwner()` 保留 Soldier 兼容（dynamic_cast 返回 SoldierObject*）。
+- **关键约束**：双轨——Lua action 取 owner 的路径不破坏；先加新接口再确认调用面迁完。
+- **风险**：低-中，tolua 绑定 + Lua 调用面。
+- **工时**：1-2 小时。
+- **价值**：解锁"第二种 AI 对象类型完整复用 AIController"，是 Ch 7-9 能力扩展的前置。
+
+#### T-24 IDecisionDriver 加 AttachBlackboard，FSM 接入共享 bb
+- **[Stage 5]** [P-16] [对应 [RefactoringPlan.md S-11](RefactoringPlan.md) 收尾]
+- **现状**：`IDecisionDriver` 只有 `Init()/Tick()`；FSM 走 `AgentActionContext`，DT/BT 走注入的 Blackboard，两套数据源。
+- **目标**：`IDecisionDriver` 增 `AttachBlackboard(Blackboard*)`；FSM 也接 AIController 的共享 Blackboard，跨 driver 数据通道统一。
+- **关键约束**：`AgentActionContext` 可作为 FSM 内部用途保留，但跨 driver 共享的数据（enemy / movePos 等）统一走 blackboard。
+- **风险**：FSM 现有数据流改动，需回归 Sandbox6。
+- **工时**：半天-1 天。
+
+#### T-25 确认 / 清理 driver fallbackBlackboard
+- **[Stage 5]** [P-17]
+- **现状**：DT/BT 各持 `m_fallbackBlackboard`，AIController 总注入 `&m_blackboard`，fallback 永不命中。
+- **目标**：确认 AIController 注入是否硬保证。是 → 删 fallback，构造改必填引用；需防御性保留 → 文档注明理由。
+- **风险**：低。
+- **工时**：30 分钟。
+
 ---
 
 ## 5. 行数 / 复杂度阶段目标
@@ -729,6 +781,10 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | T-19 | Blackboard ownership 收口到 AIController | 4 收口 | ☑ | 2026-05-27 | `AIController` 持有共享 Blackboard，DT/BT driver 通过构造注入同一份黑板并保留 fallback；旧 Lua action `owner, blackboard` 入参不变，Debug x64 构建与 Sandbox7/8 smoke 通过。 |
 | T-20 | AICommand 支持矩阵补齐 | 4 收口 | ☑ | 2026-05-27 | `MoveTo / Stop` 已落地到 `AIController::IssueCommand` 与 `AgentObject/SoldierObject::ApplyCommand`，`UseSkill / Interact` 显式记录 unsupported；Sandbox6/7/8 smoke 通过。 |
 | T-21 | Stage 4 终态样例验收 | 4 收口 | ☑ | 2026-05-27 | 新增 `AgentFactory`，`ObjectFactory::CreateAgent` 委托普通 Agent 装配 `Render / Physics / AgentAttrib / AIController`，作为非 Soldier factory 样例；Sandbox2/6/7/8 smoke 通过。 |
+| T-22 | AgentObject 瘦身：locomotion/steering facade 下沉 | 5 | ☐ | | P-14：肥类从 SoldierObject 转移到 AgentObject（~736 行 / ~60 方法）。 |
+| T-23 | Blackboard owner 泛化为 AgentObject* | 5 | ☐ | | P-15：Blackboard 仍绑死 SoldierObject*，挡住多对象类型；优先级最高。 |
+| T-24 | IDecisionDriver 加 AttachBlackboard，FSM 接入共享 bb | 5 | ☐ | | P-16：FSM 走 AgentActionContext，与 DT/BT 的 bb 数据源分裂。 |
+| T-25 | 确认/清理 driver fallbackBlackboard | 5 | ☐ | | P-17：AIController 总注入，fallback 可能死重。 |
 
 ---
 
@@ -738,4 +794,4 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - 全工程结构重构总账：[RefactoringPlan.md](RefactoringPlan.md)（本文档 T-00/T-02/T-06/T-08/T-09/T-13 跟其中 S-xx 一一映射）
 - 项目协作约定 / 命名规则：AGENTS.md（每 Task 完成同步更新）
 
-> **维护**：完成 Task 在 §8 表格回填日期和 commit。新发现问题追加为 T-22+ 并补 §2 问题清单。决策点（§6）有变更直接更新本文档，不要散在 commit。
+> **维护**：完成 Task 在 §8 表格回填日期和 commit。新发现问题追加为 T-26+ 并补 §2 问题清单。决策点（§6）有变更直接更新本文档，不要散在 commit。

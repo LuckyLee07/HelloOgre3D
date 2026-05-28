@@ -1,7 +1,9 @@
 ﻿#ifndef __HELLO_FAIRY_GUI_SYSTEM_INPUT_HELPERS_H__
 #define __HELLO_FAIRY_GUI_SYSTEM_INPUT_HELPERS_H__
 
+#include "ui/fairygui/FairyGuiSystemImpl.h"
 #include "ui/fairygui/FairyGuiSystemCommonHelpers.h"
+#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
 
 namespace
 {
