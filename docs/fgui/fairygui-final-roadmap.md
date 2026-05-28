@@ -407,7 +407,7 @@ Toast
 - `FGUI_OpenLayerSample()` 可打开 `Normal / Popup / Top / Toast` 四层验证样例，`FGUI_CloseLayerSample()` 可清理样例。
 - 也可设置 `HELLO_FGUI_LAYER_SELF_TEST=1` 在启动后自动打开 layer 验证样例并输出 dump。
 - `FGUI_RunLayerCloseSelfTest()` 会按 `CloseTopPopup -> CloseLayer("Top") -> CloseGroup("LayerProbe")` 验证真实 layer root 下的关闭和栈清理；也可设置 `HELLO_FGUI_LAYER_CLOSE_SELF_TEST=1` 自动执行。
-- `docs/fairygui-assets.md` 记录 `bin/res/assets` XML 源数据、`bin/res/fuires` 运行时 package 和 manifest 的对应关系。
+- `docs/fgui/fairygui-assets.md` 记录 `bin/res/assets` XML 源数据、`bin/res/fuires` 运行时 package 和 manifest 的对应关系。
 - `uiStack` 记录所有可入栈 UI 的打开顺序。
 - `popupStack` 记录 `Popup / Guide / Top / Toast` 等弹窗层 UI。
 - `BringToFront` 会同步刷新 sorting order 和栈顶。

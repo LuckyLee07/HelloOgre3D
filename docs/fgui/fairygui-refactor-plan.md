@@ -12,12 +12,12 @@ FGUI 子系统已经完成过两轮拆分：C++ 侧 `FairyGuiLuaApi*` 拆入 `lu
 
 | # | 问题 | 位置 | 评级 |
 |---|---|---|---|
-| 1 | `FairyGuiManager.lua` 仍是过宽 facade，公开 API、生命周期编排、调试转发、部分状态写入仍集中在一个文件 | [FairyGuiManager.lua](../bin/res/scripts/manager/fairygui/FairyGuiManager.lua) | P0 |
-| 2 | 核心对象/层级状态存在引用别名：Lifecycle / Layers 创建或接管状态表，再挂回 Manager 供其它模块通过 `owner.X` 读写 | [FairyGuiLifecycle.lua](../bin/res/scripts/manager/fairygui/FairyGuiLifecycle.lua)、[FairyGuiLayers.lua](../bin/res/scripts/manager/fairygui/FairyGuiLayers.lua) | P0 |
+| 1 | `FairyGuiManager.lua` 仍是过宽 facade，公开 API、生命周期编排、调试转发、部分状态写入仍集中在一个文件 | [FairyGuiManager.lua](../../bin/res/scripts/manager/fairygui/FairyGuiManager.lua) | P0 |
+| 2 | 核心对象/层级状态存在引用别名：Lifecycle / Layers 创建或接管状态表，再挂回 Manager 供其它模块通过 `owner.X` 读写 | [FairyGuiLifecycle.lua](../../bin/res/scripts/manager/fairygui/FairyGuiLifecycle.lua)、[FairyGuiLayers.lua](../../bin/res/scripts/manager/fairygui/FairyGuiLayers.lua) | P0 |
 | 3 | 共享状态不只 25 个核心字段，Events / Lists / Package / Controls / Services / Profiler 也在把领域状态挂到 `owner` | `bin/res/scripts/manager/fairygui/*.lua` | P0 |
-| 4 | 两个同名 `FairyGuiManager.lua` 有命名歧义，但 `bin/res/scripts/manager/FairyGuiManager.lua` 当前是静态门禁要求保留的 compatibility facade，不能先删 | [shim](../bin/res/scripts/manager/FairyGuiManager.lua)、[check_fgui_static.ps1](../tools/check_fgui_static.ps1) | P0 |
-| 5 | `FairyGuiServices.lua` 多职责混杂，Toast / Tip / Loading / Mask / MessageBox / Dialog / PopupMenu / Service 统计堆在一个文件 | [FairyGuiServices.lua](../bin/res/scripts/manager/fairygui/FairyGuiServices.lua) | P1 |
-| 6 | C++ 内部头 `FairyGuiSystemInternal.h` 过重，平台、Ogre、cocos2d、FairyGUI、IME、渲染/输入/对象状态集中在一个内部声明头 | [FairyGuiSystemInternal.h](../src/HelloOgre3D/runtime/ui/fairygui/FairyGuiSystemInternal.h) | P1 |
+| 4 | 两个同名 `FairyGuiManager.lua` 有命名歧义，但 `bin/res/scripts/manager/FairyGuiManager.lua` 当前是静态门禁要求保留的 compatibility facade，不能先删 | [shim](../../bin/res/scripts/manager/FairyGuiManager.lua)、[check_fgui_static.ps1](../../tools/check_fgui_static.ps1) | P0 |
+| 5 | `FairyGuiServices.lua` 多职责混杂，Toast / Tip / Loading / Mask / MessageBox / Dialog / PopupMenu / Service 统计堆在一个文件 | [FairyGuiServices.lua](../../bin/res/scripts/manager/fairygui/FairyGuiServices.lua) | P1 |
+| 6 | C++ 内部头 `FairyGuiSystemInternal.h` 过重，平台、Ogre、cocos2d、FairyGUI、IME、渲染/输入/对象状态集中在一个内部声明头 | [FairyGuiSystemInternal.h](../../src/HelloOgre3D/runtime/ui/fairygui/FairyGuiSystemInternal.h) | P1 |
 | 7 | 命名风格混用：`FairyGui` / `fairygui` / `fgui` 的使用场景没有写成约束 | 全仓库 | P2 |
 
 ### 根因
@@ -58,12 +58,12 @@ FGUI 子系统已经完成过两轮拆分：C++ 侧 `FairyGuiLuaApi*` 拆入 `lu
 
 | 领域 | 状态例子 | 当前主要位置 |
 |---|---|---|
-| Events / Timers | `callbacks`、`bindings`、`bindingsByHandle`、`transitionCallbacks`、`transitionCallbacksByHandle`、`timers`、`timersByKey`、`eventStats`、`eventDispatchTotal`、`lastEvent`、`nextCallbackId` | [FairyGuiEvents.lua](../bin/res/scripts/manager/fairygui/FairyGuiEvents.lua) |
-| Lists / Tree | `childrenByHandle`、`listItemHandlesByHandle`、`listItemIndexByHandle`、`listDataByHandle`、`listRenderersByHandle`、`listVirtualByHandle`、`listVirtualOptionsByHandle`、`listVirtualStatsByHandle`、`treeDataByHandle`、`treeStateByHandle`、`treeRenderersByHandle`、`treeChildPathByHandle` | [FairyGuiLists.lua](../bin/res/scripts/manager/fairygui/FairyGuiLists.lua) |
-| Package / Resource | `packageRoot`、`packages`、`packagesByName`、`resourceFallbacks`、`resourceFallbackKeys`、`resourceFallbackMaxCount`、`resourceFallbackPolicy`、`cachePolicy` | [FairyGuiPackage.lua](../bin/res/scripts/manager/fairygui/FairyGuiPackage.lua) |
-| Controls / TextInput | `textInputPoliciesByHandle`、`textInputPolicyBindingsByHandle` | [FairyGuiControls.lua](../bin/res/scripts/manager/fairygui/FairyGuiControls.lua) |
-| Services | `serviceSkins`、`serviceStats`、`toastQueue`、`toastActive`、`toastSerial`、`toastDedupe`、`loadingRefs`、`loadingRefTotal` | [FairyGuiServices.lua](../bin/res/scripts/manager/fairygui/FairyGuiServices.lua) |
-| Profiler | `perfStats` | [FairyGuiProfiler.lua](../bin/res/scripts/manager/fairygui/FairyGuiProfiler.lua) |
+| Events / Timers | `callbacks`、`bindings`、`bindingsByHandle`、`transitionCallbacks`、`transitionCallbacksByHandle`、`timers`、`timersByKey`、`eventStats`、`eventDispatchTotal`、`lastEvent`、`nextCallbackId` | [FairyGuiEvents.lua](../../bin/res/scripts/manager/fairygui/FairyGuiEvents.lua) |
+| Lists / Tree | `childrenByHandle`、`listItemHandlesByHandle`、`listItemIndexByHandle`、`listDataByHandle`、`listRenderersByHandle`、`listVirtualByHandle`、`listVirtualOptionsByHandle`、`listVirtualStatsByHandle`、`treeDataByHandle`、`treeStateByHandle`、`treeRenderersByHandle`、`treeChildPathByHandle` | [FairyGuiLists.lua](../../bin/res/scripts/manager/fairygui/FairyGuiLists.lua) |
+| Package / Resource | `packageRoot`、`packages`、`packagesByName`、`resourceFallbacks`、`resourceFallbackKeys`、`resourceFallbackMaxCount`、`resourceFallbackPolicy`、`cachePolicy` | [FairyGuiPackage.lua](../../bin/res/scripts/manager/fairygui/FairyGuiPackage.lua) |
+| Controls / TextInput | `textInputPoliciesByHandle`、`textInputPolicyBindingsByHandle` | [FairyGuiControls.lua](../../bin/res/scripts/manager/fairygui/FairyGuiControls.lua) |
+| Services | `serviceSkins`、`serviceStats`、`toastQueue`、`toastActive`、`toastSerial`、`toastDedupe`、`loadingRefs`、`loadingRefTotal` | [FairyGuiServices.lua](../../bin/res/scripts/manager/fairygui/FairyGuiServices.lua) |
+| Profiler | `perfStats` | [FairyGuiProfiler.lua](../../bin/res/scripts/manager/fairygui/FairyGuiProfiler.lua) |
 
 ---
 

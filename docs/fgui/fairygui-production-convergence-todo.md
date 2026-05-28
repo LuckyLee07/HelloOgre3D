@@ -74,7 +74,7 @@
 
 ## 当前验收口径
 
-FGUI 生产级入口收敛以 `docs/fairygui-production-gate.md` 为准：
+FGUI 生产级入口收敛以 `docs/fgui/fairygui-production-gate.md` 为准：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\run_fgui_production_gate.ps1 -Mode Full -StopExisting
@@ -89,4 +89,4 @@ Full gate 必须覆盖：
 - `tools/run_fgui_selftest.ps1 -Mode Pressure`。
 - `git diff --check`。
 
-env1 MiniUI 的全部长期能力仍以 `docs/fairygui-env1-production-target.md` 作为能力地图继续追踪；本清单只记录当前项目这轮生产级入口收敛的闭环。
+env1 MiniUI 的全部长期能力仍以 `docs/fgui/fairygui-env1-production-target.md` 作为能力地图继续追踪；本清单只记录当前项目这轮生产级入口收敛的闭环。

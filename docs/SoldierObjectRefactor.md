@@ -1,6 +1,6 @@
 # SoldierObject 继承链重构方案
 
-> **定位**：本文档专注于 **SoldierObject 这条继承链** 的重构，从当前"扛 9+ 职责的肥继承类"演化为"组件装配的薄壳实体"。是 [RefactoringPlan.md](RefactoringPlan.md) 的子专题展开，跟 [IterationPlan.md](IterationPlan.md) 的 Stage 路线对齐。
+> **定位**：本文档专注于 **SoldierObject 这条继承链** 的重构，从当前"扛 9+ 职责的肥继承类"演化为"组件装配的薄壳实体"。对象模型层面的边界与依赖方向以 [cpp-object-model-refactor-roadmap.md](cpp-object-model-refactor-roadmap.md) 为准。
 >
 > **核心原则**：**目标可激进，动作必保守**。每一步只在**保留旧 API**的前提下叠加新结构，确认 Sandbox6/7/8 行为稳定后才删字段。绝不允许"先删字段再补组件"。
 >
@@ -157,7 +157,7 @@ T-11 删除 VehicleObject 时，把 steering（`ForceToAvoidAgents/ForceToFollow
 T-18 把 `AIController::m_owner` 泛化为 `AgentObject*`，但 [Blackboard.h](../src/HelloOgre3D/sandbox/ai/common/Blackboard.h) 的 `m_owner` 仍是 `SoldierObject*`，构造也是 `explicit Blackboard(SoldierObject*)`，AIController 内用 `dynamic_cast<SoldierObject*>` 设置。**非 Soldier 的 agent 挂 AIController 时 blackboard owner 取不到**——这是阻挡"第二种 AI 对象类型完整复用"的真实硬伤。
 
 #### P-16：FSM 不接入共享 Blackboard，driver 数据通道分裂
-T-19 让 DT/BT 通过构造注入 AIController 的共享 Blackboard，但 `IDecisionDriver` 接口至今只有 `Init()/Tick()`，无 `AttachBlackboard`。`AgentStateController`(FSM) 走 `AgentActionContext` 自成一套数据通道。结果：同一 AIController 下 **DT/BT 读 blackboard、FSM 读 AgentActionContext，两套数据源**（RefactoringPlan S-11 的未收尾部分）。
+T-19 让 DT/BT 通过构造注入 AIController 的共享 Blackboard，但 `IDecisionDriver` 接口至今只有 `Init()/Tick()`，无 `AttachBlackboard`。`AgentStateController`(FSM) 走 `AgentActionContext` 自成一套数据通道。结果：同一 AIController 下 **DT/BT 读 blackboard、FSM 读 AgentActionContext，两套数据源**（driver 共性下沉的未收尾部分）。
 
 #### P-17：driver 的 `m_fallbackBlackboard` 可能是死重
 DT/BT 各持一个 `Blackboard m_fallbackBlackboard` 作注入为空兜底。但 T-19 设计上 AIController **总是**注入 `&m_blackboard`，fallback 永不命中——每个 driver 白带一个 Blackboard 实例。需确认是长期防御性保留还是可删的死重。
@@ -225,12 +225,12 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 > - 必须保留 SoldierObject 旧 Lua API 为 thin forwarder，不破坏 Sandbox6/7/8 调用面。
 > - Sandbox6/7/8 视觉与行为表现作为回归基线，每个 PR 完成都要手测一遍。
 > - 删字段 / 删旧接口 必须在"组件已就绪 + 双轨运行验证 + Lua 调用面迁完"之后。
-> - 每个任务都标注 **[Stage X]** 对应 [IterationPlan.md](IterationPlan.md)。
+> - 每个任务都标注 **[Stage X]** 分阶段推进。
 
 ### Stage 1：地基（最保守，不动业务行为）
 
 #### T-00 组件目录统一 + 领域骨架接入 IComponent
-- **[Stage 1]** [详见 [RefactoringPlan.md S-01](RefactoringPlan.md)]
+- **[Stage 1]**
 - **现状**：两个 components 目录并存，领域骨架（AgentAttrib / AgentBody / WeaponComponent）未接 IComponent。
 - **目标**：
   - 统一到 `sandbox/components/<域>/`。
@@ -278,7 +278,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **验收**：tracy 跑出来 AIController 调度行为跟当前 SoldierObject 调度一致；Sandbox6/7/8 行为不变。
 
 #### T-02 PhysicsComponent owner 字段清理（仅这一个）
-- **[Stage 1]** [P-04 衍生] [对应 [RefactoringPlan.md S-16](RefactoringPlan.md)]
+- **[Stage 1]** [P-04 衍生]
 - **现状**：PhysicsComponent 内部 `BaseObject* m_owner` 跟基类 `IComponent::m_gameobj` 重复。
 - **目标**：删 m_owner，统一用基类字段。
 - **关键约束**：**AgentLocomotion::m_owner 不在这一步动**（它是反向转发结构，见 §1.4.3）。
@@ -337,7 +337,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **工时**：半天。
 
 #### T-06 RenderComponent : IComponent + RenderableObject facade 化
-- **[Stage 2]** [P-04] [对应 [RefactoringPlan.md S-09](RefactoringPlan.md)]
+- **[Stage 2]** [P-04]
 - **现状**：RenderComponent 不继承 IComponent，跟 RenderableObject 各做一份 SceneNode 封装。
 - **目标**：
   - RenderComponent 改为 `: public IComponent`，承接渲染挂载逻辑（位置 / 朝向 / scenenode / 材质）。
@@ -377,7 +377,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **工时**：1-2 天。
 
 #### T-08 AnimComponent + IAnimController 接口化
-- **[Stage 3]** [P-11] [对应 [RefactoringPlan.md S-12](RefactoringPlan.md)]
+- **[Stage 3]** [P-11]
 - **现状**：SoldierObject 直接持 `SoldierAnimController*`，类型硬绑。
 - **目标**：抽 `IAnimController` 接口；SoldierAnimController 实现；用 `AnimComponent` 挂组件容器。
 - **关键约束**：SoldierObject::GetAnimController / HasNextAnim / IsAnimReadyForMove 等保留为 forwarder。
@@ -390,7 +390,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **工时**：2 天。
 
 #### T-09 AgentLocomotion::m_owner 泛化为 AgentObject\*
-- **[Stage 3]** [P-03] [对应 [RefactoringPlan.md S-17](RefactoringPlan.md)]
+- **[Stage 3]** [P-03]
 - **现状**：`AgentLocomotion::m_owner` 类型 `VehicleObject*`，反向转发结构。
 - **目标**：类型泛化为 `AgentObject*`（不解构 VehicleObject，那是 Stage 4），让 SoldierObject 也能直接用。
 - **关键约束**：
@@ -458,7 +458,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **工时**：1-2 天。
 
 #### T-13 BaseObject ↔ GameObject 合并 + 拼写纠正
-- **[Stage 4]** [P-10] [对应 [RefactoringPlan.md S-10](RefactoringPlan.md)]
+- **[Stage 4]** [P-10]
 - **目标**：BaseObject 直接持组件容器，删除 GameObject 类，顺手改对 `m_pGameObjet` 拼写。
 - **落地动作**：
   1. [x] `GameObject` 的组件 map / Add / Get / Remove / debug string 逻辑并入 `BaseObject`。
@@ -650,7 +650,7 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **价值**：解锁"第二种 AI 对象类型完整复用 AIController"，是 Ch 7-9 能力扩展的前置。
 
 #### T-24 IDecisionDriver 加 AttachBlackboard，FSM 接入共享 bb
-- **[Stage 5]** [P-16] [对应 [RefactoringPlan.md S-11](RefactoringPlan.md) 收尾]
+- **[Stage 5]** [P-16]
 - **现状**：`IDecisionDriver` 只有 `Init()/Tick()`；FSM 走 `AgentActionContext`，DT/BT 走注入的 Blackboard，两套数据源。
 - **目标**：`IDecisionDriver` 增 `AttachBlackboard(Blackboard*)`；FSM 也接 AIController 的共享 Blackboard，跨 driver 数据通道统一。
 - **关键约束**：`AgentActionContext` 可作为 FSM 内部用途保留，但跨 driver 共享的数据（enemy / movePos 等）统一走 blackboard。
@@ -790,8 +790,9 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 ## 9. 与其他文档的关系
 
-- 上层路线 / 性能 / AI 演化：[IterationPlan.md](IterationPlan.md)
-- 全工程结构重构总账：[RefactoringPlan.md](RefactoringPlan.md)（本文档 T-00/T-02/T-06/T-08/T-09/T-13 跟其中 S-xx 一一映射）
+- 对象模型边界 / 依赖方向：[cpp-object-model-refactor-roadmap.md](cpp-object-model-refactor-roadmap.md)
+- AI 后续能力 / 路线：[ai-roadmap.md](ai-roadmap.md)、[AIArchitectureBeyondBook.md](AIArchitectureBeyondBook.md)
+- 非 AI 项目路线（含目录组织待办）：[project-roadmap.md](project-roadmap.md)
 - 项目协作约定 / 命名规则：AGENTS.md（每 Task 完成同步更新）
 
 > **维护**：完成 Task 在 §8 表格回填日期和 commit。新发现问题追加为 T-26+ 并补 §2 问题清单。决策点（§6）有变更直接更新本文档，不要散在 commit。

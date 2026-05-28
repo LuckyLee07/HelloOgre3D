@@ -2,7 +2,7 @@
 
 > 目标：把 `HelloOgre3D` 当前混合的继承对象、组件对象、Lua 绑定、runtime 适配风格逐步收敛成一套稳定的 C++ 对象模型。
 >
-> 边界：本文关注 C++ 对象关系、职责边界、所有权、命名和绑定方式。目录结构、FGUI 专项能力、AI 专项能力分别参考 `docs/project-roadmap.md`、`docs/fairygui-final-roadmap.md`、`docs/ai-roadmap.md`。
+> 边界：本文关注 C++ 对象关系、职责边界、所有权、命名和绑定方式。目录结构、FGUI 专项能力、AI 专项能力分别参考 `docs/project-roadmap.md`、`docs/fgui/fairygui-final-roadmap.md`、`docs/ai-roadmap.md`。
 
 ## 1. 总体判断
 

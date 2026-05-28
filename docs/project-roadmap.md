@@ -19,9 +19,9 @@
 
 | 优先级 | 方向 | 主要收益 | 相关文档 |
 |---|---|---|---|
-| P0 | FGUI 业务 UI 框架 | 让 UI 从测试页走向可承载业务界面 | `docs/fairygui-final-roadmap.md` |
-| P0 | Runtime 适配层解耦 | 降低 Ogre / OIS / FGUI / Tracy 对玩法层的耦合 | `docs/IterationPlan.md` |
-| P0 | 调试与可观测性 | 让 UI、对象、资源、性能问题可定位 | `docs/IterationPlan.md` |
+| P0 | FGUI 业务 UI 框架 | 让 UI 从测试页走向可承载业务界面 | `docs/fgui/fairygui-final-roadmap.md` |
+| P0 | Runtime 适配层解耦 | 降低 Ogre / OIS / FGUI / Tracy 对玩法层的耦合 | 本文 §4 |
+| P0 | 调试与可观测性 | 让 UI、对象、资源、性能问题可定位 | 本文 §5 |
 | P1 | 技能 timeline / 触发器 | 为战斗、动画、命中、事件联动提供统一基础 | 本文 |
 | P1 | 数据化配置与热重载 | 降低调数值、调 UI、调玩法的重编译成本 | 本文 |
 | P1 | 构建、测试与回归体系 | 让 sample 行为和 UI 自测能持续验证 | 本文 |
@@ -211,6 +211,15 @@
 - [ ] 动画、物理、武器、技能不再全部硬绑单一对象类。
 - [ ] 现有 sample 行为保持稳定。
 
+### 目录与文件组织待办（来自早期结构重构清单）
+
+这些是纯结构整理项，与对象模型重构（`docs/cpp-object-model-refactor-roadmap.md`）平行，按需穿插。每条执行前先 grep 当前代码复核（这些条目记录于早期，部分前置项可能已变）。统一遵守双轨过渡：迁移文件先留 forwarding header，确认引用迁完再删。
+
+- [ ] **脚本 / 绑定收口**：`common/ScriptLuaVM`、`common/LuaInterface`、`sandbox/core/script/LuaClassNameTraits`、`sandbox/scripting/*`、`game/GameToLua` 收口到统一的 `sandbox/scripting/{vm,binding,traits,plugin}`，减少 Lua 接口/绑定入口散落在 4 个目录。
+- [ ] **单文件子目录扁平化**：`sandbox/core/component/`（仅 IComponent）、`sandbox/core/script/`（仅 LuaClassNameTraits）扁平回 `sandbox/core/`，避免单元素子目录。
+- [ ] **systems/ui → systems/hud + 删 UIService**：当前 `systems/ui/` 实为 Gorilla HUD overlay，命名过宽；`systems/service/UIService` 是 UIManager 的空转发壳，删除后调用点直连 UIManager。
+- [ ] **systems/service 拆分 / 改名**：`service/` 混了 Factory（Object/Physics/Scene/Agent/Soldier）和 Service（Camera/UI），统一为 `services/` 或拆 `factory/` + `services/`。
+
 ## 11. P2：资源与内容管线
 
 ### 目标
@@ -233,7 +242,7 @@
 
 ## 12. 近期执行队列（当前安排）
 
-这部分记录当前最新判断，后续短期开发优先按这里排。专项细节仍以 `docs/fairygui-business-framework-todo.md`、`docs/ai-roadmap.md` 和对应实现文档为准。
+这部分记录当前最新判断，后续短期开发优先按这里排。专项细节仍以 `docs/fgui/fairygui-business-framework-todo.md`、`docs/ai-roadmap.md` 和对应实现文档为准。
 
 ### 第一阶段：FGUI 压力样例与性能观测
 

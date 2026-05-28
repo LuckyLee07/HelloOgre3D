@@ -108,8 +108,8 @@ src/Engine + src/External
 - 当前重构方向：处理 Object 体系长继承链、减少冗余、拆分引擎耦合逻辑与业务逻辑。
 - AI 后续方向：以 `docs/ai-roadmap.md` 为事实来源。
 - 非 AI 后续方向：以 `docs/project-roadmap.md` 为事实来源。
-- FGUI 后续方向：优先参考 `docs/fairygui-final-roadmap.md`、`docs/fairygui-business-framework-todo.md`、`docs/fairygui-autogen-workflow.md`。
-- FGUI 阶段性生产验收：以 `docs/fairygui-production-gate.md` 和 `tools/run_fgui_production_gate.ps1` 为准。
+- FGUI 后续方向：优先参考 `docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`、`docs/fgui/fairygui-autogen-workflow.md`。
+- FGUI 阶段性生产验收：以 `docs/fgui/fairygui-production-gate.md` 和 `tools/run_fgui_production_gate.ps1` 为准。
 
 ## 中长期规划
 
@@ -162,10 +162,10 @@ src/Engine + src/External
 ## FGUI 专项规则
 
 - FGUI 长期路线参考：
-  - `docs/fairygui-final-roadmap.md`
-  - `docs/fairygui-business-framework-todo.md`
-  - `docs/fairygui-autogen-workflow.md`
-  - `docs/fairygui-assets.md`
+  - `docs/fgui/fairygui-final-roadmap.md`
+  - `docs/fgui/fairygui-business-framework-todo.md`
+  - `docs/fgui/fairygui-autogen-workflow.md`
+  - `docs/fgui/fairygui-assets.md`
 - C++ 侧负责 runtime 适配、渲染、输入、handle、事件桥；Lua 侧负责 UI 生命周期、业务逻辑、MVC、资源策略。
 - Lua 不长期直接持有 FairyGUI / Cocos 底层对象指针，优先通过 handle 和 binding id 通信。
 - 复杂 UI 默认走 Ctrl / Model / View / AutoGen 结构；简单调试 UI 可用轻量 View。

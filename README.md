@@ -2,6 +2,26 @@
 
 目标：通过重构游戏案例，将日常开发中的一些经验沉淀下来
 
+## 当前路线索引 ##
+
+- 项目级路线：`docs/project-roadmap.md`
+- C++ 对象模型与组件化边界：`docs/cpp-object-model-refactor-roadmap.md`
+- Soldier / Agent 对象链路重构：`docs/SoldierObjectRefactor.md`
+- AI 后续能力路线：`docs/ai-roadmap.md`、`docs/AIArchitectureBeyondBook.md`
+- FGUI 专项路线：`docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`
+- FGUI 阶段性生产验收：`docs/fgui/fairygui-production-gate.md`
+
+## 当前待办总览 ##
+
+详细任务不在 README 维护，避免和路线文档重复。当前优先级按以下方向推进：
+
+- FGUI：业务 UI 框架、输入 / 层级边界、复杂控件、资源与生命周期验收。
+- Runtime：Ogre / OIS / FGUI / Tracy 适配逻辑继续向 `runtime` 收口。
+- 对象模型：Agent / Soldier 组件化深化，优先处理 Blackboard owner 泛化、FSM 共享 Blackboard、AgentObject 瘦身。
+- AI：AI Debug View、Local / Team / Global 事件、AI 调度与 Tracy、Vision / Memory / TeamBlackboard / InfluenceMap。
+- 玩法基础设施：SkillTimeline、TriggerVolume、配置化与热重载。
+- 工程稳定性：非 FGUI smoke、固定随机种子、资源路径 / 大小写检查、Lua error 与崩溃诊断。
+
 2024-03-15：
 1、剥离出最基础的ogre3d的依赖库，挪到src/external目录下
 
@@ -53,7 +73,7 @@
 最近工作的内容都是跟重构解耦相关，刚好目前这个项目也需要做个重构，因此计划先把Object那块的长继承链以及冗余问题给解决掉，也方便后续内容的扩展
 
 
-新增代办：决策树/行为树/黑板/触发器/技能timeline/Jobs多线程等功能实现，以及崩溃上报模块/optick性能分析模块，结合imgui开发性能分析面板
+当时新增代办（已拆分到当前路线文档）：AI、技能 timeline、触发器、Jobs、崩溃诊断、性能分析与调试面板等方向，后续以“当前路线索引”和“当前待办总览”为准。
 
 ## macOS / Xcode 迁移说明（进行中）
 

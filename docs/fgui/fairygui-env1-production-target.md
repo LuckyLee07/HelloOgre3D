@@ -7,7 +7,7 @@
 注意：
 
 - 本文档定义的是最终目标和能力地图，不改变当前迭代顺序。
-- 当前开发仍按 `docs/fairygui-business-framework-todo.md`、`docs/fairygui-final-roadmap.md` 和近期任务安排推进。
+- 当前开发仍按 `docs/fgui/fairygui-business-framework-todo.md`、`docs/fgui/fairygui-final-roadmap.md` 和近期任务安排推进。
 - env1 作为能力对标对象，路径为 `F:\env1_trunk`，重点参考其 `MiniUIManager`、`MiniUI` 控件层、AutoGen/MVC 业务用法和输入/IME 链路。
 
 ## 对标结论
@@ -242,7 +242,7 @@ ctrl:RefreshGoods(goodsList)
 - [x] AutoGen Python 编译检查。
 - [x] AutoGen `--check --strict`。
 - [x] FGUI native 入口静态防回退检查。
-- [x] FGUI production gate 一键入口，见 `docs/fairygui-production-gate.md`。
+- [x] FGUI production gate 一键入口，见 `docs/fgui/fairygui-production-gate.md`。
 - [ ] FGUI selftest all。
 - [ ] FGUI long loop。
 - [x] 资源和生命周期泄露检查。
@@ -269,9 +269,9 @@ ctrl:RefreshGoods(goodsList)
 
 当前近期开发仍按已有计划执行：
 
-- 短期任务继续参考 `docs/fairygui-business-framework-todo.md`。
-- 总体路线继续参考 `docs/fairygui-final-roadmap.md`。
-- AutoGen 细节继续参考 `docs/fairygui-autogen-workflow.md`。
-- 资源规范继续参考 `docs/fairygui-assets.md`。
+- 短期任务继续参考 `docs/fgui/fairygui-business-framework-todo.md`。
+- 总体路线继续参考 `docs/fgui/fairygui-final-roadmap.md`。
+- AutoGen 细节继续参考 `docs/fgui/fairygui-autogen-workflow.md`。
+- 资源规范继续参考 `docs/fgui/fairygui-assets.md`。
 
 当当前计划中的阶段任务完成后，可以回到本文档按 P0-P3 对照检查，决定是否进入下一轮生产级 MiniUI 追平工作。
