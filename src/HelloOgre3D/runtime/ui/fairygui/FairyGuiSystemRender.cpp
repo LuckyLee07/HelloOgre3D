@@ -1,4 +1,4 @@
-﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemRenderHelpers.h"
 
 void FairyGuiSystemImpl::handleTrianglesCommand(const cocos2d::TrianglesCommand& command)
 {

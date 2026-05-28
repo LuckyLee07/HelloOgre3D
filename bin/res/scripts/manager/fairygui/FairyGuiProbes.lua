@@ -11,15 +11,15 @@ function FairyGuiProbes:Init(owner)
 end
 
 function FairyGuiProbes:OpenMaskProbe(param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
 	param = param or {}
 	local key = param.key or "MaskProbe"
 	local uiName = param.uiName or key
-	self:CloseUI(key, true)
+	owner:CloseUI(key, true)
 
 	local assets = param.assets or {}
 	local backgroundPath = param.backgroundImage or assets.background
@@ -36,15 +36,15 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local function addImage(parentHandle, name, path, x, y, width, height, alpha)
-		local childHandle = self:CreateLoader(parentHandle, name, path)
+		local childHandle = owner:CreateLoader(parentHandle, name, path)
 		if childHandle == nil or childHandle <= 0 then
 			return nil
 		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
-		self:SetTouchable(childHandle, false)
+		owner:SetPosition(childHandle, x, y)
+		owner:SetSize(childHandle, width, height)
+		owner:SetTouchable(childHandle, false)
 		if alpha ~= nil then
-			self:SetAlpha(childHandle, alpha)
+			owner:SetAlpha(childHandle, alpha)
 		end
 		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
 			NativeApi:removeFairyGuiObject(childHandle)
@@ -54,13 +54,13 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local function addGraphPolygon(parentHandle, name, x, y, width, height, sides, red, green, blue, alpha)
-		local childHandle = self:CreateGraphRegularPolygon(parentHandle, name, width, height, sides or 6, red or 0.35, green or 0.8, blue or 1.0, alpha or 1.0)
+		local childHandle = owner:CreateGraphRegularPolygon(parentHandle, name, width, height, sides or 6, red or 0.35, green or 0.8, blue or 1.0, alpha or 1.0)
 		if childHandle == nil or childHandle <= 0 then
 			return nil
 		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
-		self:SetTouchable(childHandle, false)
+		owner:SetPosition(childHandle, x, y)
+		owner:SetSize(childHandle, width, height)
+		owner:SetTouchable(childHandle, false)
 		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
 			NativeApi:removeFairyGuiObject(childHandle)
 			return nil
@@ -69,12 +69,12 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local function addText(parentHandle, name, text, x, y, width, height, red, green, blue)
-		local childHandle = self:CreateText(parentHandle, name, text, 18, red, green, blue)
+		local childHandle = owner:CreateText(parentHandle, name, text, 18, red, green, blue)
 		if childHandle == nil or childHandle <= 0 then
 			return nil
 		end
-		self:SetPosition(childHandle, x, y)
-		self:SetSize(childHandle, width, height)
+		owner:SetPosition(childHandle, x, y)
+		owner:SetSize(childHandle, width, height)
 		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(childHandle, parentHandle) then
 			NativeApi:removeFairyGuiObject(childHandle)
 			return nil
@@ -83,13 +83,13 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local function createNestedPanel(parentHandle, inverted)
-		local nestedHandle = self:CreateContainer("nested_mask_panel", parentHandle)
+		local nestedHandle = owner:CreateContainer("nested_mask_panel", parentHandle)
 		if nestedHandle == nil or nestedHandle <= 0 then
 			return nil
 		end
-		self:SetPosition(nestedHandle, 94, 82)
-		self:SetSize(nestedHandle, 132, 74)
-		self:SetTouchable(nestedHandle, false)
+		owner:SetPosition(nestedHandle, 94, 82)
+		owner:SetSize(nestedHandle, 132, 74)
+		owner:SetTouchable(nestedHandle, false)
 		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(nestedHandle, parentHandle) then
 			NativeApi:removeFairyGuiObject(nestedHandle)
 			return nil
@@ -103,7 +103,7 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		else
 			nestedMask = addImage(nestedHandle, "nested_mask", maskPath, 14, 8, 104, 58)
 		end
-		if nestedContent == nil or nestedAccent == nil or nestedMask == nil or not self:SetMask(nestedHandle, nestedMask, inverted == true) then
+		if nestedContent == nil or nestedAccent == nil or nestedMask == nil or not owner:SetMask(nestedHandle, nestedMask, inverted == true) then
 			NativeApi:removeFairyGuiObject(nestedHandle)
 			return nil
 		end
@@ -111,13 +111,13 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local function createPanel(parentHandle, name, x, y, inverted)
-		local panelHandle = self:CreateContainer(name, parentHandle)
+		local panelHandle = owner:CreateContainer(name, parentHandle)
 		if panelHandle == nil or panelHandle <= 0 then
 			return nil
 		end
-		self:SetPosition(panelHandle, x, y)
-		self:SetSize(panelHandle, 320, 210)
-		self:SetTouchable(panelHandle, false)
+		owner:SetPosition(panelHandle, x, y)
+		owner:SetSize(panelHandle, 320, 210)
+		owner:SetTouchable(panelHandle, false)
 		if NativeApi.addFairyGuiObjectToParent == nil or not NativeApi:addFairyGuiObjectToParent(panelHandle, parentHandle) then
 			NativeApi:removeFairyGuiObject(panelHandle)
 			return nil
@@ -133,7 +133,7 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		else
 			mask = addImage(panelHandle, "stencil_mask", maskPath, 72, 46, 176, 118)
 		end
-		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not self:SetMask(panelHandle, mask, inverted) then
+		if background == nil or stripA == nil or stripB == nil or stripC == nil or mask == nil or not owner:SetMask(panelHandle, mask, inverted) then
 			NativeApi:removeFairyGuiObject(panelHandle)
 			return nil
 		end
@@ -144,12 +144,12 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		return panelHandle
 	end
 
-	local handle = self:CreateContainer("FairyGuiMaskProbe")
+	local handle = owner:CreateContainer("FairyGuiMaskProbe")
 	if handle == nil or handle <= 0 then
 		return nil
 	end
-	self:SetSize(handle, 760, 330)
-	self:SetTouchable(handle, true)
+	owner:SetSize(handle, 760, 330)
+	owner:SetTouchable(handle, true)
 
 	local background = addImage(handle, "probe_bg", backgroundPath, 0, 24, 760, 286, 0.7)
 	local title = addText(handle, "probe_title", "FairyGUI Mask Probe", 12, 0, 320, 24, 255, 244, 210)
@@ -172,13 +172,13 @@ function FairyGuiProbes:OpenMaskProbe(param)
 	end
 
 	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName, param) then
+	if not owner:AttachToLayer(handle, layerName, param) then
 		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	if param.x ~= nil and param.y ~= nil then
-		self:SetPosition(handle, param.x, param.y)
+		owner:SetPosition(handle, param.x, param.y)
 	elseif param.center ~= false then
 		NativeApi:centerFairyGuiObject(handle, param.restraint == true)
 	end
@@ -192,10 +192,10 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		uiName = uiName,
 		cache = false,
 		layer = layerName,
-		popupGroup = self:GetPopupGroup(param),
+		popupGroup = owner:GetPopupGroup(param),
 		popupMode = param.popupMode or "stack",
-		uiGroup = self:GetUIGroup(param),
-		sceneName = self:GetSceneName(param),
+		uiGroup = owner:GetUIGroup(param),
+		sceneName = owner:GetSceneName(param),
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
 		parentHandle = param.parentHandle or param.rootHandle,
@@ -203,45 +203,45 @@ function FairyGuiProbes:OpenMaskProbe(param)
 		focusOrder = param.focusOrder,
 		tabFocus = param.tabFocus ~= false,
 	}
-	self:RegisterObject(objectInfo)
+	owner:RegisterObject(objectInfo)
 	objectInfo.cacheHiddenAtMs = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:ApplyScreenAdapt(objectInfo)
-	self:PushStack(objectInfo)
+	owner:AssignLayer(objectInfo, objectInfo.layer)
+	owner:ApplyScreenAdapt(objectInfo)
+	owner:PushStack(objectInfo)
 	return handle
 end
 
 function FairyGuiProbes:OpenTextInputProbe(param)
-	local self = self.owner
-	if self == nil then
+	local owner = self.owner
+	if owner == nil then
 		return nil
 	end
 
 	param = param or {}
 	local key = param.key or "TextInputProbe"
-	self:CloseUI(key, true)
+	owner:CloseUI(key, true)
 
-	local handle = self:CreateContainer("FairyGuiTextInputProbe")
+	local handle = owner:CreateContainer("FairyGuiTextInputProbe")
 	if handle == nil or handle <= 0 then
 		return nil
 	end
-	self:SetSize(handle, 480, 160)
-	self:SetTouchable(handle, true)
+	owner:SetSize(handle, 480, 160)
+	owner:SetTouchable(handle, true)
 
-	local titleHandle = self:CreateText(handle, "probe_title", param.title or "FairyGUI TextInput Probe", 18, 255, 244, 210)
-	local inputHandle = self:CreateTextInput(handle, "probe_input", param.text or "", 20, 230, 255, 235)
-	local hintHandle = self:CreateText(handle, "probe_hint", "type, backspace, enter", 16, 190, 210, 230)
+	local titleHandle = owner:CreateText(handle, "probe_title", param.title or "FairyGUI TextInput Probe", 18, 255, 244, 210)
+	local inputHandle = owner:CreateTextInput(handle, "probe_input", param.text or "", 20, 230, 255, 235)
+	local hintHandle = owner:CreateText(handle, "probe_hint", "type, backspace, enter", 16, 190, 210, 230)
 	if titleHandle == nil or titleHandle <= 0 or inputHandle == nil or inputHandle <= 0 or hintHandle == nil or hintHandle <= 0 then
 		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
-	self:SetPosition(titleHandle, 0, 0)
-	self:SetSize(titleHandle, 420, 28)
-	self:SetPosition(inputHandle, 0, 44)
-	self:SetSize(inputHandle, 420, 42)
-	self:SetPosition(hintHandle, 0, 104)
-	self:SetSize(hintHandle, 420, 28)
+	owner:SetPosition(titleHandle, 0, 0)
+	owner:SetSize(titleHandle, 420, 28)
+	owner:SetPosition(inputHandle, 0, 44)
+	owner:SetSize(inputHandle, 420, 42)
+	owner:SetPosition(hintHandle, 0, 104)
+	owner:SetSize(hintHandle, 420, 28)
 	if NativeApi.addFairyGuiObjectToParent == nil
 		or not NativeApi:addFairyGuiObjectToParent(titleHandle, handle)
 		or not NativeApi:addFairyGuiObjectToParent(inputHandle, handle)
@@ -251,13 +251,13 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 	end
 
 	local layerName = param.layer or "Top"
-	if not self:AttachToLayer(handle, layerName, param) then
+	if not owner:AttachToLayer(handle, layerName, param) then
 		NativeApi:removeFairyGuiObject(handle)
 		return nil
 	end
 
 	if param.x ~= nil and param.y ~= nil then
-		self:SetPosition(handle, param.x, param.y)
+		owner:SetPosition(handle, param.x, param.y)
 	elseif param.center ~= false then
 		NativeApi:centerFairyGuiObject(handle, param.restraint == true)
 	end
@@ -271,10 +271,10 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 		uiName = "TextInputProbe",
 		cache = false,
 		layer = layerName,
-		popupGroup = self:GetPopupGroup(param),
+		popupGroup = owner:GetPopupGroup(param),
 		popupMode = param.popupMode or "stack",
-		uiGroup = self:GetUIGroup(param),
-		sceneName = self:GetSceneName(param),
+		uiGroup = owner:GetUIGroup(param),
+		sceneName = owner:GetSceneName(param),
 		closeOnSceneChange = param.closeOnSceneChange ~= false,
 		destroyOnSceneChange = param.destroyOnSceneChange == true,
 		inputHandle = inputHandle,
@@ -283,15 +283,15 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 		focusOrder = param.focusOrder or { "probe_input" },
 		tabFocus = param.tabFocus ~= false,
 	}
-	self:RegisterObject(objectInfo)
+	owner:RegisterObject(objectInfo)
 	objectInfo.cacheHiddenAtMs = nil
-	self:AssignLayer(objectInfo, objectInfo.layer)
-	self:ApplyScreenAdapt(objectInfo)
-	self:PushStack(objectInfo)
+	owner:AssignLayer(objectInfo, objectInfo.layer)
+	owner:ApplyScreenAdapt(objectInfo)
+	owner:PushStack(objectInfo)
 	if param.textInputPolicy ~= nil then
-		self:SetTextInputPolicy(handle, "probe_input", param.textInputPolicy)
+		owner:SetTextInputPolicy(handle, "probe_input", param.textInputPolicy)
 	elseif param.maxLength ~= nil or param.restrict ~= nil or param.inputType ~= nil then
-		self:SetTextInputPolicy(handle, "probe_input", {
+		owner:SetTextInputPolicy(handle, "probe_input", {
 			maxLength = param.maxLength,
 			restrict = param.restrict,
 			inputType = param.inputType,
@@ -299,11 +299,11 @@ function FairyGuiProbes:OpenTextInputProbe(param)
 			allowNegative = param.allowNegative,
 		})
 	end
-	self:AddChanged(handle, "probe_input", function(evt)
-		print("[FGUI] text input changed:", self:GetText(handle, "probe_input"), evt.senderHandle)
+	owner:AddChanged(handle, "probe_input", function(evt)
+		print("[FGUI] text input changed:", owner:GetText(handle, "probe_input"), evt.senderHandle)
 	end)
-	self:AddSubmit(handle, "probe_input", function(evt)
-		print("[FGUI] text input submit:", self:GetText(handle, "probe_input"), evt.senderHandle)
+	owner:AddSubmit(handle, "probe_input", function(evt)
+		print("[FGUI] text input submit:", owner:GetText(handle, "probe_input"), evt.senderHandle)
 	end)
 	return handle, inputHandle
 end

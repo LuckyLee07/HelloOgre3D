@@ -112,42 +112,33 @@ function FairyGuiLayers:Init(owner)
 	self.owner = owner
 	self.store = owner ~= nil and owner.GetStore ~= nil and owner:GetStore() or nil
 	local objectState = getObjectState(owner)
-	local layerState = getLayerState(owner)
+	local layerState = getLayerState(owner) or self:GetLayerState()
 	self.objects = objectState ~= nil and objectState.objects or self.objects or {}
-	self.hiddenObjects = objectState ~= nil and objectState.hiddenObjects or self.hiddenObjects or {}
-	self.currentSceneName = layerState ~= nil and layerState.currentSceneName or self.currentSceneName or "Default"
-	self.designWidth = layerState ~= nil and layerState.designWidth or self.designWidth
-	self.designHeight = layerState ~= nil and layerState.designHeight or self.designHeight
-	self.scaleMode = layerState ~= nil and layerState.scaleMode or self.scaleMode or "stretch"
+	layerState.currentSceneName = layerState.currentSceneName or "Default"
+	layerState.scaleMode = layerState.scaleMode or "stretch"
+	layerState.safeArea = layerState.safeArea or normalizeSafeArea(0, 0, 0, 0)
 	self.layers = layerState ~= nil and layerState.layers or self.layers or copyTable(DEFAULT_LAYER_ORDER)
 	self.layerPolicies = layerState ~= nil and layerState.layerPolicies or self.layerPolicies or {}
 	self.layerNextOrder = layerState ~= nil and layerState.layerNextOrder or self.layerNextOrder or {}
 	self.layerObjects = layerState ~= nil and layerState.layerObjects or self.layerObjects or {}
 	self.layerRoots = layerState ~= nil and layerState.layerRoots or self.layerRoots or {}
-	self.safeArea = layerState ~= nil and layerState.safeArea or self.safeArea or normalizeSafeArea(0, 0, 0, 0)
 	self.uiStack = layerState ~= nil and layerState.uiStack or self.uiStack or {}
 	self.popupStack = layerState ~= nil and layerState.popupStack or self.popupStack or {}
 	self.stackEntriesByKey = layerState ~= nil and layerState.stackEntriesByKey or self.stackEntriesByKey or {}
-	self.nextStackSerial = layerState ~= nil and layerState.nextStackSerial or self.nextStackSerial or 0
+	layerState.nextStackSerial = layerState.nextStackSerial or 0
 	for layerName, _ in pairs(self.layers) do
 		self.layerNextOrder[layerName] = self.layerNextOrder[layerName] or 0
 		self.layerObjects[layerName] = self.layerObjects[layerName] or {}
 	end
 	if layerState ~= nil then
-		layerState.currentSceneName = self.currentSceneName
-		layerState.designWidth = self.designWidth
-		layerState.designHeight = self.designHeight
-		layerState.scaleMode = self.scaleMode
 		layerState.layers = self.layers
 		layerState.layerPolicies = self.layerPolicies
 		layerState.layerNextOrder = self.layerNextOrder
 		layerState.layerObjects = self.layerObjects
 		layerState.layerRoots = self.layerRoots
-		layerState.safeArea = self.safeArea
 		layerState.uiStack = self.uiStack
 		layerState.popupStack = self.popupStack
 		layerState.stackEntriesByKey = self.stackEntriesByKey
-		layerState.nextStackSerial = self.nextStackSerial
 	end
 	for layerName, policy in pairs(DEFAULT_LAYER_POLICY) do
 		if self.layerPolicies[layerName] == nil then
@@ -163,9 +154,50 @@ function FairyGuiLayers:GetStore()
 	return self.store
 end
 
+function FairyGuiLayers:GetLayerState()
+	local store = self:GetStore()
+	if store ~= nil and store.GetLayerState ~= nil then
+		return store:GetLayerState()
+	end
+
+	if self.layerState == nil then
+		self.layerState = {
+			currentSceneName = "Default",
+			scaleMode = "stretch",
+			layers = copyTable(DEFAULT_LAYER_ORDER),
+			layerPolicies = {},
+			layerNextOrder = {},
+			layerObjects = {},
+			layerRoots = {},
+			safeArea = normalizeSafeArea(0, 0, 0, 0),
+			uiStack = {},
+			popupStack = {},
+			stackEntriesByKey = {},
+			nextStackSerial = 0,
+		}
+	end
+	return self.layerState
+end
+
 function FairyGuiLayers:GetCurrentSceneName()
 	local store = self:GetStore()
-	return store ~= nil and store:GetCurrentScene() or self.currentSceneName or "Default"
+	if store ~= nil and store.GetCurrentScene ~= nil then
+		return store:GetCurrentScene()
+	end
+
+	local layerState = self:GetLayerState()
+	return layerState.currentSceneName or "Default"
+end
+
+function FairyGuiLayers:IsObjectHidden(keyOrObjectInfo)
+	local store = self:GetStore()
+	if store ~= nil and store.IsHidden ~= nil then
+		return store:IsHidden(keyOrObjectInfo)
+	end
+
+	local objectState = getObjectState(self.owner)
+	local key = type(keyOrObjectInfo) == "table" and keyOrObjectInfo.key or keyOrObjectInfo
+	return key ~= nil and objectState ~= nil and objectState.hiddenObjects[key] ~= nil
 end
 
 function FairyGuiLayers:GetObjectInfo(keyOrHandle)
@@ -256,8 +288,9 @@ function FairyGuiLayers:GetSafeArea()
 		return normalizeSafeArea(0, 0, 0, 0)
 	end
 
-	self.safeArea = self.safeArea or normalizeSafeArea(0, 0, 0, 0)
-	return copyTable(self.safeArea)
+	local layerState = self:GetLayerState()
+	layerState.safeArea = layerState.safeArea or normalizeSafeArea(0, 0, 0, 0)
+	return copyTable(layerState.safeArea)
 end
 
 function FairyGuiLayers:SetSafeArea(leftOrRect, top, right, bottom)
@@ -266,11 +299,8 @@ function FairyGuiLayers:SetSafeArea(leftOrRect, top, right, bottom)
 		return normalizeSafeArea(0, 0, 0, 0)
 	end
 
-	self.safeArea = normalizeSafeArea(leftOrRect, top, right, bottom)
-	local store = self:GetStore()
-	if store ~= nil then
-		store:GetLayerState().safeArea = self.safeArea
-	end
+	local layerState = self:GetLayerState()
+	layerState.safeArea = normalizeSafeArea(leftOrRect, top, right, bottom)
 	for _, objectInfo in pairs(self.objects or {}) do
 		local param = objectInfo.param or {}
 		if param.useSafeArea == true or param.safeArea == true then
@@ -471,11 +501,8 @@ function FairyGuiLayers:PushStack(objectInfo)
 		return false
 	end
 
-	self.nextStackSerial = (self.nextStackSerial or 0) + 1
-	local store = self:GetStore()
-	if store ~= nil then
-		store:GetLayerState().nextStackSerial = self.nextStackSerial
-	end
+	local layerState = self:GetLayerState()
+	layerState.nextStackSerial = (layerState.nextStackSerial or 0) + 1
 	local entry = {
 		key = objectInfo.key,
 		handle = objectInfo.handle,
@@ -485,7 +512,7 @@ function FairyGuiLayers:PushStack(objectInfo)
 		popupMode = objectInfo.popupMode,
 		priority = objectInfo.priority or 0,
 		sortingOrder = objectInfo.sortingOrder or 0,
-		serial = self.nextStackSerial,
+		serial = layerState.nextStackSerial,
 	}
 	self.stackEntriesByKey[objectInfo.key] = entry
 	table.insert(self.uiStack, entry)
@@ -508,7 +535,7 @@ function FairyGuiLayers:GetTopStackObject(stack, layerName)
 	for index = #stack, 1, -1 do
 		local entry = stack[index]
 		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
-		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil and (layerName == nil or objectInfo.layer == layerName) then
+		if objectInfo ~= nil and not self:IsObjectHidden(entry.key) and (layerName == nil or objectInfo.layer == layerName) then
 			if bestObject == nil
 				or (objectInfo.sortingOrder or 0) > (bestObject.sortingOrder or 0)
 				or ((objectInfo.sortingOrder or 0) == (bestObject.sortingOrder or 0) and (entry.serial or 0) > (bestEntry.serial or 0)) then
@@ -632,7 +659,7 @@ function FairyGuiLayers:GetTopPopupObjectByGroup(popupGroup)
 	for index = #self.popupStack, 1, -1 do
 		local entry = self.popupStack[index]
 		local objectInfo = entry ~= nil and self.objects[entry.key] or nil
-		if objectInfo ~= nil and self.hiddenObjects[entry.key] == nil and objectInfo.popupGroup == popupGroup then
+		if objectInfo ~= nil and not self:IsObjectHidden(entry.key) and objectInfo.popupGroup == popupGroup then
 			return objectInfo, entry
 		end
 	end
@@ -653,7 +680,7 @@ function FairyGuiLayers:ReopenObjectInfo(objectInfo, param)
 	objectInfo.uiGroup = self:GetUIGroup(objectInfo.param, objectInfo)
 	objectInfo.sceneName = self:GetSceneName(objectInfo.param, objectInfo)
 	objectInfo.closeOnSceneChange = objectInfo.param.closeOnSceneChange ~= false
-	self.hiddenObjects[objectInfo.key] = nil
+	owner:ShowObject(objectInfo)
 	self:SetVisible(objectInfo.handle, true)
 	if objectInfo.modalMaskHandle ~= nil then
 		self:SetVisible(objectInfo.modalMaskHandle, true)
@@ -767,7 +794,7 @@ function FairyGuiLayers:UpdateModalMaskSorting(objectInfo)
 		if NativeApi ~= nil and NativeApi.setFairyGuiObjectSortingOrder ~= nil then
 			NativeApi:setFairyGuiObjectSortingOrder(objectInfo.modalMaskHandle, (objectInfo.sortingOrder or self:GetLayerBaseOrder(objectInfo.layer)) - 1)
 		end
-		if self.hiddenObjects[objectInfo.key] == nil then
+		if not self:IsObjectHidden(objectInfo.key) then
 			self:SetVisible(objectInfo.modalMaskHandle, true)
 		end
 		updated = true
@@ -1168,17 +1195,12 @@ function FairyGuiLayers:SetDesignResolution(width, height, scaleMode)
 	if owner == nil then
 		return
 	end
-	self.designWidth = tonumber(width)
-	self.designHeight = tonumber(height)
+
+	local layerState = self:GetLayerState()
+	layerState.designWidth = tonumber(width)
+	layerState.designHeight = tonumber(height)
 	if scaleMode ~= nil then
-		self.scaleMode = scaleMode
-	end
-	local store = self:GetStore()
-	if store ~= nil then
-		local layerState = store:GetLayerState()
-		layerState.designWidth = self.designWidth
-		layerState.designHeight = self.designHeight
-		layerState.scaleMode = self.scaleMode
+		layerState.scaleMode = scaleMode
 	end
 end
 
@@ -1191,15 +1213,16 @@ function FairyGuiLayers:GetDesignTransform(param)
 	param = param or {}
 	local screenWidth = self:GetScreenWidth()
 	local screenHeight = self:GetScreenHeight()
-	local designWidth = tonumber(param.designWidth or self.designWidth)
-	local designHeight = tonumber(param.designHeight or self.designHeight)
+	local layerState = self:GetLayerState()
+	local designWidth = tonumber(param.designWidth or layerState.designWidth)
+	local designHeight = tonumber(param.designHeight or layerState.designHeight)
 	if screenWidth <= 0 or screenHeight <= 0 or designWidth == nil or designHeight == nil or designWidth <= 0 or designHeight <= 0 then
 		return 1, 1, 0, 0
 	end
 
 	local scaleX = screenWidth / designWidth
 	local scaleY = screenHeight / designHeight
-	local scaleMode = param.scaleMode or self.scaleMode or "stretch"
+	local scaleMode = param.scaleMode or layerState.scaleMode or "stretch"
 	if scaleMode == "fit" then
 		local scale = math.min(scaleX, scaleY)
 		return scale, scale, (screenWidth - designWidth * scale) * 0.5, (screenHeight - designHeight * scale) * 0.5
@@ -1225,7 +1248,8 @@ function FairyGuiLayers:ApplyDesignRect(rect, param)
 		return nil
 	end
 	param = param or {}
-	if param.useDesignScale ~= true and param.designWidth == nil and param.designHeight == nil and param.scaleMode == nil and self.designWidth == nil and self.designHeight == nil then
+	local layerState = self:GetLayerState()
+	if param.useDesignScale ~= true and param.designWidth == nil and param.designHeight == nil and param.scaleMode == nil and layerState.designWidth == nil and layerState.designHeight == nil then
 		return rect
 	end
 
@@ -1402,11 +1426,11 @@ function FairyGuiLayers:DumpStacks()
 	print("[FGUI] DumpStacks ui count=", #self.uiStack)
 	for index, entry in ipairs(self.uiStack) do
 		local objectInfo = self.objects[entry.key]
-		print("[FGUI] UIStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self.hiddenObjects[entry.key] ~= nil)
+		print("[FGUI] UIStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self:IsObjectHidden(entry.key))
 	end
 	print("[FGUI] DumpStacks popup count=", #self.popupStack)
 	for index, entry in ipairs(self.popupStack) do
 		local objectInfo = self.objects[entry.key]
-		print("[FGUI] PopupStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self.hiddenObjects[entry.key] ~= nil)
+		print("[FGUI] PopupStack", index, "key=", entry.key, "layer=", entry.layer, "mode=", entry.mode, "group=", entry.popupGroup, "popupMode=", entry.popupMode, "handle=", entry.handle, "hidden=", objectInfo ~= nil and self:IsObjectHidden(entry.key))
 	end
 end

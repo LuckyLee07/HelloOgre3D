@@ -1,7 +1,37 @@
 #ifndef __HELLO_FAIRY_GUI_SYSTEM_IMPL_H__
 #define __HELLO_FAIRY_GUI_SYSTEM_IMPL_H__
 
-#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
+#include "ui/fairygui/FairyGuiSystem.h"
+
+#include "cocos2d.h"
+
+#include <cstddef>
+#include <map>
+#include <string>
+#include <vector>
+
+namespace Ogre
+{
+	class ManualObject;
+	class RenderWindow;
+	class SceneManager;
+	class SceneNode;
+}
+
+namespace fairygui
+{
+	class EventContext;
+	class GController;
+	class GObject;
+	class GRoot;
+	class GTextInput;
+	class UIEventDispatcher;
+}
+
+#if defined(_WIN32)
+struct HWND__;
+typedef HWND__* HWND;
+#endif
 
 class FairyGuiSystemImpl : public cocos2d::RenderCommandSink
 {

@@ -58,7 +58,7 @@ function FairyGuiLifecycle:Init(owner)
 end
 
 function FairyGuiLifecycle:CollectOwnedHandles(objectInfo)
-	local self = self.owner
+	local owner = self.owner
 	local handles = {}
 	local handleSet = {}
 	if objectInfo == nil then
@@ -81,7 +81,7 @@ function FairyGuiLifecycle:CollectOwnedHandles(objectInfo)
 		end
 	end
 
-	local listState = self:GetStore():GetListState()
+	local listState = owner:GetStore():GetListState()
 	local index = 1
 	while index <= #handles do
 		local handle = handles[index]
@@ -104,7 +104,7 @@ function FairyGuiLifecycle:CollectOwnedHandles(objectInfo)
 end
 
 function FairyGuiLifecycle:CreateCloseSnapshot(objectInfo, ownedHandles)
-	local self = self.owner
+	local owner = self.owner
 	if objectInfo == nil then
 		return nil
 	end
@@ -120,7 +120,7 @@ function FairyGuiLifecycle:CreateCloseSnapshot(objectInfo, ownedHandles)
 		ownedHandles = {},
 	}
 	if ownedHandles == nil then
-		ownedHandles = self:CollectOwnedHandles(objectInfo)
+		ownedHandles = owner:CollectOwnedHandles(objectInfo)
 	end
 	for index, handle in ipairs(ownedHandles) do
 		snapshot.ownedHandles[index] = handle
@@ -129,23 +129,23 @@ function FairyGuiLifecycle:CreateCloseSnapshot(objectInfo, ownedHandles)
 end
 
 function FairyGuiLifecycle:CaptureCloseSnapshot(keyOrHandle)
-	local self = self.owner
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	local owner = self.owner
+	local objectInfo = owner:GetObjectInfo(keyOrHandle)
 	if objectInfo == nil then
 		return nil
 	end
-	local ownedHandles = self:CollectOwnedHandles(objectInfo)
-	return self:CreateCloseSnapshot(objectInfo, ownedHandles)
+	local ownedHandles = owner:CollectOwnedHandles(objectInfo)
+	return owner:CreateCloseSnapshot(objectInfo, ownedHandles)
 end
 
 function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
-	local self = self.owner
+	local owner = self.owner
 	local issues = {}
 	if objectInfo == nil then
 		table.insert(issues, "objectInfo=nil")
 		return issues
 	end
-	local store = self:GetStore()
+	local store = owner:GetStore()
 	local objectState = store:GetObjectState()
 	local layerState = store:GetLayerState()
 	local eventState = store:GetEventState()
@@ -330,7 +330,7 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 		end
 	end
 
-	local focusedHandle = self:GetFocusedHandle()
+	local focusedHandle = owner:GetFocusedHandle()
 	if focusedHandle ~= nil and handleSet[focusedHandle] == true then
 		table.insert(issues, "focusedHandle[" .. tostring(focusedHandle) .. "]")
 	end
@@ -338,8 +338,8 @@ function FairyGuiLifecycle:GetCloseResidue(objectInfo, ownedHandles)
 end
 
 function FairyGuiLifecycle:ValidateClosedObject(objectInfo, ownedHandles, label, printWhenClean)
-	local self = self.owner
-	local issues = self:GetCloseResidue(objectInfo, ownedHandles)
+	local owner = self.owner
+	local issues = owner:GetCloseResidue(objectInfo, ownedHandles)
 	if #issues <= 0 then
 		if printWhenClean == true then
 			print("[FGUI] close residue ok:", label or "", "key=", objectInfo and objectInfo.key)
@@ -349,45 +349,45 @@ function FairyGuiLifecycle:ValidateClosedObject(objectInfo, ownedHandles, label,
 
 	local message = table.concat(issues, "; ")
 	print("[FGUI] close residue warning:", label or "", "key=", objectInfo and objectInfo.key, message)
-	if self:IsStrictLifecycleEnabled() then
+	if owner:IsStrictLifecycleEnabled() then
 		error("[FGUI] close residue: " .. message)
 	end
 	return false, issues
 end
 
 function FairyGuiLifecycle:ClearFocusForHandles(ownedHandles)
-	local self = self.owner
-	local focusedHandle = self:GetFocusedHandle()
+	local owner = self.owner
+	local focusedHandle = owner:GetFocusedHandle()
 	if focusedHandle == nil or focusedHandle <= 0 then
 		return false
 	end
 	if not containsHandle(ownedHandles, focusedHandle) then
 		return false
 	end
-	return self:ClearFocus()
+	return owner:ClearFocus()
 end
 
 function FairyGuiLifecycle:AddTimer(keyOrHandle, duration, interval, tickFunc, finishFunc)
-	local self = self.owner
+	local owner = self.owner
 	if threadpool == nil or threadpool.timer == nil then
 		return nil
 	end
 
-	local objectInfo = self:GetObjectInfo(keyOrHandle)
+	local objectInfo = owner:GetObjectInfo(keyOrHandle)
 	if objectInfo == nil then
 		return nil
 	end
 
 	local key = objectInfo.key
-	local eventState = self:GetStore():GetEventState()
+	local eventState = owner:GetStore():GetEventState()
 	local seq = nil
 	local function removeTimerRecord()
 		if seq ~= nil then
-			self:RemoveTimerRecord(seq)
+			owner:RemoveTimerRecord(seq)
 		end
 	end
 	local function isOwnerAlive()
-		return key ~= nil and self:GetStore():GetObjectState().objects[key] ~= nil
+		return key ~= nil and owner:GetStore():GetObjectState().objects[key] ~= nil
 	end
 	local function callTimerCallback(callback, ...)
 		if type(callback) ~= "function" then
@@ -436,13 +436,13 @@ function FairyGuiLifecycle:AddTimer(keyOrHandle, duration, interval, tickFunc, f
 end
 
 function FairyGuiLifecycle:Delay(keyOrHandle, timeout, func)
-	local self = self.owner
-	return self:AddTimer(keyOrHandle, timeout, timeout, nil, func)
+	local owner = self.owner
+	return owner:AddTimer(keyOrHandle, timeout, timeout, nil, func)
 end
 
 function FairyGuiLifecycle:RemoveTimerRecord(timerId)
-	local self = self.owner
-	local eventState = self:GetStore():GetEventState()
+	local owner = self.owner
+	local eventState = owner:GetStore():GetEventState()
 	local timerInfo = eventState.timers[timerId]
 	if timerInfo == nil then
 		return false
@@ -460,12 +460,12 @@ function FairyGuiLifecycle:RemoveTimerRecord(timerId)
 end
 
 function FairyGuiLifecycle:CancelTimer(timerId)
-	local self = self.owner
+	local owner = self.owner
 	if timerId == nil then
 		return false
 	end
 
-	local removed = self:RemoveTimerRecord(timerId)
+	local removed = owner:RemoveTimerRecord(timerId)
 	if threadpool ~= nil and threadpool.cancel_timer ~= nil then
 		return threadpool:cancel_timer(timerId) or removed
 	end
@@ -473,12 +473,12 @@ function FairyGuiLifecycle:CancelTimer(timerId)
 end
 
 function FairyGuiLifecycle:ClearTimersForKey(key)
-	local self = self.owner
+	local owner = self.owner
 	if key == nil then
 		return 0
 	end
 
-	local timerList = self:GetStore():GetEventState().timersByKey[key]
+	local timerList = owner:GetStore():GetEventState().timersByKey[key]
 	if timerList == nil then
 		return 0
 	end
@@ -489,7 +489,7 @@ function FairyGuiLifecycle:ClearTimersForKey(key)
 	end
 	local removedCount = 0
 	for _, timerId in ipairs(timerIds) do
-		if self:CancelTimer(timerId) then
+		if owner:CancelTimer(timerId) then
 			removedCount = removedCount + 1
 		end
 	end
@@ -497,8 +497,8 @@ function FairyGuiLifecycle:ClearTimersForKey(key)
 end
 
 function FairyGuiLifecycle:GetTimerCountForKey(key)
-	local self = self.owner
-	local timerList = self:GetStore():GetEventState().timersByKey[key]
+	local owner = self.owner
+	local timerList = owner:GetStore():GetEventState().timersByKey[key]
 	return tableCount(timerList)
 end
 

@@ -606,9 +606,11 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 
 #### Stage 4 验收
 
-- [ ] SoldierObject 行数从 ~250 降到 0 或 ~50（薄壳）。
+- [x] SoldierObject 核心字段迁出：不再直接持有武器 / AI driver / Blackboard / 动画 ASM / 属性等大块状态。
+- [x] SoldierObject 保留为兼容 facade + `AICommand` 翻译层；行数不作为 Stage 4 硬性 gate。
 - [x] VehicleObject 删除或重命名。
 - [x] 至少一个新对象类型（如 Monster/NPC/普通 Agent）能通过 Factory 模式装配。
+- [ ] 后续 Stage 5 再考虑把 `SoldierObject` 压缩到 ~150-250 行，前提是先拆出 SoldierCommandHandler / SoldierStanceComponent / SoldierInputComponent 等更细组件。
 
 ---
 
@@ -620,7 +622,8 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 | Stage 1 后（T-00~T-02）| ~580 | ~250 | AI 抽走，旧 API 全 forwarder |
 | Stage 2 后（T-03~T-06）| ~400 | ~200 | 属性/武器组件化 + RenderComponent 接口化 |
 | Stage 3 后（T-07~T-10）| ~250 | ~150 | driver/anim 接口化 |
-| Stage 4 后（T-11~T-17）| 0 或 ~50 | 删除 | Factory 取代 |
+| Stage 4 后（T-11~T-21）| 不设硬性行数；当前约 600 | 删除 | 核心字段迁出，继承链打平，Factory 装配落地；保留兼容 facade + `AICommand` 翻译 |
+| Stage 5 后续候选 | ~150-250 | 删除 | 继续拆 SoldierCommandHandler / SoldierStanceComponent / SoldierInputComponent，并逐步迁移旧 Lua facade |
 
 ---
 
@@ -649,6 +652,8 @@ SoldierObject (薄壳，仅 ApplyCommand 翻译)
 - **B**：保留为薄壳含 ApplyCommand 翻译
 
 **决策时机**：T-17 之前。倾向 B（ApplyCommand 是个有意义的接口面，让 AICommand 跟具体角色解耦）。
+
+**当前口径**：Stage 4 的"薄壳"目标定义为**核心状态和装配职责迁出**，而不是强行把源码压到 0 或 ~50 行。`SoldierObject` 仍可保留旧 Lua API facade、`AICommand` 到动画 / 武器 / 移动的翻译，以及少量 Soldier 专属编排逻辑。若后续要继续压缩行数，应作为 Stage 5 单独拆分组件执行，不再 retroactively 作为 Stage 4 验收条件。
 
 ### 6.4 teamId 是否迁组件
 

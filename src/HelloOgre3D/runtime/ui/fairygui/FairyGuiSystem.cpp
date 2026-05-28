@@ -1,4 +1,4 @@
-﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemCommonHelpers.h"
 
 FairyGuiSystem::FairyGuiSystem()
 	: m_impl(new FairyGuiSystemImpl())

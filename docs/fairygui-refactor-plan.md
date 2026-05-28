@@ -101,7 +101,7 @@ FGUI 子系统已经完成过两轮拆分：C++ 侧 `FairyGuiLuaApi*` 拆入 `lu
 | 守卫断言（check_fgui_static.ps1） | 约束内容 | 受影响步骤 | 应对 |
 |---|---|---|---|
 | `Test-FairyGuiLuaFrameworkGuard` L156-166 | shim 必须存在且内容恰为 `return require("...fairygui.FairyGuiManager")` | R00 / R07 | 保留 shim；删除须同步改此断言 |
-| 同上 L168-186 | `FairyGuiManager.lua` 必须 `require` 全部 9 个子模块 | 全程 | 中央 facade 不得移除任一子模块 require；新增 `FairyGuiStore` 不在此清单内，无需登记 |
+| 同上 L168-186 | `FairyGuiManager.lua` 必须 `require` `FairyGuiStore` 和全部 9 个子模块 | 全程 | 中央 facade 不得移除 Store 或任一子模块 require |
 | 同上 L217-236 | `FairyGuiProfiler.lua` 必须含 snapshot/panel 字段 | R05(Profiler) | 迁状态不动这些方法/字段文本 |
 | `Test-FairyGuiProductionFeatureGuard` L360-390 | `FairyGuiManager.lua` 必须含约 28 个 `function FairyGuiManager:XXX` **定义文本** | R02 / R03 | 收口后这些方法**必须以薄 wrapper 形式留在本文件**，否则同步改断言 |
 | 同上 L392-405 | `FairyGuiServices.lua` 必须含 `DEFAULT_SERVICE_SKINS` / `RegisterServiceSkin` / `ResolveServiceSkin` / `ShowHoverTip` / `HideTip` 及 `serviceSkinName` / `popupMenuAnchorRect` / `tipAnchorRect` 等标记 | R04 | 拆分后这些方法/常量须留在 facade，或在同一步更新断言 |
@@ -129,7 +129,7 @@ return require("res.scripts.manager.fairygui.FairyGuiManager")
 ### 动作
 
 1. 保留 `bin/res/scripts/manager/FairyGuiManager.lua`，把它定义为 compatibility facade。
-2. `script_init.lua` 可以继续使用短路径，也可以改成真实路径；如果改成真实路径，shim 仍然保留给历史脚本和门禁。
+2. `script_init.lua` 使用真实路径 `res.scripts.manager.fairygui.FairyGuiManager`；shim 仍然保留给历史脚本和门禁。
 3. 文档和命名规范改成“新代码不新增短路径 require”，而不是“立即删除 shim”。
 
 ### 验收
@@ -191,10 +191,6 @@ end
 function FairyGuiStore:GetLayerState()
 	return self.layerState
 end
-
-function FairyGuiStore:BindCoreAliases(target)
-	-- 临时兼容 owner.X / self.X，R02 删除。
-end
 ```
 
 ### 动作
@@ -203,13 +199,13 @@ end
 2. `FairyGuiManager.lua` 顶部 require `FairyGuiStore`。
 3. `FairyGuiManager:Init()` 第一行创建 `self.store`，并增加 `GetStore()`。
 4. Lifecycle / Layers 初始化时从 `owner:GetStore()` 取 state，而不是各自创建状态表。
-5. Store 提供 `BindCoreAliases(target)`，把核心状态临时挂回 Manager / Lifecycle / Layers，确保旧访问路径不变。
+5. 如需拆成多次合入，Store 可以临时提供 alias 兼容；进入 R02 后必须删除，不作为长期 API。
 6. 只迁移表创建权，不在本步大规模替换所有读写。
 
 ### 验收
 
 - 核心 25 个字段只由 `FairyGuiStore` 创建。
-- `owner.X` / `self.X` 可以暂留，但必须指向 Store 内部表。
+- 过渡期 `owner.X` / `self.X` 如暂留，必须指向 Store 内部表；R02 完成后删除。
 - `tools/check_fgui_static.ps1` 通过。
 - `tools/run_fgui_selftest.ps1 -Mode All -StopExisting` 通过；如涉及 close/open 生命周期，追加 `-Mode LongLoop`。
 
@@ -234,6 +230,7 @@ end
 ### 验收
 
 - 核心字段 `owner.objects`、`owner.views`、`owner.controllers`、`owner.uiStack`、`owner.currentSceneName` 等直接读写在 `manager/fairygui` 内清零，Store 兼容方法除外。
+- `FairyGuiLayers` 的标量状态只读写 `store:GetLayerState()`：`currentSceneName`、`designWidth`、`designHeight`、`scaleMode`、`nextStackSerial` 不再保留同名 `self.X` 影子缓存。
 - `FairyGuiManager.lua` 行数下降，但不把固定行数作为硬门禁。
 - `tools/check_fgui_static.ps1` 通过。
 - `tools/run_fgui_selftest.ps1 -Mode All -StopExisting` 和 `-Mode LongLoop -StopExisting` 通过。
@@ -287,10 +284,14 @@ end
 | 新文件 | 职责 |
 |---|---|
 | `FairyGuiServiceCore.lua` | service 容器创建、皮肤解析、通用布局、关闭分发、统计公共逻辑 |
-| `FairyGuiToast.lua` | toast queue、dedupe、active toast 生命周期 |
-| `FairyGuiTip.lua` | normal tip / hover tip |
-| `FairyGuiLoading.lua` | loading ref count 与 loading UI |
-| `FairyGuiOverlay.lua` | guide mask、message box、dialog、popup menu |
+| `FairyGuiServiceToast.lua` | toast queue、dedupe、active toast 生命周期 |
+| `FairyGuiServiceTip.lua` | normal tip / hover tip |
+| `FairyGuiServiceLoading.lua` | loading ref count 与 loading UI |
+| `FairyGuiServiceGuideMask.lua` | guide mask |
+| `FairyGuiServiceMessageBox.lua` | message box / dialog |
+| `FairyGuiServicePopupMenu.lua` | popup menu |
+
+> 行数不是硬门槛。`FairyGuiServiceCore.lua` 可以作为 service 基础设施核心保留较大体量；真正的验收标准是职责是否集中、具体 service 是否已拆出、业务变更是否不需要反复改 Core。超过 400 行时只触发职责复查，不作为必须继续拆文件的理由。
 
 ### 动作
 
@@ -338,16 +339,20 @@ end
 
 | 文件 | 职责 |
 |---|---|
-| `FairyGuiSystemImpl.h` | `FairyGuiSystemImpl` 类声明，尽量使用前置声明和轻量标准库头 |
-| `FairyGuiSystemTypes.h` | 内部 POD/统计/handle 类型 |
-| `FairyGuiSystemPlatformWin32.h/.cpp` | Windows IME / `windows.h` / `imm.h` 相关实现 |
-| `FairyGuiSystemFairyIncludes.h` | 只给确实需要 FairyGUI/cocos/Ogre 完整类型的 `.cpp` 使用 |
-| `FairyGuiSystemInternal.h` | 兼容门面，短期只 include 新内部头；长期视情况删除 |
+| `FairyGuiSystemImpl.h` | `FairyGuiSystemImpl` 类声明；允许包含 `cocos2d.h` 支撑基类和值类型，但 Ogre / FairyGUI / Win32 尽量前置声明 |
+| `FairyGuiSystemCommonHelpers.h` | 环境变量、路径、DPI/input scale、UTF-8、统计字符串等跨实现文件工具 |
+| `FairyGuiSystemRenderHelpers.h` | Ogre 材质、三角形转换、CPU clip / stencil clip 等渲染 helper |
+| `FairyGuiSystemObjectHelpers.h` | range 控件、transition、package object 创建相关 helper |
+| `FairyGuiSystemInputHelpers.h` | OIS key、输入命中日志、Win32 IME、文本编辑 helper |
+| `FairyGuiSystemFairyIncludes.h` | 只给确实需要 FairyGUI/cocos/Ogre/Win32 完整类型的 `.cpp` 或 helper 使用 |
+| `FairyGuiSystemInternal.h` / `FairyGuiSystemInternalHelpers.h` | 兼容门面；实现 `.cpp` 不再通过它们吃大聚合头 |
 
 ### 验收
 
 - VS2017 clean rebuild 通过。
 - `FairyGuiSystem.h` 仍保持 public facade，不暴露 Ogre / cocos / FairyGUI 细节。
+- `FairyGuiSystemImpl.h` 不再 include `FairyGuiSystemFairyIncludes.h`、Ogre 头、FairyGUI 控件头或 Win32 头。
+- `FairyGuiSystem*.cpp` 按需 include 具体 helper，不再 include `FairyGuiSystemInternal.h` / `FairyGuiSystemInternalHelpers.h` 聚合入口。
 - `tools/check_fgui_static.ps1` 通过。
 - `tools/run_fgui_selftest.ps1 -Mode All -StopExisting` 通过。
 
@@ -364,14 +369,16 @@ end
 - C++ 类型/文件：`FairyGui*`，例如 `FairyGuiSystem`、`FairyGuiLuaApi`。
 - C++ 目录：`runtime/ui/fairygui/` 使用小写目录。
 - Lua 内部模块：`res.scripts.manager.fairygui.*`。
-- `bin/res/scripts/manager/FairyGuiManager.lua` 当前作为 compatibility facade 保留。
-- 新代码不新增短路径 require；业务 UI 入口仍通过 `FairyGuiManager` / Ctrl / View / Model。
+- `bin/res/scripts/manager/FairyGuiManager.lua` 当前作为 compatibility facade 保留，但 `script_init.lua` 和新代码都使用真实路径 `res.scripts.manager.fairygui.FairyGuiManager`。
+- 新代码不新增短路径 require；静态门禁禁止除 compatibility facade 外的 `res.scripts.manager.FairyGuiManager` 引用。业务 UI 入口仍通过 `FairyGuiManager` / Ctrl / View / Model。
+- FGUI 子模块内不要写 `local self = self.owner`；需要调用 manager facade 时使用显式 `local owner = self.owner`，避免把子模块自身和外部 owner 混在同一个名字里。
 - 工具、manifest、文档可使用 `fgui` 缩写，如 `fgui_autogen`、`check_fgui_static.ps1`。
 - 是否删除 shim 需要单独决策，并同步更新 `script_init.lua`、历史脚本和 `tools/check_fgui_static.ps1`。
 
 ### 验收
 
 - 文档、静态门禁和真实 require 路径一致。
+- `tools/check_fgui_static.ps1` 能阻止短路径 require 和 `local self = self.owner` 回流。
 - 如果修改 AGENTS.md，只追加 FGUI 命名小节，不影响其它项目规则。
 
 ---

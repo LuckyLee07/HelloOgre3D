@@ -1,46 +1,5 @@
 local FairyGuiStore = Class("FairyGuiStore")
 
-local OBJECT_STATE_FIELDS = {
-	"objects",
-	"objectsByHandle",
-	"uiRegistry",
-	"uiNameToKey",
-	"hiddenObjects",
-	"views",
-	"viewsByHandle",
-	"controllers",
-	"controllersByHandle",
-	"childKeysByParentKey",
-	"parentKeyByChildKey",
-}
-
-local LAYER_STATE_FIELDS = {
-	"currentSceneName",
-	"designWidth",
-	"designHeight",
-	"scaleMode",
-	"layers",
-	"layerPolicies",
-	"layerNextOrder",
-	"layerObjects",
-	"layerRoots",
-	"safeArea",
-	"uiStack",
-	"popupStack",
-	"stackEntriesByKey",
-	"nextStackSerial",
-}
-
-local function bindFields(target, source, fields)
-	if target == nil or source == nil then
-		return
-	end
-
-	for _, fieldName in ipairs(fields) do
-		target[fieldName] = source[fieldName]
-	end
-end
-
 local function isBlank(value)
 	return value == nil or value == ""
 end
@@ -185,19 +144,6 @@ end
 
 function FairyGuiStore:GetProfilerState()
 	return self.profilerState
-end
-
-function FairyGuiStore:BindObjectAliases(target)
-	bindFields(target, self.objectState, OBJECT_STATE_FIELDS)
-end
-
-function FairyGuiStore:BindLayerAliases(target)
-	bindFields(target, self.layerState, LAYER_STATE_FIELDS)
-end
-
-function FairyGuiStore:BindCoreAliases(target)
-	self:BindObjectAliases(target)
-	self:BindLayerAliases(target)
 end
 
 function FairyGuiStore:RegisterUI(name, config)

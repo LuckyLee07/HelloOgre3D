@@ -1,4 +1,4 @@
-﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemInputHelpers.h"
 
 bool FairyGuiSystemImpl::InjectMouseMove(int x, int y)
 {

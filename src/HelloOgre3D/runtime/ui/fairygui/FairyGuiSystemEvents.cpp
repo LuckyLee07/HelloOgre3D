@@ -1,4 +1,5 @@
-﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemImpl.h"
+#include "ui/fairygui/FairyGuiSystemFairyIncludes.h"
 
 int FairyGuiSystemImpl::AddObjectHandleEventListener(int objectHandle, const std::string& childPath, int eventType, int callbackId)
 {

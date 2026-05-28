@@ -150,6 +150,63 @@ function Test-FairyGuiPublicHeaderFacadeGuard {
 	}
 }
 
+function Test-FairyGuiInternalHeaderGuard {
+	Write-Host "[FGUI-CHECK] Internal header split guard"
+
+	$fguiRuntimeRoot = Join-Path $RepoRoot "src\HelloOgre3D\runtime\ui\fairygui"
+	$implPath = Join-Path $fguiRuntimeRoot "FairyGuiSystemImpl.h"
+	$internalPath = Join-Path $fguiRuntimeRoot "FairyGuiSystemInternal.h"
+	$implText = Get-Content -LiteralPath $implPath -Raw
+	$internalText = Get-Content -LiteralPath $internalPath -Raw
+
+	$implForbiddenPatterns = @(
+		"FairyGuiSystemFairyIncludes.h",
+		"#include ""Ogre",
+		"#include <Ogre",
+		"#include <windows.h>",
+		"#include <imm.h>",
+		"#include ""GObject.h""",
+		"#include ""GRoot.h""",
+		"#include ""UIPackage.h"""
+	)
+	$violations = @()
+	foreach ($pattern in $implForbiddenPatterns) {
+		if ($implText.IndexOf($pattern) -ge 0) {
+			$violations += "FairyGuiSystemImpl.h contains $pattern"
+		}
+	}
+	if ($internalText.IndexOf("FairyGuiSystemFairyIncludes.h") -ge 0 -or $internalText.IndexOf("FairyGuiSystemInternalHelpers.h") -ge 0) {
+		$violations += "FairyGuiSystemInternal.h must stay a thin compatibility include for FairyGuiSystemImpl.h only"
+	}
+
+	$cppFiles = Get-ChildItem -LiteralPath $fguiRuntimeRoot -File -Filter "FairyGuiSystem*.cpp"
+	foreach ($file in $cppFiles) {
+		$text = Get-Content -LiteralPath $file.FullName -Raw
+		if ($text.IndexOf("FairyGuiSystemInternal.h") -ge 0 -or $text.IndexOf("FairyGuiSystemInternalHelpers.h") -ge 0) {
+			$violations += "$($file.Name) must include the specific impl/helper header it needs, not the internal aggregate header"
+		}
+	}
+
+	$requiredIncludes = @{
+		"FairyGuiSystem.cpp" = "FairyGuiSystemCommonHelpers.h"
+		"FairyGuiSystemRender.cpp" = "FairyGuiSystemRenderHelpers.h"
+		"FairyGuiSystemObjects.cpp" = "FairyGuiSystemObjectHelpers.h"
+		"FairyGuiSystemInput.cpp" = "FairyGuiSystemInputHelpers.h"
+		"FairyGuiSystemEvents.cpp" = "FairyGuiSystemFairyIncludes.h"
+	}
+	foreach ($fileName in $requiredIncludes.Keys) {
+		$filePath = Join-Path $fguiRuntimeRoot $fileName
+		$text = Get-Content -LiteralPath $filePath -Raw
+		if ($text.IndexOf($requiredIncludes[$fileName]) -lt 0) {
+			$violations += "$fileName must include $($requiredIncludes[$fileName])"
+		}
+	}
+
+	if ($violations.Count -gt 0) {
+		throw "FairyGUI internal header split regressed:`n$($violations -join "`n")"
+	}
+}
+
 function Test-FairyGuiLuaFrameworkGuard {
 	Write-Host "[FGUI-CHECK] Lua framework facade guard"
 
@@ -165,9 +222,25 @@ function Test-FairyGuiLuaFrameworkGuard {
 		throw "bin/res/scripts/manager/FairyGuiManager.lua must remain a compatibility facade"
 	}
 
+	$shortRequireViolations = @()
+	$scriptFiles = Get-ChildItem -Recurse -File (Join-Path $RepoRoot "bin\res\scripts") -Filter "*.lua"
+	foreach ($file in $scriptFiles) {
+		if ($file.FullName -eq $compatManagerPath) {
+			continue
+		}
+		$matches = Select-String -LiteralPath $file.FullName -Pattern 'res.scripts.manager.FairyGuiManager' -SimpleMatch
+		foreach ($match in $matches) {
+			$shortRequireViolations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+		}
+	}
+	if ($shortRequireViolations.Count -gt 0) {
+		throw "New code must require res.scripts.manager.fairygui.FairyGuiManager directly; the short path is only a compatibility shim:`n$($shortRequireViolations -join "`n")"
+	}
+
 	$managerFacadePath = Join-Path $fguiLuaRoot "FairyGuiManager.lua"
 	$managerText = Get-Content -LiteralPath $managerFacadePath -Raw
 	$requiredModules = @(
+		"FairyGuiStore",
 		"FairyGuiProfiler",
 		"FairyGuiLifecycle",
 		"FairyGuiPackage",
@@ -183,6 +256,18 @@ function Test-FairyGuiLuaFrameworkGuard {
 		if ($managerText.IndexOf($requireText) -lt 0) {
 			throw "FairyGuiManager.lua must load $module through the central facade"
 		}
+	}
+
+	$selfOwnerViolations = @()
+	$fguiLuaFiles = Get-ChildItem -Recurse -File $fguiLuaRoot -Filter "*.lua"
+	foreach ($file in $fguiLuaFiles) {
+		$matches = Select-String -LiteralPath $file.FullName -Pattern 'local self = self.owner' -SimpleMatch
+		foreach ($match in $matches) {
+			$selfOwnerViolations += "$($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+		}
+	}
+	if ($selfOwnerViolations.Count -gt 0) {
+		throw "FGUI submodules must not shadow themselves with owner; use an explicit local owner variable:`n$($selfOwnerViolations -join "`n")"
 	}
 
 	$uiViolations = @()
@@ -262,6 +347,7 @@ function Test-FairyGuiProductionFeatureGuard {
 	$baseViewPath = Join-Path $RepoRoot "bin\res\scripts\ui\BaseFairyGuiView.lua"
 	$baseCtrlPath = Join-Path $RepoRoot "bin\res\scripts\ui\FairyGuiBaseCtrl.lua"
 	$servicesPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiServices.lua"
+	$servicesCorePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiServiceCore.lua"
 	$layersPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiLayers.lua"
 	$packagePath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiPackage.lua"
 	$profilerPath = Join-Path $RepoRoot "bin\res\scripts\manager\fairygui\FairyGuiProfiler.lua"
@@ -390,7 +476,9 @@ function Test-FairyGuiProductionFeatureGuard {
 	)
 
 	$servicesText = Get-Content -LiteralPath $servicesPath -Raw
-	Assert-TextContains "FairyGuiServices.lua" $servicesText @(
+	$servicesCoreText = Get-Content -LiteralPath $servicesCorePath -Raw
+	$servicesCombinedText = $servicesText + "`n" + $servicesCoreText
+	Assert-TextContains "FairyGuiServices/Core" $servicesCombinedText @(
 		"DEFAULT_SERVICE_SKINS",
 		"function FairyGuiServices:RegisterServiceSkin",
 		"function FairyGuiServices:ResolveServiceSkin",
@@ -541,6 +629,7 @@ try {
 	Test-FairyGuiGameManagerLegacyBindingGuard
 	Test-FairyGuiRuntimeOwnershipGuard
 	Test-FairyGuiPublicHeaderFacadeGuard
+	Test-FairyGuiInternalHeaderGuard
 	Test-FairyGuiLuaFrameworkGuard
 	Test-FairyGuiProductionFeatureGuard
 

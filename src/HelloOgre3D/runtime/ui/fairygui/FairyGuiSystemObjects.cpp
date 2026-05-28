@@ -1,4 +1,4 @@
-﻿#include "ui/fairygui/FairyGuiSystemInternal.h"
+﻿#include "ui/fairygui/FairyGuiSystemObjectHelpers.h"
 
 bool FairyGuiSystemImpl::LoadPackage(const std::string& packagePath)
 {
