@@ -4,11 +4,23 @@
 
 #include "SandboxMacros.h"
 #include "GameFunction.h"
+#include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
 #include "objects/steer/AgentPath.h"
 #include "objects/steer/OpenSteerAdapter.h"
 #include "systems/manager/ObjectManager.h"
+
+namespace
+{
+	ObjectManager* ResolveObjectManager(const AgentLocomotion* locomotion)
+	{
+		const SandboxServices* services = locomotion != nullptr ? locomotion->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->objects != nullptr)
+			return services->objects;
+		return g_ObjectManager;
+	}
+}
 
 const float AgentLocomotion::DEFAULT_AGENT_MAX_FORCE = 1000.0f;		// newtons (kg*m/s^2)
 const float AgentLocomotion::DEFAULT_AGENT_MAX_SPEED = 7.0f;		// m/s (23.0 ft/s)
@@ -265,7 +277,10 @@ Ogre::Vector3 AgentLocomotion::ForceToAvoidAgents(Ogre::Real predictionTime)
 	if (!m_adapter) return Ogre::Vector3::ZERO;
 
 	// 收集有效 Agent(排除自己、生命 > 0)
-	const auto& agents = g_ObjectManager->getAllAgents();
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
+
+	const auto& agents = objectManager->getAllAgents();
 
 	OpenSteer::AVGroup group;
 	group.reserve(agents.size());
@@ -288,7 +303,10 @@ Ogre::Vector3 AgentLocomotion::ForceToAvoidObjects(Ogre::Real predictionTime)
 
 	float timeToCollision = std::max(0.1f, static_cast<float>(predictionTime));
 
-	const auto& blocks = g_ObjectManager->getAllBlocks();
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
+
+	const auto& blocks = objectManager->getAllBlocks();
 	OpenSteer::Vec3 totalAvoidForce = OpenSteer::Vec3::zero;
 	for (auto* b : blocks)
 	{

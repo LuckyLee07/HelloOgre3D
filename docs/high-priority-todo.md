@@ -1,55 +1,67 @@
-# High Priority TODO
+# 高优先级 TODO
 
-> Source of truth: `docs/project-direction.md` and `docs/foundation-modules-inventory.md`.
-> This file tracks the current execution list only. If it conflicts with the north-star direction, update this file.
+> 方向依据：`docs/project-direction.md` 和 `docs/foundation-modules-inventory.md`。
+> 这个文件只记录“当前最该做什么”。如果它和北极星方向冲突，以北极星方向为准，并更新这里。
 
-## Goal
+## 当前目标
 
-Ship the first vertical slice:
+先跑通第一个最小垂直切片：
 
-> A creature defined by data enters the world, a region trigger detects the player, the creature attacks through data-driven BT logic, and data changes can be hot-reloaded.
+> 一个“由数据定义的生物”进入世界；一个区域触发器检测到玩家进入；生物通过数据驱动的行为树发起攻击；修改数据后可以低成本热重载。
 
-## Iteration Log
+换句话说：先证明“内容从代码变成数据”这条主线能真的跑起来，再去扩展编辑器、UGC 和大世界规模。
 
-- 2026-05-29: Added `SandboxServices` carrier and injected it through `GameManager -> ObjectManager -> BaseObject`; components can now read services from their owner.
-- 2026-05-29: Routed `PhysicsComponent` world lookup through `SandboxServices` first, with the old `g_GameManager` path kept as a compatibility fallback.
+## 迭代记录
 
-## P0 - L0 Foundation
+- 2026-05-29：新增 `SandboxServices`，并从 `GameManager -> ObjectManager -> BaseObject` 注入；组件现在能从所属对象读取服务上下文。
+- 2026-05-29：`PhysicsComponent` 优先通过 `SandboxServices` 找物理世界，保留旧 `g_GameManager` 路径作为兼容兜底。
+- 2026-05-29：`AIController` 的对象查询和寻路入口优先通过 `SandboxServices`，保留旧全局变量作为兼容兜底。
+- 2026-05-29：继续扩大服务上下文覆盖面：运动避障、FSM 寻路/随机点/分离力、武器发射、FSM 开关、子弹碰撞粒子清理、导航网格对象访问。
+- 2026-05-29：事件总线新增异步队列入口 `QueueEmit`、队列上限、丢弃计数和每帧 flush；flush 时带递归保护，回调中再次排队的事件会留到下一轮分发。
 
-- [x] Introduce `SandboxServices` as the dependency-injection carrier for sandbox systems and components.
-- [ ] Route new sandbox/runtime code through `SandboxServices` instead of direct `g_*` singleton access.
-- [ ] Extend `SandboxEventDispatcherManager` with queued cross-frame dispatch, recursion protection, per-frame throttling, queue limits, filter-as-subscription, parameterized event names, and Local/Team/Global scope routing.
-- [ ] Define the first Lua-table creature `Def` format.
-- [ ] Add a small creature assembler that builds objects/components from the Lua-table `Def`.
+## P0 - 地基任务
 
-## P0 - First Vertical Slice
+- [x] 引入 `SandboxServices`，作为 sandbox 系统和组件之间的依赖注入载体。
+- [ ] 继续把新增 sandbox/runtime 代码改成优先走 `SandboxServices`，减少直接访问 `g_*` 全局单例。
+- [ ] 扩展 `SandboxEventDispatcherManager`，让事件总线能支撑触发器和行为树事件。
+  - [x] 增加跨帧异步事件队列：先排队，后续统一分发。
+  - [x] 增加队列长度上限和丢弃计数，避免事件无限堆积。
+  - [x] 增加 flush 递归保护，避免事件回调里继续触发事件导致连环递归。
+  - [ ] 增加每帧分发节流，避免单帧事件过多卡住。
+  - [ ] 支持“过滤器即订阅”，订阅时能只接收符合条件的事件。
+  - [ ] 支持参数化事件名，例如 `PLAYER_ENTER?regionId=1`。
+  - [ ] 真正实现 Local / Team / Global 三种事件作用域路由。
+- [ ] 定义第一版 Lua table 生物 `Def` 格式。
+- [ ] 增加一个最小生物装配器：读取 Lua table `Def`，创建对象并挂组件。
 
-- [ ] Add `TriggerVolume` as the first area event source.
-- [ ] Add `TriggerRuntime.lua` for hand-written ECA trigger registration and dispatch.
-- [ ] Add `BehaviorEventNode` or an equivalent BT event entry point.
-- [ ] Add the first slice sample: data-defined creature + player-enter-region trigger + creature attack reaction.
-- [ ] Add cheap hot reload for the slice by reloading Def/BT/trigger Lua files.
+## P0 - 第一个垂直切片
 
-## P1 - BT Support Needed Before Editor Work
+- [ ] 增加 `TriggerVolume`，作为第一个区域事件源。
+- [ ] 增加 `TriggerRuntime.lua`，先用手写 Lua 完成“事件 -> 条件 -> 动作”的触发器注册和分发。
+- [ ] 增加 `BehaviorEventNode`，或等价的行为树事件入口，让事件能喂给 BT。
+- [ ] 增加第一个切片 sample：数据定义生物 + 玩家进入区域 + 生物攻击反应。
+- [ ] 增加低成本热重载：重新加载 Def / BT / trigger Lua 文件即可验证改动。
 
-- [ ] Add `Parallel` and `Random` behavior-tree nodes.
-- [ ] Add runtime parameter lookup for BT node params, starting with constants and blackboard keys.
-- [ ] Add Selector/Sequence interrupt or condition reevaluation.
-- [ ] Add object-id and array blackboard value support.
+## P1 - 行为树补强
 
-## P1 - Architecture Paydown While Touching Related Areas
+- [ ] 增加 `Parallel` 和 `Random` 行为树节点。
+- [ ] 增加行为树节点参数的运行时取值能力，先支持常量和黑板 key。
+- [ ] 增加 Selector / Sequence 的中断或条件重评估能力。
+- [ ] 增加 object-id 和数组类型的黑板值支持。
 
-- [ ] Stop adding object-level single-component forwarding methods; mark existing ones as legacy when touched.
-- [ ] Migrate component ownership toward `std::unique_ptr`.
-- [ ] Normalize component owner access to `BaseObject*`.
-- [ ] Prefer typed component lookup over scattered string keys.
-- [ ] Extract AI perception queries behind a small query interface before adding large-scale multi-creature behavior.
+## P1 - 顺手偿还的架构债
 
-## Deferred
+- [ ] 不再继续给对象层新增“转发到某个组件”的方法；碰到旧方法时标为 legacy 或逐步迁移。
+- [ ] 组件所有权逐步迁向 `std::unique_ptr`。
+- [ ] 统一组件访问 owner 的方式，全部收敛到 `BaseObject*`。
+- [ ] 优先使用类型化组件查询，减少散落的字符串 key。
+- [ ] 在继续做多生物行为前，把 AI 感知查询先抽成一个小接口。
 
-- [ ] Full CSV pipeline.
-- [ ] Save/load serialization.
-- [ ] Full visual block editor.
-- [ ] Trigger object library and editor placement workflow.
-- [ ] UGC/mod packaging and sandbox hardening.
-- [ ] World streaming.
+## 暂缓任务
+
+- [ ] 完整 CSV 管线。
+- [ ] 存档 / 读档序列化。
+- [ ] 完整可视化积木编辑器。
+- [ ] 触发器对象库和编辑器摆放流程。
+- [ ] UGC / Mod 打包和沙箱安全。
+- [ ] 世界 streaming。

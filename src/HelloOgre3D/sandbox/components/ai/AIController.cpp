@@ -14,11 +14,31 @@
 #include "ai/common/IDecisionDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/fsm/AgentStateController.h"
+#include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/manager/SandboxMgr.h"
+
+namespace
+{
+	ObjectManager* ResolveObjectManager(const AIController* controller)
+	{
+		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->objects != nullptr)
+			return services->objects;
+		return g_ObjectManager;
+	}
+
+	SandboxMgr* ResolveSandboxMgr(const AIController* controller)
+	{
+		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->sandbox != nullptr)
+			return services->sandbox;
+		return g_SandboxMgr;
+	}
+}
 
 AIController::AIController(AgentObject* owner)
 	: m_owner(owner)
@@ -148,23 +168,25 @@ bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshN
 		return false;
 	}
 
-	if (!requirePath || !g_SandboxMgr)
+	SandboxMgr* sandbox = ResolveSandboxMgr(this);
+	if (!requirePath || sandbox == nullptr)
 	{
 		return true;
 	}
 
 	std::vector<Ogre::Vector3> path;
-	return g_SandboxMgr->FindPath(navMeshName, m_owner->GetPosition(), enemy->GetPosition(), path) && !path.empty();
+	return sandbox->FindPath(navMeshName, m_owner->GetPosition(), enemy->GetPosition(), path) && !path.empty();
 }
 
 AgentObject* AIController::FindNearestEnemy(const Ogre::String& navMeshName)
 {
-	if (m_owner == nullptr || !g_ObjectManager)
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	if (m_owner == nullptr || objectManager == nullptr)
 	{
 		return nullptr;
 	}
 
-	const std::vector<AgentObject*>& agents = g_ObjectManager->getAllAgents();
+	const std::vector<AgentObject*>& agents = objectManager->getAllAgents();
 
 	AgentObject* nearestEnemy = nullptr;
 	float nearestDistance = std::numeric_limits<float>::max();
@@ -197,12 +219,13 @@ void AIController::SetEnemy(AgentObject* enemy)
 
 AgentObject* AIController::GetEnemy() const
 {
-	if (m_enemy == nullptr || m_enemyId < 0 || !g_ObjectManager)
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	if (m_enemy == nullptr || m_enemyId < 0 || objectManager == nullptr)
 	{
 		return m_enemy;
 	}
 
-	BaseObject* object = g_ObjectManager->getObjectById(m_enemyId);
+	BaseObject* object = objectManager->getObjectById(m_enemyId);
 	return object == m_enemy ? dynamic_cast<AgentObject*>(object) : nullptr;
 }
 

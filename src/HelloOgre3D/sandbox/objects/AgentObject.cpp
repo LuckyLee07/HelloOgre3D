@@ -5,6 +5,7 @@
 #include "GameManager.h"
 #include "BlockObject.h"
 #include "ai/common/AICommand.h"
+#include "core/SandboxServices.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
@@ -732,5 +733,7 @@ bool AgentObject::GetUseCppFSM()
 	return false;
 #endif // USE_CPP_FSM
 	*/
-	return g_SandboxMgr->GetUseCppFsmFlag();
+	const SandboxServices* services = GetSandboxServices();
+	SandboxMgr* sandbox = services != nullptr && services->sandbox != nullptr ? services->sandbox : g_SandboxMgr;
+	return sandbox != nullptr ? sandbox->GetUseCppFsmFlag() : true;
 }

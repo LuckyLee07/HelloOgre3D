@@ -5,6 +5,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "GameDefine.h"
 #include "GameFunction.h"
+#include "core/SandboxServices.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "game/GameManager.h"
@@ -18,6 +19,11 @@
 #include "systems/service/PhysicsFactory.h"
 
 using namespace Ogre;
+
+namespace
+{
+	void SpawnBulletImpactWithServices(const Collision& collision, const SandboxServices* services);
+}
 
 BlockObject::BlockObject(const Ogre::String& meshFile, btRigidBody* pRigidBody)
 {
@@ -189,7 +195,7 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	if (objType == OBJ_TYPE_BULLET) // 子弹类型
 	{
 		pCollideObj->SetNeedClear(); // 标记为清理
-		SpawnBulletImpact(collision);
+		SpawnBulletImpactWithServices(collision, GetSandboxServices());
 	}
 }
 
@@ -200,12 +206,21 @@ void BlockObject::addParticleNode(Ogre::SceneNode* particleNode)
 
 void BlockObject::SpawnBulletImpact(const Collision& collision)
 {
+	SpawnBulletImpactWithServices(collision, nullptr);
+}
+
+namespace
+{
+void SpawnBulletImpactWithServices(const Collision& collision, const SandboxServices* services)
+{
 	// 创建射击碰撞效果
 	Ogre::SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
 	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle(pRootScene, "BulletImpact");
 
 	// 2秒后清掉该粒子效果
-	g_ObjectManager->markNodeRemInSeconds(particleImpact, 2.0f);
+	ObjectManager* objectManager = services != nullptr && services->objects != nullptr ? services->objects : g_ObjectManager;
+	if (objectManager != nullptr)
+		objectManager->markNodeRemInSeconds(particleImpact, 2.0f);
 
 	// 获取父节点的世界位置和旋转
 	particleImpact->setPosition(collision.pointA_);
@@ -226,6 +241,8 @@ void BlockObject::SpawnBulletImpact(const Collision& collision)
 			}
 		}
 	}
+}
+
 }
 
 OpenSteer::Vec3 BlockObject::getPosition() const

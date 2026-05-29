@@ -1,6 +1,7 @@
 #ifndef __SANDBOX_EVENT_DISPATCHER_MANAGER_H__  
 #define __SANDBOX_EVENT_DISPATCHER_MANAGER_H__
 
+#include <algorithm>
 #include <deque>
 #include <map>
 #include <memory>
@@ -68,6 +69,75 @@ public:
 	// 触发事件
 	void Emit(const std::string& eventName, const SandboxContext& context)
 	{
+		EmitNow(eventName, context);
+	}
+
+	bool QueueEmit(const std::string& eventName, const SandboxContext& context)
+	{
+		if (m_maxQueuedEvents <= 0 || static_cast<int>(m_eventQueue.size()) >= m_maxQueuedEvents)
+		{
+			++m_droppedQueuedEvents;
+			return false;
+		}
+
+		QueuedEvent event;
+		event.eventName = eventName;
+		event.context = context;
+		m_eventQueue.push_back(event);
+		return true;
+	}
+
+	int FlushQueuedEvents(int maxEvents = -1)
+	{
+		if (m_isFlushingQueue)
+			return 0;
+
+		const int initialCount = static_cast<int>(m_eventQueue.size());
+		if (initialCount <= 0)
+			return 0;
+
+		const int limit = maxEvents < 0 ? initialCount : std::min(maxEvents, initialCount);
+		int dispatchedCount = 0;
+		m_isFlushingQueue = true;
+		while (dispatchedCount < limit && !m_eventQueue.empty())
+		{
+			QueuedEvent event = m_eventQueue.front();
+			m_eventQueue.pop_front();
+			EmitNow(event.eventName, event.context);
+			++dispatchedCount;
+		}
+		m_isFlushingQueue = false;
+		return dispatchedCount;
+	}
+
+	void SetMaxQueuedEvents(int maxQueuedEvents)
+	{
+		m_maxQueuedEvents = maxQueuedEvents < 0 ? 0 : maxQueuedEvents;
+		while (static_cast<int>(m_eventQueue.size()) > m_maxQueuedEvents)
+		{
+			m_eventQueue.pop_back();
+			++m_droppedQueuedEvents;
+		}
+	}
+
+	int GetQueuedEventCount() const
+	{
+		return static_cast<int>(m_eventQueue.size());
+	}
+
+	int GetDroppedQueuedEventCount() const
+	{
+		return m_droppedQueuedEvents;
+	}
+
+	int GetMaxQueuedEvents() const
+	{
+		return m_maxQueuedEvents;
+	}
+
+private:
+	void EmitNow(const std::string& eventName, const SandboxContext& context)
+	{
 		auto dispatcher = GetDispatcher(eventName);
 		RecordEmit(eventName, context, dispatcher != nullptr ? dispatcher->GetCallbackCount() : 0);
 		if (dispatcher != nullptr)
@@ -76,6 +146,7 @@ public:
 		}
 	}
 
+public:
 	int GetEmitCount() const
 	{
 		return m_emitCount;
@@ -84,6 +155,7 @@ public:
 	void ClearDebugStats()
 	{
 		m_emitCount = 0;
+		m_droppedQueuedEvents = 0;
 		m_eventCounts.clear();
 		m_recentEvents.clear();
 	}
@@ -98,7 +170,9 @@ public:
 		std::ostringstream stream;
 		stream << "[AIEvent] owner=" << ownerName
 			<< " dispatchers=" << m_dispatchers.size()
-			<< " emits=" << m_emitCount;
+			<< " emits=" << m_emitCount
+			<< " queued=" << m_eventQueue.size()
+			<< " droppedQueued=" << m_droppedQueuedEvents;
 
 		if (!m_eventCounts.empty())
 		{
@@ -131,6 +205,12 @@ public:
 
 private:
 	using DispatcherBase = std::shared_ptr<SandboxEventDispatcher>;
+	struct QueuedEvent
+	{
+		std::string eventName;
+		SandboxContext context;
+	};
+
 	struct EventRecord
 	{
 		std::string eventName;
@@ -147,6 +227,10 @@ private:
 	int m_emitCount = 0;
 	std::map<std::string, int> m_eventCounts;
 	std::deque<EventRecord> m_recentEvents;
+	std::deque<QueuedEvent> m_eventQueue;
+	int m_maxQueuedEvents = 1024;
+	int m_droppedQueuedEvents = 0;
+	bool m_isFlushingQueue = false;
 	static const int MAX_RECENT_EVENTS = 32;
 
 	// 获取分发器

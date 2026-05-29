@@ -5,6 +5,7 @@
 #include "GameFunction.h"
 #include "SandboxMacros.h"
 #include "OgreSceneNode.h"
+#include "core/SandboxServices.h"
 #include "objects/BlockObject.h"
 #include "objects/SoldierObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
@@ -13,6 +14,17 @@
 #include "components/render/RenderComponent.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/service/SceneFactory.h"
+
+namespace
+{
+	SandboxMgr* ResolveSandboxMgr(const WeaponComponent* component)
+	{
+		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->sandbox != nullptr)
+			return services->sandbox;
+		return g_SandboxMgr;
+	}
+}
 
 WeaponComponent::WeaponComponent(SoldierObject* owner)
 	: m_owner(owner)
@@ -175,7 +187,8 @@ AgentAnimStateMachine* WeaponComponent::GetObjectASM() const
 
 void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
-	if (m_owner == nullptr || g_SandboxMgr == nullptr)
+	SandboxMgr* sandbox = ResolveSandboxMgr(this);
+	if (m_owner == nullptr || sandbox == nullptr)
 	{
 		return;
 	}
@@ -204,7 +217,7 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	}
 	left.normalise();
 
-	BlockObject* bullet = g_SandboxMgr->CreateBullet(0.3f, 0.01f);
+	BlockObject* bullet = sandbox->CreateBullet(0.3f, 0.01f);
 	if (bullet == nullptr)
 	{
 		return;

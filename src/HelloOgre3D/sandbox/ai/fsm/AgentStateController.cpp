@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AgentActionContext.h"
+#include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "AgentStateEvaluators.h"
@@ -16,6 +17,22 @@
 
 namespace
 {
+	ObjectManager* ResolveObjectManager(const AgentObject* agent)
+	{
+		const SandboxServices* services = agent != nullptr ? agent->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->objects != nullptr)
+			return services->objects;
+		return g_ObjectManager;
+	}
+
+	SandboxMgr* ResolveSandboxMgr(const AgentObject* agent)
+	{
+		const SandboxServices* services = agent != nullptr ? agent->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->sandbox != nullptr)
+			return services->sandbox;
+		return g_SandboxMgr;
+	}
+
 	SoldierObject* AsSoldier(AgentObject* agent)
 	{
 		return dynamic_cast<SoldierObject*>(agent);
@@ -153,11 +170,12 @@ void AgentStateController::AddTransitionByEvaluator(const std::string& from, con
 
 bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMovePos)
 {
-	if (!m_agent || !g_SandboxMgr)
+	SandboxMgr* sandbox = ResolveSandboxMgr(m_agent);
+	if (!m_agent || sandbox == nullptr)
 		return false;
 
 	std::vector<Ogre::Vector3> path;
-	if (!g_SandboxMgr->FindPath(m_navMeshName, m_agent->GetPosition(), target, path) || path.empty())
+	if (!sandbox->FindPath(m_navMeshName, m_agent->GetPosition(), target, path) || path.empty())
 		return false;
 
 	m_agent->SetPath(path, false);
@@ -194,10 +212,11 @@ bool AgentStateController::PlanPathToEnemy()
 
 Ogre::Vector3 AgentStateController::RandomPoint() const
 {
-	if (!g_SandboxMgr)
+	SandboxMgr* sandbox = ResolveSandboxMgr(m_agent);
+	if (sandbox == nullptr)
 		return Ogre::Vector3::ZERO;
 
-	return g_SandboxMgr->RandomPoint(m_navMeshName);
+	return sandbox->RandomPoint(m_navMeshName);
 }
 
 void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode)
@@ -210,9 +229,10 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 	Ogre::Vector3 followForce = m_agent->ForceToFollowPath(0.5f);
 	Ogre::Vector3 stayForce = m_agent->ForceToStayOnPath(0.5f);
 	Ogre::Vector3 separationForce = Ogre::Vector3::ZERO;
-	if (g_ObjectManager)
+	ObjectManager* objectManager = ResolveObjectManager(m_agent);
+	if (objectManager != nullptr)
 	{
-		separationForce = m_agent->ForceToSeparate(g_ObjectManager->getAllAgents(), 1.25f, 180.0f);
+		separationForce = m_agent->ForceToSeparate(objectManager->getAllAgents(), 1.25f, 180.0f);
 	}
 
 	Ogre::Vector3 totalForces =

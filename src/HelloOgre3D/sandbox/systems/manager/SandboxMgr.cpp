@@ -225,7 +225,10 @@ void SandboxMgr::UpdateSceneGraph()
 
 NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
 {
-    const std::vector<BlockObject*> objects = g_ObjectManager->getFixedObjects();
+	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	if (objectManager == nullptr) return NULL;
+
+    const std::vector<BlockObject*> objects = objectManager->getFixedObjects();
     NavigationMesh* pNavMesh = new NavigationMesh(config, objects);
 
     if (!pNavMesh->IsValid())
@@ -234,7 +237,7 @@ NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const O
         return NULL;
     }
 
-    bool result = g_ObjectManager->addNavigationMesh(navMeshName, pNavMesh);
+    bool result = objectManager->addNavigationMesh(navMeshName, pNavMesh);
     if (!result)
     {
         SAFE_DELETE(pNavMesh);
@@ -287,7 +290,10 @@ void SandboxMgr::ApplySettingConfig(rcConfig& config, float height, float radius
 
 Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
 {
-    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
+
+    NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
     if (pNavmesh != NULL)
     {
         return pNavmesh->RandomPoint();
@@ -297,7 +303,10 @@ Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
 
 Ogre::Vector3 SandboxMgr::FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const
 {
-    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
+
+    NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
     if (pNavmesh != NULL)
     {
         return pNavmesh->FindClosestPoint(point);
@@ -307,7 +316,10 @@ Ogre::Vector3 SandboxMgr::FindClosestPoint(const Ogre::String& navMeshName, cons
 
 bool SandboxMgr::FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const
 {
-    NavigationMesh* pNavmesh = g_ObjectManager->getNavigationMesh(navMeshName);
+	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	if (objectManager == nullptr) return false;
+
+    NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
     if (pNavmesh != NULL)
     {
         return pNavmesh->FindPath(start, end, outPath);
