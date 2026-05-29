@@ -1,5 +1,7 @@
 # C++ 对象模型与代码风格重构路线图
 
+> ⚠️ 术语同步（2026-05-29）：本文部分章节成文较早，提到的 `GameObject`（独立组件容器层）与 `VehicleObject` **在当前代码中已不存在**。实际继承链为 `SandboxObject → BaseObject → AgentObject → SoldierObject`（`BlockObject` 为 `BaseObject` 的旁支），组件容器（`std::map<std::string, IComponent*>`）已直接收进 `BaseObject`。阅读时以本注与代码为准；下文保留早期表述处已就地订正。整体优先级以 `docs/project-direction.md`（北极星）为准。
+>
 > 目标：把 `HelloOgre3D` 当前混合的继承对象、组件对象、Lua 绑定、runtime 适配风格逐步收敛成一套稳定的 C++ 对象模型。
 >
 > 边界：本文关注 C++ 对象关系、职责边界、所有权、命名和绑定方式。目录结构、FGUI 专项能力、AI 专项能力分别参考 `docs/project-roadmap.md`、`docs/fgui/fairygui-final-roadmap.md`、`docs/ai-roadmap.md`。
@@ -99,22 +101,20 @@ Lua Binding Adapter
 
 ## 5. 当前主要重构对象
 
-### BaseObject / GameObject / IComponent
+### BaseObject / IComponent（早期标题为 BaseObject / GameObject / IComponent）
 
-当前 `BaseObject` 继承 `SandboxObject`，内部又持有 `GameObject` 作为组件容器。这让“对象根”和“组件容器”分成两层，但外部通常仍把 `BaseObject` 当对象根使用。
+当前 `BaseObject` 继承 `SandboxObject`，并**直接持有组件容器**（`std::map<std::string, IComponent*> m_components`）。早期曾设想用独立的 `GameObject` 层承担组件容器、与“对象根”分两层——该 `GameObject` 层现已不存在，容器能力已收进 `BaseObject`（即早期“中期考虑收进 BaseObject”的目标已达成）。
 
-目标：
+剩余目标：
 
-- 让 `BaseObject` 成为清晰的 entity root。
-- 组件容器可以先继续由 `GameObject` 承担，但所有权、生命周期、访问方式要明确。
-- 中期考虑把组件容器能力直接收进 `BaseObject`，`GameObject` 退化或删除。
+- `BaseObject` 作为清晰的 entity root，组件容器所有权、生命周期、访问方式进一步规范（所有权 `unique_ptr` 化见本文 P4 / `architecture-improvement-plan.md` P4）。
+- typed/keyed 组件访问继续收口，减少字符串 key 散落（见 `architecture-improvement-plan.md` P6）。
 
-### VehicleObject / AgentObject / SoldierObject
+### AgentObject / SoldierObject（早期标题含已删除的 VehicleObject）
 
-当前继承链承担了太多能力：
+当前继承链承担了太多能力（早期的 `VehicleObject` 层已删除，其 physics/locomotion/steering/path/health/mass 等转发已合并进 `AgentObject`）：
 
-- `VehicleObject` 转发 physics、locomotion、steering、path、health、mass 等接口。
-- `AgentObject` 加 body、Lua env、事件、死亡、输入。
+- `AgentObject` 承载 physics/locomotion/steering/path/mass + body、Lua env、事件、死亡、输入（≈898 行，转发样板偏多，见 `architecture-improvement-plan.md` P2）。
 - `SoldierObject` 加 weapon、animation、AI driver、目标选择、弹药、状态请求。
 
 目标：
@@ -157,9 +157,9 @@ Lua Binding Adapter
 任务：
 
 - 明确对象模型术语：entity、component、system、runtime adapter、binding adapter。
-- 标注关键 raw pointer 的拥有关系，至少覆盖 `BaseObject`、`GameObject`、`VehicleObject`、`SoldierObject`、`GameManager`。
+- 标注关键 raw pointer 的拥有关系，至少覆盖 `BaseObject`、`AgentObject`、`SoldierObject`、`GameManager`。
 - 梳理 Lua 当前调用到的核心 C++ API，形成兼容边界。
-- 为 `BaseObject / VehicleObject / SoldierObject / GameManager / FairyGuiSystem` 建立最小行为回归清单。
+- 为 `BaseObject / AgentObject / SoldierObject / GameManager / FairyGuiSystem` 建立最小行为回归清单。
 
 验收：
 
@@ -175,8 +175,8 @@ Lua Binding Adapter
 
 - 为组件增加统一约定：owner、update order、attach/detach、destroy、debug name。
 - 增加 typed component 访问方式，例如按类型或稳定 key 获取组件，减少字符串散落。
-- 让 `BaseObject` 明确拥有组件容器；短期可以继续委托 `GameObject`。
-- 将 `VehicleObject` 中纯转发接口分组，标记哪些是 Lua 兼容 facade，哪些后续迁移到组件。
+- 让 `BaseObject` 明确拥有组件容器（已直接持有，不再有独立 `GameObject` 层）。
+- 将 `AgentObject` 中纯转发接口分组，标记哪些是 Lua 兼容 facade，哪些后续迁移到组件。
 
 验收：
 
@@ -293,11 +293,11 @@ Lua Binding Adapter
 
 第一批任务应小、可回退、能验证：
 
-1. 给 `BaseObject / GameObject / IComponent` 补齐所有权和生命周期注释，明确当前组件容器规则。
+1. 给 `BaseObject / IComponent` 补齐所有权和生命周期注释，明确当前组件容器规则。
 2. 增加组件 debug name / typed access helper，减少字符串 key 的隐式约定。
 3. 把 `GameManager` 中 FGUI tolua 实现拆到 `FairyGuiLuaApi`，保留旧函数签名转发。
 4. 把 `FairyGuiSystem` 的 diagnostics 函数先拆出文件。
-5. 新增 `HealthComponent`，让 `VehicleObject / SoldierObject` 先通过它读写生命值，但保留旧 `GetHealth / SetHealth`。
+5. 新增 `HealthComponent`，让 `AgentObject / SoldierObject` 先通过它读写生命值，但保留旧 `GetHealth / SetHealth`。
 6. 新增 `AiDriverComponent`，把 `SoldierObject` 的 `m_driver` 挪进去，旧接口转发。
 
 每完成一项，都要更新本文档对应阶段的状态，并记录验证方式。
@@ -305,6 +305,8 @@ Lua Binding Adapter
 ## 9. 当前进展
 
 ### 2026-05-24 首批落地
+
+> 注：下列条目中的 `GameObject` 指当时的组件容器层，现已并入 `BaseObject`（见本文顶部术语同步），保留原文仅作历史记录。
 
 - [x] 新增本文档，并在 `docs/project-roadmap.md` 的对象系统组件化条目中指向本文档。
 - [x] `IComponent` 记录所属 `GameObject` 和稳定 component key，`getOwner()` 增加空指针保护，detach 时清理 key。
@@ -348,7 +350,7 @@ Lua Binding Adapter
 按重构影响面选择最小验证：
 
 - `BaseObject / Component` 改动：运行对象创建、销毁、组件 debug dump，检查 `ObjectManager:buildObjectDebugSummary`。
-- `VehicleObject / SoldierObject` 改动：验证 `Sandbox6 / Sandbox7 / Sandbox8` 中移动、射击、状态切换。
+- `AgentObject / SoldierObject` 改动：验证 `Sandbox6 / Sandbox7 / Sandbox8` 中移动、射击、状态切换。
 - AI driver 改动：验证 FSM / DecisionTree / BehaviorTree 至少各一条 sample。
 - FGUI binding 或 facade 改动：运行对应 `HELLO_FGUI_*_SELF_TEST`，复杂改动跑 `HELLO_FGUI_SELF_TEST_ALL=1`。
 - runtime/input 改动：手动跑 macOS / Windows 分支对应 sample，确认 UI 和相机输入都正常。

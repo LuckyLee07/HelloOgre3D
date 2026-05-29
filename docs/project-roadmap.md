@@ -1,5 +1,7 @@
 # 项目后续发展路线图（AI 之外）
 
+> ⚠️ 文档状态（2026-05-29）：**历史/补充**。本文成文于“教学 sample 沙盒”身份下，其优先级（尤其把 FGUI 列为 P0、§12 的 FGUI-first 近期执行队列）**已被 `docs/project-direction.md`（北极星）取代**。当前项目身份为“数据驱动沙盒运行时 + 编辑器”，整体优先级为 L0 地基 → 第一个垂直切片 → 编辑器/UGC，FGUI 已视为“编辑器 UI 基座 + 回归门禁”，不再占主线 P0。本文中 UI / runtime / 调试 / 构建等具体条目仍有参考价值，但**排序一律以北极星为准**。
+>
 > 目标：记录 `HelloOgre3D` 在 AI 之外值得持续迭代的方向，方便后续按优先级拆任务、补文档、做回归。
 >
 > 边界：AI 相关路线独立维护在 `docs/ai-roadmap.md`；本文关注 UI、runtime、玩法基础设施、调试观测、构建测试、稳定性、对象系统等非 AI 主线。
@@ -240,9 +242,11 @@
 - [ ] UI package、贴图、材质至少有基础引用统计。
 - [ ] macOS 大小写敏感路径问题能在脚本或文档中提前检查。
 
-## 12. 近期执行队列（当前安排）
+## 12. 近期执行队列（⚠️ 已被北极星取代，留作历史）
 
-这部分记录当前最新判断，后续短期开发优先按这里排。专项细节仍以 `docs/fgui/fairygui-business-framework-todo.md`、`docs/ai-roadmap.md` 和对应实现文档为准。
+> 本节是“教学 sample 沙盒”身份下的 FGUI-first 排期，**已失效**。当前近期队列以 `docs/project-direction.md` §6 节奏 + `docs/foundation-modules-inventory.md` §1“切片最小集”为准：L0 地基（SandboxServices 注入 / 事件总线扩四件套 / Lua 表 Def）→ 第一个垂直切片（生物 + 区域触发器 + 数据驱动 BT）。下面内容仅作历史记录。
+
+以下保留原文，仅作历史记录。专项细节如需参考，仍见 `docs/fgui/fairygui-business-framework-todo.md`、`docs/ai-roadmap.md` 和对应实现文档。
 
 ### 第一阶段：FGUI 压力样例与性能观测
 

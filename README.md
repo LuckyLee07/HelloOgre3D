@@ -1,10 +1,18 @@
 ## HelloOgre3D ##
 
-目标：通过重构游戏案例，将日常开发中的一些经验沉淀下来
+目标：打造一个**数据驱动的沙盒玩法运行时 + 编辑器**——大世界、多生物、可配置 AI、生物触发器、UGC 玩法；内容是可作者编辑、可序列化、可热重载的数据，而非代码。（项目身份已从早期“教学 sample 沙盒”切换，定调见 `docs/project-direction.md`。）
 
 ## 当前路线索引 ##
 
+- 🧭 方向总纲（北极星，统领以下所有文档）：`docs/project-direction.md`
 - 项目级路线：`docs/project-roadmap.md`
+- 架构优化实施方案（基于代码现状评审，含证据与可执行步骤）：`docs/architecture-improvement-plan.md`
+- 生产级沙盒/UGC 可借鉴架构参考（MiniGame系深读提炼）：`docs/reference-minigame-patterns.md`
+- 可视化编辑器实施方案（AI 行为树 + 触发器，自写 FairyGUI 积木编辑器）：`docs/visual-editor-implementation-plan.md`
+- 可视化编辑器开发任务清单（可逐条认领，带真实接口签名）：`docs/visual-editor-task-breakdown.md`
+- 行为树执行模型差异与补强分析（对比 MiniGame，列出需补能力）：`docs/behavior-tree-gap-analysis.md`
+- 触发器/事件系统差异与补强分析（对比 MiniGame，列出需补能力）：`docs/trigger-system-gap-analysis.md`
+- 地基模块盘点（已有 / 缺 / 故意不做 + 切片最小集）：`docs/foundation-modules-inventory.md`
 - C++ 对象模型与组件化边界：`docs/cpp-object-model-refactor-roadmap.md`
 - Soldier / Agent 对象链路重构：`docs/SoldierObjectRefactor.md`
 - AI 后续能力路线：`docs/ai-roadmap.md`、`docs/AIArchitectureBeyondBook.md`
@@ -15,12 +23,12 @@
 
 详细任务不在 README 维护，避免和路线文档重复。当前优先级按以下方向推进：
 
-- FGUI：业务 UI 框架、输入 / 层级边界、复杂控件、资源与生命周期验收。
-- Runtime：Ogre / OIS / FGUI / Tracy 适配逻辑继续向 `runtime` 收口。
-- 对象模型：Agent / Soldier 组件化深化，优先处理 Blackboard owner 泛化、FSM 共享 Blackboard、AgentObject 瘦身。
-- AI：AI Debug View、Local / Team / Global 事件、AI 调度与 Tracy、Vision / Memory / TeamBlackboard / InfluenceMap。
-- 玩法基础设施：SkillTimeline、TriggerVolume、配置化与热重载。
-- 工程稳定性：非 FGUI smoke、固定随机种子、资源路径 / 大小写检查、Lua error 与崩溃诊断。
+- L0 地基（最高优先）：解耦去全局单例（`SandboxServices` 注入）、CSV/Lua 表 Def 数据驱动实例化、事件总线扩“四件套 + 参数化事件名”。
+- 第一个垂直切片：数据定义的生物 + 区域触发器（玩家进入→生物攻击）+ 数据驱动行为树 + 热重载，全程手写数据、不做编辑器。
+- 缓做：可视化编辑器（AI / 触发器）、UGC / Mod、世界 streaming。
+- 维持：FGUI 转为“编辑器 UI 基座 + 回归门禁”，不再占主线 P0。
+
+> 优先级与完整定调以 `docs/project-direction.md`（北极星）为准；文档导航见 `docs/README.md`。
 
 2024-03-15：
 1、剥离出最基础的ogre3d的依赖库，挪到src/external目录下
