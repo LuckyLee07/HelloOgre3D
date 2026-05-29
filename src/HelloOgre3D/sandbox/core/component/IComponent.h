@@ -4,6 +4,7 @@
 #include <string>
 
 class BaseObject;
+struct SandboxServices;
 class IComponent
 {
 public:
@@ -11,6 +12,7 @@ public:
 	virtual ~IComponent() {}
 
 	BaseObject* getOwner() const;
+	const SandboxServices* GetSandboxServices() const;
 	const std::string& getComponentKey() const { return m_componentKey; }
 
 	virtual void onAttach(BaseObject* owner);

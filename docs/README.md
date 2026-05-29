@@ -14,6 +14,7 @@
 
 | 文档 | 作用 | 对应北极星层 |
 |---|---|---|
+| `high-priority-todo.md` | 当前高优先级施工 TODO（L0 地基 + 第一个垂直切片 + 必要 BT 补强） | L0/L1 执行 |
 | `foundation-modules-inventory.md` | 地基模块盘点(已有/缺/不做)+ 切片最小 base 集 | L0–L2 家底 |
 | `architecture-improvement-plan.md` | 架构优化实施(解耦 SandboxServices / 组件化 / 所有权 / 感知)，带 file:line 证据与验收 | L0/L1/L2 落地 |
 | `cpp-object-model-refactor-roadmap.md` | C++ 对象模型分阶段路线(术语已同步当前继承链) | L1-④ 依据 |

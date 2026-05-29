@@ -1,4 +1,5 @@
 #include "IComponent.h"
+#include "object/BaseObject.h"
 
 void IComponent::onAttach(BaseObject* owner)
 {
@@ -14,4 +15,9 @@ void IComponent::onDetach()
 BaseObject* IComponent::getOwner() const
 {
 	return m_owner;
+}
+
+const SandboxServices* IComponent::GetSandboxServices() const
+{
+	return m_owner != nullptr ? m_owner->GetSandboxServices() : nullptr;
 }

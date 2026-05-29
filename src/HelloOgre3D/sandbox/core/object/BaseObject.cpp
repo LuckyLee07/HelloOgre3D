@@ -16,7 +16,7 @@ namespace
 }
 
 BaseObject::BaseObject()
-	: m_objId(0), m_teamId(0), m_liveTicks(0), m_needClearTicks(-1)
+	: m_services(nullptr), m_objId(0), m_teamId(0), m_liveTicks(0), m_needClearTicks(-1)
 {
 	m_objType = OBJ_TYPE_NONE;
 }
@@ -53,6 +53,11 @@ BaseObject::ObjectType BaseObject::GetObjType()
 void BaseObject::SetObjId(unsigned int objId)
 {
 	m_objId = objId;
+}
+
+void BaseObject::SetSandboxServices(const SandboxServices* services)
+{
+	m_services = services;
 }
 
 void BaseObject::SetObjType(ObjectType objType)

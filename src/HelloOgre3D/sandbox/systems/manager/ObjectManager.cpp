@@ -117,6 +117,9 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 {
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
+	m_services.objects = this;
+	m_services.physics = m_pPhysicsWorld;
+	m_services.script = m_pScriptVM;
 }
 
 ObjectManager::~ObjectManager()
@@ -213,6 +216,23 @@ void ObjectManager::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 		{
 			pAgent->HandleKeyEvent(keycode, key);
 		}
+	}
+}
+
+void ObjectManager::SetSandboxServices(const SandboxServices& services)
+{
+	m_services = services;
+	if (m_services.objects == nullptr)
+		m_services.objects = this;
+	if (m_services.physics == nullptr)
+		m_services.physics = m_pPhysicsWorld;
+	if (m_services.script == nullptr)
+		m_services.script = m_pScriptVM;
+
+	for (std::unordered_map<int, BaseObject*>::iterator iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+	{
+		if (iter->second != nullptr)
+			iter->second->SetSandboxServices(&m_services);
 	}
 }
 
@@ -519,6 +539,11 @@ std::vector<BlockObject*> ObjectManager::getFixedObjects()
 
 void ObjectManager::addNewObject(BaseObject* pObject)
 {
+	if (pObject == nullptr)
+		return;
+
+	pObject->SetSandboxServices(&m_services);
+
 	unsigned int objectId = getNextObjId();
 	pObject->SetObjId(objectId);
 	pObject->Init();

@@ -1,10 +1,22 @@
 #include "PhysicsComponent.h"
 #include "GameManager.h"
+#include "core/SandboxServices.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "btBulletDynamicsCommon.h"
 #include "SandboxMacros.h"
 #include "GameFunction.h"
 #include "systems/service/PhysicsFactory.h"
+
+namespace
+{
+	PhysicsWorld* ResolvePhysicsWorld(const PhysicsComponent* component)
+	{
+		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->physics != nullptr)
+			return services->physics;
+		return g_GameManager != nullptr ? g_GameManager->getPhysicsWorld() : nullptr;
+	}
+}
 
 PhysicsComponent::PhysicsComponent(btRigidBody* body)
 	: m_body(body)
@@ -56,7 +68,7 @@ void PhysicsComponent::AddToWorld()
 {
 	if (!m_body) return;
 
-	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
+	PhysicsWorld* pPhysicsWorld = ResolvePhysicsWorld(this);
 	if (pPhysicsWorld)
 		pPhysicsWorld->addRigidBody(m_body);
 }
@@ -65,7 +77,7 @@ void PhysicsComponent::RemoveFromWorld()
 {
 	if (!m_body) return;
 
-	PhysicsWorld* pPhysicsWorld = g_GameManager->getPhysicsWorld();
+	PhysicsWorld* pPhysicsWorld = ResolvePhysicsWorld(this);
 	if (pPhysicsWorld)
 		pPhysicsWorld->removeRigidBody(m_body);
 }

@@ -22,6 +22,7 @@
 #include "debug/DebugDrawer.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "core/SandboxMacros.h"
+#include "core/SandboxServices.h"
 #include "profiling/Profile.h"
 #include "diagnostics/RuntimeResourceDiagnostics.h"
 
@@ -643,6 +644,13 @@ void GameManager::Initialize()
 	Ogre::SceneManager* pSceneManager = m_pClientManager->getSceneManager();
 	m_pSandboxMgr = new SandboxMgr(uiservice, camservice, objfactory, pSceneManager);
 	g_SandboxMgr = m_pSandboxMgr;
+
+	SandboxServices services;
+	services.objects = m_pObjectManager;
+	services.physics = m_pPhysicsWorld;
+	services.sandbox = m_pSandboxMgr;
+	services.script = m_pScriptVM;
+	m_pObjectManager->SetSandboxServices(services);
 
 	this->InitLuaEnv();
 }

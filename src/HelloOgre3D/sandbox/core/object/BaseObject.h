@@ -10,6 +10,7 @@
 #include "script/LuaClassNameTraits.h"
 
 struct Collision;
+struct SandboxServices;
 
 class BaseObject : public SandboxObject //tolua_exports
 { //tolua_exports
@@ -40,6 +41,8 @@ public:
 	//tolua_end
 
 	void SetObjId(unsigned int objId);
+	void SetSandboxServices(const SandboxServices* services);
+	const SandboxServices* GetSandboxServices() const { return m_services; }
 	
 	ObjectType GetObjType();
 	void SetObjType(ObjectType objType);
@@ -108,6 +111,7 @@ protected:
 	std::map<std::string, IComponent*> m_components;
 
 private:
+	const SandboxServices* m_services;
 	unsigned int m_objId;
 	unsigned int m_teamId;
 	int m_liveTicks = -1;

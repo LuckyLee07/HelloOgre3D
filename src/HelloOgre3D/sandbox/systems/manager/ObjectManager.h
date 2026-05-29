@@ -8,6 +8,7 @@
 #include "OISKeyboard.h"
 #include "GameDefine.h"
 #include "OgreString.h"
+#include "SandboxServices.h"
 
 namespace Ogre
 {
@@ -42,6 +43,8 @@ public:
 	void Update(int deltaMilliseconds);
 	
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
+	void SetSandboxServices(const SandboxServices& services);
+	const SandboxServices& GetSandboxServices() const { return m_services; }
 
 public:
 	//tolua_begin
@@ -93,6 +96,7 @@ private:
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;
 	AIScheduler* m_aiScheduler;
+	SandboxServices m_services;
 }; //tolua_exports
 
 extern ObjectManager* g_ObjectManager;
