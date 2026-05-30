@@ -4,6 +4,10 @@ local function getEnvValue(name)
 	return os.getenv and os.getenv(name) or nil
 end
 
+local function isTruthy(value)
+	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "True" or value == "yes" or value == "YES"
+end
+
 local function getDiagnosticLimit(key, envName, defaultValue)
 	local envValue = tonumber(getEnvValue(envName))
 	if envValue ~= nil then
@@ -49,7 +53,11 @@ function RuntimeDiagnostics.RunSelfTest()
 		print("[RuntimeDiag] AI debug summary unavailable")
 		ok = false
 	else
-		printLines(ObjectManager:buildAiDebugSummary(maxObjects))
+		local aiSummary = tostring(ObjectManager:buildAiDebugSummary(maxObjects))
+		printLines(aiSummary)
+		if isTruthy(getEnvValue("HELLO_AI_BLACKBOARD_SELF_TEST")) and string.find(aiSummary, "[BlackboardSelfTest] result=true", 1, true) == nil then
+			ok = false
+		end
 	end
 
 	if ObjectManager == nil or ObjectManager.buildAiSchedulerDebugSummary == nil then

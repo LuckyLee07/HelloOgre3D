@@ -38,6 +38,9 @@ namespace
 	const char* const kMemoryLastKnownEnemyId = "memory.lastKnownEnemyId";
 	const char* const kMemoryLastKnownEnemyPos = "memory.lastKnownEnemyPos";
 	const char* const kPerceptionSource = "PerceptionQuery";
+	const int kSenseEntryTtlMs = 750;
+	const int kMemoryEntryTtlMs = 8000;
+	const float kMemoryConfidenceDecayPerMs = 1.0f / static_cast<float>(kMemoryEntryTtlMs);
 
 	ObjectManager* ResolveObjectManager(const AIController* controller)
 	{
@@ -117,7 +120,9 @@ void AIController::TickAI(int deltaMs)
 		return;
 	}
 
-	m_localTimeMs += deltaMs;
+	const int elapsedMs = std::max(0, deltaMs);
+	m_localTimeMs += elapsedMs;
+	m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
 
 	H3D_PROFILE_SCOPE("AIController::TickAI");
 	static int totalMilisec = 0;
@@ -217,11 +222,13 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 	m_blackboard.SetObjectId(kPerceptionLastKnownTargetId, result.targetId);
 	m_blackboard.SetVec3(kPerceptionLastKnownTargetPos, result.targetPosition);
 
-	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, 1.0f, m_localTimeMs, -1, kPerceptionSource);
-	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, 1.0f, m_localTimeMs, -1, kPerceptionSource);
-	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, 1.0f, m_localTimeMs, -1, kPerceptionSource);
-	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, 1.0f, m_localTimeMs, -1, kPerceptionSource);
-	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, 1.0f, m_localTimeMs, -1, kPerceptionSource);
+	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, 1.0f, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, 1.0f, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyId, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
+	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyPos, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
 }
 
 void AIController::ClearPerceptionResult()

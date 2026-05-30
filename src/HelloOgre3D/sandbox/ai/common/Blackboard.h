@@ -29,6 +29,13 @@ public:
 		ENTRY_VALUE_VEC3
 	};
 
+	enum EntryDecayPolicy
+	{
+		ENTRY_DECAY_NONE = 0,
+		ENTRY_DECAY_LINEAR,
+		ENTRY_DECAY_EXPONENTIAL
+	};
+
 	struct EntryValue
 	{
 		EntryValueType type;
@@ -51,6 +58,15 @@ public:
 		std::string source;
 
 		Entry();
+	};
+
+	struct EntryDecay
+	{
+		EntryDecayPolicy policy;
+		float rate;
+
+		EntryDecay();
+		EntryDecay(EntryDecayPolicy decayPolicy, float decayRate);
 	};
 
 	Blackboard();
@@ -137,11 +153,16 @@ public:
 	bool IsEntryExpired(const Entry& entry, long long currentTimeMs) const;
 	bool IsEntryExpired(const std::string& key, long long currentTimeMs) const;
 	int PruneExpiredEntries(long long currentTimeMs);
+	void SetEntryDecayPolicy(const std::string& key, EntryDecayPolicy policy, float rate);
+	void ClearEntryDecayPolicy(const std::string& key);
+	bool GetEntryDecayPolicy(const std::string& key, EntryDecay& outDecay) const;
+	int UpdateEntries(long long currentTimeMs, int deltaMs);
 	std::string BuildEntryDebugString(const std::string& key, long long currentTimeMs = -1) const;
 	std::string BuildDebugSummary(int maxEntries = 8, long long currentTimeMs = -1) const;
 
 private:
 	void RemoveTypedValue(const std::string& key);
+	void RemoveEntryValue(const std::string& key);
 
 	SoldierObject* m_owner;
 
@@ -157,6 +178,7 @@ private:
 	std::unordered_map<std::string, std::vector<std::string>> m_stringArrays;
 	std::unordered_map<std::string, std::vector<int>>         m_objectIdArrays;
 	std::unordered_map<std::string, Entry>                   m_entries;
+	std::unordered_map<std::string, EntryDecay>              m_entryDecays;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(Blackboard);

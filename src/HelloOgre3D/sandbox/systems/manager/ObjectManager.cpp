@@ -21,6 +21,8 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 
 ObjectManager* g_ObjectManager = nullptr;
@@ -78,6 +80,17 @@ namespace
 		return text.substr(0, maxLength - 3) + "...";
 	}
 
+	bool NearlyEqual(float left, float right, float epsilon)
+	{
+		return std::fabs(left - right) <= epsilon;
+	}
+
+	void AppendSelfTestFailure(std::ostringstream& stream, const std::string& text, int& failures)
+	{
+		stream << "\n[BlackboardSelfTest] failure: " << text;
+		++failures;
+	}
+
 	void AppendBlackboardBrief(std::ostringstream& stream, Blackboard* blackboard)
 	{
 		if (blackboard == nullptr)
@@ -120,6 +133,9 @@ namespace
 			{
 				stream << "@" << static_cast<int>(memoryPos.x) << "," << static_cast<int>(memoryPos.y) << "," << static_cast<int>(memoryPos.z);
 				stream << " t=" << memoryPosEntry.timestampMs;
+				stream << " c=" << FormatReal(memoryPosEntry.confidence);
+				if (memoryPosEntry.ttlMs >= 0)
+					stream << " ttl=" << memoryPosEntry.ttlMs;
 			}
 			wrote = true;
 		}
@@ -356,6 +372,61 @@ std::string ObjectManager::buildAiEventDebugSummary(int maxAgents, int maxEvents
 	return stream.str();
 }
 
+static std::string BuildBlackboardSelfTestSummary()
+{
+	std::ostringstream stream;
+	int failures = 0;
+
+	Blackboard blackboard;
+	blackboard.SetObjectIdEntry("self.target", 42, 1.0f, 1000, 500, "selftest");
+	blackboard.SetEntryDecayPolicy("self.target", Blackboard::ENTRY_DECAY_LINEAR, 0.001f);
+	blackboard.UpdateEntries(1250, 250);
+
+	int targetId = -1;
+	Blackboard::Entry targetEntry;
+	if (!blackboard.GetObjectIdEntry("self.target", targetId, &targetEntry) || targetId != 42)
+	{
+		AppendSelfTestFailure(stream, "typed object id entry was not preserved after decay", failures);
+	}
+	else if (!NearlyEqual(targetEntry.confidence, 0.75f, 0.01f))
+	{
+		std::ostringstream failure;
+		failure << "linear decay confidence expected 0.75 got " << FormatReal(targetEntry.confidence);
+		AppendSelfTestFailure(stream, failure.str(), failures);
+	}
+
+	const std::string debugLine = blackboard.BuildEntryDebugString("self.target", 1250);
+	if (debugLine.find("conf=0.75") == std::string::npos || debugLine.find("ttl=500") == std::string::npos || debugLine.find("decay=linear") == std::string::npos)
+	{
+		AppendSelfTestFailure(stream, "debug string did not include confidence, ttl and decay policy", failures);
+	}
+
+	const int ttlRemoved = blackboard.UpdateEntries(1601, 351);
+	if (ttlRemoved != 1 || blackboard.HasEntry("self.target"))
+	{
+		AppendSelfTestFailure(stream, "ttl expiration did not remove stale entry", failures);
+	}
+
+	blackboard.SetFloatEntry("self.confidence", 3.0f, 1.0f, 2000, -1, "selftest");
+	blackboard.SetEntryDecayPolicy("self.confidence", Blackboard::ENTRY_DECAY_LINEAR, 0.5f);
+	const int confidenceRemoved = blackboard.UpdateEntries(2003, 3);
+	if (confidenceRemoved != 1 || blackboard.HasEntry("self.confidence"))
+	{
+		AppendSelfTestFailure(stream, "confidence reaching zero did not remove entry", failures);
+	}
+
+	std::string details = stream.str();
+	std::ostringstream result;
+	result << "[BlackboardSelfTest] result=" << (failures == 0 ? "true" : "false")
+		<< " failures=" << failures
+		<< " ttlRemoved=" << ttlRemoved
+		<< " confidenceRemoved=" << confidenceRemoved
+		<< " debug=\"" << debugLine << "\"";
+	if (!details.empty())
+		result << details;
+	return result.str();
+}
+
 std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 {
 	if (maxAgents < 0)
@@ -422,6 +493,11 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		{
 			stream << " driver=" << (ai->GetFsmController() != nullptr ? "FSM" : "None");
 		}
+	}
+	const char* blackboardSelfTest = std::getenv("HELLO_AI_BLACKBOARD_SELF_TEST");
+	if (blackboardSelfTest != nullptr && (std::string(blackboardSelfTest) == "1" || std::string(blackboardSelfTest) == "true"))
+	{
+		stream << "\n" << BuildBlackboardSelfTestSummary();
 	}
 	return stream.str();
 }

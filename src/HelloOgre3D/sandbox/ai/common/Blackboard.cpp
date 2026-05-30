@@ -1,6 +1,7 @@
 #include "Blackboard.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -26,6 +27,29 @@ namespace
 		default:
 			return "none";
 		}
+	}
+
+	const char* EntryDecayPolicyToString(Blackboard::EntryDecayPolicy policy)
+	{
+		switch (policy)
+		{
+		case Blackboard::ENTRY_DECAY_LINEAR:
+			return "linear";
+		case Blackboard::ENTRY_DECAY_EXPONENTIAL:
+			return "exponential";
+		case Blackboard::ENTRY_DECAY_NONE:
+		default:
+			return "none";
+		}
+	}
+
+	float ClampConfidence(float value)
+	{
+		if (value < 0.0f)
+			return 0.0f;
+		if (value > 1.0f)
+			return 1.0f;
+		return value;
 	}
 
 	std::string FormatEntryValue(const Blackboard::EntryValue& value)
@@ -78,6 +102,18 @@ Blackboard::Entry::Entry()
 {
 }
 
+Blackboard::EntryDecay::EntryDecay()
+	: policy(ENTRY_DECAY_NONE)
+	, rate(0.0f)
+{
+}
+
+Blackboard::EntryDecay::EntryDecay(EntryDecayPolicy decayPolicy, float decayRate)
+	: policy(decayPolicy)
+	, rate(decayRate)
+{
+}
+
 Blackboard::Blackboard() : m_owner(nullptr)
 {
 }
@@ -98,7 +134,7 @@ void Blackboard::SetOwner(SoldierObject* owner)
 
 void Blackboard::SetAgent(const std::string& key, AgentObject* value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_agents[key] = value;
 }
 
@@ -111,7 +147,7 @@ AgentObject* Blackboard::GetAgent(const std::string& key) const
 
 void Blackboard::SetFloat(const std::string& key, float value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_floats[key] = value;
 }
 
@@ -124,7 +160,7 @@ float Blackboard::GetFloat(const std::string& key, float defaultValue) const
 
 void Blackboard::SetInt(const std::string& key, int value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_ints[key] = value;
 }
 
@@ -137,7 +173,7 @@ int Blackboard::GetInt(const std::string& key, int defaultValue) const
 
 void Blackboard::SetObjectId(const std::string& key, int value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_objectIds[key] = value;
 }
 
@@ -150,7 +186,7 @@ int Blackboard::GetObjectId(const std::string& key, int defaultValue) const
 
 void Blackboard::SetBool(const std::string& key, bool value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_bools[key] = value;
 }
 
@@ -163,7 +199,7 @@ bool Blackboard::GetBool(const std::string& key, bool defaultValue) const
 
 void Blackboard::SetString(const std::string& key, const std::string& value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_strings[key] = value;
 }
 
@@ -176,7 +212,7 @@ std::string Blackboard::GetString(const std::string& key) const
 
 void Blackboard::SetVec3(const std::string& key, const Ogre::Vector3& value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_vec3s[key] = value;
 }
 
@@ -189,20 +225,20 @@ Ogre::Vector3 Blackboard::GetVec3(const std::string& key) const
 
 void Blackboard::ClearIntArray(const std::string& key)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_intArrays.erase(key);
 }
 
 void Blackboard::AddIntToArray(const std::string& key, int value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_intArrays[key].push_back(value);
 }
 
 void Blackboard::SetIntArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	std::vector<int>& values = m_intArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0);
 	values[luaIndex - 1] = value;
@@ -231,20 +267,20 @@ bool Blackboard::ContainsIntInArray(const std::string& key, int value) const
 
 void Blackboard::ClearFloatArray(const std::string& key)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_floatArrays.erase(key);
 }
 
 void Blackboard::AddFloatToArray(const std::string& key, float value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_floatArrays[key].push_back(value);
 }
 
 void Blackboard::SetFloatArrayValue(const std::string& key, int luaIndex, float value)
 {
 	if (luaIndex <= 0) return;
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	std::vector<float>& values = m_floatArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0.0f);
 	values[luaIndex - 1] = value;
@@ -266,20 +302,20 @@ int Blackboard::GetFloatArrayCount(const std::string& key) const
 
 void Blackboard::ClearStringArray(const std::string& key)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_stringArrays.erase(key);
 }
 
 void Blackboard::AddStringToArray(const std::string& key, const std::string& value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_stringArrays[key].push_back(value);
 }
 
 void Blackboard::SetStringArrayValue(const std::string& key, int luaIndex, const std::string& value)
 {
 	if (luaIndex <= 0) return;
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	std::vector<std::string>& values = m_stringArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex);
 	values[luaIndex - 1] = value;
@@ -308,20 +344,20 @@ bool Blackboard::ContainsStringInArray(const std::string& key, const std::string
 
 void Blackboard::ClearObjectIdArray(const std::string& key)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_objectIdArrays.erase(key);
 }
 
 void Blackboard::AddObjectIdToArray(const std::string& key, int value)
 {
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	m_objectIdArrays[key].push_back(value);
 }
 
 void Blackboard::SetObjectIdArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 	std::vector<int>& values = m_objectIdArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, -1);
 	values[luaIndex - 1] = value;
@@ -367,7 +403,7 @@ bool Blackboard::Has(const std::string& key) const
 void Blackboard::Remove(const std::string& key)
 {
 	RemoveTypedValue(key);
-	m_entries.erase(key);
+	RemoveEntryValue(key);
 }
 
 void Blackboard::Clear()
@@ -384,12 +420,15 @@ void Blackboard::Clear()
 	m_stringArrays.clear();
 	m_objectIdArrays.clear();
 	m_entries.clear();
+	m_entryDecays.clear();
 }
 
 void Blackboard::SetEntry(const std::string& key, const Entry& entry)
 {
 	RemoveTypedValue(key);
-	m_entries[key] = entry;
+	Entry storedEntry = entry;
+	storedEntry.confidence = ClampConfidence(storedEntry.confidence);
+	m_entries[key] = storedEntry;
 }
 
 bool Blackboard::GetEntry(const std::string& key, Entry& outEntry) const
@@ -558,6 +597,7 @@ int Blackboard::PruneExpiredEntries(long long currentTimeMs)
 	{
 		if (IsEntryExpired(iter->second, currentTimeMs))
 		{
+			m_entryDecays.erase(iter->first);
 			iter = m_entries.erase(iter);
 			++removed;
 		}
@@ -565,6 +605,72 @@ int Blackboard::PruneExpiredEntries(long long currentTimeMs)
 		{
 			++iter;
 		}
+	}
+	return removed;
+}
+
+void Blackboard::SetEntryDecayPolicy(const std::string& key, EntryDecayPolicy policy, float rate)
+{
+	if (policy == ENTRY_DECAY_NONE || rate <= 0.0f)
+	{
+		m_entryDecays.erase(key);
+		return;
+	}
+	m_entryDecays[key] = EntryDecay(policy, rate);
+}
+
+void Blackboard::ClearEntryDecayPolicy(const std::string& key)
+{
+	m_entryDecays.erase(key);
+}
+
+bool Blackboard::GetEntryDecayPolicy(const std::string& key, EntryDecay& outDecay) const
+{
+	std::unordered_map<std::string, EntryDecay>::const_iterator iter = m_entryDecays.find(key);
+	if (iter == m_entryDecays.end()) return false;
+	outDecay = iter->second;
+	return true;
+}
+
+int Blackboard::UpdateEntries(long long currentTimeMs, int deltaMs)
+{
+	const int elapsedMs = std::max(0, deltaMs);
+	int removed = 0;
+	for (std::unordered_map<std::string, Entry>::iterator iter = m_entries.begin(); iter != m_entries.end();)
+	{
+		const std::string key = iter->first;
+		Entry& entry = iter->second;
+		if (IsEntryExpired(entry, currentTimeMs))
+		{
+			m_entryDecays.erase(key);
+			iter = m_entries.erase(iter);
+			++removed;
+			continue;
+		}
+
+		std::unordered_map<std::string, EntryDecay>::const_iterator decayIter = m_entryDecays.find(key);
+		if (elapsedMs > 0 && decayIter != m_entryDecays.end())
+		{
+			const EntryDecay& decay = decayIter->second;
+			if (decay.policy == ENTRY_DECAY_LINEAR)
+			{
+				entry.confidence = ClampConfidence(entry.confidence - decay.rate * static_cast<float>(elapsedMs));
+			}
+			else if (decay.policy == ENTRY_DECAY_EXPONENTIAL)
+			{
+				entry.confidence = ClampConfidence(entry.confidence * static_cast<float>(std::pow(decay.rate, static_cast<float>(elapsedMs) / 1000.0f)));
+			}
+		}
+
+		if (entry.confidence <= 0.0f)
+		{
+			m_entryDecays.erase(key);
+			iter = m_entries.erase(iter);
+			++removed;
+			continue;
+		}
+
+		++iter;
 	}
 	return removed;
 }
@@ -582,6 +688,12 @@ std::string Blackboard::BuildEntryDebugString(const std::string& key, long long 
 		<< " t=" << entry.timestampMs;
 	if (entry.ttlMs >= 0)
 		stream << " ttl=" << entry.ttlMs;
+	EntryDecay decay;
+	if (GetEntryDecayPolicy(key, decay))
+	{
+		stream << " decay=" << EntryDecayPolicyToString(decay.policy)
+			<< " rate=" << std::fixed << std::setprecision(4) << decay.rate;
+	}
 	if (!entry.source.empty())
 		stream << " src=" << entry.source;
 	if (IsEntryExpired(entry, currentTimeMs))
@@ -624,4 +736,10 @@ void Blackboard::RemoveTypedValue(const std::string& key)
 	m_floatArrays.erase(key);
 	m_stringArrays.erase(key);
 	m_objectIdArrays.erase(key);
+}
+
+void Blackboard::RemoveEntryValue(const std::string& key)
+{
+	m_entries.erase(key);
+	m_entryDecays.erase(key);
 }

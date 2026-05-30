@@ -19,6 +19,7 @@ param(
 	[switch]$IgnoreLogErrors,
 	[switch]$NoTail,
 	[switch]$RuntimeDiag,
+	[switch]$BlackboardSelfTest,
 	[int]$DiagMaxObjects = 8,
 	[int]$DiagMaxResources = 6,
 	[int]$DiagMaxEvents = 6,
@@ -49,12 +50,14 @@ $SelectedSample = $Sample
 if ($SelectedSample -eq "Default") {
 	$SelectedSample = "Sandbox8"
 }
+$RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
 
 $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_TEST",
 	"HELLO_SANDBOX_SAMPLE",
 	"HELLO_SANDBOX_SMOKE_RUN_ID",
 	"HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST",
+	"HELLO_AI_BLACKBOARD_SELF_TEST",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS",
@@ -72,7 +75,7 @@ $KnownEnvNames = @(
 )
 
 $RunId = "{0:yyyyMMddHHmmssfff}-{1}" -f (Get-Date), $PID
-if ($RuntimeDiag -and -not $PSBoundParameters.ContainsKey("Seconds") -and $Seconds -lt 55) {
+if ($RuntimeDiagEnabled -and -not $PSBoundParameters.ContainsKey("Seconds") -and $Seconds -lt 55) {
 	$Seconds = 55
 }
 $SelectedEnv = [ordered]@{
@@ -80,11 +83,14 @@ $SelectedEnv = [ordered]@{
 	"HELLO_SANDBOX_SAMPLE" = $SelectedSample
 	"HELLO_SANDBOX_SMOKE_RUN_ID" = $RunId
 }
-if ($RuntimeDiag) {
+if ($RuntimeDiagEnabled) {
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST"] = "1"
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS"] = [string]$DiagMaxObjects
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES"] = [string]$DiagMaxResources
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS"] = [string]$DiagMaxEvents
+}
+if ($BlackboardSelfTest) {
+	$SelectedEnv["HELLO_AI_BLACKBOARD_SELF_TEST"] = "1"
 }
 if ($Preset -ne "") {
 	$SelectedEnv["HELLO_SAMPLE_PRESET"] = $Preset
@@ -110,7 +116,7 @@ if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$($RuntimeDiag.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -256,7 +262,7 @@ try {
 			throw "Sandbox smoke log did not confirm sample selection: $SelectedSample"
 		}
 
-		if ($RuntimeDiag) {
+		if ($RuntimeDiagEnabled) {
 			$diagMatches = @($LogLinesForChecks | Select-String -Pattern "\[RuntimeDiag\] self test result:\s+true")
 			if ($diagMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm runtime diagnostic selftest success."
