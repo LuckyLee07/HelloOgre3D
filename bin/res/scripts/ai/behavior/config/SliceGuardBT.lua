@@ -33,8 +33,26 @@ local SliceGuardBTConfig = {
 										event = "PLAYER_ENTER",
 										regionId = "slice_entry",
 										targetKey = "enemy",
+										targetIdKey = "slice.guard.primaryTargetId",
 										setBoolKey = "slice.guardAwake",
 										consume = false,
+									},
+									{
+										node = "Condition",
+										condition = "HasObjectId",
+										params = { "slice.guard.primaryTargetId" },
+									},
+									{
+										node = "Condition",
+										condition = "ArrayCountAtLeast",
+										params = {
+											{
+												blackboard = "slice.guard.recentTargetIds",
+												type = "object-id-array",
+												default = {},
+											},
+											1,
+										},
 									},
 									{ node = "Condition", condition = "HasEnemy" },
 									{

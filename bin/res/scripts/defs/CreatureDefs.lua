@@ -78,6 +78,9 @@ local CreatureDefs = {
 					role = "guard",
 					sliceGuardAwake = false,
 					["slice.guard.shootDistanceSq"] = 9.0,
+					["slice.guard.primaryTargetId"] = { type = "object-id", value = -1 },
+					["slice.guard.recentTargetIds"] = { type = "object-id-array", values = {} },
+					["slice.guard.patrolPointIds"] = { type = "int-array", values = { 101, 102 } },
 				},
 			},
 			behaviorTree = {
@@ -91,6 +94,8 @@ local CreatureDefs = {
 					scope = "Global",
 					action = "wake_behavior_tree",
 					targetKey = "enemy",
+					targetIdKey = "slice.guard.primaryTargetId",
+					targetIdArrayKey = "slice.guard.recentTargetIds",
 					setBoolKey = "slice.guardAwake",
 				},
 			},

@@ -99,6 +99,124 @@ local function toVector3(value, defaultValue)
 	)
 end
 
+local function normalizeValueType(value)
+	if value == nil then
+		return nil
+	end
+	return string.lower(tostring(value))
+end
+
+local function isValueType(valueType, ...)
+	for i = 1, select("#", ...) do
+		if valueType == select(i, ...) then
+			return true
+		end
+	end
+	return false
+end
+
+local function isArrayValueType(valueType)
+	if valueType == nil then
+		return false
+	end
+	return isValueType(valueType,
+		"array",
+		"int-array", "integer-array", "int[]", "integer[]", "ints", "integers",
+		"float-array", "number-array", "float[]", "number[]", "floats", "numbers",
+		"string-array", "string[]", "strings",
+		"object-id-array", "objectid-array", "object-id[]", "objectid[]", "objectids", "object-ids")
+end
+
+local function getArrayElementType(valueType, spec)
+	local explicitType = isTable(spec) and normalizeValueType(spec.elementType or spec.itemType) or nil
+	if explicitType ~= nil then
+		return explicitType
+	end
+	if isValueType(valueType, "object-id-array", "objectid-array", "object-id[]", "objectid[]", "objectids", "object-ids") then
+		return "object-id"
+	end
+	if isValueType(valueType, "int-array", "integer-array", "int[]", "integer[]", "ints", "integers") then
+		return "int"
+	end
+	if isValueType(valueType, "float-array", "number-array", "float[]", "number[]", "floats", "numbers") then
+		return "float"
+	end
+	if isValueType(valueType, "string-array", "string[]", "strings") then
+		return "string"
+	end
+	return "float"
+end
+
+local function getArrayValues(value)
+	if not isTable(value) then
+		return {}
+	end
+	if isTable(value.values) then
+		return value.values
+	end
+	if isTable(value.value) then
+		return value.value
+	end
+	if isArrayTable(value) then
+		return value
+	end
+	return {}
+end
+
+local function setBlackboardScalar(blackboard, key, valueType, rawValue)
+	if isValueType(valueType, "object-id", "objectid") then
+		local objectId = tonumber(rawValue) or -1
+		if blackboard.SetObjectId ~= nil then
+			blackboard:SetObjectId(key, objectId)
+		end
+		blackboard:SetInt(key, objectId)
+	elseif isValueType(valueType, "int", "integer") then
+		blackboard:SetInt(key, tonumber(rawValue) or 0)
+	elseif isValueType(valueType, "float", "number") then
+		blackboard:SetFloat(key, tonumber(rawValue) or 0.0)
+	elseif isValueType(valueType, "bool", "boolean") then
+		blackboard:SetBool(key, rawValue and true or false)
+	elseif isValueType(valueType, "string") then
+		blackboard:SetString(key, tostring(rawValue or ""))
+	elseif isValueType(valueType, "vec3", "vector3") and blackboard.SetVec3 ~= nil then
+		local vector = toVector3(rawValue)
+		if vector ~= nil then
+			blackboard:SetVec3(key, vector)
+		end
+	elseif rawValue ~= nil then
+		blackboard:SetString(key, tostring(rawValue))
+	else
+		blackboard:SetString(key, "")
+	end
+end
+
+local function setBlackboardArray(blackboard, key, valueType, spec)
+	local elementType = getArrayElementType(valueType, spec)
+	local values = getArrayValues(spec)
+
+	if isValueType(elementType, "object-id", "objectid") and blackboard.ClearObjectIdArray ~= nil then
+		blackboard:ClearObjectIdArray(key)
+		for _, item in ipairs(values) do
+			blackboard:AddObjectIdToArray(key, tonumber(item) or -1)
+		end
+	elseif isValueType(elementType, "int", "integer") and blackboard.ClearIntArray ~= nil then
+		blackboard:ClearIntArray(key)
+		for _, item in ipairs(values) do
+			blackboard:AddIntToArray(key, tonumber(item) or 0)
+		end
+	elseif isValueType(elementType, "float", "number") and blackboard.ClearFloatArray ~= nil then
+		blackboard:ClearFloatArray(key)
+		for _, item in ipairs(values) do
+			blackboard:AddFloatToArray(key, tonumber(item) or 0.0)
+		end
+	elseif isValueType(elementType, "string") and blackboard.ClearStringArray ~= nil then
+		blackboard:ClearStringArray(key)
+		for _, item in ipairs(values) do
+			blackboard:AddStringToArray(key, tostring(item or ""))
+		end
+	end
+end
+
 local function resolveAppearance(value)
 	if value == nil then
 		return nil
@@ -246,8 +364,21 @@ local function setBlackboardValue(blackboard, key, value)
 	elseif type(value) == "string" then
 		blackboard:SetString(key, value)
 	elseif type(value) == "table" then
-		blackboard:SetString(key, tostring(value.value or value.id or ""))
+		local valueType = normalizeValueType(value.valueType or value.type)
+		if isArrayValueType(valueType) then
+			setBlackboardArray(blackboard, key, valueType, value)
+		elseif valueType ~= nil then
+			local rawValue = value.value
+			if rawValue == nil then rawValue = value.id end
+			setBlackboardScalar(blackboard, key, valueType, rawValue)
+		else
+			blackboard:SetString(key, tostring(value.value or value.id or ""))
+		end
 	end
+end
+
+function CreatureAssembler:SetBlackboardValue(blackboard, key, value)
+	setBlackboardValue(blackboard, key, value)
 end
 
 local function applyBlackboard(object, def)

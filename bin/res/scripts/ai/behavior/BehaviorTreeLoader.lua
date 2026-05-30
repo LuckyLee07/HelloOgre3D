@@ -13,6 +13,7 @@
 --   Inverter / ForceSuccess / ForceFailure -> one-child decorators
 -- Runtime params:
 --   params = { { blackboard = "key", type = "float", default = 0 } } reads from Blackboard per tick.
+--   type supports scalar values plus object-id / int-array / float-array / string-array / object-id-array.
 -- Optional config flags:
 --   reactive / reevaluateMs -> Sequence/Selector can restart from first child to interrupt RUNNING branch
 --   debugTrace      -> driver:SetDebugTraceEnabled(bool)
@@ -67,6 +68,61 @@ local function _NormalizeValueType(valueType, defaultValue)
     return "float"
 end
 
+local function _IsValueType(valueType, ...)
+    for i = 1, select("#", ...) do
+        if valueType == select(i, ...) then
+            return true
+        end
+    end
+    return false
+end
+
+local function _ReadArrayValue(spec, bb, key, valueType, defaultValue)
+    local fallback = type(defaultValue) == "table" and defaultValue or {}
+    if not bb:Has(key) then return fallback end
+
+    if _IsValueType(valueType, "int-array", "integer-array", "int[]", "integer[]", "ints", "integers") then
+        if bb.GetIntArrayCount == nil then return fallback end
+        local values = {}
+        local defaultElement = tonumber(spec.defaultElement or spec.elementDefault) or 0
+        for i = 1, bb:GetIntArrayCount(key) do
+            values[i] = bb:GetIntArrayValue(key, i, defaultElement)
+        end
+        return values
+    end
+
+    if _IsValueType(valueType, "float-array", "number-array", "float[]", "number[]", "floats", "numbers") then
+        if bb.GetFloatArrayCount == nil then return fallback end
+        local values = {}
+        local defaultElement = tonumber(spec.defaultElement or spec.elementDefault) or 0.0
+        for i = 1, bb:GetFloatArrayCount(key) do
+            values[i] = bb:GetFloatArrayValue(key, i, defaultElement)
+        end
+        return values
+    end
+
+    if _IsValueType(valueType, "string-array", "string[]", "strings") then
+        if bb.GetStringArrayCount == nil then return fallback end
+        local values = {}
+        for i = 1, bb:GetStringArrayCount(key) do
+            values[i] = bb:GetStringArrayValue(key, i)
+        end
+        return values
+    end
+
+    if _IsValueType(valueType, "object-id-array", "objectid-array", "object-id[]", "objectid[]", "objectids", "object-ids") then
+        if bb.GetObjectIdArrayCount == nil then return fallback end
+        local values = {}
+        local defaultElement = tonumber(spec.defaultElement or spec.elementDefault) or -1
+        for i = 1, bb:GetObjectIdArrayCount(key) do
+            values[i] = bb:GetObjectIdArrayValue(key, i, defaultElement)
+        end
+        return values
+    end
+
+    return fallback
+end
+
 local function _IsBlackboardValueSpec(value)
     if type(value) ~= "table" then return false end
     if value.blackboard ~= nil or value.bb ~= nil then return true end
@@ -85,24 +141,45 @@ local function _ReadBlackboardValue(spec, context)
     local defaultValue = spec.default
     local valueType = _NormalizeValueType(spec.valueType or spec.type, defaultValue)
 
-    if valueType == "bool" or valueType == "boolean" then
-        return bb:GetBool(key, defaultValue and true or false)
+    if _IsValueType(valueType,
+        "int-array", "integer-array", "int[]", "integer[]", "ints", "integers",
+        "float-array", "number-array", "float[]", "number[]", "floats", "numbers",
+        "string-array", "string[]", "strings",
+        "object-id-array", "objectid-array", "object-id[]", "objectid[]", "objectids", "object-ids") then
+        return _ReadArrayValue(spec, bb, key, valueType, defaultValue)
     end
-    if valueType == "int" or valueType == "integer" or valueType == "object-id" or valueType == "objectid" then
-        return bb:GetInt(key, tonumber(defaultValue) or 0)
+    if valueType == "bool" or valueType == "boolean" then
+        local boolValue = bb:GetBool(key, defaultValue and true or false)
+        return boolValue
+    end
+    if valueType == "object-id" or valueType == "objectid" then
+        if bb.GetObjectId ~= nil then
+            local objectId = bb:GetObjectId(key, tonumber(defaultValue) or -1)
+            return objectId
+        end
+        local intId = bb:GetInt(key, tonumber(defaultValue) or -1)
+        return intId
+    end
+    if valueType == "int" or valueType == "integer" then
+        local intValue = bb:GetInt(key, tonumber(defaultValue) or 0)
+        return intValue
     end
     if valueType == "string" then
         if not bb:Has(key) then return defaultValue end
-        return bb:GetString(key)
+        local stringValue = bb:GetString(key)
+        return stringValue
     end
     if valueType == "agent" or valueType == "object" then
-        return bb:GetAgent(key) or defaultValue
+        local agentValue = bb:GetAgent(key)
+        return agentValue or defaultValue
     end
     if valueType == "vec3" or valueType == "vector3" then
         if not bb:Has(key) then return defaultValue end
-        return bb:GetVec3(key)
+        local vec3Value = bb:GetVec3(key)
+        return vec3Value
     end
-    return bb:GetFloat(key, tonumber(defaultValue) or 0.0)
+    local floatValue = bb:GetFloat(key, tonumber(defaultValue) or 0.0)
+    return floatValue
 end
 
 local function _ResolveValue(value, context)

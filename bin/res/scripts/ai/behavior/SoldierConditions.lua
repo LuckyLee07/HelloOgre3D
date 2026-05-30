@@ -51,6 +51,24 @@ function SoldierConditions.HasAmmo(agent, bb)
     return agent:HasAmmo()
 end
 
+function SoldierConditions.HasObjectId(key)
+    return function(agent, bb)
+        if bb == nil or bb.GetObjectId == nil then
+            return false
+        end
+        return bb:GetObjectId(tostring(key), -1) >= 0
+    end
+end
+
+function SoldierConditions.ArrayCountAtLeast(values, minCount)
+    return function()
+        if type(values) ~= "table" then
+            return false
+        end
+        return #values >= (tonumber(minCount) or 1)
+    end
+end
+
 local function _CanShootEnemy(agent, bb, maxDistanceSq)
     maxDistanceSq = tonumber(maxDistanceSq) or 9.0
     local eventEnemy = bb:GetAgent("enemy")

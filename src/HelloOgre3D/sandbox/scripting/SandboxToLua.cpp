@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 30 11:17:33 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 30 11:31:43 2026.
 */
 
 #ifndef __cplusplus
@@ -8084,6 +8084,79 @@ static int tolua_SandboxToLua_Blackboard_GetInt00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetObjectId of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetObjectId00
+static int tolua_SandboxToLua_Blackboard_SetObjectId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int value = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetObjectId'", NULL);
+#endif
+  {
+   self->SetObjectId(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetObjectId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetObjectId of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetObjectId00
+static int tolua_SandboxToLua_Blackboard_GetObjectId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int defaultValue = ((int)  tolua_tonumber(tolua_S,3,-1));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectId'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetObjectId(key,defaultValue);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetObjectId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: SetBool of class  Blackboard */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetBool00
 static int tolua_SandboxToLua_Blackboard_SetBool00(lua_State* tolua_S)
@@ -8305,6 +8378,846 @@ static int tolua_SandboxToLua_Blackboard_GetVec300(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetVec3'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearIntArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ClearIntArray00
+static int tolua_SandboxToLua_Blackboard_ClearIntArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearIntArray'", NULL);
+#endif
+  {
+   self->ClearIntArray(key);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearIntArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AddIntToArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_AddIntToArray00
+static int tolua_SandboxToLua_Blackboard_AddIntToArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int value = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddIntToArray'", NULL);
+#endif
+  {
+   self->AddIntToArray(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AddIntToArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetIntArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetIntArrayValue00
+static int tolua_SandboxToLua_Blackboard_SetIntArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  int value = ((int)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetIntArrayValue'", NULL);
+#endif
+  {
+   self->SetIntArrayValue(key,luaIndex,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetIntArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetIntArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetIntArrayValue00
+static int tolua_SandboxToLua_Blackboard_GetIntArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  int defaultValue = ((int)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetIntArrayValue'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetIntArrayValue(key,luaIndex,defaultValue);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetIntArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetIntArrayCount of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetIntArrayCount00
+static int tolua_SandboxToLua_Blackboard_GetIntArrayCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetIntArrayCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetIntArrayCount(key);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetIntArrayCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ContainsIntInArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ContainsIntInArray00
+static int tolua_SandboxToLua_Blackboard_ContainsIntInArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int value = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ContainsIntInArray'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->ContainsIntInArray(key,value);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ContainsIntInArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearFloatArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ClearFloatArray00
+static int tolua_SandboxToLua_Blackboard_ClearFloatArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearFloatArray'", NULL);
+#endif
+  {
+   self->ClearFloatArray(key);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearFloatArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AddFloatToArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_AddFloatToArray00
+static int tolua_SandboxToLua_Blackboard_AddFloatToArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  float value = ((float)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddFloatToArray'", NULL);
+#endif
+  {
+   self->AddFloatToArray(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AddFloatToArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetFloatArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetFloatArrayValue00
+static int tolua_SandboxToLua_Blackboard_SetFloatArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  float value = ((float)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetFloatArrayValue'", NULL);
+#endif
+  {
+   self->SetFloatArrayValue(key,luaIndex,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetFloatArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetFloatArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetFloatArrayValue00
+static int tolua_SandboxToLua_Blackboard_GetFloatArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  float defaultValue = ((float)  tolua_tonumber(tolua_S,4,0.0f));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetFloatArrayValue'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetFloatArrayValue(key,luaIndex,defaultValue);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetFloatArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetFloatArrayCount of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetFloatArrayCount00
+static int tolua_SandboxToLua_Blackboard_GetFloatArrayCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetFloatArrayCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetFloatArrayCount(key);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetFloatArrayCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearStringArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ClearStringArray00
+static int tolua_SandboxToLua_Blackboard_ClearStringArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearStringArray'", NULL);
+#endif
+  {
+   self->ClearStringArray(key);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearStringArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AddStringToArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_AddStringToArray00
+static int tolua_SandboxToLua_Blackboard_AddStringToArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const std::string value = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddStringToArray'", NULL);
+#endif
+  {
+   self->AddStringToArray(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+   tolua_pushcppstring(tolua_S,(const char*)value);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AddStringToArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetStringArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetStringArrayValue00
+static int tolua_SandboxToLua_Blackboard_SetStringArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  const std::string value = ((const std::string)  tolua_tocppstring(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetStringArrayValue'", NULL);
+#endif
+  {
+   self->SetStringArrayValue(key,luaIndex,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+   tolua_pushcppstring(tolua_S,(const char*)value);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetStringArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetStringArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetStringArrayValue00
+static int tolua_SandboxToLua_Blackboard_GetStringArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetStringArrayValue'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->GetStringArrayValue(key,luaIndex);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetStringArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetStringArrayCount of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetStringArrayCount00
+static int tolua_SandboxToLua_Blackboard_GetStringArrayCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetStringArrayCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetStringArrayCount(key);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetStringArrayCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ContainsStringInArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ContainsStringInArray00
+static int tolua_SandboxToLua_Blackboard_ContainsStringInArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const std::string value = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ContainsStringInArray'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->ContainsStringInArray(key,value);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+   tolua_pushcppstring(tolua_S,(const char*)value);
+  }
+ }
+ return 3;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ContainsStringInArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearObjectIdArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ClearObjectIdArray00
+static int tolua_SandboxToLua_Blackboard_ClearObjectIdArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearObjectIdArray'", NULL);
+#endif
+  {
+   self->ClearObjectIdArray(key);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearObjectIdArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AddObjectIdToArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_AddObjectIdToArray00
+static int tolua_SandboxToLua_Blackboard_AddObjectIdToArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int value = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddObjectIdToArray'", NULL);
+#endif
+  {
+   self->AddObjectIdToArray(key,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AddObjectIdToArray'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetObjectIdArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_SetObjectIdArrayValue00
+static int tolua_SandboxToLua_Blackboard_SetObjectIdArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  Blackboard* self = (Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  int value = ((int)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetObjectIdArrayValue'", NULL);
+#endif
+  {
+   self->SetObjectIdArrayValue(key,luaIndex,value);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetObjectIdArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetObjectIdArrayValue of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetObjectIdArrayValue00
+static int tolua_SandboxToLua_Blackboard_GetObjectIdArrayValue00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int luaIndex = ((int)  tolua_tonumber(tolua_S,3,0));
+  int defaultValue = ((int)  tolua_tonumber(tolua_S,4,-1));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectIdArrayValue'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetObjectIdArrayValue(key,luaIndex,defaultValue);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetObjectIdArrayValue'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetObjectIdArrayCount of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetObjectIdArrayCount00
+static int tolua_SandboxToLua_Blackboard_GetObjectIdArrayCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetObjectIdArrayCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetObjectIdArrayCount(key);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetObjectIdArrayCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ContainsObjectIdInArray of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_ContainsObjectIdInArray00
+static int tolua_SandboxToLua_Blackboard_ContainsObjectIdInArray00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int value = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ContainsObjectIdInArray'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->ContainsObjectIdInArray(key,value);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ContainsObjectIdInArray'.",&tolua_err);
  return 0;
 #endif
 }
@@ -10311,12 +11224,37 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetFloat",tolua_SandboxToLua_Blackboard_GetFloat00);
    tolua_function(tolua_S,"SetInt",tolua_SandboxToLua_Blackboard_SetInt00);
    tolua_function(tolua_S,"GetInt",tolua_SandboxToLua_Blackboard_GetInt00);
+   tolua_function(tolua_S,"SetObjectId",tolua_SandboxToLua_Blackboard_SetObjectId00);
+   tolua_function(tolua_S,"GetObjectId",tolua_SandboxToLua_Blackboard_GetObjectId00);
    tolua_function(tolua_S,"SetBool",tolua_SandboxToLua_Blackboard_SetBool00);
    tolua_function(tolua_S,"GetBool",tolua_SandboxToLua_Blackboard_GetBool00);
    tolua_function(tolua_S,"SetString",tolua_SandboxToLua_Blackboard_SetString00);
    tolua_function(tolua_S,"GetString",tolua_SandboxToLua_Blackboard_GetString00);
    tolua_function(tolua_S,"SetVec3",tolua_SandboxToLua_Blackboard_SetVec300);
    tolua_function(tolua_S,"GetVec3",tolua_SandboxToLua_Blackboard_GetVec300);
+   tolua_function(tolua_S,"ClearIntArray",tolua_SandboxToLua_Blackboard_ClearIntArray00);
+   tolua_function(tolua_S,"AddIntToArray",tolua_SandboxToLua_Blackboard_AddIntToArray00);
+   tolua_function(tolua_S,"SetIntArrayValue",tolua_SandboxToLua_Blackboard_SetIntArrayValue00);
+   tolua_function(tolua_S,"GetIntArrayValue",tolua_SandboxToLua_Blackboard_GetIntArrayValue00);
+   tolua_function(tolua_S,"GetIntArrayCount",tolua_SandboxToLua_Blackboard_GetIntArrayCount00);
+   tolua_function(tolua_S,"ContainsIntInArray",tolua_SandboxToLua_Blackboard_ContainsIntInArray00);
+   tolua_function(tolua_S,"ClearFloatArray",tolua_SandboxToLua_Blackboard_ClearFloatArray00);
+   tolua_function(tolua_S,"AddFloatToArray",tolua_SandboxToLua_Blackboard_AddFloatToArray00);
+   tolua_function(tolua_S,"SetFloatArrayValue",tolua_SandboxToLua_Blackboard_SetFloatArrayValue00);
+   tolua_function(tolua_S,"GetFloatArrayValue",tolua_SandboxToLua_Blackboard_GetFloatArrayValue00);
+   tolua_function(tolua_S,"GetFloatArrayCount",tolua_SandboxToLua_Blackboard_GetFloatArrayCount00);
+   tolua_function(tolua_S,"ClearStringArray",tolua_SandboxToLua_Blackboard_ClearStringArray00);
+   tolua_function(tolua_S,"AddStringToArray",tolua_SandboxToLua_Blackboard_AddStringToArray00);
+   tolua_function(tolua_S,"SetStringArrayValue",tolua_SandboxToLua_Blackboard_SetStringArrayValue00);
+   tolua_function(tolua_S,"GetStringArrayValue",tolua_SandboxToLua_Blackboard_GetStringArrayValue00);
+   tolua_function(tolua_S,"GetStringArrayCount",tolua_SandboxToLua_Blackboard_GetStringArrayCount00);
+   tolua_function(tolua_S,"ContainsStringInArray",tolua_SandboxToLua_Blackboard_ContainsStringInArray00);
+   tolua_function(tolua_S,"ClearObjectIdArray",tolua_SandboxToLua_Blackboard_ClearObjectIdArray00);
+   tolua_function(tolua_S,"AddObjectIdToArray",tolua_SandboxToLua_Blackboard_AddObjectIdToArray00);
+   tolua_function(tolua_S,"SetObjectIdArrayValue",tolua_SandboxToLua_Blackboard_SetObjectIdArrayValue00);
+   tolua_function(tolua_S,"GetObjectIdArrayValue",tolua_SandboxToLua_Blackboard_GetObjectIdArrayValue00);
+   tolua_function(tolua_S,"GetObjectIdArrayCount",tolua_SandboxToLua_Blackboard_GetObjectIdArrayCount00);
+   tolua_function(tolua_S,"ContainsObjectIdInArray",tolua_SandboxToLua_Blackboard_ContainsObjectIdInArray00);
    tolua_function(tolua_S,"Has",tolua_SandboxToLua_Blackboard_Has00);
    tolua_function(tolua_S,"Remove",tolua_SandboxToLua_Blackboard_Remove00);
    tolua_function(tolua_S,"Clear",tolua_SandboxToLua_Blackboard_Clear00);

@@ -50,7 +50,9 @@ local function _ApplyCreatureDefBlackboard(bb, creatureDef)
     end
     if creatureDef.ai ~= nil and creatureDef.ai.blackboard ~= nil then
         for key, value in pairs(creatureDef.ai.blackboard) do
-            if type(value) == "boolean" then
+            if CreatureAssembler ~= nil and CreatureAssembler.SetBlackboardValue ~= nil then
+                CreatureAssembler:SetBlackboardValue(bb, key, value)
+            elseif type(value) == "boolean" then
                 bb:SetBool(key, value)
             elseif type(value) == "number" then
                 bb:SetFloat(key, value)
@@ -95,4 +97,7 @@ end
 function Agent_Update(agent, deltaTimeInMillis)
     -- C++ SoldierObject::Update 已经自动 tick 了 BehaviorTreeDriver；
     -- 这里留给 per-frame Lua 钩子。
+end
+
+function Agent_EventHandle(agent, keycode)
 end

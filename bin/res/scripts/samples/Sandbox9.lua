@@ -22,6 +22,15 @@ local function printBtTrace(object)
 	if driver ~= nil and driver.GetLastDebugTrace ~= nil then
 		print("[Sandbox9] bt trace:", driver:GetLastDebugTrace())
 	end
+	local blackboard = driver ~= nil and driver.GetBlackboard ~= nil and driver:GetBlackboard() or nil
+	if blackboard == nil and ai ~= nil and ai.GetBlackboard ~= nil then
+		blackboard = ai:GetBlackboard()
+	end
+	if blackboard ~= nil and blackboard.GetObjectId ~= nil and blackboard.GetObjectIdArrayCount ~= nil then
+		local targetId = blackboard:GetObjectId("slice.guard.primaryTargetId", -1)
+		local targetCount = blackboard:GetObjectIdArrayCount("slice.guard.recentTargetIds")
+		print("[Sandbox9] bt object ids:", targetId, targetCount)
+	end
 end
 
 local function scheduleSmokeDiagnostics()
