@@ -20,6 +20,7 @@
 - 2026-05-29：事件总线新增异步队列入口 `QueueEmit`、队列上限、丢弃计数和每帧 flush；flush 时带递归保护，回调中再次排队的事件会留到下一轮分发。
 - 2026-05-30：补齐事件总线整组能力：每帧分发节流、过滤器订阅、参数化事件名、Local / Team / Global scope 路由，供后续触发器和行为树事件复用。
 - 2026-05-30：定义第一版 Lua table 生物 `Def`，并增加最小 `CreatureAssembler`，可从 Def 创建 soldier / agent，并应用队伍、位置、运动、属性和武器初始值。
+- 2026-05-30：跑通第一个垂直切片：`Sandbox9` 使用 Lua `TriggerVolume` 检测玩家进入区域，经 `TriggerRuntime` 唤醒守卫 BT 的 `Event` 节点；F8 可低成本重载 Def / Trigger / BT。
 
 ## P0 - 地基任务
 
@@ -38,11 +39,11 @@
 
 ## P0 - 第一个垂直切片
 
-- [ ] 增加 `TriggerVolume`，作为第一个区域事件源。
-- [ ] 增加 `TriggerRuntime.lua`，先用手写 Lua 完成“事件 -> 条件 -> 动作”的触发器注册和分发。
-- [ ] 增加 `BehaviorEventNode`，或等价的行为树事件入口，让事件能喂给 BT。
-- [ ] 增加第一个切片 sample：数据定义生物 + 玩家进入区域 + 生物攻击反应。
-- [ ] 增加低成本热重载：重新加载 Def / BT / trigger Lua 文件即可验证改动。
+- [x] 增加 `TriggerVolume`，作为第一个区域事件源。
+- [x] 增加 `TriggerRuntime.lua`，先用手写 Lua 完成“事件 -> 条件 -> 动作”的触发器注册和分发。
+- [x] 增加 `BehaviorEventNode`，或等价的行为树事件入口，让事件能喂给 BT。
+- [x] 增加第一个切片 sample：数据定义生物 + 玩家进入区域 + 生物攻击反应。
+- [x] 增加低成本热重载：重新加载 Def / BT / trigger Lua 文件即可验证改动。
 
 ## P1 - 行为树补强
 

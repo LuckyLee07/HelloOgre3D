@@ -1,6 +1,48 @@
 local CreatureDefs = {
 	schemaVersion = 1,
+	triggerVolumes = {
+		slice_entry = {
+			id = "slice_entry",
+			event = "PLAYER_ENTER?regionId=slice_entry",
+			scope = "Global",
+			center = { x = 0, y = 0, z = 0 },
+			halfExtents = { x = 5, y = 4, z = 5 },
+			targetTeamId = 0,
+			drawDebug = true,
+		},
+	},
 	defs = {
+		slice_player = {
+			id = "slice_player",
+			displayName = "切片玩家",
+			kind = "soldier",
+			tags = { "creature", "slice", "player" },
+			factory = {
+				type = "soldier",
+				script = "res/scripts/agent/IndirectSoldierAgent.lua",
+				appearance = "Dark",
+				weaponMesh = "models/futuristic_soldier/soldier_weapon.mesh",
+			},
+			teamId = 0,
+			transform = {
+				position = { x = 0, y = 0, z = 0 },
+				rotation = { x = 0, y = 90, z = 0 },
+			},
+			attributes = {
+				maxHealth = 120,
+				health = 120,
+			},
+			weapon = {
+				maxAmmo = 10,
+				ammo = 10,
+			},
+			ai = {
+				driver = "fsm",
+				blackboard = {
+					role = "player",
+				},
+			},
+		},
 		slice_guard = {
 			id = "slice_guard",
 			displayName = "切片守卫",
@@ -8,13 +50,13 @@ local CreatureDefs = {
 			tags = { "creature", "slice", "guard" },
 			factory = {
 				type = "soldier",
-				script = "res/scripts/agent/IndirectSoldierAgent.lua",
+				script = "res/scripts/agent/BehaviorSoldierAgent.lua",
 				appearance = "Light",
 				weaponMesh = "models/futuristic_soldier/soldier_weapon.mesh",
 			},
 			teamId = 1,
 			transform = {
-				position = { x = 0, y = 0, z = 0 },
+				position = { x = 2.5, y = 0, z = 0 },
 				rotation = { x = 0, y = -90, z = 0 },
 			},
 			locomotion = {
@@ -31,20 +73,24 @@ local CreatureDefs = {
 				ammo = 10,
 			},
 			ai = {
-				driver = "fsm",
+				driver = "bt",
 				blackboard = {
 					role = "guard",
+					sliceGuardAwake = false,
 				},
 			},
 			behaviorTree = {
 				entry = "slice_guard",
-				script = "res.scripts.ai.behavior.config.SoldierBT",
+				script = "res.scripts.ai.behavior.config.SliceGuardBT",
+				reload = true,
 			},
 			triggers = {
 				{
 					event = "PLAYER_ENTER?regionId=slice_entry",
 					scope = "Global",
 					action = "wake_behavior_tree",
+					targetKey = "enemy",
+					setBoolKey = "slice.guardAwake",
 				},
 			},
 		},

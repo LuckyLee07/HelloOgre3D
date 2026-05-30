@@ -8,7 +8,8 @@ param(
 		"Sandbox5",
 		"Sandbox6",
 		"Sandbox7",
-		"Sandbox8"
+		"Sandbox8",
+		"Sandbox9"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,

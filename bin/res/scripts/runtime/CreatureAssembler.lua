@@ -65,9 +65,9 @@ local function requireModule(moduleName)
 	error("[CreatureAssembler] require failed: " .. tostring(moduleName) .. " " .. tostring(result))
 end
 
-local function loadDefSource(moduleName)
+local function loadDefModule(moduleName)
 	local source = requireModule(moduleName)
-	return source.defs or source
+	return source
 end
 
 local function getCoordinate(value, keyName, index, defaultValue)
@@ -238,9 +238,55 @@ local function applyWeapon(object, weapon)
 	end
 end
 
+local function setBlackboardValue(blackboard, key, value)
+	if type(value) == "boolean" then
+		blackboard:SetBool(key, value)
+	elseif type(value) == "number" then
+		blackboard:SetFloat(key, value)
+	elseif type(value) == "string" then
+		blackboard:SetString(key, value)
+	elseif type(value) == "table" then
+		blackboard:SetString(key, tostring(value.value or value.id or ""))
+	end
+end
+
+local function applyBlackboard(object, def)
+	if object == nil then
+		return
+	end
+
+	local getAi = object.GetAI or object.GetAIController
+	local ai = getAi ~= nil and getAi(object) or nil
+	local blackboard = ai ~= nil and ai.GetBlackboard ~= nil and ai:GetBlackboard() or nil
+	if blackboard == nil then
+		return
+	end
+
+	blackboard:SetString("__creature.defId", tostring(def.id or ""))
+	if def.displayName ~= nil then
+		blackboard:SetString("__creature.displayName", tostring(def.displayName))
+	end
+	if def.behaviorTree ~= nil and def.behaviorTree.script ~= nil then
+		blackboard:SetString("__bt.config", tostring(def.behaviorTree.script))
+	end
+
+	if object.GetMaxHealth ~= nil then
+		blackboard:SetFloat("maxHealth", object:GetMaxHealth())
+	elseif def.attributes ~= nil and def.attributes.maxHealth ~= nil then
+		blackboard:SetFloat("maxHealth", def.attributes.maxHealth)
+	end
+
+	if def.ai ~= nil and def.ai.blackboard ~= nil then
+		for key, value in pairs(def.ai.blackboard) do
+			setBlackboardValue(blackboard, key, value)
+		end
+	end
+end
+
 function CreatureAssembler:ReloadDefs()
 	package.loaded[self.defModuleName] = nil
-	self.defs = loadDefSource(self.defModuleName)
+	self.defSource = loadDefModule(self.defModuleName)
+	self.defs = self.defSource.defs or self.defSource
 	self.resolvedDefs = {}
 end
 
@@ -279,6 +325,17 @@ function CreatureAssembler:GetDef(defId, resolving)
 	return cloneTable(resolved)
 end
 
+function CreatureAssembler:GetTriggerVolumeDefs()
+	if self.defSource == nil then
+		self:ReloadDefs()
+	end
+	return cloneTable(self.defSource.triggerVolumes or {})
+end
+
+function CreatureAssembler:GetPendingCreateDef()
+	return self.pendingCreateDef
+end
+
 function CreatureAssembler:CreateCreature(defId, overrides, sandbox)
 	sandbox = sandbox or Sandbox
 	if sandbox == nil then
@@ -290,13 +347,20 @@ function CreatureAssembler:CreateCreature(defId, overrides, sandbox)
 	local factoryType = factory.type or def.kind
 	local object = nil
 
-	if factoryType == "soldier" then
-		object = createSoldier(def, factory, sandbox)
-	elseif factoryType == "agent" then
-		object = createAgent(def, factory, sandbox)
-	else
+	self.pendingCreateDef = def
+	local ok, result = pcall(function()
+		if factoryType == "soldier" then
+			return createSoldier(def, factory, sandbox)
+		elseif factoryType == "agent" then
+			return createAgent(def, factory, sandbox)
+		end
 		error("[CreatureAssembler] unsupported factory type: " .. tostring(factoryType))
+	end)
+	self.pendingCreateDef = nil
+	if not ok then
+		error(result)
 	end
+	object = result
 
 	if object == nil then
 		error("[CreatureAssembler] failed to create creature: " .. tostring(defId))
@@ -309,12 +373,16 @@ function CreatureAssembler:CreateCreature(defId, overrides, sandbox)
 	applyLocomotion(object, def.locomotion)
 	applyAttributes(object, def.attributes)
 	applyWeapon(object, def.weapon)
+	applyBlackboard(object, def)
 
 	self.instances = self.instances or setmetatable({}, { __mode = "k" })
 	self.instances[object] = {
 		defId = def.id or defId,
 		def = cloneTable(def),
 	}
+	if TriggerRuntime ~= nil and TriggerRuntime.RegisterCreature ~= nil then
+		TriggerRuntime:RegisterCreature(object, def)
+	end
 	return object, def
 end
 
