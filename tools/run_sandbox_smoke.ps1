@@ -9,7 +9,8 @@ param(
 		"Sandbox6",
 		"Sandbox7",
 		"Sandbox8",
-		"Sandbox9"
+		"Sandbox9",
+		"Sandbox10"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -50,6 +51,9 @@ $LogCandidates = @(
 $SelectedSample = $Sample
 if ($SelectedSample -eq "Default") {
 	$SelectedSample = "Sandbox8"
+}
+if ($Preset -eq "ai_lastknown_demo" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox10"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
 
@@ -115,6 +119,9 @@ if ($AiScheduler) {
 }
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
+}
+if ($Preset -eq "ai_lastknown_demo" -and $Seconds -lt 70) {
+	$Seconds = 70
 }
 
 Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"

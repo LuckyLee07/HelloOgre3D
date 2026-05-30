@@ -38,6 +38,15 @@ local function _MarkSearchCompleted(bb)
     bb:SetInt("memory.search.completedObservedAtMs", _observedAtMs)
 end
 
+local function _WriteDebugSearchTarget(bb)
+    if bb == nil or _target == nil then
+        return
+    end
+    bb:SetObjectId("debug.lastKnownSearchEnemyId", _enemyId)
+    bb:SetVec3("debug.lastKnownSearchEnemyPos", _target)
+    bb:SetInt("debug.lastKnownSearchObservedAtMs", _observedAtMs)
+end
+
 local function _ClearMove(owner, bb)
     if owner then
         owner:ClearMovePosition()
@@ -59,6 +68,7 @@ function OnInitialize(owner, bb)
         return
     end
 
+    _WriteDebugSearchTarget(bb)
     owner:EnterMoveAnim()
     owner:SetMovePosition(_target)
     if bb then bb:SetVec3("movePos", _target) end

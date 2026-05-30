@@ -140,6 +140,29 @@ namespace
 			}
 			wrote = true;
 		}
+		if (blackboard->GetBool("memory.snapshot.hasLastKnownEnemy", false))
+		{
+			const Ogre::Vector3 lastKnownPos = blackboard->GetVec3("memory.snapshot.lastKnownEnemyPos");
+			stream << (wrote ? "," : "") << "lastKnown:" << blackboard->GetObjectId("memory.snapshot.lastKnownEnemyId", -1)
+				<< "@" << FormatVec3(lastKnownPos)
+				<< " age=" << blackboard->GetInt("memory.snapshot.lastKnownEnemyAgeMs", -1)
+				<< " c=" << FormatReal(blackboard->GetFloat("memory.snapshot.lastKnownEnemyConfidence", 0.0f));
+			wrote = true;
+		}
+		else if (blackboard->Has("debug.lastKnownSearchEnemyPos"))
+		{
+			const Ogre::Vector3 lastKnownPos = blackboard->GetVec3("debug.lastKnownSearchEnemyPos");
+			stream << (wrote ? "," : "") << "lastKnown:" << blackboard->GetObjectId("debug.lastKnownSearchEnemyId", -1)
+				<< "@" << FormatVec3(lastKnownPos)
+				<< " t=" << blackboard->GetInt("debug.lastKnownSearchObservedAtMs", -1);
+			wrote = true;
+		}
+		if (blackboard->Has("memory.search.completedEnemyId"))
+		{
+			stream << (wrote ? "," : "") << "searchDone:" << blackboard->GetObjectId("memory.search.completedEnemyId", -1)
+				<< "@" << blackboard->GetInt("memory.search.completedObservedAtMs", -1);
+			wrote = true;
+		}
 		if (blackboard->Has("knowledge.enemyId"))
 		{
 			stream << (wrote ? "," : "") << "knowledgeEnemy:" << blackboard->GetObjectId("knowledge.enemyId", -1);
@@ -176,6 +199,20 @@ namespace
 		if (blackboard->Has("__bt.traceEventCount"))
 		{
 			stream << (wrote ? "," : "") << "btEvents:" << blackboard->GetInt("__bt.traceEventCount", 0);
+			wrote = true;
+		}
+		if (blackboard->Has("__bt.currentAction"))
+		{
+			stream << (wrote ? "," : "") << "btAction:" << blackboard->GetString("__bt.currentAction");
+			if (blackboard->Has("__bt.currentActionStatus"))
+			{
+				stream << "/" << blackboard->GetString("__bt.currentActionStatus");
+			}
+			wrote = true;
+		}
+		if (blackboard->Has("debug.demoPhase"))
+		{
+			stream << (wrote ? "," : "") << "demo:" << blackboard->GetString("debug.demoPhase");
 			wrote = true;
 		}
 		if (!wrote)

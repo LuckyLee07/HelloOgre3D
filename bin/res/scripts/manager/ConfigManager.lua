@@ -125,6 +125,48 @@ function ConfigManager:GetDiagnosticLimit(sampleName, key, defaultValue)
 	return tonumber(diagnostics[key]) or defaultValue
 end
 
+function ConfigManager:IsSelectedPreset(presetName)
+	return self:GetSelectedPresetName() == presetName
+end
+
+function ConfigManager:ApplyAiBlackboardDefaults(blackboard, sampleName)
+	if blackboard == nil then
+		return false
+	end
+
+	local preset = self:GetSamplePreset(sampleName)
+	local config = preset.aiBlackboard or {}
+	for key, value in pairs(config.floats or {}) do
+		blackboard:SetFloat(tostring(key), tonumber(value) or 0.0)
+	end
+	for key, value in pairs(config.ints or {}) do
+		blackboard:SetInt(tostring(key), tonumber(value) or 0)
+	end
+	for key, value in pairs(config.bools or {}) do
+		blackboard:SetBool(tostring(key), isTruthy(value))
+	end
+	for key, value in pairs(config.strings or {}) do
+		blackboard:SetString(tostring(key), tostring(value))
+	end
+	return next(config) ~= nil
+end
+
+function ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
+	if driver == nil then
+		return false
+	end
+
+	local preset = self:GetSamplePreset(sampleName)
+	local config = preset.behaviorTree or {}
+	if config.debugTrace ~= nil and driver.SetDebugTraceEnabled ~= nil then
+		driver:SetDebugTraceEnabled(isTruthy(config.debugTrace))
+	end
+	if config.debugTracePrint ~= nil and driver.SetDebugTracePrintEnabled ~= nil then
+		driver:SetDebugTracePrintEnabled(isTruthy(config.debugTracePrint))
+	end
+	return next(config) ~= nil
+end
+
 function ConfigManager:GetAgentTeamId(sampleName, index)
 	local preset = self:GetSamplePreset(sampleName)
 	local lightCount = tonumber(preset.lightTeamCount) or 0

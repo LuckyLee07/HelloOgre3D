@@ -32,6 +32,13 @@ function Agent_Initialize(agent)
 
     local bb = driver:GetBlackboard()
     bb:SetFloat("maxHealth", agent:GetMaxHealth())
+    local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox8"
+    if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
+        ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)
+    end
+    if ConfigManager ~= nil and ConfigManager.ConfigureBehaviorTreeDriver ~= nil then
+        ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
+    end
 
     local tree = BehaviorTreeLoader.Build(SoldierBTConfig, agent, driver, bb, SoldierConditions)
     if tree == nil then

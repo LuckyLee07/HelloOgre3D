@@ -254,7 +254,7 @@ end, 500)  -- 500ms 更新一次
 | Blackboard Scope 三层 | Stage 2/3 交界任务：Local 已有，Team / Global 待补 |
 | Blackboard metadata value | Stage 3 已有最小通道：typed value + confidence + timestamp + ttl + source；Team / Global scope 待补 |
 | TTL / Confidence 衰减 | Stage 3 已有最小通道：`UpdateEntries` 自动剔除过期 entry，并按 linear / exponential policy 衰减 confidence |
-| Chapter 7 Knowledge sample | Stage 3 已有 `Sandbox9`：Lua `KnowledgeSource` 限频评估，结果写入 C++ `Blackboard`，DT 只消费黑板数据 |
+| Chapter 7 Knowledge sample | Stage 3 已有 `Sandbox9`：Lua `KnowledgeSource` 限频评估，结果写入 C++ `Blackboard`，BT 只消费黑板数据 |
 | IKnowledgeSource 接口 + multi-source 融合 | Stage 3 后半段（本文档 K-03，等 Sensor MVP 后再做）|
 | Lua source 包装 | Stage 3 后半段（本文档 K-04，非首轮 MVP）|
 

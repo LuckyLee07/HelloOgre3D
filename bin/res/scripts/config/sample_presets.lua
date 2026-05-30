@@ -61,9 +61,58 @@ SamplePresets.ai_perf_smoke = {
 	},
 }
 
+SamplePresets.ai_lastknown_demo = {
+	seed = 20260530,
+	agentCount = 2,
+	lightTeamCount = 1,
+	spawnMode = "fixed",
+	targetRadius = 1,
+	spawnPoints = {
+		{ -5, 0, 13 },
+		{ 5, 0, 13 },
+	},
+	aiBlackboard = {
+		floats = {
+			["perception.visionRange"] = 12.0,
+			["perception.fieldOfViewDegrees"] = 120.0,
+		},
+		ints = {
+			["perception.visionIntervalMs"] = 100,
+		},
+		bools = {
+			["perception.requirePath"] = true,
+		},
+		strings = {
+			["debug.demo"] = "ai_lastknown_demo",
+		},
+	},
+	behaviorTree = {
+		debugTrace = true,
+		debugTracePrint = false,
+	},
+	lastKnownDemo = {
+		enabled = true,
+		targetIndex = 2,
+		relocateAfterMs = 2200,
+		relocateTo = { 48, 0, 24 },
+		freezeTarget = true,
+	},
+	aiScheduler = {
+		enabled = false,
+		tickMs = 50,
+		maxPerFrame = 8,
+	},
+	diagnostics = {
+		maxObjects = 8,
+		maxResources = 6,
+		maxEvents = 8,
+	},
+}
+
 SamplePresets.Sandbox6 = SamplePresets.default
 SamplePresets.Sandbox7 = SamplePresets.default
 SamplePresets.Sandbox8 = SamplePresets.default
+SamplePresets.Sandbox10 = SamplePresets.ai_lastknown_demo
 
 SamplePresets.Sandbox9 = {
 	seed = 20260530,

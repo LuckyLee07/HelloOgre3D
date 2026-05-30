@@ -30,7 +30,8 @@
 - 2026-05-30：完成 P-01 最小闭环：新增 `VisionSensor`，由 `AIController` 定时驱动视觉扫描并写入 `sense.*` / `memory.*` metadata，RuntimeDiag 可看到 vision sensor 摘要。
 - 2026-05-30：完成 P-02 最小闭环：新增 `MemoryStore`，把 lastKnown 敌人位置、时间戳、有效期和 confidence 衰减收敛为领域接口，底层继续复用 Blackboard metadata。
 - 2026-05-30：完成 P-03 最小闭环：`MemoryStore` 同步 Lua 可读 snapshot，BT 增加 lastKnown 记忆条件和移动到最后已知位置的 action。
-- 2026-05-30：新增 `Sandbox9` 作为 Chapter 7 Knowledge sample：Lua `KnowledgeSource` 定时评估最近可达敌人与最佳逃跑点，写入 C++ `Blackboard`，再由 DT 消费。
+- 2026-05-30：新增 `Sandbox9` 作为 Chapter 7 Knowledge sample：Lua `KnowledgeSource` 定时评估最近可达敌人与最佳逃跑点，写入 C++ `Blackboard`，再由 BT 消费。
+- 2026-05-30：新增 `Sandbox10` lastKnown 可读演示 sample：基于 `Sandbox8` 的 BT 场景拷贝，用左上角阶段面板、彩色地面标记和 RuntimeDiag 共同展示“发现敌人 -> 追击 -> 失去视野 -> 搜索最后已知位置”。
 
 ## P0 - 方向回正
 
@@ -50,8 +51,8 @@
 - [x] 为空间范围查询预留 `IAgentSpatialQuery` 接口，当前用 `ObjectManager` 线性实现兜底。
 - [x] 增加记忆层：目标离开视野后保留 lastKnown 位置、时间戳和有效期。
 - [x] 增加行为树条件 / action：有目标、失去目标但有记忆、移动到最后已知位置、搜索失败后回待机。
-- [ ] 在 sample 中展示“发现敌人 -> 追击 -> 失去视野 -> 搜索最后已知位置”的完整过程。
-- [ ] 日志或 debug 摘要能看出当前感知目标、最后已知位置和 BT 当前节点。
+- [x] 在 sample 中展示“发现敌人 -> 追击 -> 失去视野 -> 搜索最后已知位置”的完整过程。
+- [x] 日志或 debug 摘要能看出当前感知目标、最后已知位置和 BT 当前节点。
 
 ## P0 - 行为树与 Blackboard 可观测性
 
@@ -59,7 +60,7 @@
 - [x] 增加行为树节点参数的运行时取值能力，先支持常量和 blackboard key。
 - [x] 增加 Selector / Sequence 的中断或条件重评估能力。
 - [x] 增加 object-id 和数组类型的 blackboard 值支持。
-- [ ] 给 AI sample 增加一份稳定的 BT trace / blackboard 摘要输出。
+- [x] 给 AI sample 增加一份稳定的 BT trace / blackboard 摘要输出。
 - [ ] 配置错误能明确报出节点类型、字段和 fallback 行为。
 
 ## P1 - AI 架构债
