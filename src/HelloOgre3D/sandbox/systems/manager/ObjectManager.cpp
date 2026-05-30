@@ -140,6 +140,29 @@ namespace
 			}
 			wrote = true;
 		}
+		if (blackboard->Has("knowledge.enemyId"))
+		{
+			stream << (wrote ? "," : "") << "knowledgeEnemy:" << blackboard->GetObjectId("knowledge.enemyId", -1);
+			if (blackboard->Has("knowledge.enemyDistance"))
+			{
+				stream << "@" << static_cast<int>(blackboard->GetFloat("knowledge.enemyDistance", 0.0f));
+			}
+			if (blackboard->Has("knowledge.enemyEvalCount"))
+			{
+				stream << " eval=" << blackboard->GetInt("knowledge.enemyEvalCount", 0);
+			}
+			wrote = true;
+		}
+		if (blackboard->Has("knowledge.bestFleePosition"))
+		{
+			const Ogre::Vector3 fleePos = blackboard->GetVec3("knowledge.bestFleePosition");
+			stream << (wrote ? "," : "") << "knowledgeFlee:" << FormatVec3(fleePos);
+			if (blackboard->Has("knowledge.fleeEvalCount"))
+			{
+				stream << " eval=" << blackboard->GetInt("knowledge.fleeEvalCount", 0);
+			}
+			wrote = true;
+		}
 		if (blackboard->GetEntryCount() > 0)
 		{
 			stream << (wrote ? "," : "") << "meta:" << blackboard->GetEntryCount();

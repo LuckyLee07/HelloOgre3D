@@ -65,4 +65,23 @@ SamplePresets.Sandbox6 = SamplePresets.default
 SamplePresets.Sandbox7 = SamplePresets.default
 SamplePresets.Sandbox8 = SamplePresets.default
 
+SamplePresets.Sandbox9 = {
+	seed = 20260530,
+	agentCount = 3,
+	lightTeamCount = 3,
+	spawnMode = "random",
+	targetRadius = 1,
+	spawnPoints = fixedSpawnPoints,
+	aiScheduler = {
+		enabled = false,
+		tickMs = 50,
+		maxPerFrame = 8,
+	},
+	diagnostics = {
+		maxObjects = 8,
+		maxResources = 6,
+		maxEvents = 6,
+	},
+}
+
 return SamplePresets

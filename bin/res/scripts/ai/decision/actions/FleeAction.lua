@@ -8,6 +8,13 @@ local _maxAttempts = 10
 
 function OnInitialize(owner, bb)
     if not owner then return end
+    if bb ~= nil and bb:Has("knowledge.bestFleePosition") then
+        local fleePos = bb:GetVec3("knowledge.bestFleePosition")
+        bb:SetVec3("movePos", fleePos)
+        owner:SetMovePosition(fleePos)
+        return
+    end
+
     local enemy = bb:GetAgent("enemy")
     if enemy then
         local enemyPos = enemy:GetPosition()

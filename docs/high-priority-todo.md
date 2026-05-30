@@ -30,13 +30,14 @@
 - 2026-05-30：完成 P-01 最小闭环：新增 `VisionSensor`，由 `AIController` 定时驱动视觉扫描并写入 `sense.*` / `memory.*` metadata，RuntimeDiag 可看到 vision sensor 摘要。
 - 2026-05-30：完成 P-02 最小闭环：新增 `MemoryStore`，把 lastKnown 敌人位置、时间戳、有效期和 confidence 衰减收敛为领域接口，底层继续复用 Blackboard metadata。
 - 2026-05-30：完成 P-03 最小闭环：`MemoryStore` 同步 Lua 可读 snapshot，BT 增加 lastKnown 记忆条件和移动到最后已知位置的 action。
+- 2026-05-30：新增 `Sandbox9` 作为 Chapter 7 Knowledge sample：Lua `KnowledgeSource` 定时评估最近可达敌人与最佳逃跑点，写入 C++ `Blackboard`，再由 DT 消费。
 
 ## P0 - 方向回正
 
 - [x] 把项目北极星改回 AI 学习与实验沙盒。
 - [x] 删除偏数据驱动玩法切片的 Lua runtime 和 sample。
 - [x] 清理 `game_init.lua`、smoke 参数和 `BehaviorTreeLoader` 中只服务触发器切片的注册点。
-- [ ] 重新选择一个 AI 学习 sample 作为下一阶段主验证面。
+- [x] 重新选择一个 AI 学习 sample 作为下一阶段主验证面：`Sandbox9` / Chapter 7 Knowledge。
 
 ## P0 - AI 感知与记忆切片
 
