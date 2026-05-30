@@ -437,9 +437,14 @@ static std::string BuildBlackboardSelfTestSummary()
 	}
 
 	const int memoryExpired = memoryBlackboard.UpdateEntries(1601, 351);
+	memoryStore.SyncSnapshot(1601);
 	if (memoryExpired != 3 || memoryStore.HasLastKnownEnemy(1601))
 	{
 		AppendSelfTestFailure(stream, "memory store ttl expiration did not clear last known enemy entries", failures);
+	}
+	if (memoryBlackboard.GetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, true))
+	{
+		AppendSelfTestFailure(stream, "memory store did not clear typed Lua snapshot after expiration", failures);
 	}
 
 	std::string details = stream.str();

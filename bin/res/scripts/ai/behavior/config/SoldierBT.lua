@@ -14,6 +14,7 @@ SoldierBTConfig = {
         flee = "FleeAction.lua",
         die = "DieAction.lua",
         randomMove = "RandomMoveAction.lua",
+        moveToLastKnownEnemy = "MoveToLastKnownEnemyAction.lua",
     },
 
     tree = {
@@ -25,6 +26,8 @@ SoldierBTConfig = {
                     { node = "Condition", condition = "IsAlive" },
                     {
                         node = "Selector",
+                        name = "action",
+                        reevaluateMs = 200,
                         children = {
                             {
                                 node = "Sequence",
@@ -74,6 +77,14 @@ SoldierBTConfig = {
                                             { node = "Action", action = "reload" },
                                         },
                                     },
+                                },
+                            },
+                            {
+                                node = "Sequence",
+                                name = "investigateMemory",
+                                children = {
+                                    { node = "Condition", condition = "HasLastKnownEnemyMemory", minConfidence = 0.05 },
+                                    { node = "Action", action = "moveToLastKnownEnemy", reuse = false },
                                 },
                             },
                             {

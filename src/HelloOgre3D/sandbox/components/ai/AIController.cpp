@@ -127,7 +127,9 @@ void AIController::TickAI(int deltaMs)
 	const int elapsedMs = std::max(0, deltaMs);
 	m_localTimeMs += elapsedMs;
 	m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
+	m_memoryStore.SyncSnapshot(m_localTimeMs);
 	UpdateVisionSensor(elapsedMs, "default", true, false);
+	m_memoryStore.SyncSnapshot(m_localTimeMs);
 
 	H3D_PROFILE_SCOPE("AIController::TickAI");
 	static int totalMilisec = 0;

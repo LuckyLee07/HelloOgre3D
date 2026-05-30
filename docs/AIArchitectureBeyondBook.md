@@ -861,6 +861,7 @@ AI 能力容易出现"编译通过但表现漂移"，每个阶段必须有最小
 | S-04 | DangerSensor | Sensor | ☐ | Stage 3 |
 | P-01 | VisionSensor MVP | Perception | ☑ | Stage 3 |
 | P-02 | MemoryComponent / MemoryStore MVP | Perception | ☑ | Stage 3 |
+| P-03 | BT lastKnown investigation branch | Perception/BT | ☑ | Stage 3 |
 | T-00 | TeamBlackboardService + team target sharing | Tactic | ☐ | Stage 3/4 |
 | T-01 | Formation 系统 + Lua 配置 | Tactic | ☐ | Stage 4 |
 | T-02 | 协作 BT 节点（CallForBackup/WaitForSquadMate/MoveToFormationSlot/FollowSquadOrder）| Tactic | ☐ | Stage 4 |

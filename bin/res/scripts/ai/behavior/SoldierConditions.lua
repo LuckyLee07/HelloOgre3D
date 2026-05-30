@@ -47,6 +47,44 @@ function SoldierConditions.HasEnemy(agent, bb)
     return false
 end
 
+local function _GetLastKnownEnemySnapshot(bb)
+    if bb == nil or bb.GetBool == nil then
+        return nil
+    end
+    if not bb:GetBool("memory.snapshot.hasLastKnownEnemy", false) then
+        return nil
+    end
+
+    local enemyId = bb:GetObjectId("memory.snapshot.lastKnownEnemyId", -1)
+    if enemyId < 0 then
+        return nil
+    end
+
+    return {
+        enemyId = enemyId,
+        observedAtMs = bb:GetInt("memory.snapshot.lastKnownEnemyObservedAtMs", -1),
+        confidence = bb:GetFloat("memory.snapshot.lastKnownEnemyConfidence", 0.0),
+    }
+end
+
+function SoldierConditions.HasLastKnownEnemyMemory(agent, bb, cfg)
+    local memory = _GetLastKnownEnemySnapshot(bb)
+    if memory == nil then
+        return false
+    end
+
+    if cfg == nil or cfg.skipCompleted ~= false then
+        local completedId = bb:GetObjectId("memory.search.completedEnemyId", -1)
+        local completedObservedAtMs = bb:GetInt("memory.search.completedObservedAtMs", -1)
+        if completedId == memory.enemyId and completedObservedAtMs == memory.observedAtMs then
+            return false
+        end
+    end
+
+    local minConfidence = cfg and tonumber(cfg.minConfidence) or 0.05
+    return memory.confidence >= minConfidence
+end
+
 function SoldierConditions.HasAmmo(agent, bb)
     return agent:HasAmmo()
 end

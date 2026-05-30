@@ -18,6 +18,12 @@ namespace AIMemoryKeys
 	static const char* const kMemoryLastKnownEnemyPos = "memory.lastKnownEnemyPos";
 	static const char* const kMemoryLastKnownEnemyDistance = "memory.lastKnownEnemyDistance";
 	static const char* const kMemoryLastKnownEnemyObservedAtMs = "memory.lastKnownEnemyObservedAtMs";
+	static const char* const kMemorySnapshotHasLastKnownEnemy = "memory.snapshot.hasLastKnownEnemy";
+	static const char* const kMemorySnapshotLastKnownEnemyId = "memory.snapshot.lastKnownEnemyId";
+	static const char* const kMemorySnapshotLastKnownEnemyPos = "memory.snapshot.lastKnownEnemyPos";
+	static const char* const kMemorySnapshotLastKnownEnemyConfidence = "memory.snapshot.lastKnownEnemyConfidence";
+	static const char* const kMemorySnapshotLastKnownEnemyObservedAtMs = "memory.snapshot.lastKnownEnemyObservedAtMs";
+	static const char* const kMemorySnapshotLastKnownEnemyAgeMs = "memory.snapshot.lastKnownEnemyAgeMs";
 }
 
 struct EnemyMemory
@@ -97,6 +103,7 @@ public:
 		m_blackboard->Remove(AIMemoryKeys::kMemoryLastKnownEnemyPos);
 		m_blackboard->Remove(AIMemoryKeys::kMemoryLastKnownEnemyDistance);
 		m_blackboard->Remove(AIMemoryKeys::kMemoryLastKnownEnemyObservedAtMs);
+		ClearSnapshot();
 	}
 
 	void RememberVisibleEnemy(const AgentPerceptionResult& result, long long currentTimeMs, const MemoryStoreConfig& config)
@@ -119,6 +126,7 @@ public:
 		ApplyDecay(AIMemoryKeys::kMemoryLastKnownEnemyId, config);
 		ApplyDecay(AIMemoryKeys::kMemoryLastKnownEnemyPos, config);
 		ApplyDecay(AIMemoryKeys::kMemoryLastKnownEnemyDistance, config);
+		SyncSnapshot(currentTimeMs);
 	}
 
 	bool HasLastKnownEnemy(long long currentTimeMs = -1) const
@@ -163,6 +171,26 @@ public:
 		return outMemory.IsValid(currentTimeMs);
 	}
 
+	void SyncSnapshot(long long currentTimeMs)
+	{
+		if (m_blackboard == nullptr)
+			return;
+
+		EnemyMemory memory;
+		if (!GetLastKnownEnemy(currentTimeMs, memory))
+		{
+			ClearSnapshot();
+			return;
+		}
+
+		m_blackboard->SetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, true);
+		m_blackboard->SetObjectId(AIMemoryKeys::kMemorySnapshotLastKnownEnemyId, memory.enemyId);
+		m_blackboard->SetVec3(AIMemoryKeys::kMemorySnapshotLastKnownEnemyPos, memory.lastKnownPosition);
+		m_blackboard->SetFloat(AIMemoryKeys::kMemorySnapshotLastKnownEnemyConfidence, memory.confidence);
+		m_blackboard->SetInt(AIMemoryKeys::kMemorySnapshotLastKnownEnemyObservedAtMs, static_cast<int>(memory.observedTimeMs));
+		m_blackboard->SetInt(AIMemoryKeys::kMemorySnapshotLastKnownEnemyAgeMs, memory.AgeMs(currentTimeMs));
+	}
+
 	std::string BuildDebugString(long long currentTimeMs) const
 	{
 		EnemyMemory memory;
@@ -185,6 +213,21 @@ public:
 	}
 
 private:
+	void ClearSnapshot()
+	{
+		if (m_blackboard == nullptr)
+			return;
+
+		m_blackboard->SetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, false);
+		m_blackboard->Remove(AIMemoryKeys::kMemorySnapshotLastKnownEnemyId);
+		m_blackboard->Remove(AIMemoryKeys::kMemorySnapshotLastKnownEnemyPos);
+		m_blackboard->Remove(AIMemoryKeys::kMemorySnapshotLastKnownEnemyConfidence);
+		m_blackboard->Remove(AIMemoryKeys::kMemorySnapshotLastKnownEnemyObservedAtMs);
+		m_blackboard->Remove(AIMemoryKeys::kMemorySnapshotLastKnownEnemyAgeMs);
+		m_blackboard->Remove(AIMemoryKeys::kPerceptionLastKnownTargetId);
+		m_blackboard->Remove(AIMemoryKeys::kPerceptionLastKnownTargetPos);
+	}
+
 	static float Clamp01(float value)
 	{
 		if (value < 0.0f)

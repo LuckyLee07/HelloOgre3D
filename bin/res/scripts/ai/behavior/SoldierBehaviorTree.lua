@@ -29,6 +29,9 @@
 --                 ShootAction
 --               PursueAction
 --           ReloadAction
+--       Sequence(memory) [失去当前目标但有记忆 → 去最后已知位置]
+--         Cond: HasLastKnownEnemyMemory
+--         MoveToLastKnownEnemyAction
 --       Sequence(idle) [无敌人、非 critical → 巡逻或 idle]
 --         Selector(idleChoice)
 --           Sequence(moveIfHasPos2)
@@ -74,6 +77,12 @@ local function _Sel(driver, ...)
     return s
 end
 
+local function _ReactiveSel(driver, reevaluateMs, ...)
+    local s = driver:NewSelector(reevaluateMs or 0)
+    for _, child in ipairs({...}) do s:AddChild(child) end
+    return s
+end
+
 -- agent: SoldierObject*
 -- driver: BehaviorTreeDriver*
 -- bb: Blackboard*
@@ -88,6 +97,7 @@ function SoldierBehaviorTreeBuilder.Build(agent, driver, bb)
     local fleeAction       = _NewLuaAction(driver, "flee",       "FleeAction.lua")
     local dieAction        = _NewLuaAction(driver, "die",        "DieAction.lua")
     local randomMoveAction = _NewLuaAction(driver, "randomMove", "RandomMoveAction.lua")
+    local memoryMoveAction = _NewLuaAction(driver, "moveToLastKnownEnemy", "MoveToLastKnownEnemyAction.lua")
 
     -- ===== 条件叶子（闭包捕获 agent + bb） =====
     local condAlive    = _NewCond(driver, function() return SoldierConditions.IsAlive(agent, bb) end)
@@ -95,6 +105,7 @@ function SoldierBehaviorTreeBuilder.Build(agent, driver, bb)
     local condHasPos   = _NewCond(driver, function() return SoldierConditions.HasMovePosition(agent, bb) end)
     local condHasPos2  = _NewCond(driver, function() return SoldierConditions.HasMovePosition(agent, bb) end)
     local condHasEnemy = _NewCond(driver, function() return SoldierConditions.HasEnemy(agent, bb) end)
+    local condHasMemory = _NewCond(driver, function() return SoldierConditions.HasLastKnownEnemyMemory(agent, bb) end)
     local condHasAmmo  = _NewCond(driver, function() return SoldierConditions.HasAmmo(agent, bb) end)
     local condCanShoot = _NewCond(driver, function() return SoldierConditions.CanShootEnemy(agent, bb) end)
     local condRandom   = _NewCond(driver, function() return math.random() >= 0.5 end)
@@ -110,13 +121,15 @@ function SoldierBehaviorTreeBuilder.Build(agent, driver, bb)
     local combatChoice = _Sel(driver, ammoOkSeq, reloadAction)
     local combatSeq    = _Seq(driver, condHasEnemy, combatChoice)
 
+    local memorySeq = _Seq(driver, condHasMemory, memoryMoveAction)
+
     local moveIfHasPos2 = _Seq(driver, condHasPos2, moveAction)
     local maybeRandom   = _Seq(driver, condRandom, randomMoveAction)
     local roamChoice    = _Sel(driver, maybeRandom, idleAction)
     local idleChoice    = _Sel(driver, moveIfHasPos2, roamChoice)
     local idleSeq       = idleChoice  -- 无前置条件，直接走 selector
 
-    local actionSel = _Sel(driver, criticalSeq, combatSeq, idleSeq)
+    local actionSel = _ReactiveSel(driver, 200, criticalSeq, combatSeq, memorySeq, idleSeq)
     local aliveSeq  = _Seq(driver, condAlive, actionSel)
 
     local root = _Sel(driver, aliveSeq, dieAction)
