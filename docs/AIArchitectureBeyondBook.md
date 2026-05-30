@@ -252,7 +252,7 @@ end, 500)  -- 500ms 更新一次
 |---|---|
 | Local Blackboard ownership | 已由 SoldierObjectRefactor T-19 收口到 AIController |
 | Blackboard Scope 三层 | Stage 2/3 交界任务：Local 已有，Team / Global 待补 |
-| Blackboard metadata value | Stage 3 新增（本文档 K-01）|
+| Blackboard metadata value | Stage 3 已有最小通道：typed value + confidence + timestamp + ttl + source；Team / Global scope 待补 |
 | TTL / Confidence 衰减 | Stage 3 新增（本文档 K-02）|
 | IKnowledgeSource 接口 + multi-source 融合 | Stage 3 后半段（本文档 K-03，等 Sensor MVP 后再做）|
 | Lua source 包装 | Stage 3 后半段（本文档 K-04，非首轮 MVP）|
@@ -849,7 +849,7 @@ AI 能力容易出现"编译通过但表现漂移"，每个阶段必须有最小
 
 | # | 任务 | 类别 | 状态 | 阶段 |
 |---|---|---|---|---|
-| K-01 | Blackboard metadata / safe value | Knowledge | ☐ | Stage 3 |
+| K-01 | Blackboard metadata / safe value | Knowledge | ☑ | Stage 3 |
 | K-02 | Blackboard TTL + Confidence 衰减 | Knowledge | ☐ | Stage 3 |
 | K-03 | IKnowledgeSource 接口 + multi-source 融合 | Knowledge | ☐ | Stage 3 |
 | K-04 | LuaKnowledgeSource 包装 | Knowledge | ☐ | Stage 3 |

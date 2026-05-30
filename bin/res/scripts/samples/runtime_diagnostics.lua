@@ -45,6 +45,13 @@ function RuntimeDiagnostics.RunSelfTest()
 		printLines(ObjectManager:buildObjectDebugSummary(maxObjects))
 	end
 
+	if ObjectManager == nil or ObjectManager.buildAiDebugSummary == nil then
+		print("[RuntimeDiag] AI debug summary unavailable")
+		ok = false
+	else
+		printLines(ObjectManager:buildAiDebugSummary(maxObjects))
+	end
+
 	if ObjectManager == nil or ObjectManager.buildAiSchedulerDebugSummary == nil then
 		print("[RuntimeDiag] AI scheduler diagnostics unavailable")
 		ok = false

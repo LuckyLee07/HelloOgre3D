@@ -18,6 +18,41 @@ class AgentObject;
 class Blackboard //tolua_exports
 { //tolua_exports
 public:
+	enum EntryValueType
+	{
+		ENTRY_VALUE_NONE = 0,
+		ENTRY_VALUE_AGENT_ID,
+		ENTRY_VALUE_FLOAT,
+		ENTRY_VALUE_INT,
+		ENTRY_VALUE_BOOL,
+		ENTRY_VALUE_STRING,
+		ENTRY_VALUE_VEC3
+	};
+
+	struct EntryValue
+	{
+		EntryValueType type;
+		int objectId;
+		float floatValue;
+		int intValue;
+		bool boolValue;
+		std::string stringValue;
+		Ogre::Vector3 vec3Value;
+
+		EntryValue();
+	};
+
+	struct Entry
+	{
+		EntryValue value;
+		float confidence;
+		long long timestampMs;
+		int ttlMs;
+		std::string source;
+
+		Entry();
+	};
+
 	Blackboard();
 	explicit Blackboard(SoldierObject* owner);
 	~Blackboard();
@@ -80,7 +115,34 @@ public:
 	void Clear();
 	//tolua_end
 
+	void SetEntry(const std::string& key, const Entry& entry);
+	bool GetEntry(const std::string& key, Entry& outEntry) const;
+	bool HasEntry(const std::string& key) const;
+	int GetEntryCount() const;
+
+	void SetObjectIdEntry(const std::string& key, int objectId, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+	void SetFloatEntry(const std::string& key, float value, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+	void SetIntEntry(const std::string& key, int value, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+	void SetBoolEntry(const std::string& key, bool value, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+	void SetStringEntry(const std::string& key, const std::string& value, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+	void SetVec3Entry(const std::string& key, const Ogre::Vector3& value, float confidence = 1.0f, long long timestampMs = 0, int ttlMs = -1, const std::string& source = "");
+
+	bool GetObjectIdEntry(const std::string& key, int& outObjectId, Entry* outEntry = nullptr) const;
+	bool GetFloatEntry(const std::string& key, float& outValue, Entry* outEntry = nullptr) const;
+	bool GetIntEntry(const std::string& key, int& outValue, Entry* outEntry = nullptr) const;
+	bool GetBoolEntry(const std::string& key, bool& outValue, Entry* outEntry = nullptr) const;
+	bool GetStringEntry(const std::string& key, std::string& outValue, Entry* outEntry = nullptr) const;
+	bool GetVec3Entry(const std::string& key, Ogre::Vector3& outValue, Entry* outEntry = nullptr) const;
+
+	bool IsEntryExpired(const Entry& entry, long long currentTimeMs) const;
+	bool IsEntryExpired(const std::string& key, long long currentTimeMs) const;
+	int PruneExpiredEntries(long long currentTimeMs);
+	std::string BuildEntryDebugString(const std::string& key, long long currentTimeMs = -1) const;
+	std::string BuildDebugSummary(int maxEntries = 8, long long currentTimeMs = -1) const;
+
 private:
+	void RemoveTypedValue(const std::string& key);
+
 	SoldierObject* m_owner;
 
 	std::unordered_map<std::string, AgentObject*>   m_agents;
@@ -94,6 +156,7 @@ private:
 	std::unordered_map<std::string, std::vector<float>>       m_floatArrays;
 	std::unordered_map<std::string, std::vector<std::string>> m_stringArrays;
 	std::unordered_map<std::string, std::vector<int>>         m_objectIdArrays;
+	std::unordered_map<std::string, Entry>                   m_entries;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(Blackboard);

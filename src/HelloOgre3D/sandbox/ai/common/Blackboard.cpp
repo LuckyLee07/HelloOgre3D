@@ -1,6 +1,82 @@
 #include "Blackboard.h"
 
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
+
+namespace
+{
+	const char* EntryValueTypeToString(Blackboard::EntryValueType type)
+	{
+		switch (type)
+		{
+		case Blackboard::ENTRY_VALUE_AGENT_ID:
+			return "agent-id";
+		case Blackboard::ENTRY_VALUE_FLOAT:
+			return "float";
+		case Blackboard::ENTRY_VALUE_INT:
+			return "int";
+		case Blackboard::ENTRY_VALUE_BOOL:
+			return "bool";
+		case Blackboard::ENTRY_VALUE_STRING:
+			return "string";
+		case Blackboard::ENTRY_VALUE_VEC3:
+			return "vec3";
+		case Blackboard::ENTRY_VALUE_NONE:
+		default:
+			return "none";
+		}
+	}
+
+	std::string FormatEntryValue(const Blackboard::EntryValue& value)
+	{
+		std::ostringstream stream;
+		switch (value.type)
+		{
+		case Blackboard::ENTRY_VALUE_AGENT_ID:
+			stream << value.objectId;
+			break;
+		case Blackboard::ENTRY_VALUE_FLOAT:
+			stream << std::fixed << std::setprecision(2) << value.floatValue;
+			break;
+		case Blackboard::ENTRY_VALUE_INT:
+			stream << value.intValue;
+			break;
+		case Blackboard::ENTRY_VALUE_BOOL:
+			stream << (value.boolValue ? "true" : "false");
+			break;
+		case Blackboard::ENTRY_VALUE_STRING:
+			stream << value.stringValue;
+			break;
+		case Blackboard::ENTRY_VALUE_VEC3:
+			stream << std::fixed << std::setprecision(2)
+				<< value.vec3Value.x << "," << value.vec3Value.y << "," << value.vec3Value.z;
+			break;
+		case Blackboard::ENTRY_VALUE_NONE:
+		default:
+			stream << "-";
+			break;
+		}
+		return stream.str();
+	}
+}
+
+Blackboard::EntryValue::EntryValue()
+	: type(ENTRY_VALUE_NONE)
+	, objectId(-1)
+	, floatValue(0.0f)
+	, intValue(0)
+	, boolValue(false)
+	, vec3Value(Ogre::Vector3::ZERO)
+{
+}
+
+Blackboard::Entry::Entry()
+	: confidence(1.0f)
+	, timestampMs(0)
+	, ttlMs(-1)
+{
+}
 
 Blackboard::Blackboard() : m_owner(nullptr)
 {
@@ -22,6 +98,7 @@ void Blackboard::SetOwner(SoldierObject* owner)
 
 void Blackboard::SetAgent(const std::string& key, AgentObject* value)
 {
+	m_entries.erase(key);
 	m_agents[key] = value;
 }
 
@@ -34,6 +111,7 @@ AgentObject* Blackboard::GetAgent(const std::string& key) const
 
 void Blackboard::SetFloat(const std::string& key, float value)
 {
+	m_entries.erase(key);
 	m_floats[key] = value;
 }
 
@@ -46,6 +124,7 @@ float Blackboard::GetFloat(const std::string& key, float defaultValue) const
 
 void Blackboard::SetInt(const std::string& key, int value)
 {
+	m_entries.erase(key);
 	m_ints[key] = value;
 }
 
@@ -58,6 +137,7 @@ int Blackboard::GetInt(const std::string& key, int defaultValue) const
 
 void Blackboard::SetObjectId(const std::string& key, int value)
 {
+	m_entries.erase(key);
 	m_objectIds[key] = value;
 }
 
@@ -70,6 +150,7 @@ int Blackboard::GetObjectId(const std::string& key, int defaultValue) const
 
 void Blackboard::SetBool(const std::string& key, bool value)
 {
+	m_entries.erase(key);
 	m_bools[key] = value;
 }
 
@@ -82,6 +163,7 @@ bool Blackboard::GetBool(const std::string& key, bool defaultValue) const
 
 void Blackboard::SetString(const std::string& key, const std::string& value)
 {
+	m_entries.erase(key);
 	m_strings[key] = value;
 }
 
@@ -94,6 +176,7 @@ std::string Blackboard::GetString(const std::string& key) const
 
 void Blackboard::SetVec3(const std::string& key, const Ogre::Vector3& value)
 {
+	m_entries.erase(key);
 	m_vec3s[key] = value;
 }
 
@@ -106,17 +189,20 @@ Ogre::Vector3 Blackboard::GetVec3(const std::string& key) const
 
 void Blackboard::ClearIntArray(const std::string& key)
 {
+	m_entries.erase(key);
 	m_intArrays.erase(key);
 }
 
 void Blackboard::AddIntToArray(const std::string& key, int value)
 {
+	m_entries.erase(key);
 	m_intArrays[key].push_back(value);
 }
 
 void Blackboard::SetIntArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
+	m_entries.erase(key);
 	std::vector<int>& values = m_intArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0);
 	values[luaIndex - 1] = value;
@@ -145,17 +231,20 @@ bool Blackboard::ContainsIntInArray(const std::string& key, int value) const
 
 void Blackboard::ClearFloatArray(const std::string& key)
 {
+	m_entries.erase(key);
 	m_floatArrays.erase(key);
 }
 
 void Blackboard::AddFloatToArray(const std::string& key, float value)
 {
+	m_entries.erase(key);
 	m_floatArrays[key].push_back(value);
 }
 
 void Blackboard::SetFloatArrayValue(const std::string& key, int luaIndex, float value)
 {
 	if (luaIndex <= 0) return;
+	m_entries.erase(key);
 	std::vector<float>& values = m_floatArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0.0f);
 	values[luaIndex - 1] = value;
@@ -177,17 +266,20 @@ int Blackboard::GetFloatArrayCount(const std::string& key) const
 
 void Blackboard::ClearStringArray(const std::string& key)
 {
+	m_entries.erase(key);
 	m_stringArrays.erase(key);
 }
 
 void Blackboard::AddStringToArray(const std::string& key, const std::string& value)
 {
+	m_entries.erase(key);
 	m_stringArrays[key].push_back(value);
 }
 
 void Blackboard::SetStringArrayValue(const std::string& key, int luaIndex, const std::string& value)
 {
 	if (luaIndex <= 0) return;
+	m_entries.erase(key);
 	std::vector<std::string>& values = m_stringArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex);
 	values[luaIndex - 1] = value;
@@ -216,17 +308,20 @@ bool Blackboard::ContainsStringInArray(const std::string& key, const std::string
 
 void Blackboard::ClearObjectIdArray(const std::string& key)
 {
+	m_entries.erase(key);
 	m_objectIdArrays.erase(key);
 }
 
 void Blackboard::AddObjectIdToArray(const std::string& key, int value)
 {
+	m_entries.erase(key);
 	m_objectIdArrays[key].push_back(value);
 }
 
 void Blackboard::SetObjectIdArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
+	m_entries.erase(key);
 	std::vector<int>& values = m_objectIdArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, -1);
 	values[luaIndex - 1] = value;
@@ -265,22 +360,14 @@ bool Blackboard::Has(const std::string& key) const
 		|| m_intArrays.count(key) > 0
 		|| m_floatArrays.count(key) > 0
 		|| m_stringArrays.count(key) > 0
-		|| m_objectIdArrays.count(key) > 0;
+		|| m_objectIdArrays.count(key) > 0
+		|| m_entries.count(key) > 0;
 }
 
 void Blackboard::Remove(const std::string& key)
 {
-	m_agents.erase(key);
-	m_floats.erase(key);
-	m_ints.erase(key);
-	m_objectIds.erase(key);
-	m_bools.erase(key);
-	m_strings.erase(key);
-	m_vec3s.erase(key);
-	m_intArrays.erase(key);
-	m_floatArrays.erase(key);
-	m_stringArrays.erase(key);
-	m_objectIdArrays.erase(key);
+	RemoveTypedValue(key);
+	m_entries.erase(key);
 }
 
 void Blackboard::Clear()
@@ -296,4 +383,245 @@ void Blackboard::Clear()
 	m_floatArrays.clear();
 	m_stringArrays.clear();
 	m_objectIdArrays.clear();
+	m_entries.clear();
+}
+
+void Blackboard::SetEntry(const std::string& key, const Entry& entry)
+{
+	RemoveTypedValue(key);
+	m_entries[key] = entry;
+}
+
+bool Blackboard::GetEntry(const std::string& key, Entry& outEntry) const
+{
+	auto iter = m_entries.find(key);
+	if (iter == m_entries.end()) return false;
+	outEntry = iter->second;
+	return true;
+}
+
+bool Blackboard::HasEntry(const std::string& key) const
+{
+	return m_entries.count(key) > 0;
+}
+
+int Blackboard::GetEntryCount() const
+{
+	return static_cast<int>(m_entries.size());
+}
+
+void Blackboard::SetObjectIdEntry(const std::string& key, int objectId, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_AGENT_ID;
+	entry.value.objectId = objectId;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+void Blackboard::SetFloatEntry(const std::string& key, float value, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_FLOAT;
+	entry.value.floatValue = value;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+void Blackboard::SetIntEntry(const std::string& key, int value, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_INT;
+	entry.value.intValue = value;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+void Blackboard::SetBoolEntry(const std::string& key, bool value, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_BOOL;
+	entry.value.boolValue = value;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+void Blackboard::SetStringEntry(const std::string& key, const std::string& value, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_STRING;
+	entry.value.stringValue = value;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+void Blackboard::SetVec3Entry(const std::string& key, const Ogre::Vector3& value, float confidence, long long timestampMs, int ttlMs, const std::string& source)
+{
+	Entry entry;
+	entry.value.type = ENTRY_VALUE_VEC3;
+	entry.value.vec3Value = value;
+	entry.confidence = confidence;
+	entry.timestampMs = timestampMs;
+	entry.ttlMs = ttlMs;
+	entry.source = source;
+	SetEntry(key, entry);
+}
+
+bool Blackboard::GetObjectIdEntry(const std::string& key, int& outObjectId, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_AGENT_ID) return false;
+	outObjectId = entry.value.objectId;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::GetFloatEntry(const std::string& key, float& outValue, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_FLOAT) return false;
+	outValue = entry.value.floatValue;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::GetIntEntry(const std::string& key, int& outValue, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_INT) return false;
+	outValue = entry.value.intValue;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::GetBoolEntry(const std::string& key, bool& outValue, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_BOOL) return false;
+	outValue = entry.value.boolValue;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::GetStringEntry(const std::string& key, std::string& outValue, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_STRING) return false;
+	outValue = entry.value.stringValue;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::GetVec3Entry(const std::string& key, Ogre::Vector3& outValue, Entry* outEntry) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry) || entry.value.type != ENTRY_VALUE_VEC3) return false;
+	outValue = entry.value.vec3Value;
+	if (outEntry != nullptr) *outEntry = entry;
+	return true;
+}
+
+bool Blackboard::IsEntryExpired(const Entry& entry, long long currentTimeMs) const
+{
+	if (currentTimeMs < 0 || entry.ttlMs < 0)
+		return false;
+	return currentTimeMs > entry.timestampMs + entry.ttlMs;
+}
+
+bool Blackboard::IsEntryExpired(const std::string& key, long long currentTimeMs) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry))
+		return false;
+	return IsEntryExpired(entry, currentTimeMs);
+}
+
+int Blackboard::PruneExpiredEntries(long long currentTimeMs)
+{
+	int removed = 0;
+	for (std::unordered_map<std::string, Entry>::iterator iter = m_entries.begin(); iter != m_entries.end();)
+	{
+		if (IsEntryExpired(iter->second, currentTimeMs))
+		{
+			iter = m_entries.erase(iter);
+			++removed;
+		}
+		else
+		{
+			++iter;
+		}
+	}
+	return removed;
+}
+
+std::string Blackboard::BuildEntryDebugString(const std::string& key, long long currentTimeMs) const
+{
+	Entry entry;
+	if (!GetEntry(key, entry))
+		return key + "=<missing>";
+
+	std::ostringstream stream;
+	stream << key << "=" << FormatEntryValue(entry.value)
+		<< " type=" << EntryValueTypeToString(entry.value.type)
+		<< " conf=" << std::fixed << std::setprecision(2) << entry.confidence
+		<< " t=" << entry.timestampMs;
+	if (entry.ttlMs >= 0)
+		stream << " ttl=" << entry.ttlMs;
+	if (!entry.source.empty())
+		stream << " src=" << entry.source;
+	if (IsEntryExpired(entry, currentTimeMs))
+		stream << " expired";
+	return stream.str();
+}
+
+std::string Blackboard::BuildDebugSummary(int maxEntries, long long currentTimeMs) const
+{
+	if (maxEntries < 0)
+		maxEntries = 0;
+	std::vector<std::string> keys;
+	keys.reserve(m_entries.size());
+	for (std::unordered_map<std::string, Entry>::const_iterator iter = m_entries.begin(); iter != m_entries.end(); ++iter)
+	{
+		keys.push_back(iter->first);
+	}
+	std::sort(keys.begin(), keys.end());
+
+	const int showing = std::min(maxEntries, static_cast<int>(keys.size()));
+	std::ostringstream stream;
+	stream << "[Blackboard] metadata entries=" << m_entries.size() << " showing=" << showing;
+	for (int i = 0; i < showing; ++i)
+	{
+		stream << "\n  " << BuildEntryDebugString(keys[i], currentTimeMs);
+	}
+	return stream.str();
+}
+
+void Blackboard::RemoveTypedValue(const std::string& key)
+{
+	m_agents.erase(key);
+	m_floats.erase(key);
+	m_ints.erase(key);
+	m_objectIds.erase(key);
+	m_bools.erase(key);
+	m_strings.erase(key);
+	m_vec3s.erase(key);
+	m_intArrays.erase(key);
+	m_floatArrays.erase(key);
+	m_stringArrays.erase(key);
+	m_objectIdArrays.erase(key);
 }

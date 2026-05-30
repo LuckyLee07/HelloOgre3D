@@ -32,6 +32,12 @@ namespace
 	const char* const kPerceptionTargetDistanceSq = "perception.targetDistanceSq";
 	const char* const kPerceptionLastKnownTargetId = "perception.lastKnownTargetId";
 	const char* const kPerceptionLastKnownTargetPos = "perception.lastKnownTargetPos";
+	const char* const kSenseTargetId = "sense.targetId";
+	const char* const kSenseTargetPos = "sense.targetPos";
+	const char* const kSenseTargetDistance = "sense.targetDistance";
+	const char* const kMemoryLastKnownEnemyId = "memory.lastKnownEnemyId";
+	const char* const kMemoryLastKnownEnemyPos = "memory.lastKnownEnemyPos";
+	const char* const kPerceptionSource = "PerceptionQuery";
 
 	ObjectManager* ResolveObjectManager(const AIController* controller)
 	{
@@ -58,6 +64,7 @@ AIController::AIController(BaseObject* owner)
 	, m_hasMovePos(false)
 	, m_movePos(Ogre::Vector3::ZERO)
 	, m_tickInOwnerUpdateEnabled(true)
+	, m_localTimeMs(0)
 {
 }
 
@@ -70,6 +77,7 @@ void AIController::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 	m_blackboard.SetOwner(GetSoldierOwner());
+	m_localTimeMs = 0;
 	InitDefaultDriver();
 }
 
@@ -108,6 +116,8 @@ void AIController::TickAI(int deltaMs)
 	{
 		return;
 	}
+
+	m_localTimeMs += deltaMs;
 
 	H3D_PROFILE_SCOPE("AIController::TickAI");
 	static int totalMilisec = 0;
@@ -202,9 +212,16 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 	m_blackboard.SetObjectId(kPerceptionTargetId, result.targetId);
 	m_blackboard.SetVec3(kPerceptionTargetPos, result.targetPosition);
 	m_blackboard.SetFloat(kPerceptionTargetDistanceSq, result.distanceSquared);
-	m_blackboard.SetFloat(kPerceptionTargetDistance, std::sqrt(std::max(0.0f, result.distanceSquared)));
+	const float distance = std::sqrt(std::max(0.0f, result.distanceSquared));
+	m_blackboard.SetFloat(kPerceptionTargetDistance, distance);
 	m_blackboard.SetObjectId(kPerceptionLastKnownTargetId, result.targetId);
 	m_blackboard.SetVec3(kPerceptionLastKnownTargetPos, result.targetPosition);
+
+	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, 1.0f, m_localTimeMs, -1, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, 1.0f, m_localTimeMs, -1, kPerceptionSource);
+	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, 1.0f, m_localTimeMs, -1, kPerceptionSource);
+	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, 1.0f, m_localTimeMs, -1, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, 1.0f, m_localTimeMs, -1, kPerceptionSource);
 }
 
 void AIController::ClearPerceptionResult()
@@ -215,6 +232,9 @@ void AIController::ClearPerceptionResult()
 	m_blackboard.Remove(kPerceptionTargetPos);
 	m_blackboard.Remove(kPerceptionTargetDistance);
 	m_blackboard.Remove(kPerceptionTargetDistanceSq);
+	m_blackboard.Remove(kSenseTargetId);
+	m_blackboard.Remove(kSenseTargetPos);
+	m_blackboard.Remove(kSenseTargetDistance);
 }
 
 void AIController::SetEnemy(AgentObject* enemy)

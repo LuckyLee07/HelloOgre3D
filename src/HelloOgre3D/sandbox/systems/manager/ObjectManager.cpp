@@ -110,6 +110,24 @@ namespace
 			stream << (wrote ? "," : "") << "senseTarget:none";
 			wrote = true;
 		}
+		int memoryTargetId = -1;
+		if (blackboard->GetObjectIdEntry("memory.lastKnownEnemyId", memoryTargetId))
+		{
+			stream << (wrote ? "," : "") << "memoryTarget:" << memoryTargetId;
+			Blackboard::Entry memoryPosEntry;
+			Ogre::Vector3 memoryPos = Ogre::Vector3::ZERO;
+			if (blackboard->GetVec3Entry("memory.lastKnownEnemyPos", memoryPos, &memoryPosEntry))
+			{
+				stream << "@" << static_cast<int>(memoryPos.x) << "," << static_cast<int>(memoryPos.y) << "," << static_cast<int>(memoryPos.z);
+				stream << " t=" << memoryPosEntry.timestampMs;
+			}
+			wrote = true;
+		}
+		if (blackboard->GetEntryCount() > 0)
+		{
+			stream << (wrote ? "," : "") << "meta:" << blackboard->GetEntryCount();
+			wrote = true;
+		}
 		if (blackboard->Has("__bt.traceFrame"))
 		{
 			stream << (wrote ? "," : "") << "btFrame:" << blackboard->GetInt("__bt.traceFrame", 0);

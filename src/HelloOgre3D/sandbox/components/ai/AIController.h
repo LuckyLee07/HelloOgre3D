@@ -76,6 +76,7 @@ private:
 	bool m_hasMovePos;
 	Ogre::Vector3 m_movePos;
 	bool m_tickInOwnerUpdateEnabled;
+	long long m_localTimeMs;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(AIController);
