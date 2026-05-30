@@ -24,16 +24,28 @@ namespace
 			return services->sandbox;
 		return g_SandboxMgr;
 	}
+
+	RenderComponent* FindOwnerRender(const WeaponComponent* component)
+	{
+		BaseObject* owner = component != nullptr ? component->getOwner() : nullptr;
+		return owner != nullptr ? owner->FindComponent<RenderComponent>() : nullptr;
+	}
+
+	AnimComponent* FindOwnerAnim(const WeaponComponent* component)
+	{
+		BaseObject* owner = component != nullptr ? component->getOwner() : nullptr;
+		return owner != nullptr ? owner->FindComponent<AnimComponent>() : nullptr;
+	}
 }
 
-WeaponComponent::WeaponComponent(SoldierObject* owner)
-	: m_owner(owner)
-	, m_weaponRender(nullptr)
+WeaponComponent::WeaponComponent(BaseObject* owner)
+	: m_weaponRender(nullptr)
 	, m_ammo(10)
 	, m_maxAmmo(10)
 	, m_handOffsetPos(Ogre::Vector3::ZERO)
 	, m_handOffsetOrientation(Ogre::Quaternion::IDENTITY)
 {
+	(void)owner;
 }
 
 WeaponComponent::~WeaponComponent()
@@ -44,16 +56,16 @@ WeaponComponent::~WeaponComponent()
 void WeaponComponent::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
-	if (m_owner == nullptr)
-	{
-		m_owner = dynamic_cast<SoldierObject*>(getOwner());
-	}
 }
 
 void WeaponComponent::onDetach()
 {
-	m_owner = nullptr;
 	IComponent::onDetach();
+}
+
+SoldierObject* WeaponComponent::GetSoldierOwner() const
+{
+	return dynamic_cast<SoldierObject*>(getOwner());
 }
 
 void WeaponComponent::update(int deltaMs)
@@ -63,7 +75,7 @@ void WeaponComponent::update(int deltaMs)
 	{
 		m_weaponRender->Update(deltaMs);
 	}
-	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	AnimComponent* anim = FindOwnerAnim(this);
 	if (anim != nullptr)
 	{
 		anim->UpdateWeaponAnimations(deltaMs);
@@ -75,7 +87,7 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 	SAFE_DELETE(m_weaponRender);
 
 	m_weaponRender = new RenderComponent(meshFile);
-	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	AnimComponent* anim = FindOwnerAnim(this);
 	if (anim != nullptr)
 	{
 		anim->InitWeaponAnimations(m_weaponRender->GetEntity(), false);
@@ -88,12 +100,13 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 
 void WeaponComponent::SyncToHandBone()
 {
-	if (m_owner == nullptr || m_weaponRender == nullptr || m_owner->GetRenderComponent() == nullptr)
+	RenderComponent* ownerRender = FindOwnerRender(this);
+	if (m_weaponRender == nullptr || ownerRender == nullptr)
 	{
 		return;
 	}
 
-	Ogre::SceneNode* soldierNode = m_owner->GetRenderComponent()->GetSceneNode();
+	Ogre::SceneNode* soldierNode = ownerRender->GetSceneNode();
 	if (soldierNode == nullptr)
 	{
 		return;
@@ -116,12 +129,13 @@ void WeaponComponent::SyncToHandBone()
 
 void WeaponComponent::ShootBullet()
 {
-	if (m_owner == nullptr || m_owner->GetRenderComponent() == nullptr)
+	RenderComponent* ownerRender = FindOwnerRender(this);
+	if (ownerRender == nullptr)
 	{
 		return;
 	}
 
-	Ogre::SceneNode* soldierNode = m_owner->GetRenderComponent()->GetSceneNode();
+	Ogre::SceneNode* soldierNode = ownerRender->GetSceneNode();
 	if (soldierNode == nullptr)
 	{
 		return;
@@ -175,20 +189,21 @@ void WeaponComponent::ShootBullet()
 
 AgentAnim* WeaponComponent::GetAnimation(const char* animationName)
 {
-	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	AnimComponent* anim = FindOwnerAnim(this);
 	return anim != nullptr ? anim->GetWeaponAnimation(animationName) : nullptr;
 }
 
 AgentAnimStateMachine* WeaponComponent::GetObjectASM() const
 {
-	AnimComponent* anim = m_owner != nullptr ? m_owner->FindComponent<AnimComponent>() : nullptr;
+	AnimComponent* anim = FindOwnerAnim(this);
 	return anim != nullptr ? anim->GetWeaponAsm() : nullptr;
 }
 
 void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
 	SandboxMgr* sandbox = ResolveSandboxMgr(this);
-	if (m_owner == nullptr || sandbox == nullptr)
+	SoldierObject* owner = GetSoldierOwner();
+	if (owner == nullptr || sandbox == nullptr)
 	{
 		return;
 	}
@@ -202,7 +217,7 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 
 	if (forward.isNaN() || forward.isZeroLength())
 	{
-		forward = m_owner->GetForward();
+		forward = owner->GetForward();
 	}
 	forward.normalise();
 	if (up.isNaN() || up.isZeroLength())
@@ -223,7 +238,7 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 		return;
 	}
 
-	bullet->SetOwner(m_owner);
+	bullet->SetOwner(owner);
 	bullet->SetMass(0.1f);
 	bullet->setPosition(position + forward * 0.2f);
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);

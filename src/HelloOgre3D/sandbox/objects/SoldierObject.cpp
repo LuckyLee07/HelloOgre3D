@@ -20,6 +20,7 @@
 #include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
+#include "components/ComponentKeys.h"
 #include "components/render/RenderComponent.h"
 #include "LogSystem.h"
 #include "profiling/Profile.h"
@@ -45,7 +46,7 @@ SoldierObject::SoldierObject(RenderComponent* renderComp, btRigidBody* pRigidBod
 
 SoldierObject::~SoldierObject()
 {
-	RemoveComponent("anim");
+	RemoveComponent(ComponentKeys::Anim);
 	SAFE_DELETE(m_inputInfo);
 }
 
@@ -59,7 +60,7 @@ void SoldierObject::Init()
 
 AIController* SoldierObject::GetAIController() const
 {
-	return const_cast<AIController*>(GetComponentAs<AIController>("ai"));
+	return const_cast<AIController*>(FindComponent<AIController>());
 }
 
 AIController* SoldierObject::GetAI() const
@@ -69,7 +70,7 @@ AIController* SoldierObject::GetAI() const
 
 AnimComponent* SoldierObject::GetAnimComponent() const
 {
-	return const_cast<AnimComponent*>(GetComponentAs<AnimComponent>("anim"));
+	return const_cast<AnimComponent*>(FindComponent<AnimComponent>());
 }
 
 void SoldierObject::ApplyCommand(const AICommand& command)
@@ -127,12 +128,12 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 
 WeaponComponent* SoldierObject::getWeapon()
 {
-	return GetComponentAs<WeaponComponent>("weapon");
+	return FindComponent<WeaponComponent>();
 }
 
 int SoldierObject::getStanceType() const
 {
-	const AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	return attrib != nullptr ? attrib->GetStanceType() : SOLDIER_STAND;
 }
 
@@ -202,7 +203,7 @@ void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Qua
 
 void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
 {
-	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	if (attrib != nullptr)
 	{
 		attrib->SetMaxHealth(maxHealth);
@@ -211,7 +212,7 @@ void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
 
 Ogre::Real SoldierObject::GetMaxHealth() const
 {
-	const AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	return attrib != nullptr ? attrib->GetMaxHealth() : std::max<Ogre::Real>(GetHealth(), 1.0f);
 }
 
@@ -226,7 +227,7 @@ void SoldierObject::SetAmmo(int ammo)
 
 int SoldierObject::GetAmmo() const
 {
-	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	return weaponComp != nullptr ? weaponComp->GetAmmo() : 0;
 }
 
@@ -241,13 +242,13 @@ void SoldierObject::SetMaxAmmo(int maxAmmo)
 
 int SoldierObject::GetMaxAmmo() const
 {
-	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	return weaponComp != nullptr ? weaponComp->GetMaxAmmo() : 0;
 }
 
 bool SoldierObject::HasAmmo() const
 {
-	const WeaponComponent* weaponComp = GetComponentAs<WeaponComponent>("weapon");
+	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	return weaponComp != nullptr && weaponComp->HasAmmo();
 }
 
@@ -313,7 +314,7 @@ bool SoldierObject::IsTargetReached(float threshold) const
 }
 void SoldierObject::changeStanceType(int stanceType)
 {
-	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	if (attrib == nullptr)
 		return;
 
@@ -343,7 +344,7 @@ void SoldierObject::changeStanceType(int stanceType)
 
 void SoldierObject::ApplyStanceParams(int stanceType)
 {
-	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	float soldier_height = 0.0f;
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
@@ -380,7 +381,7 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 void SoldierObject::TryApplyPendingStance()
 {
-	AgentAttrib* attrib = GetComponentAs<AgentAttrib>("attrib");
+	AgentAttrib* attrib = FindComponent<AgentAttrib>();
 	if (attrib == nullptr)
 	{
 		return;

@@ -16,7 +16,6 @@ public:
 
 	virtual void onAttach(BaseObject* owner);
 	virtual void onDetach();
-	void SetOwner(AgentObject* owner) { m_owner = owner; }
 
 	// 位置设置
 	void SetPosition(const Ogre::Vector3& position);
@@ -92,7 +91,7 @@ public:
 	static const float DEFAULT_AGENT_SPEED;
 
 private:
-	AgentObject* m_owner = nullptr;
+	AgentObject* GetAgentOwner() const;
 
 	// Path 路径
 	std::vector<Ogre::Vector3> m_points;

@@ -41,6 +41,9 @@ public:
 	//tolua_begin
 	void initBody(const Ogre::String& meshFile);
 	AgentObject* getBody() { return this; }
+
+	// Legacy Lua compatibility forwards. New C++ code should prefer typed
+	// component accessors such as FindComponent<T>() / GetLocomotion().
 	AgentAnim* GetAnimation(const char* animationName);
 	AgentAnimStateMachine* GetObjectASM() const;
 
@@ -146,6 +149,8 @@ public:
 	LuaScriptComponent* GetLuaScript();
 	const LuaScriptComponent* GetLuaScript() const;
 	OpenSteerAdapter* GetAdapter() const;
+	// Legacy render component accessor kept for older C++ call sites; prefer
+	// FindComponent<RenderComponent>() when touching nearby code.
 	RenderComponent* GetRenderComponent() const { return m_renderComp; }
 
 protected:

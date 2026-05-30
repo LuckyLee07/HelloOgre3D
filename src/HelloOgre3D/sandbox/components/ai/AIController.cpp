@@ -2,9 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <limits>
 #include <string>
-#include <vector>
 
 #include "GameFunction.h"
 #include "SandboxMacros.h"
@@ -14,6 +12,7 @@
 #include "ai/common/IDecisionDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/fsm/AgentStateController.h"
+#include "ai/perception/AgentPerceptionQuery.h"
 #include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
@@ -40,9 +39,8 @@ namespace
 	}
 }
 
-AIController::AIController(AgentObject* owner)
-	: m_owner(owner)
-	, m_blackboard(dynamic_cast<SoldierObject*>(owner))
+AIController::AIController(BaseObject* owner)
+	: m_blackboard(dynamic_cast<SoldierObject*>(owner))
 	, m_driver(nullptr)
 	, m_enemy(nullptr)
 	, m_enemyId(-1)
@@ -50,7 +48,6 @@ AIController::AIController(AgentObject* owner)
 	, m_movePos(Ogre::Vector3::ZERO)
 	, m_tickInOwnerUpdateEnabled(true)
 {
-	InitDefaultDriver();
 }
 
 AIController::~AIController()
@@ -61,10 +58,6 @@ AIController::~AIController()
 void AIController::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
-	if (m_owner == nullptr)
-	{
-		m_owner = dynamic_cast<AgentObject*>(getOwner());
-	}
 	m_blackboard.SetOwner(GetSoldierOwner());
 	InitDefaultDriver();
 }
@@ -72,20 +65,20 @@ void AIController::onAttach(BaseObject* owner)
 void AIController::onDetach()
 {
 	m_blackboard.SetOwner(nullptr);
-	m_owner = nullptr;
 	IComponent::onDetach();
 }
 
 void AIController::InitDefaultDriver()
 {
-	if (m_owner == nullptr || m_driver != nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr || m_driver != nullptr)
 	{
 		return;
 	}
 
-	if (m_owner->GetUseCppFSM())
+	if (owner->GetUseCppFSM())
 	{
-		AgentStateController* fsm = new AgentStateController(m_owner);
+		AgentStateController* fsm = new AgentStateController(owner);
 		fsm->Init();
 		m_driver = fsm;
 	}
@@ -93,12 +86,14 @@ void AIController::InitDefaultDriver()
 
 unsigned int AIController::GetAgentId() const
 {
-	return m_owner != nullptr ? m_owner->GetObjId() : 0;
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetObjId() : 0;
 }
 
 void AIController::TickAI(int deltaMs)
 {
-	if (m_owner == nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
 	{
 		return;
 	}
@@ -115,11 +110,11 @@ void AIController::TickAI(int deltaMs)
 		SoldierObject* soldier = GetSoldierOwner();
 		if (soldier != nullptr)
 		{
-			m_owner->callFunction("Agent_Update", "u[SoldierObject]i", soldier, deltaMs);
+			owner->callFunction("Agent_Update", "u[SoldierObject]i", soldier, deltaMs);
 		}
 		else
 		{
-			m_owner->callFunction("Agent_Update", "u[AgentObject]i", m_owner, deltaMs);
+			owner->callFunction("Agent_Update", "u[AgentObject]i", owner, deltaMs);
 		}
 	}
 
@@ -145,70 +140,26 @@ SoldierObject* AIController::GetOwner() const
 	return GetSoldierOwner();
 }
 
+AgentObject* AIController::GetAgentOwner() const
+{
+	return dynamic_cast<AgentObject*>(getOwner());
+}
+
 SoldierObject* AIController::GetSoldierOwner() const
 {
-	return dynamic_cast<SoldierObject*>(m_owner);
+	return dynamic_cast<SoldierObject*>(GetAgentOwner());
 }
 
 bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
 {
-	if (m_owner == nullptr || !enemy || enemy == m_owner)
-	{
-		return false;
-	}
-
-	if (enemy->GetHealth() <= 0.0f)
-	{
-		return false;
-	}
-
-	unsigned int enemyTeamId = enemy->GetTeamId();
-	if (enemyTeamId == m_owner->GetTeamId())
-	{
-		return false;
-	}
-
-	SandboxMgr* sandbox = ResolveSandboxMgr(this);
-	if (!requirePath || sandbox == nullptr)
-	{
-		return true;
-	}
-
-	std::vector<Ogre::Vector3> path;
-	return sandbox->FindPath(navMeshName, m_owner->GetPosition(), enemy->GetPosition(), path) && !path.empty();
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	return query.IsEnemyValid(GetAgentOwner(), enemy, navMeshName, requirePath);
 }
 
-AgentObject* AIController::FindNearestEnemy(const Ogre::String& navMeshName)
+AgentObject* AIController::FindNearestEnemy(const Ogre::String& navMeshName) const
 {
-	ObjectManager* objectManager = ResolveObjectManager(this);
-	if (m_owner == nullptr || objectManager == nullptr)
-	{
-		return nullptr;
-	}
-
-	const std::vector<AgentObject*>& agents = objectManager->getAllAgents();
-
-	AgentObject* nearestEnemy = nullptr;
-	float nearestDistance = std::numeric_limits<float>::max();
-
-	for (AgentObject* candidate : agents)
-	{
-		if (!IsEnemyValid(candidate, navMeshName, true))
-		{
-			continue;
-		}
-
-		const float distSquared = m_owner->GetPosition().squaredDistance(candidate->GetPosition());
-		if (distSquared >= nearestDistance)
-		{
-			continue;
-		}
-
-		nearestEnemy = candidate;
-		nearestDistance = distSquared;
-	}
-
-	return nearestEnemy;
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	return query.FindNearestEnemy(GetAgentOwner(), navMeshName);
 }
 
 void AIController::SetEnemy(AgentObject* enemy)
@@ -243,7 +194,8 @@ bool AIController::HasEnemy(const Ogre::String& navMeshName)
 
 bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
-	if (m_owner == nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
 	{
 		return false;
 	}
@@ -256,13 +208,14 @@ bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDis
 
 	const float distance = std::max(0.0f, shootDistance);
 	const float shootSquared = distance * distance;
-	const float distSquared = m_owner->GetPosition().squaredDistance(enemy->GetPosition());
+	const float distSquared = owner->GetPosition().squaredDistance(enemy->GetPosition());
 	return distSquared < shootSquared;
 }
 
 bool AIController::HasMovePosition(float reachDistance) const
 {
-	if (m_owner == nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
 	{
 		return false;
 	}
@@ -272,16 +225,16 @@ bool AIController::HasMovePosition(float reachDistance) const
 
 	if (m_hasMovePos)
 	{
-		return m_owner->GetPosition().squaredDistance(m_movePos) > reachSquared;
+		return owner->GetPosition().squaredDistance(m_movePos) > reachSquared;
 	}
 
-	if (!m_owner->HasPath())
+	if (!owner->HasPath())
 	{
 		return false;
 	}
 
-	const Ogre::Vector3 target = m_owner->GetTarget();
-	return m_owner->GetPosition().squaredDistance(target) > reachSquared;
+	const Ogre::Vector3 target = owner->GetTarget();
+	return owner->GetPosition().squaredDistance(target) > reachSquared;
 }
 
 void AIController::SetMovePosition(const Ogre::Vector3& movePos)
@@ -298,7 +251,8 @@ void AIController::ClearMovePosition()
 
 bool AIController::IsTargetReached(float threshold) const
 {
-	if (m_owner == nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
 	{
 		return false;
 	}
@@ -308,16 +262,16 @@ bool AIController::IsTargetReached(float threshold) const
 
 	if (m_hasMovePos)
 	{
-		return m_owner->GetPosition().squaredDistance(m_movePos) < thresholdSquared;
+		return owner->GetPosition().squaredDistance(m_movePos) < thresholdSquared;
 	}
 
-	if (!m_owner->HasPath())
+	if (!owner->HasPath())
 	{
 		return false;
 	}
 
-	const Ogre::Vector3 target = m_owner->GetTarget();
-	return m_owner->GetPosition().squaredDistance(target) < thresholdSquared;
+	const Ogre::Vector3 target = owner->GetTarget();
+	return owner->GetPosition().squaredDistance(target) < thresholdSquared;
 }
 
 DecisionTreeDriver* AIController::GetDecisionTreeDriver() const
@@ -337,7 +291,8 @@ AgentStateController* AIController::GetFsmController() const
 
 void AIController::IssueCommand(const AICommand& command)
 {
-	if (m_owner != nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner != nullptr)
 	{
 		if (command.kind == AICommand::COMMAND_MOVE_TO)
 		{
@@ -349,13 +304,13 @@ void AIController::IssueCommand(const AICommand& command)
 			ClearMovePosition();
 			m_blackboard.Remove("movePos");
 		}
-		m_owner->ApplyCommand(command);
+		owner->ApplyCommand(command);
 	}
 }
 
 void AIController::SetDriverByType(const char* type)
 {
-	if (m_owner == nullptr || type == nullptr)
+	if (GetAgentOwner() == nullptr || type == nullptr)
 	{
 		return;
 	}
@@ -381,7 +336,8 @@ void AIController::SetDriverByType(const char* type)
 
 void AIController::SetFsmDriver()
 {
-	if (m_owner == nullptr)
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
 	{
 		return;
 	}
@@ -392,7 +348,7 @@ void AIController::SetFsmDriver()
 	}
 	SAFE_DELETE(m_driver);
 
-	AgentStateController* fsm = new AgentStateController(m_owner);
+	AgentStateController* fsm = new AgentStateController(owner);
 	fsm->Init();
 	m_driver = fsm;
 }

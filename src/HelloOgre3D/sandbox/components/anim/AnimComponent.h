@@ -17,7 +17,7 @@ namespace Ogre {
 class AnimComponent : public IComponent
 {
 public:
-	explicit AnimComponent(SoldierObject* owner = nullptr);
+	explicit AnimComponent(BaseObject* owner = nullptr);
 	virtual ~AnimComponent();
 
 	virtual void onAttach(BaseObject* owner) override;
@@ -42,6 +42,7 @@ public:
 	bool IsAnimReadyForShoot() const;
 
 private:
+	SoldierObject* GetSoldierOwner() const;
 	void EnsureController();
 	void SubscribeAnimEvents();
 	void UnsubscribeAnimEvents();
@@ -50,7 +51,6 @@ private:
 	void ClearAnimations(std::unordered_map<std::string, AgentAnim*>& animations);
 
 private:
-	SoldierObject* m_owner;
 	IAnimController* m_controller;
 	Ogre::Entity* m_bodyEntity;
 	Ogre::Entity* m_weaponEntity;

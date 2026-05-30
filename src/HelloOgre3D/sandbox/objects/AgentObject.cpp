@@ -13,6 +13,7 @@
 #include "components/agent/AgentAttrib.h"
 #include "components/agent/AgentLocomotion.h"
 #include "components/anim/AnimComponent.h"
+#include "components/ComponentKeys.h"
 #include "components/physics/PhysicsComponent.h"
 #include "components/render/RenderComponent.h"
 #include "components/script/LuaScriptComponent.h"
@@ -35,19 +36,19 @@ AgentObject::AgentObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* 
 	m_objType = OBJ_TYPE_AGENT;
 
 	AgentLocomotion* locomotion = new AgentLocomotion();
-	if (!AddComponent("locomotion", locomotion))
+	if (!AddComponent(ComponentKeys::Locomotion, locomotion))
 	{
 		SAFE_DELETE(locomotion);
 	}
 
 	PhysicsComponent* physics = new PhysicsComponent(pRigidBody);
-	if (!AddComponent("physics", physics))
+	if (!AddComponent(ComponentKeys::Physics, physics))
 	{
 		SAFE_DELETE(physics);
 	}
 
 	LuaScriptComponent* script = new LuaScriptComponent();
-	if (AddComponent("script", script))
+	if (AddComponent(ComponentKeys::Script, script))
 	{
 		script->SetLocalEnvOwner(this, LuaClassNameTraits<AgentObject>::value);
 	}
@@ -60,7 +61,7 @@ AgentObject::AgentObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* 
 
 	if (m_renderComp != nullptr)
 	{
-		if (!AddComponent("render", m_renderComp))
+		if (!AddComponent(ComponentKeys::Render, m_renderComp))
 		{
 			SAFE_DELETE(m_renderComp);
 		}
@@ -71,7 +72,7 @@ AgentObject::AgentObject(RenderComponent* renderComp, btRigidBody* pRigidBody/* 
 
 AgentObject::~AgentObject()
 {
-	RemoveComponent("attrib");
+	RemoveComponent(ComponentKeys::Attrib);
 	m_renderComp = nullptr;
 }
 
@@ -84,11 +85,11 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 {
 	if (m_renderComp != nullptr)
 	{
-		RemoveComponent("render");
+		RemoveComponent(ComponentKeys::Render);
 		m_renderComp = nullptr;
 	}
 	RenderComponent* renderComp = new RenderComponent(meshFile);
-	if (AddComponent("render", renderComp))
+	if (AddComponent(ComponentKeys::Render, renderComp))
 	{
 		m_renderComp = renderComp;
 		AnimComponent* anim = FindComponent<AnimComponent>();
@@ -358,7 +359,7 @@ void AgentObject::SetHealth(Ogre::Real health)
 	if (attrib == nullptr)
 	{
 		AgentAttrib* newAttrib = new AgentAttrib(DEFAULT_AGENT_HEALTH, DEFAULT_AGENT_HEALTH, SOLDIER_STAND, -1);
-		if (AddComponent("attrib", newAttrib))
+		if (AddComponent(ComponentKeys::Attrib, newAttrib))
 		{
 			attrib = newAttrib;
 		}

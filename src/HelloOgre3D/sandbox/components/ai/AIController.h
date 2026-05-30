@@ -18,7 +18,7 @@ struct AICommand;
 class AIController : public IComponent //tolua_exports
 { //tolua_exports
 public:
-	explicit AIController(AgentObject* owner = nullptr);
+	explicit AIController(BaseObject* owner = nullptr);
 	virtual ~AIController();
 
 	virtual void onAttach(BaseObject* owner) override;
@@ -52,17 +52,17 @@ public:
 	bool IsTickInOwnerUpdateEnabled() const { return m_tickInOwnerUpdateEnabled; }
 
 private:
+	AgentObject* GetAgentOwner() const;
 	SoldierObject* GetSoldierOwner() const;
 	void InitDefaultDriver();
 	void SetFsmDriver();
 	void SetDecisionTreeDriver();
 	void SetBehaviorTreeDriver();
 	void SetEnemy(AgentObject* enemy);
-	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName);
+	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName) const;
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 
 private:
-	AgentObject* m_owner;
 	Blackboard m_blackboard;
 	IDecisionDriver* m_driver;
 	AgentObject* m_enemy;

@@ -15,7 +15,7 @@ class SoldierObject;
 class WeaponComponent : public IComponent //tolua_exports
 { //tolua_exports
 public:
-	explicit WeaponComponent(SoldierObject* owner = nullptr);
+	explicit WeaponComponent(BaseObject* owner = nullptr);
 	virtual ~WeaponComponent();
 
 	virtual void onAttach(BaseObject* owner) override;
@@ -46,7 +46,9 @@ public:
 	const Ogre::Quaternion& GetHandOffsetOrientation() const { return m_handOffsetOrientation; }
 
 private:
-	SoldierObject* m_owner;
+	SoldierObject* GetSoldierOwner() const;
+
+private:
 	RenderComponent* m_weaponRender;
 	int m_ammo;
 	int m_maxAmmo;

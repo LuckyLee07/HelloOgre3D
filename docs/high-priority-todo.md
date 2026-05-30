@@ -24,6 +24,8 @@
 - 2026-05-30：进入 P1 行为树补强：C++ BT runtime 增加 `Parallel` / `Random` 节点，Lua `BehaviorTreeLoader` 支持从配置创建，并补上 blackboard 参数运行时取值；`Sandbox9` 切片已接入验证。
 - 2026-05-30：`Sequence` / `Selector` 增加可配置重评估能力，配置 `reactive` 或 `reevaluateMs` 后可从第一个 child 重新检查条件并中断旧 RUNNING 分支；`Sandbox9` 守卫 BT 已接入 reactive 配置作为回归面。
 - 2026-05-30：黑板补齐 `object-id`、整型/浮点/字符串数组、object-id 数组；Def 初始化、触发器事件写入、BT 运行时参数读取和 `Sandbox9` 守卫验证面已串起来。
+- 2026-05-30：给对象层组件转发方法加上 legacy 护栏，并把 `WeaponComponent` 对宿主渲染组件的访问改成直接 typed component 查询，避免继续沿对象层新增转发口。
+- 2026-05-30：组件侧 owner 访问统一收敛为 `BaseObject*` + 局部类型转换；常用组件 key 集中到 `ComponentKeys`，对象/工厂侧优先走 typed component 查询；AI 敌人感知查询抽成 `IAgentPerceptionQuery` / `AgentPerceptionQuery` 小接口。
 
 ## P0 - 地基任务
 
@@ -57,11 +59,11 @@
 
 ## P1 - 顺手偿还的架构债
 
-- [ ] 不再继续给对象层新增“转发到某个组件”的方法；碰到旧方法时标为 legacy 或逐步迁移。
+- [x] 不再继续给对象层新增“转发到某个组件”的方法；碰到旧方法时标为 legacy 或逐步迁移。
 - [ ] 组件所有权逐步迁向 `std::unique_ptr`。
-- [ ] 统一组件访问 owner 的方式，全部收敛到 `BaseObject*`。
-- [ ] 优先使用类型化组件查询，减少散落的字符串 key。
-- [ ] 在继续做多生物行为前，把 AI 感知查询先抽成一个小接口。
+- [x] 统一组件访问 owner 的方式，全部收敛到 `BaseObject*`。
+- [x] 优先使用类型化组件查询，减少散落的字符串 key。
+- [x] 在继续做多生物行为前，把 AI 感知查询先抽成一个小接口。
 
 ## 暂缓任务
 

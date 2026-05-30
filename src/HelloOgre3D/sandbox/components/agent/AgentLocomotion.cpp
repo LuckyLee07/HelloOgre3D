@@ -31,8 +31,7 @@ const float AgentLocomotion::DEFAULT_AGENT_RADIUS = 0.3f;			// meters (1.97 feet
 const float AgentLocomotion::DEFAULT_AGENT_SPEED = 0.0f;			// m/s (0 ft/s)
 
 AgentLocomotion::AgentLocomotion() 
-	: m_owner(nullptr),
-	m_mass(DEFAULT_AGENT_MASS),
+	: m_mass(DEFAULT_AGENT_MASS),
 	m_height(DEFAULT_AGENT_HEIGHT),
 	m_radius(DEFAULT_AGENT_RADIUS),
 	m_speed(DEFAULT_AGENT_SPEED),
@@ -51,27 +50,30 @@ AgentLocomotion::~AgentLocomotion()
 void AgentLocomotion::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
-
-	auto* pObject = getOwner();
-	assert(pObject != nullptr);
-	m_owner = dynamic_cast<AgentObject*>(pObject);
 }
 
 void AgentLocomotion::onDetach()
 {
-	m_owner = nullptr;
 	IComponent::onDetach();
+}
+
+AgentObject* AgentLocomotion::GetAgentOwner() const
+{
+	return dynamic_cast<AgentObject*>(getOwner());
 }
 
 // --- 参数/状态：暂转发 ---
 void AgentLocomotion::SetPosition(const Ogre::Vector3& position)
 {
-	m_owner->setPosition(position);
+	AgentObject* owner = GetAgentOwner();
+	if (owner != nullptr)
+		owner->setPosition(position);
 }
 
 Ogre::Vector3 AgentLocomotion::GetPosition() const
 {
-	return m_owner->GetPosition();
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetPosition() : Ogre::Vector3::ZERO;
 }
 
 void AgentLocomotion::SetMass(Ogre::Real mass)
@@ -138,12 +140,16 @@ Ogre::Real AgentLocomotion::GetMaxSpeed() const
 // --- 姿态/速度：转发 ---
 void AgentLocomotion::SetForward(const Ogre::Vector3& forward)
 {
-	m_owner->SetForward(forward);
+	AgentObject* owner = GetAgentOwner();
+	if (owner != nullptr)
+		owner->SetForward(forward);
 }
 
 void AgentLocomotion::SetVelocity(const Ogre::Vector3& velocity)
 {
-	m_owner->SetVelocity(velocity);
+	AgentObject* owner = GetAgentOwner();
+	if (owner != nullptr)
+		owner->SetVelocity(velocity);
 }
 
 void AgentLocomotion::SetTarget(const Ogre::Vector3& targetPos)
@@ -168,22 +174,26 @@ Ogre::Vector3 AgentLocomotion::GetTarget() const
 
 Ogre::Vector3 AgentLocomotion::GetVelocity() const
 {
-	return m_owner->GetVelocity();
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetVelocity() : Ogre::Vector3::ZERO;
 }
 
 Ogre::Vector3 AgentLocomotion::GetUp() const
 {
-	return m_owner->GetUp();
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetUp() : Ogre::Vector3::UNIT_Y;
 }
 
 Ogre::Vector3 AgentLocomotion::GetLeft() const
 {
-	return m_owner->GetLeft();
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetLeft() : Ogre::Vector3::UNIT_X;
 }
 
 Ogre::Vector3 AgentLocomotion::GetForward() const
 {
-	return m_owner->GetForward();
+	AgentObject* owner = GetAgentOwner();
+	return owner != nullptr ? owner->GetForward() : Ogre::Vector3::UNIT_Z;
 }
 
 void AgentLocomotion::SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic)
@@ -281,12 +291,13 @@ Ogre::Vector3 AgentLocomotion::ForceToAvoidAgents(Ogre::Real predictionTime)
 	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
 
 	const auto& agents = objectManager->getAllAgents();
+	AgentObject* owner = GetAgentOwner();
 
 	OpenSteer::AVGroup group;
 	group.reserve(agents.size());
 	for (auto* a : agents)
 	{
-		if (!a || a == m_owner) continue; // 排除自己
+		if (!a || a == owner) continue; // 排除自己
 		if (a->GetHealth() <= 0) continue;
 		auto* veh = a->GetAdapter();
 		if (veh) group.push_back(veh);
@@ -322,9 +333,10 @@ Ogre::Vector3 AgentLocomotion::ForceToCombine(const std::vector<AgentObject*>& a
 
 	OpenSteer::AVGroup group;
 	group.reserve(agents.size());
+	AgentObject* owner = GetAgentOwner();
 	for (auto* a : agents)
 	{
-		if (a == nullptr || a == m_owner) // 排除自己
+		if (a == nullptr || a == owner) // 排除自己
 			continue;
 		auto* veh = a->GetAdapter();
 		if (veh) group.push_back(veh);
@@ -341,9 +353,10 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 
 	OpenSteer::AVGroup group;
 	group.reserve(agents.size());
+	AgentObject* owner = GetAgentOwner();
 	for (auto* a : agents)
 	{
-		if (a == nullptr || a == m_owner) // 排除自己
+		if (a == nullptr || a == owner) // 排除自己
 			continue;
 		auto* veh = a->GetAdapter();
 		if (!veh) continue;
@@ -357,5 +370,7 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 
 void AgentLocomotion::ApplyForce(const Ogre::Vector3& force)
 {
-	return m_owner->ApplyForce(force);
+	AgentObject* owner = GetAgentOwner();
+	if (owner != nullptr)
+		owner->ApplyForce(force);
 }

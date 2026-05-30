@@ -40,6 +40,8 @@ public:
 	AIController* GetAIController() const;
 	AIController* GetAI() const;
 
+	// Legacy Lua compatibility forwards. Keep old samples/actions working, but
+	// new C++ code should prefer getWeapon(), GetAIController(), or components.
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const;
 

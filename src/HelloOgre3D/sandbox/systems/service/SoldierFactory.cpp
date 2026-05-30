@@ -10,6 +10,7 @@
 #include "components/ai/AIController.h"
 #include "components/anim/AnimComponent.h"
 #include "components/combat/WeaponComponent.h"
+#include "components/ComponentKeys.h"
 #include "components/render/RenderComponent.h"
 #include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
@@ -79,14 +80,15 @@ void SoldierFactory::AttachSoldierComponents(SoldierObject* soldier)
 	}
 
 	AgentAttrib* attrib = new AgentAttrib(soldier->GetHealth(), std::max<Ogre::Real>(soldier->GetHealth(), 1.0f), SOLDIER_STAND, -1);
-	AddSoldierComponent(soldier, "attrib", attrib);
+	AddSoldierComponent(soldier, ComponentKeys::Attrib, attrib);
 
-	AddSoldierComponent(soldier, "weapon", new WeaponComponent());
-	AddSoldierComponent(soldier, "ai", new AIController());
+	AddSoldierComponent(soldier, ComponentKeys::Weapon, new WeaponComponent());
+	AddSoldierComponent(soldier, ComponentKeys::AI, new AIController());
 
-	AnimComponent* anim = AddSoldierComponent(soldier, "anim", new AnimComponent());
-	if (anim != nullptr && soldier->GetRenderComponent() != nullptr)
+	AnimComponent* anim = AddSoldierComponent(soldier, ComponentKeys::Anim, new AnimComponent());
+	RenderComponent* render = soldier->FindComponent<RenderComponent>();
+	if (anim != nullptr && render != nullptr)
 	{
-		anim->InitBodyAnimations(soldier->GetRenderComponent()->GetEntity(), true);
+		anim->InitBodyAnimations(render->GetEntity(), true);
 	}
 }

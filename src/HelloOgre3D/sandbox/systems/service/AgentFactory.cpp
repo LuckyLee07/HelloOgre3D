@@ -8,6 +8,7 @@
 #include "components/agent/AgentAttrib.h"
 #include "components/agent/AgentLocomotion.h"
 #include "components/ai/AIController.h"
+#include "components/ComponentKeys.h"
 #include "components/render/RenderComponent.h"
 #include "objects/AgentObject.h"
 #include "scripting/LuaPluginMgr.h"
@@ -81,6 +82,6 @@ void AgentFactory::AttachAgentComponents(AgentObject* agent)
 	}
 
 	AgentAttrib* attrib = new AgentAttrib(agent->GetHealth(), std::max<Ogre::Real>(agent->GetHealth(), 1.0f), SOLDIER_STAND, -1);
-	AddAgentComponent(agent, "attrib", attrib);
-	AddAgentComponent(agent, "ai", new AIController());
+	AddAgentComponent(agent, ComponentKeys::Attrib, attrib);
+	AddAgentComponent(agent, ComponentKeys::AI, new AIController());
 }
