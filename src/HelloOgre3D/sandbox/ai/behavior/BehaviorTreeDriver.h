@@ -37,8 +37,8 @@ public:
 
 	// 节点工厂 —— driver 保留所有权。
 	BehaviorTree*       NewTree();
-	BehaviorSequence*   NewSequence();
-	BehaviorSelector*   NewSelector();
+	BehaviorSequence*   NewSequence(float reevaluateMs = -1.0f);
+	BehaviorSelector*   NewSelector(float reevaluateMs = -1.0f);
 	BehaviorParallel*   NewParallel(int successPolicy = 2, int failurePolicy = 1);
 	BehaviorRandomSelector* NewRandomSelector();
 	LuaBehaviorAction*  NewLuaAction(const std::string& name);

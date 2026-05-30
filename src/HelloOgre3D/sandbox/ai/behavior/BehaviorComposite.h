@@ -7,9 +7,9 @@
 
 // Composite 共用基类：维护有序子列表 + 当前 RUNNING 子节点游标 m_runningIdx。
 //
-// 设计说明：BT 是"非反应式"的简化模型 —— 一旦某个子节点返回 RUNNING，
-// 父 Composite 下一帧会从该子节点恢复继续 tick，而不重新从头评估。
-// 想让 BT "再考虑一下"，由叶 Action 主动周期性返回 SUCCESS（参考 MoveAction 的 segment 切片做法）。
+// 默认语义仍是"非反应式"：一旦某个子节点 RUNNING，父 Composite 下一帧从该
+// 子节点恢复。配置 reevaluateMs 后，父节点会按间隔从第一个 child 重新检查，
+// 用来支持数据驱动触发器、黑板条件变化和上层中断。
 //
 // Lua 端用 driver:NewSequence() / driver:NewSelector() 拿到指针，
 // 再用 :AddChild() 装配；driver 持有所有节点的所有权。
@@ -28,8 +28,15 @@ public:
 	virtual void Reset() override;
 
 protected:
+	void ConfigureReevaluation(float reevaluateMs);
+	bool ShouldReevaluate(float deltaMs);
+	void ResetRunningChild();
+	void ResetRunningChildIfChanged(int nextRunningIdx);
+
 	std::vector<BehaviorNode*> m_children;  // 非拥有；driver 负责生命周期
 	int m_runningIdx;                       // -1 表示从头开始；否则下一帧从该 child 恢复
+	float m_reevaluateMs;                   // < 0 表示关闭；0 表示每帧重评估
+	float m_reevaluateElapsedMs;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(BehaviorComposite);
@@ -43,6 +50,8 @@ REGISTER_LUA_CLASS_NAME(BehaviorComposite);
 class BehaviorSequence : public BehaviorComposite //tolua_exports
 { //tolua_exports
 public:
+	explicit BehaviorSequence(float reevaluateMs = -1.0f);
+
 	virtual Status Tick(float deltaMs) override;
 	virtual const char* GetDebugType() const override { return "Sequence"; }
 }; //tolua_exports
@@ -58,6 +67,8 @@ REGISTER_LUA_CLASS_NAME(BehaviorSequence);
 class BehaviorSelector : public BehaviorComposite //tolua_exports
 { //tolua_exports
 public:
+	explicit BehaviorSelector(float reevaluateMs = -1.0f);
+
 	virtual Status Tick(float deltaMs) override;
 	virtual const char* GetDebugType() const override { return "Selector"; }
 }; //tolua_exports

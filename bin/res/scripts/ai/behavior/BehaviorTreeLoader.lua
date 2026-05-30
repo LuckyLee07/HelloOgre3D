@@ -2,8 +2,8 @@
 -- Builds the existing C++ BehaviorTree runtime from a Lua table config.
 --
 -- Supported node types in this first pass:
---   Sequence  -> driver:NewSequence()
---   Selector  -> driver:NewSelector()
+--   Sequence  -> driver:NewSequence(reevaluateMs)
+--   Selector  -> driver:NewSelector(reevaluateMs)
 --   Parallel  -> driver:NewParallel(successPolicy, failurePolicy)
 --   Random    -> driver:NewRandomSelector()
 --   Condition -> driver:NewCondition() + SetEvaluator(function)
@@ -14,6 +14,7 @@
 -- Runtime params:
 --   params = { { blackboard = "key", type = "float", default = 0 } } reads from Blackboard per tick.
 -- Optional config flags:
+--   reactive / reevaluateMs -> Sequence/Selector can restart from first child to interrupt RUNNING branch
 --   debugTrace      -> driver:SetDebugTraceEnabled(bool)
 --   debugTracePrint -> driver:SetDebugTracePrintEnabled(bool), also enables trace when debugTrace is omitted
 
@@ -134,6 +135,30 @@ local function _PolicyToInt(value, defaultValue)
         return 2
     end
     return defaultValue
+end
+
+local function _GetReevaluateMs(cfg, context)
+    local value = cfg.reevaluateMs or cfg.recheckMs or cfg.reactiveMs
+    if value == nil and cfg.reevaluateSeconds ~= nil then
+        value = cfg.reevaluateSeconds * 1000.0
+    end
+    if value == nil and cfg.recheckSeconds ~= nil then
+        value = cfg.recheckSeconds * 1000.0
+    end
+    if value == nil and cfg.reactive == true then
+        value = 0.0
+    end
+    if value == nil and cfg.reevaluate == true then
+        value = 0.0
+    end
+    if value == nil then
+        return -1.0
+    end
+    value = _ResolveValue(value, context)
+    if type(value) == "boolean" then
+        return value and 0.0 or -1.0
+    end
+    return tonumber(value) or -1.0
 end
 
 local function _SetDebugName(node, cfg, context, nodeType)
@@ -271,14 +296,14 @@ function BehaviorTreeLoader.BuildNode(cfg, context)
     local nodeType = _GetNodeType(cfg)
 
     if nodeType == "Sequence" then
-        local node = context.driver:NewSequence()
+        local node = context.driver:NewSequence(_GetReevaluateMs(cfg, context))
         _SetDebugName(node, cfg, context, nodeType)
         if not _BindChildren(node, cfg.children, context) then return nil end
         return node
     end
 
     if nodeType == "Selector" then
-        local node = context.driver:NewSelector()
+        local node = context.driver:NewSelector(_GetReevaluateMs(cfg, context))
         _SetDebugName(node, cfg, context, nodeType)
         if not _BindChildren(node, cfg.children, context) then return nil end
         return node

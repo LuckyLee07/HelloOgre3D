@@ -16,11 +16,13 @@ local SliceGuardBTConfig = {
 			{
 				node = "Sequence",
 				name = "AliveGuard",
+				reactive = true,
 				children = {
 					{ node = "Condition", condition = "IsAlive" },
 					{
 						node = "Selector",
 						name = "AwakeOrIdle",
+						reactive = true,
 						children = {
 							{
 								node = "Sequence",
@@ -43,6 +45,7 @@ local SliceGuardBTConfig = {
 										children = {
 											{
 												node = "Selector",
+												reactive = true,
 												children = {
 													{
 														node = "Sequence",

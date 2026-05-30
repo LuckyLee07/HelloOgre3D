@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 30 10:57:07 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 30 11:17:33 2026.
 */
 
 #ifndef __cplusplus
@@ -9300,18 +9300,20 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_NewSequence00(lua_State* tolua_
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  float reevaluateMs = ((float)  tolua_tonumber(tolua_S,2,-1.0f));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewSequence'", NULL);
 #endif
   {
-   BehaviorSequence* tolua_ret = (BehaviorSequence*)  self->NewSequence();
+   BehaviorSequence* tolua_ret = (BehaviorSequence*)  self->NewSequence(reevaluateMs);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorSequence");
   }
  }
@@ -9332,18 +9334,20 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_NewSelector00(lua_State* tolua_
  tolua_Error tolua_err;
  if (
      !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,2,&tolua_err)
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  float reevaluateMs = ((float)  tolua_tonumber(tolua_S,2,-1.0f));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewSelector'", NULL);
 #endif
   {
-   BehaviorSelector* tolua_ret = (BehaviorSelector*)  self->NewSelector();
+   BehaviorSelector* tolua_ret = (BehaviorSelector*)  self->NewSelector(reevaluateMs);
     tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorSelector");
   }
  }

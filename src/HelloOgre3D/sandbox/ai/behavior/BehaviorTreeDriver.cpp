@@ -37,16 +37,16 @@ BehaviorTree* BehaviorTreeDriver::NewTree()
 	return t;
 }
 
-BehaviorSequence* BehaviorTreeDriver::NewSequence()
+BehaviorSequence* BehaviorTreeDriver::NewSequence(float reevaluateMs)
 {
-	BehaviorSequence* s = new BehaviorSequence();
+	BehaviorSequence* s = new BehaviorSequence(reevaluateMs);
 	m_ownedNodes.push_back(s);
 	return s;
 }
 
-BehaviorSelector* BehaviorTreeDriver::NewSelector()
+BehaviorSelector* BehaviorTreeDriver::NewSelector(float reevaluateMs)
 {
-	BehaviorSelector* s = new BehaviorSelector();
+	BehaviorSelector* s = new BehaviorSelector(reevaluateMs);
 	m_ownedNodes.push_back(s);
 	return s;
 }
