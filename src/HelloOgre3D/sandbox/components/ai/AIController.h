@@ -13,6 +13,8 @@ class BehaviorTreeDriver;
 class DecisionTreeDriver;
 class IDecisionDriver;
 class SoldierObject;
+struct AgentPerceptionOptions;
+struct AgentPerceptionResult;
 struct AICommand;
 
 class AIController : public IComponent //tolua_exports
@@ -60,7 +62,11 @@ private:
 	void SetBehaviorTreeDriver();
 	void SetEnemy(AgentObject* enemy);
 	AgentObject* FindNearestEnemy(const Ogre::String& navMeshName) const;
+	bool FindNearestEnemy(const Ogre::String& navMeshName, AgentPerceptionResult& result) const;
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
+	AgentPerceptionOptions BuildPerceptionOptions(const Ogre::String& navMeshName, bool requirePath) const;
+	void WritePerceptionResult(const AgentPerceptionResult& result);
+	void ClearPerceptionResult();
 
 private:
 	Blackboard m_blackboard;

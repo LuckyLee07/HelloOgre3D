@@ -77,6 +77,8 @@ local CreatureDefs = {
 				blackboard = {
 					role = "guard",
 					sliceGuardAwake = false,
+					["perception.visionRange"] = 24.0,
+					["perception.requirePath"] = true,
 					["slice.guard.shootDistanceSq"] = 9.0,
 					["slice.guard.primaryTargetId"] = { type = "object-id", value = -1 },
 					["slice.guard.recentTargetIds"] = { type = "object-id-array", values = {} },

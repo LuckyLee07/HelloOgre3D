@@ -96,6 +96,20 @@ namespace
 			stream << (wrote ? "," : "") << "movePos:" << static_cast<int>(movePos.x) << "," << static_cast<int>(movePos.y) << "," << static_cast<int>(movePos.z);
 			wrote = true;
 		}
+		if (blackboard->Has("perception.targetId"))
+		{
+			stream << (wrote ? "," : "") << "senseTarget:" << blackboard->GetObjectId("perception.targetId", -1);
+			if (blackboard->Has("perception.targetDistance"))
+			{
+				stream << "@" << static_cast<int>(blackboard->GetFloat("perception.targetDistance", 0.0f));
+			}
+			wrote = true;
+		}
+		else if (blackboard->Has("perception.hasTarget"))
+		{
+			stream << (wrote ? "," : "") << "senseTarget:none";
+			wrote = true;
+		}
 		if (blackboard->Has("__bt.traceFrame"))
 		{
 			stream << (wrote ? "," : "") << "btFrame:" << blackboard->GetInt("__bt.traceFrame", 0);

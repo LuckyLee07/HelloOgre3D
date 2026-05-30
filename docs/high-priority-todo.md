@@ -26,6 +26,7 @@
 - 2026-05-30：黑板补齐 `object-id`、整型/浮点/字符串数组、object-id 数组；Def 初始化、触发器事件写入、BT 运行时参数读取和 `Sandbox9` 守卫验证面已串起来。
 - 2026-05-30：给对象层组件转发方法加上 legacy 护栏，并把 `WeaponComponent` 对宿主渲染组件的访问改成直接 typed component 查询，避免继续沿对象层新增转发口。
 - 2026-05-30：组件侧 owner 访问统一收敛为 `BaseObject*` + 局部类型转换；常用组件 key 集中到 `ComponentKeys`，对象/工厂侧优先走 typed component 查询；AI 敌人感知查询抽成 `IAgentPerceptionQuery` / `AgentPerceptionQuery` 小接口。
+- 2026-05-30：AI 感知查询从“返回敌人指针”推进为 `AgentPerceptionResult`，可按黑板配置视野范围/寻路要求，并把目标 id、位置、距离、最后已知位置写回 blackboard；新增 `IAgentSpatialQuery` 作为后续空间分区替换点。
 
 ## P0 - 地基任务
 
@@ -64,6 +65,9 @@
 - [x] 统一组件访问 owner 的方式，全部收敛到 `BaseObject*`。
 - [x] 优先使用类型化组件查询，减少散落的字符串 key。
 - [x] 在继续做多生物行为前，把 AI 感知查询先抽成一个小接口。
+- [x] 把 AI 感知查询扩展为可配置感知结果，并写回 blackboard。
+- [x] 为空间范围查询预留 `IAgentSpatialQuery` 接口，当前用 `ObjectManager` 线性实现兜底。
+- [ ] 用 uniform grid 或等价空间分区替换线性 agent 查询实现。
 
 ## 暂缓任务
 

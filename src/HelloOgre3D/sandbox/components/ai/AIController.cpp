@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <string>
 
 #include "GameFunction.h"
@@ -22,6 +23,16 @@
 
 namespace
 {
+	const char* const kPerceptionVisionRange = "perception.visionRange";
+	const char* const kPerceptionRequirePath = "perception.requirePath";
+	const char* const kPerceptionHasTarget = "perception.hasTarget";
+	const char* const kPerceptionTargetId = "perception.targetId";
+	const char* const kPerceptionTargetPos = "perception.targetPos";
+	const char* const kPerceptionTargetDistance = "perception.targetDistance";
+	const char* const kPerceptionTargetDistanceSq = "perception.targetDistanceSq";
+	const char* const kPerceptionLastKnownTargetId = "perception.lastKnownTargetId";
+	const char* const kPerceptionLastKnownTargetPos = "perception.lastKnownTargetPos";
+
 	ObjectManager* ResolveObjectManager(const AIController* controller)
 	{
 		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
@@ -153,13 +164,57 @@ SoldierObject* AIController::GetSoldierOwner() const
 bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
 {
 	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
-	return query.IsEnemyValid(GetAgentOwner(), enemy, navMeshName, requirePath);
+	AgentPerceptionResult result;
+	return query.TryGetEnemy(GetAgentOwner(), enemy, BuildPerceptionOptions(navMeshName, requirePath), result);
 }
 
 AgentObject* AIController::FindNearestEnemy(const Ogre::String& navMeshName) const
 {
+	AgentPerceptionResult result;
+	return FindNearestEnemy(navMeshName, result) ? result.target : nullptr;
+}
+
+bool AIController::FindNearestEnemy(const Ogre::String& navMeshName, AgentPerceptionResult& result) const
+{
 	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
-	return query.FindNearestEnemy(GetAgentOwner(), navMeshName);
+	return query.FindNearestEnemy(GetAgentOwner(), BuildPerceptionOptions(navMeshName, true), result);
+}
+
+AgentPerceptionOptions AIController::BuildPerceptionOptions(const Ogre::String& navMeshName, bool requirePath) const
+{
+	AgentPerceptionOptions options;
+	options.navMeshName = navMeshName;
+	options.maxDistance = std::max(0.0f, m_blackboard.GetFloat(kPerceptionVisionRange, 0.0f));
+	options.requirePath = requirePath && m_blackboard.GetBool(kPerceptionRequirePath, true);
+	return options;
+}
+
+void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
+{
+	if (result.target == nullptr)
+	{
+		ClearPerceptionResult();
+		return;
+	}
+
+	m_blackboard.SetAgent("enemy", result.target);
+	m_blackboard.SetBool(kPerceptionHasTarget, true);
+	m_blackboard.SetObjectId(kPerceptionTargetId, result.targetId);
+	m_blackboard.SetVec3(kPerceptionTargetPos, result.targetPosition);
+	m_blackboard.SetFloat(kPerceptionTargetDistanceSq, result.distanceSquared);
+	m_blackboard.SetFloat(kPerceptionTargetDistance, std::sqrt(std::max(0.0f, result.distanceSquared)));
+	m_blackboard.SetObjectId(kPerceptionLastKnownTargetId, result.targetId);
+	m_blackboard.SetVec3(kPerceptionLastKnownTargetPos, result.targetPosition);
+}
+
+void AIController::ClearPerceptionResult()
+{
+	m_blackboard.Remove("enemy");
+	m_blackboard.SetBool(kPerceptionHasTarget, false);
+	m_blackboard.Remove(kPerceptionTargetId);
+	m_blackboard.Remove(kPerceptionTargetPos);
+	m_blackboard.Remove(kPerceptionTargetDistance);
+	m_blackboard.Remove(kPerceptionTargetDistanceSq);
 }
 
 void AIController::SetEnemy(AgentObject* enemy)
@@ -183,33 +238,46 @@ AgentObject* AIController::GetEnemy() const
 bool AIController::HasEnemy(const Ogre::String& navMeshName)
 {
 	AgentObject* enemy = GetEnemy();
-	if (IsEnemyValid(enemy, navMeshName, true))
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionResult result;
+	if (query.TryGetEnemy(GetAgentOwner(), enemy, BuildPerceptionOptions(navMeshName, true), result))
 	{
+		WritePerceptionResult(result);
 		return true;
 	}
 
-	SetEnemy(FindNearestEnemy(navMeshName));
-	return GetEnemy() != nullptr;
+	if (FindNearestEnemy(navMeshName, result))
+	{
+		SetEnemy(result.target);
+		WritePerceptionResult(result);
+		return true;
+	}
+
+	SetEnemy(nullptr);
+	ClearPerceptionResult();
+	return false;
 }
 
 bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
 {
 	AgentObject* owner = GetAgentOwner();
-	if (owner == nullptr)
+	if (owner == nullptr || shootDistance <= 0.0f)
 	{
 		return false;
 	}
 
 	AgentObject* enemy = GetEnemy();
-	if (!IsEnemyValid(enemy, navMeshName, false))
+	AgentPerceptionOptions options = BuildPerceptionOptions(navMeshName, false);
+	options.maxDistance = std::max(0.0f, shootDistance);
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionResult result;
+	if (!query.TryGetEnemy(owner, enemy, options, result))
 	{
 		return false;
 	}
 
-	const float distance = std::max(0.0f, shootDistance);
-	const float shootSquared = distance * distance;
-	const float distSquared = owner->GetPosition().squaredDistance(enemy->GetPosition());
-	return distSquared < shootSquared;
+	WritePerceptionResult(result);
+	return true;
 }
 
 bool AIController::HasMovePosition(float reachDistance) const
