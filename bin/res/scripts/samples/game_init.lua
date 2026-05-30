@@ -44,6 +44,7 @@ print("[SandboxSmoke] sample selected:", sandboxSampleName)
 
 _G.LuaPluginMgr = ClassList.LuaPluginMgr:new()
 
+require("res.scripts.runtime.CreatureAssembler")
 require("res.scripts.samples.fgui_init")
 local RuntimeDiagnostics = require("res.scripts.samples.runtime_diagnostics")
 local VisualTraceGate = require("res.scripts.samples.visual_trace_gate")
