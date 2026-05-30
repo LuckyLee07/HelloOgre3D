@@ -10,19 +10,22 @@ class SandboxEventDispatcher
 {
 public:
 	using Callback = std::function<void(const SandboxContext&)>;
+	using Filter = std::function<bool(const SandboxContext&)>;
 	using Token = int;
 	struct CallbackEntry
 	{
 		Token token;
 		Callback callback;
+		Filter filter;
 	};
 
 	// 绑定回调
-	Token BindCallback(const Callback& callback)
+	Token BindCallback(const Callback& callback, const Filter& filter = Filter())
 	{
 		CallbackEntry entry;
 		entry.token = ++m_nextToken;
 		entry.callback = callback;
+		entry.filter = filter;
 		m_callbacks.push_back(entry);
 		return entry.token;
 	}
@@ -47,13 +50,24 @@ public:
 		return static_cast<int>(m_callbacks.size());
 	}
 
+	int GetMatchingCallbackCount(const SandboxContext& context) const
+	{
+		int count = 0;
+		for (const auto& entry: m_callbacks)
+		{
+			if (entry.callback && (!entry.filter || entry.filter(context)))
+				++count;
+		}
+		return count;
+	}
+
 	// 执行回调
 	void Invoke(const SandboxContext& context)
 	{
 		const std::vector<CallbackEntry> callbacks = m_callbacks;
 		for (const auto& entry: callbacks)
 		{
-			if (HasCallback(entry.token) && entry.callback)
+			if (HasCallback(entry.token) && entry.callback && (!entry.filter || entry.filter(context)))
 				entry.callback(context);
 		}
 	}

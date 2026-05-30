@@ -18,3 +18,9 @@ SandboxEventDispatcherManager* SandboxObject::Event()
 	}
 	return m_pEventMgr;
 }
+
+void SandboxObject::FlushQueuedEvents(int maxEvents)
+{
+	if (m_pEventMgr != nullptr)
+		m_pEventMgr->FlushQueuedEvents(maxEvents);
+}

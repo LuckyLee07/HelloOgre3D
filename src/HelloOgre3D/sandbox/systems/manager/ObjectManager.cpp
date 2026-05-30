@@ -15,6 +15,7 @@
 #include "components/ai/AIController.h"
 #include "components/physics/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
+#include "event/SandboxEventDispatcherManager.h"
 #include "profiling/Profile.h"
 
 #include <sstream>
@@ -150,6 +151,8 @@ void ObjectManager::Update(int deltaMilliseconds)
 	if (m_aiScheduler != nullptr)
 		m_aiScheduler->BeginFrame(deltaMilliseconds, getAiSoldierCount());
 
+	SandboxEventDispatcherManager::GetGlobalInst().FlushQueuedEvents();
+
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;
@@ -176,6 +179,7 @@ void ObjectManager::Update(int deltaMilliseconds)
 			}
 
 			pObject->Update(deltaMilliseconds);
+			pObject->FlushQueuedEvents();
 			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
 			{
 				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);

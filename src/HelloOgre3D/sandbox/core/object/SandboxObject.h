@@ -10,6 +10,7 @@ public:
 	virtual ~SandboxObject();
 	
 	SandboxEventDispatcherManager* Event();
+	void FlushQueuedEvents(int maxEvents = -1);
 
 private:
 	SandboxEventDispatcherManager* m_pEventMgr;
