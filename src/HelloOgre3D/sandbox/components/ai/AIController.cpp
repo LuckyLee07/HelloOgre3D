@@ -30,15 +30,11 @@ namespace
 	const char* const kPerceptionTargetPos = "perception.targetPos";
 	const char* const kPerceptionTargetDistance = "perception.targetDistance";
 	const char* const kPerceptionTargetDistanceSq = "perception.targetDistanceSq";
-	const char* const kPerceptionLastKnownTargetId = "perception.lastKnownTargetId";
-	const char* const kPerceptionLastKnownTargetPos = "perception.lastKnownTargetPos";
 	const char* const kPerceptionVisionIntervalMs = "perception.visionIntervalMs";
 	const char* const kPerceptionFieldOfViewDegrees = "perception.fieldOfViewDegrees";
 	const char* const kSenseTargetId = "sense.targetId";
 	const char* const kSenseTargetPos = "sense.targetPos";
 	const char* const kSenseTargetDistance = "sense.targetDistance";
-	const char* const kMemoryLastKnownEnemyId = "memory.lastKnownEnemyId";
-	const char* const kMemoryLastKnownEnemyPos = "memory.lastKnownEnemyPos";
 	const char* const kPerceptionSource = "VisionSensor";
 	const int kVisionScanIntervalMs = 200;
 	const int kSenseEntryTtlMs = 750;
@@ -71,6 +67,7 @@ AIController::AIController(BaseObject* owner)
 	, m_movePos(Ogre::Vector3::ZERO)
 	, m_tickInOwnerUpdateEnabled(true)
 	, m_localTimeMs(0)
+	, m_memoryStore(&m_blackboard)
 {
 }
 
@@ -83,6 +80,7 @@ void AIController::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
 	m_blackboard.SetOwner(GetSoldierOwner());
+	m_memoryStore.SetBlackboard(&m_blackboard);
 	m_localTimeMs = 0;
 	m_visionSensor.Clear();
 	InitDefaultDriver();
@@ -91,6 +89,7 @@ void AIController::onAttach(BaseObject* owner)
 void AIController::onDetach()
 {
 	m_visionSensor.Clear();
+	m_memoryStore.SetBlackboard(nullptr);
 	m_blackboard.SetOwner(nullptr);
 	IComponent::onDetach();
 }
@@ -219,6 +218,16 @@ VisionSensorConfig AIController::BuildVisionSensorConfig(const Ogre::String& nav
 	return config;
 }
 
+MemoryStoreConfig AIController::BuildMemoryStoreConfig() const
+{
+	MemoryStoreConfig config;
+	config.ttlMs = kMemoryEntryTtlMs;
+	config.decayPolicy = Blackboard::ENTRY_DECAY_LINEAR;
+	config.decayRate = kMemoryConfidenceDecayPerMs;
+	config.source = kPerceptionSource;
+	return config;
+}
+
 bool AIController::UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan)
 {
 	AgentObject* owner = GetAgentOwner();
@@ -262,17 +271,12 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 	m_blackboard.SetFloat(kPerceptionTargetDistanceSq, result.distanceSquared);
 	const float distance = std::sqrt(std::max(0.0f, result.distanceSquared));
 	m_blackboard.SetFloat(kPerceptionTargetDistance, distance);
-	m_blackboard.SetObjectId(kPerceptionLastKnownTargetId, result.targetId);
-	m_blackboard.SetVec3(kPerceptionLastKnownTargetPos, result.targetPosition);
 
 	const float confidence = std::max(0.0f, std::min(1.0f, result.confidence));
 	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
 	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
 	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, confidence, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, confidence, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyId, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
-	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyPos, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
+	m_memoryStore.RememberVisibleEnemy(result, m_localTimeMs, BuildMemoryStoreConfig());
 }
 
 void AIController::ClearPerceptionResult()
@@ -413,6 +417,11 @@ AgentStateController* AIController::GetFsmController() const
 std::string AIController::BuildSensorDebugString() const
 {
 	return m_visionSensor.BuildDebugString();
+}
+
+std::string AIController::BuildMemoryDebugString() const
+{
+	return m_memoryStore.BuildDebugString(m_localTimeMs);
 }
 
 void AIController::IssueCommand(const AICommand& command)

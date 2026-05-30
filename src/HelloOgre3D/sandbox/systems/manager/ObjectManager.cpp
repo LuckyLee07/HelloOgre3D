@@ -6,6 +6,7 @@
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
+#include "ai/perception/MemoryStore.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "ClientManager.h"
@@ -415,12 +416,39 @@ static std::string BuildBlackboardSelfTestSummary()
 		AppendSelfTestFailure(stream, "confidence reaching zero did not remove entry", failures);
 	}
 
+	Blackboard memoryBlackboard;
+	MemoryStore memoryStore(&memoryBlackboard);
+	MemoryStoreConfig memoryConfig;
+	memoryConfig.ttlMs = 500;
+	memoryConfig.decayRate = 0.001f;
+	memoryConfig.source = "selftest";
+	AgentPerceptionResult perceptionResult;
+	perceptionResult.targetId = 7;
+	perceptionResult.targetPosition = Ogre::Vector3(1.0f, 2.0f, 3.0f);
+	perceptionResult.distanceSquared = 25.0f;
+	perceptionResult.confidence = 1.0f;
+	memoryStore.RememberVisibleEnemy(perceptionResult, 1000, memoryConfig);
+	memoryBlackboard.UpdateEntries(1250, 250);
+
+	EnemyMemory enemyMemory;
+	if (!memoryStore.GetLastKnownEnemy(1250, enemyMemory) || enemyMemory.enemyId != 7 || !NearlyEqual(enemyMemory.confidence, 0.75f, 0.01f))
+	{
+		AppendSelfTestFailure(stream, "memory store did not preserve last known enemy with decayed confidence", failures);
+	}
+
+	const int memoryExpired = memoryBlackboard.UpdateEntries(1601, 351);
+	if (memoryExpired != 3 || memoryStore.HasLastKnownEnemy(1601))
+	{
+		AppendSelfTestFailure(stream, "memory store ttl expiration did not clear last known enemy entries", failures);
+	}
+
 	std::string details = stream.str();
 	std::ostringstream result;
 	result << "[BlackboardSelfTest] result=" << (failures == 0 ? "true" : "false")
 		<< " failures=" << failures
 		<< " ttlRemoved=" << ttlRemoved
 		<< " confidenceRemoved=" << confidenceRemoved
+		<< " memoryExpired=" << memoryExpired
 		<< " debug=\"" << debugLine << "\"";
 	if (!details.empty())
 		result << details;
@@ -496,6 +524,9 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		const std::string sensorSummary = ai->BuildSensorDebugString();
 		if (!sensorSummary.empty())
 			stream << " " << sensorSummary;
+		const std::string memorySummary = ai->BuildMemoryDebugString();
+		if (!memorySummary.empty())
+			stream << " " << memorySummary;
 	}
 	const char* blackboardSelfTest = std::getenv("HELLO_AI_BLACKBOARD_SELF_TEST");
 	if (blackboardSelfTest != nullptr && (std::string(blackboardSelfTest) == "1" || std::string(blackboardSelfTest) == "true"))

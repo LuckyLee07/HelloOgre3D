@@ -6,6 +6,7 @@
 #include "OgreString.h"
 #include "OgreVector3.h"
 #include "ai/common/Blackboard.h"
+#include "ai/perception/MemoryStore.h"
 #include "ai/perception/VisionSensor.h"
 #include "component/IComponent.h"
 #include "script/LuaClassNameTraits.h"
@@ -50,6 +51,7 @@ public:
 
 	AgentStateController* GetFsmController() const;
 	std::string BuildSensorDebugString() const;
+	std::string BuildMemoryDebugString() const;
 
 	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
@@ -70,6 +72,7 @@ private:
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 	AgentPerceptionOptions BuildPerceptionOptions(const Ogre::String& navMeshName, bool requirePath) const;
 	VisionSensorConfig BuildVisionSensorConfig(const Ogre::String& navMeshName, bool requirePath) const;
+	MemoryStoreConfig BuildMemoryStoreConfig() const;
 	bool UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan);
 	void WritePerceptionResult(const AgentPerceptionResult& result);
 	void ClearPerceptionResult();
@@ -84,6 +87,7 @@ private:
 	bool m_tickInOwnerUpdateEnabled;
 	long long m_localTimeMs;
 	VisionSensor m_visionSensor;
+	MemoryStore m_memoryStore;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(AIController);
