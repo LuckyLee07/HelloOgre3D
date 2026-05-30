@@ -14,6 +14,16 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 
 local _sliceObjects = {}
 
+local function printBtTrace(object)
+	if object == nil then return end
+	local getAi = object.GetAI or object.GetAIController
+	local ai = getAi ~= nil and getAi(object) or nil
+	local driver = ai ~= nil and ai.GetBehaviorTreeDriver ~= nil and ai:GetBehaviorTreeDriver() or nil
+	if driver ~= nil and driver.GetLastDebugTrace ~= nil then
+		print("[Sandbox9] bt trace:", driver:GetLastDebugTrace())
+	end
+end
+
 local function scheduleSmokeDiagnostics()
 	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true or threadpool == nil then
 		return
@@ -23,6 +33,9 @@ local function scheduleSmokeDiagnostics()
 		print(TriggerRuntime:BuildDebugSummary())
 		if ObjectManager ~= nil and ObjectManager.buildAiDebugSummary ~= nil then
 			print(ObjectManager:buildAiDebugSummary(4))
+		end
+		for _, object in ipairs(_sliceObjects) do
+			printBtTrace(object)
 		end
 	end)
 end

@@ -14,6 +14,8 @@ class BehaviorTree;
 class BehaviorNode;
 class BehaviorSequence;
 class BehaviorSelector;
+class BehaviorParallel;
+class BehaviorRandomSelector;
 class LuaBehaviorAction;
 class LuaCondition;
 
@@ -37,6 +39,8 @@ public:
 	BehaviorTree*       NewTree();
 	BehaviorSequence*   NewSequence();
 	BehaviorSelector*   NewSelector();
+	BehaviorParallel*   NewParallel(int successPolicy = 2, int failurePolicy = 1);
+	BehaviorRandomSelector* NewRandomSelector();
 	LuaBehaviorAction*  NewLuaAction(const std::string& name);
 	LuaCondition*       NewCondition();
 	BehaviorNode*       NewWait(float waitMs);

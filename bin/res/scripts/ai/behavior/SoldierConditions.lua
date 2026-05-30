@@ -51,14 +51,25 @@ function SoldierConditions.HasAmmo(agent, bb)
     return agent:HasAmmo()
 end
 
-function SoldierConditions.CanShootEnemy(agent, bb)
+local function _CanShootEnemy(agent, bb, maxDistanceSq)
+    maxDistanceSq = tonumber(maxDistanceSq) or 9.0
     local eventEnemy = bb:GetAgent("enemy")
     if _IsValidEnemy(agent, eventEnemy) then
         local toEnemy = eventEnemy:GetPosition() - agent:GetPosition()
         toEnemy.y = 0
-        return toEnemy:squaredLength() < 9.0
+        return toEnemy:squaredLength() < maxDistanceSq
     end
-    return agent:CanShootEnemy("default", 3.0)
+    return agent:CanShootEnemy("default", math.sqrt(maxDistanceSq))
+end
+
+function SoldierConditions.CanShootEnemy(agentOrMaxDistanceSq, bb)
+    if type(agentOrMaxDistanceSq) == "number" then
+        local maxDistanceSq = agentOrMaxDistanceSq
+        return function(agent, blackboard)
+            return _CanShootEnemy(agent, blackboard, maxDistanceSq)
+        end
+    end
+    return _CanShootEnemy(agentOrMaxDistanceSq, bb, 9.0)
 end
 
 function SoldierConditions.RandomChance(threshold)

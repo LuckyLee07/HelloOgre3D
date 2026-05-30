@@ -15,46 +15,86 @@ local SliceGuardBTConfig = {
 		children = {
 			{
 				node = "Sequence",
-				name = "WakeByTriggerThenAttack",
+				name = "AliveGuard",
 				children = {
 					{ node = "Condition", condition = "IsAlive" },
 					{
-						node = "Event",
-						event = "PLAYER_ENTER",
-						regionId = "slice_entry",
-						targetKey = "enemy",
-						setBoolKey = "slice.guardAwake",
-						consume = false,
-					},
-					{ node = "Condition", condition = "HasEnemy" },
-					{
 						node = "Selector",
+						name = "AwakeOrIdle",
 						children = {
 							{
 								node = "Sequence",
+								name = "WakeByTriggerThenAttack",
 								children = {
-									{ node = "Condition", condition = "HasAmmo" },
 									{
-										node = "Selector",
+										node = "Event",
+										event = "PLAYER_ENTER",
+										regionId = "slice_entry",
+										targetKey = "enemy",
+										setBoolKey = "slice.guardAwake",
+										consume = false,
+									},
+									{ node = "Condition", condition = "HasEnemy" },
+									{
+										node = "Parallel",
+										name = "AttackWithSenseTick",
+										successPolicy = "all",
+										failurePolicy = "one",
 										children = {
 											{
-												node = "Sequence",
+												node = "Selector",
 												children = {
-													{ node = "Condition", condition = "CanShootEnemy" },
-													{ node = "Action", action = "shoot" },
+													{
+														node = "Sequence",
+														children = {
+															{ node = "Condition", condition = "HasAmmo" },
+															{
+																node = "Selector",
+																children = {
+																	{
+																		node = "Sequence",
+																		children = {
+																			{
+																				node = "Condition",
+																				condition = "CanShootEnemy",
+																				params = {
+																					{
+																						blackboard = "slice.guard.shootDistanceSq",
+																						type = "float",
+																						default = 9.0,
+																					},
+																				},
+																			},
+																			{ node = "Action", action = "shoot" },
+																		},
+																	},
+																	{ node = "Action", action = "pursue" },
+																},
+															},
+														},
+													},
+													{ node = "Action", action = "reload" },
 												},
 											},
-											{ node = "Action", action = "pursue" },
+											{
+												node = "ForceSuccess",
+												child = { node = "Wait", waitMs = 50 },
+											},
 										},
 									},
 								},
 							},
-							{ node = "Action", action = "reload" },
+							{
+								node = "Random",
+								name = "IdleFallback",
+								children = {
+									{ node = "Action", action = "idle" },
+								},
+							},
 						},
 					},
 				},
 			},
-			{ node = "Action", action = "idle" },
 			{ node = "Action", action = "die" },
 		},
 	},

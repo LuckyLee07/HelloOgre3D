@@ -4,11 +4,15 @@
 -- Supported node types in this first pass:
 --   Sequence  -> driver:NewSequence()
 --   Selector  -> driver:NewSelector()
+--   Parallel  -> driver:NewParallel(successPolicy, failurePolicy)
+--   Random    -> driver:NewRandomSelector()
 --   Condition -> driver:NewCondition() + SetEvaluator(function)
 --   Action    -> driver:NewLuaAction(name) + BindToScript(script)
 --   Event     -> driver:NewCondition() + BehaviorEventRuntime blackboard event check
 --   Wait      -> driver:NewWait(waitMs). Use waitMs/ms for milliseconds, wait/seconds for seconds.
 --   Inverter / ForceSuccess / ForceFailure -> one-child decorators
+-- Runtime params:
+--   params = { { blackboard = "key", type = "float", default = 0 } } reads from Blackboard per tick.
 -- Optional config flags:
 --   debugTrace      -> driver:SetDebugTraceEnabled(bool)
 --   debugTracePrint -> driver:SetDebugTracePrintEnabled(bool), also enables trace when debugTrace is omitted
@@ -51,6 +55,85 @@ local function _BuildDebugName(cfg, nodeType)
         return tostring(nodeType) .. ":" .. tostring(cfg.name)
     end
     return tostring(nodeType)
+end
+
+local function _NormalizeValueType(valueType, defaultValue)
+    if valueType ~= nil then
+        return string.lower(tostring(valueType))
+    end
+    if type(defaultValue) == "boolean" then return "bool" end
+    if type(defaultValue) == "string" then return "string" end
+    return "float"
+end
+
+local function _IsBlackboardValueSpec(value)
+    if type(value) ~= "table" then return false end
+    if value.blackboard ~= nil or value.bb ~= nil then return true end
+    if value.source == "blackboard" or value.from == "blackboard" then return value.key ~= nil end
+    return false
+end
+
+local function _ReadBlackboardValue(spec, context)
+    local bb = context.blackboard
+    if bb == nil then return spec.default end
+
+    local key = spec.blackboard or spec.bb or spec.key
+    if key == nil then return spec.default end
+    key = tostring(key)
+
+    local defaultValue = spec.default
+    local valueType = _NormalizeValueType(spec.valueType or spec.type, defaultValue)
+
+    if valueType == "bool" or valueType == "boolean" then
+        return bb:GetBool(key, defaultValue and true or false)
+    end
+    if valueType == "int" or valueType == "integer" or valueType == "object-id" or valueType == "objectid" then
+        return bb:GetInt(key, tonumber(defaultValue) or 0)
+    end
+    if valueType == "string" then
+        if not bb:Has(key) then return defaultValue end
+        return bb:GetString(key)
+    end
+    if valueType == "agent" or valueType == "object" then
+        return bb:GetAgent(key) or defaultValue
+    end
+    if valueType == "vec3" or valueType == "vector3" then
+        if not bb:Has(key) then return defaultValue end
+        return bb:GetVec3(key)
+    end
+    return bb:GetFloat(key, tonumber(defaultValue) or 0.0)
+end
+
+local function _ResolveValue(value, context)
+    if _IsBlackboardValueSpec(value) then
+        return _ReadBlackboardValue(value, context)
+    end
+    if type(value) == "table" and value.value ~= nil then
+        return value.value
+    end
+    return value
+end
+
+local function _ResolveParams(params, context)
+    local values = {}
+    for i, value in ipairs(params) do
+        values[i] = _ResolveValue(value, context)
+    end
+    return values
+end
+
+local function _PolicyToInt(value, defaultValue)
+    if value == nil then return defaultValue end
+    if type(value) == "number" then return value end
+
+    local text = string.lower(tostring(value))
+    if text == "one" or text == "any" or text == "first" then
+        return 1
+    end
+    if text == "all" then
+        return 2
+    end
+    return defaultValue
 end
 
 local function _SetDebugName(node, cfg, context, nodeType)
@@ -140,13 +223,11 @@ local function _CreateConditionEvaluator(cfg, context)
     end
 
     if cfg.params ~= nil then
-        local evaluator = fn(_unpack(cfg.params))
-        if type(evaluator) == "function" then
-            return function()
+        return function()
+            local evaluator = fn(_unpack(_ResolveParams(cfg.params, context)))
+            if type(evaluator) == "function" then
                 return evaluator(context.agent, context.blackboard, cfg)
             end
-        end
-        return function()
             return evaluator and true or false
         end
     end
@@ -203,6 +284,22 @@ function BehaviorTreeLoader.BuildNode(cfg, context)
         return node
     end
 
+    if nodeType == "Parallel" then
+        local successPolicy = _PolicyToInt(cfg.successPolicy or cfg.success, 2)
+        local failurePolicy = _PolicyToInt(cfg.failurePolicy or cfg.failure, 1)
+        local node = context.driver:NewParallel(successPolicy, failurePolicy)
+        _SetDebugName(node, cfg, context, nodeType)
+        if not _BindChildren(node, cfg.children, context) then return nil end
+        return node
+    end
+
+    if nodeType == "Random" or nodeType == "RandomSelector" then
+        local node = context.driver:NewRandomSelector()
+        _SetDebugName(node, cfg, context, "Random")
+        if not _BindChildren(node, cfg.children, context) then return nil end
+        return node
+    end
+
     if nodeType == "Condition" then
         return _CreateCondition(cfg, context)
     end
@@ -219,6 +316,7 @@ function BehaviorTreeLoader.BuildNode(cfg, context)
         local waitMs = cfg.waitMs or cfg.ms
         if waitMs == nil and cfg.wait ~= nil then waitMs = cfg.wait * 1000.0 end
         if cfg.seconds ~= nil then waitMs = cfg.seconds * 1000.0 end
+        waitMs = _ResolveValue(waitMs, context)
         if waitMs == nil then waitMs = 0.0 end
         local node = context.driver:NewWait(waitMs)
         return _SetDebugName(node, cfg, context, nodeType)

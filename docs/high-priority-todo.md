@@ -21,6 +21,7 @@
 - 2026-05-30：补齐事件总线整组能力：每帧分发节流、过滤器订阅、参数化事件名、Local / Team / Global scope 路由，供后续触发器和行为树事件复用。
 - 2026-05-30：定义第一版 Lua table 生物 `Def`，并增加最小 `CreatureAssembler`，可从 Def 创建 soldier / agent，并应用队伍、位置、运动、属性和武器初始值。
 - 2026-05-30：跑通第一个垂直切片：`Sandbox9` 使用 Lua `TriggerVolume` 检测玩家进入区域，经 `TriggerRuntime` 唤醒守卫 BT 的 `Event` 节点；F8 可低成本重载 Def / Trigger / BT。
+- 2026-05-30：进入 P1 行为树补强：C++ BT runtime 增加 `Parallel` / `Random` 节点，Lua `BehaviorTreeLoader` 支持从配置创建，并补上 blackboard 参数运行时取值；`Sandbox9` 切片已接入验证。
 
 ## P0 - 地基任务
 
@@ -47,8 +48,8 @@
 
 ## P1 - 行为树补强
 
-- [ ] 增加 `Parallel` 和 `Random` 行为树节点。
-- [ ] 增加行为树节点参数的运行时取值能力，先支持常量和黑板 key。
+- [x] 增加 `Parallel` 和 `Random` 行为树节点。
+- [x] 增加行为树节点参数的运行时取值能力，先支持常量和黑板 key。
 - [ ] 增加 Selector / Sequence 的中断或条件重评估能力。
 - [ ] 增加 object-id 和数组类型的黑板值支持。
 

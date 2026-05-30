@@ -77,6 +77,7 @@ local CreatureDefs = {
 				blackboard = {
 					role = "guard",
 					sliceGuardAwake = false,
+					["slice.guard.shootDistanceSq"] = 9.0,
 				},
 			},
 			behaviorTree = {

@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Wed May 27 17:00:33 2026.
+** Generated automatically by tolua++-1.0.92 on Sat May 30 10:57:07 2026.
 */
 
 #ifndef __cplusplus
@@ -96,17 +96,19 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"ObjectManager");
  tolua_usertype(tolua_S,"SoldierAnimController");
  tolua_usertype(tolua_S,"AIController");
+ tolua_usertype(tolua_S,"BehaviorTreeDriver");
+ tolua_usertype(tolua_S,"AgentAnimStateMachine");
  tolua_usertype(tolua_S,"WeaponComponent");
  tolua_usertype(tolua_S,"IPlayerInput");
  tolua_usertype(tolua_S,"Ogre::Node");
- tolua_usertype(tolua_S,"BehaviorTreeDriver");
+ tolua_usertype(tolua_S,"BehaviorTree");
  tolua_usertype(tolua_S,"BehaviorSelector");
  tolua_usertype(tolua_S,"IComponent");
- tolua_usertype(tolua_S,"AgentAnimStateMachine");
+ tolua_usertype(tolua_S,"DecisionTree");
  tolua_usertype(tolua_S,"AgentObject");
  tolua_usertype(tolua_S,"Ogre::AnimationState");
  tolua_usertype(tolua_S,"std::vector<Ogre::Vector3>");
- tolua_usertype(tolua_S,"BehaviorTree");
+ tolua_usertype(tolua_S,"BehaviorParallel");
  tolua_usertype(tolua_S,"BehaviorComposite");
  tolua_usertype(tolua_S,"btQuaternion");
  tolua_usertype(tolua_S,"BehaviorAction");
@@ -122,7 +124,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"DecisionBranch");
  tolua_usertype(tolua_S,"DecisionTreeDriver");
  tolua_usertype(tolua_S,"Ogre::ColourValue");
- tolua_usertype(tolua_S,"DecisionTree");
+ tolua_usertype(tolua_S,"BehaviorRandomSelector");
  tolua_usertype(tolua_S,"Blackboard");
  tolua_usertype(tolua_S,"BehaviorNode");
  tolua_usertype(tolua_S,"LuaBehaviorAction");
@@ -9354,6 +9356,74 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_NewSelector00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: NewParallel of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewParallel00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewParallel00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  int successPolicy = ((int)  tolua_tonumber(tolua_S,2,2));
+  int failurePolicy = ((int)  tolua_tonumber(tolua_S,3,1));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewParallel'", NULL);
+#endif
+  {
+   BehaviorParallel* tolua_ret = (BehaviorParallel*)  self->NewParallel(successPolicy,failurePolicy);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorParallel");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewParallel'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: NewRandomSelector of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewRandomSelector00
+static int tolua_SandboxToLua_BehaviorTreeDriver_NewRandomSelector00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'NewRandomSelector'", NULL);
+#endif
+  {
+   BehaviorRandomSelector* tolua_ret = (BehaviorRandomSelector*)  self->NewRandomSelector();
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"BehaviorRandomSelector");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'NewRandomSelector'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: NewLuaAction of class  BehaviorTreeDriver */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_NewLuaAction00
 static int tolua_SandboxToLua_BehaviorTreeDriver_NewLuaAction00(lua_State* tolua_S)
@@ -10300,6 +10370,12 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"BehaviorSelector","BehaviorSelector","BehaviorComposite",NULL);
   tolua_beginmodule(tolua_S,"BehaviorSelector");
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"BehaviorParallel","BehaviorParallel","BehaviorComposite",NULL);
+  tolua_beginmodule(tolua_S,"BehaviorParallel");
+  tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"BehaviorRandomSelector","BehaviorRandomSelector","BehaviorComposite",NULL);
+  tolua_beginmodule(tolua_S,"BehaviorRandomSelector");
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BehaviorTree","BehaviorTree","",NULL);
   tolua_beginmodule(tolua_S,"BehaviorTree");
    tolua_function(tolua_S,"SetRoot",tolua_SandboxToLua_BehaviorTree_SetRoot00);
@@ -10320,6 +10396,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"NewTree",tolua_SandboxToLua_BehaviorTreeDriver_NewTree00);
    tolua_function(tolua_S,"NewSequence",tolua_SandboxToLua_BehaviorTreeDriver_NewSequence00);
    tolua_function(tolua_S,"NewSelector",tolua_SandboxToLua_BehaviorTreeDriver_NewSelector00);
+   tolua_function(tolua_S,"NewParallel",tolua_SandboxToLua_BehaviorTreeDriver_NewParallel00);
+   tolua_function(tolua_S,"NewRandomSelector",tolua_SandboxToLua_BehaviorTreeDriver_NewRandomSelector00);
    tolua_function(tolua_S,"NewLuaAction",tolua_SandboxToLua_BehaviorTreeDriver_NewLuaAction00);
    tolua_function(tolua_S,"NewCondition",tolua_SandboxToLua_BehaviorTreeDriver_NewCondition00);
    tolua_function(tolua_S,"NewWait",tolua_SandboxToLua_BehaviorTreeDriver_NewWait00);

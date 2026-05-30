@@ -64,4 +64,49 @@ public:
 
 REGISTER_LUA_CLASS_NAME(BehaviorSelector);
 
+
+// Parallel：同一帧 tick 所有未终结子节点。
+//   - successPolicy: POLICY_ALL 时全部 SUCCESS 才 SUCCESS；POLICY_ONE 时任一 SUCCESS 即 SUCCESS
+//   - failurePolicy: POLICY_ONE 时任一 FAILURE 即 FAILURE；POLICY_ALL 时全部 FAILURE 才 FAILURE
+// 默认值是常见的"全成功 / 一失败"语义。
+class BehaviorParallel : public BehaviorComposite //tolua_exports
+{ //tolua_exports
+public:
+	enum Policy
+	{
+		POLICY_ONE = 1,
+		POLICY_ALL = 2,
+	};
+
+	BehaviorParallel(int successPolicy = POLICY_ALL, int failurePolicy = POLICY_ONE);
+
+	virtual Status Tick(float deltaMs) override;
+	virtual void Reset() override;
+	virtual const char* GetDebugType() const override { return "Parallel"; }
+
+private:
+	std::vector<Status> m_childStatus;
+	int m_successPolicy;
+	int m_failurePolicy;
+}; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(BehaviorParallel);
+
+
+// RandomSelector：每次从头评估时随机打乱子节点顺序，其余语义同 Selector。
+class BehaviorRandomSelector : public BehaviorComposite //tolua_exports
+{ //tolua_exports
+public:
+	virtual Status Tick(float deltaMs) override;
+	virtual void Reset() override;
+	virtual const char* GetDebugType() const override { return "Random"; }
+
+private:
+	void BuildOrder();
+
+	std::vector<int> m_order;
+}; //tolua_exports
+
+REGISTER_LUA_CLASS_NAME(BehaviorRandomSelector);
+
 #endif  // __BEHAVIOR_COMPOSITE_H__

@@ -51,6 +51,20 @@ BehaviorSelector* BehaviorTreeDriver::NewSelector()
 	return s;
 }
 
+BehaviorParallel* BehaviorTreeDriver::NewParallel(int successPolicy, int failurePolicy)
+{
+	BehaviorParallel* p = new BehaviorParallel(successPolicy, failurePolicy);
+	m_ownedNodes.push_back(p);
+	return p;
+}
+
+BehaviorRandomSelector* BehaviorTreeDriver::NewRandomSelector()
+{
+	BehaviorRandomSelector* r = new BehaviorRandomSelector();
+	m_ownedNodes.push_back(r);
+	return r;
+}
+
 LuaBehaviorAction* BehaviorTreeDriver::NewLuaAction(const std::string& name)
 {
 	LuaBehaviorAction* a = new LuaBehaviorAction(name, m_owner);
