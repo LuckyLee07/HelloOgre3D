@@ -493,6 +493,9 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		{
 			stream << " driver=" << (ai->GetFsmController() != nullptr ? "FSM" : "None");
 		}
+		const std::string sensorSummary = ai->BuildSensorDebugString();
+		if (!sensorSummary.empty())
+			stream << " " << sensorSummary;
 	}
 	const char* blackboardSelfTest = std::getenv("HELLO_AI_BLACKBOARD_SELF_TEST");
 	if (blackboardSelfTest != nullptr && (std::string(blackboardSelfTest) == "1" || std::string(blackboardSelfTest) == "true"))

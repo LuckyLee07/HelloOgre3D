@@ -1,9 +1,12 @@
 #ifndef __AI_CONTROLLER_H__
 #define __AI_CONTROLLER_H__
 
+#include <string>
+
 #include "OgreString.h"
 #include "OgreVector3.h"
 #include "ai/common/Blackboard.h"
+#include "ai/perception/VisionSensor.h"
 #include "component/IComponent.h"
 #include "script/LuaClassNameTraits.h"
 
@@ -46,6 +49,7 @@ public:
 	//tolua_end
 
 	AgentStateController* GetFsmController() const;
+	std::string BuildSensorDebugString() const;
 
 	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
@@ -65,6 +69,8 @@ private:
 	bool FindNearestEnemy(const Ogre::String& navMeshName, AgentPerceptionResult& result) const;
 	bool IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const;
 	AgentPerceptionOptions BuildPerceptionOptions(const Ogre::String& navMeshName, bool requirePath) const;
+	VisionSensorConfig BuildVisionSensorConfig(const Ogre::String& navMeshName, bool requirePath) const;
+	bool UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan);
 	void WritePerceptionResult(const AgentPerceptionResult& result);
 	void ClearPerceptionResult();
 
@@ -77,6 +83,7 @@ private:
 	Ogre::Vector3 m_movePos;
 	bool m_tickInOwnerUpdateEnabled;
 	long long m_localTimeMs;
+	VisionSensor m_visionSensor;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(AIController);

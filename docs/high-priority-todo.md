@@ -27,6 +27,7 @@
 - 2026-05-30：方向回正为 AI 学习与实验沙盒；清理 Lua 生物 Def、CreatureAssembler、TriggerRuntime、TriggerVolume、BehaviorEventRuntime、数据驱动触发器到 BT 的 Sandbox9 切片。
 - 2026-05-30：进入 `AIArchitectureBeyondBook.md` 的 Ch7/Ch8 Stage 3：`Blackboard` 增加 metadata entry 最小通道（typed value + confidence + timestamp + ttl + source），当前感知结果同步写入 `sense.*` / `memory.*` metadata，作为后续 VisionSensor / MemoryComponent 的地基。
 - 2026-05-30：完成 K-02 最小闭环：`Blackboard` 增加 TTL 自动过期和 confidence 衰减策略，`AIController` 为 `sense.*` / `memory.*` metadata 设置有效期，RuntimeDiag 可触发 Blackboard 自测。
+- 2026-05-30：完成 P-01 最小闭环：新增 `VisionSensor`，由 `AIController` 定时驱动视觉扫描并写入 `sense.*` / `memory.*` metadata，RuntimeDiag 可看到 vision sensor 摘要。
 
 ## P0 - 方向回正
 
@@ -39,6 +40,7 @@
 
 - [x] 完成 K-01 最小闭环：`Blackboard` 支持 metadata entry / safe tagged value，并能输出 debug 摘要。
 - [x] 完成 K-02 最小闭环：`Blackboard` 支持 metadata TTL 自动过期和 confidence 衰减，避免后续 Sensor / Memory 各自实现过期机制。
+- [x] 完成 P-01 最小闭环：`VisionSensor` 接管当前敌人扫描，按间隔输出 `sense.*` / `memory.*` 感知结果。
 - [x] 在继续做多生物行为前，把 AI 感知查询先抽成一个小接口。
 - [x] 把 AI 感知查询扩展为可配置感知结果，并写回 blackboard。
 - [x] 为空间范围查询预留 `IAgentSpatialQuery` 接口，当前用 `ObjectManager` 线性实现兜底。

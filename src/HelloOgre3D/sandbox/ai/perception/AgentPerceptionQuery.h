@@ -1,6 +1,8 @@
 #ifndef __AGENT_PERCEPTION_QUERY_H__
 #define __AGENT_PERCEPTION_QUERY_H__
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -16,12 +18,14 @@ struct AgentPerceptionOptions
 		: navMeshName("default")
 		, maxDistance(0.0f)
 		, requirePath(true)
+		, fieldOfViewDegrees(0.0f)
 	{
 	}
 
 	Ogre::String navMeshName;
 	float maxDistance;
 	bool requirePath;
+	float fieldOfViewDegrees;
 };
 
 struct AgentPerceptionResult
@@ -31,6 +35,7 @@ struct AgentPerceptionResult
 		, targetId(-1)
 		, targetPosition(Ogre::Vector3::ZERO)
 		, distanceSquared(0.0f)
+		, confidence(1.0f)
 	{
 	}
 
@@ -38,6 +43,7 @@ struct AgentPerceptionResult
 	int targetId;
 	Ogre::Vector3 targetPosition;
 	float distanceSquared;
+	float confidence;
 };
 
 class IAgentPerceptionQuery
@@ -109,6 +115,11 @@ public:
 			return false;
 		}
 
+		if (!PassesFieldOfView(owner, enemy, options.fieldOfViewDegrees))
+		{
+			return false;
+		}
+
 		if (options.requirePath && m_sandbox != nullptr)
 		{
 			std::vector<Ogre::Vector3> path;
@@ -122,6 +133,7 @@ public:
 		result.targetId = static_cast<int>(enemy->GetObjId());
 		result.targetPosition = enemy->GetPosition();
 		result.distanceSquared = distanceSquared;
+		result.confidence = ComputeConfidence(distanceSquared, options.maxDistance);
 		return true;
 	}
 
@@ -158,6 +170,44 @@ public:
 	}
 
 private:
+	static float Clamp01(float value)
+	{
+		if (value < 0.0f)
+			return 0.0f;
+		if (value > 1.0f)
+			return 1.0f;
+		return value;
+	}
+
+	static bool PassesFieldOfView(AgentObject* owner, AgentObject* enemy, float fieldOfViewDegrees)
+	{
+		if (fieldOfViewDegrees <= 0.0f || fieldOfViewDegrees >= 360.0f)
+			return true;
+
+		Ogre::Vector3 toEnemy = enemy->GetPosition() - owner->GetPosition();
+		toEnemy.y = 0.0f;
+		if (toEnemy.squaredLength() <= 0.0001f)
+			return true;
+
+		Ogre::Vector3 forward = owner->GetForward();
+		forward.y = 0.0f;
+		if (forward.squaredLength() <= 0.0001f)
+			return true;
+
+		toEnemy.normalise();
+		forward.normalise();
+		const float halfRadians = fieldOfViewDegrees * 0.5f * 3.1415926535f / 180.0f;
+		return forward.dotProduct(toEnemy) >= std::cos(halfRadians);
+	}
+
+	static float ComputeConfidence(float distanceSquared, float maxDistance)
+	{
+		if (maxDistance <= 0.0f)
+			return 1.0f;
+		const float distance = std::sqrt(std::max(0.0f, distanceSquared));
+		return Clamp01(1.0f - distance / maxDistance);
+	}
+
 	ObjectManagerAgentSpatialQuery m_defaultSpatialQuery;
 	IAgentSpatialQuery* m_spatialQuery;
 	SandboxMgr* m_sandbox;

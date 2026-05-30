@@ -32,12 +32,15 @@ namespace
 	const char* const kPerceptionTargetDistanceSq = "perception.targetDistanceSq";
 	const char* const kPerceptionLastKnownTargetId = "perception.lastKnownTargetId";
 	const char* const kPerceptionLastKnownTargetPos = "perception.lastKnownTargetPos";
+	const char* const kPerceptionVisionIntervalMs = "perception.visionIntervalMs";
+	const char* const kPerceptionFieldOfViewDegrees = "perception.fieldOfViewDegrees";
 	const char* const kSenseTargetId = "sense.targetId";
 	const char* const kSenseTargetPos = "sense.targetPos";
 	const char* const kSenseTargetDistance = "sense.targetDistance";
 	const char* const kMemoryLastKnownEnemyId = "memory.lastKnownEnemyId";
 	const char* const kMemoryLastKnownEnemyPos = "memory.lastKnownEnemyPos";
-	const char* const kPerceptionSource = "PerceptionQuery";
+	const char* const kPerceptionSource = "VisionSensor";
+	const int kVisionScanIntervalMs = 200;
 	const int kSenseEntryTtlMs = 750;
 	const int kMemoryEntryTtlMs = 8000;
 	const float kMemoryConfidenceDecayPerMs = 1.0f / static_cast<float>(kMemoryEntryTtlMs);
@@ -81,11 +84,13 @@ void AIController::onAttach(BaseObject* owner)
 	IComponent::onAttach(owner);
 	m_blackboard.SetOwner(GetSoldierOwner());
 	m_localTimeMs = 0;
+	m_visionSensor.Clear();
 	InitDefaultDriver();
 }
 
 void AIController::onDetach()
 {
+	m_visionSensor.Clear();
 	m_blackboard.SetOwner(nullptr);
 	IComponent::onDetach();
 }
@@ -123,6 +128,7 @@ void AIController::TickAI(int deltaMs)
 	const int elapsedMs = std::max(0, deltaMs);
 	m_localTimeMs += elapsedMs;
 	m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
+	UpdateVisionSensor(elapsedMs, "default", true, false);
 
 	H3D_PROFILE_SCOPE("AIController::TickAI");
 	static int totalMilisec = 0;
@@ -201,7 +207,44 @@ AgentPerceptionOptions AIController::BuildPerceptionOptions(const Ogre::String& 
 	options.navMeshName = navMeshName;
 	options.maxDistance = std::max(0.0f, m_blackboard.GetFloat(kPerceptionVisionRange, 0.0f));
 	options.requirePath = requirePath && m_blackboard.GetBool(kPerceptionRequirePath, true);
+	options.fieldOfViewDegrees = std::max(0.0f, m_blackboard.GetFloat(kPerceptionFieldOfViewDegrees, 0.0f));
 	return options;
+}
+
+VisionSensorConfig AIController::BuildVisionSensorConfig(const Ogre::String& navMeshName, bool requirePath) const
+{
+	VisionSensorConfig config;
+	config.perception = BuildPerceptionOptions(navMeshName, requirePath);
+	config.scanIntervalMs = std::max(0, m_blackboard.GetInt(kPerceptionVisionIntervalMs, kVisionScanIntervalMs));
+	return config;
+}
+
+bool AIController::UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan)
+{
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
+	{
+		return false;
+	}
+
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	const bool scanned = m_visionSensor.Tick(owner, GetEnemy(), &query, BuildVisionSensorConfig(navMeshName, requirePath), deltaMs, forceScan);
+	if (scanned)
+	{
+		if (m_visionSensor.HasVisibleTarget())
+		{
+			const AgentPerceptionResult& result = m_visionSensor.GetLastResult();
+			SetEnemy(result.target);
+			WritePerceptionResult(result);
+		}
+		else
+		{
+			SetEnemy(nullptr);
+			ClearPerceptionResult();
+		}
+	}
+
+	return m_visionSensor.HasVisibleTarget();
 }
 
 void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
@@ -222,11 +265,12 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 	m_blackboard.SetObjectId(kPerceptionLastKnownTargetId, result.targetId);
 	m_blackboard.SetVec3(kPerceptionLastKnownTargetPos, result.targetPosition);
 
-	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, 1.0f, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, 1.0f, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
-	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, 1.0f, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
+	const float confidence = std::max(0.0f, std::min(1.0f, result.confidence));
+	m_blackboard.SetObjectIdEntry(kSenseTargetId, result.targetId, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetObjectIdEntry(kMemoryLastKnownEnemyId, result.targetId, confidence, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
+	m_blackboard.SetVec3Entry(kMemoryLastKnownEnemyPos, result.targetPosition, confidence, m_localTimeMs, kMemoryEntryTtlMs, kPerceptionSource);
 	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyId, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
 	m_blackboard.SetEntryDecayPolicy(kMemoryLastKnownEnemyPos, Blackboard::ENTRY_DECAY_LINEAR, kMemoryConfidenceDecayPerMs);
 }
@@ -264,25 +308,7 @@ AgentObject* AIController::GetEnemy() const
 
 bool AIController::HasEnemy(const Ogre::String& navMeshName)
 {
-	AgentObject* enemy = GetEnemy();
-	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
-	AgentPerceptionResult result;
-	if (query.TryGetEnemy(GetAgentOwner(), enemy, BuildPerceptionOptions(navMeshName, true), result))
-	{
-		WritePerceptionResult(result);
-		return true;
-	}
-
-	if (FindNearestEnemy(navMeshName, result))
-	{
-		SetEnemy(result.target);
-		WritePerceptionResult(result);
-		return true;
-	}
-
-	SetEnemy(nullptr);
-	ClearPerceptionResult();
-	return false;
+	return UpdateVisionSensor(0, navMeshName, true, !m_visionSensor.HasScanned());
 }
 
 bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
@@ -382,6 +408,11 @@ BehaviorTreeDriver* AIController::GetBehaviorTreeDriver() const
 AgentStateController* AIController::GetFsmController() const
 {
 	return dynamic_cast<AgentStateController*>(m_driver);
+}
+
+std::string AIController::BuildSensorDebugString() const
+{
+	return m_visionSensor.BuildDebugString();
 }
 
 void AIController::IssueCommand(const AICommand& command)
