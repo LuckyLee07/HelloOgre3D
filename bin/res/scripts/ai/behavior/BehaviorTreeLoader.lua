@@ -8,7 +8,6 @@
 --   Random    -> driver:NewRandomSelector()
 --   Condition -> driver:NewCondition() + SetEvaluator(function)
 --   Action    -> driver:NewLuaAction(name) + BindToScript(script)
---   Event     -> driver:NewCondition() + BehaviorEventRuntime blackboard event check
 --   Wait      -> driver:NewWait(waitMs). Use waitMs/ms for milliseconds, wait/seconds for seconds.
 --   Inverter / ForceSuccess / ForceFailure -> one-child decorators
 -- Runtime params:
@@ -23,17 +22,9 @@ BehaviorTreeLoader = {}
 
 local _DEFAULT_ACTION_DIR = "res/scripts/ai/decision/actions/"
 local _unpack = unpack or table.unpack
-local _behaviorEventRuntime = nil
 
 local function _PrintError(message)
     print("BehaviorTreeLoader error: " .. tostring(message))
-end
-
-local function _GetBehaviorEventRuntime()
-    if _behaviorEventRuntime == nil then
-        _behaviorEventRuntime = require("res.scripts.runtime.BehaviorEventRuntime")
-    end
-    return _behaviorEventRuntime
 end
 
 local function _GetNodeType(cfg)
@@ -349,21 +340,6 @@ local function _CreateCondition(cfg, context)
     return node
 end
 
-local function _CreateEventCondition(cfg, context)
-    local eventName = cfg.event or cfg.name
-    if eventName == nil then
-        _PrintError("Event node missing event/name")
-        return nil
-    end
-
-    local node = context.driver:NewCondition()
-    node:SetEvaluator(function()
-        return _GetBehaviorEventRuntime().Test(context.agent, context.blackboard, eventName, cfg)
-    end)
-    _SetDebugName(node, cfg, context, "Event")
-    return node
-end
-
 function BehaviorTreeLoader.BuildNode(cfg, context)
     if type(cfg) ~= "table" then
         _PrintError("node config must be a table")
@@ -404,10 +380,6 @@ function BehaviorTreeLoader.BuildNode(cfg, context)
 
     if nodeType == "Condition" then
         return _CreateCondition(cfg, context)
-    end
-
-    if nodeType == "Event" or nodeType == "BehaviorEvent" then
-        return _CreateEventCondition(cfg, context)
     end
 
     if nodeType == "Action" then

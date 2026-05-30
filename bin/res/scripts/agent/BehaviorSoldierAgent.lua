@@ -12,57 +12,6 @@ require("res.scripts.ai.behavior.SoldierConditions.lua")
 require("res.scripts.ai.behavior.BehaviorTreeLoader.lua")
 require("res.scripts.ai.behavior.config.SoldierBT.lua")
 
-local function _GetPendingCreatureDef()
-    if CreatureAssembler ~= nil and CreatureAssembler.GetPendingCreateDef ~= nil then
-        return CreatureAssembler:GetPendingCreateDef()
-    end
-    return nil
-end
-
-local function _LoadBehaviorConfig(creatureDef)
-    if creatureDef == nil or creatureDef.behaviorTree == nil or creatureDef.behaviorTree.script == nil then
-        return SoldierBTConfig
-    end
-
-    local moduleName = creatureDef.behaviorTree.script
-    if creatureDef.behaviorTree.reload ~= false then
-        package.loaded[moduleName] = nil
-    end
-
-    local ok, config = pcall(require, moduleName)
-    if ok and type(config) == "table" then
-        return config
-    end
-
-    print("Error: failed to load behavior tree config:", tostring(moduleName), tostring(config))
-    return SoldierBTConfig
-end
-
-local function _ApplyCreatureDefBlackboard(bb, creatureDef)
-    if bb == nil or creatureDef == nil then return end
-
-    bb:SetString("__creature.defId", tostring(creatureDef.id or ""))
-    if creatureDef.displayName ~= nil then
-        bb:SetString("__creature.displayName", tostring(creatureDef.displayName))
-    end
-    if creatureDef.behaviorTree ~= nil and creatureDef.behaviorTree.script ~= nil then
-        bb:SetString("__bt.config", tostring(creatureDef.behaviorTree.script))
-    end
-    if creatureDef.ai ~= nil and creatureDef.ai.blackboard ~= nil then
-        for key, value in pairs(creatureDef.ai.blackboard) do
-            if CreatureAssembler ~= nil and CreatureAssembler.SetBlackboardValue ~= nil then
-                CreatureAssembler:SetBlackboardValue(bb, key, value)
-            elseif type(value) == "boolean" then
-                bb:SetBool(key, value)
-            elseif type(value) == "number" then
-                bb:SetFloat(key, value)
-            else
-                bb:SetString(key, tostring(value))
-            end
-        end
-    end
-end
-
 function Agent_Initialize(agent)
     if agent == nil then return end
 
@@ -83,10 +32,8 @@ function Agent_Initialize(agent)
 
     local bb = driver:GetBlackboard()
     bb:SetFloat("maxHealth", agent:GetMaxHealth())
-    local creatureDef = _GetPendingCreatureDef()
-    _ApplyCreatureDefBlackboard(bb, creatureDef)
 
-    local tree = BehaviorTreeLoader.Build(_LoadBehaviorConfig(creatureDef), agent, driver, bb, SoldierConditions)
+    local tree = BehaviorTreeLoader.Build(SoldierBTConfig, agent, driver, bb, SoldierConditions)
     if tree == nil then
         print("Error: failed to build Soldier behavior tree from config")
         return
