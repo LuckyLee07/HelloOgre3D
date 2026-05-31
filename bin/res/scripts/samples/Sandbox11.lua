@@ -13,6 +13,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         GUI.MarkupNewline ..
         "F1: to reset the camera" .. GUI.MarkupNewline ..
         "F2: toggle the menu" .. GUI.MarkupNewline ..
+        "F3: toggle the navigation mesh" .. GUI.MarkupNewline ..
         "F5: toggle performance information" .. GUI.MarkupNewline ..
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug";
@@ -23,6 +24,8 @@ local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
 local _demoPanelSize = {w = 530, h = 270}
+local _navMesh = nil
+local _drawNavMesh = true
 local _colors = {
     team0 = ColourValue(1.0, 0.45, 0.15),
     team1 = ColourValue(0.95, 0.9, 0.1),
@@ -118,6 +121,32 @@ local function _IsBlockedByLevel(startPos, endPos)
     return false
 end
 
+local function _GetAgentHeight(agent)
+    if agent ~= nil and agent.GetHeight ~= nil then
+        local height = tonumber(agent:GetHeight()) or 0.0
+        if height > 0.0 then
+            return height
+        end
+    end
+    return 1.6
+end
+
+local function _GetSightHeightRatio(key, defaultValue)
+    local config = _chapter8.config or {}
+    local value = tonumber(config[key])
+    if value == nil then
+        return defaultValue
+    end
+    return value
+end
+
+local function _GetSightAnchor(agent, heightRatio)
+    if agent == nil then
+        return nil
+    end
+    return agent:GetPosition() + Vector3(0, _GetAgentHeight(agent) * heightRatio, 0)
+end
+
 local function _PassesOriginalFov(agent, target)
     if agent == nil or target == nil then
         return false
@@ -148,8 +177,8 @@ local function _BuildSightLine(agent, target)
         return nil
     end
 
-    local startPos = agent:GetPosition() + Vector3(0, 1.6, 0)
-    local endPos = target:GetPosition() + Vector3(0, 1.2, 0)
+    local startPos = _GetSightAnchor(agent, _GetSightHeightRatio("sightOriginHeightRatio", 0.30))
+    local endPos = _GetSightAnchor(target, _GetSightHeightRatio("sightTargetHeightRatio", 0.0))
     return {
         startPos = startPos,
         endPos = endPos,
@@ -204,6 +233,13 @@ end
 local function _FormatVec3(pos)
     if pos == nil then return "-" end
     return string.format("%.1f, %.1f, %.1f", pos.x, pos.y, pos.z)
+end
+
+local function _Chapter8DebugLog(...)
+    local config = _chapter8.config or {}
+    if config.debugLog == true then
+        print(...)
+    end
 end
 
 local function _ApplyChapter8Camera()
@@ -276,7 +312,7 @@ local function _KeepAgentsInDemoStage()
                 if safePos ~= nil then
                     agent:setPosition(safePos)
                     _ClearAgentDemoOrders(agent)
-                    print("[Chapter8Comms] stage guard", "id=", _GetAgentId(agent), "from=", _FormatVec3(pos), "to=", _FormatVec3(safePos))
+                    _Chapter8DebugLog("[Chapter8Comms] stage guard", "id=", _GetAgentId(agent), "from=", _FormatVec3(pos), "to=", _FormatVec3(safePos))
                 end
             end
         end
@@ -374,7 +410,7 @@ local function _MarkSharedMove(agent, sighting)
 
     _chapter8.lastSharedAt[key] = _chapter8.elapsedMs
     _chapter8.totalSharedMoves = _chapter8.totalSharedMoves + 1
-    print("[Chapter8Comms] SharedEnemy", "team=", agent:GetTeamId(), "receiver=", receiverId, "from=", sighting.spotterId, "target=", sighting.targetId, "pos=", _FormatVec3(sighting.targetPos))
+    _Chapter8DebugLog("[Chapter8Comms] SharedEnemy", "team=", agent:GetTeamId(), "receiver=", receiverId, "from=", sighting.spotterId, "target=", sighting.targetId, "pos=", _FormatVec3(sighting.targetPos))
 end
 
 local function _PublishEnemySighted(sighting)
@@ -402,7 +438,7 @@ local function _PublishEnemySighted(sighting)
     memory.lastEvent = event
     _chapter8.totalBroadcasts = _chapter8.totalBroadcasts + 1
     _PushRecentEvent(event)
-    print("[Chapter8Comms] EnemySighted", "team=", sighting.teamId, "sender=", sighting.spotterId, "target=", sighting.targetId, "pos=", _FormatVec3(sighting.targetPos))
+    _Chapter8DebugLog("[Chapter8Comms] EnemySighted", "team=", sighting.teamId, "sender=", sighting.spotterId, "target=", sighting.targetId, "pos=", _FormatVec3(sighting.targetPos))
 end
 
 local function _ExpireTeamMemory()
@@ -676,7 +712,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.config = config
 
     if _chapter8.enabled then
-        print("[Chapter8Comms] armed", "agents=", #_agents, "teamMemoryTtlMs=", tonumber(config.teamMemoryTtlMs) or 2500)
+        _Chapter8DebugLog("[Chapter8Comms] armed", "agents=", #_agents, "teamMemoryTtlMs=", tonumber(config.teamMemoryTtlMs) or 2500)
     end
 end
 
@@ -684,29 +720,6 @@ local function _IsFarEnoughFromPlacedAgents(position, minDistance)
     local minDistanceSq = minDistance * minDistance
     for _, placedPosition in ipairs(_spawnNavPositions) do
         if (position - placedPosition):squaredLength() < minDistanceSq then
-            return false
-        end
-    end
-    return true
-end
-
-local function _HasPathBetween(fromPos, toPos)
-    if fromPos == nil or toPos == nil then
-        return false
-    end
-
-    local path = std.vector_Ogre__Vector3_()
-    local ok = Sandbox:FindPath("default", fromPos, toPos, path)
-    return ok and path:size() > 0
-end
-
-local function _IsConnectedToPlacedAgents(position)
-    if #_spawnNavPositions == 0 then
-        return true
-    end
-
-    for _, placedPosition in ipairs(_spawnNavPositions) do
-        if not _HasPathBetween(position, placedPosition) then
             return false
         end
     end
@@ -730,8 +743,7 @@ local function _FindOriginalChapter8Spawn(config)
             local position = Sandbox:RandomPoint("default")
             if position ~= nil
                 and position.y >= minSpawnY
-                and _IsFarEnoughFromPlacedAgents(position, distance)
-                and _IsConnectedToPlacedAgents(position) then
+                and _IsFarEnoughFromPlacedAgents(position, distance) then
                 return position
             end
         end
@@ -750,7 +762,7 @@ local function _PlaceChapter8Agent(agent, sampleName, index, config)
             agent:SetTargetRadius(1)
             return position
         end
-        print("[Chapter8Comms] warning random spawn fallback", "index=", index)
+        _Chapter8DebugLog("[Chapter8Comms] warning random spawn fallback", "index=", index)
     end
 
     local position = ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, index, "default")
@@ -766,6 +778,11 @@ function EventHandle_Keyboard(keycode, pressed)
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
         _ApplyChapter8Camera()
+    elseif (keycode == OIS.KC_F3) then
+        _drawNavMesh = not _drawNavMesh
+        if _navMesh ~= nil then
+            _navMesh:SetDebugVisible(_drawNavMesh)
+        end
     end
 end
 
@@ -785,6 +802,8 @@ function Sandbox_Initialize()
     _agentsById = {}
     _safeSpawnById = {}
     _spawnNavPositions = {}
+    _navMesh = nil
+    _drawNavMesh = true
 
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
@@ -813,8 +832,9 @@ function Sandbox_Initialize()
     navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
-    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
-    if navMesh ~= nil then navMesh:SetDebugVisible(true) end
+    _navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    _drawNavMesh = true
+    if _navMesh ~= nil then _navMesh:SetDebugVisible(_drawNavMesh) end
 
     local sampleName = "Sandbox11"
     local agentCount = ConfigManager:GetAgentCount(sampleName, 6)
@@ -822,7 +842,7 @@ function Sandbox_Initialize()
     local chapter8Config = preset.chapter8Comms or {}
     _chapter8.config = chapter8Config
     _CreateDemoPanel()
-    print(ConfigManager:BuildDebugSummary(sampleName))
+    _Chapter8DebugLog(ConfigManager:BuildDebugSummary(sampleName))
 
     local agentLuafile = "res/scripts/agent/BehaviorSoldierAgent.lua"
     for i = 1, agentCount do
@@ -840,7 +860,7 @@ function Sandbox_Initialize()
         _agentsById[_GetAgentId(agent)] = agent
         _safeSpawnById[_GetAgentId(agent)] = spawnPoint
 
-        print("[Chapter8Comms] spawn", "index=", i, "id=", _GetAgentId(agent), "team=", teamId, "pos=", _FormatVec3(spawnPoint))
+        _Chapter8DebugLog("[Chapter8Comms] spawn", "index=", i, "id=", _GetAgentId(agent), "team=", teamId, "pos=", _FormatVec3(spawnPoint))
     end
 
     _InitializeChapter8Comms(sampleName)

@@ -217,8 +217,8 @@ private:
 		if (m_objectManager == nullptr || owner == nullptr || enemy == nullptr)
 			return true;
 
-		const Ogre::Vector3 origin = owner->GetPosition() + Ogre::Vector3(0.0f, 1.6f, 0.0f);
-		const Ogre::Vector3 target = enemy->GetPosition() + Ogre::Vector3(0.0f, 1.2f, 0.0f);
+		const Ogre::Vector3 origin = GetSightOrigin(owner);
+		const Ogre::Vector3 target = GetSightTarget(enemy);
 		Ogre::Vector3 direction = target - origin;
 		const float length = direction.length();
 		if (length <= 0.001f)
@@ -248,6 +248,19 @@ private:
 		}
 
 		return true;
+	}
+
+	static Ogre::Vector3 GetSightOrigin(const AgentObject* agent)
+	{
+		if (agent == nullptr)
+			return Ogre::Vector3::ZERO;
+
+		return agent->GetPosition() + Ogre::Vector3(0.0f, agent->GetHeight() * 0.5f, 0.0f);
+	}
+
+	static Ogre::Vector3 GetSightTarget(const AgentObject* agent)
+	{
+		return agent != nullptr ? agent->GetPosition() : Ogre::Vector3::ZERO;
 	}
 
 	static float ComputeConfidence(float distanceSquared, float maxDistance)
