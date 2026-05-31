@@ -92,6 +92,24 @@ namespace
 		++failures;
 	}
 
+	void AppendAiEventSelfTestFailure(std::ostringstream& stream, const std::string& text, int& failures)
+	{
+		stream << "\n[AIEventSelfTest] failure: " << text;
+		++failures;
+	}
+
+	SandboxContext BuildAiEventSelfTestContext(const char* eventType, SandboxEventScope scope, int senderId, int targetId, int teamId, double timeMs)
+	{
+		SandboxContext context;
+		context.Set_String(SandboxEventFields::EventType(), eventType != nullptr ? eventType : "");
+		context.Set_String(SandboxEventFields::Scope(), SandboxEventPayload::ToString(scope));
+		context.Set_Number(SandboxEventFields::SenderId(), static_cast<double>(senderId));
+		context.Set_Number(SandboxEventFields::TargetId(), static_cast<double>(targetId));
+		context.Set_Number(SandboxEventFields::TeamId(), static_cast<double>(teamId));
+		context.Set_Number(SandboxEventFields::TimeMs(), timeMs);
+		return context;
+	}
+
 	void AppendBlackboardBrief(std::ostringstream& stream, Blackboard* blackboard)
 	{
 		if (blackboard == nullptr)
@@ -431,6 +449,99 @@ std::string ObjectManager::buildAiEventDebugSummary(int maxAgents, int maxEvents
 		stream << "\n" << agent->Event()->BuildDebugSummary("agent#" + std::to_string(agent->GetObjId()), maxEvents);
 	}
 	return stream.str();
+}
+
+std::string ObjectManager::runAiEventScopeSelfTest()
+{
+	static int selfTestRunIndex = 0;
+	const int runIndex = ++selfTestRunIndex;
+	const std::string eventName = std::string(SandboxEventTypes::EnemySighted()) + "_ScopeSelfTest_" + std::to_string(runIndex);
+	SandboxEventDispatcherManager localManager;
+	SandboxEventDispatcherManager& globalManager = SandboxEventDispatcherManager::GetGlobalInst();
+
+	int failures = 0;
+	int localCount = 0;
+	int teamOneCount = 0;
+	int teamTwoCount = 0;
+	int globalCount = 0;
+	int localSenderId = -1;
+	int teamTwoTargetId = -1;
+	int globalTeamId = -1;
+	std::ostringstream details;
+
+	const SandboxEventDispatcherManager::Token localToken = localManager.SubscribeScoped(eventName, SandboxEventScope::Local, [&localCount, &localSenderId](const SandboxContext& context) {
+		++localCount;
+		localSenderId = static_cast<int>(context.Get_Number(SandboxEventFields::SenderId(), -1.0));
+	});
+	const SandboxEventDispatcherManager::Token teamOneToken = localManager.SubscribeScoped(eventName + "?teamId=1", SandboxEventScope::Team, [&teamOneCount](const SandboxContext&) {
+		++teamOneCount;
+	});
+	const SandboxEventDispatcherManager::Token teamTwoToken = localManager.SubscribeScoped(eventName + "?teamId=2", SandboxEventScope::Team, [&teamTwoCount, &teamTwoTargetId](const SandboxContext& context) {
+		++teamTwoCount;
+		teamTwoTargetId = static_cast<int>(context.Get_Number(SandboxEventFields::TargetId(), -1.0));
+	});
+	const SandboxEventDispatcherManager::Token globalToken = globalManager.SubscribeScoped(eventName, SandboxEventScope::Global, [&globalCount, &globalTeamId](const SandboxContext& context) {
+		++globalCount;
+		globalTeamId = static_cast<int>(context.Get_Number(SandboxEventFields::TeamId(), -1.0));
+	});
+
+	if (localToken <= 0 || teamOneToken <= 0 || teamTwoToken <= 0 || globalToken <= 0)
+		AppendAiEventSelfTestFailure(details, "subscribe token was not created", failures);
+
+	localManager.Emit(eventName, BuildAiEventSelfTestContext(SandboxEventTypes::EnemySighted(), SandboxEventScope::Local, 101, 201, 1, 10.0));
+	if (localCount != 1 || localSenderId != 101)
+		AppendAiEventSelfTestFailure(details, "local scope did not dispatch exactly once", failures);
+	if (teamOneCount != 0 || teamTwoCount != 0 || globalCount != 0)
+		AppendAiEventSelfTestFailure(details, "local scope leaked into team/global subscribers", failures);
+
+	localManager.Emit(eventName, BuildAiEventSelfTestContext(SandboxEventTypes::EnemySighted(), SandboxEventScope::Team, 102, 202, 1, 20.0));
+	if (teamOneCount != 1 || teamTwoCount != 0)
+		AppendAiEventSelfTestFailure(details, "team scope did not respect teamId=1 filter", failures);
+
+	localManager.Emit(eventName + "?teamId=2", BuildAiEventSelfTestContext(SandboxEventTypes::EnemySighted(), SandboxEventScope::Team, 103, 203, -1, 30.0));
+	if (teamOneCount != 1 || teamTwoCount != 1 || teamTwoTargetId != 203)
+		AppendAiEventSelfTestFailure(details, "team scope did not apply event-name filter params", failures);
+
+	const bool queued = localManager.QueueEmit(eventName, BuildAiEventSelfTestContext(SandboxEventTypes::SupportRequested(), SandboxEventScope::Team, 104, 204, 1, 40.0));
+	const int queuedBeforeFlush = localManager.GetQueuedEventCount();
+	const int flushedCount = localManager.FlushQueuedEvents(1);
+	const int queuedAfterFlush = localManager.GetQueuedEventCount();
+	if (!queued || queuedBeforeFlush != 1 || flushedCount != 1 || queuedAfterFlush != 0 || teamOneCount != 2)
+		AppendAiEventSelfTestFailure(details, "queued team event did not flush through scoped dispatcher", failures);
+
+	const bool unsubscribed = localManager.UnsubscribeScoped(eventName, SandboxEventScope::Team, teamOneToken);
+	localManager.Emit(eventName, BuildAiEventSelfTestContext(SandboxEventTypes::SupportResponded(), SandboxEventScope::Team, 105, 205, 1, 50.0));
+	if (!unsubscribed || teamOneCount != 2)
+		AppendAiEventSelfTestFailure(details, "team unsubscribe did not remove callback", failures);
+
+	localManager.Emit(eventName, BuildAiEventSelfTestContext(SandboxEventTypes::BulletShot(), SandboxEventScope::Global, 106, 206, 9, 60.0));
+	if (globalCount != 1 || globalTeamId != 9)
+		AppendAiEventSelfTestFailure(details, "global scope did not route through global dispatcher", failures);
+	if (localCount != 1 || teamOneCount != 2 || teamTwoCount != 1)
+		AppendAiEventSelfTestFailure(details, "global scope leaked back into local/team subscribers", failures);
+
+	globalManager.UnsubscribeScoped(eventName, SandboxEventScope::Global, globalToken);
+	globalManager.RemoveDispatcher(eventName, SandboxEventScope::Global);
+	localManager.UnsubscribeScoped(eventName, SandboxEventScope::Local, localToken);
+	localManager.UnsubscribeScoped(eventName, SandboxEventScope::Team, teamTwoToken);
+
+	std::ostringstream result;
+	result << "[AIEventSelfTest] result=" << (failures == 0 ? "true" : "false")
+		<< " failures=" << failures
+		<< " event=" << eventName
+		<< " local=" << localCount
+		<< " team1=" << teamOneCount
+		<< " team2=" << teamTwoCount
+		<< " global=" << globalCount
+		<< " queuedBefore=" << queuedBeforeFlush
+		<< " flushed=" << flushedCount
+		<< " queuedAfter=" << queuedAfterFlush
+		<< " unsubscribed=" << (unsubscribed ? "true" : "false")
+		<< "\n" << localManager.BuildDebugSummary("selftest.local", 8);
+	const std::string detailText = details.str();
+	if (!detailText.empty())
+		result << detailText;
+	return result.str();
 }
 
 static std::string BuildBlackboardSelfTestSummary()

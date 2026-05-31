@@ -95,16 +95,18 @@
 ### 完成标准
 
 - [ ] `AgentCommunications` 不再直接依赖临时 table 约定，核心字段有明确规范。
-- [ ] Local / Team / Global 三类事件的派发路径清晰。
+- [x] Local / Team / Global 三类事件的派发路径清晰。
 - [ ] agent 销毁、sample 重载、UI 关闭后不会留下悬空 callback。
-- [ ] 事件派发耗时接入 Tracy 或至少有统计 dump。
+- [x] 事件派发耗时接入 Tracy 或至少有统计 dump。
 
-当前进展（2026-05-23）：
+当前进展（2026-05-31）：
 
 - [x] `SandboxEventPayload` 第一版已统一 `eventType/scope/senderId/targetId/teamId/timeMs/x/y/z` 字段。
 - [x] Local 事件已覆盖 `HEALTH_CHANGE`、`ASM_STATE_CHANGE`、`ASM_NOTIFY`，并由 dispatcher 记录最近事件、订阅者数量和派发次数。
 - [x] Dispatcher 已返回订阅 token，`AgentObject` / `SoldierObject` 在销毁链路中显式解绑 Local event callback。
-- [ ] Team / Global 派发路径和延迟派发仍待补齐。
+- [x] `SandboxEventTypes` 已补 `EnemySighted` / `BulletShot` / `BulletImpact` / `SupportRequested` / `SupportResponded`，作为后续 AI 事件命名收口点。
+- [x] `SandboxEventDispatcherManager` 已支持 Local / Team / Global scope 路由、eventName query params 过滤、`QueueEmit` / `FlushQueuedEvents` 延迟派发，并可用 `HELLO_AI_EVENT_SELF_TEST=1` 跑通 scope selftest。
+- [ ] Spatial 过滤、Lua 侧事件 facade、`AgentCommunications` 临时 table 约定收口仍待后续处理。
 
 ## 6. P0：AI 更新调度与性能观测
 

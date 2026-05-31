@@ -20,6 +20,11 @@ namespace SandboxEventTypes
 	const char* HealthChanged() { return "HEALTH_CHANGE"; }
 	const char* AnimStateChanged() { return "ASM_STATE_CHANGE"; }
 	const char* AnimNotify() { return "ASM_NOTIFY"; }
+	const char* EnemySighted() { return "EnemySighted"; }
+	const char* BulletShot() { return "BulletShot"; }
+	const char* BulletImpact() { return "BulletImpact"; }
+	const char* SupportRequested() { return "SupportRequested"; }
+	const char* SupportResponded() { return "SupportResponded"; }
 }
 
 const char* SandboxEventPayload::ToString(SandboxEventScope scope)

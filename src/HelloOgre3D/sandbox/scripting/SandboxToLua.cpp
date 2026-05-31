@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat May 30 11:31:43 2026.
+** Generated automatically by tolua++-1.0.92 on Sun May 31 21:40:41 2026.
 */
 
 #ifndef __cplusplus
@@ -7580,6 +7580,38 @@ static int tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00(lua_State
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: runAiEventScopeSelfTest of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00
+static int tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'runAiEventScopeSelfTest'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->runAiEventScopeSelfTest();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'runAiEventScopeSelfTest'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: buildObjectDebugSummary of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00
 static int tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00(lua_State* tolua_S)
@@ -11204,6 +11236,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"configureAiScheduler",tolua_SandboxToLua_ObjectManager_configureAiScheduler00);
    tolua_function(tolua_S,"buildAiSchedulerDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00);
    tolua_function(tolua_S,"buildAiEventDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00);
+   tolua_function(tolua_S,"runAiEventScopeSelfTest",tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00);
    tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"NavigationMesh","NavigationMesh","",NULL);

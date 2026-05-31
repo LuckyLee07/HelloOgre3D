@@ -367,14 +367,15 @@ enum class SandboxEventScope {
     Local,
     Team,
     Global,
-    Spatial, // 待补
+    // SpatialFilter 仍留给 S-02，先作为 Team / Global 的过滤条件接入
 };
 
 namespace SandboxEventTypes {
-    const char* EnemySighted();       // 待补
-    const char* BulletShot();         // 待补
-    const char* BulletImpact();       // 待补
-    const char* SupportRequested();   // 待补
+    const char* EnemySighted();       // 已有
+    const char* BulletShot();         // 已有
+    const char* BulletImpact();       // 已有
+    const char* SupportRequested();   // 已有
+    const char* SupportResponded();   // 已有
 }
 
 namespace SandboxEventFields {
@@ -397,6 +398,8 @@ namespace SandboxEventFields {
 3. 保持 dispatcher token unsubscribe 机制，agent 销毁、sample 重载、UI 关闭时必须解绑。
 4. C++ 内部可以逐步引入 enum wrapper，但 Lua 侧继续拿 `SandboxContext` / table 字段，字段由 `SandboxEventFields` 统一。
 5. 只有当现有 dispatcher 在性能、延迟派发或类型安全上无法承载时，再把它升级或替换成真正 typed EventBus。
+
+落地状态（2026-05-31）：`SandboxEventTypes` 已补 EnemySighted / BulletShot / BulletImpact / SupportRequested / SupportResponded；`SandboxEventDispatcherManager` 已能验证 Local / Team / Global scope、teamId 过滤、全局路由和 QueueEmit 延迟派发。SpatialFilter 与 Lua 事件 facade 仍留在 S-02 / 后续任务中处理。
 
 `Spatial` scope 配合 `SpatialFilter`（中心点 + 半径）：枪声只在 50m 内 agent 收到。
 
@@ -741,8 +744,8 @@ public:
 | 顺序 | 任务 | 引入能力 |
 |---|---|---|
 | 1 | **K-01** Blackboard metadata / safe value | 为 TTL、confidence、debug trace 打基础 |
-| 2 | **S-01** 扩展 `SandboxEventPayload` / `SandboxEventTypes` | 统一 AI 事件字段，补 Team / Global 路线 |
-| 3 | **S-02** SpatialFilter / 延迟派发 | 枪声、冲击、发现敌人按范围传播 |
+| 2 | **S-01** 扩展 `SandboxEventPayload` / `SandboxEventTypes` | 统一 AI 事件字段，补 Team / Global 路线（scope selftest 已接入） |
+| 3 | **S-02** SpatialFilter / 延迟派发 | 枪声、冲击、发现敌人按范围传播；Spatial 仍待补 |
 | 4 | VisionSensor MVP | 视觉感知写 `sense.*` / `memory.*`，固定 sample 可观察 |
 | 5 | MemoryComponent / MemoryStore MVP | 最后已知位置、TTL、confidence 衰减 |
 | 6 | **K-02** Blackboard TTL / Confidence 收口 | 让 Memory 和 Sensor 不各自造过期机制 |
@@ -836,7 +839,7 @@ AI 能力容易出现"编译通过但表现漂移"，每个阶段必须有最小
 | 门禁 | 建议入口 | 验收标准 |
 |---|---|---|
 | Blackboard metadata selftest | `HELLO_AI_BLACKBOARD_SELF_TEST=1` 或专用 smoke | typed value / ttl / confidence / debug dump 行为稳定 |
-| Event scope selftest | `HELLO_AI_EVENT_SELF_TEST=1` | Local / Team / Global / Spatial 派发路径正确，销毁后无残留 callback |
+| Event scope selftest | `HELLO_AI_EVENT_SELF_TEST=1` 或 `tools\run_sandbox_smoke.ps1 -RuntimeDiag -AiEventSelfTest` | Local / Team / Global 派发路径正确，teamId 过滤与 token unsubscribe 行为稳定；Spatial 另走 S-02 |
 | Vision smoke | 固定 seed sample | 视野距离、FOV、遮挡、目标 id 写入符合预期 |
 | Memory smoke | 固定 seed sample | 敌人离开视野后，AI 能移动到最后已知位置，TTL 到期后遗忘 |
 | TeamBlackboard smoke | 固定 seed sample | 一个 agent 发现敌人后，同队 agent 行为改变，scan/apply 的 runs/skips 可见 |

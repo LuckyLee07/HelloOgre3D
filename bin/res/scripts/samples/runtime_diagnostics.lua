@@ -74,6 +74,19 @@ function RuntimeDiagnostics.RunSelfTest()
 		printLines(ObjectManager:buildAiEventDebugSummary(maxObjects, maxEvents))
 	end
 
+	if isTruthy(getEnvValue("HELLO_AI_EVENT_SELF_TEST")) then
+		if ObjectManager == nil or ObjectManager.runAiEventScopeSelfTest == nil then
+			print("[RuntimeDiag] AI event selftest unavailable")
+			ok = false
+		else
+			local eventSelfTest = tostring(ObjectManager:runAiEventScopeSelfTest())
+			printLines(eventSelfTest)
+			if string.find(eventSelfTest, "[AIEventSelfTest] result=true", 1, true) == nil then
+				ok = false
+			end
+		end
+	end
+
 	if GameManager == nil or GameManager.buildRuntimeResourceDump == nil then
 		print("[RuntimeDiag] resource dump unavailable")
 		ok = false

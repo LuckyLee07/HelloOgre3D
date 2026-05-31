@@ -36,6 +36,11 @@ namespace SandboxEventTypes
 	const char* HealthChanged();
 	const char* AnimStateChanged();
 	const char* AnimNotify();
+	const char* EnemySighted();
+	const char* BulletShot();
+	const char* BulletImpact();
+	const char* SupportRequested();
+	const char* SupportResponded();
 }
 
 class SandboxEventPayload

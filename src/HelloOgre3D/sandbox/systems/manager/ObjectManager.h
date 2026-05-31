@@ -61,6 +61,7 @@ public:
 	void configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame);
 	std::string buildAiSchedulerDebugSummary() const;
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
+	std::string runAiEventScopeSelfTest();
 	std::string buildObjectDebugSummary(int maxObjects);
 	//tolua_end
 

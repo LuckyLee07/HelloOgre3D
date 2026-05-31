@@ -38,6 +38,7 @@
 - 2026-05-31：新增 `Sandbox13` 作为 InfluenceMap 第一版 sample：在 danger/support 双层影响图上选择低危险支援点，smoke 会检查 `[InfluenceMapSmoke] PASS`。
 - 2026-05-31：补齐 `Sandbox13` 的更新节奏与观测：preset 默认启用 `AIScheduler`，InfluenceMap 通过 `updateIntervalMs` 降频刷新，面板和 smoke 输出 updates/skips/cellWrites。
 - 2026-05-31：补齐 TeamBlackboard 调度验收：`Sandbox12` / `Sandbox13` 的视线 pair 扫描、共享记忆应用和记忆清理按 interval + budget 分批执行，smoke 输出 scan/apply stats。
+- 2026-05-31：补齐 `SandboxEventDispatcherManager` 的 Team / Global scope 验证：C++ selftest 覆盖 Local / Team / Global 路由、teamId 过滤、QueueEmit 延迟派发和 token unsubscribe，smoke 可用 `-AiEventSelfTest` 检查。
 - 2026-05-30：补齐 `BehaviorTreeLoader` 配置诊断：错误和警告会输出节点路径、节点类型、字段名、错误说明和 fallback 后果，便于定位声明式 BT 配置问题。
 
 ## P0 - 方向回正

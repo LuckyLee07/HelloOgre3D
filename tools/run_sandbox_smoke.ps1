@@ -25,6 +25,7 @@ param(
 	[switch]$NoTail,
 	[switch]$RuntimeDiag,
 	[switch]$BlackboardSelfTest,
+	[switch]$AiEventSelfTest,
 	[int]$DiagMaxObjects = 8,
 	[int]$DiagMaxResources = 6,
 	[int]$DiagMaxEvents = 6,
@@ -67,7 +68,7 @@ if ($Preset -eq "team_blackboard" -and -not $PSBoundParameters.ContainsKey("Samp
 if ($Preset -eq "influence_map" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox13"
 }
-$RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
+$RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent
 
 $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_TEST",
@@ -75,6 +76,7 @@ $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_RUN_ID",
 	"HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST",
 	"HELLO_AI_BLACKBOARD_SELF_TEST",
+	"HELLO_AI_EVENT_SELF_TEST",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS",
@@ -108,6 +110,9 @@ if ($RuntimeDiagEnabled) {
 }
 if ($BlackboardSelfTest) {
 	$SelectedEnv["HELLO_AI_BLACKBOARD_SELF_TEST"] = "1"
+}
+if ($AiEventSelfTest) {
+	$SelectedEnv["HELLO_AI_EVENT_SELF_TEST"] = "1"
 }
 if ($Preset -ne "") {
 	$SelectedEnv["HELLO_SAMPLE_PRESET"] = $Preset
@@ -145,7 +150,7 @@ if ($Preset -eq "influence_map" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -295,6 +300,12 @@ try {
 			$diagMatches = @($LogLinesForChecks | Select-String -Pattern "\[RuntimeDiag\] self test result:\s+true")
 			if ($diagMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm runtime diagnostic selftest success."
+			}
+			if ($AiEventSelfTest) {
+				$eventSelfTestMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIEventSelfTest\]\s+result=true")
+				if ($eventSelfTestMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm AI event scope selftest success."
+				}
 			}
 			if ($Preset -ne "") {
 				$presetMatches = @($LogLinesForChecks | Select-String -Pattern "\[ConfigManager\].*preset=.*$([regex]::Escape($Preset))")
