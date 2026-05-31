@@ -12,7 +12,8 @@ param(
 		"Sandbox9",
 		"Sandbox10",
 		"Sandbox11",
-		"Sandbox12"
+		"Sandbox12",
+		"Sandbox13"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -62,6 +63,9 @@ if ($Preset -eq "chapter8_comms" -and -not $PSBoundParameters.ContainsKey("Sampl
 }
 if ($Preset -eq "team_blackboard" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox12"
+}
+if ($Preset -eq "influence_map" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox13"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
 
@@ -135,6 +139,9 @@ if ($Preset -eq "chapter8_comms" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 if ($Preset -eq "team_blackboard" -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "influence_map" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
@@ -308,6 +315,13 @@ try {
 			$teamBlackboardMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\]\s+PASS")
 			if ($teamBlackboardMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard shared target response."
+			}
+		}
+
+		if ($Preset -eq "influence_map") {
+			$influenceMatches = @($LogLinesForChecks | Select-String -Pattern "\[InfluenceMapSmoke\]\s+PASS")
+			if ($influenceMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm InfluenceMap tactical movement."
 			}
 		}
 

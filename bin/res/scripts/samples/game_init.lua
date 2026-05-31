@@ -11,6 +11,7 @@ local SANDBOX_SAMPLE_NAMES = {
 	Sandbox10 = true,
 	Sandbox11 = true,
 	Sandbox12 = true,
+	Sandbox13 = true,
 }
 
 local function getEnvValue(name)
@@ -24,7 +25,7 @@ end
 local function getSandboxSampleName()
 	local sampleName = getEnvValue("HELLO_SANDBOX_SAMPLE")
 	if sampleName == nil or sampleName == "" or sampleName == "Default" then
-		return "Sandbox12"
+		return "Sandbox13"
 	end
 	if string.match(sampleName, "^%d+$") ~= nil then
 		sampleName = "Sandbox" .. sampleName

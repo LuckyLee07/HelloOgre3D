@@ -35,6 +35,7 @@
 - 2026-05-30：新增 `Sandbox11` 作为 Chapter 8 Sensory Perception 原味复刻 sample：6 个 agent 随机分散出生、交替分队、随机移动/追击/射击，绿色视线与红色路径线展示 `EnemySighted -> TeamMemory -> shared enemy`。
 - 2026-05-31：新增 `Sandbox12` 作为 TeamBlackboard 第一版 sample：复用 Chapter 8 动态战场，把队伍共享敌人位置收敛到 `TeamBlackboard`，用于后续 Chapter 9 战术层。
 - 2026-05-31：强化 `Sandbox12` 团队协作验收：固定开场 `EnemySighted`，队友写入 `SupportResponded` 并移动到支援点，smoke 会检查 `[TeamBlackboardSmoke] PASS`。
+- 2026-05-31：新增 `Sandbox13` 作为 InfluenceMap 第一版 sample：在 danger/support 双层影响图上选择低危险支援点，smoke 会检查 `[InfluenceMapSmoke] PASS`。
 - 2026-05-30：补齐 `BehaviorTreeLoader` 配置诊断：错误和警告会输出节点路径、节点类型、字段名、错误说明和 fallback 后果，便于定位声明式 BT 配置问题。
 
 ## P0 - 方向回正
@@ -80,8 +81,8 @@
 
 - [x] TeamBlackboard 第一版：同队 agent 可以共享发现的敌人位置。
 - [x] 团队协作 sample：一个 agent 发现敌人后，队友改变行为。
-- [ ] InfluenceMap 多层结果与 debug 显示。
-- [ ] 战术移动 sample：AI 避开危险区域或偏好掩体区域。
+- [x] InfluenceMap 多层结果与 debug 显示。
+- [x] 战术移动 sample：AI 避开危险区域或偏好掩体区域。
 - [ ] AI 更新调度和性能观测：感知、知识源、InfluenceMap 频率可配置。
 - [x] 固定随机种子 sample preset，支撑可复现 AI 行为验证。
 

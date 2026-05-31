@@ -232,6 +232,35 @@ SamplePresets.team_blackboard.chapter8Comms.scriptedOpeningSighting = {
 
 SamplePresets.Sandbox12 = SamplePresets.team_blackboard
 
+SamplePresets.influence_map = cloneTable(SamplePresets.team_blackboard)
+SamplePresets.influence_map.aiBlackboard.strings["debug.demo"] = "influence_map"
+SamplePresets.influence_map.chapter8Comms.showDemoPanel = true
+SamplePresets.influence_map.chapter8Comms.drawTeamMemories = true
+SamplePresets.influence_map.chapter8Comms.supportOffsetDistance = 8.0
+SamplePresets.influence_map.chapter8Comms.influenceMap = {
+	enabled = true,
+	draw = true,
+	minX = -30.0,
+	maxX = 50.0,
+	minZ = -15.0,
+	maxZ = 60.0,
+	cellSize = 5.0,
+	y = 0.12,
+	dangerStrength = 1.0,
+	dangerRadius = 13.0,
+	dangerWeight = 2.8,
+	supportStrength = 1.0,
+	supportRadius = 5.0,
+	supportWeight = 1.2,
+	supportOffsetDistance = 8.0,
+	supportSamples = 12,
+	candidateCount = 16,
+	candidateRadii = { 6.0, 8.0, 10.0, 12.0 },
+	drawThreshold = 0.08,
+}
+
+SamplePresets.Sandbox13 = SamplePresets.influence_map
+
 SamplePresets.Sandbox9 = {
 	seed = 20260530,
 	agentCount = 3,
