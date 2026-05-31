@@ -304,6 +304,13 @@ try {
 			}
 		}
 
+		if ($Preset -eq "team_blackboard") {
+			$teamBlackboardMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\]\s+PASS")
+			if ($teamBlackboardMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard shared target response."
+			}
+		}
+
 		$CheckedLogLineCount = $LogLinesForChecks.Count
 		$FailurePattern = "OGRE EXCEPTION|PANIC:|lua_dofile path|call_func error|call_string error|lua_pcall|stack traceback|self test result:\s*false|self test case:.*FAIL"
 		$Failures = @($LogLinesForChecks | Select-String -Pattern $FailurePattern)

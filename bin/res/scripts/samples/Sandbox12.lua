@@ -24,7 +24,7 @@ local _agentsById = {}
 local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
-local _demoPanelSize = {w = 530, h = 270}
+local _demoPanelSize = {w = 560, h = 295}
 local _navMesh = nil
 local _drawNavMesh = true
 local _colors = {
@@ -32,7 +32,10 @@ local _colors = {
     team1 = ColourValue(0.95, 0.9, 0.1),
     comm = ColourValue(0.0, 0.85, 1.0),
     shared = ColourValue(0.7, 0.55, 1.0),
+    support = ColourValue(0.95, 0.25, 1.0),
 }
+
+local _TEAM_INTENT_SUPPORT = "support_shared_enemy"
 
 local _chapter8 = {
     enabled = false,
@@ -46,9 +49,13 @@ local _chapter8 = {
     totalSightings = 0,
     totalBroadcasts = 0,
     totalSharedMoves = 0,
+    totalSupportResponses = 0,
     activeDirectSightings = 0,
     activeTeamMemories = 0,
     activeSharedReceivers = 0,
+    activeSupportResponses = 0,
+    openingSightingPublished = false,
+    supportSmokePrinted = false,
     config = {},
 }
 
@@ -226,6 +233,25 @@ local function _GetFloatValue(bb, key, defaultValue)
     return bb:GetFloat(key, defaultValue or 0.0)
 end
 
+local function _ClearSupportBlackboard(bb)
+    if bb == nil then
+        return
+    end
+    local intent = _GetStringValue(bb, "team.intent", "")
+    if intent == _TEAM_INTENT_SUPPORT then
+        bb:Remove("movePos")
+    end
+    bb:Remove("chapter8.sharedTargetId")
+    bb:Remove("chapter8.sharedTargetPos")
+    bb:Remove("chapter8.receivedEvent")
+    bb:Remove("team.intent")
+    bb:Remove("team.focusTargetId")
+    bb:Remove("team.lastKnownEnemyPos")
+    bb:Remove("team.supportTargetPos")
+    bb:Remove("team.supportFromAgentId")
+    bb:Remove("team.supportSeenAtMs")
+end
+
 local function _FormatVec3(pos)
     if pos == nil then return "-" end
     return string.format("%.1f, %.1f, %.1f", pos.x, pos.y, pos.z)
@@ -289,9 +315,7 @@ local function _ClearAgentDemoOrders(agent)
     if bb ~= nil then
         bb:Remove("enemy")
         bb:Remove("movePos")
-        bb:Remove("chapter8.sharedTargetId")
-        bb:Remove("chapter8.sharedTargetPos")
-        bb:Remove("chapter8.receivedEvent")
+        _ClearSupportBlackboard(bb)
     end
 end
 
@@ -343,7 +367,7 @@ local function _ReadDirectSighting(agent)
     end
 
     return {
-        eventType = "EnemySighted",
+        eventType = TeamBlackboard.EventTypes.EnemySighted,
         teamId = agent:GetTeamId(),
         spotter = agent,
         spotterId = _GetAgentId(agent),
@@ -365,7 +389,7 @@ local function _BuildOriginalSighting(agent, target, line)
 
     local toTarget = target:GetPosition() - agent:GetPosition()
     return {
-        eventType = "EnemySighted",
+        eventType = TeamBlackboard.EventTypes.EnemySighted,
         teamId = agent:GetTeamId(),
         spotter = agent,
         spotterId = _GetAgentId(agent),
@@ -409,6 +433,39 @@ local function _MarkSharedMove(agent, sighting)
     _Chapter8DebugLog("[Chapter8Comms] SharedEnemy", "team=", agent:GetTeamId(), "receiver=", receiverId, "from=", sighting.spotterId, "target=", sighting.targetId, "pos=", _FormatVec3(sighting.targetPos))
 end
 
+local function _BuildSupportPosition(agent, sighting)
+    if sighting == nil or sighting.targetPos == nil then
+        return nil
+    end
+
+    local radius = tonumber(_chapter8.config.supportOffsetDistance) or 3.0
+    if radius <= 0.0 then
+        return sighting.targetPos
+    end
+
+    local responderId = _GetAgentId(agent)
+    local angle = (responderId % 8) * 0.785398163
+    local candidate = sighting.targetPos + Vector3(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+    local navPos = Sandbox:FindClosestPoint("default", candidate)
+    return navPos ~= nil and navPos or candidate
+end
+
+local function _MarkSupportResponse(agent, sighting, supportPos)
+    local response, isNew = TeamBlackboard:RememberSupportResponse(agent:GetTeamId(), {
+        teamId = agent:GetTeamId(),
+        responderId = _GetAgentId(agent),
+        fromAgentId = sighting.spotterId,
+        targetId = sighting.targetId,
+        targetPos = sighting.targetPos,
+        supportPos = supportPos,
+        timeMs = _chapter8.elapsedMs,
+    })
+    if isNew then
+        _chapter8.totalSupportResponses = _chapter8.totalSupportResponses + 1
+    end
+    return response
+end
+
 local function _PublishEnemySighted(sighting)
     local memory = _EnsureTeamMemory(sighting.teamId)
     local existing = memory.visibleEnemies[sighting.targetId]
@@ -423,14 +480,10 @@ local function _PublishEnemySighted(sighting)
         return
     end
 
-    local event = {
-        eventType = "EnemySighted",
-        teamId = sighting.teamId,
-        senderId = sighting.spotterId,
-        targetId = sighting.targetId,
-        targetPos = sighting.targetPos,
-        timeMs = _chapter8.elapsedMs,
-    }
+    local event = TeamBlackboard:BuildEnemySightedEvent(sighting, _chapter8.elapsedMs)
+    if event == nil then
+        return
+    end
     TeamBlackboard:SetLastEvent(sighting.teamId, event)
     _chapter8.totalBroadcasts = _chapter8.totalBroadcasts + 1
     _PushRecentEvent(event)
@@ -439,7 +492,9 @@ end
 
 local function _ExpireTeamMemory()
     local ttlMs = tonumber(_chapter8.config.teamMemoryTtlMs) or 2500
+    local supportTtlMs = tonumber(_chapter8.config.supportResponseTtlMs) or ttlMs
     _chapter8.activeTeamMemories = TeamBlackboard:PruneVisibleEnemies(_chapter8.elapsedMs, ttlMs)
+    _chapter8.activeSupportResponses = TeamBlackboard:PruneSupportResponses(_chapter8.elapsedMs, supportTtlMs)
 end
 
 local function _PruneRecentEvents()
@@ -451,6 +506,52 @@ local function _PruneRecentEvents()
         end
     end
     _chapter8.recentEvents = kept
+end
+
+local function _PublishScriptedOpeningSighting()
+    local config = _chapter8.config.scriptedOpeningSighting
+    if _chapter8.openingSightingPublished or config == nil or config.enabled ~= true then
+        return
+    end
+
+    local delayMs = tonumber(config.delayMs) or 500
+    if _chapter8.elapsedMs < delayMs then
+        return
+    end
+
+    local spotter = _agents[tonumber(config.spotterIndex) or 1]
+    local target = _agents[tonumber(config.targetIndex) or 2]
+    if not _IsAlive(spotter) or not _IsAlive(target) or spotter:GetTeamId() == target:GetTeamId() then
+        return
+    end
+
+    local toTarget = target:GetPosition() - spotter:GetPosition()
+    _PublishEnemySighted({
+        eventType = TeamBlackboard.EventTypes.EnemySighted,
+        teamId = spotter:GetTeamId(),
+        spotter = spotter,
+        spotterId = _GetAgentId(spotter),
+        targetId = _GetAgentId(target),
+        targetPos = target:GetPosition(),
+        distance = toTarget:length(),
+        confidence = 1.0,
+        lastSeenMs = _chapter8.elapsedMs,
+    })
+    _chapter8.openingSightingPublished = true
+    print("[TeamBlackboardDemo] opening EnemySighted", "team=", spotter:GetTeamId(), "sender=", _GetAgentId(spotter), "target=", _GetAgentId(target))
+end
+
+local function _MaybePrintTeamBlackboardSmoke()
+    if _chapter8.supportSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
+        return
+    end
+    if _chapter8.totalBroadcasts > 0 and _chapter8.totalSupportResponses > 0 and _chapter8.totalSharedMoves > 0 then
+        _chapter8.supportSmokePrinted = true
+        print("[TeamBlackboardSmoke] PASS",
+            "broadcasts=", _chapter8.totalBroadcasts,
+            "supportResponses=", _chapter8.totalSupportResponses,
+            "sharedMoves=", _chapter8.totalSharedMoves)
+    end
 end
 
 local function _SelectTeamMemoryForAgent(agent)
@@ -477,32 +578,49 @@ local function _HasDirectTarget(agent)
 end
 
 local function _ApplyTeamMemoryToAgent(agent)
-    if agent == nil or _HasDirectTarget(agent) then
+    if agent == nil then
         return false
     end
 
     local sighting = _SelectTeamMemoryForAgent(agent)
     local bb = _GetBlackboard(agent)
     local target = sighting ~= nil and _agentsById[sighting.targetId] or nil
+    if _HasDirectTarget(agent) then
+        _ClearSupportBlackboard(bb)
+        return false
+    end
     if sighting == nil or bb == nil then
         if bb ~= nil then
-            bb:Remove("chapter8.sharedTargetId")
-            bb:Remove("chapter8.sharedTargetPos")
-            bb:Remove("chapter8.receivedEvent")
+            _ClearSupportBlackboard(bb)
         end
         return false
     end
 
     if not _IsAlive(target) then
+        _ClearSupportBlackboard(bb)
         return false
     end
 
-    bb:SetAgent("enemy", target)
-    bb:SetString("chapter8.receivedEvent", "EnemySighted")
+    local supportPos = _BuildSupportPosition(agent, sighting)
+    if supportPos == nil then
+        return false
+    end
+
+    bb:Remove("enemy")
+    bb:SetString("team.intent", _TEAM_INTENT_SUPPORT)
+    bb:SetObjectId("team.focusTargetId", sighting.targetId)
+    bb:SetVec3("team.lastKnownEnemyPos", sighting.targetPos)
+    bb:SetVec3("team.supportTargetPos", supportPos)
+    bb:SetInt("team.supportFromAgentId", sighting.spotterId)
+    bb:SetInt("team.supportSeenAtMs", sighting.lastSeenMs)
+    bb:SetString("chapter8.receivedEvent", TeamBlackboard.EventTypes.EnemySighted)
     bb:SetObjectId("chapter8.sharedTargetId", sighting.targetId)
     bb:SetVec3("chapter8.sharedTargetPos", sighting.targetPos)
     bb:SetInt("chapter8.sharedFromAgentId", sighting.spotterId)
     bb:SetInt("chapter8.sharedSeenAtMs", sighting.lastSeenMs)
+    bb:SetVec3("movePos", supportPos)
+    agent:SetMovePosition(supportPos)
+    _MarkSupportResponse(agent, sighting, supportPos)
     _MarkSharedMove(agent, sighting)
     return true
 end
@@ -535,6 +653,7 @@ local function _UpdateChapter8Comms(deltaTimeInMillis)
         end
     end
 
+    _PublishScriptedOpeningSighting()
     _ExpireTeamMemory()
     _PruneRecentEvents()
 
@@ -543,6 +662,7 @@ local function _UpdateChapter8Comms(deltaTimeInMillis)
             _chapter8.activeSharedReceivers = _chapter8.activeSharedReceivers + 1
         end
     end
+    _MaybePrintTeamBlackboardSmoke()
 end
 
 local function _DrawAgentMarker(agent)
@@ -602,6 +722,13 @@ local function _DrawTeamMemories()
         for _, sighting in pairs(memory.visibleEnemies) do
             _DrawMemoryMarker(sighting.targetPos, color)
         end
+        for _, response in pairs(TeamBlackboard:GetSupportResponses(teamId)) do
+            local responder = _agentsById[response.responderId]
+            if responder ~= nil and response.supportPos ~= nil then
+                DebugDrawer:drawLine(responder:GetPosition() + Vector3(0, 1.4, 0), response.supportPos + Vector3(0, 1.4, 0), _colors.support)
+                DebugDrawer:drawCircle(response.supportPos + Vector3(0, 0.18, 0), 1.0, 24, _colors.support, false)
+            end
+        end
     end
 
     for _, agent in ipairs(_agents) do
@@ -609,6 +736,10 @@ local function _DrawTeamMemories()
         if bb ~= nil and bb:Has("chapter8.sharedTargetPos") then
             local pos = bb:GetVec3("chapter8.sharedTargetPos")
             DebugDrawer:drawLine(agent:GetPosition() + Vector3(0, 1.1, 0), pos + Vector3(0, 1.1, 0), _colors.shared)
+        end
+        if bb ~= nil and bb:Has("team.supportTargetPos") then
+            local pos = bb:GetVec3("team.supportTargetPos")
+            DebugDrawer:drawLine(agent:GetPosition() + Vector3(0, 1.7, 0), pos + Vector3(0, 1.7, 0), _colors.support)
         end
     end
 end
@@ -643,6 +774,16 @@ local function _TeamSummary(teamId)
     return count, last
 end
 
+local function _SupportSummary(teamId)
+    local count = 0
+    local last = "-"
+    for responderId, response in pairs(TeamBlackboard:GetSupportResponses(teamId)) do
+        count = count + 1
+        last = "#" .. tostring(responderId) .. " -> #" .. tostring(response.targetId)
+    end
+    return count, last
+end
+
 local function _LastEventSummary()
     local event = _chapter8.recentEvents[#_chapter8.recentEvents]
     if event == nil then
@@ -654,6 +795,8 @@ end
 local function _BuildDemoPanelText()
     local team0Count, team0Last = _TeamSummary(0)
     local team1Count, team1Last = _TeamSummary(1)
+    local team0SupportCount, team0SupportLast = _SupportSummary(0)
+    local team1SupportCount, team1SupportLast = _SupportSummary(1)
 
     return GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "[Sandbox12 - Team Blackboard]" .. GUI.MarkupNewline ..
@@ -669,10 +812,13 @@ local function _BuildDemoPanelText()
             "  receivers: " .. tostring(_chapter8.activeSharedReceivers) .. GUI.MarkupNewline ..
         "Team 0 blackboard: " .. tostring(team0Count) .. "  " .. team0Last .. GUI.MarkupNewline ..
         "Team 1 blackboard: " .. tostring(team1Count) .. "  " .. team1Last .. GUI.MarkupNewline ..
+        "Support 0: " .. tostring(team0SupportCount) .. "  " .. team0SupportLast .. GUI.MarkupNewline ..
+        "Support 1: " .. tostring(team1SupportCount) .. "  " .. team1SupportLast .. GUI.MarkupNewline ..
         "Last event: " .. _LastEventSummary() .. GUI.MarkupNewline ..
         "Totals: sightings=" .. tostring(_chapter8.totalSightings) ..
             " broadcasts=" .. tostring(_chapter8.totalBroadcasts) ..
-            " sharedEnemies=" .. tostring(_chapter8.totalSharedMoves)
+            " sharedMoves=" .. tostring(_chapter8.totalSharedMoves) ..
+            " support=" .. tostring(_chapter8.totalSupportResponses)
 end
 
 local function _UpdateDemoPanel()
@@ -696,6 +842,10 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.totalSightings = 0
     _chapter8.totalBroadcasts = 0
     _chapter8.totalSharedMoves = 0
+    _chapter8.totalSupportResponses = 0
+    _chapter8.activeSupportResponses = 0
+    _chapter8.openingSightingPublished = false
+    _chapter8.supportSmokePrinted = false
     _chapter8.config = config
 
     if _chapter8.enabled then

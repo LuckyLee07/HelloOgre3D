@@ -204,11 +204,31 @@ SamplePresets.chapter8_comms = {
 SamplePresets.Sandbox11 = SamplePresets.chapter8_comms
 
 SamplePresets.team_blackboard = cloneTable(SamplePresets.chapter8_comms)
+SamplePresets.team_blackboard.agentCount = 6
+SamplePresets.team_blackboard.lightTeamCount = 3
+SamplePresets.team_blackboard.spawnMode = "fixed"
+SamplePresets.team_blackboard.spawnPoints = {
+	{ -14.442, 0.080, 21.076 },
+	{ 19.732, 0.050, -7.443 },
+	{ 20.737, 0.050, 39.859 },
+	{ 28.901, 0.068, 66.047 },
+	{ -8.847, 0.050, -9.129 },
+	{ 30.546, 0.050, 15.425 },
+}
 SamplePresets.team_blackboard.aiBlackboard.strings["debug.demo"] = "team_blackboard"
 SamplePresets.team_blackboard.chapter8Comms.showDemoPanel = true
 SamplePresets.team_blackboard.chapter8Comms.drawAgentMarkers = true
 SamplePresets.team_blackboard.chapter8Comms.drawTeamBroadcasts = true
 SamplePresets.team_blackboard.chapter8Comms.drawTeamMemories = true
+SamplePresets.team_blackboard.chapter8Comms.useOriginalRandomSpawn = false
+SamplePresets.team_blackboard.chapter8Comms.supportOffsetDistance = 4.0
+SamplePresets.team_blackboard.chapter8Comms.supportResponseTtlMs = 3000
+SamplePresets.team_blackboard.chapter8Comms.scriptedOpeningSighting = {
+	enabled = true,
+	delayMs = 800,
+	spotterIndex = 1,
+	targetIndex = 2,
+}
 
 SamplePresets.Sandbox12 = SamplePresets.team_blackboard
 

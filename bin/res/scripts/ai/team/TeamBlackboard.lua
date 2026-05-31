@@ -3,6 +3,11 @@
 
 local TeamBlackboard = {}
 
+TeamBlackboard.EventTypes = {
+	EnemySighted = "EnemySighted",
+	SupportResponded = "SupportResponded",
+}
+
 local _teams = {}
 
 local function _CloneVec3(pos)
@@ -16,6 +21,7 @@ local function _NewTeamState(teamId)
 	return {
 		teamId = tonumber(teamId) or 0,
 		visibleEnemies = {},
+		supportResponses = {},
 		lastEvent = nil,
 		values = {},
 	}
@@ -41,6 +47,7 @@ function TeamBlackboard:RememberVisibleEnemy(teamId, sighting)
 	local team = self:GetTeam(teamId)
 	local existing = team.visibleEnemies[sighting.targetId]
 	local stored = {
+		eventType = TeamBlackboard.EventTypes.EnemySighted,
 		teamId = tonumber(sighting.teamId) or tonumber(teamId) or 0,
 		spotterId = sighting.spotterId,
 		targetId = sighting.targetId,
@@ -49,6 +56,20 @@ function TeamBlackboard:RememberVisibleEnemy(teamId, sighting)
 	}
 	team.visibleEnemies[sighting.targetId] = stored
 	return stored, existing == nil
+end
+
+function TeamBlackboard:BuildEnemySightedEvent(sighting, timeMs)
+	if sighting == nil then
+		return nil
+	end
+	return {
+		eventType = TeamBlackboard.EventTypes.EnemySighted,
+		teamId = sighting.teamId,
+		senderId = sighting.spotterId,
+		targetId = sighting.targetId,
+		targetPos = _CloneVec3(sighting.targetPos),
+		timeMs = tonumber(timeMs) or 0,
+	}
 end
 
 function TeamBlackboard:ForgetVisibleEnemy(teamId, targetId)
@@ -65,6 +86,31 @@ function TeamBlackboard:GetVisibleEnemies(teamId)
 	return self:GetTeam(teamId).visibleEnemies
 end
 
+function TeamBlackboard:RememberSupportResponse(teamId, response)
+	if response == nil or response.responderId == nil then
+		return nil, false
+	end
+
+	local team = self:GetTeam(teamId)
+	local existing = team.supportResponses[response.responderId]
+	local stored = {
+		eventType = TeamBlackboard.EventTypes.SupportResponded,
+		teamId = tonumber(response.teamId) or tonumber(teamId) or 0,
+		responderId = response.responderId,
+		fromAgentId = response.fromAgentId,
+		targetId = response.targetId,
+		targetPos = _CloneVec3(response.targetPos),
+		supportPos = _CloneVec3(response.supportPos),
+		timeMs = tonumber(response.timeMs) or 0,
+	}
+	team.supportResponses[response.responderId] = stored
+	return stored, existing == nil or existing.targetId ~= stored.targetId
+end
+
+function TeamBlackboard:GetSupportResponses(teamId)
+	return self:GetTeam(teamId).supportResponses
+end
+
 function TeamBlackboard:PruneVisibleEnemies(nowMs, ttlMs)
 	nowMs = tonumber(nowMs) or 0
 	ttlMs = tonumber(ttlMs) or 0
@@ -73,6 +119,22 @@ function TeamBlackboard:PruneVisibleEnemies(nowMs, ttlMs)
 		for targetId, sighting in pairs(team.visibleEnemies) do
 			if (nowMs - (tonumber(sighting.lastSeenMs) or 0)) > ttlMs then
 				team.visibleEnemies[targetId] = nil
+			else
+				activeCount = activeCount + 1
+			end
+		end
+	end
+	return activeCount
+end
+
+function TeamBlackboard:PruneSupportResponses(nowMs, ttlMs)
+	nowMs = tonumber(nowMs) or 0
+	ttlMs = tonumber(ttlMs) or 0
+	local activeCount = 0
+	for _, team in pairs(_teams) do
+		for responderId, response in pairs(team.supportResponses) do
+			if (nowMs - (tonumber(response.timeMs) or 0)) > ttlMs then
+				team.supportResponses[responderId] = nil
 			else
 				activeCount = activeCount + 1
 			end
