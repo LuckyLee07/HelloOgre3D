@@ -25,7 +25,7 @@ local _agentsById = {}
 local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
-local _demoPanelSize = {w = 620, h = 335}
+local _demoPanelSize = {w = 650, h = 360}
 local _navMesh = nil
 local _influenceMap = nil
 local _drawNavMesh = true
@@ -61,6 +61,29 @@ local _chapter8 = {
     activeSharedReceivers = 0,
     activeSupportResponses = 0,
     activeInfluenceCells = 0,
+    sightScanElapsedMs = 0,
+    sightScanIntervalMs = 0,
+    sightScanCursor = 0,
+    sightScanRunCount = 0,
+    sightScanSkipCount = 0,
+    sightPairChecks = 0,
+    teamApplyElapsedMs = 0,
+    teamApplyIntervalMs = 0,
+    teamApplyCursor = 1,
+    teamApplyRunCount = 0,
+    teamApplySkipCount = 0,
+    teamApplyAgentChecks = 0,
+    teamPruneElapsedMs = 0,
+    teamPruneIntervalMs = 0,
+    teamPruneRunCount = 0,
+    teamPruneSkipCount = 0,
+    influenceElapsedMs = 0,
+    influenceFrameCount = 0,
+    influenceUpdateCount = 0,
+    influenceSkipCount = 0,
+    influenceIntervalMs = 0,
+    influenceLastUpdateMs = 0,
+    influenceLastCellWrites = 0,
     lastTacticalScore = 0.0,
     lastTacticalDanger = 0.0,
     lastTacticalSupport = 0.0,
@@ -154,6 +177,15 @@ local function _GetSightHeightRatio(key, defaultValue)
     local config = _chapter8.config or {}
     local value = tonumber(config[key])
     if value == nil then
+        return defaultValue
+    end
+    return value
+end
+
+local function _GetPositiveConfigNumber(key, defaultValue)
+    local config = _chapter8.config or {}
+    local value = tonumber(config[key])
+    if value == nil or value <= 0 then
         return defaultValue
     end
     return value
@@ -460,12 +492,39 @@ local function _EnsureInfluenceMap()
     return _influenceMap
 end
 
-local function _UpdateInfluenceMap()
+local function _HasInfluenceSources()
+    for _, memory in pairs(_chapter8.teamMemory or {}) do
+        for _, _ in pairs(memory.visibleEnemies or {}) do
+            return true
+        end
+    end
+    return false
+end
+
+local function _UpdateInfluenceMap(deltaTimeInMillis)
     local config = _GetInfluenceConfig()
     if config.enabled ~= true then
         _chapter8.activeInfluenceCells = 0
+        _chapter8.influenceLastCellWrites = 0
         return
     end
+
+    local intervalMs = math.max(1, tonumber(config.updateIntervalMs) or 500)
+    _chapter8.influenceIntervalMs = intervalMs
+    _chapter8.influenceFrameCount = _chapter8.influenceFrameCount + 1
+    _chapter8.influenceElapsedMs = _chapter8.influenceElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+
+    local hasSources = _HasInfluenceSources()
+    local shouldForceFirst = hasSources and (_chapter8.influenceUpdateCount == 0 or _chapter8.activeInfluenceCells <= 0)
+    if not shouldForceFirst and _chapter8.influenceElapsedMs < intervalMs then
+        _chapter8.influenceSkipCount = _chapter8.influenceSkipCount + 1
+        return
+    end
+
+    local updateMs = _chapter8.influenceElapsedMs
+    _chapter8.influenceElapsedMs = 0
+    _chapter8.influenceUpdateCount = _chapter8.influenceUpdateCount + 1
+    _chapter8.influenceLastUpdateMs = updateMs
 
     local map = _EnsureInfluenceMap()
     map:Reset()
@@ -476,14 +535,16 @@ local function _UpdateInfluenceMap()
     local supportOffsetDistance = tonumber(config.supportOffsetDistance) or tonumber(_chapter8.config.supportOffsetDistance) or 7.0
     local supportRadius = tonumber(config.supportRadius) or 5.0
     local supportSamples = tonumber(config.supportSamples) or 12
+    local cellWrites = 0
 
     for _, memory in pairs(_chapter8.teamMemory or {}) do
-        for _, sighting in pairs(memory.visibleEnemies) do
-            map:AddRadialSource("danger", sighting.targetPos, dangerStrength, dangerRadius)
-            map:AddRingSources("support", sighting.targetPos, supportStrength, supportOffsetDistance, supportRadius, supportSamples)
+        for _, sighting in pairs(memory.visibleEnemies or {}) do
+            cellWrites = cellWrites + map:AddRadialSource("danger", sighting.targetPos, dangerStrength, dangerRadius)
+            cellWrites = cellWrites + map:AddRingSources("support", sighting.targetPos, supportStrength, supportOffsetDistance, supportRadius, supportSamples)
         end
     end
 
+    _chapter8.influenceLastCellWrites = cellWrites
     _chapter8.activeInfluenceCells = map:CountActiveCells(tonumber(config.drawThreshold) or 0.05)
 end
 
@@ -622,12 +683,24 @@ local function _MaybePrintTeamBlackboardSmoke()
     if _chapter8.supportSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
         return
     end
-    if _chapter8.totalBroadcasts > 0 and _chapter8.totalSupportResponses > 0 and _chapter8.totalSharedMoves > 0 then
+    if _chapter8.totalBroadcasts > 0
+        and _chapter8.totalSupportResponses > 0
+        and _chapter8.totalSharedMoves > 0
+        and _chapter8.sightScanRunCount > 0
+        and _chapter8.sightScanSkipCount > 0
+        and _chapter8.teamApplyRunCount > 0
+        and _chapter8.teamApplySkipCount > 0 then
         _chapter8.supportSmokePrinted = true
         print("[TeamBlackboardSmoke] PASS",
             "broadcasts=", _chapter8.totalBroadcasts,
             "supportResponses=", _chapter8.totalSupportResponses,
-            "sharedMoves=", _chapter8.totalSharedMoves)
+            "sharedMoves=", _chapter8.totalSharedMoves,
+            "scanRuns=", _chapter8.sightScanRunCount,
+            "scanSkips=", _chapter8.sightScanSkipCount,
+            "pairChecks=", _chapter8.sightPairChecks,
+            "applyRuns=", _chapter8.teamApplyRunCount,
+            "applySkips=", _chapter8.teamApplySkipCount,
+            "agentChecks=", _chapter8.teamApplyAgentChecks)
     end
 end
 
@@ -635,11 +708,19 @@ local function _MaybePrintInfluenceMapSmoke()
     if _chapter8.influenceSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
         return
     end
-    if _chapter8.activeInfluenceCells > 0 and _chapter8.totalTacticalMoves > 0 then
+    if _chapter8.activeInfluenceCells > 0
+        and _chapter8.totalTacticalMoves > 0
+        and _chapter8.influenceUpdateCount > 0
+        and _chapter8.influenceSkipCount > 0 then
         _chapter8.influenceSmokePrinted = true
         print("[InfluenceMapSmoke] PASS",
             "activeCells=", _chapter8.activeInfluenceCells,
             "tacticalMoves=", _chapter8.totalTacticalMoves,
+            "updates=", _chapter8.influenceUpdateCount,
+            "skips=", _chapter8.influenceSkipCount,
+            "intervalMs=", _chapter8.influenceIntervalMs,
+            "lastUpdateMs=", _chapter8.influenceLastUpdateMs,
+            "cellWrites=", _chapter8.influenceLastCellWrites,
             "danger=", string.format("%.2f", _chapter8.lastTacticalDanger),
             "support=", string.format("%.2f", _chapter8.lastTacticalSupport),
             "score=", string.format("%.2f", _chapter8.lastTacticalScore))
@@ -728,44 +809,122 @@ local function _ApplyTeamMemoryToAgent(agent)
     return true
 end
 
-local function _UpdateChapter8Comms(deltaTimeInMillis)
-    if not _chapter8.enabled then return end
+local function _GetSightPairFromCursor(cursor)
+    local count = #_agents
+    if count <= 1 then
+        return nil, nil
+    end
 
-    _chapter8.elapsedMs = _chapter8.elapsedMs + math.max(0, deltaTimeInMillis)
+    local pairsPerSpotter = count - 1
+    local pairIndex = cursor % (count * pairsPerSpotter)
+    local spotterIndex = math.floor(pairIndex / pairsPerSpotter) + 1
+    local targetSlot = (pairIndex % pairsPerSpotter) + 1
+    local targetIndex = targetSlot >= spotterIndex and targetSlot + 1 or targetSlot
+    return _agents[spotterIndex], _agents[targetIndex]
+end
+
+local function _UpdateScheduledSightScan(deltaTimeInMillis)
+    local totalPairs = #_agents * math.max(0, #_agents - 1)
+    if totalPairs <= 0 then
+        return
+    end
+
+    local intervalMs = math.max(1, _GetPositiveConfigNumber("sightScanIntervalMs", 120))
+    local pairsPerTick = math.max(1, math.min(totalPairs, _GetPositiveConfigNumber("sightPairsPerTick", 10)))
+    _chapter8.sightScanIntervalMs = intervalMs
+    _chapter8.sightScanElapsedMs = _chapter8.sightScanElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+
+    local shouldForceFirst = _chapter8.sightScanRunCount == 0
+    if not shouldForceFirst and _chapter8.sightScanElapsedMs < intervalMs then
+        _chapter8.sightScanSkipCount = _chapter8.sightScanSkipCount + 1
+        return
+    end
+
+    _chapter8.sightScanElapsedMs = 0
+    _chapter8.sightScanRunCount = _chapter8.sightScanRunCount + 1
     _chapter8.directSightings = {}
     _chapter8.sightLines = {}
     _chapter8.activeDirectSightings = 0
-    _chapter8.activeSharedReceivers = 0
 
-    for _, spotter in ipairs(_agents) do
-        if _IsAlive(spotter) then
-            for _, target in ipairs(_agents) do
-                if _IsAlive(target) and target ~= spotter then
-                    local line = _BuildSightLine(spotter, target)
-                    if line ~= nil then
-                        table.insert(_chapter8.sightLines, line)
-                        local sighting = _BuildOriginalSighting(spotter, target, line)
-                        if sighting ~= nil then
-                            table.insert(_chapter8.directSightings, sighting)
-                            _chapter8.activeDirectSightings = _chapter8.activeDirectSightings + 1
-                            _PublishEnemySighted(sighting)
-                        end
-                    end
+    for _ = 1, pairsPerTick do
+        local spotter, target = _GetSightPairFromCursor(_chapter8.sightScanCursor)
+        _chapter8.sightScanCursor = (_chapter8.sightScanCursor + 1) % totalPairs
+        _chapter8.sightPairChecks = _chapter8.sightPairChecks + 1
+        if _IsAlive(spotter) and _IsAlive(target) and spotter ~= target then
+            local line = _BuildSightLine(spotter, target)
+            if line ~= nil then
+                table.insert(_chapter8.sightLines, line)
+                local sighting = _BuildOriginalSighting(spotter, target, line)
+                if sighting ~= nil then
+                    table.insert(_chapter8.directSightings, sighting)
+                    _chapter8.activeDirectSightings = _chapter8.activeDirectSightings + 1
+                    _PublishEnemySighted(sighting)
                 end
             end
         end
     end
+end
 
-    _PublishScriptedOpeningSighting()
-    _UpdateInfluenceMap()
+local function _UpdateScheduledTeamPrune(deltaTimeInMillis)
+    local intervalMs = math.max(1, _GetPositiveConfigNumber("teamPruneIntervalMs", 250))
+    _chapter8.teamPruneIntervalMs = intervalMs
+    _chapter8.teamPruneElapsedMs = _chapter8.teamPruneElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+    local shouldForceFirst = _chapter8.teamPruneRunCount == 0
+    if not shouldForceFirst and _chapter8.teamPruneElapsedMs < intervalMs then
+        _chapter8.teamPruneSkipCount = _chapter8.teamPruneSkipCount + 1
+        return
+    end
+
+    _chapter8.teamPruneElapsedMs = 0
+    _chapter8.teamPruneRunCount = _chapter8.teamPruneRunCount + 1
     _ExpireTeamMemory()
-    _PruneRecentEvents()
+end
 
-    for _, agent in ipairs(_agents) do
+local function _UpdateScheduledTeamApply(deltaTimeInMillis)
+    if #_agents <= 0 then
+        return
+    end
+
+    local intervalMs = math.max(1, _GetPositiveConfigNumber("teamApplyIntervalMs", 160))
+    local agentsPerTick = math.max(1, math.min(#_agents, _GetPositiveConfigNumber("teamAgentsPerTick", 3)))
+    _chapter8.teamApplyIntervalMs = intervalMs
+    _chapter8.teamApplyElapsedMs = _chapter8.teamApplyElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+
+    local shouldForceFirst = _chapter8.teamApplyRunCount == 0
+    if not shouldForceFirst and _chapter8.teamApplyElapsedMs < intervalMs then
+        _chapter8.teamApplySkipCount = _chapter8.teamApplySkipCount + 1
+        return
+    end
+
+    _chapter8.teamApplyElapsedMs = 0
+    _chapter8.teamApplyRunCount = _chapter8.teamApplyRunCount + 1
+    _chapter8.activeSharedReceivers = 0
+
+    for _ = 1, agentsPerTick do
+        local index = ((_chapter8.teamApplyCursor - 1) % #_agents) + 1
+        _chapter8.teamApplyCursor = index + 1
+        if _chapter8.teamApplyCursor > #_agents then
+            _chapter8.teamApplyCursor = 1
+        end
+        local agent = _agents[index]
+        _chapter8.teamApplyAgentChecks = _chapter8.teamApplyAgentChecks + 1
         if _IsAlive(agent) and _ApplyTeamMemoryToAgent(agent) then
             _chapter8.activeSharedReceivers = _chapter8.activeSharedReceivers + 1
         end
     end
+end
+
+local function _UpdateChapter8Comms(deltaTimeInMillis)
+    if not _chapter8.enabled then return end
+
+    _chapter8.elapsedMs = _chapter8.elapsedMs + math.max(0, deltaTimeInMillis)
+
+    _UpdateScheduledSightScan(deltaTimeInMillis)
+    _PublishScriptedOpeningSighting()
+    _UpdateInfluenceMap(deltaTimeInMillis)
+    _UpdateScheduledTeamPrune(deltaTimeInMillis)
+    _PruneRecentEvents()
+    _UpdateScheduledTeamApply(deltaTimeInMillis)
     _MaybePrintTeamBlackboardSmoke()
     _MaybePrintInfluenceMapSmoke()
 end
@@ -948,8 +1107,20 @@ local function _BuildDemoPanelText()
         "Direct sightings: " .. tostring(_chapter8.activeDirectSightings) ..
             "  shared sightings: " .. tostring(_chapter8.activeTeamMemories) ..
             "  receivers: " .. tostring(_chapter8.activeSharedReceivers) .. GUI.MarkupNewline ..
+        "Schedule: scan " .. tostring(_chapter8.sightScanIntervalMs) .. "ms" ..
+            " runs=" .. tostring(_chapter8.sightScanRunCount) ..
+            " skips=" .. tostring(_chapter8.sightScanSkipCount) ..
+            " pairs=" .. tostring(_chapter8.sightPairChecks) .. GUI.MarkupNewline ..
+        "Team apply: " .. tostring(_chapter8.teamApplyIntervalMs) .. "ms" ..
+            " runs=" .. tostring(_chapter8.teamApplyRunCount) ..
+            " skips=" .. tostring(_chapter8.teamApplySkipCount) ..
+            " agents=" .. tostring(_chapter8.teamApplyAgentChecks) .. GUI.MarkupNewline ..
         "Influence cells: " .. tostring(_chapter8.activeInfluenceCells) ..
             "  tactical moves: " .. tostring(_chapter8.totalTacticalMoves) .. GUI.MarkupNewline ..
+        "Influence update: " .. tostring(_chapter8.influenceIntervalMs) .. "ms" ..
+            "  runs=" .. tostring(_chapter8.influenceUpdateCount) ..
+            "  skipped=" .. tostring(_chapter8.influenceSkipCount) ..
+            "  writes=" .. tostring(_chapter8.influenceLastCellWrites) .. GUI.MarkupNewline ..
         "Last score: " .. string.format("%.2f", _chapter8.lastTacticalScore) ..
             " danger=" .. string.format("%.2f", _chapter8.lastTacticalDanger) ..
             " support=" .. string.format("%.2f", _chapter8.lastTacticalSupport) .. GUI.MarkupNewline ..
@@ -988,7 +1159,33 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.totalSupportResponses = 0
     _chapter8.totalTacticalMoves = 0
     _chapter8.activeSupportResponses = 0
+    _chapter8.activeDirectSightings = 0
+    _chapter8.activeSharedReceivers = 0
+    _chapter8.activeTeamMemories = 0
     _chapter8.activeInfluenceCells = 0
+    _chapter8.sightScanElapsedMs = 0
+    _chapter8.sightScanIntervalMs = tonumber(config.sightScanIntervalMs) or 120
+    _chapter8.sightScanCursor = 0
+    _chapter8.sightScanRunCount = 0
+    _chapter8.sightScanSkipCount = 0
+    _chapter8.sightPairChecks = 0
+    _chapter8.teamApplyElapsedMs = 0
+    _chapter8.teamApplyIntervalMs = tonumber(config.teamApplyIntervalMs) or 160
+    _chapter8.teamApplyCursor = 1
+    _chapter8.teamApplyRunCount = 0
+    _chapter8.teamApplySkipCount = 0
+    _chapter8.teamApplyAgentChecks = 0
+    _chapter8.teamPruneElapsedMs = 0
+    _chapter8.teamPruneIntervalMs = tonumber(config.teamPruneIntervalMs) or 250
+    _chapter8.teamPruneRunCount = 0
+    _chapter8.teamPruneSkipCount = 0
+    _chapter8.influenceElapsedMs = 0
+    _chapter8.influenceFrameCount = 0
+    _chapter8.influenceUpdateCount = 0
+    _chapter8.influenceSkipCount = 0
+    _chapter8.influenceIntervalMs = tonumber((config.influenceMap or {}).updateIntervalMs) or 500
+    _chapter8.influenceLastUpdateMs = 0
+    _chapter8.influenceLastCellWrites = 0
     _chapter8.lastTacticalScore = 0.0
     _chapter8.lastTacticalDanger = 0.0
     _chapter8.lastTacticalSupport = 0.0

@@ -311,17 +311,44 @@ try {
 			}
 		}
 
+		if ($Preset -eq "chapter8_perception" -or $Preset -eq "ai_lastknown_demo") {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler is enabled for perception preset."
+			}
+		}
+
 		if ($Preset -eq "team_blackboard") {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler is enabled for TeamBlackboard preset."
+			}
 			$teamBlackboardMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\]\s+PASS")
 			if ($teamBlackboardMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard shared target response."
 			}
+			$teamBlackboardScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*scanRuns=.*scanSkips=.*applyRuns=.*applySkips=")
+			if ($teamBlackboardScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats."
+			}
 		}
 
 		if ($Preset -eq "influence_map") {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler is enabled for InfluenceMap preset."
+			}
 			$influenceMatches = @($LogLinesForChecks | Select-String -Pattern "\[InfluenceMapSmoke\]\s+PASS")
 			if ($influenceMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm InfluenceMap tactical movement."
+			}
+			$influenceScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[InfluenceMapSmoke\].*updates=.*skips=.*intervalMs=")
+			if ($influenceScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm InfluenceMap scheduled update stats."
+			}
+			$teamBlackboardScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*scanRuns=.*scanSkips=.*applyRuns=.*applySkips=")
+			if ($teamBlackboardScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats for InfluenceMap preset."
 			}
 		}
 
