@@ -123,7 +123,7 @@ SamplePresets.chapter8_comms = {
 	seed = 20260530,
 	agentCount = 6,
 	lightTeamCount = 3,
-	spawnMode = "fixed",
+	spawnMode = "random",
 	targetRadius = 1,
 	spawnPoints = {
 		{ -14.442, 0.080, 21.076 },
@@ -163,7 +163,7 @@ SamplePresets.chapter8_comms = {
 		sharedMoveDistance = 2.5,
 		sightOriginHeightRatio = 0.5,
 		sightTargetHeightRatio = 0.0,
-		useOriginalRandomSpawn = false,
+		useOriginalRandomSpawn = true,
 		alternateTeams = true,
 		minSpawnDistance = 25.0,
 		minFallbackSpawnDistance = 14.0,
