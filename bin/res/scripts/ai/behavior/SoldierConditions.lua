@@ -130,5 +130,7 @@ end
 
 function SoldierConditions.RandomChance(threshold)
     -- 工厂：返回一个无参 evaluator 闭包。
-    return function() return math.random() >= (threshold or 0.5) end
+    return function(agent, bb)
+        return math.random() >= (threshold or 0.5)
+    end
 end

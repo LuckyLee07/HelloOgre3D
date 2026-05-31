@@ -113,9 +113,18 @@ function CreateLevelBox(size, position, rotation)
 	object:setRotation(rotation);
     object:setMaterial("Ground2");
     object:SetMass(0)
+    if _G.SandboxLevelBoxes ~= nil then
+        table.insert(_G.SandboxLevelBoxes, {
+            size = size,
+            position = position,
+            rotation = rotation,
+        })
+    end
 end
 
 function SandboxUtilities_CreateLevel()
+    _G.SandboxLevelBoxes = {}
+
     local level = {
         { 20, Vector3(0, -10, 0), Vector3(0, 0, 0) },
         { 20, Vector3(0, -10, 20), Vector3(0, 0, 0) },

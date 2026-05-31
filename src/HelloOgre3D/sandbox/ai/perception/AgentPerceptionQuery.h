@@ -6,10 +6,15 @@
 #include <limits>
 #include <vector>
 
+#include "OgreAxisAlignedBox.h"
+#include "OgreEntity.h"
+#include "OgreMath.h"
+#include "OgreRay.h"
 #include "OgreString.h"
 #include "OgreVector3.h"
 #include "ai/perception/AgentSpatialQuery.h"
 #include "objects/AgentObject.h"
+#include "objects/BlockObject.h"
 #include "systems/manager/SandboxMgr.h"
 
 struct AgentPerceptionOptions
@@ -63,6 +68,7 @@ public:
 	AgentPerceptionQuery(ObjectManager* objectManager, SandboxMgr* sandbox)
 		: m_defaultSpatialQuery(objectManager)
 		, m_spatialQuery(&m_defaultSpatialQuery)
+		, m_objectManager(objectManager)
 		, m_sandbox(sandbox)
 	{
 	}
@@ -70,6 +76,7 @@ public:
 	AgentPerceptionQuery(IAgentSpatialQuery* spatialQuery, SandboxMgr* sandbox)
 		: m_defaultSpatialQuery(nullptr)
 		, m_spatialQuery(spatialQuery)
+		, m_objectManager(nullptr)
 		, m_sandbox(sandbox)
 	{
 	}
@@ -116,6 +123,11 @@ public:
 		}
 
 		if (!PassesFieldOfView(owner, enemy, options.fieldOfViewDegrees))
+		{
+			return false;
+		}
+
+		if (!HasLineOfSight(owner, enemy))
 		{
 			return false;
 		}
@@ -200,6 +212,44 @@ private:
 		return forward.dotProduct(toEnemy) >= std::cos(halfRadians);
 	}
 
+	bool HasLineOfSight(AgentObject* owner, AgentObject* enemy) const
+	{
+		if (m_objectManager == nullptr || owner == nullptr || enemy == nullptr)
+			return true;
+
+		const Ogre::Vector3 origin = owner->GetPosition() + Ogre::Vector3(0.0f, 1.6f, 0.0f);
+		const Ogre::Vector3 target = enemy->GetPosition() + Ogre::Vector3(0.0f, 1.2f, 0.0f);
+		Ogre::Vector3 direction = target - origin;
+		const float length = direction.length();
+		if (length <= 0.001f)
+			return true;
+
+		direction /= length;
+		const Ogre::Ray ray(origin, direction);
+		const std::vector<BlockObject*>& blocks = m_objectManager->getAllBlocks();
+		for (BlockObject* block : blocks)
+		{
+			if (block == nullptr)
+				continue;
+			if (block->GetObjType() != BaseObject::OBJ_TYPE_BLOCK)
+				continue;
+
+			Ogre::Entity* entity = block->GetEntity();
+			if (entity == nullptr)
+				continue;
+
+			const Ogre::AxisAlignedBox box = entity->getWorldBoundingBox(true);
+			if (box.isNull())
+				continue;
+
+			const std::pair<bool, Ogre::Real> hit = Ogre::Math::intersects(ray, box);
+			if (hit.first && hit.second > 0.05f && hit.second < length - 0.05f)
+				return false;
+		}
+
+		return true;
+	}
+
 	static float ComputeConfidence(float distanceSquared, float maxDistance)
 	{
 		if (maxDistance <= 0.0f)
@@ -210,6 +260,7 @@ private:
 
 	ObjectManagerAgentSpatialQuery m_defaultSpatialQuery;
 	IAgentSpatialQuery* m_spatialQuery;
+	ObjectManager* m_objectManager;
 	SandboxMgr* m_sandbox;
 };
 

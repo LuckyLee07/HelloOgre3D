@@ -23,12 +23,77 @@ BehaviorTreeLoader = {}
 local _DEFAULT_ACTION_DIR = "res/scripts/ai/decision/actions/"
 local _unpack = unpack or table.unpack
 
-local function _PrintError(message)
-    print("BehaviorTreeLoader error: " .. tostring(message))
-end
-
 local function _GetNodeType(cfg)
     return cfg and (cfg.node or cfg.type)
+end
+
+local function _PathToString(path)
+    if path == nil or path == "" then
+        return "root"
+    end
+    return tostring(path)
+end
+
+local function _NodeLabel(cfg)
+    local nodeType = _GetNodeType(cfg)
+    if nodeType == nil then
+        return "unknown"
+    end
+    return tostring(nodeType)
+end
+
+local function _Issue(context, cfg, path, field, message, fallback, level)
+    level = level or "error"
+    local prefix = level == "warning" and "BehaviorTreeLoader warning: " or "BehaviorTreeLoader error: "
+    local text = prefix ..
+        "path=" .. _PathToString(path) ..
+        " node=" .. _NodeLabel(cfg) ..
+        " field=" .. tostring(field or "node") ..
+        " message=" .. tostring(message)
+    if fallback ~= nil and fallback ~= "" then
+        text = text .. " fallback=" .. tostring(fallback)
+    end
+    print(text)
+
+    if context ~= nil then
+        if level == "warning" then
+            context.warningCount = (context.warningCount or 0) + 1
+        else
+            context.errorCount = (context.errorCount or 0) + 1
+        end
+    end
+end
+
+local function _IssueError(context, cfg, path, field, message, fallback)
+    _Issue(context, cfg, path, field, message, fallback or "tree build fails; node is not attached", "error")
+end
+
+local function _IssueWarning(context, cfg, path, field, message, fallback)
+    _Issue(context, cfg, path, field, message, fallback, "warning")
+end
+
+local function _ChildPath(path, index)
+    return _PathToString(path) .. ".children[" .. tostring(index) .. "]"
+end
+
+local function _FieldPath(path, field)
+    return _PathToString(path) .. "." .. tostring(field)
+end
+
+local function _ListKeys(values)
+    if type(values) ~= "table" then
+        return "-"
+    end
+
+    local keys = {}
+    for key, _ in pairs(values) do
+        table.insert(keys, tostring(key))
+    end
+    table.sort(keys)
+    if #keys == 0 then
+        return "-"
+    end
+    return table.concat(keys, ",")
 end
 
 local function _BuildDebugName(cfg, nodeType)
@@ -191,7 +256,7 @@ local function _ResolveParams(params, context)
     return values
 end
 
-local function _PolicyToInt(value, defaultValue)
+local function _PolicyToInt(value, defaultValue, context, cfg, path, field, fallbackLabel)
     if value == nil then return defaultValue end
     if type(value) == "number" then return value end
 
@@ -202,10 +267,11 @@ local function _PolicyToInt(value, defaultValue)
     if text == "all" then
         return 2
     end
+    _IssueWarning(context, cfg, path, field, "unsupported policy '" .. tostring(value) .. "'", fallbackLabel)
     return defaultValue
 end
 
-local function _GetReevaluateMs(cfg, context)
+local function _GetReevaluateMs(cfg, context, path)
     local value = cfg.reevaluateMs or cfg.recheckMs or cfg.reactiveMs
     if value == nil and cfg.reevaluateSeconds ~= nil then
         value = cfg.reevaluateSeconds * 1000.0
@@ -226,7 +292,12 @@ local function _GetReevaluateMs(cfg, context)
     if type(value) == "boolean" then
         return value and 0.0 or -1.0
     end
-    return tonumber(value) or -1.0
+    local numericValue = tonumber(value)
+    if numericValue == nil then
+        _IssueWarning(context, cfg, path, "reevaluateMs", "invalid reevaluate value '" .. tostring(value) .. "'", "reactive reevaluation disabled")
+        return -1.0
+    end
+    return numericValue
 end
 
 local function _SetDebugName(node, cfg, context, nodeType)
@@ -236,11 +307,22 @@ local function _SetDebugName(node, cfg, context, nodeType)
     return node
 end
 
-local function _BindChildren(parent, children, context)
-    if not children then return true end
+local function _BindChildren(parent, children, context, path, cfg)
+    if children == nil then
+        _IssueWarning(context, cfg, path, "children", "children list is missing", "node is created with no children")
+        return true
+    end
+    if type(children) ~= "table" then
+        _IssueWarning(context, cfg, path, "children", "children must be a table", "children ignored; node is created with no children")
+        return true
+    end
+    if #children == 0 then
+        _IssueWarning(context, cfg, path, "children", "children list is empty", "node is created with no children")
+        return true
+    end
 
-    for _, childCfg in ipairs(children) do
-        local child = BehaviorTreeLoader.BuildNode(childCfg, context)
+    for index, childCfg in ipairs(children) do
+        local child = BehaviorTreeLoader.BuildNode(childCfg, context, _ChildPath(path, index))
         if child == nil then
             return false
         end
@@ -251,23 +333,24 @@ end
 
 local function _GetSingleChildConfig(cfg)
     if cfg.child ~= nil then return cfg.child end
-    if cfg.children ~= nil then return cfg.children[1] end
+    if type(cfg.children) == "table" then return cfg.children[1] end
     return nil
 end
 
-local function _BuildSingleChild(cfg, context)
+local function _BuildSingleChild(cfg, context, path)
     local childCfg = _GetSingleChildConfig(cfg)
     if childCfg == nil then
-        _PrintError(tostring(_GetNodeType(cfg)) .. " node missing child")
+        _IssueError(context, cfg, path, "child", "decorator node missing child", "tree build fails; decorator is not created")
         return nil
     end
-    return BehaviorTreeLoader.BuildNode(childCfg, context)
+    local childPath = cfg.child ~= nil and _FieldPath(path, "child") or _ChildPath(path, 1)
+    return BehaviorTreeLoader.BuildNode(childCfg, context, childPath)
 end
 
-local function _CreateAction(cfg, context)
+local function _CreateAction(cfg, context, path)
     local key = cfg.action or cfg.name or cfg.script
     if key == nil then
-        _PrintError("Action node missing action/name/script")
+        _IssueError(context, cfg, path, "action", "Action node missing action/name/script")
         return nil
     end
 
@@ -280,7 +363,7 @@ local function _CreateAction(cfg, context)
 
     local scriptName = cfg.script or context.actions[key]
     if scriptName == nil then
-        _PrintError("Action script not found: " .. tostring(key))
+        _IssueError(context, cfg, path, "script", "Action script not found for key '" .. tostring(key) .. "'; known actions=" .. _ListKeys(context.actions))
         return nil
     end
 
@@ -295,7 +378,7 @@ local function _CreateAction(cfg, context)
     return action
 end
 
-local function _CreateConditionEvaluator(cfg, context)
+local function _CreateConditionEvaluator(cfg, context, path)
     local condition = cfg.condition or cfg.name
 
     if type(condition) == "function" then
@@ -305,17 +388,23 @@ local function _CreateConditionEvaluator(cfg, context)
     end
 
     if type(condition) ~= "string" then
-        _PrintError("Condition node missing condition/name")
+        _IssueError(context, cfg, path, "condition", "Condition node missing condition/name")
         return nil
     end
 
     local fn = context.conditions and context.conditions[condition]
     if type(fn) ~= "function" then
-        _PrintError("Condition function not found: " .. tostring(condition))
+        _IssueError(context, cfg, path, "condition", "Condition function not found '" .. tostring(condition) .. "'; known conditions=" .. _ListKeys(context.conditions))
         return nil
     end
 
     if cfg.params ~= nil then
+        if type(cfg.params) ~= "table" then
+            _IssueWarning(context, cfg, path, "params", "params must be a table", "condition is called without params")
+            return function()
+                return fn(context.agent, context.blackboard, cfg)
+            end
+        end
         return function()
             local evaluator = fn(_unpack(_ResolveParams(cfg.params, context)))
             if type(evaluator) == "function" then
@@ -330,8 +419,8 @@ local function _CreateConditionEvaluator(cfg, context)
     end
 end
 
-local function _CreateCondition(cfg, context)
-    local evaluator = _CreateConditionEvaluator(cfg, context)
+local function _CreateCondition(cfg, context, path)
+    local evaluator = _CreateConditionEvaluator(cfg, context, path)
     if evaluator == nil then return nil end
 
     local node = context.driver:NewCondition()
@@ -340,50 +429,55 @@ local function _CreateCondition(cfg, context)
     return node
 end
 
-function BehaviorTreeLoader.BuildNode(cfg, context)
+function BehaviorTreeLoader.BuildNode(cfg, context, path)
+    path = _PathToString(path)
     if type(cfg) ~= "table" then
-        _PrintError("node config must be a table")
+        _IssueError(context, { node = "unknown" }, path, "node", "node config must be a table")
         return nil
     end
 
     local nodeType = _GetNodeType(cfg)
+    if nodeType == nil then
+        _IssueError(context, cfg, path, "node", "node type is missing")
+        return nil
+    end
 
     if nodeType == "Sequence" then
-        local node = context.driver:NewSequence(_GetReevaluateMs(cfg, context))
+        local node = context.driver:NewSequence(_GetReevaluateMs(cfg, context, path))
         _SetDebugName(node, cfg, context, nodeType)
-        if not _BindChildren(node, cfg.children, context) then return nil end
+        if not _BindChildren(node, cfg.children, context, path, cfg) then return nil end
         return node
     end
 
     if nodeType == "Selector" then
-        local node = context.driver:NewSelector(_GetReevaluateMs(cfg, context))
+        local node = context.driver:NewSelector(_GetReevaluateMs(cfg, context, path))
         _SetDebugName(node, cfg, context, nodeType)
-        if not _BindChildren(node, cfg.children, context) then return nil end
+        if not _BindChildren(node, cfg.children, context, path, cfg) then return nil end
         return node
     end
 
     if nodeType == "Parallel" then
-        local successPolicy = _PolicyToInt(cfg.successPolicy or cfg.success, 2)
-        local failurePolicy = _PolicyToInt(cfg.failurePolicy or cfg.failure, 1)
+        local successPolicy = _PolicyToInt(cfg.successPolicy or cfg.success, 2, context, cfg, path, "successPolicy", "uses default successPolicy=all")
+        local failurePolicy = _PolicyToInt(cfg.failurePolicy or cfg.failure, 1, context, cfg, path, "failurePolicy", "uses default failurePolicy=one")
         local node = context.driver:NewParallel(successPolicy, failurePolicy)
         _SetDebugName(node, cfg, context, nodeType)
-        if not _BindChildren(node, cfg.children, context) then return nil end
+        if not _BindChildren(node, cfg.children, context, path, cfg) then return nil end
         return node
     end
 
     if nodeType == "Random" or nodeType == "RandomSelector" then
         local node = context.driver:NewRandomSelector()
         _SetDebugName(node, cfg, context, "Random")
-        if not _BindChildren(node, cfg.children, context) then return nil end
+        if not _BindChildren(node, cfg.children, context, path, cfg) then return nil end
         return node
     end
 
     if nodeType == "Condition" then
-        return _CreateCondition(cfg, context)
+        return _CreateCondition(cfg, context, path)
     end
 
     if nodeType == "Action" then
-        return _CreateAction(cfg, context)
+        return _CreateAction(cfg, context, path)
     end
 
     if nodeType == "Wait" then
@@ -391,43 +485,47 @@ function BehaviorTreeLoader.BuildNode(cfg, context)
         if waitMs == nil and cfg.wait ~= nil then waitMs = cfg.wait * 1000.0 end
         if cfg.seconds ~= nil then waitMs = cfg.seconds * 1000.0 end
         waitMs = _ResolveValue(waitMs, context)
-        if waitMs == nil then waitMs = 0.0 end
-        local node = context.driver:NewWait(waitMs)
+        local numericWaitMs = tonumber(waitMs)
+        if numericWaitMs == nil then
+            _IssueWarning(context, cfg, path, "waitMs", "missing or invalid wait duration '" .. tostring(waitMs) .. "'", "uses waitMs=0")
+            numericWaitMs = 0.0
+        end
+        local node = context.driver:NewWait(numericWaitMs)
         return _SetDebugName(node, cfg, context, nodeType)
     end
 
     if nodeType == "Inverter" or nodeType == "Invert" then
-        local child = _BuildSingleChild(cfg, context)
+        local child = _BuildSingleChild(cfg, context, path)
         if child == nil then return nil end
         local node = context.driver:NewInverter(child)
         return _SetDebugName(node, cfg, context, nodeType)
     end
 
     if nodeType == "ForceSuccess" or nodeType == "Success" or nodeType == "Succeeder" then
-        local child = _BuildSingleChild(cfg, context)
+        local child = _BuildSingleChild(cfg, context, path)
         if child == nil then return nil end
         local node = context.driver:NewForceSuccess(child)
         return _SetDebugName(node, cfg, context, nodeType)
     end
 
     if nodeType == "ForceFailure" or nodeType == "Failure" or nodeType == "Failer" then
-        local child = _BuildSingleChild(cfg, context)
+        local child = _BuildSingleChild(cfg, context, path)
         if child == nil then return nil end
         local node = context.driver:NewForceFailure(child)
         return _SetDebugName(node, cfg, context, nodeType)
     end
 
-    _PrintError("unsupported node type: " .. tostring(nodeType))
+    _IssueError(context, cfg, path, "node", "unsupported node type '" .. tostring(nodeType) .. "'")
     return nil
 end
 
 function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
     if type(config) ~= "table" then
-        _PrintError("tree config must be a table")
+        _IssueError(nil, { node = "Tree" }, "root", "config", "tree config must be a table")
         return nil
     end
     if driver == nil then
-        _PrintError("driver is nil")
+        _IssueError(nil, { node = "Tree" }, "root", "driver", "driver is nil")
         return nil
     end
 
@@ -439,6 +537,8 @@ function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
         actions = config.actions or {},
         actionDir = config.actionDir or _DEFAULT_ACTION_DIR,
         actionCache = {},
+        errorCount = 0,
+        warningCount = 0,
     }
 
     if config.debugTrace ~= nil and driver.SetDebugTraceEnabled ~= nil then
@@ -452,10 +552,16 @@ function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
     end
 
     local rootConfig = config.tree or config.root or config
-    local root = BehaviorTreeLoader.BuildNode(rootConfig, context)
-    if root == nil then return nil end
+    local root = BehaviorTreeLoader.BuildNode(rootConfig, context, "root")
+    if root == nil then
+        print("BehaviorTreeLoader build failed: errors=" .. tostring(context.errorCount) .. " warnings=" .. tostring(context.warningCount))
+        return nil
+    end
 
     local tree = driver:NewTree()
     tree:SetRoot(root)
+    if context.warningCount > 0 then
+        print("BehaviorTreeLoader build completed with warnings: warnings=" .. tostring(context.warningCount))
+    end
     return tree
 end

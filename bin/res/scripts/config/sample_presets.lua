@@ -61,7 +61,15 @@ SamplePresets.ai_perf_smoke = {
 	},
 }
 
-SamplePresets.ai_lastknown_demo = {
+local chapter8PerceptionDemoConfig = {
+	enabled = true,
+	targetIndex = 2,
+	relocateAfterMs = 2200,
+	relocateTo = { 48, 0, 24 },
+	freezeTarget = true,
+}
+
+SamplePresets.chapter8_perception = {
 	seed = 20260530,
 	agentCount = 2,
 	lightTeamCount = 1,
@@ -83,20 +91,15 @@ SamplePresets.ai_lastknown_demo = {
 			["perception.requirePath"] = true,
 		},
 		strings = {
-			["debug.demo"] = "ai_lastknown_demo",
+			["debug.demo"] = "chapter8_perception",
 		},
 	},
 	behaviorTree = {
 		debugTrace = true,
 		debugTracePrint = false,
 	},
-	lastKnownDemo = {
-		enabled = true,
-		targetIndex = 2,
-		relocateAfterMs = 2200,
-		relocateTo = { 48, 0, 24 },
-		freezeTarget = true,
-	},
+	perceptionDemo = chapter8PerceptionDemoConfig,
+	lastKnownDemo = chapter8PerceptionDemoConfig,
 	aiScheduler = {
 		enabled = false,
 		tickMs = 50,
@@ -109,10 +112,82 @@ SamplePresets.ai_lastknown_demo = {
 	},
 }
 
+SamplePresets.ai_lastknown_demo = SamplePresets.chapter8_perception
+
 SamplePresets.Sandbox6 = SamplePresets.default
 SamplePresets.Sandbox7 = SamplePresets.default
 SamplePresets.Sandbox8 = SamplePresets.default
-SamplePresets.Sandbox10 = SamplePresets.ai_lastknown_demo
+SamplePresets.Sandbox10 = SamplePresets.chapter8_perception
+
+SamplePresets.chapter8_comms = {
+	seed = 20260530,
+	agentCount = 6,
+	lightTeamCount = 3,
+	spawnMode = "random",
+	targetRadius = 1,
+	spawnPoints = {
+		{ -5, 0, 13 },
+		{ 5, 0, 4 },
+		{ 18.5, 0, 4 },
+		{ 18.5, 0, 17 },
+		{ 15, 0, 21 },
+		{ 19, 0, 25 },
+	},
+	aiBlackboard = {
+		floats = {
+			["perception.visionRange"] = 0.0,
+			["perception.fieldOfViewDegrees"] = 90.0,
+		},
+		ints = {
+			["perception.visionIntervalMs"] = 1,
+		},
+		bools = {
+			["perception.requirePath"] = true,
+		},
+		strings = {
+			["debug.demo"] = "chapter8_comms",
+		},
+	},
+	behaviorTree = {
+		debugTrace = true,
+		debugTracePrint = false,
+	},
+	chapter8Comms = {
+		enabled = true,
+		cameraPosition = { -30, 18, -17 },
+		cameraOrientation = { -146, -40, -157 },
+		teamMemoryTtlMs = 2500,
+		eventTtlMs = 1400,
+		broadcastIntervalMs = 500,
+		sharedMoveDistance = 2.5,
+		useOriginalRandomSpawn = true,
+		alternateTeams = true,
+		minSpawnDistance = 25.0,
+		minFallbackSpawnDistance = 14.0,
+		minSpawnY = -0.5,
+		maxSpawnAttempts = 4096,
+		agentMaxSpeed = nil,
+		keepAgentsInDemoStage = false,
+		showDemoPanel = false,
+		drawAgentMarkers = false,
+		drawVisionRange = false,
+		drawTeamBroadcasts = false,
+		drawTeamMemories = false,
+		drawDirectSightLines = true,
+	},
+	aiScheduler = {
+		enabled = false,
+		tickMs = 50,
+		maxPerFrame = 8,
+	},
+	diagnostics = {
+		maxObjects = 10,
+		maxResources = 6,
+		maxEvents = 10,
+	},
+}
+
+SamplePresets.Sandbox11 = SamplePresets.chapter8_comms
 
 SamplePresets.Sandbox9 = {
 	seed = 20260530,

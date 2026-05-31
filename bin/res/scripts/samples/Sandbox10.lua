@@ -1,12 +1,12 @@
 -- Sandbox10.lua
--- Sandbox8-derived BT scenario focused on lastKnown memory demonstration.
+-- Chapter 8 Perception sample: VisionSensor -> MemoryStore -> BT lastKnown search.
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
 
-local textSize = {w = 330, h = 260}
+local textSize = {w = 360, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "[Sandbox10 - LastKnown Memory]" .. GUI.MarkupNewline ..
+        "[Sandbox10 - Chapter 8 Perception]" .. GUI.MarkupNewline ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
         "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
         "Hold RMB: to look" .. GUI.MarkupNewline ..
@@ -17,13 +17,13 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "F6: toggle camera information" .. GUI.MarkupNewline ..
         "F7: toggle physics debug" .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
-        "BT perception -> memory -> lastKnown search" .. GUI.MarkupNewline ..
-        "(fixed two-agent demo preset)";
+        "VisionSensor -> MemoryStore -> BT" .. GUI.MarkupNewline ..
+        "shows current sight vs remembered target";
 
 local _agents = {}
 local _demoPanel = nil
-local _demoPanelSize = {w = 430, h = 210}
-local _lastKnownDemo = {
+local _demoPanelSize = {w = 470, h = 245}
+local _perceptionDemo = {
     enabled = false,
     elapsedMs = 0,
     relocated = false,
@@ -57,7 +57,7 @@ local function _GetPursuer()
 end
 
 local function _GetDemoTarget()
-    local config = _lastKnownDemo.config or {}
+    local config = _perceptionDemo.config or {}
     return _agents[tonumber(config.targetIndex) or 2]
 end
 
@@ -73,6 +73,42 @@ local function _GetStringValue(bb, key, defaultValue)
     return bb:GetString(key)
 end
 
+local function _GetIntValue(bb, key, defaultValue)
+    if bb == nil or not bb:Has(key) then
+        return defaultValue
+    end
+    return bb:GetInt(key, defaultValue or 0)
+end
+
+local function _GetFloatValue(bb, key, defaultValue)
+    if bb == nil or not bb:Has(key) then
+        return defaultValue
+    end
+    return bb:GetFloat(key, defaultValue or 0.0)
+end
+
+local function _GetVisionRange(bb)
+    return _GetFloatValue(bb, "perception.visionRange", 12.0)
+end
+
+local function _GetMemoryState(bb)
+    if bb == nil then
+        return "none", "-", "-"
+    end
+    if bb:GetBool("memory.snapshot.hasLastKnownEnemy", false) then
+        return "active",
+            tostring(_GetIntValue(bb, "memory.snapshot.lastKnownEnemyAgeMs", -1)) .. "ms",
+            string.format("%.2f", _GetFloatValue(bb, "memory.snapshot.lastKnownEnemyConfidence", 0.0))
+    end
+    if bb:Has("debug.lastKnownSearchEnemyPos") then
+        return "BT search snapshot", "-", "-"
+    end
+    if _perceptionDemo.relocated then
+        return "expired or empty", "-", "-"
+    end
+    return "waiting for vision", "-", "-"
+end
+
 local function _CreateDemoPanel()
     local panel = Sandbox:CreateUIFrame()
     panel:setPosition(Vector2(20, 20))
@@ -83,23 +119,24 @@ local function _CreateDemoPanel()
 end
 
 local function _SetPhase(phase)
-    _lastKnownDemo.phase = phase
+    if _perceptionDemo.phase == phase then return end
+    _perceptionDemo.phase = phase
     for _, agent in ipairs(_agents) do
         _SetAgentDemoPhase(agent, phase)
     end
 end
 
-local function _InitializeLastKnownDemo(sampleName)
+local function _InitializePerceptionDemo(sampleName)
     local preset = ConfigManager:GetSamplePreset(sampleName)
-    local config = preset.lastKnownDemo or {}
-    _lastKnownDemo.enabled = config.enabled == true
-    _lastKnownDemo.elapsedMs = 0
-    _lastKnownDemo.relocated = false
-    _lastKnownDemo.lastKnownPos = nil
-    _lastKnownDemo.relocatedPos = nil
-    _lastKnownDemo.config = config
+    local config = preset.perceptionDemo or preset.lastKnownDemo or {}
+    _perceptionDemo.enabled = config.enabled == true
+    _perceptionDemo.elapsedMs = 0
+    _perceptionDemo.relocated = false
+    _perceptionDemo.lastKnownPos = nil
+    _perceptionDemo.relocatedPos = nil
+    _perceptionDemo.config = config
 
-    if not _lastKnownDemo.enabled then return end
+    if not _perceptionDemo.enabled then return end
     local targetIndex = tonumber(config.targetIndex) or 2
     local target = _agents[targetIndex]
     if target ~= nil and config.freezeTarget == true then
@@ -107,17 +144,17 @@ local function _InitializeLastKnownDemo(sampleName)
         target:SetVelocity(Vector3(0, 0, 0))
     end
     _SetPhase("see_chase")
-    print("[LastKnownDemo] armed", "targetIndex=", targetIndex, "relocateAfterMs=", tonumber(config.relocateAfterMs) or 0)
+    print("[Chapter8Perception] armed", "targetIndex=", targetIndex, "relocateAfterMs=", tonumber(config.relocateAfterMs) or 0)
 end
 
-local function _RelocateLastKnownTarget()
-    if not _lastKnownDemo.enabled or _lastKnownDemo.relocated then return end
-    local config = _lastKnownDemo.config or {}
+local function _RelocatePerceptionTarget()
+    if not _perceptionDemo.enabled or _perceptionDemo.relocated then return end
+    local config = _perceptionDemo.config or {}
     local target = _agents[tonumber(config.targetIndex) or 2]
     local relocateTo = _PointToVector3(config.relocateTo)
     if target == nil or relocateTo == nil then return end
 
-    _lastKnownDemo.lastKnownPos = target:GetPosition()
+    _perceptionDemo.lastKnownPos = target:GetPosition()
     local position = Sandbox:FindClosestPoint("default", relocateTo)
     position.y = position.y + target:GetHeight() * 0.5
     target:setPosition(position)
@@ -127,15 +164,15 @@ local function _RelocateLastKnownTarget()
         target:SetMaxSpeed(0)
     end
 
-    _lastKnownDemo.relocated = true
-    _lastKnownDemo.relocatedPos = position
+    _perceptionDemo.relocated = true
+    _perceptionDemo.relocatedPos = position
     _SetPhase("target_vanished")
-    print("[LastKnownDemo] target relocated", "id=", target:GetObjId(), "pos=", position.x, position.y, position.z)
+    print("[Chapter8Perception] target relocated", "id=", target:GetObjId(), "pos=", position.x, position.y, position.z)
 end
 
 local function _ResolveLastKnownPos(bb)
     if bb == nil then
-        return _lastKnownDemo.lastKnownPos
+        return _perceptionDemo.lastKnownPos
     end
     if bb:GetBool("memory.snapshot.hasLastKnownEnemy", false) then
         return bb:GetVec3("memory.snapshot.lastKnownEnemyPos")
@@ -143,22 +180,22 @@ local function _ResolveLastKnownPos(bb)
     if bb:Has("debug.lastKnownSearchEnemyPos") then
         return bb:GetVec3("debug.lastKnownSearchEnemyPos")
     end
-    return _lastKnownDemo.lastKnownPos
+    return _perceptionDemo.lastKnownPos
 end
 
 local function _RefreshPhaseFromBlackboard(bb)
-    if not _lastKnownDemo.relocated then
-        _lastKnownDemo.phase = "see_chase"
+    if not _perceptionDemo.relocated then
+        _SetPhase("see_chase")
         return
     end
 
     local action = _GetStringValue(bb, "__bt.currentAction", "")
     if action == "moveToLastKnownEnemy" then
-        _lastKnownDemo.phase = "search_last_known"
+        _SetPhase("memory_guides_search")
     elseif bb ~= nil and bb:Has("memory.search.completedEnemyId") then
-        _lastKnownDemo.phase = "search_done"
+        _SetPhase("search_done")
     else
-        _lastKnownDemo.phase = "target_vanished"
+        _SetPhase("target_vanished")
     end
 end
 
@@ -170,10 +207,10 @@ local function _BuildDemoPanelText()
 
     local phaseTitle = {
         setup = "SETUP",
-        see_chase = "1 SEE ENEMY -> CHASE",
-        target_vanished = "2 TARGET VANISHES",
-        search_last_known = "3 SEARCH LAST KNOWN",
-        search_done = "4 SEARCH DONE",
+        see_chase = "1 VISION HAS TARGET",
+        target_vanished = "2 VISION LOST TARGET",
+        memory_guides_search = "3 MEMORY GUIDES SEARCH",
+        search_done = "4 MEMORY SEARCH DONE",
     }
     local action = _GetStringValue(bb, "__bt.currentAction", "-")
     local sense = "none"
@@ -182,26 +219,29 @@ local function _BuildDemoPanelText()
     end
     local lastKnownPos = _ResolveLastKnownPos(bb)
     local realTargetPos = target ~= nil and target:GetPosition() or nil
+    local memoryState, memoryAge, memoryConfidence = _GetMemoryState(bb)
+    local visionRange = _GetVisionRange(bb)
 
     local color = GUI.MarkupColor.White
-    if _lastKnownDemo.phase == "see_chase" then
+    if _perceptionDemo.phase == "see_chase" then
         color = GUI.MarkupColor.Green
-    elseif _lastKnownDemo.phase == "target_vanished" then
+    elseif _perceptionDemo.phase == "target_vanished" then
         color = GUI.MarkupColor.Orange
-    elseif _lastKnownDemo.phase == "search_last_known" then
+    elseif _perceptionDemo.phase == "memory_guides_search" then
         color = GUI.MarkupColor.Yellow
     end
 
     return GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "[Sandbox10 readable AI demo]" .. GUI.MarkupNewline ..
-        color .. "Stage: " .. tostring(phaseTitle[_lastKnownDemo.phase] or _lastKnownDemo.phase) .. GUI.MarkupColor.White .. GUI.MarkupNewline ..
-        "Meaning: current sight can be empty, memory still guides BT" .. GUI.MarkupNewline ..
+        "[Sandbox10 - Chapter 8 Perception]" .. GUI.MarkupNewline ..
+        color .. "Stage: " .. tostring(phaseTitle[_perceptionDemo.phase] or _perceptionDemo.phase) .. GUI.MarkupColor.White .. GUI.MarkupNewline ..
+        "Goal: separate current vision from remembered evidence" .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
-        "Pursuer: green marker" .. GUI.MarkupNewline ..
-        "Real target: red marker after vanish" .. GUI.MarkupNewline ..
-        "Last known: yellow ring + pillar" .. GUI.MarkupNewline ..
+        "VisionSensor: blue range ring, green line when visible" .. GUI.MarkupNewline ..
+        "MemoryStore: yellow last-known ring + pillar" .. GUI.MarkupNewline ..
+        "BT: searches memory when vision target is none" .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
-        "Sense target: " .. sense .. GUI.MarkupNewline ..
+        "Vision target: " .. sense .. "  range: " .. string.format("%.1f", visionRange) .. GUI.MarkupNewline ..
+        "Memory: " .. memoryState .. "  age: " .. memoryAge .. "  conf: " .. memoryConfidence .. GUI.MarkupNewline ..
         "Last known: " .. _FormatVec3(lastKnownPos) .. GUI.MarkupNewline ..
         "Real target: " .. _FormatVec3(realTargetPos) .. GUI.MarkupNewline ..
         "BT action: " .. tostring(action)
@@ -240,9 +280,9 @@ local function _DrawDemoGuides()
 
     if pursuer ~= nil then
         local pos = pursuer:GetPosition()
-        DebugDrawer:drawCircle(pos + Vector3(0, 0.1, 0), 12.0, 48, UtilColors.Blue, false)
+        DebugDrawer:drawCircle(pos + Vector3(0, 0.1, 0), _GetVisionRange(bb), 48, UtilColors.Blue, false)
     end
-    if pursuer ~= nil and target ~= nil and not _lastKnownDemo.relocated then
+    if pursuer ~= nil and target ~= nil and not _perceptionDemo.relocated then
         DebugDrawer:drawLine(pursuer:GetPosition() + Vector3(0, 1.6, 0), target:GetPosition() + Vector3(0, 1.6, 0), UtilColors.Green)
     end
     if lastKnownPos ~= nil then
@@ -251,8 +291,8 @@ local function _DrawDemoGuides()
             DebugDrawer:drawLine(pursuer:GetPosition() + Vector3(0, 1.2, 0), lastKnownPos + Vector3(0, 1.2, 0), UtilColors.Yellow)
         end
     end
-    if _lastKnownDemo.relocatedPos ~= nil and lastKnownPos ~= nil then
-        DebugDrawer:drawLine(lastKnownPos + Vector3(0, 0.6, 0), _lastKnownDemo.relocatedPos + Vector3(0, 0.6, 0), UtilColors.Red)
+    if _perceptionDemo.relocatedPos ~= nil and lastKnownPos ~= nil then
+        DebugDrawer:drawLine(lastKnownPos + Vector3(0, 0.6, 0), _perceptionDemo.relocatedPos + Vector3(0, 0.6, 0), UtilColors.Red)
     end
 end
 
@@ -326,17 +366,17 @@ function Sandbox_Initialize()
         ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, i, "default")
     end
 
-    _InitializeLastKnownDemo(sampleName)
+    _InitializePerceptionDemo(sampleName)
 end
 
 function Sandbox_Update(deltaTimeInMillis)
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
-    if _lastKnownDemo.enabled and not _lastKnownDemo.relocated then
-        _lastKnownDemo.elapsedMs = _lastKnownDemo.elapsedMs + deltaTimeInMillis
-        local relocateAfterMs = tonumber(_lastKnownDemo.config and _lastKnownDemo.config.relocateAfterMs) or 0
-        if _lastKnownDemo.elapsedMs >= relocateAfterMs then
-            _RelocateLastKnownTarget()
+    if _perceptionDemo.enabled and not _perceptionDemo.relocated then
+        _perceptionDemo.elapsedMs = _perceptionDemo.elapsedMs + deltaTimeInMillis
+        local relocateAfterMs = tonumber(_perceptionDemo.config and _perceptionDemo.config.relocateAfterMs) or 0
+        if _perceptionDemo.elapsedMs >= relocateAfterMs then
+            _RelocatePerceptionTarget()
         end
     end
     _DrawDemoGuides()

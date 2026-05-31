@@ -10,7 +10,8 @@ param(
 		"Sandbox7",
 		"Sandbox8",
 		"Sandbox9",
-		"Sandbox10"
+		"Sandbox10",
+		"Sandbox11"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -52,8 +53,11 @@ $SelectedSample = $Sample
 if ($SelectedSample -eq "Default") {
 	$SelectedSample = "Sandbox8"
 }
-if ($Preset -eq "ai_lastknown_demo" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox10"
+}
+if ($Preset -eq "chapter8_comms" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox11"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
 
@@ -120,7 +124,10 @@ if ($AiScheduler) {
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
 }
-if ($Preset -eq "ai_lastknown_demo" -and $Seconds -lt 70) {
+if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "chapter8_comms" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
