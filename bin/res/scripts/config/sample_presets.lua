@@ -23,6 +23,17 @@ local fixedSpawnPoints = {
 	{ 48, 2, 16 },
 }
 
+local function cloneTable(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local result = {}
+	for k, v in pairs(value) do
+		result[k] = cloneTable(v)
+	end
+	return result
+end
+
 SamplePresets.default = {
 	seed = 20260524,
 	agentCount = 7,
@@ -191,6 +202,15 @@ SamplePresets.chapter8_comms = {
 }
 
 SamplePresets.Sandbox11 = SamplePresets.chapter8_comms
+
+SamplePresets.team_blackboard = cloneTable(SamplePresets.chapter8_comms)
+SamplePresets.team_blackboard.aiBlackboard.strings["debug.demo"] = "team_blackboard"
+SamplePresets.team_blackboard.chapter8Comms.showDemoPanel = true
+SamplePresets.team_blackboard.chapter8Comms.drawAgentMarkers = true
+SamplePresets.team_blackboard.chapter8Comms.drawTeamBroadcasts = true
+SamplePresets.team_blackboard.chapter8Comms.drawTeamMemories = true
+
+SamplePresets.Sandbox12 = SamplePresets.team_blackboard
 
 SamplePresets.Sandbox9 = {
 	seed = 20260530,

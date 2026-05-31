@@ -11,7 +11,8 @@ param(
 		"Sandbox8",
 		"Sandbox9",
 		"Sandbox10",
-		"Sandbox11"
+		"Sandbox11",
+		"Sandbox12"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -58,6 +59,9 @@ if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and
 }
 if ($Preset -eq "chapter8_comms" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox11"
+}
+if ($Preset -eq "team_blackboard" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox12"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent
 
@@ -128,6 +132,9 @@ if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and
 	$Seconds = 70
 }
 if ($Preset -eq "chapter8_comms" -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "team_blackboard" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
