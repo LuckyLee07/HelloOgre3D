@@ -47,8 +47,10 @@ public:
 	void SetFactTtlMs(int ttlMs);
 	int GetFactTtlMs() const { return m_factTtlMs; }
 
+	bool RememberEnemySighting(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, long long lastSeenMs, float confidence);
 	void SyncFromAgents(const std::vector<AgentObject*>& agents, int deltaMs);
 	bool GetBestEnemyFact(int teamId, EnemySightingFact& outFact) const;
+	bool GetBestEnemyFact(int teamId, int ignoredReporterId, EnemySightingFact& outFact) const;
 	const Stats& GetStats() const { return m_stats; }
 	std::string BuildDebugSummary() const;
 	void PublishTracyCounters() const;

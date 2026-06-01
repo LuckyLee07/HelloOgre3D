@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sun May 31 21:40:41 2026.
+** Generated automatically by tolua++-1.0.92 on Mon Jun  1 17:33:50 2026.
 */
 
 #ifndef __cplusplus
@@ -7544,6 +7544,249 @@ static int tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00(lua_S
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: clearTeamBlackboardFacts of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearTeamBlackboardFacts00
+static int tolua_SandboxToLua_ObjectManager_clearTeamBlackboardFacts00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearTeamBlackboardFacts'", NULL);
+#endif
+  {
+   self->clearTeamBlackboardFacts();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearTeamBlackboardFacts'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: configureTeamBlackboard of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_configureTeamBlackboard00
+static int tolua_SandboxToLua_ObjectManager_configureTeamBlackboard00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int ttlMs = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTeamBlackboard'", NULL);
+#endif
+  {
+   self->configureTeamBlackboard(ttlMs);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTeamBlackboard'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: rememberTeamEnemyFact of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_rememberTeamEnemyFact00
+static int tolua_SandboxToLua_ObjectManager_rememberTeamEnemyFact00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,8,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int teamId = ((int)  tolua_tonumber(tolua_S,2,0));
+  int reporterId = ((int)  tolua_tonumber(tolua_S,3,0));
+  int targetId = ((int)  tolua_tonumber(tolua_S,4,0));
+  const Ogre::Vector3* targetPosition = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+  int lastSeenMs = ((int)  tolua_tonumber(tolua_S,6,0));
+  float confidence = ((float)  tolua_tonumber(tolua_S,7,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'rememberTeamEnemyFact'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->rememberTeamEnemyFact(teamId,reporterId,targetId,*targetPosition,lastSeenMs,confidence);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'rememberTeamEnemyFact'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: writeBestTeamEnemyFactToBlackboard of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_writeBestTeamEnemyFactToBlackboard00
+static int tolua_SandboxToLua_ObjectManager_writeBestTeamEnemyFactToBlackboard00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"AgentObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  AgentObject* agent = ((AgentObject*)  tolua_tousertype(tolua_S,2,0));
+  const std::string keyPrefix = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+  bool allowOwnReport = ((bool)  tolua_toboolean(tolua_S,4,false));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'writeBestTeamEnemyFactToBlackboard'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->writeBestTeamEnemyFactToBlackboard(agent,keyPrefix,allowOwnReport);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)keyPrefix);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'writeBestTeamEnemyFactToBlackboard'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTeamBlackboardFactCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTeamBlackboardFactCount00
+static int tolua_SandboxToLua_ObjectManager_getTeamBlackboardFactCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTeamBlackboardFactCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTeamBlackboardFactCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardFactCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTeamBlackboardReportCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTeamBlackboardReportCount00
+static int tolua_SandboxToLua_ObjectManager_getTeamBlackboardReportCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTeamBlackboardReportCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTeamBlackboardReportCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardReportCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildTeamBlackboardDebugSummary of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00
+static int tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildTeamBlackboardDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildTeamBlackboardDebugSummary();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildTeamBlackboardDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: buildAiEventDebugSummary of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00
 static int tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00(lua_State* tolua_S)
@@ -11235,6 +11478,13 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"buildAiDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00);
    tolua_function(tolua_S,"configureAiScheduler",tolua_SandboxToLua_ObjectManager_configureAiScheduler00);
    tolua_function(tolua_S,"buildAiSchedulerDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiSchedulerDebugSummary00);
+   tolua_function(tolua_S,"clearTeamBlackboardFacts",tolua_SandboxToLua_ObjectManager_clearTeamBlackboardFacts00);
+   tolua_function(tolua_S,"configureTeamBlackboard",tolua_SandboxToLua_ObjectManager_configureTeamBlackboard00);
+   tolua_function(tolua_S,"rememberTeamEnemyFact",tolua_SandboxToLua_ObjectManager_rememberTeamEnemyFact00);
+   tolua_function(tolua_S,"writeBestTeamEnemyFactToBlackboard",tolua_SandboxToLua_ObjectManager_writeBestTeamEnemyFactToBlackboard00);
+   tolua_function(tolua_S,"getTeamBlackboardFactCount",tolua_SandboxToLua_ObjectManager_getTeamBlackboardFactCount00);
+   tolua_function(tolua_S,"getTeamBlackboardReportCount",tolua_SandboxToLua_ObjectManager_getTeamBlackboardReportCount00);
+   tolua_function(tolua_S,"buildTeamBlackboardDebugSummary",tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00);
    tolua_function(tolua_S,"buildAiEventDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00);
    tolua_function(tolua_S,"runAiEventScopeSelfTest",tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00);
    tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);

@@ -291,6 +291,7 @@ score = objective + support + cover - threat - crowd
 
 - [ ] 梳理 `TeamBlackboard.lua` 的现有 API。
 - [ ] 设计 C++ `TeamBlackboardService` fact schema。
+- [x] 接入第一版 Lua facade：`TeamBlackboard.lua` 保持旧 API，同时把 `EnemySighted` 同步到 C++ service，并提供 C++ fact count / report count / best fact 写回 blackboard 的兼容入口。
 - [ ] 梳理 `InfluenceMap.lua` 的 sample 依赖和 debug 输出。
 - [ ] 设计 C++ `InfluenceMapSystem` layer schema。
 

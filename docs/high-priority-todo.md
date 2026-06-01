@@ -101,6 +101,7 @@
 - [ ] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
 - [ ] `AgentPerceptionSystem`：把视觉、听觉、危险等感知收口到 C++ 批量系统，Lua 只读结果。
 - [ ] `TeamBlackboardService`：把 Lua `TeamBlackboard` 迁移为 C++ service，支持 fact TTL、priority、统计和 Lua facade。
+  - [x] 第一版 C++ service + Lua facade：Lua `EnemySighted` 会同步写入 C++ facts，Lua 可把最佳团队敌情写回 agent blackboard，并在 `Sandbox12` smoke 中验收 `cppFacts/cppReports/cppApplies`。
 - [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
 - [ ] AI debug / RuntimeDiag：统一输出 perception、memory、team facts、influence score、BT trace 和 scheduler stats。

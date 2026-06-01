@@ -97,6 +97,12 @@ namespace
 		return text == "0" || text == "false" || text == "FALSE" || text == "False" || text == "off" || text == "OFF";
 	}
 
+	std::string MakeBlackboardKey(const std::string& prefix, const char* suffix)
+	{
+		const std::string safePrefix = prefix.empty() ? "team.cpp" : prefix;
+		return safePrefix + "." + suffix;
+	}
+
 	void AppendSelfTestFailure(std::ostringstream& stream, const std::string& text, int& failures)
 	{
 		stream << "\n[BlackboardSelfTest] failure: " << text;
@@ -451,6 +457,74 @@ void ObjectManager::configureAiScheduler(bool enabled, int tickIntervalMs, int m
 	if (m_aiScheduler == nullptr)
 		return;
 	m_aiScheduler->Configure(enabled, tickIntervalMs, maxTicksPerFrame);
+}
+
+void ObjectManager::clearTeamBlackboardFacts()
+{
+	if (m_teamBlackboardService != nullptr)
+		m_teamBlackboardService->Clear();
+}
+
+void ObjectManager::configureTeamBlackboard(int ttlMs)
+{
+	if (m_teamBlackboardService != nullptr)
+		m_teamBlackboardService->SetFactTtlMs(ttlMs);
+}
+
+bool ObjectManager::rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence)
+{
+	if (m_teamBlackboardService == nullptr)
+		return false;
+	return m_teamBlackboardService->RememberEnemySighting(teamId, reporterId, targetId, targetPosition, lastSeenMs, confidence);
+}
+
+bool ObjectManager::writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport)
+{
+	if (m_teamBlackboardService == nullptr || agent == nullptr)
+		return false;
+
+	AIController* ai = agent->FindComponent<AIController>();
+	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+	if (blackboard == nullptr)
+		return false;
+
+	TeamBlackboardService::EnemySightingFact fact;
+	const int ignoredReporterId = allowOwnReport ? -1 : static_cast<int>(agent->GetObjId());
+	if (!m_teamBlackboardService->GetBestEnemyFact(agent->GetTeamId(), ignoredReporterId, fact))
+	{
+		blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), false);
+		return false;
+	}
+
+	const long long currentTimeMs = m_teamBlackboardService->GetStats().currentTimeMs;
+	const int ageMs = static_cast<int>(std::max<long long>(0, currentTimeMs - fact.lastSeenMs));
+	blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), true);
+	blackboard->SetObjectId(MakeBlackboardKey(keyPrefix, "targetId"), fact.targetId);
+	blackboard->SetVec3(MakeBlackboardKey(keyPrefix, "targetPos"), fact.targetPosition);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reporterId"), fact.reporterId);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "lastSeenMs"), static_cast<int>(fact.lastSeenMs));
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "ageMs"), ageMs);
+	blackboard->SetFloat(MakeBlackboardKey(keyPrefix, "confidence"), fact.confidence);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reportCount"), fact.reportCount);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "priority"), fact.priority);
+	return true;
+}
+
+int ObjectManager::getTeamBlackboardFactCount() const
+{
+	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->GetStats().factCount : 0;
+}
+
+int ObjectManager::getTeamBlackboardReportCount() const
+{
+	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->GetStats().reportCount : 0;
+}
+
+std::string ObjectManager::buildTeamBlackboardDebugSummary() const
+{
+	if (m_teamBlackboardService == nullptr)
+		return "[TeamBlackboardService] unavailable";
+	return m_teamBlackboardService->BuildDebugSummary();
 }
 
 std::string ObjectManager::buildAiSchedulerDebugSummary() const

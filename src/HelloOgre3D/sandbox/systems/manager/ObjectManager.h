@@ -8,6 +8,7 @@
 #include "OISKeyboard.h"
 #include "GameDefine.h"
 #include "OgreString.h"
+#include "OgreVector3.h"
 #include "SandboxServices.h"
 
 namespace Ogre
@@ -62,6 +63,13 @@ public:
 	std::string buildAiDebugSummary(int maxAgents);
 	void configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame);
 	std::string buildAiSchedulerDebugSummary() const;
+	void clearTeamBlackboardFacts();
+	void configureTeamBlackboard(int ttlMs);
+	bool rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence);
+	bool writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport = false);
+	int getTeamBlackboardFactCount() const;
+	int getTeamBlackboardReportCount() const;
+	std::string buildTeamBlackboardDebugSummary() const;
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string runAiEventScopeSelfTest();
 	std::string buildObjectDebugSummary(int maxObjects);

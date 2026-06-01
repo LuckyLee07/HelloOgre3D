@@ -66,6 +66,7 @@ local _chapter8 = {
     teamApplyRunCount = 0,
     teamApplySkipCount = 0,
     teamApplyAgentChecks = 0,
+    cppFactApplyCount = 0,
     teamPruneElapsedMs = 0,
     teamPruneIntervalMs = 0,
     teamPruneRunCount = 0,
@@ -573,6 +574,8 @@ local function _MaybePrintTeamBlackboardSmoke()
     if _chapter8.totalBroadcasts > 0
         and _chapter8.totalSupportResponses > 0
         and _chapter8.totalSharedMoves > 0
+        and TeamBlackboard:GetCppFactCount() > 0
+        and _chapter8.cppFactApplyCount > 0
         and _chapter8.sightScanRunCount > 0
         and _chapter8.sightScanSkipCount > 0
         and _chapter8.teamApplyRunCount > 0
@@ -587,7 +590,10 @@ local function _MaybePrintTeamBlackboardSmoke()
             "pairChecks=", _chapter8.sightPairChecks,
             "applyRuns=", _chapter8.teamApplyRunCount,
             "applySkips=", _chapter8.teamApplySkipCount,
-            "agentChecks=", _chapter8.teamApplyAgentChecks)
+            "agentChecks=", _chapter8.teamApplyAgentChecks,
+            "cppFacts=", TeamBlackboard:GetCppFactCount(),
+            "cppReports=", TeamBlackboard:GetCppReportCount(),
+            "cppApplies=", _chapter8.cppFactApplyCount)
     end
 end
 
@@ -617,6 +623,10 @@ end
 local function _ApplyTeamMemoryToAgent(agent)
     if agent == nil then
         return false
+    end
+
+    if TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, "team.cpp", false) then
+        _chapter8.cppFactApplyCount = _chapter8.cppFactApplyCount + 1
     end
 
     local sighting = _SelectTeamMemoryForAgent(agent)
@@ -933,6 +943,9 @@ local function _BuildDemoPanelText()
             " runs=" .. tostring(_chapter8.teamApplyRunCount) ..
             " skips=" .. tostring(_chapter8.teamApplySkipCount) ..
             " agents=" .. tostring(_chapter8.teamApplyAgentChecks) .. GUI.MarkupNewline ..
+        "C++ service: facts=" .. tostring(TeamBlackboard:GetCppFactCount()) ..
+            " reports=" .. tostring(TeamBlackboard:GetCppReportCount()) ..
+            " writes=" .. tostring(_chapter8.cppFactApplyCount) .. GUI.MarkupNewline ..
         "Team 0 blackboard: " .. tostring(team0Count) .. "  " .. team0Last .. GUI.MarkupNewline ..
         "Team 1 blackboard: " .. tostring(team1Count) .. "  " .. team1Last .. GUI.MarkupNewline ..
         "Support 0: " .. tostring(team0SupportCount) .. "  " .. team0SupportLast .. GUI.MarkupNewline ..
@@ -956,6 +969,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.elapsedMs = 0
     _chapter8.directSightings = {}
     TeamBlackboard:Reset()
+    TeamBlackboard:ConfigureCppService(tonumber(config.teamMemoryTtlMs) or 2500)
     _chapter8.teamMemory = {}
     _EnsureTeamMemory(0)
     _EnsureTeamMemory(1)
@@ -982,6 +996,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.teamApplyRunCount = 0
     _chapter8.teamApplySkipCount = 0
     _chapter8.teamApplyAgentChecks = 0
+    _chapter8.cppFactApplyCount = 0
     _chapter8.teamPruneElapsedMs = 0
     _chapter8.teamPruneIntervalMs = tonumber(config.teamPruneIntervalMs) or 250
     _chapter8.teamPruneRunCount = 0

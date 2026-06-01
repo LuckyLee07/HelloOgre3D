@@ -17,6 +17,25 @@ local function _CloneVec3(pos)
 	return Vector3(pos.x, pos.y, pos.z)
 end
 
+local function _HasCppService()
+	return ObjectManager ~= nil
+		and ObjectManager.rememberTeamEnemyFact ~= nil
+		and ObjectManager.writeBestTeamEnemyFactToBlackboard ~= nil
+end
+
+local function _RememberCppEnemyFact(sighting)
+	if not _HasCppService() or sighting == nil or sighting.targetPos == nil then
+		return false
+	end
+	return ObjectManager:rememberTeamEnemyFact(
+		tonumber(sighting.teamId) or 0,
+		tonumber(sighting.spotterId) or -1,
+		tonumber(sighting.targetId) or -1,
+		sighting.targetPos,
+		tonumber(sighting.lastSeenMs) or 0,
+		tonumber(sighting.confidence) or 1.0)
+end
+
 local function _NewTeamState(teamId)
 	return {
 		teamId = tonumber(teamId) or 0,
@@ -29,6 +48,9 @@ end
 
 function TeamBlackboard:Reset()
 	_teams = {}
+	if ObjectManager ~= nil and ObjectManager.clearTeamBlackboardFacts ~= nil then
+		ObjectManager:clearTeamBlackboardFacts()
+	end
 end
 
 function TeamBlackboard:GetTeam(teamId)
@@ -53,8 +75,10 @@ function TeamBlackboard:RememberVisibleEnemy(teamId, sighting)
 		targetId = sighting.targetId,
 		targetPos = _CloneVec3(sighting.targetPos),
 		lastSeenMs = tonumber(sighting.lastSeenMs) or 0,
+		confidence = tonumber(sighting.confidence) or 1.0,
 	}
 	team.visibleEnemies[sighting.targetId] = stored
+	_RememberCppEnemyFact(stored)
 	return stored, existing == nil
 end
 
@@ -84,6 +108,42 @@ end
 
 function TeamBlackboard:GetVisibleEnemies(teamId)
 	return self:GetTeam(teamId).visibleEnemies
+end
+
+function TeamBlackboard:ConfigureCppService(ttlMs)
+	if ObjectManager ~= nil and ObjectManager.configureTeamBlackboard ~= nil then
+		ObjectManager:configureTeamBlackboard(tonumber(ttlMs) or 0)
+		return true
+	end
+	return false
+end
+
+function TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, keyPrefix, allowOwnReport)
+	if ObjectManager == nil or ObjectManager.writeBestTeamEnemyFactToBlackboard == nil or agent == nil then
+		return false
+	end
+	return ObjectManager:writeBestTeamEnemyFactToBlackboard(agent, keyPrefix or "team.cpp", allowOwnReport == true)
+end
+
+function TeamBlackboard:GetCppFactCount()
+	if ObjectManager ~= nil and ObjectManager.getTeamBlackboardFactCount ~= nil then
+		return ObjectManager:getTeamBlackboardFactCount()
+	end
+	return 0
+end
+
+function TeamBlackboard:GetCppReportCount()
+	if ObjectManager ~= nil and ObjectManager.getTeamBlackboardReportCount ~= nil then
+		return ObjectManager:getTeamBlackboardReportCount()
+	end
+	return 0
+end
+
+function TeamBlackboard:BuildCppDebugSummary()
+	if ObjectManager ~= nil and ObjectManager.buildTeamBlackboardDebugSummary ~= nil then
+		return ObjectManager:buildTeamBlackboardDebugSummary()
+	end
+	return "[TeamBlackboardService] unavailable"
 end
 
 function TeamBlackboard:RememberSupportResponse(teamId, response)

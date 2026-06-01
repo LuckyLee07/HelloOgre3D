@@ -67,6 +67,26 @@ void TeamBlackboardService::SetFactTtlMs(int ttlMs)
 	m_stats.ttlMs = m_factTtlMs;
 }
 
+bool TeamBlackboardService::RememberEnemySighting(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, long long lastSeenMs, float confidence)
+{
+	if (targetId < 0)
+		return false;
+
+	EnemySightingFact fact;
+	fact.teamId = teamId;
+	fact.targetId = targetId;
+	fact.reporterId = reporterId;
+	fact.reportCount = 1;
+	fact.lastSeenMs = lastSeenMs;
+	fact.targetPosition = targetPosition;
+	fact.confidence = std::max(0.0f, std::min(1.0f, confidence));
+	const int ageMs = static_cast<int>(std::max<long long>(0, m_stats.currentTimeMs - fact.lastSeenMs));
+	fact.priority = BuildPriority(fact.confidence, fact.reportCount, ageMs);
+	RememberEnemyFact(fact);
+	RefreshStats(m_stats.lastScanAgentCount, m_stats.lastWriterCount);
+	return true;
+}
+
 void TeamBlackboardService::SyncFromAgents(const std::vector<AgentObject*>& agents, int deltaMs)
 {
 	H3D_PROFILE_SCOPE("TeamBlackboardService::SyncFromAgents");
@@ -110,6 +130,11 @@ void TeamBlackboardService::SyncFromAgents(const std::vector<AgentObject*>& agen
 
 bool TeamBlackboardService::GetBestEnemyFact(int teamId, EnemySightingFact& outFact) const
 {
+	return GetBestEnemyFact(teamId, -1, outFact);
+}
+
+bool TeamBlackboardService::GetBestEnemyFact(int teamId, int ignoredReporterId, EnemySightingFact& outFact) const
+{
 	outFact = EnemySightingFact();
 	std::unordered_map<int, TeamState>::const_iterator foundTeam = m_teams.find(teamId);
 	if (foundTeam == m_teams.end())
@@ -119,6 +144,8 @@ bool TeamBlackboardService::GetBestEnemyFact(int teamId, EnemySightingFact& outF
 	for (EnemyFactMap::const_iterator iter = foundTeam->second.enemyFacts.begin(); iter != foundTeam->second.enemyFacts.end(); ++iter)
 	{
 		const EnemySightingFact& fact = iter->second;
+		if (ignoredReporterId >= 0 && fact.reporterId == ignoredReporterId)
+			continue;
 		if (!found || fact.priority > outFact.priority || (fact.priority == outFact.priority && fact.lastSeenMs > outFact.lastSeenMs))
 		{
 			outFact = fact;
