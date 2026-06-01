@@ -36,7 +36,7 @@ public:
 		int maxResultsPerQuery;
 	};
 
-	explicit AgentSpatialIndexSystem(float cellSize = 50.0f);
+	explicit AgentSpatialIndexSystem(float cellSize = 20.0f);
 
 	void SetEnabled(bool enabled);
 	bool IsEnabled() const { return m_enabled; }

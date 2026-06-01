@@ -22,6 +22,7 @@ class PhysicsWorld;
 class NavigationMesh;
 class AIScheduler;
 class AgentSpatialIndexSystem;
+class TeamBlackboardService;
 
 //tolua_begin
 enum MGR_OBJ_TYPE
@@ -79,6 +80,8 @@ public:
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
 	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex; }
 	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex; }
+	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService; }
+	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
 
 private:
 	void realAddObject(BaseObject* pObject);
@@ -101,6 +104,7 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 	AIScheduler* m_aiScheduler;
 	AgentSpatialIndexSystem* m_agentSpatialIndex;
+	TeamBlackboardService* m_teamBlackboardService;
 	SandboxServices m_services;
 }; //tolua_exports
 

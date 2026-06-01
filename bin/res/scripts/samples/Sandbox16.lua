@@ -13,6 +13,7 @@ local _elapsedMs = 0
 local _summaryIntervalMs = 250
 local _avgFrameMs = 0
 local _frameCount = 0
+local _runtimeSummaryPrinted = false
 
 local textSize = { w = 390, h = 210 }
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -69,6 +70,15 @@ local function _RefreshSummary(force)
 	_summary = ObjectManager:buildAiDebugSummary(0)
 	if _panel ~= nil then
 		_panel:setMarkupText(_FormatSummaryText())
+	end
+end
+
+local function _PrintSummary(prefix)
+	if _summary == "" then
+		return
+	end
+	for line in string.gmatch(tostring(_summary), "[^\r\n]+") do
+		print(prefix .. " " .. line)
 	end
 end
 
@@ -170,6 +180,7 @@ function Sandbox_Initialize()
 
 	_CreateAgents()
 	_RefreshSummary(true)
+	_PrintSummary("[Sandbox16InitSummary]")
 end
 
 function Sandbox_Update(deltaTimeInMillis)
@@ -183,4 +194,10 @@ function Sandbox_Update(deltaTimeInMillis)
 
 	_DrawDebugGuides()
 	_RefreshSummary(false)
+
+	if not _runtimeSummaryPrinted and _frameCount >= 3 then
+		_RefreshSummary(true)
+		_PrintSummary("[Sandbox16RuntimeSummary]")
+		_runtimeSummaryPrinted = true
+	end
 end

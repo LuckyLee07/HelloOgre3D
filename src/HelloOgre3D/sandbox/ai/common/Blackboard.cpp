@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <sstream>
 
+#include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
+
 namespace
 {
 	const char* EntryValueTypeToString(Blackboard::EntryValueType type)
@@ -122,6 +125,10 @@ Blackboard::Blackboard(SoldierObject* owner) : m_owner(owner)
 {
 }
 
+Blackboard::Blackboard(AgentObject* owner) : m_owner(owner)
+{
+}
+
 Blackboard::~Blackboard()
 {
 	Clear();
@@ -130,6 +137,16 @@ Blackboard::~Blackboard()
 void Blackboard::SetOwner(SoldierObject* owner)
 {
 	m_owner = owner;
+}
+
+void Blackboard::SetOwner(AgentObject* owner)
+{
+	m_owner = owner;
+}
+
+SoldierObject* Blackboard::GetOwner() const
+{
+	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 void Blackboard::SetAgent(const std::string& key, AgentObject* value)

@@ -15,7 +15,8 @@ param(
 		"Sandbox12",
 		"Sandbox13",
 		"Sandbox14",
-		"Sandbox15"
+		"Sandbox15",
+		"Sandbox16"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -39,6 +40,13 @@ param(
 	[switch]$AiScheduler,
 	[int]$AiTickMs = 50,
 	[int]$AiMaxPerFrame = 8,
+	[switch]$VisualTrace,
+	[int]$VisualTraceDelayFrames = 15,
+	[int]$VisualTraceIntervalFrames = 15,
+	[int]$VisualTraceMaxSamples = 8,
+	[int]$VisualTraceMaxAgents = 16,
+	[switch]$DisableSpatialIndex,
+	[int]$SpatialCellSize = 0,
 	[switch]$DryRun
 )
 
@@ -76,6 +84,9 @@ if ($Preset -eq "hearing_danger" -and -not $PSBoundParameters.ContainsKey("Sampl
 if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox15"
 }
+if ($Preset -eq "ai_perception_pressure" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox16"
+}
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent
 
 $KnownEnvNames = @(
@@ -98,7 +109,14 @@ $KnownEnvNames = @(
 	"HELLO_SAMPLE_AI_MAX_PER_FRAME",
 	"HELLO_AI_SCHEDULER_ENABLE",
 	"HELLO_AI_SCHEDULER_TICK_MS",
-	"HELLO_AI_SCHEDULER_MAX_PER_FRAME"
+	"HELLO_AI_SCHEDULER_MAX_PER_FRAME",
+	"HELLO_VISUAL_TRACE_GATE",
+	"HELLO_VISUAL_TRACE_DELAY_FRAMES",
+	"HELLO_VISUAL_TRACE_INTERVAL_FRAMES",
+	"HELLO_VISUAL_TRACE_MAX_SAMPLES",
+	"HELLO_VISUAL_TRACE_MAX_AGENTS",
+	"HELLO_AI_SPATIAL_INDEX_ENABLE",
+	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE"
 )
 
 $RunId = "{0:yyyyMMddHHmmssfff}-{1}" -f (Get-Date), $PID
@@ -142,6 +160,19 @@ if ($AiScheduler) {
 	$SelectedEnv["HELLO_AI_SCHEDULER_TICK_MS"] = [string]$AiTickMs
 	$SelectedEnv["HELLO_AI_SCHEDULER_MAX_PER_FRAME"] = [string]$AiMaxPerFrame
 }
+if ($VisualTrace) {
+	$SelectedEnv["HELLO_VISUAL_TRACE_GATE"] = "1"
+	$SelectedEnv["HELLO_VISUAL_TRACE_DELAY_FRAMES"] = [string]$VisualTraceDelayFrames
+	$SelectedEnv["HELLO_VISUAL_TRACE_INTERVAL_FRAMES"] = [string]$VisualTraceIntervalFrames
+	$SelectedEnv["HELLO_VISUAL_TRACE_MAX_SAMPLES"] = [string]$VisualTraceMaxSamples
+	$SelectedEnv["HELLO_VISUAL_TRACE_MAX_AGENTS"] = [string]$VisualTraceMaxAgents
+}
+if ($DisableSpatialIndex) {
+	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_ENABLE"] = "0"
+}
+if ($SpatialCellSize -gt 0) {
+	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_CELL_SIZE"] = [string]$SpatialCellSize
+}
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
 }
@@ -164,7 +195,7 @@ if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -407,8 +438,15 @@ try {
 			}
 		}
 
+		if ($Preset -eq "ai_perception_pressure" -or $SelectedSample -eq "Sandbox16") {
+			$spatialMatches = @($LogLinesForChecks | Select-String -Pattern "\[AgentSpatialIndex\].*queries=")
+			if ($spatialMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AgentSpatialIndex diagnostics."
+			}
+		}
+
 		$CheckedLogLineCount = $LogLinesForChecks.Count
-		$FailurePattern = "OGRE EXCEPTION|PANIC:|lua_dofile path|call_func error|call_string error|lua_pcall|stack traceback|self test result:\s*false|self test case:.*FAIL"
+		$FailurePattern = "OGRE EXCEPTION|PANIC:|lua_dofile path|call_func error|call_string error|lua_pcall|stack traceback|self test result:\s*false|self test case:.*FAIL|\[VisualTraceGate\] result:\s*false"
 		$Failures = @($LogLinesForChecks | Select-String -Pattern $FailurePattern)
 		if ($Failures.Count -gt 0) {
 			Write-Host "[SMOKE] detected log failures:"

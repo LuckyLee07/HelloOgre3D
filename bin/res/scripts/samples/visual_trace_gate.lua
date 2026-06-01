@@ -172,6 +172,8 @@ local function sample(state, elapsed)
 	for _, line in ipairs(lines) do
 		if string.find(line, "AI agents=", 1, true) == 1 then
 			print("[VisualTrace] t=" .. formatNumber(elapsed) .. " " .. line)
+		elseif string.find(line, "[AgentSpatialIndex]", 1, true) == 1 then
+			print("[VisualTrace] t=" .. formatNumber(elapsed) .. " " .. line)
 		elseif string.sub(line, 1, 1) == "#" then
 			print("[VisualTrace] t=" .. formatNumber(elapsed) .. " " .. line)
 			local lower = string.lower(line)

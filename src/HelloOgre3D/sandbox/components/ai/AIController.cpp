@@ -59,7 +59,7 @@ namespace
 }
 
 AIController::AIController(BaseObject* owner)
-	: m_blackboard(dynamic_cast<SoldierObject*>(owner))
+	: m_blackboard(dynamic_cast<AgentObject*>(owner))
 	, m_driver(nullptr)
 	, m_enemy(nullptr)
 	, m_enemyId(-1)
@@ -79,7 +79,7 @@ AIController::~AIController()
 void AIController::onAttach(BaseObject* owner)
 {
 	IComponent::onAttach(owner);
-	m_blackboard.SetOwner(GetSoldierOwner());
+	m_blackboard.SetOwner(GetAgentOwner());
 	m_memoryStore.SetBlackboard(&m_blackboard);
 	m_localTimeMs = 0;
 	m_visionSensor.Clear();
@@ -90,7 +90,7 @@ void AIController::onDetach()
 {
 	m_visionSensor.Clear();
 	m_memoryStore.SetBlackboard(nullptr);
-	m_blackboard.SetOwner(nullptr);
+	m_blackboard.SetOwner(static_cast<AgentObject*>(nullptr));
 	IComponent::onDetach();
 }
 

@@ -8,6 +8,7 @@
 #include "ai/common/Blackboard.h"
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
+#include "ai/team/TeamBlackboardService.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "ClientManager.h"
@@ -256,6 +257,7 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
 	m_agentSpatialIndex = new AgentSpatialIndexSystem();
+	m_teamBlackboardService = new TeamBlackboardService();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
 	const char* spatialCellSize = std::getenv("HELLO_AI_SPATIAL_INDEX_CELL_SIZE");
@@ -278,6 +280,7 @@ ObjectManager::~ObjectManager()
 	this->clearAllObjects(MGR_OBJ_ALLS);
 	SAFE_DELETE(m_aiScheduler);
 	SAFE_DELETE(m_agentSpatialIndex);
+	SAFE_DELETE(m_teamBlackboardService);
 
 	auto iter = m_navMeshes.begin();
 	for ( ; iter != m_navMeshes.end(); iter++)
@@ -344,6 +347,11 @@ void ObjectManager::Update(int deltaMilliseconds)
 	}
 	if (m_aiScheduler != nullptr)
 		m_aiScheduler->PublishTracyCounters();
+	if (m_teamBlackboardService != nullptr)
+	{
+		m_teamBlackboardService->SyncFromAgents(m_agents, deltaMilliseconds);
+		m_teamBlackboardService->PublishTracyCounters();
+	}
 
 	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
 	for (auto iter = m_remSceneNodes.begin(); iter != m_remSceneNodes.end();)
@@ -668,10 +676,36 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 
 	const int aiControllerCount = getAiSoldierCount();
 	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
+	int visibleTargetCount = 0;
+	int memoryTargetCount = 0;
+	int blackboardEntryCount = 0;
+	for (AgentObject* agent : m_agents)
+	{
+		if (agent == nullptr)
+			continue;
+
+		AIController* ai = agent->FindComponent<AIController>();
+		Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+		if (blackboard == nullptr)
+			continue;
+
+		if (blackboard->GetBool("perception.hasTarget", false))
+			++visibleTargetCount;
+		if (blackboard->GetBool("memory.snapshot.hasLastKnownEnemy", false))
+			++memoryTargetCount;
+		blackboardEntryCount += blackboard->GetEntryCount();
+	}
 	std::ostringstream stream;
-	stream << "AI agents=" << m_agents.size() << " controllers=" << aiControllerCount << " showing=" << showingCount;
+	stream << "AI agents=" << m_agents.size()
+		<< " controllers=" << aiControllerCount
+		<< " showing=" << showingCount
+		<< " visibleTargets=" << visibleTargetCount
+		<< " memoryTargets=" << memoryTargetCount
+		<< " bbEntries=" << blackboardEntryCount;
 	if (m_agentSpatialIndex != nullptr)
 		stream << "\n" << m_agentSpatialIndex->BuildDebugSummary();
+	if (m_teamBlackboardService != nullptr)
+		stream << "\n" << m_teamBlackboardService->BuildDebugSummary();
 
 	for (int index = 0; index < showingCount; ++index)
 	{
@@ -853,6 +887,8 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 			m_aiScheduler->Clear();
 		if (m_agentSpatialIndex != nullptr)
 			m_agentSpatialIndex->Clear();
+		if (m_teamBlackboardService != nullptr)
+			m_teamBlackboardService->Clear();
 	}
 }
 std::vector<BlockObject*> ObjectManager::getFixedObjects()

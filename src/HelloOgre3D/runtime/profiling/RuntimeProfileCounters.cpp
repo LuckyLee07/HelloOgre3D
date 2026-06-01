@@ -40,3 +40,18 @@ void RuntimeProfileCounters::PlotAiSchedulerStats(int enabled, int agentCount, i
 	H3D_PROFILE_PLOT("AISchedulerTickIntervalMs", static_cast<double>(tickIntervalMs));
 	H3D_PROFILE_PLOT("AISchedulerMaxTicksPerFrame", static_cast<double>(maxTicksPerFrame));
 }
+
+void RuntimeProfileCounters::PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount)
+{
+	(void)teamCount;
+	(void)factCount;
+	(void)reportCount;
+	(void)writerCount;
+	(void)expiredCount;
+
+	H3D_PROFILE_PLOT("TeamBlackboardTeams", static_cast<double>(teamCount));
+	H3D_PROFILE_PLOT("TeamBlackboardFacts", static_cast<double>(factCount));
+	H3D_PROFILE_PLOT("TeamBlackboardReports", static_cast<double>(reportCount));
+	H3D_PROFILE_PLOT("TeamBlackboardWriters", static_cast<double>(writerCount));
+	H3D_PROFILE_PLOT("TeamBlackboardExpired", static_cast<double>(expiredCount));
+}

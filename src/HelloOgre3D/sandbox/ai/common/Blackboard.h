@@ -71,12 +71,15 @@ public:
 
 	Blackboard();
 	explicit Blackboard(SoldierObject* owner);
+	explicit Blackboard(AgentObject* owner);
 	~Blackboard();
 
 	void SetOwner(SoldierObject* owner);
+	void SetOwner(AgentObject* owner);
+	AgentObject* GetAgentOwner() const { return m_owner; }
 
 	//tolua_begin
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 
 	void SetAgent(const std::string& key, AgentObject* value);
 	AgentObject* GetAgent(const std::string& key) const;
@@ -164,7 +167,7 @@ private:
 	void RemoveTypedValue(const std::string& key);
 	void RemoveEntryValue(const std::string& key);
 
-	SoldierObject* m_owner;
+	AgentObject* m_owner;
 
 	std::unordered_map<std::string, AgentObject*>   m_agents;
 	std::unordered_map<std::string, float>          m_floats;
