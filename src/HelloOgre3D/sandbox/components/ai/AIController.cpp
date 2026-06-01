@@ -32,6 +32,8 @@ namespace
 	const char* const kPerceptionTargetDistance = "perception.targetDistance";
 	const char* const kPerceptionTargetDistanceSq = "perception.targetDistanceSq";
 	const char* const kPerceptionVisionIntervalMs = "perception.visionIntervalMs";
+	const char* const kPerceptionVisionInitialDelayMs = "perception.visionInitialDelayMs";
+	const char* const kPerceptionStaggerScans = "perception.staggerScans";
 	const char* const kPerceptionFieldOfViewDegrees = "perception.fieldOfViewDegrees";
 	const char* const kSenseTargetId = "sense.targetId";
 	const char* const kSenseTargetPos = "sense.targetPos";
@@ -256,6 +258,15 @@ VisionSensorConfig AIController::BuildVisionSensorConfig(const Ogre::String& nav
 	VisionSensorConfig config;
 	config.perception = BuildPerceptionOptions(navMeshName, requirePath);
 	config.scanIntervalMs = std::max(0, m_blackboard.GetInt(kPerceptionVisionIntervalMs, kVisionScanIntervalMs));
+	const int configuredDelayMs = m_blackboard.GetInt(kPerceptionVisionInitialDelayMs, -1);
+	if (configuredDelayMs >= 0)
+	{
+		config.initialDelayMs = configuredDelayMs;
+	}
+	else if (config.scanIntervalMs > 0 && m_blackboard.GetBool(kPerceptionStaggerScans, false))
+	{
+		config.initialDelayMs = static_cast<int>((GetAgentId() * 37u) % static_cast<unsigned int>(config.scanIntervalMs));
+	}
 	return config;
 }
 
@@ -353,7 +364,8 @@ AgentObject* AIController::GetEnemy() const
 
 bool AIController::HasEnemy(const Ogre::String& navMeshName)
 {
-	return UpdateVisionSensor(0, navMeshName, true, !m_visionSensor.HasScanned());
+	const bool forceInitialScan = !m_blackboard.GetBool(kPerceptionStaggerScans, false) && !m_visionSensor.HasScanned();
+	return UpdateVisionSensor(0, navMeshName, true, forceInitialScan);
 }
 
 bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)

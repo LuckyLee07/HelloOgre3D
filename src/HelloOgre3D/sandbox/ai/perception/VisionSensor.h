@@ -12,11 +12,13 @@ struct VisionSensorConfig
 {
 	VisionSensorConfig()
 		: scanIntervalMs(200)
+		, initialDelayMs(0)
 	{
 	}
 
 	AgentPerceptionOptions perception;
 	int scanIntervalMs;
+	int initialDelayMs;
 };
 
 class VisionSensor
@@ -25,6 +27,7 @@ public:
 	VisionSensor()
 		: m_timeSinceScanMs(0)
 		, m_lastScanIntervalMs(200)
+		, m_lastInitialDelayMs(0)
 		, m_scanCount(0)
 		, m_hasScanned(false)
 		, m_hasVisibleTarget(false)
@@ -36,7 +39,12 @@ public:
 		const int elapsedMs = std::max(0, deltaMs);
 		m_timeSinceScanMs += elapsedMs;
 		m_lastScanIntervalMs = std::max(0, config.scanIntervalMs);
+		m_lastInitialDelayMs = std::max(0, config.initialDelayMs);
 		m_lastConfig = config;
+
+		const int firstScanDelayMs = m_lastScanIntervalMs > 0 ? std::min(m_lastInitialDelayMs, m_lastScanIntervalMs) : 0;
+		if (!forceScan && !m_hasScanned && firstScanDelayMs > 0 && m_timeSinceScanMs < firstScanDelayMs)
+			return false;
 
 		if (!forceScan && m_hasScanned && m_lastScanIntervalMs > 0 && m_timeSinceScanMs < m_lastScanIntervalMs)
 			return false;
@@ -81,6 +89,7 @@ public:
 		std::ostringstream stream;
 		stream << "vision={scans:" << m_scanCount
 			<< ",interval:" << m_lastScanIntervalMs
+			<< ",delay:" << m_lastInitialDelayMs
 			<< ",age:" << m_timeSinceScanMs;
 		if (m_hasVisibleTarget)
 		{
@@ -99,6 +108,7 @@ public:
 private:
 	int m_timeSinceScanMs;
 	int m_lastScanIntervalMs;
+	int m_lastInitialDelayMs;
 	int m_scanCount;
 	bool m_hasScanned;
 	bool m_hasVisibleTarget;

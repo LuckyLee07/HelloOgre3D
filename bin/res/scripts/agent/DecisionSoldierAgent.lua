@@ -31,6 +31,10 @@ function Agent_Initialize(agent)
 
     local bb = driver:GetBlackboard()
     bb:SetFloat("maxHealth", agent:GetMaxHealth())
+    local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox7"
+    if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
+        ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)
+    end
 
     local tree = SoldierDecisionTreeBuilder.Build(agent, driver, bb)
     driver:SetTree(tree)

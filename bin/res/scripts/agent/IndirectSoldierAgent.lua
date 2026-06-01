@@ -27,6 +27,12 @@ end
 
 function Agent_Initialize(agent)
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED);
+    local ai = agent:GetAI()
+    local bb = ai ~= nil and ai:GetBlackboard() or nil
+    local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox6"
+    if bb ~= nil and ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
+        ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)
+    end
 end
 
 

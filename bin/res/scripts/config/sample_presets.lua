@@ -80,6 +80,26 @@ local chapter8PerceptionDemoConfig = {
 	freezeTarget = true,
 }
 
+local chapter6To8AiConfig = cloneTable(SamplePresets.default)
+chapter6To8AiConfig.aiBlackboard = {
+	floats = {
+		["perception.visionRange"] = 40.0,
+		["perception.fieldOfViewDegrees"] = 360.0,
+	},
+	ints = {
+		["perception.visionIntervalMs"] = 200,
+	},
+	bools = {
+		["perception.requirePath"] = false,
+		["perception.staggerScans"] = true,
+	},
+}
+chapter6To8AiConfig.aiScheduler = {
+	enabled = true,
+	tickMs = 50,
+	maxPerFrame = 8,
+}
+
 SamplePresets.chapter8_perception = {
 	seed = 20260530,
 	agentCount = 2,
@@ -125,9 +145,9 @@ SamplePresets.chapter8_perception = {
 
 SamplePresets.ai_lastknown_demo = SamplePresets.chapter8_perception
 
-SamplePresets.Sandbox6 = SamplePresets.default
-SamplePresets.Sandbox7 = SamplePresets.default
-SamplePresets.Sandbox8 = SamplePresets.default
+SamplePresets.Sandbox6 = cloneTable(chapter6To8AiConfig)
+SamplePresets.Sandbox7 = cloneTable(chapter6To8AiConfig)
+SamplePresets.Sandbox8 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox10 = SamplePresets.chapter8_perception
 
 SamplePresets.chapter8_comms = {

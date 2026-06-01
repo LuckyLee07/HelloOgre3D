@@ -24,7 +24,31 @@
 #include "OgreParticleFXPlugin.h"
 #include "ogre3d_gorilla/include/Gorilla.h"
 
+#include <cstdlib>
+
 using namespace Ogre;
+namespace
+{
+    int ReadSimulationHz()
+    {
+        const char* value = std::getenv("HELLO_SIM_FPS");
+        if (value == nullptr || value[0] == '\0')
+            value = std::getenv("HELLO_SIM_HZ");
+
+        if (value == nullptr || value[0] == '\0')
+            return 60;
+
+        const int hz = std::atoi(value);
+        if (hz <= 0)
+            return 60;
+        if (hz < 15)
+            return 15;
+        if (hz > 240)
+            return 240;
+        return hz;
+    }
+}
+
 #if defined(_WIN32)
 static Ogre::String BuildDpiScaledVideoMode(unsigned int baseWidth, unsigned int baseHeight)
 {
@@ -440,7 +464,8 @@ void ClientManager::SetProfileTime(ProfileTimeType profile, long long time)
 
 void ClientManager::Update()
 {
-    static long long updatePerSecondInMicros = 1000000 / 30;
+    static int simulationHz = ReadSimulationHz();
+    static long long updatePerSecondInMicros = 1000000 / simulationHz;
     static int deltaMilliseconds = int(updatePerSecondInMicros / 1000);
 
     long long currTimeInMicros = m_Timer.getMicroseconds();
