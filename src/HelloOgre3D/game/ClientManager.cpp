@@ -8,6 +8,7 @@
 #include "core/SandboxMacros.h"
 #include "common/RenderConfigHelper.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 #if defined(HELLO_ENABLE_FGUI)
 #include "ui/fairygui/FairyGuiSystem.h"
 #endif
@@ -448,33 +449,56 @@ void ClientManager::Update()
     if (m_pGameManager && timeDeltaInMicros >= updatePerSecondInMicros)
     {
         H3D_PROFILE_SCOPE("ClientManager::Update");
+        const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+        RuntimeSimulationTiming perfTiming;
+        perfTiming.simulateDeltaMs = double(timeDeltaInMicros) / 1000.0;
+        long long stageStartMicros = 0;
         SetProfileTime(P_TOTAL_SIMULATE_TIME, timeDeltaInMicros);
         H3D_PROFILE_PLOT("SimulateDeltaMs", double(timeDeltaInMicros) / 1000.0);
 
         {
             H3D_PROFILE_SCOPE("DebugDrawer::Clear");
+            if (perfEnabled)
+                stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
             m_pDebugDrawer->clear();
+            if (perfEnabled)
+                perfTiming.debugClearMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
         }
 
         {
             H3D_PROFILE_SCOPE("GameManager::Update");
+            if (perfEnabled)
+                stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
             m_pGameManager->Update(deltaMilliseconds);
+            if (perfEnabled)
+                perfTiming.gameUpdateMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
         }
         m_lastUpdateTimeInMicro = currTimeInMicros;
 
         {
             H3D_PROFILE_SCOPE("DebugDrawer::Build");
+            if (perfEnabled)
+                stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
             m_pDebugDrawer->build();
+            if (perfEnabled)
+                perfTiming.debugBuildMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
         }
 
         long long newTimeInMicros = m_Timer.getMicroseconds() - currTimeInMicros;
         SetProfileTime(P_SIMULATE_TIME, newTimeInMicros);
+        perfTiming.simulateCostMs = double(newTimeInMicros) / 1000.0;
         H3D_PROFILE_PLOT("SimulateCostMs", double(newTimeInMicros) / 1000.0);
 
         {
             H3D_PROFILE_SCOPE("InputManager::Update");
+            if (perfEnabled)
+                stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
             m_pInputManager->update(deltaMilliseconds);
+            if (perfEnabled)
+                perfTiming.inputUpdateMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
         }
+        if (perfEnabled)
+            RuntimeStallProfiler::SetSimulationTiming(perfTiming);
     }
 }
 

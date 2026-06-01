@@ -24,6 +24,7 @@
 #include "core/SandboxMacros.h"
 #include "core/SandboxServices.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 #include "diagnostics/RuntimeResourceDiagnostics.h"
 
 using namespace Ogre;
@@ -681,29 +682,50 @@ void GameManager::InitLuaEnv()
 void GameManager::Update(int deltaMilliseconds)
 {
 	H3D_PROFILE_SCOPE("GameManager::UpdateStages");
+	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+	RuntimeGameUpdateTiming perfTiming;
+	long long stageStartMicros = 0;
 	//struct timeval stNow;
 	//gettimeofday(&stNow, NULL);
 	{
 		H3D_PROFILE_SCOPE("Lua::__tick__");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pScriptVM->callFunction("__tick__", "i", deltaMilliseconds);
+		if (perfEnabled)
+			perfTiming.luaTickMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
 
 	m_SimulationTime += deltaMilliseconds;
 
 	{
 		H3D_PROFILE_SCOPE("ObjectManager::Update");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pObjectManager->Update(deltaMilliseconds);
+		if (perfEnabled)
+			perfTiming.objectManagerMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
 
 	{
 		H3D_PROFILE_SCOPE("PhysicsWorld::Step");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pPhysicsWorld->stepWorld();
+		if (perfEnabled)
+			perfTiming.physicsMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
 
 	{
 		H3D_PROFILE_SCOPE("Lua::Sandbox_Update");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
+		if (perfEnabled)
+			perfTiming.sandboxLuaMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
+	if (perfEnabled)
+		RuntimeStallProfiler::SetGameUpdateTiming(perfTiming);
 }
 
 Ogre::Camera* GameManager::getCamera()

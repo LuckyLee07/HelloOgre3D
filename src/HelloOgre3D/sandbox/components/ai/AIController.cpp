@@ -18,6 +18,7 @@
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/manager/SandboxMgr.h"
 
@@ -124,14 +125,39 @@ void AIController::TickAI(int deltaMs)
 		return;
 	}
 
+	H3D_PROFILE_SCOPE("AIController::TickAI");
+	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+	RuntimeAiTickTiming perfTiming;
+	const long long tickStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+	long long stageStartMicros = 0;
+
 	const int elapsedMs = std::max(0, deltaMs);
 	m_localTimeMs += elapsedMs;
-	m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
-	m_memoryStore.SyncSnapshot(m_localTimeMs);
-	UpdateVisionSensor(elapsedMs, "default", true, false);
-	m_memoryStore.SyncSnapshot(m_localTimeMs);
-
-	H3D_PROFILE_SCOPE("AIController::TickAI");
+	{
+		H3D_PROFILE_SCOPE("AIController::MemoryUpdate");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
+		m_memoryStore.SyncSnapshot(m_localTimeMs);
+		if (perfEnabled)
+			perfTiming.memoryMs += RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	}
+	{
+		H3D_PROFILE_SCOPE("AIController::VisionSensor");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		UpdateVisionSensor(elapsedMs, "default", true, false);
+		if (perfEnabled)
+			perfTiming.visionMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	}
+	{
+		H3D_PROFILE_SCOPE("AIController::MemorySnapshot");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_memoryStore.SyncSnapshot(m_localTimeMs);
+		if (perfEnabled)
+			perfTiming.memoryMs += RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	}
 	static int totalMilisec = 0;
 	totalMilisec += deltaMs;
 
@@ -140,6 +166,8 @@ void AIController::TickAI(int deltaMs)
 	{
 		totalMilisec = 0;
 		H3D_PROFILE_SCOPE("Lua::Agent_Update");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		SoldierObject* soldier = GetSoldierOwner();
 		if (soldier != nullptr)
 		{
@@ -149,12 +177,23 @@ void AIController::TickAI(int deltaMs)
 		{
 			owner->callFunction("Agent_Update", "u[AgentObject]i", owner, deltaMs);
 		}
+		if (perfEnabled)
+			perfTiming.luaMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
 
 	if (m_driver)
 	{
 		H3D_PROFILE_SCOPE("IDecisionDriver::Tick");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_driver->Tick((float)deltaMs);
+		if (perfEnabled)
+			perfTiming.driverMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	}
+	if (perfEnabled)
+	{
+		perfTiming.totalMs = RuntimeStallProfiler::ElapsedMsSince(tickStartMicros);
+		RuntimeStallProfiler::AddAiTickTiming(perfTiming);
 	}
 }
 

@@ -2,6 +2,7 @@
 #include "OgreRenderWindow.h"
 #include "ClientManager.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 
 Application::Application(const std::string& appTitle)
 {
@@ -50,22 +51,41 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
     H3D_PROFILE_SCOPE("Application::frameRenderingQueued");
     if (m_pClientManager->GetShutdown()) 
         return false;
+
+    const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+    RuntimeClientFrameTiming frameTiming;
+    long long stageStartMicros = 0;
     
     //Need to capture/update each device
     {
         H3D_PROFILE_SCOPE("Application::InputCapture");
+        if (perfEnabled)
+            stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->InputCapture();
+        if (perfEnabled)
+            frameTiming.inputCaptureMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
     {
         H3D_PROFILE_SCOPE("Application::Update");
+        if (perfEnabled)
+            stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->Update();
+        if (perfEnabled)
+            frameTiming.updateCallMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
     {
         H3D_PROFILE_SCOPE("Application::FrameRendering");
+        if (perfEnabled)
+            stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->FrameRendering(event);
+        if (perfEnabled)
+            frameTiming.frameRenderingMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
+
+    if (perfEnabled)
+        RuntimeStallProfiler::FinishFrame(frameTiming);
 
     return true;
 }
@@ -76,9 +96,16 @@ bool Application::frameStarted(const Ogre::FrameEvent& event)
     H3D_PROFILE_SCOPE("Application::frameStarted");
     H3D_PROFILE_PLOT("FrameTimeMs", event.timeSinceLastFrame * 1000.0f);
 
+    const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+    if (perfEnabled)
+        RuntimeStallProfiler::BeginFrame(event.timeSinceLastFrame * 1000.0f);
+
     {
         H3D_PROFILE_SCOPE("Application::Draw");
+        const long long drawStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
         m_pClientManager->Draw();
+        if (perfEnabled)
+            RuntimeStallProfiler::SetDrawTiming(RuntimeStallProfiler::ElapsedMsSince(drawStartMicros));
     }
 
     return true;

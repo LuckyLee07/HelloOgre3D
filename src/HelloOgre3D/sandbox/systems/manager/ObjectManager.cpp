@@ -20,6 +20,7 @@
 #include "ai/navigation/NavigationMesh.h"
 #include "event/SandboxEventDispatcherManager.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 
 #include <sstream>
 #include <iomanip>
@@ -304,19 +305,41 @@ ObjectManager* ObjectManager::GetInstance()
 void ObjectManager::Update(int deltaMilliseconds)
 {
 	H3D_PROFILE_SCOPE("ObjectManager::Update");
+	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+	RuntimeObjectUpdateTiming perfTiming;
+	perfTiming.objectCount = static_cast<int>(m_objects.size());
+	perfTiming.agentCount = static_cast<int>(m_agents.size());
+	long long stageStartMicros = 0;
 	const bool useAiScheduler = m_aiScheduler != nullptr && m_aiScheduler->IsEnabled();
+	const int aiControllerCount = getAiSoldierCount();
+	perfTiming.aiControllerCount = aiControllerCount;
 	if (m_aiScheduler != nullptr)
-		m_aiScheduler->BeginFrame(deltaMilliseconds, getAiSoldierCount());
+	{
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_aiScheduler->BeginFrame(deltaMilliseconds, aiControllerCount);
+		if (perfEnabled)
+			perfTiming.schedulerBeginMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	}
 	if (m_agentSpatialIndex != nullptr)
 	{
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		if (m_agentSpatialIndex->IsEnabled())
 			m_agentSpatialIndex->Rebuild(m_agents);
 		else
 			m_agentSpatialIndex->BeginFrameLinearFallback(static_cast<int>(m_agents.size()));
+		if (perfEnabled)
+			perfTiming.spatialRebuildMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
 
+	if (perfEnabled)
+		stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 	SandboxEventDispatcherManager::GetGlobalInst().FlushQueuedEvents();
+	if (perfEnabled)
+		perfTiming.eventFlushMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 
+	const long long objectLoopStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
 	{
 		BaseObject* pObject = iter->second;
@@ -342,8 +365,19 @@ void ObjectManager::Update(int deltaMilliseconds)
 				ai->SetTickInOwnerUpdateEnabled(true);
 			}
 
+			const long long objectUpdateStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
 			pObject->Update(deltaMilliseconds);
+			if (perfEnabled)
+			{
+				const double objectUpdateMs = RuntimeStallProfiler::ElapsedMsSince(objectUpdateStartMicros);
+				perfTiming.objectUpdateMs += objectUpdateMs;
+				perfTiming.objectUpdateMaxMs = std::max(perfTiming.objectUpdateMaxMs, objectUpdateMs);
+				++perfTiming.objectUpdateCount;
+			}
+			const long long objectEventStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
 			pObject->FlushQueuedEvents();
+			if (perfEnabled)
+				perfTiming.objectEventFlushMs += RuntimeStallProfiler::ElapsedMsSince(objectEventStartMicros);
 			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
 			{
 				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
@@ -351,15 +385,23 @@ void ObjectManager::Update(int deltaMilliseconds)
 			iter++;
 		}
 	}
+	if (perfEnabled)
+		perfTiming.objectLoopMs = RuntimeStallProfiler::ElapsedMsSince(objectLoopStartMicros);
 	if (m_aiScheduler != nullptr)
 		m_aiScheduler->PublishTracyCounters();
 	if (m_teamBlackboardService != nullptr)
 	{
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_teamBlackboardService->SyncFromAgents(m_agents, deltaMilliseconds);
+		if (perfEnabled)
+			perfTiming.teamBlackboardMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 		m_teamBlackboardService->PublishTracyCounters();
 	}
 
 	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
+	if (perfEnabled)
+		stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 	for (auto iter = m_remSceneNodes.begin(); iter != m_remSceneNodes.end();)
 	{
 		int lastMilliSeconds = iter->second;
@@ -378,6 +420,34 @@ void ObjectManager::Update(int deltaMilliseconds)
 			iter->second = lastMilliSeconds;
 			iter++;
 		}
+	}
+	if (perfEnabled)
+	{
+		perfTiming.sceneCleanupMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		if (m_agentSpatialIndex != nullptr)
+		{
+			const AgentSpatialIndexSystem::Stats& stats = m_agentSpatialIndex->GetStats();
+			perfTiming.spatialEnabled = m_agentSpatialIndex->IsEnabled() ? 1 : 0;
+			perfTiming.spatialAgentCount = stats.agentCount;
+			perfTiming.spatialCellCount = stats.occupiedCellCount;
+			perfTiming.spatialQueryCount = stats.queryCount;
+			perfTiming.spatialCandidateCount = stats.candidateCount;
+			perfTiming.spatialResultCount = stats.resultCount;
+			perfTiming.spatialMaxCandidates = stats.maxCandidatesPerQuery;
+			perfTiming.spatialMaxResults = stats.maxResultsPerQuery;
+			perfTiming.spatialAvgCandidates = stats.queryCount > 0 ? static_cast<double>(stats.candidateCount) / static_cast<double>(stats.queryCount) : 0.0;
+			perfTiming.spatialAvgResults = stats.queryCount > 0 ? static_cast<double>(stats.resultCount) / static_cast<double>(stats.queryCount) : 0.0;
+		}
+		if (m_teamBlackboardService != nullptr)
+		{
+			const TeamBlackboardService::Stats& stats = m_teamBlackboardService->GetStats();
+			perfTiming.teamCount = stats.teamCount;
+			perfTiming.teamFactCount = stats.factCount;
+			perfTiming.teamReportCount = stats.reportCount;
+			perfTiming.teamWriterCount = stats.lastWriterCount;
+			perfTiming.teamExpiredCount = stats.expiredCount;
+		}
+		RuntimeStallProfiler::SetObjectUpdateTiming(perfTiming);
 	}
 }
 
