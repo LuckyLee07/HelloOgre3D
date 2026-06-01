@@ -14,6 +14,7 @@ local SANDBOX_SAMPLE_NAMES = {
 	Sandbox13 = true,
 	Sandbox14 = true,
 	Sandbox15 = true,
+	Sandbox16 = true,
 }
 
 local function getEnvValue(name)

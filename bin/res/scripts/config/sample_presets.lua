@@ -337,6 +337,40 @@ SamplePresets.formation_tactics.chapter8Comms.chapter9Formation = {
 
 SamplePresets.Sandbox15 = SamplePresets.formation_tactics
 
+SamplePresets.ai_perception_pressure = cloneTable(SamplePresets.default)
+SamplePresets.ai_perception_pressure.seed = 20260601
+SamplePresets.ai_perception_pressure.agentCount = 120
+SamplePresets.ai_perception_pressure.lightTeamCount = 60
+SamplePresets.ai_perception_pressure.spawnMode = "grid"
+SamplePresets.ai_perception_pressure.aiScheduler.enabled = false
+SamplePresets.ai_perception_pressure.aiBlackboard = {
+	floats = {
+		["perception.visionRange"] = 18.0,
+		["perception.fieldOfViewDegrees"] = 360.0,
+	},
+	ints = {
+		["perception.visionIntervalMs"] = 1,
+	},
+	bools = {
+		["perception.requirePath"] = false,
+	},
+	strings = {
+		["debug.demo"] = "ai_perception_pressure",
+	},
+}
+SamplePresets.ai_perception_pressure.perceptionPressure = {
+	defaultAgentCount = 120,
+	spacing = 6.0,
+	planeSize = 260,
+}
+SamplePresets.ai_perception_pressure.diagnostics = {
+	maxObjects = 0,
+	maxResources = 6,
+	maxEvents = 0,
+}
+
+SamplePresets.Sandbox16 = SamplePresets.ai_perception_pressure
+
 SamplePresets.Sandbox9 = {
 	seed = 20260530,
 	agentCount = 3,

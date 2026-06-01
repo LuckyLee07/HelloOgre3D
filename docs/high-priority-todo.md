@@ -93,6 +93,18 @@
 - [x] Chapter 9 Formation / 协作 BT 第一版：队形 slot、请求支援、等待队友和移动到队形点。
 - [x] 固定随机种子 sample preset，支撑可复现 AI 行为验证。
 
+## P0/P1 - 下一阶段技术迭代
+
+> 详细规划见 `docs/ai-technical-iteration-plan.md`。当前重点从“继续新增 sample”转向“把已跑通的 AI 概念收口为可扩展 C++ 底座”。
+
+- [ ] `AgentSpatialIndexSystem`：用 uniform grid 或等价空间分区替换当前线性 agent 查询。
+- [ ] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
+- [ ] `AgentPerceptionSystem`：把视觉、听觉、危险等感知收口到 C++ 批量系统，Lua 只读结果。
+- [ ] `TeamBlackboardService`：把 Lua `TeamBlackboard` 迁移为 C++ service，支持 fact TTL、priority、统计和 Lua facade。
+- [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
+- [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
+- [ ] AI debug / RuntimeDiag：统一输出 perception、memory、team facts、influence score、BT trace 和 scheduler stats。
+
 ## 暂缓任务
 
 - [ ] Lua 生物 Def / CreatureAssembler。

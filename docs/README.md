@@ -15,6 +15,7 @@
 | 文档 | 作用 | 对应北极星层 |
 |---|---|---|
 | `high-priority-todo.md` | 当前高优先级施工 TODO（L0 地基 + 第一个垂直切片 + 必要 BT 补强） | L0/L1 执行 |
+| `ai-technical-iteration-plan.md` | 下一阶段 AI 技术迭代规划：Spatial/AOI、感知系统、TeamBlackboard、InfluenceMap、BT runtime 与 benchmark | AI P0/P1 执行 |
 | `foundation-modules-inventory.md` | 地基模块盘点(已有/缺/不做)+ 切片最小 base 集 | L0–L2 家底 |
 | `architecture-improvement-plan.md` | 架构优化实施(解耦 SandboxServices / 组件化 / 所有权 / 感知)，带 file:line 证据与验收 | L0/L1/L2 落地 |
 | `cpp-object-model-refactor-roadmap.md` | C++ 对象模型分阶段路线(术语已同步当前继承链) | L1-④ 依据 |
@@ -28,6 +29,7 @@
 | 文档 | 作用 |
 |---|---|
 | `reference-minigame-patterns.md` | 生产级沙盒 MiniGame 可借鉴架构调研(已纠正反射/Blockly/dev-VM 表述)；“为什么这么做”的依据 |
+| `minigame-ai-production-reference.md` | MiniGame AI 生产架构专项参考，聚焦 C++ 热路径、Lua 行为层、BT runtime、AOI/SoA/Job 与本项目落地路线 |
 
 ## 🗄 Historical / 补充（具体条目可参考，排序以北极星为准）
 
@@ -59,6 +61,7 @@
 ## 阅读路径建议
 
 - **想知道项目往哪走 / 该先做什么** → `project-direction.md`（北极星）。
+- **想知道下一阶段 AI 技术迭代怎么排** → `ai-technical-iteration-plan.md`。
 - **想知道还缺哪些地基、下一步碰什么** → `foundation-modules-inventory.md`。
 - **要动某个系统**：架构/解耦 → `architecture-improvement-plan.md`；BT → `behavior-tree-gap-analysis.md`；触发器/事件 → `trigger-system-gap-analysis.md`；编辑器 → `visual-editor-*`。
 - **想了解参考来源(MiniGame 怎么做的)** → `reference-minigame-patterns.md`。

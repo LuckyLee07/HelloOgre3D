@@ -21,6 +21,7 @@ class ScriptLuaVM;
 class PhysicsWorld;
 class NavigationMesh;
 class AIScheduler;
+class AgentSpatialIndexSystem;
 
 //tolua_begin
 enum MGR_OBJ_TYPE
@@ -76,6 +77,8 @@ public:
 
 	NavigationMesh* getNavigationMesh(const Ogre::String& navName);
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
+	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex; }
+	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex; }
 
 private:
 	void realAddObject(BaseObject* pObject);
@@ -97,6 +100,7 @@ private:
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;
 	AIScheduler* m_aiScheduler;
+	AgentSpatialIndexSystem* m_agentSpatialIndex;
 	SandboxServices m_services;
 }; //tolua_exports
 

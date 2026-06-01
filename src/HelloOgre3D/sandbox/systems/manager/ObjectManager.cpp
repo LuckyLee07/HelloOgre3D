@@ -6,6 +6,7 @@
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
+#include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
@@ -84,6 +85,15 @@ namespace
 	bool NearlyEqual(float left, float right, float epsilon)
 	{
 		return std::fabs(left - right) <= epsilon;
+	}
+
+	bool IsFalseEnvValue(const char* value)
+	{
+		if (value == nullptr || value[0] == '\0')
+			return false;
+
+		const std::string text(value);
+		return text == "0" || text == "false" || text == "FALSE" || text == "False" || text == "off" || text == "OFF";
 	}
 
 	void AppendSelfTestFailure(std::ostringstream& stream, const std::string& text, int& failures)
@@ -245,6 +255,16 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 {
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
+	m_agentSpatialIndex = new AgentSpatialIndexSystem();
+	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
+		m_agentSpatialIndex->SetEnabled(false);
+	const char* spatialCellSize = std::getenv("HELLO_AI_SPATIAL_INDEX_CELL_SIZE");
+	if (spatialCellSize != nullptr)
+	{
+		const float cellSize = static_cast<float>(std::atof(spatialCellSize));
+		if (cellSize > 0.0f)
+			m_agentSpatialIndex->SetCellSize(cellSize);
+	}
 	m_services.objects = this;
 	m_services.physics = m_pPhysicsWorld;
 	m_services.script = m_pScriptVM;
@@ -257,6 +277,7 @@ ObjectManager::~ObjectManager()
 
 	this->clearAllObjects(MGR_OBJ_ALLS);
 	SAFE_DELETE(m_aiScheduler);
+	SAFE_DELETE(m_agentSpatialIndex);
 
 	auto iter = m_navMeshes.begin();
 	for ( ; iter != m_navMeshes.end(); iter++)
@@ -277,6 +298,13 @@ void ObjectManager::Update(int deltaMilliseconds)
 	const bool useAiScheduler = m_aiScheduler != nullptr && m_aiScheduler->IsEnabled();
 	if (m_aiScheduler != nullptr)
 		m_aiScheduler->BeginFrame(deltaMilliseconds, getAiSoldierCount());
+	if (m_agentSpatialIndex != nullptr)
+	{
+		if (m_agentSpatialIndex->IsEnabled())
+			m_agentSpatialIndex->Rebuild(m_agents);
+		else
+			m_agentSpatialIndex->BeginFrameLinearFallback(static_cast<int>(m_agents.size()));
+	}
 
 	SandboxEventDispatcherManager::GetGlobalInst().FlushQueuedEvents();
 
@@ -642,6 +670,8 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
 	std::ostringstream stream;
 	stream << "AI agents=" << m_agents.size() << " controllers=" << aiControllerCount << " showing=" << showingCount;
+	if (m_agentSpatialIndex != nullptr)
+		stream << "\n" << m_agentSpatialIndex->BuildDebugSummary();
 
 	for (int index = 0; index < showingCount; ++index)
 	{
@@ -821,6 +851,8 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		m_agents.clear();
 		if (m_aiScheduler != nullptr)
 			m_aiScheduler->Clear();
+		if (m_agentSpatialIndex != nullptr)
+			m_agentSpatialIndex->Clear();
 	}
 }
 std::vector<BlockObject*> ObjectManager::getFixedObjects()
@@ -882,6 +914,8 @@ void ObjectManager::realAddObject(BaseObject* pObject)
 		auto newObject = dynamic_cast<AgentObject*>(pObject);
 		assert(newObject != nullptr);
 		m_agents.push_back(newObject);
+		if (m_agentSpatialIndex != nullptr)
+			m_agentSpatialIndex->AddOrUpdateAgent(newObject);
 	}
 	else if (objtype >= BaseObject::OBJ_TYPE_BLOCK)
 	{
@@ -904,6 +938,8 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 		{
 			if ((*it)->GetObjId() == objid)
 			{
+				if (m_agentSpatialIndex != nullptr)
+					m_agentSpatialIndex->RemoveAgent(static_cast<AgentObject*>(pObject));
 				m_agents.erase(it);
 				if (m_aiScheduler != nullptr)
 					m_aiScheduler->RemoveAgent(objid);
