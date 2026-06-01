@@ -15,6 +15,11 @@ SoldierBTConfig = {
         die = "DieAction.lua",
         randomMove = "RandomMoveAction.lua",
         moveToLastKnownEnemy = "MoveToLastKnownEnemyAction.lua",
+        investigateSound = "InvestigateSoundAction.lua",
+        evadeDanger = "EvadeDangerAction.lua",
+        moveToFormationSlot = "MoveToFormationSlotAction.lua",
+        callForBackup = "CallForBackupAction.lua",
+        waitForSquadMate = "WaitForSquadMateAction.lua",
     },
 
     tree = {
@@ -50,6 +55,22 @@ SoldierBTConfig = {
                             },
                             {
                                 node = "Sequence",
+                                name = "evadeDanger",
+                                children = {
+                                    { node = "Condition", condition = "HasDangerThreat", minDanger = 0.1 },
+                                    { node = "Action", action = "evadeDanger", reuse = false },
+                                },
+                            },
+                            {
+                                node = "Sequence",
+                                name = "callForBackup",
+                                children = {
+                                    { node = "Condition", condition = "ShouldCallForBackup" },
+                                    { node = "Action", action = "callForBackup", reuse = false },
+                                },
+                            },
+                            {
+                                node = "Sequence",
                                 children = {
                                     { node = "Condition", condition = "HasEnemy" },
                                     {
@@ -81,10 +102,34 @@ SoldierBTConfig = {
                             },
                             {
                                 node = "Sequence",
+                                name = "investigateSound",
+                                children = {
+                                    { node = "Condition", condition = "HasHeardSound", minConfidence = 0.05 },
+                                    { node = "Action", action = "investigateSound", reuse = false },
+                                },
+                            },
+                            {
+                                node = "Sequence",
                                 name = "investigateMemory",
                                 children = {
                                     { node = "Condition", condition = "HasLastKnownEnemyMemory", minConfidence = 0.05 },
                                     { node = "Action", action = "moveToLastKnownEnemy", reuse = false },
+                                },
+                            },
+                            {
+                                node = "Sequence",
+                                name = "waitForSquadMate",
+                                children = {
+                                    { node = "Condition", condition = "ShouldWaitForSquadMate" },
+                                    { node = "Action", action = "waitForSquadMate", reuse = false },
+                                },
+                            },
+                            {
+                                node = "Sequence",
+                                name = "moveToFormationSlot",
+                                children = {
+                                    { node = "Condition", condition = "HasFormationSlot" },
+                                    { node = "Action", action = "moveToFormationSlot", reuse = false },
                                 },
                             },
                             {

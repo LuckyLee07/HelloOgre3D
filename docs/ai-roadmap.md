@@ -13,6 +13,7 @@
 - KnowledgeSource / SoldierKnowledge 已能按置信度、刷新频率产出知识结果。
 - AgentSenses / AgentCommunications 已能完成视野感知、事件广播、队伍消息传递。
 - InfluenceMap / SoldierTactics 已能表达危险区域、队伍区域，并可在 sample 中可视化。
+- Hearing / Danger、Formation / 协作 BT 已有 Lua-first 最小 sample，后续再收口为 C++ Sensor / Squad 能力。
 - 至少有一组 sample 覆盖 Knowledge、Perception、Tactics 的基本行为回归。
 
 如果上述内容尚未完成，应先回到 chapter 7-9 迁移任务，不要提前展开本文档中的中后期扩展。
@@ -135,12 +136,14 @@
 - [ ] InfluenceMap 更新频率和 layer 开关可配置。
 - [ ] 有一份固定 sample 用于性能回归。
 
-当前进展（2026-05-23）：
+当前进展（2026-05-31）：
 
 - [x] `AIScheduler` 第一版已支持 Soldier AI tick 与动画/渲染 update 解耦、按 agentId 错峰、每帧 tick budget 和 Lua 可配置开关。
 - [x] `RuntimeProfileCounters` 已接入 `AIScheduler*` Tracy plots，`ObjectManager:buildAiSchedulerDebugSummary()` 可 dump 最近一帧调度数据。
 - [x] `ai_perf_smoke` sample preset 已固定 seed、20 个 agent、固定出生点和 AI scheduler 参数，可由 smoke 脚本复现性能样例。
-- [ ] Sensor / KnowledgeSource / InfluenceMap 独立刷新频率仍待补齐。
+- [x] `Sandbox12` / `Sandbox13` 已把视线扫描、共享记忆应用、InfluenceMap 刷新拆成 interval + budget，并在 smoke stats 中输出 runs/skips/cellWrites。
+- [x] `Sandbox14` / `Sandbox15` preset 已继续复用 `AIScheduler`，Hearing/Danger 与 Formation 验收不会每帧全量驱动所有 agent。
+- [ ] C++ Sensor / KnowledgeSource / InfluenceMap 分片预算与 Tracy 明细仍待后续收口。
 
 ## 7. P1：感知系统组件化
 
@@ -160,6 +163,7 @@
 
 - [ ] 视觉感知和记忆衰减不再强绑定单个 Soldier 脚本。
 - [x] 至少一个 sample 展示“敌人离开视野后，AI 移动到最后已知位置”。
+- [x] 至少一个 sample 展示“没看见敌人但听到声音或感到危险后改变行为”。
 - [ ] 视野角、视野距离、记忆保留时间可通过配置调整。
 - [ ] Lua 行为节点只读感知结果，不再在节点内临时扫描全场对象。
 
@@ -182,9 +186,10 @@
 
 ### 完成标准
 
-- [ ] 同队 agent 可以共享发现的敌人位置。
-- [ ] 队伍可以选择一个共享集火目标。
+- [x] 同队 agent 可以共享发现的敌人位置。
+- [x] 队伍可以通过 TeamBlackboard 共享 focus target；优先级、锁定时间和 commander 选择后置。
 - [x] 至少一个 sample 展示“一个 agent 发现敌人后，队友改变行为”。
+- [x] 至少一个 sample 展示 formation slot、请求支援、等待队友和协作移动。
 - [ ] TeamBlackboard 生命周期跟随 Sandbox 或队伍，不依赖单个 agent。
 
 ## 9. P1：InfluenceMap 多层升级
@@ -212,8 +217,8 @@
 ### 完成标准
 
 - [ ] 至少支持 3 个以上可独立显示的 influence layer。
-- [ ] 战术行为能读取 influence 结果选择移动目标。
-- [ ] 至少一个 sample 展示“AI 避开危险区域或偏好掩体区域”。
+- [x] 战术行为能读取 influence 结果选择移动目标。
+- [x] 至少一个 sample 展示“AI 避开危险区域或偏好掩体区域”。
 - [ ] InfluenceMap 更新成本在 Tracy 中可见。
 
 ## 10. P1：行为树数据化与热重载
@@ -363,18 +368,20 @@
 ## 16. 跟踪清单
 
 - [ ] AI debug view 第一版。
-- [ ] Local / Team / Global 事件层级落地。
-- [ ] AI 更新调度器和 Tracy 埋点落地。
-- [ ] VisionSense / MemoryStore 拆分。
-- [ ] TeamBlackboard 第一版。
-- [ ] InfluenceMap 多 layer 与 debug 显示。
-- [ ] InfluenceMap 结果接入战术移动选择。
+- [x] Local / Team / Global 事件层级落地。
+- [x] AI 更新调度器第一版和 Tracy counters 落地。
+- [x] VisionSense / MemoryStore 拆分。
+- [x] TeamBlackboard 第一版。
+- [x] Hearing / Danger 最小 sample。
+- [x] Formation / 协作 BT 最小 sample。
+- [x] InfluenceMap 多 layer 与 debug 显示。
+- [x] InfluenceMap 结果接入战术移动选择。
 - [ ] BehaviorTree config subtree。
 - [ ] BehaviorTree hot reload。
 - [ ] 技能 timeline 第一版。
 - [ ] TriggerVolume 第一版。
 - [ ] AI 决策日志导出。
-- [ ] 固定随机种子 sample preset。
-- [ ] 至少一个团队协作 sample。
-- [ ] 至少一个影响力地图寻路 sample。
+- [x] 固定随机种子 sample preset。
+- [x] 至少一个团队协作 sample。
+- [x] 至少一个影响力地图寻路 sample。
 

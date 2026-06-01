@@ -273,6 +273,70 @@ SamplePresets.influence_map.chapter8Comms.influenceMap = {
 
 SamplePresets.Sandbox13 = SamplePresets.influence_map
 
+SamplePresets.hearing_danger = cloneTable(SamplePresets.team_blackboard)
+SamplePresets.hearing_danger.aiBlackboard.strings["debug.demo"] = "hearing_danger"
+SamplePresets.hearing_danger.aiScheduler.enabled = true
+SamplePresets.hearing_danger.aiScheduler.tickMs = 80
+SamplePresets.hearing_danger.aiScheduler.maxPerFrame = 3
+SamplePresets.hearing_danger.chapter8Comms.sightScanEnabled = false
+SamplePresets.hearing_danger.chapter8Comms.teamSupportEnabled = false
+SamplePresets.hearing_danger.chapter8Comms.drawDirectSightLines = false
+SamplePresets.hearing_danger.chapter8Comms.drawTeamBroadcasts = false
+SamplePresets.hearing_danger.chapter8Comms.drawTeamMemories = false
+SamplePresets.hearing_danger.chapter8Comms.hearingDanger = {
+	enabled = true,
+	draw = true,
+	scanIntervalMs = 100,
+	agentsPerTick = 3,
+	eventTtlMs = 2200,
+	hearingRadius = 46.0,
+	dangerRadius = 14.0,
+	investigateStopDistance = 5.0,
+	escapeDistance = 9.0,
+	responseCooldownMs = 450,
+	dangerCooldownMs = 350,
+	scriptedGunshot = {
+		enabled = true,
+		delayMs = 900,
+		repeatIntervalMs = 1800,
+		shooterIndex = 2,
+		targetIndex = 1,
+	},
+}
+
+SamplePresets.Sandbox14 = SamplePresets.hearing_danger
+
+SamplePresets.formation_tactics = cloneTable(SamplePresets.team_blackboard)
+SamplePresets.formation_tactics.aiBlackboard.strings["debug.demo"] = "formation_tactics"
+SamplePresets.formation_tactics.aiScheduler.enabled = true
+SamplePresets.formation_tactics.aiScheduler.tickMs = 80
+SamplePresets.formation_tactics.aiScheduler.maxPerFrame = 3
+SamplePresets.formation_tactics.chapter8Comms.sightScanEnabled = false
+SamplePresets.formation_tactics.chapter8Comms.teamSupportEnabled = false
+SamplePresets.formation_tactics.chapter8Comms.drawTeamBroadcasts = true
+SamplePresets.formation_tactics.chapter8Comms.drawTeamMemories = true
+SamplePresets.formation_tactics.chapter8Comms.scriptedOpeningSighting = {
+	enabled = true,
+	delayMs = 700,
+	spotterIndex = 1,
+	targetIndex = 2,
+}
+SamplePresets.formation_tactics.chapter8Comms.teamMemoryTtlMs = 6000
+SamplePresets.formation_tactics.chapter8Comms.chapter9Formation = {
+	enabled = true,
+	draw = true,
+	teamId = 1,
+	updateIntervalMs = 180,
+	slotSpacing = 5.0,
+	readyDistance = 1.8,
+	minReadyCount = 2,
+	waitTimeoutMs = 1600,
+	callForBackup = true,
+	focusPosition = { 19.732, 0.05, -7.443 },
+}
+
+SamplePresets.Sandbox15 = SamplePresets.formation_tactics
+
 SamplePresets.Sandbox9 = {
 	seed = 20260530,
 	agentCount = 3,

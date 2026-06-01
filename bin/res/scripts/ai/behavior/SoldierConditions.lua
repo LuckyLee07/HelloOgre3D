@@ -32,6 +32,45 @@ function SoldierConditions.HasMovePosition(agent, bb)
     return agent:HasMovePosition(1.5)
 end
 
+function SoldierConditions.HasDangerThreat(agent, bb, cfg)
+    if bb == nil or not bb:Has("sense.dangerEscapePos") then
+        return false
+    end
+    local minDanger = cfg and tonumber(cfg.minDanger) or 0.1
+    return bb:GetFloat("sense.dangerLevel", 0.0) >= minDanger
+end
+
+function SoldierConditions.HasHeardSound(agent, bb, cfg)
+    if bb == nil or not bb:Has("sense.heardSoundPos") then
+        return false
+    end
+    if cfg == nil or cfg.requireNoVisual ~= false then
+        if bb:GetBool("perception.hasTarget", false) then
+            return false
+        end
+    end
+    local minConfidence = cfg and tonumber(cfg.minConfidence) or 0.05
+    return bb:GetFloat("sense.heardSoundConfidence", 0.0) >= minConfidence
+end
+
+function SoldierConditions.HasFormationSlot(agent, bb, cfg)
+    if bb == nil or not bb:GetBool("formation.enabled", false) then
+        return false
+    end
+    return bb:Has("formation.slotPos")
+end
+
+function SoldierConditions.ShouldCallForBackup(agent, bb, cfg)
+    return bb ~= nil and bb:GetBool("team.shouldCallForBackup", false)
+end
+
+function SoldierConditions.ShouldWaitForSquadMate(agent, bb, cfg)
+    if bb == nil or not bb:GetBool("formation.waitForSquadMate", false) then
+        return false
+    end
+    return bb:GetInt("formation.readyCount", 0) < bb:GetInt("formation.minReadyCount", 2)
+end
+
 function SoldierConditions.HasEnemy(agent, bb)
     local eventEnemy = bb:GetAgent("enemy")
     if _IsValidEnemy(agent, eventEnemy) then

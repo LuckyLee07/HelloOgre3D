@@ -6,9 +6,17 @@ require("res.scripts.agent.BehaviorSoldierAgent.lua")
 local TeamBlackboard = require("res.scripts.ai.team.TeamBlackboard.lua")
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
 
+local _sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox13"
+local _sampleTitles = {
+    Sandbox13 = "[Sandbox13 - Influence Map]",
+    Sandbox14 = "[Sandbox14 - Hearing / Danger]",
+    Sandbox15 = "[Sandbox15 - Formation Tactics]",
+}
+local _sampleTitle = _sampleTitles[_sampleName] or ("[" .. tostring(_sampleName) .. " - AI Tactics]")
+
 local textSize = {w = 300, h = 185}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "[Sandbox13 - Influence Map]" .. GUI.MarkupNewline ..
+        _sampleTitle .. GUI.MarkupNewline ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
         "Hold Shift: to accelerate movement" .. GUI.MarkupNewline ..
         "Hold RMB: to look" .. GUI.MarkupNewline ..
@@ -25,7 +33,7 @@ local _agentsById = {}
 local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
-local _demoPanelSize = {w = 650, h = 360}
+local _demoPanelSize = {w = 700, h = 430}
 local _navMesh = nil
 local _influenceMap = nil
 local _drawNavMesh = true
@@ -34,8 +42,13 @@ local _colors = {
     team1 = ColourValue(0.95, 0.9, 0.1),
     comm = ColourValue(0.0, 0.85, 1.0),
     shared = ColourValue(0.7, 0.55, 1.0),
+    hearing = ColourValue(1.0, 0.65, 0.05),
+    investigate = ColourValue(1.0, 0.9, 0.25),
     support = ColourValue(0.95, 0.25, 1.0),
     danger = ColourValue(1.0, 0.15, 0.05),
+    evade = ColourValue(0.25, 0.55, 1.0),
+    formation = ColourValue(0.75, 0.45, 1.0),
+    backup = ColourValue(0.0, 0.95, 0.75),
     supportCell = ColourValue(0.1, 0.9, 0.35),
     tactical = ColourValue(0.25, 0.55, 1.0),
 }
@@ -87,6 +100,30 @@ local _chapter8 = {
     lastTacticalScore = 0.0,
     lastTacticalDanger = 0.0,
     lastTacticalSupport = 0.0,
+    soundEvents = {},
+    dangerEvents = {},
+    lastHeardAt = {},
+    lastDangerAt = {},
+    hearingElapsedMs = 0,
+    hearingIntervalMs = 0,
+    hearingRunCount = 0,
+    hearingSkipCount = 0,
+    hearingAgentChecks = 0,
+    totalSoundEvents = 0,
+    totalHeardResponses = 0,
+    totalDangerResponses = 0,
+    totalInvestigations = 0,
+    scriptedGunshotNextMs = 0,
+    hearingSmokePrinted = false,
+    formationElapsedMs = 0,
+    formationIntervalMs = 0,
+    formationRunCount = 0,
+    formationSkipCount = 0,
+    formationSlotAssignments = 0,
+    formationReadyCount = 0,
+    formationBackupCalls = 0,
+    formationWaitAssignments = 0,
+    formationSmokePrinted = false,
     openingSightingPublished = false,
     supportSmokePrinted = false,
     influenceSmokePrinted = false,
@@ -298,6 +335,41 @@ local function _ClearSupportBlackboard(bb)
     bb:Remove("team.tacticalScore")
 end
 
+local function _ClearSensoryBlackboard(bb)
+    if bb == nil then
+        return
+    end
+    bb:Remove("sense.heardSoundPos")
+    bb:Remove("sense.heardInvestigatePos")
+    bb:Remove("sense.heardSoundSourceId")
+    bb:Remove("sense.heardSoundAgeMs")
+    bb:Remove("sense.heardSoundConfidence")
+    bb:Remove("sense.dangerLevel")
+    bb:Remove("sense.dangerPos")
+    bb:Remove("sense.dangerEscapePos")
+    bb:Remove("sense.dangerSourceId")
+    bb:Remove("chapter8.sensoryIntent")
+end
+
+local function _ClearFormationBlackboard(bb)
+    if bb == nil then
+        return
+    end
+    bb:Remove("formation.enabled")
+    bb:Remove("formation.role")
+    bb:Remove("formation.slotIndex")
+    bb:Remove("formation.slotPos")
+    bb:Remove("formation.anchorPos")
+    bb:Remove("formation.focusPos")
+    bb:Remove("formation.readyCount")
+    bb:Remove("formation.minReadyCount")
+    bb:Remove("formation.waitForSquadMate")
+    bb:Remove("formation.waitTimeoutMs")
+    bb:Remove("formation.inSlot")
+    bb:Remove("team.shouldCallForBackup")
+    bb:Remove("team.requestTimeMs")
+end
+
 local function _FormatVec3(pos)
     if pos == nil then return "-" end
     return string.format("%.1f, %.1f, %.1f", pos.x, pos.y, pos.z)
@@ -312,7 +384,7 @@ end
 
 local function _ApplyChapter8Camera()
     local camera = Sandbox:GetCamera()
-    local preset = ConfigManager:GetSamplePreset("Sandbox13")
+    local preset = ConfigManager:GetSamplePreset(_sampleName)
     local config = preset ~= nil and preset.chapter8Comms or nil
     local position = config ~= nil and config.cameraPosition or nil
     local orientation = config ~= nil and config.cameraOrientation or nil
@@ -334,6 +406,45 @@ end
 
 local function _IsAlive(agent)
     return agent ~= nil and agent:GetHealth() > 0
+end
+
+local function _Normalize2D(vec)
+    if vec == nil then return Vector3(0, 0, 1) end
+    vec.y = 0
+    if vec:squaredLength() <= 0.0001 then
+        return Vector3(0, 0, 1)
+    end
+    return Vector.Normalize(vec)
+end
+
+local function _ProjectToNav(pos)
+    if pos == nil then return nil end
+    local navPos = Sandbox:FindClosestPoint("default", pos)
+    return navPos ~= nil and navPos or pos
+end
+
+local function _DistanceToSegmentSq2D(point, startPos, endPos)
+    if point == nil or startPos == nil or endPos == nil then
+        return 100000000.0
+    end
+    local vx = endPos.x - startPos.x
+    local vz = endPos.z - startPos.z
+    local wx = point.x - startPos.x
+    local wz = point.z - startPos.z
+    local lengthSq = vx * vx + vz * vz
+    if lengthSq <= 0.0001 then
+        local dx = point.x - startPos.x
+        local dz = point.z - startPos.z
+        return dx * dx + dz * dz
+    end
+    local t = (wx * vx + wz * vz) / lengthSq
+    if t < 0.0 then t = 0.0 end
+    if t > 1.0 then t = 1.0 end
+    local px = startPos.x + vx * t
+    local pz = startPos.z + vz * t
+    local dx = point.x - px
+    local dz = point.z - pz
+    return dx * dx + dz * dz
 end
 
 local function _IsInsideDemoStage(pos)
@@ -362,6 +473,8 @@ local function _ClearAgentDemoOrders(agent)
         bb:Remove("enemy")
         bb:Remove("movePos")
         _ClearSupportBlackboard(bb)
+        _ClearSensoryBlackboard(bb)
+        _ClearFormationBlackboard(bb)
     end
 end
 
@@ -727,6 +840,372 @@ local function _MaybePrintInfluenceMapSmoke()
     end
 end
 
+local function _GetHearingDangerConfig()
+    local config = _chapter8.config or {}
+    return config.hearingDanger or {}
+end
+
+local function _IsHearingDangerEnabled()
+    return _GetHearingDangerConfig().enabled == true
+end
+
+local function _GetFormationConfig()
+    local config = _chapter8.config or {}
+    return config.chapter9Formation or {}
+end
+
+local function _IsFormationEnabled()
+    return _GetFormationConfig().enabled == true
+end
+
+local function _PushSoundEvent(shooter, target)
+    if not _IsAlive(shooter) then
+        return
+    end
+
+    local hearing = _GetHearingDangerConfig()
+    local soundPos = shooter:GetPosition()
+    local impactPos = target ~= nil and target:GetPosition() or soundPos
+    local event = {
+        eventType = "Gunshot",
+        sourceId = _GetAgentId(shooter),
+        sourceTeamId = shooter:GetTeamId(),
+        targetId = _GetAgentId(target),
+        pos = soundPos,
+        impactPos = impactPos,
+        timeMs = _chapter8.elapsedMs,
+        ttlMs = tonumber(hearing.eventTtlMs) or 1800,
+        radius = tonumber(hearing.hearingRadius) or 44.0,
+        dangerRadius = tonumber(hearing.dangerRadius) or 13.0,
+    }
+    table.insert(_chapter8.soundEvents, event)
+    table.insert(_chapter8.dangerEvents, event)
+    _chapter8.totalSoundEvents = _chapter8.totalSoundEvents + 1
+    _PushRecentEvent({
+        eventType = "Gunshot",
+        teamId = shooter:GetTeamId(),
+        senderId = _GetAgentId(shooter),
+        targetId = _GetAgentId(target),
+        timeMs = _chapter8.elapsedMs,
+    })
+    _Chapter8DebugLog("[HearingDanger] Gunshot", "source=", event.sourceId, "impact=", _FormatVec3(event.impactPos))
+end
+
+local function _UpdateScriptedGunshot()
+    local hearing = _GetHearingDangerConfig()
+    local scripted = hearing.scriptedGunshot
+    if scripted == nil or scripted.enabled ~= true then
+        return
+    end
+
+    local delayMs = tonumber(scripted.delayMs) or 900
+    local repeatMs = tonumber(scripted.repeatIntervalMs) or 1700
+    if _chapter8.scriptedGunshotNextMs <= 0 then
+        _chapter8.scriptedGunshotNextMs = delayMs
+    end
+    if _chapter8.elapsedMs < _chapter8.scriptedGunshotNextMs then
+        return
+    end
+
+    local shooter = _agents[tonumber(scripted.shooterIndex) or 2]
+    local target = _agents[tonumber(scripted.targetIndex) or 1]
+    _PushSoundEvent(shooter, target)
+    _chapter8.scriptedGunshotNextMs = _chapter8.elapsedMs + repeatMs
+end
+
+local function _PruneSensoryEvents()
+    local keptSounds = {}
+    for _, event in ipairs(_chapter8.soundEvents or {}) do
+        if (_chapter8.elapsedMs - event.timeMs) <= event.ttlMs then
+            table.insert(keptSounds, event)
+        end
+    end
+    _chapter8.soundEvents = keptSounds
+
+    local keptDanger = {}
+    for _, event in ipairs(_chapter8.dangerEvents or {}) do
+        if (_chapter8.elapsedMs - event.timeMs) <= event.ttlMs then
+            table.insert(keptDanger, event)
+        end
+    end
+    _chapter8.dangerEvents = keptDanger
+end
+
+local function _BuildInvestigatePos(agent, event)
+    local hearing = _GetHearingDangerConfig()
+    local stopDistance = tonumber(hearing.investigateStopDistance) or 5.0
+    local fromSound = _Normalize2D(agent:GetPosition() - event.pos)
+    local pos = event.pos + Vector3(fromSound.x * stopDistance, 0, fromSound.z * stopDistance)
+    return _ProjectToNav(pos)
+end
+
+local function _BuildDangerEscapePos(agent, event)
+    local hearing = _GetHearingDangerConfig()
+    local escapeDistance = tonumber(hearing.escapeDistance) or 9.0
+    local away = _Normalize2D(agent:GetPosition() - event.impactPos)
+    local pos = agent:GetPosition() + Vector3(away.x * escapeDistance, 0, away.z * escapeDistance)
+    return _ProjectToNav(pos)
+end
+
+local function _ApplyHearingDangerToAgent(agent)
+    if not _IsAlive(agent) then
+        return
+    end
+
+    local bb = _GetBlackboard(agent)
+    if bb == nil or bb:GetBool("perception.hasTarget", false) then
+        return
+    end
+
+    local hearing = _GetHearingDangerConfig()
+    local heardCooldownMs = tonumber(hearing.responseCooldownMs) or 450
+    local dangerCooldownMs = tonumber(hearing.dangerCooldownMs) or 350
+    local agentId = _GetAgentId(agent)
+
+    for _, event in ipairs(_chapter8.soundEvents or {}) do
+        if event.sourceTeamId ~= agent:GetTeamId() then
+            local distance = (agent:GetPosition() - event.pos):length()
+            if distance <= event.radius then
+                local key = tostring(agentId) .. ":" .. tostring(event.sourceId)
+                local lastAt = _chapter8.lastHeardAt[key]
+                if lastAt == nil or (_chapter8.elapsedMs - lastAt) >= heardCooldownMs then
+                    _chapter8.lastHeardAt[key] = _chapter8.elapsedMs
+                    local confidence = math.max(0.05, 1.0 - (distance / event.radius))
+                    local investigatePos = _BuildInvestigatePos(agent, event)
+                    bb:SetString("chapter8.sensoryIntent", "investigate_sound")
+                    bb:SetVec3("sense.heardSoundPos", event.pos)
+                    bb:SetVec3("sense.heardInvestigatePos", investigatePos)
+                    bb:SetObjectId("sense.heardSoundSourceId", event.sourceId)
+                    bb:SetInt("sense.heardSoundAgeMs", _chapter8.elapsedMs - event.timeMs)
+                    bb:SetFloat("sense.heardSoundConfidence", confidence)
+                    _chapter8.totalHeardResponses = _chapter8.totalHeardResponses + 1
+                    _chapter8.totalInvestigations = _chapter8.totalInvestigations + 1
+                end
+            end
+        end
+    end
+
+    for _, event in ipairs(_chapter8.dangerEvents or {}) do
+        if event.sourceTeamId ~= agent:GetTeamId() then
+            local distanceSq = _DistanceToSegmentSq2D(agent:GetPosition(), event.pos, event.impactPos)
+            local dangerRadius = event.dangerRadius
+            if distanceSq <= dangerRadius * dangerRadius then
+                local key = tostring(agentId) .. ":" .. tostring(event.sourceId)
+                local lastAt = _chapter8.lastDangerAt[key]
+                if lastAt == nil or (_chapter8.elapsedMs - lastAt) >= dangerCooldownMs then
+                    _chapter8.lastDangerAt[key] = _chapter8.elapsedMs
+                    local dangerLevel = math.max(0.1, 1.0 - (math.sqrt(distanceSq) / dangerRadius))
+                    local escapePos = _BuildDangerEscapePos(agent, event)
+                    bb:SetString("chapter8.sensoryIntent", "evade_danger")
+                    bb:SetFloat("sense.dangerLevel", dangerLevel)
+                    bb:SetVec3("sense.dangerPos", event.impactPos)
+                    bb:SetVec3("sense.dangerEscapePos", escapePos)
+                    bb:SetObjectId("sense.dangerSourceId", event.sourceId)
+                    _chapter8.totalDangerResponses = _chapter8.totalDangerResponses + 1
+                end
+            end
+        end
+    end
+end
+
+local function _UpdateHearingDanger(deltaTimeInMillis)
+    if not _IsHearingDangerEnabled() then
+        return
+    end
+    if #_agents <= 0 then
+        return
+    end
+
+    _UpdateScriptedGunshot()
+    _PruneSensoryEvents()
+
+    local hearing = _GetHearingDangerConfig()
+    local intervalMs = math.max(1, tonumber(hearing.scanIntervalMs) or 100)
+    local agentsPerTick = math.max(1, math.min(#_agents, tonumber(hearing.agentsPerTick) or 3))
+    _chapter8.hearingIntervalMs = intervalMs
+    _chapter8.hearingElapsedMs = _chapter8.hearingElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+    local shouldForceFirst = _chapter8.hearingRunCount == 0
+    if not shouldForceFirst and _chapter8.hearingElapsedMs < intervalMs then
+        _chapter8.hearingSkipCount = _chapter8.hearingSkipCount + 1
+        return
+    end
+
+    _chapter8.hearingElapsedMs = 0
+    _chapter8.hearingRunCount = _chapter8.hearingRunCount + 1
+    for index = 1, agentsPerTick do
+        local agent = _agents[((_chapter8.hearingAgentChecks + index - 1) % #_agents) + 1]
+        _ApplyHearingDangerToAgent(agent)
+    end
+    _chapter8.hearingAgentChecks = _chapter8.hearingAgentChecks + agentsPerTick
+end
+
+local function _MaybePrintHearingDangerSmoke()
+    if _chapter8.hearingSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
+        return
+    end
+    if _chapter8.totalSoundEvents > 0
+        and _chapter8.totalHeardResponses > 0
+        and _chapter8.totalDangerResponses > 0
+        and _chapter8.totalInvestigations > 0
+        and _chapter8.hearingRunCount > 0
+        and _chapter8.hearingSkipCount > 0 then
+        _chapter8.hearingSmokePrinted = true
+        print("[HearingDangerSmoke] PASS",
+            "sounds=", _chapter8.totalSoundEvents,
+            "heard=", _chapter8.totalHeardResponses,
+            "danger=", _chapter8.totalDangerResponses,
+            "investigations=", _chapter8.totalInvestigations,
+            "runs=", _chapter8.hearingRunCount,
+            "skips=", _chapter8.hearingSkipCount,
+            "agentChecks=", _chapter8.hearingAgentChecks)
+    end
+end
+
+local function _TeamMembers(teamId)
+    local members = {}
+    for _, agent in ipairs(_agents) do
+        if _IsAlive(agent) and agent:GetTeamId() == teamId then
+            table.insert(members, agent)
+        end
+    end
+    table.sort(members, function(a, b) return _GetAgentId(a) < _GetAgentId(b) end)
+    return members
+end
+
+local function _FindFormationFocus(teamId)
+    local memory = _EnsureTeamMemory(teamId)
+    for _, sighting in pairs(memory.visibleEnemies) do
+        if sighting.targetPos ~= nil then
+            return sighting.targetPos, sighting
+        end
+    end
+    local formation = _GetFormationConfig()
+    local fallback = formation.focusPosition
+    if fallback ~= nil then
+        return Vector3(fallback[1], fallback[2] or 0, fallback[3]), nil
+    end
+    return nil, nil
+end
+
+local function _FormationSlotOffset(slotIndex, spacing)
+    local row = math.floor((slotIndex - 1) / 2) + 1
+    local side = ((slotIndex - 1) % 2 == 0) and -1 or 1
+    if slotIndex == 1 then
+        return Vector3(0, 0, 0)
+    end
+    return Vector3(side * row * spacing, 0, -row * spacing)
+end
+
+local function _ApplyFormationForTeam(teamId)
+    local formation = _GetFormationConfig()
+    local members = _TeamMembers(teamId)
+    if #members <= 0 then
+        return
+    end
+
+    local leader = members[1]
+    local focusPos, sighting = _FindFormationFocus(teamId)
+    if focusPos == nil then
+        local anchor = formation.anchorPosition
+        if anchor ~= nil then
+            focusPos = Vector3(anchor[1], anchor[2] or 0, anchor[3])
+        else
+            focusPos = leader:GetPosition() + Vector3(0, 0, 10)
+        end
+    end
+
+    local spacing = tonumber(formation.slotSpacing) or 5.0
+    local anchorPos = leader:GetPosition()
+    local forward = _Normalize2D(focusPos - anchorPos)
+    local right = Vector3(forward.z, 0, -forward.x)
+    local readyDistance = tonumber(formation.readyDistance) or 1.8
+    local minReady = math.max(1, tonumber(formation.minReadyCount) or math.min(3, #members))
+    local readyCount = 0
+    local slots = {}
+
+    for index, agent in ipairs(members) do
+        local offset = _FormationSlotOffset(index, spacing)
+        local slotPos = anchorPos + Vector3(right.x * offset.x, 0, right.z * offset.x) + Vector3(forward.x * offset.z, 0, forward.z * offset.z)
+        slotPos = _ProjectToNav(slotPos)
+        slots[index] = slotPos
+        if slotPos ~= nil and (agent:GetPosition() - slotPos):length() <= readyDistance then
+            readyCount = readyCount + 1
+        end
+    end
+
+    _chapter8.formationReadyCount = readyCount
+    for index, agent in ipairs(members) do
+        local bb = _GetBlackboard(agent)
+        local slotPos = slots[index]
+        if bb ~= nil and slotPos ~= nil then
+            bb:SetBool("formation.enabled", true)
+            bb:SetString("formation.role", index == 1 and "leader" or "member")
+            bb:SetInt("formation.slotIndex", index)
+            bb:SetVec3("formation.slotPos", slotPos)
+            bb:SetVec3("formation.anchorPos", anchorPos)
+            bb:SetVec3("formation.focusPos", focusPos)
+            bb:SetInt("formation.readyCount", readyCount)
+            bb:SetInt("formation.minReadyCount", minReady)
+            bb:SetInt("formation.waitTimeoutMs", tonumber(formation.waitTimeoutMs) or 1600)
+            bb:SetBool("formation.waitForSquadMate", index == 1 and readyCount < minReady)
+            _chapter8.formationSlotAssignments = _chapter8.formationSlotAssignments + 1
+            if index == 1 and readyCount < minReady then
+                _chapter8.formationWaitAssignments = _chapter8.formationWaitAssignments + 1
+            end
+            if index == 1 and sighting ~= nil and formation.callForBackup ~= false then
+                bb:SetBool("team.shouldCallForBackup", true)
+                bb:SetInt("team.requestTimeMs", _chapter8.elapsedMs)
+                bb:SetObjectId("team.focusTargetId", sighting.targetId)
+                bb:SetVec3("team.lastKnownEnemyPos", sighting.targetPos)
+            end
+        end
+    end
+end
+
+local function _UpdateFormation(deltaTimeInMillis)
+    if not _IsFormationEnabled() then
+        return
+    end
+
+    local formation = _GetFormationConfig()
+    local intervalMs = math.max(1, tonumber(formation.updateIntervalMs) or 180)
+    _chapter8.formationIntervalMs = intervalMs
+    _chapter8.formationElapsedMs = _chapter8.formationElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+    local shouldForceFirst = _chapter8.formationRunCount == 0
+    if not shouldForceFirst and _chapter8.formationElapsedMs < intervalMs then
+        _chapter8.formationSkipCount = _chapter8.formationSkipCount + 1
+        return
+    end
+
+    _chapter8.formationElapsedMs = 0
+    _chapter8.formationRunCount = _chapter8.formationRunCount + 1
+    _ApplyFormationForTeam(tonumber(formation.teamId) or 1)
+
+    local request = TeamBlackboard:GetValue(tonumber(formation.teamId) or 1, "backupRequest", nil)
+    if request ~= nil then
+        _chapter8.formationBackupCalls = 1
+    end
+end
+
+local function _MaybePrintFormationSmoke()
+    if _chapter8.formationSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
+        return
+    end
+    if _chapter8.formationSlotAssignments > 0
+        and _chapter8.formationRunCount > 0
+        and _chapter8.formationSkipCount > 0
+        and _chapter8.formationBackupCalls > 0 then
+        _chapter8.formationSmokePrinted = true
+        print("[FormationSmoke] PASS",
+            "slots=", _chapter8.formationSlotAssignments,
+            "ready=", _chapter8.formationReadyCount,
+            "backupCalls=", _chapter8.formationBackupCalls,
+            "waitAssignments=", _chapter8.formationWaitAssignments,
+            "runs=", _chapter8.formationRunCount,
+            "skips=", _chapter8.formationSkipCount)
+    end
+end
+
 local function _SelectTeamMemoryForAgent(agent)
     local memory = _EnsureTeamMemory(agent:GetTeamId())
     local receiverId = _GetAgentId(agent)
@@ -752,6 +1231,9 @@ end
 
 local function _ApplyTeamMemoryToAgent(agent)
     if agent == nil then
+        return false
+    end
+    if _chapter8.config ~= nil and _chapter8.config.teamSupportEnabled == false then
         return false
     end
 
@@ -824,6 +1306,11 @@ local function _GetSightPairFromCursor(cursor)
 end
 
 local function _UpdateScheduledSightScan(deltaTimeInMillis)
+    if _chapter8.config ~= nil and _chapter8.config.sightScanEnabled == false then
+        _chapter8.sightScanSkipCount = _chapter8.sightScanSkipCount + 1
+        return
+    end
+
     local totalPairs = #_agents * math.max(0, #_agents - 1)
     if totalPairs <= 0 then
         return
@@ -921,12 +1408,16 @@ local function _UpdateChapter8Comms(deltaTimeInMillis)
 
     _UpdateScheduledSightScan(deltaTimeInMillis)
     _PublishScriptedOpeningSighting()
+    _UpdateHearingDanger(deltaTimeInMillis)
     _UpdateInfluenceMap(deltaTimeInMillis)
     _UpdateScheduledTeamPrune(deltaTimeInMillis)
     _PruneRecentEvents()
     _UpdateScheduledTeamApply(deltaTimeInMillis)
+    _UpdateFormation(deltaTimeInMillis)
+    _MaybePrintHearingDangerSmoke()
     _MaybePrintTeamBlackboardSmoke()
     _MaybePrintInfluenceMapSmoke()
+    _MaybePrintFormationSmoke()
 end
 
 local function _DrawAgentMarker(agent)
@@ -975,6 +1466,57 @@ local function _DrawInfluenceMap()
     end
     for _, cell in ipairs(_influenceMap:GetActiveCells("support", threshold)) do
         _DrawInfluenceCell(cell, _colors.supportCell, 0.16)
+    end
+end
+
+local function _DrawHearingDanger()
+    local hearing = _GetHearingDangerConfig()
+    if hearing.enabled ~= true or hearing.draw == false then
+        return
+    end
+
+    for _, event in ipairs(_chapter8.soundEvents or {}) do
+        DebugDrawer:drawCircle(event.pos + Vector3(0, 0.22, 0), event.radius, 48, _colors.hearing, false)
+        DebugDrawer:drawLine(event.pos + Vector3(0, 0.2, 0), event.pos + Vector3(0, 4.5, 0), _colors.hearing)
+        DebugDrawer:drawLine(event.pos + Vector3(0, 1.2, 0), event.impactPos + Vector3(0, 1.2, 0), _colors.danger)
+    end
+
+    for _, event in ipairs(_chapter8.dangerEvents or {}) do
+        DebugDrawer:drawCircle(event.impactPos + Vector3(0, 0.26, 0), event.dangerRadius, 48, _colors.danger, false)
+    end
+
+    for _, agent in ipairs(_agents) do
+        local bb = _GetBlackboard(agent)
+        if bb ~= nil and bb:Has("sense.heardInvestigatePos") then
+            local pos = bb:GetVec3("sense.heardInvestigatePos")
+            DebugDrawer:drawLine(agent:GetPosition() + Vector3(0, 1.3, 0), pos + Vector3(0, 1.3, 0), _colors.investigate)
+            DebugDrawer:drawCircle(pos + Vector3(0, 0.2, 0), 1.1, 24, _colors.investigate, false)
+        end
+        if bb ~= nil and bb:Has("sense.dangerEscapePos") then
+            local pos = bb:GetVec3("sense.dangerEscapePos")
+            DebugDrawer:drawLine(agent:GetPosition() + Vector3(0, 1.8, 0), pos + Vector3(0, 1.8, 0), _colors.evade)
+            DebugDrawer:drawCircle(pos + Vector3(0, 0.25, 0), 1.3, 24, _colors.evade, false)
+        end
+    end
+end
+
+local function _DrawFormation()
+    local formation = _GetFormationConfig()
+    if formation.enabled ~= true or formation.draw == false then
+        return
+    end
+
+    for _, agent in ipairs(_agents) do
+        local bb = _GetBlackboard(agent)
+        if bb ~= nil and bb:GetBool("formation.enabled", false) and bb:Has("formation.slotPos") then
+            local slotPos = bb:GetVec3("formation.slotPos")
+            DebugDrawer:drawLine(agent:GetPosition() + Vector3(0, 1.6, 0), slotPos + Vector3(0, 1.6, 0), _colors.formation)
+            DebugDrawer:drawCircle(slotPos + Vector3(0, 0.24, 0), 1.2, 24, _colors.formation, false)
+            if bb:Has("formation.focusPos") then
+                local focusPos = bb:GetVec3("formation.focusPos")
+                DebugDrawer:drawLine(slotPos + Vector3(0, 1.0, 0), focusPos + Vector3(0, 1.0, 0), _colors.backup)
+            end
+        end
     end
 end
 
@@ -1058,6 +1600,8 @@ local function _DrawDemoGuides()
     _DrawTeamBroadcasts()
     _DrawTeamMemories()
     _DrawInfluenceMap()
+    _DrawHearingDanger()
+    _DrawFormation()
 end
 
 local function _TeamSummary(teamId)
@@ -1094,15 +1638,28 @@ local function _BuildDemoPanelText()
     local team1Count, team1Last = _TeamSummary(1)
     local team0SupportCount, team0SupportLast = _SupportSummary(0)
     local team1SupportCount, team1SupportLast = _SupportSummary(1)
+    local stage = "TACTICAL INFLUENCE"
+    local goal = "teammates choose low-danger support points"
+    if _IsHearingDangerEnabled() then
+        stage = "HEARING + DANGER"
+        goal = "agents react without seeing the enemy"
+    end
+    if _IsFormationEnabled() then
+        stage = "FORMATION + COOP BT"
+        goal = "squad slots + backup request + wait-for-mate"
+    end
 
     return GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-        "[Sandbox13 - Influence Map]" .. GUI.MarkupNewline ..
-        GUI.MarkupColor.Green .. "Stage: TACTICAL INFLUENCE" .. GUI.MarkupColor.White .. GUI.MarkupNewline ..
-        "Goal: teammates choose low-danger support points" .. GUI.MarkupNewline ..
+        _sampleTitle .. GUI.MarkupNewline ..
+        GUI.MarkupColor.Green .. "Stage: " .. stage .. GUI.MarkupColor.White .. GUI.MarkupNewline ..
+        "Goal: " .. goal .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
         "Influence: red danger cells + green support cells" .. GUI.MarkupNewline ..
         "TeamComms: cyan lines broadcast EnemySighted" .. GUI.MarkupNewline ..
         "TacticalMove: blue line moves toward scored support point" .. GUI.MarkupNewline ..
+        "Hearing: orange rings -> investigate sound" .. GUI.MarkupNewline ..
+        "Danger: red threat -> blue evade path" .. GUI.MarkupNewline ..
+        "Formation: purple slots, teal backup focus" .. GUI.MarkupNewline ..
         GUI.MarkupNewline ..
         "Direct sightings: " .. tostring(_chapter8.activeDirectSightings) ..
             "  shared sightings: " .. tostring(_chapter8.activeTeamMemories) ..
@@ -1121,6 +1678,16 @@ local function _BuildDemoPanelText()
             "  runs=" .. tostring(_chapter8.influenceUpdateCount) ..
             "  skipped=" .. tostring(_chapter8.influenceSkipCount) ..
             "  writes=" .. tostring(_chapter8.influenceLastCellWrites) .. GUI.MarkupNewline ..
+        "Hearing/Danger: sounds=" .. tostring(_chapter8.totalSoundEvents) ..
+            " heard=" .. tostring(_chapter8.totalHeardResponses) ..
+            " danger=" .. tostring(_chapter8.totalDangerResponses) ..
+            " runs=" .. tostring(_chapter8.hearingRunCount) ..
+            " skips=" .. tostring(_chapter8.hearingSkipCount) .. GUI.MarkupNewline ..
+        "Formation: slots=" .. tostring(_chapter8.formationSlotAssignments) ..
+            " ready=" .. tostring(_chapter8.formationReadyCount) ..
+            " backup=" .. tostring(_chapter8.formationBackupCalls) ..
+            " wait=" .. tostring(_chapter8.formationWaitAssignments) ..
+            " runs=" .. tostring(_chapter8.formationRunCount) .. GUI.MarkupNewline ..
         "Last score: " .. string.format("%.2f", _chapter8.lastTacticalScore) ..
             " danger=" .. string.format("%.2f", _chapter8.lastTacticalDanger) ..
             " support=" .. string.format("%.2f", _chapter8.lastTacticalSupport) .. GUI.MarkupNewline ..
@@ -1189,6 +1756,30 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.lastTacticalScore = 0.0
     _chapter8.lastTacticalDanger = 0.0
     _chapter8.lastTacticalSupport = 0.0
+    _chapter8.soundEvents = {}
+    _chapter8.dangerEvents = {}
+    _chapter8.lastHeardAt = {}
+    _chapter8.lastDangerAt = {}
+    _chapter8.hearingElapsedMs = 0
+    _chapter8.hearingIntervalMs = tonumber((config.hearingDanger or {}).scanIntervalMs) or 100
+    _chapter8.hearingRunCount = 0
+    _chapter8.hearingSkipCount = 0
+    _chapter8.hearingAgentChecks = 0
+    _chapter8.totalSoundEvents = 0
+    _chapter8.totalHeardResponses = 0
+    _chapter8.totalDangerResponses = 0
+    _chapter8.totalInvestigations = 0
+    _chapter8.scriptedGunshotNextMs = 0
+    _chapter8.hearingSmokePrinted = false
+    _chapter8.formationElapsedMs = 0
+    _chapter8.formationIntervalMs = tonumber((config.chapter9Formation or {}).updateIntervalMs) or 180
+    _chapter8.formationRunCount = 0
+    _chapter8.formationSkipCount = 0
+    _chapter8.formationSlotAssignments = 0
+    _chapter8.formationReadyCount = 0
+    _chapter8.formationBackupCalls = 0
+    _chapter8.formationWaitAssignments = 0
+    _chapter8.formationSmokePrinted = false
     _chapter8.openingSightingPublished = false
     _chapter8.supportSmokePrinted = false
     _chapter8.influenceSmokePrinted = false
@@ -1320,7 +1911,7 @@ function Sandbox_Initialize()
     _drawNavMesh = true
     if _navMesh ~= nil then _navMesh:SetDebugVisible(_drawNavMesh) end
 
-    local sampleName = "Sandbox13"
+    local sampleName = _sampleName
     local agentCount = ConfigManager:GetAgentCount(sampleName, 6)
     local preset = ConfigManager:GetSamplePreset(sampleName)
     local chapter8Config = preset.chapter8Comms or {}

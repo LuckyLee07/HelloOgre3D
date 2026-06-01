@@ -40,6 +40,8 @@
 - 2026-05-31：补齐 TeamBlackboard 调度验收：`Sandbox12` / `Sandbox13` 的视线 pair 扫描、共享记忆应用和记忆清理按 interval + budget 分批执行，smoke 输出 scan/apply stats。
 - 2026-05-31：补齐 `SandboxEventDispatcherManager` 的 Team / Global scope 验证：C++ selftest 覆盖 Local / Team / Global 路由、teamId 过滤、QueueEmit 延迟派发和 token unsubscribe，smoke 可用 `-AiEventSelfTest` 检查。
 - 2026-05-30：补齐 `BehaviorTreeLoader` 配置诊断：错误和警告会输出节点路径、节点类型、字段名、错误说明和 fallback 后果，便于定位声明式 BT 配置问题。
+- 2026-05-31：新增 `Sandbox14` 作为 Hearing / Danger 最小 sample：关闭直接视线扫描，用脚本化枪声和危险线写入 blackboard，展示“没看见敌人但听到/感到威胁后调查或规避”，smoke 检查 `[HearingDangerSmoke] PASS`。
+- 2026-05-31：新增 `Sandbox15` 作为 Chapter 9 Formation / 协作 BT 最小 sample：队友分配 formation slot，BT 读取 `CallForBackup` / `WaitForSquadMate` / `MoveToFormationSlot`，smoke 检查 `[FormationSmoke] PASS`。
 
 ## P0 - 方向回正
 
@@ -87,6 +89,8 @@
 - [x] InfluenceMap 多层结果与 debug 显示。
 - [x] 战术移动 sample：AI 避开危险区域或偏好掩体区域。
 - [x] AI 更新调度和性能观测：感知、知识源、InfluenceMap 频率可配置。
+- [x] HearingSensor / DangerSensor 最小 sample：没看见敌人时也能根据声音和危险区域改变行为。
+- [x] Chapter 9 Formation / 协作 BT 第一版：队形 slot、请求支援、等待队友和移动到队形点。
 - [x] 固定随机种子 sample preset，支撑可复现 AI 行为验证。
 
 ## 暂缓任务

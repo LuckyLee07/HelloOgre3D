@@ -13,7 +13,9 @@ param(
 		"Sandbox10",
 		"Sandbox11",
 		"Sandbox12",
-		"Sandbox13"
+		"Sandbox13",
+		"Sandbox14",
+		"Sandbox15"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -67,6 +69,12 @@ if ($Preset -eq "team_blackboard" -and -not $PSBoundParameters.ContainsKey("Samp
 }
 if ($Preset -eq "influence_map" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox13"
+}
+if ($Preset -eq "hearing_danger" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox14"
+}
+if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox15"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent
 
@@ -147,6 +155,12 @@ if ($Preset -eq "team_blackboard" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 if ($Preset -eq "influence_map" -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "hearing_danger" -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
@@ -360,6 +374,36 @@ try {
 			$teamBlackboardScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*scanRuns=.*scanSkips=.*applyRuns=.*applySkips=")
 			if ($teamBlackboardScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats for InfluenceMap preset."
+			}
+		}
+
+		if ($Preset -eq "hearing_danger") {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler is enabled for Hearing/Danger preset."
+			}
+			$hearingMatches = @($LogLinesForChecks | Select-String -Pattern "\[HearingDangerSmoke\]\s+PASS")
+			if ($hearingMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Hearing/Danger sensory response."
+			}
+			$hearingScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[HearingDangerSmoke\].*runs=.*skips=.*agentChecks=")
+			if ($hearingScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Hearing/Danger scheduled scan stats."
+			}
+		}
+
+		if ($Preset -eq "formation_tactics") {
+			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
+			if ($schedulerMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm AI scheduler is enabled for Formation preset."
+			}
+			$formationMatches = @($LogLinesForChecks | Select-String -Pattern "\[FormationSmoke\]\s+PASS")
+			if ($formationMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Formation tactical behavior."
+			}
+			$formationScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[FormationSmoke\].*slots=.*ready=.*backupCalls=.*runs=.*skips=")
+			if ($formationScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Formation scheduled update stats."
 			}
 		}
 
