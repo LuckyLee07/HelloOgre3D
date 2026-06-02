@@ -21,12 +21,12 @@
 
 当前主要技术缺口：
 
-- `IAgentSpatialQuery` 已有接口，但默认实现仍通过 `ObjectManager::getAllAgents()` 做线性范围查询。
-- TeamBlackboard 仍是 Lua 全局表，缺少 C++ 生命周期、TTL、priority、统计和统一 facade。
+- `AgentSpatialIndexSystem` 第一版已接入，`IAgentSpatialQuery` 默认可走 uniform grid；后续仍缺 team/alive/includeSelf/type 过滤、queryCostMs 和 grid vs linear 基准对照。
+- `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；后续仍缺更完整 fact schema 和 Lua 全局状态迁移。
 - InfluenceMap 仍是 Lua 网格，适合教学，不适合大规模战术评分或路径代价。
-- 感知结果虽已写入 Blackboard / MemoryStore，但还缺统一的 C++ 批量感知系统和结果缓存。
+- `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；后续仍缺独立 `PerceptionResultCache`、hearing / danger C++ sense 和 Lua 扫描清理。
 - BT runtime 已有教学级扩展，但还缺 instance pool、node result cache、blackboard dirty 依赖和距离 LOD。
-- 还没有稳定的 100 / 500 / 1000 agent 性能基准 sample。
+- 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；还需要实际沉淀 spatial on/off、scheduler on/off、Debug/Release 的基线数据。
 
 ## 2. 迭代主线
 
@@ -267,23 +267,27 @@ score = objective + support + cover - threat - crowd
 
 ### 近期一：Spatial Index
 
-- [ ] 设计 `AgentSpatialIndexSystem` 数据结构。
-- [ ] 接入 agent 注册、注销、位置更新。
-- [ ] 替换 `ObjectManagerAgentSpatialQuery` 线性查询。
-- [ ] 增加 maxResults 和 query stats。
-- [ ] 增加 spatial query smoke / RuntimeDiag 输出。
+- [x] 设计 `AgentSpatialIndexSystem` 数据结构。
+- [x] 接入 agent 注册、注销、位置更新。
+- [x] 替换 `ObjectManagerAgentSpatialQuery` 线性查询。
+- [x] 增加 maxResults 和基础 query stats。
+- [x] 增加 spatial query smoke / RuntimeDiag 输出。
+- [ ] 补齐 teamId / alive / includeSelf / type 或 tag 过滤。
+- [ ] 补齐 queryCostMs 和 grid vs linear 一致性 / 成本对照。
 
 ### 近期二：AI Perf Preset
 
-- [ ] 新增 100 / 500 / 1000 agent preset。
-- [ ] 固定 seed 和出生点分布。
-- [ ] 输出 spatial / perception / scheduler 统计。
-- [ ] 对比线性查询与 grid 查询成本。
+- [x] 新增 100 / 500 / 1000 agent preset。
+- [x] 固定 seed 和 grid 出生点分布。
+- [x] 输出 spatial / perception / scheduler 统计入口，`run_sandbox_smoke.ps1` 会为 `ai_perf_*` 自动启用 `FramePerf`。
+- [x] 提供线性查询与 grid 查询成本对照入口：`-DisableSpatialIndex`。
+- [ ] 实际记录 100 / 500 / 1000 在 spatial on/off、scheduler on/off、Debug/Release 下的基线结果。
 
 ### 近期三：Perception System
 
-- [ ] 将 `VisionSensor` 接入 spatial query。
-- [ ] 建立 `PerceptionResultCache`。
+- [x] 将 `VisionSensor` 接入 spatial query。
+- [x] 建立 `AgentPerceptionSystem` 第一阶段：保持每帧全量更新，把 per-agent perception tick 集中到 system 级执行和统计。
+- [ ] 建立独立 `PerceptionResultCache`。
 - [ ] 将 hearing / danger sample 的结果入口收口到 C++ sense。
 - [ ] Lua BT 只读结果，不做对象扫描。
 

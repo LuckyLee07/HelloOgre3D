@@ -6,6 +6,7 @@ class RuntimeProfileCounters
 public:
 	static void PlotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	static void PlotAiSchedulerStats(int enabled, int agentCount, int tickedCount, int skippedCount, int pendingCount, int tickIntervalMs, int maxTicksPerFrame);
+	static void PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialResultCount);
 	static void PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount);
 };
 
@@ -46,6 +47,7 @@ struct RuntimeObjectUpdateTiming
 
 	double schedulerBeginMs;
 	double spatialRebuildMs;
+	double perceptionSystemMs;
 	double eventFlushMs;
 	double objectLoopMs;
 	double objectUpdateMs;
@@ -57,6 +59,16 @@ struct RuntimeObjectUpdateTiming
 	int agentCount;
 	int aiControllerCount;
 	int objectUpdateCount;
+	int perceptionEnabled;
+	int perceptionAgentCount;
+	int perceptionControllerCount;
+	int perceptionScanCount;
+	int perceptionVisibleCount;
+	int perceptionSpatialQueryCount;
+	int perceptionSpatialCandidateCount;
+	int perceptionSpatialResultCount;
+	double perceptionMemoryMs;
+	double perceptionVisionMs;
 	int spatialEnabled;
 	int spatialAgentCount;
 	int spatialCellCount;

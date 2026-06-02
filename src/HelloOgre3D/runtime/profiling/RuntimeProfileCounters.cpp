@@ -110,6 +110,7 @@ namespace
 		H3D_PROFILE_PLOT("RuntimeSimulateCostMs", s_stallFrameState.simulation.simulateCostMs);
 		H3D_PROFILE_PLOT("RuntimeGameUpdateMs", s_stallFrameState.simulation.gameUpdateMs);
 		H3D_PROFILE_PLOT("RuntimeObjectManagerMs", s_stallFrameState.game.objectManagerMs);
+		H3D_PROFILE_PLOT("RuntimeAgentPerceptionSystemMs", s_stallFrameState.object.perceptionSystemMs);
 		H3D_PROFILE_PLOT("RuntimeAiTickMs", s_stallFrameState.ai.totalMs);
 		H3D_PROFILE_PLOT("RuntimeLuaTickMs", s_stallFrameState.game.luaTickMs);
 		H3D_PROFILE_PLOT("RuntimeSandboxLuaMs", s_stallFrameState.game.sandboxLuaMs);
@@ -156,6 +157,7 @@ namespace
 			<< " aiControllers=" << s_stallFrameState.object.aiControllerCount
 			<< " schedulerBegin=" << s_stallFrameState.object.schedulerBeginMs
 			<< " spatialRebuild=" << s_stallFrameState.object.spatialRebuildMs
+			<< " perceptionSystem=" << s_stallFrameState.object.perceptionSystemMs
 			<< " eventFlush=" << s_stallFrameState.object.eventFlushMs
 			<< " loop=" << s_stallFrameState.object.objectLoopMs
 			<< " objectUpdate=" << s_stallFrameState.object.objectUpdateMs
@@ -171,6 +173,17 @@ namespace
 			<< " vision=" << s_stallFrameState.ai.visionMs
 			<< " lua=" << s_stallFrameState.ai.luaMs
 			<< " driver=" << s_stallFrameState.ai.driverMs;
+
+		stream << "\n[FramePerf] perception enabled=" << s_stallFrameState.object.perceptionEnabled
+			<< " agents=" << s_stallFrameState.object.perceptionAgentCount
+			<< " controllers=" << s_stallFrameState.object.perceptionControllerCount
+			<< " scans=" << s_stallFrameState.object.perceptionScanCount
+			<< " visible=" << s_stallFrameState.object.perceptionVisibleCount
+			<< " memory=" << s_stallFrameState.object.perceptionMemoryMs
+			<< " vision=" << s_stallFrameState.object.perceptionVisionMs
+			<< " spatialQueries=" << s_stallFrameState.object.perceptionSpatialQueryCount
+			<< " candidates=" << s_stallFrameState.object.perceptionSpatialCandidateCount
+			<< " results=" << s_stallFrameState.object.perceptionSpatialResultCount;
 
 		stream << "\n[FramePerf] spatial enabled=" << s_stallFrameState.object.spatialEnabled
 			<< " agents=" << s_stallFrameState.object.spatialAgentCount
@@ -233,6 +246,25 @@ void RuntimeProfileCounters::PlotAiSchedulerStats(int enabled, int agentCount, i
 	H3D_PROFILE_PLOT("AISchedulerMaxTicksPerFrame", static_cast<double>(maxTicksPerFrame));
 }
 
+void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialResultCount)
+{
+	(void)enabled;
+	(void)controllerCount;
+	(void)scanCount;
+	(void)visibleCount;
+	(void)spatialQueryCount;
+	(void)spatialCandidateCount;
+	(void)spatialResultCount;
+
+	H3D_PROFILE_PLOT("AgentPerceptionEnabled", static_cast<double>(enabled));
+	H3D_PROFILE_PLOT("AgentPerceptionControllers", static_cast<double>(controllerCount));
+	H3D_PROFILE_PLOT("AgentPerceptionScans", static_cast<double>(scanCount));
+	H3D_PROFILE_PLOT("AgentPerceptionVisible", static_cast<double>(visibleCount));
+	H3D_PROFILE_PLOT("AgentPerceptionSpatialQueries", static_cast<double>(spatialQueryCount));
+	H3D_PROFILE_PLOT("AgentPerceptionSpatialCandidates", static_cast<double>(spatialCandidateCount));
+	H3D_PROFILE_PLOT("AgentPerceptionSpatialResults", static_cast<double>(spatialResultCount));
+}
+
 void RuntimeProfileCounters::PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount)
 {
 	(void)teamCount;
@@ -276,6 +308,7 @@ RuntimeGameUpdateTiming::RuntimeGameUpdateTiming()
 RuntimeObjectUpdateTiming::RuntimeObjectUpdateTiming()
 	: schedulerBeginMs(0.0)
 	, spatialRebuildMs(0.0)
+	, perceptionSystemMs(0.0)
 	, eventFlushMs(0.0)
 	, objectLoopMs(0.0)
 	, objectUpdateMs(0.0)
@@ -287,6 +320,16 @@ RuntimeObjectUpdateTiming::RuntimeObjectUpdateTiming()
 	, agentCount(0)
 	, aiControllerCount(0)
 	, objectUpdateCount(0)
+	, perceptionEnabled(0)
+	, perceptionAgentCount(0)
+	, perceptionControllerCount(0)
+	, perceptionScanCount(0)
+	, perceptionVisibleCount(0)
+	, perceptionSpatialQueryCount(0)
+	, perceptionSpatialCandidateCount(0)
+	, perceptionSpatialResultCount(0)
+	, perceptionMemoryMs(0.0)
+	, perceptionVisionMs(0.0)
 	, spatialEnabled(0)
 	, spatialAgentCount(0)
 	, spatialCellCount(0)

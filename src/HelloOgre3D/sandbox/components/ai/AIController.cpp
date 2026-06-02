@@ -69,6 +69,7 @@ AIController::AIController(BaseObject* owner)
 	, m_hasMovePos(false)
 	, m_movePos(Ogre::Vector3::ZERO)
 	, m_tickInOwnerUpdateEnabled(true)
+	, m_perceptionTickInAiTickEnabled(true)
 	, m_localTimeMs(0)
 	, m_memoryStore(&m_blackboard)
 {
@@ -85,6 +86,7 @@ void AIController::onAttach(BaseObject* owner)
 	m_blackboard.SetOwner(GetAgentOwner());
 	m_memoryStore.SetBlackboard(&m_blackboard);
 	m_localTimeMs = 0;
+	m_perceptionTickInAiTickEnabled = true;
 	m_visionSensor.Clear();
 	InitDefaultDriver();
 }
@@ -119,6 +121,68 @@ unsigned int AIController::GetAgentId() const
 	return owner != nullptr ? owner->GetObjId() : 0;
 }
 
+void AIController::TickPerception(int deltaMs, AIPerceptionTickStats* outStats)
+{
+	if (outStats != nullptr)
+		*outStats = AIPerceptionTickStats();
+
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr)
+	{
+		return;
+	}
+
+	H3D_PROFILE_SCOPE("AIController::TickPerception");
+	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+	long long stageStartMicros = 0;
+
+	const int elapsedMs = std::max(0, deltaMs);
+	m_localTimeMs += elapsedMs;
+	{
+		H3D_PROFILE_SCOPE("AIController::MemoryUpdate");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
+		m_memoryStore.SyncSnapshot(m_localTimeMs);
+		if (perfEnabled)
+		{
+			const double memoryMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			if (outStats != nullptr)
+				outStats->memoryMs += memoryMs;
+		}
+	}
+	{
+		H3D_PROFILE_SCOPE("AIController::VisionSensor");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		bool scanned = false;
+		const bool hasVisibleTarget = UpdateVisionSensor(elapsedMs, "default", true, false, &scanned);
+		if (perfEnabled)
+		{
+			const double visionMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			if (outStats != nullptr)
+				outStats->visionMs = visionMs;
+		}
+		if (outStats != nullptr)
+		{
+			outStats->scanned = scanned;
+			outStats->hasVisibleTarget = hasVisibleTarget;
+		}
+	}
+	{
+		H3D_PROFILE_SCOPE("AIController::MemorySnapshot");
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_memoryStore.SyncSnapshot(m_localTimeMs);
+		if (perfEnabled)
+		{
+			const double memoryMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			if (outStats != nullptr)
+				outStats->memoryMs += memoryMs;
+		}
+	}
+}
+
 void AIController::TickAI(int deltaMs)
 {
 	AgentObject* owner = GetAgentOwner();
@@ -133,32 +197,12 @@ void AIController::TickAI(int deltaMs)
 	const long long tickStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
 	long long stageStartMicros = 0;
 
-	const int elapsedMs = std::max(0, deltaMs);
-	m_localTimeMs += elapsedMs;
+	if (m_perceptionTickInAiTickEnabled)
 	{
-		H3D_PROFILE_SCOPE("AIController::MemoryUpdate");
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_blackboard.UpdateEntries(m_localTimeMs, elapsedMs);
-		m_memoryStore.SyncSnapshot(m_localTimeMs);
-		if (perfEnabled)
-			perfTiming.memoryMs += RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-	}
-	{
-		H3D_PROFILE_SCOPE("AIController::VisionSensor");
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		UpdateVisionSensor(elapsedMs, "default", true, false);
-		if (perfEnabled)
-			perfTiming.visionMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-	}
-	{
-		H3D_PROFILE_SCOPE("AIController::MemorySnapshot");
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_memoryStore.SyncSnapshot(m_localTimeMs);
-		if (perfEnabled)
-			perfTiming.memoryMs += RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		AIPerceptionTickStats perceptionStats;
+		TickPerception(deltaMs, &perceptionStats);
+		perfTiming.memoryMs += perceptionStats.memoryMs;
+		perfTiming.visionMs += perceptionStats.visionMs;
 	}
 	static int totalMilisec = 0;
 	totalMilisec += deltaMs;
@@ -202,6 +246,11 @@ void AIController::TickAI(int deltaMs)
 void AIController::SetTickInOwnerUpdateEnabled(bool enabled)
 {
 	m_tickInOwnerUpdateEnabled = enabled;
+}
+
+void AIController::SetPerceptionTickInAiTickEnabled(bool enabled)
+{
+	m_perceptionTickInAiTickEnabled = enabled;
 }
 
 Blackboard* AIController::GetBlackboard() const
@@ -280,16 +329,20 @@ MemoryStoreConfig AIController::BuildMemoryStoreConfig() const
 	return config;
 }
 
-bool AIController::UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan)
+bool AIController::UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan, bool* outScanned)
 {
 	AgentObject* owner = GetAgentOwner();
 	if (owner == nullptr)
 	{
+		if (outScanned != nullptr)
+			*outScanned = false;
 		return false;
 	}
 
 	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
 	const bool scanned = m_visionSensor.Tick(owner, GetEnemy(), &query, BuildVisionSensorConfig(navMeshName, requirePath), deltaMs, forceScan);
+	if (outScanned != nullptr)
+		*outScanned = scanned;
 	if (scanned)
 	{
 		if (m_visionSensor.HasVisibleTarget())

@@ -14,6 +14,8 @@ local _summaryIntervalMs = 250
 local _avgFrameMs = 0
 local _frameCount = 0
 local _runtimeSummaryPrinted = false
+local _runtimeSummaryFrame = 30
+local _perfConfigLine = ""
 
 local textSize = { w = 390, h = 210 }
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -33,6 +35,18 @@ end
 local function _GetPressureConfig()
 	local preset = ConfigManager:GetSamplePreset(_sampleName)
 	return preset.perceptionPressure or {}
+end
+
+local function _GetNestedValue(root, firstKey, secondKey, defaultValue)
+	local first = root ~= nil and root[firstKey] or nil
+	if first == nil then
+		return defaultValue
+	end
+	local value = first[secondKey]
+	if value == nil then
+		return defaultValue
+	end
+	return value
 end
 
 local function _CreatePanel()
@@ -55,6 +69,7 @@ local function _FormatSummaryText()
 		" avgFrameMs=" .. string.format("%.2f", _avgFrameMs) ..
 		" spatialEnv=" .. tostring(spatialEnabled) .. GUI.MarkupNewline ..
 		"cellSizeEnv=" .. tostring(os.getenv and os.getenv("HELLO_AI_SPATIAL_INDEX_CELL_SIZE") or "default") .. GUI.MarkupNewline ..
+		tostring(_perfConfigLine) .. GUI.MarkupNewline ..
 		GUI.MarkupNewline ..
 		tostring(_summary)
 end
@@ -119,6 +134,18 @@ local function _CreateAgents()
 	local count = ConfigManager:GetAgentCount(_sampleName, tonumber(config.defaultAgentCount) or 120)
 	local lightTeamCount = math.floor(count * 0.5)
 	local agentLuafile = "res/scripts/agent/PerceptionPressureAgent.lua"
+	local scheduler = preset.aiScheduler or {}
+	local spacing = tonumber(config.spacing) or _GetEnvNumber("HELLO_PRESSURE_SPACING", 6.0)
+	local visionRange = _GetNestedValue(preset.aiBlackboard, "floats", "perception.visionRange", 18.0)
+	local visionIntervalMs = _GetNestedValue(preset.aiBlackboard, "ints", "perception.visionIntervalMs", 1)
+	local spatialEnv = os.getenv and os.getenv("HELLO_AI_SPATIAL_INDEX_ENABLE") or "default-on"
+	local cellSizeEnv = os.getenv and os.getenv("HELLO_AI_SPATIAL_INDEX_CELL_SIZE") or "default"
+
+	_runtimeSummaryFrame = tonumber(config.runtimeSummaryFrame) or _runtimeSummaryFrame
+	_perfConfigLine = "profile=" .. tostring(config.profileName or preset.name) ..
+		" spacing=" .. string.format("%.1f", spacing) ..
+		" vision=" .. tostring(visionRange) ..
+		" interval=" .. tostring(visionIntervalMs)
 
 	for i = 1, count do
 		local teamId = i <= lightTeamCount and 1 or 0
@@ -130,6 +157,17 @@ local function _CreateAgents()
 
 	print(ConfigManager:BuildDebugSummary(_sampleName))
 	print("[Sandbox16] perception pressure agents=", count, "preset=", tostring(preset.name))
+	print("[Sandbox16PerfConfig] preset=", tostring(preset.name),
+		"profile=", tostring(config.profileName or preset.name),
+		"agents=", count,
+		"light=", lightTeamCount,
+		"spacing=", spacing,
+		"visionRange=", visionRange,
+		"visionIntervalMs=", visionIntervalMs,
+		"scheduler=", tostring(scheduler.enabled == true),
+		"spatialEnv=", tostring(spatialEnv),
+		"cellSizeEnv=", tostring(cellSizeEnv),
+		"runtimeSummaryFrame=", _runtimeSummaryFrame)
 end
 
 function EventHandle_Keyboard(keycode, pressed)
@@ -195,8 +233,9 @@ function Sandbox_Update(deltaTimeInMillis)
 	_DrawDebugGuides()
 	_RefreshSummary(false)
 
-	if not _runtimeSummaryPrinted and _frameCount >= 3 then
+	if not _runtimeSummaryPrinted and _frameCount >= _runtimeSummaryFrame then
 		_RefreshSummary(true)
+		print("[Sandbox16PerfRuntime] frames=", _frameCount, "avgFrameMs=", string.format("%.2f", _avgFrameMs))
 		_PrintSummary("[Sandbox16RuntimeSummary]")
 		_runtimeSummaryPrinted = true
 	end

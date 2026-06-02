@@ -382,6 +382,7 @@ SamplePresets.ai_perception_pressure.perceptionPressure = {
 	defaultAgentCount = 120,
 	spacing = 6.0,
 	planeSize = 260,
+	runtimeSummaryFrame = 30,
 }
 SamplePresets.ai_perception_pressure.diagnostics = {
 	maxObjects = 0,
@@ -390,6 +391,23 @@ SamplePresets.ai_perception_pressure.diagnostics = {
 }
 
 SamplePresets.Sandbox16 = SamplePresets.ai_perception_pressure
+
+local function makeAiPerfPreset(agentCount)
+	local preset = cloneTable(SamplePresets.ai_perception_pressure)
+	preset.seed = 20260601
+	preset.agentCount = agentCount
+	preset.lightTeamCount = math.floor(agentCount * 0.5)
+	preset.spawnMode = "grid"
+	preset.aiScheduler.enabled = false
+	preset.perceptionPressure.defaultAgentCount = agentCount
+	preset.perceptionPressure.profileName = "ai_perf_" .. tostring(agentCount)
+	preset.perceptionPressure.runtimeSummaryFrame = 30
+	return preset
+end
+
+SamplePresets.ai_perf_100 = makeAiPerfPreset(100)
+SamplePresets.ai_perf_500 = makeAiPerfPreset(500)
+SamplePresets.ai_perf_1000 = makeAiPerfPreset(1000)
 
 SamplePresets.Sandbox9 = {
 	seed = 20260530,

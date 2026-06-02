@@ -42,6 +42,11 @@
 - 2026-05-30：补齐 `BehaviorTreeLoader` 配置诊断：错误和警告会输出节点路径、节点类型、字段名、错误说明和 fallback 后果，便于定位声明式 BT 配置问题。
 - 2026-05-31：新增 `Sandbox14` 作为 Hearing / Danger 最小 sample：关闭直接视线扫描，用脚本化枪声和危险线写入 blackboard，展示“没看见敌人但听到/感到威胁后调查或规避”，smoke 检查 `[HearingDangerSmoke] PASS`。
 - 2026-05-31：新增 `Sandbox15` 作为 Chapter 9 Formation / 协作 BT 最小 sample：队友分配 formation slot，BT 读取 `CallForBackup` / `WaitForSquadMate` / `MoveToFormationSlot`，smoke 检查 `[FormationSmoke] PASS`。
+- 2026-06-01：新增 `AgentSpatialIndexSystem` 第一版，`ObjectManagerAgentSpatialQuery` 默认优先走 uniform grid，并可通过 `HELLO_AI_SPATIAL_INDEX_ENABLE=0` 回退线性查询。
+- 2026-06-01：新增 `TeamBlackboardService` 第一版，Lua `TeamBlackboard` 可把 `EnemySighted` 同步到 C++ facts，并把最佳团队敌情写回 agent blackboard。
+- 2026-06-01：新增 `Sandbox16` 作为 AI perception pressure sample，默认 120 agent、关闭 AI scheduler、每帧全量感知更新，用于暴露感知/记忆/空间查询性能问题。
+- 2026-06-01：新增 `FramePerf` 卡顿诊断日志，支持 `HELLO_PERF_STALL_LOG`、`HELLO_PERF_STALL_THRESHOLD_MS`、`HELLO_PERF_SUMMARY_INTERVAL_MS`，可分段输出 frame / simulate / game / object / AI / spatial / teamBB 耗时。
+- 2026-06-02：新增 `AgentPerceptionSystem` 第一阶段：`ObjectManager` 每帧批量驱动 `AIController::TickPerception`，`AIController::TickAI` 默认跳过重复 perception；FramePerf / RuntimeDiag 可单独看到 perception system 的 scans、visible、spatial query 和 memory/vision 耗时。
 
 ## P0 - 方向回正
 
@@ -80,7 +85,8 @@
 - [x] 优先使用类型化组件查询，减少散落的字符串 key。
 - [ ] 继续把新增 sandbox/runtime 代码改成优先走 `SandboxServices`，减少直接访问 `g_*` 全局单例。
 - [ ] 组件所有权逐步迁向 `std::unique_ptr`。
-- [ ] 用 uniform grid 或等价空间分区替换线性 agent 查询实现。
+- [x] 用 uniform grid 或等价空间分区替换线性 agent 查询第一版。
+- [ ] 继续补齐 spatial query 的过滤、统计和对照基准，避免只停留在“能查附近 agent”的最小实现。
 
 ## P1 - 后续 AI 学习主题
 
@@ -97,14 +103,24 @@
 
 > 详细规划见 `docs/ai-technical-iteration-plan.md`。当前重点从“继续新增 sample”转向“把已跑通的 AI 概念收口为可扩展 C++ 底座”。
 
-- [ ] `AgentSpatialIndexSystem`：用 uniform grid 或等价空间分区替换当前线性 agent 查询。
-- [ ] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
+- [x] `AgentSpatialIndexSystem` 第一版：`ObjectManager` 每帧 rebuild agent grid，`IAgentSpatialQuery` 默认优先走 grid，支持 `maxResults` 和基础 candidates/results stats。
+- [ ] `AgentSpatialIndexSystem` 二期：补 teamId / alive / includeSelf / type 或 tag 过滤，补 queryCostMs，补 grid vs linear 结果一致性和成本对照。
+- [x] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
+- [ ] `ai_perf` baseline：基于 `Sandbox16` 固化 100 / 500 / 1000 agent 场景，分别记录 spatial on/off、scheduler on/off、Debug/Release 的 FramePerf 摘要。
 - [ ] `AgentPerceptionSystem`：把视觉、听觉、危险等感知收口到 C++ 批量系统，Lua 只读结果。
+- [x] `AgentPerceptionSystem` 第一阶段保持每帧全量更新，不启用 scheduler 降频；先把 `AIController` 内的 per-agent vision/memory 热点集中到 system 级统计和缓存。
+- [ ] `PerceptionResultCache`：保存 currentTarget、lastKnown、confidence、ageMs、source、候选数和扫描耗时，保持现有 blackboard key 兼容。
 - [ ] `TeamBlackboardService`：把 Lua `TeamBlackboard` 迁移为 C++ service，支持 fact TTL、priority、统计和 Lua facade。
   - [x] 第一版 C++ service + Lua facade：Lua `EnemySighted` 会同步写入 C++ facts，Lua 可把最佳团队敌情写回 agent blackboard，并在 `Sandbox12` smoke 中验收 `cppFacts/cppReports/cppApplies`。
+- [ ] `TeamBlackboardService` 二期：扩展 `SupportRequested`、`SupportResponded`、`FocusTarget`、`RetreatPoint`、`FormationSlot` 等 fact 类型，减少 Lua 全局表承担团队状态。
 - [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
+- [ ] `InfluenceMapSystem` 第一阶段：支持 danger / support / occupancy 或 objective 至少 3 层，提供 dirty region / interval 更新、cellWrites、queryCount、bestScore 统计。
+- [ ] `TacticalQueryService` 第一阶段：提供 `FindBestSupportPosition`、`FindLowThreatPosition`、`ScorePosition`，Lua 只传 query 类型和权重，不直接遍历网格。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
+- [ ] BT runtime 性能化分步落地：先做 trace sampling / cache 统计，再做 dirty key 依赖和 LOD，避免在感知热点未稳定前扩大改动面。
 - [ ] AI debug / RuntimeDiag：统一输出 perception、memory、team facts、influence score、BT trace 和 scheduler stats。
+- [ ] AI Debug 第一阶段：不急于完整 UI，先扩展 RuntimeDiag / 文本面板，支持选中或指定 agent 输出 perception snapshot、memory、team fact、BT trace、spatial stats。
+- [ ] AI event / communication 清理：补 Lua event facade，清理 `AgentCommunications` 临时 table 约定，并验证 sample reload / agent destroy 后不会留下悬空 callback。
 
 ## 暂缓任务
 

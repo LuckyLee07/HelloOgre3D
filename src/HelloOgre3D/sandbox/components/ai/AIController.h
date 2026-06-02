@@ -21,6 +21,22 @@ struct AgentPerceptionOptions;
 struct AgentPerceptionResult;
 struct AICommand;
 
+struct AIPerceptionTickStats
+{
+	AIPerceptionTickStats()
+		: scanned(false)
+		, hasVisibleTarget(false)
+		, memoryMs(0.0)
+		, visionMs(0.0)
+	{
+	}
+
+	bool scanned;
+	bool hasVisibleTarget;
+	double memoryMs;
+	double visionMs;
+};
+
 class AIController : public IComponent //tolua_exports
 { //tolua_exports
 public:
@@ -55,9 +71,12 @@ public:
 
 	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
+	void TickPerception(int deltaMs, AIPerceptionTickStats* outStats = nullptr);
 	void TickAI(int deltaMs);
 	void SetTickInOwnerUpdateEnabled(bool enabled);
 	bool IsTickInOwnerUpdateEnabled() const { return m_tickInOwnerUpdateEnabled; }
+	void SetPerceptionTickInAiTickEnabled(bool enabled);
+	bool IsPerceptionTickInAiTickEnabled() const { return m_perceptionTickInAiTickEnabled; }
 
 private:
 	AgentObject* GetAgentOwner() const;
@@ -73,7 +92,7 @@ private:
 	AgentPerceptionOptions BuildPerceptionOptions(const Ogre::String& navMeshName, bool requirePath) const;
 	VisionSensorConfig BuildVisionSensorConfig(const Ogre::String& navMeshName, bool requirePath) const;
 	MemoryStoreConfig BuildMemoryStoreConfig() const;
-	bool UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan);
+	bool UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan, bool* outScanned = nullptr);
 	void WritePerceptionResult(const AgentPerceptionResult& result);
 	void ClearPerceptionResult();
 
@@ -85,6 +104,7 @@ private:
 	bool m_hasMovePos;
 	Ogre::Vector3 m_movePos;
 	bool m_tickInOwnerUpdateEnabled;
+	bool m_perceptionTickInAiTickEnabled;
 	long long m_localTimeMs;
 	VisionSensor m_visionSensor;
 	MemoryStore m_memoryStore;

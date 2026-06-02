@@ -46,7 +46,11 @@ param(
 	[int]$VisualTraceMaxSamples = 8,
 	[int]$VisualTraceMaxAgents = 16,
 	[switch]$DisableSpatialIndex,
+	[switch]$DisablePerceptionSystem,
 	[int]$SpatialCellSize = 0,
+	[switch]$PerfStallLog,
+	[int]$PerfStallThresholdMs = 40,
+	[int]$PerfSummaryIntervalMs = 3000,
 	[switch]$DryRun
 )
 
@@ -66,6 +70,12 @@ $SelectedSample = $Sample
 if ($SelectedSample -eq "Default") {
 	$SelectedSample = "Sandbox8"
 }
+$AiPerfPresetNames = @(
+	"ai_perception_pressure",
+	"ai_perf_100",
+	"ai_perf_500",
+	"ai_perf_1000"
+)
 if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox10"
 }
@@ -84,7 +94,7 @@ if ($Preset -eq "hearing_danger" -and -not $PSBoundParameters.ContainsKey("Sampl
 if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox15"
 }
-if ($Preset -eq "ai_perception_pressure" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+if (($AiPerfPresetNames -contains $Preset) -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox16"
 }
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent
@@ -116,7 +126,11 @@ $KnownEnvNames = @(
 	"HELLO_VISUAL_TRACE_MAX_SAMPLES",
 	"HELLO_VISUAL_TRACE_MAX_AGENTS",
 	"HELLO_AI_SPATIAL_INDEX_ENABLE",
-	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE"
+	"HELLO_AI_PERCEPTION_SYSTEM_ENABLE",
+	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE",
+	"HELLO_PERF_STALL_LOG",
+	"HELLO_PERF_STALL_THRESHOLD_MS",
+	"HELLO_PERF_SUMMARY_INTERVAL_MS"
 )
 
 $RunId = "{0:yyyyMMddHHmmssfff}-{1}" -f (Get-Date), $PID
@@ -170,11 +184,22 @@ if ($VisualTrace) {
 if ($DisableSpatialIndex) {
 	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_ENABLE"] = "0"
 }
+if ($DisablePerceptionSystem) {
+	$SelectedEnv["HELLO_AI_PERCEPTION_SYSTEM_ENABLE"] = "0"
+}
 if ($SpatialCellSize -gt 0) {
 	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_CELL_SIZE"] = [string]$SpatialCellSize
 }
+if ($PerfStallLog -or ($AiPerfPresetNames -contains $Preset)) {
+	$SelectedEnv["HELLO_PERF_STALL_LOG"] = "1"
+	$SelectedEnv["HELLO_PERF_STALL_THRESHOLD_MS"] = [string]$PerfStallThresholdMs
+	$SelectedEnv["HELLO_PERF_SUMMARY_INTERVAL_MS"] = [string]$PerfSummaryIntervalMs
+}
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
+}
+if (($Preset -like "ai_perf_*") -and $Seconds -lt 35) {
+	$Seconds = 35
 }
 if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and $Seconds -lt 70) {
 	$Seconds = 70
@@ -195,7 +220,7 @@ if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -442,6 +467,12 @@ try {
 			$spatialMatches = @($LogLinesForChecks | Select-String -Pattern "\[AgentSpatialIndex\].*queries=")
 			if ($spatialMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm AgentSpatialIndex diagnostics."
+			}
+			if (-not $DisablePerceptionSystem) {
+				$perceptionMatches = @($LogLinesForChecks | Select-String -Pattern "\[AgentPerceptionSystem\].*scans=")
+				if ($perceptionMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm AgentPerceptionSystem diagnostics."
+				}
 			}
 		}
 

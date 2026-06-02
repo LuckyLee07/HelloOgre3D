@@ -24,7 +24,7 @@ local _agentsById = {}
 local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
-local _demoPanelSize = {w = 640, h = 335}
+local _demoPanelSize = {w = 400, h = 280}
 local _navMesh = nil
 local _drawNavMesh = true
 local _colors = {

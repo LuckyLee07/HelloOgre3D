@@ -22,6 +22,7 @@ class ScriptLuaVM;
 class PhysicsWorld;
 class NavigationMesh;
 class AIScheduler;
+class AgentPerceptionSystem;
 class AgentSpatialIndexSystem;
 class TeamBlackboardService;
 
@@ -88,6 +89,8 @@ public:
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
 	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex; }
 	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex; }
+	const AgentPerceptionSystem* GetAgentPerceptionSystem() const { return m_agentPerceptionSystem; }
+	AgentPerceptionSystem* GetAgentPerceptionSystem() { return m_agentPerceptionSystem; }
 	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService; }
 	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
 
@@ -112,6 +115,7 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 	AIScheduler* m_aiScheduler;
 	AgentSpatialIndexSystem* m_agentSpatialIndex;
+	AgentPerceptionSystem* m_agentPerceptionSystem;
 	TeamBlackboardService* m_teamBlackboardService;
 	SandboxServices m_services;
 }; //tolua_exports

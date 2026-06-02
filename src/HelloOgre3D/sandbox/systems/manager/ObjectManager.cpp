@@ -6,6 +6,7 @@
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
+#include "ai/perception/AgentPerceptionSystem.h"
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
 #include "ai/team/TeamBlackboardService.h"
@@ -264,9 +265,12 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
 	m_agentSpatialIndex = new AgentSpatialIndexSystem();
+	m_agentPerceptionSystem = new AgentPerceptionSystem();
 	m_teamBlackboardService = new TeamBlackboardService();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
+	if (IsFalseEnvValue(std::getenv("HELLO_AI_PERCEPTION_SYSTEM_ENABLE")))
+		m_agentPerceptionSystem->SetEnabled(false);
 	const char* spatialCellSize = std::getenv("HELLO_AI_SPATIAL_INDEX_CELL_SIZE");
 	if (spatialCellSize != nullptr)
 	{
@@ -287,6 +291,7 @@ ObjectManager::~ObjectManager()
 	this->clearAllObjects(MGR_OBJ_ALLS);
 	SAFE_DELETE(m_aiScheduler);
 	SAFE_DELETE(m_agentSpatialIndex);
+	SAFE_DELETE(m_agentPerceptionSystem);
 	SAFE_DELETE(m_teamBlackboardService);
 
 	auto iter = m_navMeshes.begin();
@@ -338,6 +343,16 @@ void ObjectManager::Update(int deltaMilliseconds)
 	SandboxEventDispatcherManager::GetGlobalInst().FlushQueuedEvents();
 	if (perfEnabled)
 		perfTiming.eventFlushMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+
+	if (m_agentPerceptionSystem != nullptr)
+	{
+		if (perfEnabled)
+			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_agentPerceptionSystem->Update(m_agents, deltaMilliseconds, this);
+		if (perfEnabled)
+			perfTiming.perceptionSystemMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		m_agentPerceptionSystem->PublishTracyCounters();
+	}
 
 	const long long objectLoopStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
 	for (auto iter = m_objects.begin(); iter != m_objects.end();)
@@ -437,6 +452,20 @@ void ObjectManager::Update(int deltaMilliseconds)
 			perfTiming.spatialMaxResults = stats.maxResultsPerQuery;
 			perfTiming.spatialAvgCandidates = stats.queryCount > 0 ? static_cast<double>(stats.candidateCount) / static_cast<double>(stats.queryCount) : 0.0;
 			perfTiming.spatialAvgResults = stats.queryCount > 0 ? static_cast<double>(stats.resultCount) / static_cast<double>(stats.queryCount) : 0.0;
+		}
+		if (m_agentPerceptionSystem != nullptr)
+		{
+			const AgentPerceptionSystem::Stats& stats = m_agentPerceptionSystem->GetStats();
+			perfTiming.perceptionEnabled = stats.enabled;
+			perfTiming.perceptionAgentCount = stats.agentCount;
+			perfTiming.perceptionControllerCount = stats.controllerCount;
+			perfTiming.perceptionScanCount = stats.scanCount;
+			perfTiming.perceptionVisibleCount = stats.visibleCount;
+			perfTiming.perceptionSpatialQueryCount = stats.spatialQueryCount;
+			perfTiming.perceptionSpatialCandidateCount = stats.spatialCandidateCount;
+			perfTiming.perceptionSpatialResultCount = stats.spatialResultCount;
+			perfTiming.perceptionMemoryMs = stats.memoryMs;
+			perfTiming.perceptionVisionMs = stats.visionMs;
 		}
 		if (m_teamBlackboardService != nullptr)
 		{
@@ -848,6 +877,8 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		<< " bbEntries=" << blackboardEntryCount;
 	if (m_agentSpatialIndex != nullptr)
 		stream << "\n" << m_agentSpatialIndex->BuildDebugSummary();
+	if (m_agentPerceptionSystem != nullptr)
+		stream << "\n" << m_agentPerceptionSystem->BuildDebugSummary();
 	if (m_teamBlackboardService != nullptr)
 		stream << "\n" << m_teamBlackboardService->BuildDebugSummary();
 
@@ -1031,6 +1062,8 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 			m_aiScheduler->Clear();
 		if (m_agentSpatialIndex != nullptr)
 			m_agentSpatialIndex->Clear();
+		if (m_agentPerceptionSystem != nullptr)
+			m_agentPerceptionSystem->Clear();
 		if (m_teamBlackboardService != nullptr)
 			m_teamBlackboardService->Clear();
 	}
