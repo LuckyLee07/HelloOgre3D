@@ -54,7 +54,8 @@
 
 | 入口 | 作用 |
 |---|---|
-| `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 实测基线：100 / 500 / 1000 agent，spatial on/off 与 perception system on/off 对照 |
+| `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 实测基线：100 / 500 / 1000 agent，spatial on/off 与 perception system on/off 对照，当前入口为 `Sandbox16` |
+| `perf/ai-spatial-filter-retest-20260602.md` | Spatial query 过滤二期复测：500 / 1000 agent 下 filtered / reject / queryMs 与旧基线对照，当前入口为 `Sandbox16` |
 | `perf/fgui-tracy-sample-*.md` | FGUI Tracy 性能实测报告（visible pressure 等） |
 
 ---

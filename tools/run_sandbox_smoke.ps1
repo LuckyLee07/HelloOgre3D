@@ -16,7 +16,8 @@ param(
 		"Sandbox13",
 		"Sandbox14",
 		"Sandbox15",
-		"Sandbox16"
+		"Sandbox16",
+		"Sandbox17"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -93,6 +94,9 @@ if ($Preset -eq "hearing_danger" -and -not $PSBoundParameters.ContainsKey("Sampl
 }
 if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox15"
+}
+if ($Preset -eq "chapter9_tactics_lua" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox17"
 }
 if (($AiPerfPresetNames -contains $Preset) -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox16"
@@ -224,6 +228,9 @@ if ($Preset -eq "hearing_danger" -and $Seconds -lt 70) {
 }
 if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 	$Seconds = 70
+}
+if ($Preset -eq "chapter9_tactics_lua" -and $Seconds -lt 35) {
+	$Seconds = 35
 }
 
 Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
@@ -466,6 +473,17 @@ try {
 			$formationScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[FormationSmoke\].*slots=.*ready=.*backupCalls=.*runs=.*skips=")
 			if ($formationScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Formation scheduled update stats."
+			}
+		}
+
+		if ($Preset -eq "chapter9_tactics_lua") {
+			$tacticsMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsSmoke\]\s+PASS")
+			if ($tacticsMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Chapter 9 tactics behavior."
+			}
+			$tacticsScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsSmoke\].*dangerCells=.*teamCells=.*dangerUpdates=.*teamUpdates=")
+			if ($tacticsScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Chapter 9 tactics layer update stats."
 			}
 		}
 

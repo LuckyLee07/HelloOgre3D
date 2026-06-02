@@ -49,6 +49,8 @@
 - 2026-06-02：新增 `AgentPerceptionSystem` 第一阶段：`ObjectManager` 每帧批量驱动 `AIController::TickPerception`，`AIController::TickAI` 默认跳过重复 perception；FramePerf / RuntimeDiag 可单独看到 perception system 的 scans、visible、spatial query 和 memory/vision 耗时。
 - 2026-06-02：沉淀 `Sandbox16` / `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` Debug x64 基线报告：见 `docs/perf/ai-perception-baseline-20260602.md`；当前结论是热点集中在 C++ 感知 / 记忆写入，spatial index 已显著降低候选数但仍不足以支撑 500 / 1000 agent 每帧全量感知。
 - 2026-06-02：`AgentSpatialIndexSystem` 二期第一段完成：spatial query options 支持 owner/includeSelf、alive、team include/exclude、objectType 过滤；grid 和 linear fallback 走同一套过滤统计，FramePerf / RuntimeDiag 输出 filtered、rejectSelf、rejectTeam、rejectDead、rejectType、queryMs。
+- 2026-06-02：完成 spatial filter 二期复测：见 `docs/perf/ai-spatial-filter-retest-20260602.md`；1000 agent 下 filtered 从旧版 24,068 降到 564，`perceptionSystem` 从约 1581 ms 降到约 1247 ms，下一步优先做 `PerceptionResultCache` 减少重复 blackboard / memory 写入。
+- 2026-06-02：新增 `Sandbox17` 作为 Chapter 9 Tactics Lua-first 第一版 sample：复刻 HelloOgre3DX 的 DangerousAreas / TeamAreas 战术层，基于 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件驱动 influence layer；`Sandbox16` 继续作为 AI perception pressure / `ai_perf_*` 入口保留。
 
 ## P0 - 方向回正
 
@@ -99,6 +101,7 @@
 - [x] AI 更新调度和性能观测：感知、知识源、InfluenceMap 频率可配置。
 - [x] HearingSensor / DangerSensor 最小 sample：没看见敌人时也能根据声音和危险区域改变行为。
 - [x] Chapter 9 Formation / 协作 BT 第一版：队形 slot、请求支援、等待队友和移动到队形点。
+- [x] Chapter 9 Tactics Lua-first 第一版：`Sandbox17` 展示 DangerousAreas / TeamAreas 双层战术评分，并用 `[Chapter9TacticsSmoke] PASS` 验收事件、layer cell 和更新统计。
 - [x] 固定随机种子 sample preset，支撑可复现 AI 行为验证。
 
 ## P0/P1 - 下一阶段技术迭代
@@ -107,7 +110,7 @@
 
 - [x] `AgentSpatialIndexSystem` 第一版：`ObjectManager` 每帧 rebuild agent grid，`IAgentSpatialQuery` 默认优先走 grid，支持 `maxResults` 和基础 candidates/results stats。
 - [x] `AgentSpatialIndexSystem` 二期第一段：补 teamId / alive / includeSelf / objectType 过滤和 queryMs / filtered / reject 统计，grid 与 linear fallback 共用过滤语义。
-- [ ] `AgentSpatialIndexSystem` 二期复测：基于 `ai_perf_500` / `ai_perf_1000` 重新记录 grid vs linear 结果一致性和成本对照。
+- [x] `AgentSpatialIndexSystem` 二期复测：基于 `ai_perf_500` / `ai_perf_1000` 重新记录 grid vs linear 结果一致性和成本对照。
 - [x] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
 - [x] `ai_perf` baseline 第一版：基于 `Sandbox16` 固化 100 / 500 / 1000 agent Debug x64 场景，记录 spatial on/off、perception system on/off 的 FramePerf 摘要。
 - [ ] `ai_perf` baseline 二期：补 scheduler on/off、Release x64、必要 Tracy capture 对照。
@@ -118,6 +121,7 @@
   - [x] 第一版 C++ service + Lua facade：Lua `EnemySighted` 会同步写入 C++ facts，Lua 可把最佳团队敌情写回 agent blackboard，并在 `Sandbox12` smoke 中验收 `cppFacts/cppReports/cppApplies`。
 - [ ] `TeamBlackboardService` 二期：扩展 `SupportRequested`、`SupportResponded`、`FocusTarget`、`RetreatPoint`、`FormationSlot` 等 fact 类型，减少 Lua 全局表承担团队状态。
 - [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
+- [x] `InfluenceMapSystem` 迁移准备：先用 `Sandbox17` Lua-first 版本固化 Chapter 9 tactics 的事件输入、danger/team layer、统计和 smoke 验收，作为 `Sandbox18` C++ 第二版对照。
 - [ ] `InfluenceMapSystem` 第一阶段：支持 danger / support / occupancy 或 objective 至少 3 层，提供 dirty region / interval 更新、cellWrites、queryCount、bestScore 统计。
 - [ ] `TacticalQueryService` 第一阶段：提供 `FindBestSupportPosition`、`FindLowThreatPosition`、`ScorePosition`，Lua 只传 query 类型和权重，不直接遍历网格。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。

@@ -357,6 +357,57 @@ SamplePresets.formation_tactics.chapter8Comms.chapter9Formation = {
 
 SamplePresets.Sandbox15 = SamplePresets.formation_tactics
 
+SamplePresets.chapter9_tactics_lua = cloneTable(SamplePresets.default)
+SamplePresets.chapter9_tactics_lua.seed = 20260602
+SamplePresets.chapter9_tactics_lua.agentCount = 6
+SamplePresets.chapter9_tactics_lua.lightTeamCount = 3
+SamplePresets.chapter9_tactics_lua.spawnMode = "fixed"
+SamplePresets.chapter9_tactics_lua.targetRadius = 1
+SamplePresets.chapter9_tactics_lua.spawnPoints = {
+	{ -18, 0, 10 },
+	{ -12, 0, 24 },
+	{ -3, 0, 36 },
+	{ 22, 0, 10 },
+	{ 30, 0, 24 },
+	{ 38, 0, 36 },
+}
+SamplePresets.chapter9_tactics_lua.aiScheduler.enabled = false
+SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
+	scriptedEvents = true,
+	scriptedEventIntervalMs = 1800,
+	eventTtlMs = 1800,
+	deadFriendlyDelayMs = 2600,
+	dangerUpdateIntervalMs = 500,
+	teamUpdateIntervalMs = 500,
+	dangerPerspectiveTeamId = 0,
+	teamPositiveTeamId = 0,
+	dangerStrength = -1.0,
+	teamStrength = 1.0,
+	bulletShotRadius = 10.0,
+	bulletImpactRadius = 8.0,
+	deadFriendlyRadius = 12.0,
+	enemySightingRadius = 14.0,
+	teamInfluenceRadius = 11.0,
+	drawThreshold = 0.08,
+	drawInSmoke = false,
+	maxDrawCellsPerLayer = 64,
+	influenceMap = {
+		minX = -32.0,
+		maxX = 56.0,
+		minZ = -8.0,
+		maxZ = 62.0,
+		cellSize = 4.0,
+		y = 0.12,
+	},
+}
+SamplePresets.chapter9_tactics_lua.diagnostics = {
+	maxObjects = 12,
+	maxResources = 6,
+	maxEvents = 8,
+}
+
+SamplePresets.Sandbox17 = SamplePresets.chapter9_tactics_lua
+
 SamplePresets.ai_perception_pressure = cloneTable(SamplePresets.default)
 SamplePresets.ai_perception_pressure.seed = 20260601
 SamplePresets.ai_perception_pressure.agentCount = 120

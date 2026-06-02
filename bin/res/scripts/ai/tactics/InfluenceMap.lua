@@ -52,6 +52,11 @@ function InfluenceMap:Reset()
 	self.layers = {}
 end
 
+function InfluenceMap:ClearLayer(layerName)
+	layerName = tostring(layerName or "default")
+	self.layers[layerName] = {}
+end
+
 function InfluenceMap:_Layer(layerName)
 	layerName = tostring(layerName or "default")
 	if self.layers[layerName] == nil then

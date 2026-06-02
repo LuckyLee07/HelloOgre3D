@@ -1,6 +1,6 @@
 # AI 技术迭代规划
 
-> 目标：把 `Sandbox9`-`Sandbox15` 已经跑通的 AI 学习 sample，从 Lua-first / sample-first 的实验形态，逐步收口成更高性能、可观测、可扩展的 C++ AI 底座。
+> 目标：把 `Sandbox9`-`Sandbox15` 与 `Sandbox17` 已经跑通的 AI 学习 sample，从 Lua-first / sample-first 的实验形态，逐步收口成更高性能、可观测、可扩展的 C++ AI 底座；`Sandbox16` 作为 AI perception pressure / ai_perf 的性能压力入口保留，`Sandbox18` 预留给 Chapter 9 C++ 第二版。
 >
 > 方向依据：`docs/project-direction.md`、`docs/ai-roadmap.md`、`docs/minigame-ai-production-reference.md`。
 >
@@ -15,18 +15,18 @@
 - 团队：Lua `TeamBlackboard` 已可展示共享敌人、支援响应和队形协作。
 - 战术：Lua `InfluenceMap` 已可展示 danger / support 双层评分与战术移动。
 - 调度：`AIScheduler` 已支持 interval、bucket、per-frame budget 和统计摘要。
-- Sample：`Sandbox9`-`Sandbox15` 已覆盖 Knowledge、Vision/Memory、TeamBlackboard、InfluenceMap、Hearing/Danger、Formation。
+- Sample：`Sandbox9`-`Sandbox15` 已覆盖 Knowledge、Vision/Memory、TeamBlackboard、InfluenceMap、Hearing/Danger、Formation；`Sandbox16` 承接 AI perception pressure / ai_perf 压力验证；`Sandbox17` 覆盖 Chapter 9 Tactics Lua-first 第一版。
 
 下一阶段不应继续优先扩充更多教学 sample，而应把已有 sample 背后的高频能力迁入 C++ system。
 
 当前主要技术缺口：
 
-- `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。后续仍需基于 500 / 1000 agent 复测 grid vs linear 成本对照。
+- `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。500 / 1000 agent 复测已沉淀到 `docs/perf/ai-spatial-filter-retest-20260602.md`，下一步重点转向 `PerceptionResultCache`。
 - `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；后续仍缺更完整 fact schema 和 Lua 全局状态迁移。
-- InfluenceMap 仍是 Lua 网格，适合教学，不适合大规模战术评分或路径代价。
+- InfluenceMap 仍是 Lua 网格，适合教学，不适合大规模战术评分或路径代价；`Sandbox17` 先把 Chapter 9 DangerousAreas / TeamAreas 的事件输入、layer 输出和 smoke 验收固化，`Sandbox18` 再作为 C++ 第二版迁移面。
 - `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；后续仍缺独立 `PerceptionResultCache`、hearing / danger C++ sense 和 Lua 扫描清理。
 - BT runtime 已有教学级扩展，但还缺 instance pool、node result cache、blackboard dirty 依赖和距离 LOD。
-- 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，后续仍需补 scheduler on/off、Release x64 和必要 Tracy capture。
+- 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，当前压力入口仍是 `Sandbox16`；后续仍需补 scheduler on/off、Release x64 和必要 Tracy capture。
 
 ## 2. 迭代主线
 
@@ -151,7 +151,7 @@ AgentSpatialIndexSystem
 
 ### 目标
 
-把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、统计和 debug draw。
+把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、统计和 debug draw。当前第一步是 `Sandbox17` Lua-first 版本，用来对齐 HelloOgre3DX Chapter 9 的 DangerousAreas / TeamAreas 语义；第二步再用 `Sandbox18` 承接 C++ 版 `InfluenceMapSystem` / `TacticalQueryService`。
 
 ### 建议实现
 
@@ -179,6 +179,7 @@ score = objective + support + cover - threat - crowd
 ### 验收
 
 - `Sandbox13` 行为不退化，并能显示 C++ InfluenceMap stats。
+- `Sandbox17` 的 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件驱动战术层不退化。
 - 至少支持 3 个 layer 的单独 debug draw。
 - 输出 updates / skips / cellWrites / queryCount / bestScore。
 - 候选点数量有上限，战术查询不会随 agent 数量失控增长。
@@ -274,7 +275,7 @@ score = objective + support + cover - threat - crowd
 - [x] 增加 spatial query smoke / RuntimeDiag 输出。
 - [x] 补齐 owner / includeSelf、teamId include/exclude、alive、objectType 过滤。
 - [x] 补齐 filtered、rejectSelf、rejectTeam、rejectDead、rejectType、queryMs 统计。
-- [ ] 基于 `ai_perf_500` / `ai_perf_1000` 复测 grid vs linear 一致性 / 成本对照。
+- [x] 基于 `ai_perf_500` / `ai_perf_1000` 复测 grid vs linear 一致性 / 成本对照。
 
 ### 近期二：AI Perf Preset
 
@@ -300,6 +301,7 @@ score = objective + support + cover - threat - crowd
 - [ ] 设计 C++ `TeamBlackboardService` fact schema。
 - [x] 接入第一版 Lua facade：`TeamBlackboard.lua` 保持旧 API，同时把 `EnemySighted` 同步到 C++ service，并提供 C++ fact count / report count / best fact 写回 blackboard 的兼容入口。
 - [ ] 梳理 `InfluenceMap.lua` 的 sample 依赖和 debug 输出。
+- [x] 用 `Sandbox17` 固化 Chapter 9 Tactics Lua-first 对照面：DangerousAreas / TeamAreas、事件 TTL、layer 更新统计和 `[Chapter9TacticsSmoke] PASS`。
 - [ ] 设计 C++ `InfluenceMapSystem` layer schema。
 
 ## 11. 成功标准
