@@ -51,6 +51,7 @@
 - 2026-06-02：`AgentSpatialIndexSystem` 二期第一段完成：spatial query options 支持 owner/includeSelf、alive、team include/exclude、objectType 过滤；grid 和 linear fallback 走同一套过滤统计，FramePerf / RuntimeDiag 输出 filtered、rejectSelf、rejectTeam、rejectDead、rejectType、queryMs。
 - 2026-06-02：完成 spatial filter 二期复测：见 `docs/perf/ai-spatial-filter-retest-20260602.md`；1000 agent 下 filtered 从旧版 24,068 降到 564，`perceptionSystem` 从约 1581 ms 降到约 1247 ms，下一步优先做 `PerceptionResultCache` 减少重复 blackboard / memory 写入。
 - 2026-06-02：新增 `Sandbox17` 作为 Chapter 9 Tactics Lua-first 第一版 sample：复刻 HelloOgre3DX 的 DangerousAreas / TeamAreas 战术层，基于 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件驱动 influence layer；`Sandbox16` 继续作为 AI perception pressure / `ai_perf_*` 入口保留。
+- 2026-06-02：新增 `Sandbox18` 作为 Chapter 9 Tactics C++ 第二版第一切片：Lua 继续负责事件编排，C++ `InfluenceMapSystem` 负责 danger / team / objective 三层网格、radial source 写入、战术评分查询和统计输出；smoke 检查 `[Chapter9TacticsCppSmoke] PASS`。
 
 ## P0 - 方向回正
 
@@ -102,6 +103,7 @@
 - [x] HearingSensor / DangerSensor 最小 sample：没看见敌人时也能根据声音和危险区域改变行为。
 - [x] Chapter 9 Formation / 协作 BT 第一版：队形 slot、请求支援、等待队友和移动到队形点。
 - [x] Chapter 9 Tactics Lua-first 第一版：`Sandbox17` 展示 DangerousAreas / TeamAreas 双层战术评分，并用 `[Chapter9TacticsSmoke] PASS` 验收事件、layer cell 和更新统计。
+- [x] Chapter 9 Tactics C++ 第二版第一切片：`Sandbox18` 使用 C++ `InfluenceMapSystem` 承接 danger / team / objective 三层影响力、位置评分和 best position 查询，并用 `[Chapter9TacticsCppSmoke] PASS` 验收。
 - [x] 固定随机种子 sample preset，支撑可复现 AI 行为验证。
 
 ## P0/P1 - 下一阶段技术迭代
@@ -122,7 +124,8 @@
 - [ ] `TeamBlackboardService` 二期：扩展 `SupportRequested`、`SupportResponded`、`FocusTarget`、`RetreatPoint`、`FormationSlot` 等 fact 类型，减少 Lua 全局表承担团队状态。
 - [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
 - [x] `InfluenceMapSystem` 迁移准备：先用 `Sandbox17` Lua-first 版本固化 Chapter 9 tactics 的事件输入、danger/team layer、统计和 smoke 验收，作为 `Sandbox18` C++ 第二版对照。
-- [ ] `InfluenceMapSystem` 第一阶段：支持 danger / support / occupancy 或 objective 至少 3 层，提供 dirty region / interval 更新、cellWrites、queryCount、bestScore 统计。
+- [x] `InfluenceMapSystem` 第一切片：支持 danger / team / objective 3 层，提供 `cellWrites`、`queryCount`、`bestScore`、active cells 和 debug summary 统计，并通过 `ObjectManager` Lua facade 接入 `Sandbox18`。
+- [ ] `InfluenceMapSystem` 第二阶段：补 dirty region / interval 更新、cover / crowd / support schema、layer debug draw 和更多 pressure preset。
 - [ ] `TacticalQueryService` 第一阶段：提供 `FindBestSupportPosition`、`FindLowThreatPosition`、`ScorePosition`，Lua 只传 query 类型和权重，不直接遍历网格。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
 - [ ] BT runtime 性能化分步落地：先做 trace sampling / cache 统计，再做 dirty key 依赖和 LOD，避免在感知热点未稳定前扩大改动面。

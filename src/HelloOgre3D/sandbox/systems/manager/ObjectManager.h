@@ -24,6 +24,7 @@ class NavigationMesh;
 class AIScheduler;
 class AgentPerceptionSystem;
 class AgentSpatialIndexSystem;
+class InfluenceMapSystem;
 class TeamBlackboardService;
 
 //tolua_begin
@@ -71,6 +72,19 @@ public:
 	int getTeamBlackboardFactCount() const;
 	int getTeamBlackboardReportCount() const;
 	std::string buildTeamBlackboardDebugSummary() const;
+	void clearTacticalInfluence();
+	void configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
+	void clearTacticalInfluenceLayer(const std::string& layerName);
+	int addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
+	float sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const;
+	float scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
+	Ogre::Vector3 findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
+	int getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const;
+	int getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const;
+	int getTacticalInfluenceActiveCellCount() const;
+	int getTacticalInfluenceCellWriteCount() const;
+	int getTacticalInfluenceQueryCount() const;
+	std::string buildTacticalInfluenceDebugSummary() const;
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string runAiEventScopeSelfTest();
 	std::string buildObjectDebugSummary(int maxObjects);
@@ -93,6 +107,8 @@ public:
 	AgentPerceptionSystem* GetAgentPerceptionSystem() { return m_agentPerceptionSystem; }
 	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService; }
 	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
+	const InfluenceMapSystem* GetInfluenceMapSystem() const { return m_influenceMapSystem; }
+	InfluenceMapSystem* GetInfluenceMapSystem() { return m_influenceMapSystem; }
 
 private:
 	void realAddObject(BaseObject* pObject);
@@ -117,6 +133,7 @@ private:
 	AgentSpatialIndexSystem* m_agentSpatialIndex;
 	AgentPerceptionSystem* m_agentPerceptionSystem;
 	TeamBlackboardService* m_teamBlackboardService;
+	InfluenceMapSystem* m_influenceMapSystem;
 	SandboxServices m_services;
 }; //tolua_exports
 

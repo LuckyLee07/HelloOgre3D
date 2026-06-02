@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Mon Jun  1 17:33:50 2026.
+** Generated automatically by tolua++-1.0.92 on Tue Jun  2 18:51:37 2026.
 */
 
 #ifndef __cplusplus
@@ -7787,6 +7787,482 @@ static int tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00(lu
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: clearTacticalInfluence of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearTacticalInfluence00
+static int tolua_SandboxToLua_ObjectManager_clearTacticalInfluence00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearTacticalInfluence'", NULL);
+#endif
+  {
+   self->clearTacticalInfluence();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearTacticalInfluence'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: configureTacticalInfluence of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_configureTacticalInfluence00
+static int tolua_SandboxToLua_ObjectManager_configureTacticalInfluence00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,7,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  float minX = ((float)  tolua_tonumber(tolua_S,2,0));
+  float maxX = ((float)  tolua_tonumber(tolua_S,3,0));
+  float minZ = ((float)  tolua_tonumber(tolua_S,4,0));
+  float maxZ = ((float)  tolua_tonumber(tolua_S,5,0));
+  float cellSize = ((float)  tolua_tonumber(tolua_S,6,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTacticalInfluence'", NULL);
+#endif
+  {
+   self->configureTacticalInfluence(minX,maxX,minZ,maxZ,cellSize);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTacticalInfluence'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearTacticalInfluenceLayer of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00
+static int tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearTacticalInfluenceLayer'", NULL);
+#endif
+  {
+   self->clearTacticalInfluenceLayer(layerName);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearTacticalInfluenceLayer'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: addTacticalInfluenceSource of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_addTacticalInfluenceSource00
+static int tolua_SandboxToLua_ObjectManager_addTacticalInfluenceSource00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const Ogre::Vector3* center = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+  float strength = ((float)  tolua_tonumber(tolua_S,4,0));
+  float radius = ((float)  tolua_tonumber(tolua_S,5,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'addTacticalInfluenceSource'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->addTacticalInfluenceSource(layerName,*center,strength,radius);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'addTacticalInfluenceSource'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: sampleTacticalInfluence of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_sampleTacticalInfluence00
+static int tolua_SandboxToLua_ObjectManager_sampleTacticalInfluence00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'sampleTacticalInfluence'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->sampleTacticalInfluence(layerName,*position);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'sampleTacticalInfluence'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: scoreTacticalPosition of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_scoreTacticalPosition00
+static int tolua_SandboxToLua_ObjectManager_scoreTacticalPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  float dangerWeight = ((float)  tolua_tonumber(tolua_S,3,0));
+  float teamWeight = ((float)  tolua_tonumber(tolua_S,4,0));
+  float objectiveWeight = ((float)  tolua_tonumber(tolua_S,5,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'scoreTacticalPosition'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->scoreTacticalPosition(*position,dangerWeight,teamWeight,objectiveWeight);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'scoreTacticalPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: findBestTacticalPosition of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_findBestTacticalPosition00
+static int tolua_SandboxToLua_ObjectManager_findBestTacticalPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,8,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* center = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  float radius = ((float)  tolua_tonumber(tolua_S,3,0));
+  float step = ((float)  tolua_tonumber(tolua_S,4,0));
+  float dangerWeight = ((float)  tolua_tonumber(tolua_S,5,0));
+  float teamWeight = ((float)  tolua_tonumber(tolua_S,6,0));
+  float objectiveWeight = ((float)  tolua_tonumber(tolua_S,7,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'findBestTacticalPosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->findBestTacticalPosition(*center,radius,step,dangerWeight,teamWeight,objectiveWeight);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'findBestTacticalPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalInfluenceLayerActiveCellCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerActiveCellCount00
+static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerActiveCellCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalInfluenceLayerActiveCellCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalInfluenceLayerActiveCellCount(layerName);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalInfluenceLayerActiveCellCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalInfluenceLayerCellWriteCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerCellWriteCount00
+static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerCellWriteCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalInfluenceLayerCellWriteCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalInfluenceLayerCellWriteCount(layerName);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalInfluenceLayerCellWriteCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalInfluenceActiveCellCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00
+static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalInfluenceActiveCellCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalInfluenceActiveCellCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalInfluenceActiveCellCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalInfluenceCellWriteCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceCellWriteCount00
+static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceCellWriteCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalInfluenceCellWriteCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalInfluenceCellWriteCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalInfluenceCellWriteCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalInfluenceQueryCount of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceQueryCount00
+static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceQueryCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalInfluenceQueryCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalInfluenceQueryCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalInfluenceQueryCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildTacticalInfluenceDebugSummary of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildTacticalInfluenceDebugSummary00
+static int tolua_SandboxToLua_ObjectManager_buildTacticalInfluenceDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const ObjectManager* self = (const ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildTacticalInfluenceDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildTacticalInfluenceDebugSummary();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildTacticalInfluenceDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: buildAiEventDebugSummary of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00
 static int tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00(lua_State* tolua_S)
@@ -11485,6 +11961,19 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getTeamBlackboardFactCount",tolua_SandboxToLua_ObjectManager_getTeamBlackboardFactCount00);
    tolua_function(tolua_S,"getTeamBlackboardReportCount",tolua_SandboxToLua_ObjectManager_getTeamBlackboardReportCount00);
    tolua_function(tolua_S,"buildTeamBlackboardDebugSummary",tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00);
+   tolua_function(tolua_S,"clearTacticalInfluence",tolua_SandboxToLua_ObjectManager_clearTacticalInfluence00);
+   tolua_function(tolua_S,"configureTacticalInfluence",tolua_SandboxToLua_ObjectManager_configureTacticalInfluence00);
+   tolua_function(tolua_S,"clearTacticalInfluenceLayer",tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00);
+   tolua_function(tolua_S,"addTacticalInfluenceSource",tolua_SandboxToLua_ObjectManager_addTacticalInfluenceSource00);
+   tolua_function(tolua_S,"sampleTacticalInfluence",tolua_SandboxToLua_ObjectManager_sampleTacticalInfluence00);
+   tolua_function(tolua_S,"scoreTacticalPosition",tolua_SandboxToLua_ObjectManager_scoreTacticalPosition00);
+   tolua_function(tolua_S,"findBestTacticalPosition",tolua_SandboxToLua_ObjectManager_findBestTacticalPosition00);
+   tolua_function(tolua_S,"getTacticalInfluenceLayerActiveCellCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerActiveCellCount00);
+   tolua_function(tolua_S,"getTacticalInfluenceLayerCellWriteCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerCellWriteCount00);
+   tolua_function(tolua_S,"getTacticalInfluenceActiveCellCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00);
+   tolua_function(tolua_S,"getTacticalInfluenceCellWriteCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceCellWriteCount00);
+   tolua_function(tolua_S,"getTacticalInfluenceQueryCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceQueryCount00);
+   tolua_function(tolua_S,"buildTacticalInfluenceDebugSummary",tolua_SandboxToLua_ObjectManager_buildTacticalInfluenceDebugSummary00);
    tolua_function(tolua_S,"buildAiEventDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00);
    tolua_function(tolua_S,"runAiEventScopeSelfTest",tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00);
    tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);

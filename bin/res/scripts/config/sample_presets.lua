@@ -408,6 +408,18 @@ SamplePresets.chapter9_tactics_lua.diagnostics = {
 
 SamplePresets.Sandbox17 = SamplePresets.chapter9_tactics_lua
 
+SamplePresets.chapter9_tactics_cpp = cloneTable(SamplePresets.chapter9_tactics_lua)
+SamplePresets.chapter9_tactics_cpp.seed = 20260603
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.cppInfluenceMap = true
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveStrength = 1.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveRadius = 16.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveWeight = 1.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.dangerWeight = 1.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.teamWeight = 1.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryRadius = 24.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryStep = 4.0
+SamplePresets.Sandbox18 = SamplePresets.chapter9_tactics_cpp
+
 SamplePresets.ai_perception_pressure = cloneTable(SamplePresets.default)
 SamplePresets.ai_perception_pressure.seed = 20260601
 SamplePresets.ai_perception_pressure.agentCount = 120

@@ -17,7 +17,8 @@ param(
 		"Sandbox14",
 		"Sandbox15",
 		"Sandbox16",
-		"Sandbox17"
+		"Sandbox17",
+		"Sandbox18"
 	)]
 	[string]$Sample = "Sandbox8",
 	[int]$Seconds = 28,
@@ -97,6 +98,9 @@ if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sa
 }
 if ($Preset -eq "chapter9_tactics_lua" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox17"
+}
+if ($Preset -eq "chapter9_tactics_cpp" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox18"
 }
 if (($AiPerfPresetNames -contains $Preset) -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox16"
@@ -230,6 +234,9 @@ if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 if ($Preset -eq "chapter9_tactics_lua" -and $Seconds -lt 35) {
+	$Seconds = 35
+}
+if ($Preset -eq "chapter9_tactics_cpp" -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 
@@ -484,6 +491,17 @@ try {
 			$tacticsScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsSmoke\].*dangerCells=.*teamCells=.*dangerUpdates=.*teamUpdates=")
 			if ($tacticsScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Chapter 9 tactics layer update stats."
+			}
+		}
+
+		if ($Preset -eq "chapter9_tactics_cpp") {
+			$tacticsMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\]\s+PASS")
+			if ($tacticsMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Chapter 9 C++ tactics behavior."
+			}
+			$tacticsScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\].*dangerCells=.*teamCells=.*writes=.*queries=")
+			if ($tacticsScheduleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Chapter 9 C++ tactics influence stats."
 			}
 		}
 

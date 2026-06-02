@@ -9,6 +9,7 @@
 #include "ai/perception/AgentPerceptionSystem.h"
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
+#include "ai/tactics/InfluenceMapSystem.h"
 #include "ai/team/TeamBlackboardService.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
@@ -267,6 +268,7 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	m_agentSpatialIndex = new AgentSpatialIndexSystem();
 	m_agentPerceptionSystem = new AgentPerceptionSystem();
 	m_teamBlackboardService = new TeamBlackboardService();
+	m_influenceMapSystem = new InfluenceMapSystem();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_PERCEPTION_SYSTEM_ENABLE")))
@@ -293,6 +295,7 @@ ObjectManager::~ObjectManager()
 	SAFE_DELETE(m_agentSpatialIndex);
 	SAFE_DELETE(m_agentPerceptionSystem);
 	SAFE_DELETE(m_teamBlackboardService);
+	SAFE_DELETE(m_influenceMapSystem);
 
 	auto iter = m_navMeshes.begin();
 	for ( ; iter != m_navMeshes.end(); iter++)
@@ -640,6 +643,84 @@ std::string ObjectManager::buildTeamBlackboardDebugSummary() const
 	return m_teamBlackboardService->BuildDebugSummary();
 }
 
+void ObjectManager::clearTacticalInfluence()
+{
+	if (m_influenceMapSystem != nullptr)
+		m_influenceMapSystem->Clear();
+}
+
+void ObjectManager::configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize)
+{
+	if (m_influenceMapSystem != nullptr)
+		m_influenceMapSystem->Configure(minX, maxX, minZ, maxZ, cellSize);
+}
+
+void ObjectManager::clearTacticalInfluenceLayer(const std::string& layerName)
+{
+	if (m_influenceMapSystem != nullptr)
+		m_influenceMapSystem->ClearLayer(layerName);
+}
+
+int ObjectManager::addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius)
+{
+	if (m_influenceMapSystem == nullptr)
+		return 0;
+	return m_influenceMapSystem->AddRadialSource(layerName, center, strength, radius);
+}
+
+float ObjectManager::sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const
+{
+	if (m_influenceMapSystem == nullptr)
+		return 0.0f;
+	return m_influenceMapSystem->SampleLayer(layerName, position);
+}
+
+float ObjectManager::scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const
+{
+	if (m_influenceMapSystem == nullptr)
+		return 0.0f;
+	return m_influenceMapSystem->ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
+}
+
+Ogre::Vector3 ObjectManager::findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight)
+{
+	if (m_influenceMapSystem == nullptr)
+		return center;
+	return m_influenceMapSystem->FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+}
+
+int ObjectManager::getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const
+{
+	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetLayerActiveCellCount(layerName) : 0;
+}
+
+int ObjectManager::getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const
+{
+	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetLayerCellWriteCount(layerName) : 0;
+}
+
+int ObjectManager::getTacticalInfluenceActiveCellCount() const
+{
+	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().activeCellCount : 0;
+}
+
+int ObjectManager::getTacticalInfluenceCellWriteCount() const
+{
+	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().cellWriteCount : 0;
+}
+
+int ObjectManager::getTacticalInfluenceQueryCount() const
+{
+	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().queryCount : 0;
+}
+
+std::string ObjectManager::buildTacticalInfluenceDebugSummary() const
+{
+	if (m_influenceMapSystem == nullptr)
+		return "[TacticalInfluenceSystem] unavailable";
+	return m_influenceMapSystem->BuildDebugSummary();
+}
+
 std::string ObjectManager::buildAiSchedulerDebugSummary() const
 {
 	if (m_aiScheduler == nullptr)
@@ -895,6 +976,8 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		stream << "\n" << m_agentPerceptionSystem->BuildDebugSummary();
 	if (m_teamBlackboardService != nullptr)
 		stream << "\n" << m_teamBlackboardService->BuildDebugSummary();
+	if (m_influenceMapSystem != nullptr)
+		stream << "\n" << m_influenceMapSystem->BuildDebugSummary();
 
 	for (int index = 0; index < showingCount; ++index)
 	{
@@ -1080,6 +1163,8 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 			m_agentPerceptionSystem->Clear();
 		if (m_teamBlackboardService != nullptr)
 			m_teamBlackboardService->Clear();
+		if (m_influenceMapSystem != nullptr)
+			m_influenceMapSystem->Clear();
 	}
 }
 std::vector<BlockObject*> ObjectManager::getFixedObjects()
