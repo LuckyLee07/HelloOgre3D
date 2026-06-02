@@ -198,7 +198,13 @@ if ($PerfStallLog -or ($AiPerfPresetNames -contains $Preset)) {
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
 }
-if (($Preset -like "ai_perf_*") -and $Seconds -lt 35) {
+if ($Preset -eq "ai_perf_1000" -and $Seconds -lt 120) {
+	$Seconds = 120
+}
+elseif ($Preset -eq "ai_perf_500" -and $Seconds -lt 90) {
+	$Seconds = 90
+}
+elseif (($Preset -like "ai_perf_*") -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and $Seconds -lt 70) {

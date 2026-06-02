@@ -447,10 +447,18 @@ void ObjectManager::Update(int deltaMilliseconds)
 			perfTiming.spatialCellCount = stats.occupiedCellCount;
 			perfTiming.spatialQueryCount = stats.queryCount;
 			perfTiming.spatialCandidateCount = stats.candidateCount;
+			perfTiming.spatialFilteredCandidateCount = stats.filteredCandidateCount;
 			perfTiming.spatialResultCount = stats.resultCount;
 			perfTiming.spatialMaxCandidates = stats.maxCandidatesPerQuery;
+			perfTiming.spatialMaxFilteredCandidates = stats.maxFilteredCandidatesPerQuery;
 			perfTiming.spatialMaxResults = stats.maxResultsPerQuery;
+			perfTiming.spatialRejectedSelfCount = stats.rejectedSelfCount;
+			perfTiming.spatialRejectedTeamCount = stats.rejectedTeamCount;
+			perfTiming.spatialRejectedDeadCount = stats.rejectedDeadCount;
+			perfTiming.spatialRejectedTypeCount = stats.rejectedTypeCount;
+			perfTiming.spatialQueryCostMs = stats.queryCostMs;
 			perfTiming.spatialAvgCandidates = stats.queryCount > 0 ? static_cast<double>(stats.candidateCount) / static_cast<double>(stats.queryCount) : 0.0;
+			perfTiming.spatialAvgFilteredCandidates = stats.queryCount > 0 ? static_cast<double>(stats.filteredCandidateCount) / static_cast<double>(stats.queryCount) : 0.0;
 			perfTiming.spatialAvgResults = stats.queryCount > 0 ? static_cast<double>(stats.resultCount) / static_cast<double>(stats.queryCount) : 0.0;
 		}
 		if (m_agentPerceptionSystem != nullptr)
@@ -463,7 +471,13 @@ void ObjectManager::Update(int deltaMilliseconds)
 			perfTiming.perceptionVisibleCount = stats.visibleCount;
 			perfTiming.perceptionSpatialQueryCount = stats.spatialQueryCount;
 			perfTiming.perceptionSpatialCandidateCount = stats.spatialCandidateCount;
+			perfTiming.perceptionSpatialFilteredCandidateCount = stats.spatialFilteredCandidateCount;
 			perfTiming.perceptionSpatialResultCount = stats.spatialResultCount;
+			perfTiming.perceptionSpatialRejectedSelfCount = stats.spatialRejectedSelfCount;
+			perfTiming.perceptionSpatialRejectedTeamCount = stats.spatialRejectedTeamCount;
+			perfTiming.perceptionSpatialRejectedDeadCount = stats.spatialRejectedDeadCount;
+			perfTiming.perceptionSpatialRejectedTypeCount = stats.spatialRejectedTypeCount;
+			perfTiming.perceptionSpatialQueryCostMs = stats.spatialQueryCostMs;
 			perfTiming.perceptionMemoryMs = stats.memoryMs;
 			perfTiming.perceptionVisionMs = stats.visionMs;
 		}

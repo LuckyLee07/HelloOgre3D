@@ -9,6 +9,28 @@
 
 class AgentObject;
 
+struct AgentSpatialQueryOptions
+{
+	AgentSpatialQueryOptions()
+		: owner(nullptr)
+		, includeSelf(true)
+		, requireAlive(false)
+		, requiredTeamId(-1)
+		, excludedTeamId(-1)
+		, requiredObjectType(0)
+		, maxResults(0)
+	{
+	}
+
+	const AgentObject* owner;
+	bool includeSelf;
+	bool requireAlive;
+	int requiredTeamId;
+	int excludedTeamId;
+	int requiredObjectType;
+	int maxResults;
+};
+
 class AgentSpatialIndexSystem
 {
 public:
@@ -20,9 +42,16 @@ public:
 			, rebuildCount(0)
 			, queryCount(0)
 			, candidateCount(0)
+			, filteredCandidateCount(0)
 			, resultCount(0)
 			, maxCandidatesPerQuery(0)
+			, maxFilteredCandidatesPerQuery(0)
 			, maxResultsPerQuery(0)
+			, rejectedSelfCount(0)
+			, rejectedTeamCount(0)
+			, rejectedDeadCount(0)
+			, rejectedTypeCount(0)
+			, queryCostMs(0.0)
 		{
 		}
 
@@ -31,9 +60,16 @@ public:
 		int rebuildCount;
 		int queryCount;
 		int candidateCount;
+		int filteredCandidateCount;
 		int resultCount;
 		int maxCandidatesPerQuery;
+		int maxFilteredCandidatesPerQuery;
 		int maxResultsPerQuery;
+		int rejectedSelfCount;
+		int rejectedTeamCount;
+		int rejectedDeadCount;
+		int rejectedTypeCount;
+		double queryCostMs;
 	};
 
 	explicit AgentSpatialIndexSystem(float cellSize = 20.0f);
@@ -49,7 +85,8 @@ public:
 	void AddOrUpdateAgent(AgentObject* agent);
 	void RemoveAgent(AgentObject* agent);
 	void QueryAgentsInRange(const Ogre::Vector3& center, float radius, std::vector<AgentObject*>& outAgents, int maxResults = 0) const;
-	void RecordFallbackQueryStats(int candidates, int results) const;
+	void QueryAgentsInRange(const Ogre::Vector3& center, float radius, std::vector<AgentObject*>& outAgents, const AgentSpatialQueryOptions& options) const;
+	void RecordFallbackQueryStats(int candidates, int filteredCandidates, int results, int rejectedSelf = 0, int rejectedTeam = 0, int rejectedDead = 0, int rejectedType = 0, double queryCostMs = 0.0) const;
 
 	bool IsBuilt() const { return m_built; }
 	const Stats& GetStats() const { return m_stats; }
@@ -91,7 +128,7 @@ private:
 
 	CellKey BuildCellKey(const Ogre::Vector3& position) const;
 	void InsertAgent(AgentObject* agent, const CellKey& key);
-	void RecordQueryStats(int candidates, int results) const;
+	void RecordQueryStats(int candidates, int filteredCandidates, int results, int rejectedSelf, int rejectedTeam, int rejectedDead, int rejectedType, double queryCostMs) const;
 
 	float m_cellSize;
 	bool m_enabled;

@@ -7,10 +7,70 @@
 
 #include "objects/AgentObject.h"
 #include "profiling/Profile.h"
+#include "profiling/RuntimeProfileCounters.h"
 
 namespace
 {
 	const float kMinCellSize = 1.0f;
+
+	struct QueryFilterStats
+	{
+		QueryFilterStats()
+			: rawCandidates(0)
+			, filteredCandidates(0)
+			, rejectedSelf(0)
+			, rejectedTeam(0)
+			, rejectedDead(0)
+			, rejectedType(0)
+		{
+		}
+
+		int rawCandidates;
+		int filteredCandidates;
+		int rejectedSelf;
+		int rejectedTeam;
+		int rejectedDead;
+		int rejectedType;
+	};
+
+	bool PassesQueryOptions(AgentObject* agent, const AgentSpatialQueryOptions& options, QueryFilterStats& stats)
+	{
+		if (agent == nullptr)
+			return false;
+
+		if (!options.includeSelf && options.owner != nullptr && agent == options.owner)
+		{
+			++stats.rejectedSelf;
+			return false;
+		}
+
+		if (options.requireAlive && agent->GetHealth() <= 0.0f)
+		{
+			++stats.rejectedDead;
+			return false;
+		}
+
+		if (options.requiredTeamId >= 0 && static_cast<int>(agent->GetTeamId()) != options.requiredTeamId)
+		{
+			++stats.rejectedTeam;
+			return false;
+		}
+
+		if (options.excludedTeamId >= 0 && static_cast<int>(agent->GetTeamId()) == options.excludedTeamId)
+		{
+			++stats.rejectedTeam;
+			return false;
+		}
+
+		if (options.requiredObjectType > 0 && static_cast<int>(agent->GetObjType()) != options.requiredObjectType)
+		{
+			++stats.rejectedType;
+			return false;
+		}
+
+		++stats.filteredCandidates;
+		return true;
+	}
 }
 
 AgentSpatialIndexSystem::AgentSpatialIndexSystem(float cellSize)
@@ -119,13 +179,21 @@ void AgentSpatialIndexSystem::RemoveAgent(AgentObject* agent)
 
 void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, float radius, std::vector<AgentObject*>& outAgents, int maxResults) const
 {
+	AgentSpatialQueryOptions options;
+	options.maxResults = maxResults;
+	QueryAgentsInRange(center, radius, outAgents, options);
+}
+
+void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, float radius, std::vector<AgentObject*>& outAgents, const AgentSpatialQueryOptions& options) const
+{
 	H3D_PROFILE_SCOPE("AgentSpatialIndexSystem::QueryAgentsInRange");
+	const long long queryStartMicros = RuntimeStallProfiler::NowMicroseconds();
 	outAgents.clear();
 	if (!m_enabled || !m_built)
 		return;
 
-	const bool limitResults = maxResults > 0;
-	int candidates = 0;
+	const bool limitResults = options.maxResults > 0;
+	QueryFilterStats filterStats;
 
 	if (radius <= 0.0f)
 	{
@@ -133,18 +201,19 @@ void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, fl
 		{
 			for (AgentObject* agent : cell->second)
 			{
-				++candidates;
-				if (agent == nullptr)
+				++filterStats.rawCandidates;
+				if (!PassesQueryOptions(agent, options, filterStats))
 					continue;
+
 				outAgents.push_back(agent);
-				if (limitResults && static_cast<int>(outAgents.size()) >= maxResults)
+				if (limitResults && static_cast<int>(outAgents.size()) >= options.maxResults)
 				{
-					RecordQueryStats(candidates, static_cast<int>(outAgents.size()));
+					RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
 					return;
 				}
 			}
 		}
-		RecordQueryStats(candidates, static_cast<int>(outAgents.size()));
+		RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
 		return;
 	}
 
@@ -163,29 +232,32 @@ void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, fl
 
 			for (AgentObject* agent : foundCell->second)
 			{
-				++candidates;
+				++filterStats.rawCandidates;
 				if (agent == nullptr)
 					continue;
 
 				if (center.squaredDistance(agent->GetPosition()) > radiusSquared)
 					continue;
 
+				if (!PassesQueryOptions(agent, options, filterStats))
+					continue;
+
 				outAgents.push_back(agent);
-				if (limitResults && static_cast<int>(outAgents.size()) >= maxResults)
+				if (limitResults && static_cast<int>(outAgents.size()) >= options.maxResults)
 				{
-					RecordQueryStats(candidates, static_cast<int>(outAgents.size()));
+					RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
 					return;
 				}
 			}
 		}
 	}
 
-	RecordQueryStats(candidates, static_cast<int>(outAgents.size()));
+	RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
 }
 
-void AgentSpatialIndexSystem::RecordFallbackQueryStats(int candidates, int results) const
+void AgentSpatialIndexSystem::RecordFallbackQueryStats(int candidates, int filteredCandidates, int results, int rejectedSelf, int rejectedTeam, int rejectedDead, int rejectedType, double queryCostMs) const
 {
-	RecordQueryStats(candidates, results);
+	RecordQueryStats(candidates, filteredCandidates, results, rejectedSelf, rejectedTeam, rejectedDead, rejectedType, queryCostMs);
 }
 
 std::string AgentSpatialIndexSystem::BuildDebugSummary() const
@@ -197,6 +269,9 @@ std::string AgentSpatialIndexSystem::BuildDebugSummary() const
 	const float avgResults = m_stats.queryCount > 0
 		? static_cast<float>(m_stats.resultCount) / static_cast<float>(m_stats.queryCount)
 		: 0.0f;
+	const float avgFiltered = m_stats.queryCount > 0
+		? static_cast<float>(m_stats.filteredCandidateCount) / static_cast<float>(m_stats.queryCount)
+		: 0.0f;
 
 	stream << "[AgentSpatialIndex] enabled=" << (m_enabled ? "true" : "false")
 		<< " mode=" << (m_enabled ? "grid" : "linearFallback")
@@ -207,11 +282,19 @@ std::string AgentSpatialIndexSystem::BuildDebugSummary() const
 		<< " rebuilds=" << m_stats.rebuildCount
 		<< " queries=" << m_stats.queryCount
 		<< " candidates=" << m_stats.candidateCount
+		<< " filtered=" << m_stats.filteredCandidateCount
 		<< " results=" << m_stats.resultCount
 		<< " avgCandidates=" << std::fixed << std::setprecision(1) << avgCandidates
+		<< " avgFiltered=" << std::fixed << std::setprecision(1) << avgFiltered
 		<< " avgResults=" << std::fixed << std::setprecision(1) << avgResults
 		<< " maxCandidates=" << m_stats.maxCandidatesPerQuery
-		<< " maxResults=" << m_stats.maxResultsPerQuery;
+		<< " maxFiltered=" << m_stats.maxFilteredCandidatesPerQuery
+		<< " maxResults=" << m_stats.maxResultsPerQuery
+		<< " rejectSelf=" << m_stats.rejectedSelfCount
+		<< " rejectTeam=" << m_stats.rejectedTeamCount
+		<< " rejectDead=" << m_stats.rejectedDeadCount
+		<< " rejectType=" << m_stats.rejectedTypeCount
+		<< " queryMs=" << std::fixed << std::setprecision(2) << m_stats.queryCostMs;
 	return stream.str();
 }
 
@@ -228,11 +311,18 @@ void AgentSpatialIndexSystem::InsertAgent(AgentObject* agent, const CellKey& key
 	m_agentCells[agent] = key;
 }
 
-void AgentSpatialIndexSystem::RecordQueryStats(int candidates, int results) const
+void AgentSpatialIndexSystem::RecordQueryStats(int candidates, int filteredCandidates, int results, int rejectedSelf, int rejectedTeam, int rejectedDead, int rejectedType, double queryCostMs) const
 {
 	++m_stats.queryCount;
 	m_stats.candidateCount += candidates;
+	m_stats.filteredCandidateCount += filteredCandidates;
 	m_stats.resultCount += results;
 	m_stats.maxCandidatesPerQuery = std::max(m_stats.maxCandidatesPerQuery, candidates);
+	m_stats.maxFilteredCandidatesPerQuery = std::max(m_stats.maxFilteredCandidatesPerQuery, filteredCandidates);
 	m_stats.maxResultsPerQuery = std::max(m_stats.maxResultsPerQuery, results);
+	m_stats.rejectedSelfCount += rejectedSelf;
+	m_stats.rejectedTeamCount += rejectedTeam;
+	m_stats.rejectedDeadCount += rejectedDead;
+	m_stats.rejectedTypeCount += rejectedType;
+	m_stats.queryCostMs += queryCostMs;
 }

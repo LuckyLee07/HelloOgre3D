@@ -158,7 +158,12 @@ public:
 		}
 
 		std::vector<AgentObject*> agents;
-		m_spatialQuery->QueryAgentsInRange(owner->GetPosition(), options.maxDistance, agents);
+		AgentSpatialQueryOptions spatialOptions;
+		spatialOptions.owner = owner;
+		spatialOptions.includeSelf = false;
+		spatialOptions.requireAlive = true;
+		spatialOptions.excludedTeamId = static_cast<int>(owner->GetTeamId());
+		m_spatialQuery->QueryAgentsInRange(owner->GetPosition(), options.maxDistance, agents, spatialOptions);
 		float nearestDistance = std::numeric_limits<float>::max();
 
 		for (AgentObject* candidate : agents)

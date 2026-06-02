@@ -183,18 +183,32 @@ namespace
 			<< " vision=" << s_stallFrameState.object.perceptionVisionMs
 			<< " spatialQueries=" << s_stallFrameState.object.perceptionSpatialQueryCount
 			<< " candidates=" << s_stallFrameState.object.perceptionSpatialCandidateCount
+			<< " filtered=" << s_stallFrameState.object.perceptionSpatialFilteredCandidateCount
 			<< " results=" << s_stallFrameState.object.perceptionSpatialResultCount;
+		stream << " rejectSelf=" << s_stallFrameState.object.perceptionSpatialRejectedSelfCount
+			<< " rejectTeam=" << s_stallFrameState.object.perceptionSpatialRejectedTeamCount
+			<< " rejectDead=" << s_stallFrameState.object.perceptionSpatialRejectedDeadCount
+			<< " rejectType=" << s_stallFrameState.object.perceptionSpatialRejectedTypeCount
+			<< " queryMs=" << s_stallFrameState.object.perceptionSpatialQueryCostMs;
 
 		stream << "\n[FramePerf] spatial enabled=" << s_stallFrameState.object.spatialEnabled
 			<< " agents=" << s_stallFrameState.object.spatialAgentCount
 			<< " cells=" << s_stallFrameState.object.spatialCellCount
 			<< " queries=" << s_stallFrameState.object.spatialQueryCount
 			<< " candidates=" << s_stallFrameState.object.spatialCandidateCount
+			<< " filtered=" << s_stallFrameState.object.spatialFilteredCandidateCount
 			<< " results=" << s_stallFrameState.object.spatialResultCount
 			<< " avgCandidates=" << s_stallFrameState.object.spatialAvgCandidates
+			<< " avgFiltered=" << s_stallFrameState.object.spatialAvgFilteredCandidates
 			<< " avgResults=" << s_stallFrameState.object.spatialAvgResults
 			<< " maxCandidates=" << s_stallFrameState.object.spatialMaxCandidates
-			<< " maxResults=" << s_stallFrameState.object.spatialMaxResults;
+			<< " maxFiltered=" << s_stallFrameState.object.spatialMaxFilteredCandidates
+			<< " maxResults=" << s_stallFrameState.object.spatialMaxResults
+			<< " rejectSelf=" << s_stallFrameState.object.spatialRejectedSelfCount
+			<< " rejectTeam=" << s_stallFrameState.object.spatialRejectedTeamCount
+			<< " rejectDead=" << s_stallFrameState.object.spatialRejectedDeadCount
+			<< " rejectType=" << s_stallFrameState.object.spatialRejectedTypeCount
+			<< " queryMs=" << s_stallFrameState.object.spatialQueryCostMs;
 
 		stream << "\n[FramePerf] teamBB teams=" << s_stallFrameState.object.teamCount
 			<< " facts=" << s_stallFrameState.object.teamFactCount
@@ -246,7 +260,7 @@ void RuntimeProfileCounters::PlotAiSchedulerStats(int enabled, int agentCount, i
 	H3D_PROFILE_PLOT("AISchedulerMaxTicksPerFrame", static_cast<double>(maxTicksPerFrame));
 }
 
-void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialResultCount)
+void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialFilteredCandidateCount, int spatialResultCount)
 {
 	(void)enabled;
 	(void)controllerCount;
@@ -254,6 +268,7 @@ void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controlle
 	(void)visibleCount;
 	(void)spatialQueryCount;
 	(void)spatialCandidateCount;
+	(void)spatialFilteredCandidateCount;
 	(void)spatialResultCount;
 
 	H3D_PROFILE_PLOT("AgentPerceptionEnabled", static_cast<double>(enabled));
@@ -262,6 +277,7 @@ void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controlle
 	H3D_PROFILE_PLOT("AgentPerceptionVisible", static_cast<double>(visibleCount));
 	H3D_PROFILE_PLOT("AgentPerceptionSpatialQueries", static_cast<double>(spatialQueryCount));
 	H3D_PROFILE_PLOT("AgentPerceptionSpatialCandidates", static_cast<double>(spatialCandidateCount));
+	H3D_PROFILE_PLOT("AgentPerceptionSpatialFilteredCandidates", static_cast<double>(spatialFilteredCandidateCount));
 	H3D_PROFILE_PLOT("AgentPerceptionSpatialResults", static_cast<double>(spatialResultCount));
 }
 
@@ -327,7 +343,13 @@ RuntimeObjectUpdateTiming::RuntimeObjectUpdateTiming()
 	, perceptionVisibleCount(0)
 	, perceptionSpatialQueryCount(0)
 	, perceptionSpatialCandidateCount(0)
+	, perceptionSpatialFilteredCandidateCount(0)
 	, perceptionSpatialResultCount(0)
+	, perceptionSpatialRejectedSelfCount(0)
+	, perceptionSpatialRejectedTeamCount(0)
+	, perceptionSpatialRejectedDeadCount(0)
+	, perceptionSpatialRejectedTypeCount(0)
+	, perceptionSpatialQueryCostMs(0.0)
 	, perceptionMemoryMs(0.0)
 	, perceptionVisionMs(0.0)
 	, spatialEnabled(0)
@@ -335,10 +357,18 @@ RuntimeObjectUpdateTiming::RuntimeObjectUpdateTiming()
 	, spatialCellCount(0)
 	, spatialQueryCount(0)
 	, spatialCandidateCount(0)
+	, spatialFilteredCandidateCount(0)
 	, spatialResultCount(0)
 	, spatialMaxCandidates(0)
+	, spatialMaxFilteredCandidates(0)
 	, spatialMaxResults(0)
+	, spatialRejectedSelfCount(0)
+	, spatialRejectedTeamCount(0)
+	, spatialRejectedDeadCount(0)
+	, spatialRejectedTypeCount(0)
+	, spatialQueryCostMs(0.0)
 	, spatialAvgCandidates(0.0)
+	, spatialAvgFilteredCandidates(0.0)
 	, spatialAvgResults(0.0)
 	, teamCount(0)
 	, teamFactCount(0)

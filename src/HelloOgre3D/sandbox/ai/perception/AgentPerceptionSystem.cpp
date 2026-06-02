@@ -77,7 +77,13 @@ void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int 
 		const AgentSpatialIndexSystem::Stats& spatialAfter = spatialIndex->GetStats();
 		stats.spatialQueryCount = std::max(0, spatialAfter.queryCount - spatialBefore.queryCount);
 		stats.spatialCandidateCount = std::max(0, spatialAfter.candidateCount - spatialBefore.candidateCount);
+		stats.spatialFilteredCandidateCount = std::max(0, spatialAfter.filteredCandidateCount - spatialBefore.filteredCandidateCount);
 		stats.spatialResultCount = std::max(0, spatialAfter.resultCount - spatialBefore.resultCount);
+		stats.spatialRejectedSelfCount = std::max(0, spatialAfter.rejectedSelfCount - spatialBefore.rejectedSelfCount);
+		stats.spatialRejectedTeamCount = std::max(0, spatialAfter.rejectedTeamCount - spatialBefore.rejectedTeamCount);
+		stats.spatialRejectedDeadCount = std::max(0, spatialAfter.rejectedDeadCount - spatialBefore.rejectedDeadCount);
+		stats.spatialRejectedTypeCount = std::max(0, spatialAfter.rejectedTypeCount - spatialBefore.rejectedTypeCount);
+		stats.spatialQueryCostMs = std::max(0.0, spatialAfter.queryCostMs - spatialBefore.queryCostMs);
 	}
 
 	m_stats = stats;
@@ -91,6 +97,9 @@ std::string AgentPerceptionSystem::BuildDebugSummary() const
 	const float avgResults = m_stats.spatialQueryCount > 0
 		? static_cast<float>(m_stats.spatialResultCount) / static_cast<float>(m_stats.spatialQueryCount)
 		: 0.0f;
+	const float avgFiltered = m_stats.spatialQueryCount > 0
+		? static_cast<float>(m_stats.spatialFilteredCandidateCount) / static_cast<float>(m_stats.spatialQueryCount)
+		: 0.0f;
 
 	std::ostringstream stream;
 	stream << "[AgentPerceptionSystem] enabled=" << (m_enabled ? "true" : "false")
@@ -101,9 +110,16 @@ std::string AgentPerceptionSystem::BuildDebugSummary() const
 		<< " visible=" << m_stats.visibleCount
 		<< " spatialQueries=" << m_stats.spatialQueryCount
 		<< " candidates=" << m_stats.spatialCandidateCount
+		<< " filtered=" << m_stats.spatialFilteredCandidateCount
 		<< " results=" << m_stats.spatialResultCount
 		<< " avgCandidates=" << std::fixed << std::setprecision(1) << avgCandidates
+		<< " avgFiltered=" << std::fixed << std::setprecision(1) << avgFiltered
 		<< " avgResults=" << std::fixed << std::setprecision(1) << avgResults
+		<< " rejectSelf=" << m_stats.spatialRejectedSelfCount
+		<< " rejectTeam=" << m_stats.spatialRejectedTeamCount
+		<< " rejectDead=" << m_stats.spatialRejectedDeadCount
+		<< " rejectType=" << m_stats.spatialRejectedTypeCount
+		<< " queryMs=" << std::fixed << std::setprecision(2) << m_stats.spatialQueryCostMs
 		<< " memoryMs=" << std::fixed << std::setprecision(2) << m_stats.memoryMs
 		<< " visionMs=" << std::fixed << std::setprecision(2) << m_stats.visionMs;
 	return stream.str();
@@ -118,5 +134,6 @@ void AgentPerceptionSystem::PublishTracyCounters() const
 		m_stats.visibleCount,
 		m_stats.spatialQueryCount,
 		m_stats.spatialCandidateCount,
+		m_stats.spatialFilteredCandidateCount,
 		m_stats.spatialResultCount);
 }

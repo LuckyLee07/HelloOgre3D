@@ -47,6 +47,8 @@
 - 2026-06-01：新增 `Sandbox16` 作为 AI perception pressure sample，默认 120 agent、关闭 AI scheduler、每帧全量感知更新，用于暴露感知/记忆/空间查询性能问题。
 - 2026-06-01：新增 `FramePerf` 卡顿诊断日志，支持 `HELLO_PERF_STALL_LOG`、`HELLO_PERF_STALL_THRESHOLD_MS`、`HELLO_PERF_SUMMARY_INTERVAL_MS`，可分段输出 frame / simulate / game / object / AI / spatial / teamBB 耗时。
 - 2026-06-02：新增 `AgentPerceptionSystem` 第一阶段：`ObjectManager` 每帧批量驱动 `AIController::TickPerception`，`AIController::TickAI` 默认跳过重复 perception；FramePerf / RuntimeDiag 可单独看到 perception system 的 scans、visible、spatial query 和 memory/vision 耗时。
+- 2026-06-02：沉淀 `Sandbox16` / `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` Debug x64 基线报告：见 `docs/perf/ai-perception-baseline-20260602.md`；当前结论是热点集中在 C++ 感知 / 记忆写入，spatial index 已显著降低候选数但仍不足以支撑 500 / 1000 agent 每帧全量感知。
+- 2026-06-02：`AgentSpatialIndexSystem` 二期第一段完成：spatial query options 支持 owner/includeSelf、alive、team include/exclude、objectType 过滤；grid 和 linear fallback 走同一套过滤统计，FramePerf / RuntimeDiag 输出 filtered、rejectSelf、rejectTeam、rejectDead、rejectType、queryMs。
 
 ## P0 - 方向回正
 
@@ -104,9 +106,11 @@
 > 详细规划见 `docs/ai-technical-iteration-plan.md`。当前重点从“继续新增 sample”转向“把已跑通的 AI 概念收口为可扩展 C++ 底座”。
 
 - [x] `AgentSpatialIndexSystem` 第一版：`ObjectManager` 每帧 rebuild agent grid，`IAgentSpatialQuery` 默认优先走 grid，支持 `maxResults` 和基础 candidates/results stats。
-- [ ] `AgentSpatialIndexSystem` 二期：补 teamId / alive / includeSelf / type 或 tag 过滤，补 queryCostMs，补 grid vs linear 结果一致性和成本对照。
+- [x] `AgentSpatialIndexSystem` 二期第一段：补 teamId / alive / includeSelf / objectType 过滤和 queryMs / filtered / reject 统计，grid 与 linear fallback 共用过滤语义。
+- [ ] `AgentSpatialIndexSystem` 二期复测：基于 `ai_perf_500` / `ai_perf_1000` 重新记录 grid vs linear 结果一致性和成本对照。
 - [x] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
-- [ ] `ai_perf` baseline：基于 `Sandbox16` 固化 100 / 500 / 1000 agent 场景，分别记录 spatial on/off、scheduler on/off、Debug/Release 的 FramePerf 摘要。
+- [x] `ai_perf` baseline 第一版：基于 `Sandbox16` 固化 100 / 500 / 1000 agent Debug x64 场景，记录 spatial on/off、perception system on/off 的 FramePerf 摘要。
+- [ ] `ai_perf` baseline 二期：补 scheduler on/off、Release x64、必要 Tracy capture 对照。
 - [ ] `AgentPerceptionSystem`：把视觉、听觉、危险等感知收口到 C++ 批量系统，Lua 只读结果。
 - [x] `AgentPerceptionSystem` 第一阶段保持每帧全量更新，不启用 scheduler 降频；先把 `AIController` 内的 per-agent vision/memory 热点集中到 system 级统计和缓存。
 - [ ] `PerceptionResultCache`：保存 currentTarget、lastKnown、confidence、ageMs、source、候选数和扫描耗时，保持现有 blackboard key 兼容。

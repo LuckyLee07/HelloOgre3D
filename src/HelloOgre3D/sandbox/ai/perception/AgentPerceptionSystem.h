@@ -21,7 +21,13 @@ public:
 			, visibleCount(0)
 			, spatialQueryCount(0)
 			, spatialCandidateCount(0)
+			, spatialFilteredCandidateCount(0)
 			, spatialResultCount(0)
+			, spatialRejectedSelfCount(0)
+			, spatialRejectedTeamCount(0)
+			, spatialRejectedDeadCount(0)
+			, spatialRejectedTypeCount(0)
+			, spatialQueryCostMs(0.0)
 			, memoryMs(0.0)
 			, visionMs(0.0)
 		{
@@ -35,7 +41,13 @@ public:
 		int visibleCount;
 		int spatialQueryCount;
 		int spatialCandidateCount;
+		int spatialFilteredCandidateCount;
 		int spatialResultCount;
+		int spatialRejectedSelfCount;
+		int spatialRejectedTeamCount;
+		int spatialRejectedDeadCount;
+		int spatialRejectedTypeCount;
+		double spatialQueryCostMs;
 		double memoryMs;
 		double visionMs;
 	};

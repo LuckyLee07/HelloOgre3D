@@ -8,7 +8,7 @@
 
 | 文档 | 作用 |
 |---|---|
-| `project-direction.md` | 项目身份(数据驱动沙盒运行时+编辑器)、核心主轴(内容即数据)、L0–L4 模块优先级、第一个垂直切片、先做/缓做/别做。**统领以下所有文档。** |
+| `project-direction.md` | 项目身份(AI 学习与实验沙盒)、核心主轴(把 AI 能力讲清楚、跑起来、看得见)、近期优先级、先做/缓做/别做。**统领以下所有文档。** |
 
 ## 🔨 Active 规划（按这些施工）
 
@@ -54,6 +54,7 @@
 
 | 入口 | 作用 |
 |---|---|
+| `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 实测基线：100 / 500 / 1000 agent，spatial on/off 与 perception system on/off 对照 |
 | `perf/fgui-tracy-sample-*.md` | FGUI Tracy 性能实测报告（visible pressure 等） |
 
 ---

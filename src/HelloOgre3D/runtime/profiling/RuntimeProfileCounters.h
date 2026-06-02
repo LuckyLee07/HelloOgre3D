@@ -6,7 +6,7 @@ class RuntimeProfileCounters
 public:
 	static void PlotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	static void PlotAiSchedulerStats(int enabled, int agentCount, int tickedCount, int skippedCount, int pendingCount, int tickIntervalMs, int maxTicksPerFrame);
-	static void PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialResultCount);
+	static void PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialFilteredCandidateCount, int spatialResultCount);
 	static void PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount);
 };
 
@@ -66,7 +66,13 @@ struct RuntimeObjectUpdateTiming
 	int perceptionVisibleCount;
 	int perceptionSpatialQueryCount;
 	int perceptionSpatialCandidateCount;
+	int perceptionSpatialFilteredCandidateCount;
 	int perceptionSpatialResultCount;
+	int perceptionSpatialRejectedSelfCount;
+	int perceptionSpatialRejectedTeamCount;
+	int perceptionSpatialRejectedDeadCount;
+	int perceptionSpatialRejectedTypeCount;
+	double perceptionSpatialQueryCostMs;
 	double perceptionMemoryMs;
 	double perceptionVisionMs;
 	int spatialEnabled;
@@ -74,10 +80,18 @@ struct RuntimeObjectUpdateTiming
 	int spatialCellCount;
 	int spatialQueryCount;
 	int spatialCandidateCount;
+	int spatialFilteredCandidateCount;
 	int spatialResultCount;
 	int spatialMaxCandidates;
+	int spatialMaxFilteredCandidates;
 	int spatialMaxResults;
+	int spatialRejectedSelfCount;
+	int spatialRejectedTeamCount;
+	int spatialRejectedDeadCount;
+	int spatialRejectedTypeCount;
+	double spatialQueryCostMs;
 	double spatialAvgCandidates;
+	double spatialAvgFilteredCandidates;
 	double spatialAvgResults;
 	int teamCount;
 	int teamFactCount;
