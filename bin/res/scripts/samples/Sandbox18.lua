@@ -3,6 +3,8 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.IndirectSoldierAgent.lua")
+require("res.scripts.agent.DecisionSoldierAgent.lua")
+require("res.scripts.agent.AgentUtils.lua")
 
 local _sampleName = "Sandbox18"
 local _agents = {}
@@ -39,12 +41,21 @@ local _tactics = {
 	teamCells = 0,
 	objectiveCells = 0,
 	lastCellWrites = 0,
+	cppEventCount = 0,
 	queryCount = 0,
 	bestPosition = nil,
 	bestScore = 0.0,
 	lastBurstAtMs = -1,
 	deadFriendlyPublished = false,
 	smokePrinted = false,
+	smokeComplete = false,
+}
+
+local _tacticalDriver = {
+	agent = nil,
+	lastTarget = nil,
+	acc = Vector3(0.0),
+	moveCount = 0,
 }
 
 local textSize = { w = 410, h = 230 }
@@ -86,6 +97,14 @@ local function _ReadBool(config, key, defaultValue)
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
 end
 
+local function _ReadString(config, key, defaultValue)
+	local value = config ~= nil and config[key] or nil
+	if value == nil then
+		return defaultValue
+	end
+	return tostring(value)
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -115,8 +134,20 @@ end
 local function _HasCppTactics()
 	return ObjectManager ~= nil
 		and ObjectManager.configureTacticalInfluence ~= nil
-		and ObjectManager.addTacticalInfluenceSource ~= nil
-		and ObjectManager.findBestTacticalPosition ~= nil
+		and ObjectManager.publishTacticalEvent ~= nil
+		and ObjectManager.rebuildTacticalDangerLayer ~= nil
+		and ObjectManager.findBestTacticalQueryPosition ~= nil
+end
+
+local function _ShouldRunObjectiveAndQuery(config)
+	return _G.HELLO_SANDBOX_SMOKE_MODE == true
+		or _ReadBool(config, "objectiveEnabled", false) == true
+		or _ReadBool(config, "tacticalQueryEnabled", false) == true
+end
+
+local function _ShouldRunTacticalAgent(config)
+	return _G.HELLO_SANDBOX_SMOKE_MODE == true
+		or _ReadBool(config, "tacticalAgentEnabled", false) == true
 end
 
 local function _ConfigureCppTactics()
@@ -128,12 +159,19 @@ local function _ConfigureCppTactics()
 	local config = _GetConfig()
 	local mapConfig = config.influenceMap or {}
 	ObjectManager:clearTacticalInfluence()
+	ObjectManager:clearTacticalEvents()
+	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
 	ObjectManager:configureTacticalInfluence(
 		_ReadNumber(mapConfig, "minX", -32.0),
 		_ReadNumber(mapConfig, "maxX", 56.0),
 		_ReadNumber(mapConfig, "minZ", -8.0),
 		_ReadNumber(mapConfig, "maxZ", 62.0),
 		_ReadNumber(mapConfig, "cellSize", 4.0))
+	local falloff = _ReadNumber(config, "influenceFalloff", 0.2)
+	local inertia = _ReadNumber(config, "influenceInertia", 0.5)
+	ObjectManager:setTacticalInfluenceLayerOptions("danger", falloff, inertia)
+	ObjectManager:setTacticalInfluenceLayerOptions("team", falloff, inertia)
+	ObjectManager:setTacticalInfluenceLayerOptions("objective", falloff, inertia)
 end
 
 local function _CreatePanel()
@@ -155,6 +193,7 @@ local function _RefreshPanel()
 	end
 	local text = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 		"Chapter9 C++ Tactics: events=" .. tostring(_tactics.eventCount) ..
+		" cppEvents=" .. tostring(_tactics.cppEventCount) ..
 		" writes=" .. tostring(_tactics.lastCellWrites) ..
 		" queries=" .. tostring(_tactics.queryCount) .. GUI.MarkupNewline ..
 		"Danger: cells=" .. tostring(_tactics.dangerCells) ..
@@ -185,6 +224,28 @@ local function _PublishTacticEvent(eventType, event)
 	elseif eventType == "EnemySighted" and event.agent ~= nil then
 		_tactics.seenEnemies[_GetAgentId(event.agent)] = event
 	end
+
+	if _HasCppTactics() then
+		local position = event.position or event.seenAt
+		if position == nil and event.agent ~= nil then
+			position = event.agent:GetPosition()
+		end
+		if position ~= nil then
+			local sender = event.sender or event.spotter or event.reporter
+			if sender == nil and eventType ~= "EnemySighted" and eventType ~= "DeadFriendlySighted" then
+				sender = event.agent
+			end
+			local senderId = _GetAgentId(sender)
+			local targetId = event.agent ~= nil and _GetAgentId(event.agent) or -1
+			local teamId = sender ~= nil and sender:GetTeamId() or -1
+			local targetTeamId = event.agent ~= nil and event.agent:GetTeamId() or -1
+			if eventType == "DeadFriendlySighted" and event.agent ~= nil then
+				teamId = event.agent:GetTeamId()
+			end
+			ObjectManager:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
+			_tactics.cppEventCount = ObjectManager:getTacticalEventCount()
+		end
+	end
 end
 
 local function _PruneTimedEvents(events, deltaTimeInMillis)
@@ -209,7 +270,14 @@ end
 
 local function _PublishScriptedBurst(force)
 	local config = _GetConfig()
-	if _ReadBool(config, "scriptedEvents", true) ~= true then
+	local scriptedEnabled = _ReadBool(config, "scriptedEvents", false)
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true then
+		scriptedEnabled = scriptedEnabled or _ReadBool(config, "scriptedEventsInSmoke", true)
+	end
+	if scriptedEnabled ~= true then
+		return
+	end
+	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true and _HasCppTactics() and ObjectManager:getTacticalEventCount() > 0 then
 		return
 	end
 
@@ -232,15 +300,15 @@ local function _PublishScriptedBurst(force)
 	local impactOffset = Vector3(math.sin(_tactics.eventCount + 1) * 2.5, 0, math.cos(_tactics.eventCount + 1) * 2.5)
 	local impactPos = _ProjectToNav(targetPos + impactOffset)
 
-	_PublishTacticEvent("BulletShot", { position = shotPos, agent = shooter })
-	_PublishTacticEvent("BulletImpact", { position = impactPos, agent = shooter })
-	_PublishTacticEvent("EnemySighted", { agent = target, seenAt = targetPos, lastSeen = _elapsedMs })
+	_PublishTacticEvent("BulletShot", { position = shotPos, agent = shooter, sender = shooter })
+	_PublishTacticEvent("BulletImpact", { position = impactPos, agent = shooter, sender = shooter })
+	_PublishTacticEvent("EnemySighted", { agent = target, sender = shooter, seenAt = targetPos, lastSeen = _elapsedMs })
 
 	local deadDelayMs = _ReadNumber(config, "deadFriendlyDelayMs", 2600)
 	if not _tactics.deadFriendlyPublished and _elapsedMs >= deadDelayMs then
 		local deadFriendly = _FindAgentByTeam(shooterTeam, shooter) or shooter
 		if deadFriendly ~= nil then
-			_PublishTacticEvent("DeadFriendlySighted", { agent = deadFriendly, seenAt = deadFriendly:GetPosition(), lastSeen = _elapsedMs })
+			_PublishTacticEvent("DeadFriendlySighted", { agent = deadFriendly, sender = shooter, seenAt = deadFriendly:GetPosition(), lastSeen = _elapsedMs })
 			_tactics.deadFriendlyPublished = true
 		end
 	end
@@ -268,7 +336,6 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	_tactics.dangerElapsedMs = 0
 	_tactics.dangerRunCount = _tactics.dangerRunCount + 1
 
-	ObjectManager:clearTacticalInfluenceLayer("danger")
 	_tactics.bulletImpacts = _PruneTimedEvents(_tactics.bulletImpacts, intervalMs)
 	_tactics.bulletShots = _PruneTimedEvents(_tactics.bulletShots, intervalMs)
 
@@ -278,27 +345,18 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local impactRadius = _ReadNumber(config, "bulletImpactRadius", 8.0)
 	local corpseRadius = _ReadNumber(config, "deadFriendlyRadius", 12.0)
 	local sightingRadius = _ReadNumber(config, "enemySightingRadius", 14.0)
-	local writes = 0
-
-	for _, event in ipairs(_tactics.bulletImpacts) do
-		writes = writes + _AddSource("danger", event.position, dangerStrength, impactRadius)
-	end
-	for _, event in ipairs(_tactics.bulletShots) do
-		writes = writes + _AddSource("danger", event.position, dangerStrength, shotRadius)
-	end
-	for _, event in pairs(_tactics.deadFriendlies) do
-		if event.agent ~= nil and event.agent:GetTeamId() == perspectiveTeamId then
-			writes = writes + _AddSource("danger", event.agent:GetPosition(), dangerStrength, corpseRadius)
-		end
-	end
-	for _, event in pairs(_tactics.seenEnemies) do
-		if event.agent ~= nil and event.agent:GetTeamId() ~= perspectiveTeamId then
-			writes = writes + _AddSource("danger", event.seenAt or event.agent:GetPosition(), dangerStrength, sightingRadius)
-		end
-	end
+	local writes = ObjectManager:rebuildTacticalDangerLayer(
+		perspectiveTeamId,
+		dangerStrength,
+		shotRadius,
+		impactRadius,
+		corpseRadius,
+		sightingRadius,
+		_ReadNumber(config, "influenceSpreadPasses", 2))
 
 	_tactics.dangerCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("danger")
 	_tactics.lastCellWrites = writes
+	_tactics.cppEventCount = ObjectManager:getTacticalEventCount()
 end
 
 local function _UpdateTeamAreas(deltaTimeInMillis)
@@ -316,23 +374,24 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	_tactics.teamElapsedMs = 0
 	_tactics.teamRunCount = _tactics.teamRunCount + 1
 
-	ObjectManager:clearTacticalInfluenceLayer("team")
 	local positiveTeamId = _ReadNumber(config, "teamPositiveTeamId", 0)
 	local teamRadius = _ReadNumber(config, "teamInfluenceRadius", 11.0)
 	local teamStrength = _ReadNumber(config, "teamStrength", 1.0)
-	local writes = 0
-	for _, agent in ipairs(_agents) do
-		if _IsAlive(agent) then
-			local value = agent:GetTeamId() == positiveTeamId and teamStrength or -teamStrength
-			writes = writes + _AddSource("team", agent:GetPosition(), value, teamRadius)
-		end
-	end
+	local writes = ObjectManager:rebuildTacticalTeamLayer(
+		positiveTeamId,
+		teamStrength,
+		teamRadius,
+		_ReadNumber(config, "influenceSpreadPasses", 2))
 
 	_tactics.teamCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("team")
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
 end
 
 local function _FindObjectiveCenter()
+	if _HasCppTactics() then
+		local fallback = _agents[1] ~= nil and _agents[1]:GetPosition() or Vector3(0, 0, 0)
+		return ObjectManager:getLastTacticalEventPosition("EnemySighted", fallback)
+	end
 	for _, event in pairs(_tactics.seenEnemies) do
 		if event.seenAt ~= nil then
 			return event.seenAt
@@ -350,27 +409,25 @@ local function _UpdateObjectiveAndQuery()
 	end
 
 	local config = _GetConfig()
+	if not _ShouldRunObjectiveAndQuery(config) then
+		return
+	end
 	local center = _ProjectToNav(_FindObjectiveCenter())
-	ObjectManager:clearTacticalInfluenceLayer("objective")
-	_tactics.lastCellWrites = _tactics.lastCellWrites + _AddSource(
-		"objective",
+	_tactics.lastCellWrites = _tactics.lastCellWrites + ObjectManager:rebuildTacticalObjectiveLayer(
 		center,
 		_ReadNumber(config, "objectiveStrength", 1.0),
-		_ReadNumber(config, "objectiveRadius", 16.0))
+		_ReadNumber(config, "objectiveRadius", 16.0),
+		_ReadNumber(config, "influenceSpreadPasses", 2))
 	_tactics.objectiveCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("objective")
 
-	_tactics.bestPosition = ObjectManager:findBestTacticalPosition(
+	_tactics.bestPosition = ObjectManager:findBestTacticalQueryPosition(
+		_ReadString(config, "tacticalQueryType", "support"),
 		center,
 		_ReadNumber(config, "tacticalQueryRadius", 24.0),
-		_ReadNumber(config, "tacticalQueryStep", 4.0),
-		_ReadNumber(config, "dangerWeight", 1.0),
-		_ReadNumber(config, "teamWeight", 1.0),
-		_ReadNumber(config, "objectiveWeight", 1.0))
-	_tactics.bestScore = ObjectManager:scoreTacticalPosition(
-		_tactics.bestPosition,
-		_ReadNumber(config, "dangerWeight", 1.0),
-		_ReadNumber(config, "teamWeight", 1.0),
-		_ReadNumber(config, "objectiveWeight", 1.0))
+		_ReadNumber(config, "tacticalQueryStep", 4.0))
+	_tactics.bestScore = ObjectManager:scoreTacticalQueryPosition(
+		_ReadString(config, "tacticalQueryType", "support"),
+		_tactics.bestPosition)
 	_tactics.queryCount = ObjectManager:getTacticalInfluenceQueryCount()
 end
 
@@ -378,20 +435,23 @@ local function _DrawTacticEvents()
 	if not _drawTactics then
 		return
 	end
-	for _, event in ipairs(_tactics.bulletShots) do
-		DebugDrawer:drawCircle(event.position + Vector3(0, 0.24, 0), 1.2, 24, _colors.bullet, false)
-	end
-	for _, event in ipairs(_tactics.bulletImpacts) do
-		DebugDrawer:drawCircle(event.position + Vector3(0, 0.28, 0), 2.0, 32, _colors.danger, false)
-	end
-	for _, event in pairs(_tactics.deadFriendlies) do
-		if event.agent ~= nil then
-			local pos = event.agent:GetPosition()
-			DebugDrawer:drawCircle(pos + Vector3(0, 0.28, 0), 1.6, 32, _colors.dead, false)
-			DebugDrawer:drawLine(pos + Vector3(-1.2, 0.45, 0), pos + Vector3(1.2, 0.45, 0), _colors.dead)
+	local config = _GetConfig()
+	if _ReadBool(config, "drawEventMarkers", false) then
+		for _, event in ipairs(_tactics.bulletShots) do
+			DebugDrawer:drawCircle(event.position + Vector3(0, 0.24, 0), 1.2, 24, _colors.bullet, false)
+		end
+		for _, event in ipairs(_tactics.bulletImpacts) do
+			DebugDrawer:drawCircle(event.position + Vector3(0, 0.28, 0), 2.0, 32, _colors.danger, false)
+		end
+		for _, event in pairs(_tactics.deadFriendlies) do
+			if event.agent ~= nil then
+				local pos = event.agent:GetPosition()
+				DebugDrawer:drawCircle(pos + Vector3(0, 0.28, 0), 1.6, 32, _colors.dead, false)
+				DebugDrawer:drawLine(pos + Vector3(-1.2, 0.45, 0), pos + Vector3(1.2, 0.45, 0), _colors.dead)
+			end
 		end
 	end
-	if _tactics.bestPosition ~= nil then
+	if _ReadBool(config, "drawBestPosition", false) and _tactics.bestPosition ~= nil then
 		local pos = _tactics.bestPosition
 		DebugDrawer:drawCircle(pos + Vector3(0, 0.34, 0), 2.2, 36, _colors.best, false)
 		DebugDrawer:drawLine(pos + Vector3(-1.8, 0.55, 0), pos + Vector3(1.8, 0.55, 0), _colors.best)
@@ -400,12 +460,106 @@ local function _DrawTacticEvents()
 end
 
 local function _DrawAgents()
+	local config = _GetConfig()
+	if _ReadBool(config, "drawAgentMarkers", false) ~= true then
+		return
+	end
 	for _, agent in ipairs(_agents) do
 		local pos = agent:GetPosition()
 		local color = agent:GetTeamId() == 1 and _colors.team1 or _colors.team0
 		DebugDrawer:drawCircle(pos + Vector3(0, 0.16, 0), 1.2, 24, color, false)
 		DebugDrawer:drawLine(pos + Vector3(0, 0.2, 0), pos + Vector3(0, 3.0, 0), color)
 	end
+end
+
+local function _DrawCell(center, color, y, cellSize)
+	if center == nil then
+		return
+	end
+	local half = cellSize * 0.5
+	local p = Vector3(center.x, y, center.z)
+	local a = p + Vector3(-half, 0, -half)
+	local b = p + Vector3(half, 0, -half)
+	local c = p + Vector3(half, 0, half)
+	local d = p + Vector3(-half, 0, half)
+	DebugDrawer:drawLine(a, b, color)
+	DebugDrawer:drawLine(b, c, color)
+	DebugDrawer:drawLine(c, d, color)
+	DebugDrawer:drawLine(d, a, color)
+end
+
+local function _DrawCppInfluenceLayer(layerName, y, colorFn)
+	if not _drawTactics or not _HasCppTactics() then
+		return
+	end
+	local config = _GetConfig()
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _ReadBool(config, "drawInSmoke", false) ~= true then
+		return
+	end
+	local mapConfig = config.influenceMap or {}
+	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
+	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+	local maxCells = math.max(1, _ReadNumber(config, "maxDrawCellsPerLayer", 64))
+	local count = ObjectManager:getTacticalInfluenceLayerDebugCellCount(layerName, threshold, maxCells)
+	for index = 1, count do
+		local pos = ObjectManager:getTacticalInfluenceLayerDebugCellPosition(layerName, index, threshold)
+		local value = ObjectManager:getTacticalInfluenceLayerDebugCellValue(layerName, index, threshold)
+		_DrawCell(pos, colorFn(value), y, cellSize)
+	end
+end
+
+local function _DrawCppInfluenceMap()
+	local config = _GetConfig()
+	_DrawCppInfluenceLayer("danger", 0.12, function() return _colors.danger end)
+	_DrawCppInfluenceLayer("team", 0.22, function(value)
+		return value >= 0 and _colors.team1 or _colors.team0
+	end)
+	if _ReadBool(config, "drawObjectiveLayer", false) then
+		_DrawCppInfluenceLayer("objective", 0.32, function() return _colors.objective end)
+	end
+end
+
+local function _BuildAndSetTacticalPath(agent, target)
+	local path = std.vector_Ogre__Vector3_()
+	local ok = Sandbox:FindPath("default", agent:GetPosition(), target, path)
+	if ok and path:size() > 0 then
+		Agent_SetPath(agent, path, false)
+		agent:SetTarget(target)
+		agent:SetTargetRadius(1.0)
+		return true
+	end
+	agent:SetTarget(target)
+	agent:SetTargetRadius(1.0)
+	return false
+end
+
+local function _UpdateTacticalAgent(deltaTimeInMillis)
+	local config = _GetConfig()
+	if not _ShouldRunTacticalAgent(config) then
+		return
+	end
+	local agent = _tacticalDriver.agent
+	local target = _ProjectToNav(_tactics.bestPosition)
+	if agent == nil or target == nil or not _IsAlive(agent) then
+		return
+	end
+
+	agent:SetMaxSpeed(_ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
+	local rebuildSq = _ReadNumber(config, "tacticalAgentRepathDistance", 1.0)
+	rebuildSq = rebuildSq * rebuildSq
+	if _tacticalDriver.lastTarget == nil or (target - _tacticalDriver.lastTarget):squaredLength() > rebuildSq then
+		_BuildAndSetTacticalPath(agent, target)
+		_tacticalDriver.lastTarget = target
+		_tacticalDriver.moveCount = _tacticalDriver.moveCount + 1
+	end
+
+	local dtSec = math.max(0, tonumber(deltaTimeInMillis) or 0) / 1000.0
+	if dtSec <= 0 then
+		return
+	end
+	local force = agent:HasPath() and Soldier_CalculateSteering(agent, dtSec) or agent:ForceToPosition(target)
+	AgentUtilities_ApplySteeringForce2(agent, force, _tacticalDriver.acc, dtSec)
+	AgentUtilities_ClampHorizontalSpeed(agent)
 end
 
 local function _MaybePrintSmoke()
@@ -417,6 +571,7 @@ local function _MaybePrintSmoke()
 		and _tactics.dangerCells > 0
 		and _tactics.teamCells > 0
 		and _tactics.queryCount > 0
+		and _tacticalDriver.moveCount > 0
 		and _tactics.eventCount >= 3 then
 		_tactics.smokePrinted = true
 		print("[Chapter9TacticsCppSmoke] PASS",
@@ -426,27 +581,87 @@ local function _MaybePrintSmoke()
 			"objectiveCells=", _tactics.objectiveCells,
 			"writes=", _tactics.lastCellWrites,
 			"queries=", _tactics.queryCount,
+			"moves=", _tacticalDriver.moveCount,
 			"bestScore=", string.format("%.2f", _tactics.bestScore),
 			"summary=", ObjectManager:buildTacticalInfluenceDebugSummary())
+		_tactics.smokeComplete = true
+		if _tacticalDriver.agent ~= nil then
+			_tacticalDriver.agent:SetMaxSpeed(0)
+			_tacticalDriver.agent:SetVelocity(Vector3(0, 0, 0))
+			_tacticalDriver.agent:SetTarget(_tacticalDriver.agent:GetPosition())
+		end
 	end
+end
+
+local function _GetTeamIdForAgent(config, index)
+	if _ReadBool(config, "alternateTeams", true) then
+		return (index % 2 == 0) and 0 or 1
+	end
+	return ConfigManager:GetAgentTeamId(_sampleName, index)
+end
+
+local function _GetAppearanceForTeam(teamId)
+	return teamId == 0 and Soldier.AppearanceTypes.DARK or Soldier.AppearanceTypes.LIGHT
+end
+
+local function _PlaceAgentLikeChapter9(agent, preset, config, index)
+	if agent == nil then
+		return nil
+	end
+	if preset.spawnMode ~= "random" then
+		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
+	end
+
+	local minDistanceSq = _ReadNumber(config, "minSpawnDistanceSq", 725.0)
+	local maxAttempts = math.max(1, _ReadNumber(config, "maxSpawnAttempts", 4096))
+	local position = nil
+	for attempt = 1, maxAttempts do
+		position = Sandbox:RandomPoint("default")
+		if position ~= nil then
+			local found = true
+			for _, other in ipairs(_agents) do
+				local delta = position - other:GetPosition()
+				delta.y = 0
+				if delta:squaredLength() < minDistanceSq then
+					found = false
+					break
+				end
+			end
+			if found then
+				break
+			end
+		end
+		position = nil
+	end
+	if position == nil then
+		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
+	end
+
+	position.y = position.y + agent:GetHeight() * 0.5
+	agent:setPosition(position)
+	local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition()) or position
+	agent:SetTarget(navPosition)
+	agent:SetTargetRadius(preset.targetRadius or 1)
+	return position
 end
 
 local function _CreateAgents()
 	local preset = _GetPreset()
+	local config = _GetConfig()
 	local agentCount = ConfigManager:GetAgentCount(_sampleName, 6)
-	local agentLuafile = "res/scripts/agent/IndirectSoldierAgent.lua"
+	local agentLuafile = _ReadString(config, "agentScript", "res/scripts/agent/DecisionSoldierAgent.lua")
 	print(ConfigManager:BuildDebugSummary(_sampleName))
 
 	for i = 1, agentCount do
-		local teamId = ConfigManager:GetAgentTeamId(_sampleName, i)
-		local agentType = ConfigManager:GetAgentAppearance(_sampleName, i, Soldier.AppearanceTypes)
+		local teamId = _GetTeamIdForAgent(config, i)
+		local agentType = _GetAppearanceForTeam(teamId)
 		local agent = Create_Soldier(agentLuafile, agentType, teamId)
+		_PlaceAgentLikeChapter9(agent, preset, config, i)
 		table.insert(_agents, agent)
-		ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, i, "default")
-		agent:SetTarget(agent:GetPosition())
-		agent:SetTargetRadius(preset.targetRadius or 1)
-		agent:SetMaxSpeed(0)
-		agent:SetVelocity(Vector3(0, 0, 0))
+	end
+	_tacticalDriver.agent = _agents[1]
+	if _tacticalDriver.agent ~= nil and _ShouldRunTacticalAgent(config) then
+		_tacticalDriver.agent:SetMaxSpeed(_ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
 	end
 end
 
@@ -476,11 +691,16 @@ function EventHandle_WindowResized(width, height)
 end
 
 function Sandbox_Initialize()
+	local config = _GetConfig()
+	_G.HELLO_SUPPRESS_AI_PATH_DRAW = _ReadBool(config, "suppressPathDraw", true)
+
 	GUI_CreateCameraAndProfileInfo()
 	GUI_CreateSandboxText(infoText, textSize)
-	_CreatePanel()
+	if _ReadBool(config, "showTacticsPanel", false) then
+		_CreatePanel()
+	end
 
-	Sandbox:SetUseCppFsmFlag(false)
+	Sandbox:SetUseCppFsmFlag(true)
 
 	local camera = Sandbox:GetCamera()
 	camera:setPosition(Vector3(-30, 18, -17))
@@ -512,7 +732,6 @@ function Sandbox_Initialize()
 	_CreateAgents()
 	_ConfigureCppTactics()
 
-	local config = _GetConfig()
 	_tactics.dangerElapsedMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)
 	_tactics.teamElapsedMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
 	_PublishScriptedBurst(true)
@@ -523,13 +742,19 @@ function Sandbox_Update(deltaTimeInMillis)
 	GUI_UpdateCameraInfo()
 	GUI_UpdateProfileInfo()
 
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _tactics.smokeComplete then
+		return
+	end
+
 	_elapsedMs = _elapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
 	_panelElapsedMs = _panelElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
 	_PublishScriptedBurst(false)
 	_UpdateDangerousAreas(deltaTimeInMillis)
 	_UpdateTeamAreas(deltaTimeInMillis)
 	_UpdateObjectiveAndQuery()
+	_UpdateTacticalAgent(deltaTimeInMillis)
 	_DrawAgents()
+	_DrawCppInfluenceMap()
 	_DrawTacticEvents()
 	if _panelElapsedMs >= 250 then
 		_panelElapsedMs = 0

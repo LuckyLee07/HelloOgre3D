@@ -23,6 +23,7 @@ public:
 		int sourceCount;
 		int cellWriteCount;
 		int queryCount;
+		int spreadPassCount;
 		int lastQueryCandidateCount;
 		float lastBestScore;
 		Ogre::Vector3 lastBestPosition;
@@ -33,7 +34,10 @@ public:
 	void Configure(float minX, float maxX, float minZ, float maxZ, float cellSize);
 	void Clear();
 	void ClearLayer(const std::string& layerName);
+	void SetLayerOptions(const std::string& layerName, float falloff, float inertia);
+	int AddPointSource(const std::string& layerName, const Ogre::Vector3& center, float strength);
 	int AddRadialSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
+	int SpreadLayer(const std::string& layerName, int passCount);
 	float SampleLayer(const std::string& layerName, const Ogre::Vector3& position) const;
 	float ScorePosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
 	Ogre::Vector3 FindBestPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
@@ -41,6 +45,9 @@ public:
 	const Stats& GetStats() const { return m_stats; }
 	int GetLayerActiveCellCount(const std::string& layerName) const;
 	int GetLayerCellWriteCount(const std::string& layerName) const;
+	int GetLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
+	Ogre::Vector3 GetLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
+	float GetLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
 	std::string BuildDebugSummary() const;
 
 private:
@@ -51,6 +58,9 @@ private:
 		std::vector<float> values;
 		int sourceCount;
 		int cellWriteCount;
+		int spreadPassCount;
+		float falloff;
+		float inertia;
 	};
 
 	Layer& GetOrCreateLayer(const std::string& layerName);
@@ -60,6 +70,7 @@ private:
 	bool WorldToCell(const Ogre::Vector3& position, int& outX, int& outZ) const;
 	int GetCellIndex(int x, int z) const;
 	Ogre::Vector3 GetCellCenter(int x, int z) const;
+	float ReadCell(const Layer& layer, int x, int z) const;
 	void RecalculateStats();
 
 	float m_minX;

@@ -15,6 +15,7 @@
 #include "ai/fsm/AgentStateController.h"
 #include "ai/perception/AgentPerceptionQuery.h"
 #include "core/SandboxServices.h"
+#include "event/SandboxEventPayload.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
@@ -382,6 +383,22 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 	m_blackboard.SetVec3Entry(kSenseTargetPos, result.targetPosition, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
 	m_blackboard.SetFloatEntry(kSenseTargetDistance, distance, confidence, m_localTimeMs, kSenseEntryTtlMs, kPerceptionSource);
 	m_memoryStore.RememberVisibleEnemy(result, m_localTimeMs, BuildMemoryStoreConfig());
+
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	AgentObject* owner = GetAgentOwner();
+	if (objectManager != nullptr && owner != nullptr)
+	{
+		objectManager->publishTacticalEvent(
+			SandboxEventTypes::EnemySighted(),
+			static_cast<int>(owner->GetObjId()),
+			result.targetId,
+			owner->GetTeamId(),
+			result.target != nullptr ? result.target->GetTeamId() : -1,
+			result.targetPosition,
+			static_cast<int>(m_localTimeMs),
+			"global",
+			false);
+	}
 }
 
 void AIController::ClearPerceptionResult()

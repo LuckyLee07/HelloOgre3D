@@ -40,6 +40,7 @@ end
 -- - MoveAction 直接用 agent:GetTarget()（来自 Sandbox:RandomPoint，已贴地）
 -- - PursueAction 必须把敌人 GetPosition() 投影到 navmesh，再传进来
 function MoveHelpers.DrawPath(agent, circleCenter, color, offset, radius)
+    if _G.HELLO_SUPPRESS_AI_PATH_DRAW == true then return end
     if not agent then return end
     local path = agent:GetPath()
     if path == nil or path:size() == 0 then return end

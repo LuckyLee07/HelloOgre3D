@@ -39,6 +39,7 @@ namespace SandboxEventTypes
 	const char* EnemySighted();
 	const char* BulletShot();
 	const char* BulletImpact();
+	const char* DeadFriendlySighted();
 	const char* SupportRequested();
 	const char* SupportResponded();
 }

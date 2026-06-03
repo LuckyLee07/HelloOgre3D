@@ -25,6 +25,7 @@ class AIScheduler;
 class AgentPerceptionSystem;
 class AgentSpatialIndexSystem;
 class InfluenceMapSystem;
+class TacticalQueryService;
 class TeamBlackboardService;
 
 //tolua_begin
@@ -75,12 +76,40 @@ public:
 	void clearTacticalInfluence();
 	void configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
 	void clearTacticalInfluenceLayer(const std::string& layerName);
+	void setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia);
 	int addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
+	int addTacticalInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength);
+	int spreadTacticalInfluenceLayer(const std::string& layerName, int passCount);
 	float sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const;
 	float scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
 	Ogre::Vector3 findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
+	float scoreTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& position) const;
+	Ogre::Vector3 findBestTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& center, float radius, float step);
+	Ogre::Vector3 findBestSupportPosition(const Ogre::Vector3& center, float radius, float step);
+	Ogre::Vector3 findLowThreatPosition(const Ogre::Vector3& center, float radius, float step);
+	void configureTacticalEvents(int eventTtlMs);
+	void clearTacticalEvents();
+	void publishTacticalEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent);
+	int getTacticalEventCount() const;
+	int getTacticalEventTypeCount(const std::string& eventType) const;
+	Ogre::Vector3 getLastTacticalEventPosition(const std::string& eventType, const Ogre::Vector3& fallback) const;
+	int getTacticalEventDebugRecordCount() const;
+	std::string getTacticalEventDebugType(int luaIndex) const;
+	int getTacticalEventDebugSenderId(int luaIndex) const;
+	int getTacticalEventDebugTargetId(int luaIndex) const;
+	int getTacticalEventDebugTeamId(int luaIndex) const;
+	int getTacticalEventDebugTargetTeamId(int luaIndex) const;
+	Ogre::Vector3 getTacticalEventDebugPosition(int luaIndex) const;
+	int getTacticalEventDebugTimeMs(int luaIndex) const;
+	int getTacticalEventDebugRemainingTtlMs(int luaIndex) const;
+	int rebuildTacticalDangerLayer(int perspectiveTeamId, float dangerStrength, float bulletShotRadius, float bulletImpactRadius, float deadFriendlyRadius, float enemySightingRadius, int spreadPasses);
+	int rebuildTacticalTeamLayer(int positiveTeamId, float teamStrength, float radius, int spreadPasses);
+	int rebuildTacticalObjectiveLayer(const Ogre::Vector3& center, float strength, float radius, int spreadPasses);
 	int getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const;
 	int getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const;
+	int getTacticalInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
+	Ogre::Vector3 getTacticalInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
+	float getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
 	int getTacticalInfluenceActiveCellCount() const;
 	int getTacticalInfluenceCellWriteCount() const;
 	int getTacticalInfluenceQueryCount() const;
@@ -107,8 +136,10 @@ public:
 	AgentPerceptionSystem* GetAgentPerceptionSystem() { return m_agentPerceptionSystem; }
 	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService; }
 	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
-	const InfluenceMapSystem* GetInfluenceMapSystem() const { return m_influenceMapSystem; }
-	InfluenceMapSystem* GetInfluenceMapSystem() { return m_influenceMapSystem; }
+	const TacticalQueryService* GetTacticalQueryService() const { return m_tacticalQueryService; }
+	TacticalQueryService* GetTacticalQueryService() { return m_tacticalQueryService; }
+	const InfluenceMapSystem* GetInfluenceMapSystem() const;
+	InfluenceMapSystem* GetInfluenceMapSystem();
 
 private:
 	void realAddObject(BaseObject* pObject);
@@ -133,7 +164,7 @@ private:
 	AgentSpatialIndexSystem* m_agentSpatialIndex;
 	AgentPerceptionSystem* m_agentPerceptionSystem;
 	TeamBlackboardService* m_teamBlackboardService;
-	InfluenceMapSystem* m_influenceMapSystem;
+	TacticalQueryService* m_tacticalQueryService;
 	SandboxServices m_services;
 }; //tolua_exports
 

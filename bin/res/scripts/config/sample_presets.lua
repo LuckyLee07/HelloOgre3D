@@ -361,7 +361,7 @@ SamplePresets.chapter9_tactics_lua = cloneTable(SamplePresets.default)
 SamplePresets.chapter9_tactics_lua.seed = 20260602
 SamplePresets.chapter9_tactics_lua.agentCount = 6
 SamplePresets.chapter9_tactics_lua.lightTeamCount = 3
-SamplePresets.chapter9_tactics_lua.spawnMode = "fixed"
+SamplePresets.chapter9_tactics_lua.spawnMode = "random"
 SamplePresets.chapter9_tactics_lua.targetRadius = 1
 SamplePresets.chapter9_tactics_lua.spawnPoints = {
 	{ -18, 0, 10 },
@@ -372,8 +372,34 @@ SamplePresets.chapter9_tactics_lua.spawnPoints = {
 	{ 38, 0, 36 },
 }
 SamplePresets.chapter9_tactics_lua.aiScheduler.enabled = false
+SamplePresets.chapter9_tactics_lua.aiBlackboard = {
+	floats = {
+		["perception.visionRange"] = 60.0,
+		["perception.fieldOfViewDegrees"] = 360.0,
+	},
+	ints = {
+		["perception.visionIntervalMs"] = 100,
+	},
+	bools = {
+		["perception.requirePath"] = true,
+		["perception.staggerScans"] = true,
+	},
+	strings = {
+		["debug.demo"] = "chapter9_tactics",
+	},
+}
 SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
-	scriptedEvents = true,
+	agentScript = "res/scripts/agent/DecisionSoldierAgent.lua",
+	alternateTeams = true,
+	minSpawnDistanceSq = 725.0,
+	maxSpawnAttempts = 4096,
+	suppressPathDraw = true,
+	showTacticsPanel = false,
+	drawAgentMarkers = false,
+	drawEventMarkers = false,
+	useCppEventSource = true,
+	scriptedEvents = false,
+	scriptedEventsInSmoke = true,
 	scriptedEventIntervalMs = 1800,
 	eventTtlMs = 1800,
 	deadFriendlyDelayMs = 2600,
@@ -416,8 +442,18 @@ SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveRadius = 16.0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveWeight = 1.0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.dangerWeight = 1.0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.teamWeight = 1.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.influenceFalloff = 0.2
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.influenceInertia = 0.5
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.influenceSpreadPasses = 2
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveEnabled = false
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawObjectiveLayer = false
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawBestPosition = false
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryType = "support"
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryRadius = 24.0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryStep = 4.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentEnabled = false
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentMaxSpeed = 2.4
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentRepathDistance = 1.5
 SamplePresets.Sandbox18 = SamplePresets.chapter9_tactics_cpp
 
 SamplePresets.ai_perception_pressure = cloneTable(SamplePresets.default)

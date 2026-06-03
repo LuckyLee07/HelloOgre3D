@@ -16,6 +16,7 @@
 #include "components/ComponentKeys.h"
 #include "components/physics/PhysicsComponent.h"
 #include "components/render/RenderComponent.h"
+#include "event/SandboxEventPayload.h"
 #include "systems/service/SceneFactory.h"
 #include "systems/service/PhysicsFactory.h"
 
@@ -197,6 +198,22 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	{
 		pCollideObj->SetNeedClear(); // 标记为清理
 		SpawnBulletImpactWithServices(collision, GetSandboxServices());
+		BlockObject* bullet = dynamic_cast<BlockObject*>(pCollideObj);
+		ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+		if (bullet != nullptr && objectManager != nullptr)
+		{
+			BaseObject* bulletOwner = bullet->GetOwner();
+			objectManager->publishTacticalEvent(
+				SandboxEventTypes::BulletImpact(),
+				bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
+				static_cast<int>(GetObjId()),
+				bulletOwner != nullptr ? bulletOwner->GetTeamId() : -1,
+				GetTeamId(),
+				collision.pointA_,
+				0,
+				"global",
+				false);
+		}
 	}
 }
 

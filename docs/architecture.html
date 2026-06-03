@@ -174,7 +174,8 @@
 			<h1>HelloOgre3D 架构流程图</h1>
 			<p class="summary">
 				这份文档面向新接手项目的人，用来快速理解 HelloOgre3D 的运行链路、目录职责、AI 框架、脚本桥接和构建流程。
-				项目当前仍是持续重构中的 C++ / Lua 游戏沙盒，因此图中重点标出了“应用编排、运行时适配、沙盒玩法、脚本扩展、资源加载”之间的边界。
+				项目当前定位为 <strong>AI 学习与实验沙盒</strong>（C++ / Lua）：通过一组可运行、可观察的 sample，系统实现并验证游戏 AI 的核心能力——FSM / 决策树 / 行为树、黑板、感知、记忆、知识源、团队通信、影响力地图与战术层。
+				下文图中重点标出“应用编排、运行时适配、沙盒玩法、<strong>AI 分层架构</strong>、脚本扩展、资源加载”之间的边界。方向定调以 <code>docs/project-direction.md</code> 为准。
 			</p>
 		</div>
 
@@ -245,57 +246,100 @@ sequenceDiagram
     App->>ClientMgr: Update(delta)
     ClientMgr->>GameMgr: Update(fixedDelta)
     GameMgr->>ObjMgr: Update(delta)
+    ObjMgr->>ObjMgr: AIScheduler 错峰 / 空间索引重建 / TeamBlackboard 分批 / 事件 flush
     ObjMgr->>Soldier: Update(delta)
     Soldier->>Lua: Agent_Update / 行为回调
-    Soldier->>Soldier: AI / 动画 / 物理 / 武器同步
+    Soldier->>Soldier: AI（感知/黑板/驱动）/ 动画 / 物理 / 武器同步
     Ogre->>App: frameRenderingQueued(evt)
     App->>ClientMgr: frameRenderingQueued(evt)
     ClientMgr->>ClientMgr: 输入采集、调试绘制、渲染前处理
 			</div>
 			<p>
-				当前主循环的关键点是：渲染帧由 Ogre 驱动，游戏逻辑从 <code>ClientManager</code> 进入，
-				再传递到 <code>GameManager</code> 和沙盒对象系统。对象数量增加时，最先需要关注的是对象线性更新、Lua 高频调用、AI tick、动画和渲染侧阴影成本。
+				当前主循环的关键点是：渲染帧由 Ogre 驱动，游戏逻辑从 <code>ClientManager</code> 进入，再传递到 <code>GameManager</code> 和沙盒对象系统。
+				<code>ObjectManager::Update</code> 现在除了驱动对象更新，还集中承担 AIScheduler 分帧错峰、空间索引重建、TeamBlackboard 分批更新和事件队列 flush——职责偏重，是后续把跨对象逻辑 system 化的重点对象。对象数量增加时，最先要关注的是空间查询、感知扫描、Lua 高频调用、AI tick 和渲染侧成本。
 			</p>
 		</div>
 
-		<h2>三、AI 与脚本链路</h2>
+		<h2>三、AI 分层架构（感知 → 黑板 → 决策 → 协调）</h2>
 		<div class="panel">
 			<div class="mermaid">
-graph LR
-    LuaCfg["Lua AI 配置<br/>bin/res/scripts/ai"]
-    Loader["BehaviorTreeLoader<br/>配置转运行树"]
-    Driver["BehaviorTreeDriver<br/>tick 行为树"]
-    BTNode["BT 节点<br/>Selector / Sequence / Condition / Action"]
-    LuaAction["LuaBehaviorAction<br/>调用脚本行为"]
-    Blackboard["Blackboard<br/>运行时共享数据"]
-    Decision["DecisionTreeDriver<br/>决策树"]
-    FSM["FSM<br/>状态机"]
-    Object["SoldierObject / Agent<br/>对象执行层"]
+graph TD
+    subgraph Lua["AI 配置与脚本 (Lua)"]
+        BTCfg["BT 声明式配置<br/>ai/behavior + BehaviorTreeLoader"]
+        Know["KnowledgeSource<br/>ai/knowledge (Lua)"]
+        LuaLeaf["LuaBehaviorAction / LuaCondition<br/>叶子行为与条件"]
+    end
+
+    subgraph Percept["感知层 sandbox/ai/perception"]
+        Spatial["AgentSpatialIndexSystem<br/>uniform grid 空间查询"]
+        PQuery["AgentPerceptionQuery<br/>找敌 / 可达判定"]
+        Vision["VisionSensor<br/>视野扫描"]
+        Memory["MemoryStore<br/>最后已知位置 + TTL/衰减"]
+    end
+
+    subgraph Decide["决策层"]
+        AICtrl["AIController 组件<br/>components/ai 持 driver + blackboard"]
+        FSM["FSM<br/>ai/fsm"]
+        DT["DecisionTree<br/>ai/decision"]
+        BT["BehaviorTree<br/>ai/behavior<br/>Selector/Sequence/Parallel/Random + 反应式重评估"]
+        BB["Blackboard<br/>ai/common<br/>object-id / 数组 / TTL / confidence / metadata"]
+    end
+
+    subgraph Coord["协调与调度"]
+        Team["TeamBlackboardService<br/>ai/team 共享敌情"]
+        Influence["InfluenceMapSystem<br/>ai/tactics 危险/支援层"]
+        Event["SandboxEventDispatcher<br/>core/event Local/Team/Global"]
+        Sched["AIScheduler<br/>ai/common 分帧错峰"]
+    end
+
+    Object["SoldierObject / AgentObject<br/>执行层"]
     Nav["Navigation<br/>Recast / Detour"]
+    Svc["SandboxServices<br/>core 依赖注入"]
 
-    LuaCfg --> Loader
-    Loader --> Driver
-    Driver --> BTNode
-    BTNode --> LuaAction
-    LuaAction --> Object
-    BTNode <--> Blackboard
-    Decision --> Object
+    Spatial --> PQuery
+    Vision --> Memory
+    PQuery --> BB
+    Memory --> BB
+    Know --> BB
+    BTCfg --> BT
+    AICtrl --> BT
+    AICtrl --> DT
+    AICtrl --> FSM
+    BT <--> BB
+    DT <--> BB
+    BT --> LuaLeaf
+    LuaLeaf --> Object
     FSM --> Object
+    DT --> Object
+    Team <--> BB
+    Influence --> BB
+    Event --> AICtrl
+    Sched --> AICtrl
     Object --> Nav
-    Object --> Blackboard
+    Svc -.注入.-> AICtrl
+    Svc -.注入.-> Spatial
 
-    style LuaCfg fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style Loader fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style Driver fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style BTNode fill:#fff7ed,stroke:#d97706,stroke-width:2px
-    style LuaAction fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style Blackboard fill:#e0f2fe,stroke:#2563eb,stroke-width:2px
+    style BB fill:#e0f2fe,stroke:#2563eb,stroke-width:2px
+    style AICtrl fill:#dcfce7,stroke:#059669,stroke-width:2px
+    style BT fill:#fef3c7,stroke:#d97706,stroke-width:2px
     style Object fill:#dcfce7,stroke:#059669,stroke-width:2px
     style Nav fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+    style Svc fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+    style BTCfg fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style Know fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style LuaLeaf fill:#fee2e2,stroke:#dc2626,stroke-width:2px
 			</div>
 			<p>
-				AI 体系目前同时包含有限状态机、决策树和行为树。行为树结构已经开始向 Lua 配置迁移，
-				C++ 侧负责运行时节点、tick 调度和宿主对象桥接，Lua 侧负责样例规则和可扩展行为。
+				AI 已从单纯的 FSM / 决策树 / 行为树，扩展为一套<strong>分层结构</strong>（对应 Chapter 7-9 学习主线）：
+			</p>
+			<ul>
+				<li><strong>感知层 <code>ai/perception</code></strong>：<code>VisionSensor</code> 视野扫描 + <code>MemoryStore</code> 最后已知位置（带 TTL / confidence 衰减）；<code>AgentSpatialIndexSystem</code> 提供 uniform grid 空间查询；<code>AgentPerceptionQuery</code> 统一找敌 / 可达判定，结果写回 Blackboard。</li>
+				<li><strong>决策层</strong>：<code>AIController</code>（组件）持有 FSM / DecisionTree / BehaviorTree 三类 driver，共享同一个 <code>Blackboard</code>（已支持 object-id / 数组 / TTL / confidence / metadata）。行为树支持 Parallel / Random 节点与 Selector / Sequence 的反应式重评估，结构走 Lua 声明式配置。</li>
+				<li><strong>协调层</strong>：<code>TeamBlackboardService</code> 共享队伍敌情；<code>InfluenceMapSystem</code> 提供危险 / 支援层做战术移动；<code>SandboxEventDispatcher</code> 提供 Local / Team / Global 事件分发；<code>AIScheduler</code> 做分帧错峰。</li>
+				<li><strong>依赖注入</strong>：<code>core/SandboxServices</code> 向组件 / 系统提供运行时服务（对象查询、物理、寻路、脚本），逐步替代 <code>g_*</code> 全局单例。</li>
+			</ul>
+			<p>
+				样例映射：<code>Sandbox6-8</code> 覆盖 FSM / DT / BT；<code>Sandbox9</code> Chapter 7 Knowledge；<code>Sandbox10-11 / 14</code> Chapter 8 Perception / Hearing；<code>Sandbox12</code> TeamBlackboard；<code>Sandbox13</code> InfluenceMap；<code>Sandbox15</code> Chapter 9 Formation。
 			</p>
 		</div>
 
@@ -319,7 +363,7 @@ graph LR
 			</div>
 			<div class="card">
 				<h3><code>src/HelloOgre3D/sandbox</code></h3>
-				<p>沙盒玩法层。包含对象系统、AI、导航、脚本桥、物理、组件和系统，是当前重构与功能实验的主要区域。</p>
+				<p>沙盒玩法与 AI 层，是当前实验主战场。AI 子模块：<code>ai/behavior</code>（行为树）、<code>ai/decision</code>（决策树）、<code>ai/fsm</code>（状态机）、<code>ai/perception</code>（视觉/记忆/空间查询）、<code>ai/team</code>（团队黑板）、<code>ai/tactics</code>（影响力地图）、<code>ai/common</code>（Blackboard / AIScheduler）、<code>ai/navigation</code>。另含 <code>objects</code>、<code>components</code>（含 <code>components/ai/AIController</code>）、<code>systems</code>、<code>core/SandboxServices</code>（依赖注入）、<code>core/event</code>（事件总线）、<code>scripting</code>（脚本桥）。</p>
 			</div>
 			<div class="card">
 				<h3><code>bin/res/scripts</code></h3>
@@ -380,46 +424,53 @@ graph TD
 │                                      Lua 调用桥接
 ├─ src/HelloOgre3D/sandbox/objects
 │                                      游戏对象实现
+├─ src/HelloOgre3D/sandbox/components/ai/AIController
+│                                      每个 agent 的 AI 组件（driver + blackboard + 感知集成）
 ├─ src/HelloOgre3D/sandbox/ai
-│                                      FSM、决策树、行为树、导航
+│                                      behavior/decision/fsm/perception/team/tactics/common/navigation
+├─ src/HelloOgre3D/sandbox/core/SandboxServices.h
+│                                      运行时服务依赖注入（替代 g_* 全局）
+├─ src/HelloOgre3D/sandbox/core/event
+│                                      事件总线 Local/Team/Global
 ├─ src/HelloOgre3D/runtime
 │                                      Ogre / profiling 运行时适配
 └─ bin/res/scripts
-                                       Lua 玩法脚本和 samples</code></pre>
+                                       Lua 玩法脚本、ai 配置/knowledge/tactics 与 samples</code></pre>
 		</div>
 
 		<h2>七、当前演进重点</h2>
+		<p class="summary">主线为 AI 学习与实验沙盒：Chapter 7-9（Knowledge / Perception / Tactics）已基本落地，下面是已完成面与下一步重点。详见 <code>docs/high-priority-todo.md</code>、<code>docs/AIArchitectureBeyondBook.md</code>。</p>
 		<div class="grid">
 			<div class="card">
-				<h3>对象系统降耦</h3>
+				<h3>AI 分层（已落地）</h3>
 				<ul>
-					<li>缩短对象继承链。</li>
-					<li>把动画、AI、物理、武器挂接逐步拆成组件。</li>
-					<li>减少 manager 和对象之间的隐式全局依赖。</li>
+					<li>感知：VisionSensor / MemoryStore / AgentPerceptionQuery / 空间索引。</li>
+					<li>黑板：object-id、数组、TTL、confidence、metadata。</li>
+					<li>团队 / 战术：TeamBlackboardService、InfluenceMapSystem、Formation。</li>
 				</ul>
 			</div>
 			<div class="card">
-				<h3>AI 可配置化</h3>
+				<h3>行为树补强（已落地）</h3>
 				<ul>
-					<li>行为树结构从 C++ / Lua builder 迁移到 Lua 配置。</li>
-					<li>保留 C++ 节点执行效率，同时让 Lua 承接玩法规则。</li>
-					<li>后续补黑板、触发器和节点级调试统计。</li>
+					<li>Parallel / Random 节点 + Lua 声明式配置。</li>
+					<li>Selector / Sequence 反应式重评估（条件变化即中断）。</li>
+					<li>BehaviorTrace + 黑板摘要 + 配置错误诊断。</li>
 				</ul>
 			</div>
 			<div class="card">
-				<h3>性能可观测</h3>
+				<h3>下一步重点</h3>
 				<ul>
-					<li>Tracy 已接入，用于查看帧、Lua、AI、对象更新热点。</li>
-					<li>下一步应补对象数、Lua 调用数、BT tick 数、渲染统计等 counters。</li>
-					<li>对象增多后的瓶颈要同时看逻辑侧和渲染侧。</li>
+					<li>uniform grid 空间分区替换线性查询（替换点已留）。</li>
+					<li>把 TeamBlackboard / 空间索引等从 <code>ObjectManager</code> 拆成独立 system。</li>
+					<li>继续以 <code>SandboxServices</code> 收口 <code>g_*</code>，组件所有权迁 <code>unique_ptr</code>。</li>
 				</ul>
 			</div>
 			<div class="card">
-				<h3>跨平台整理</h3>
+				<h3>已知待修（code review）</h3>
 				<ul>
-					<li>Windows 仍是主要路径，同时已开始补 macOS / Xcode 支持。</li>
-					<li>新增路径和 include 需要注意大小写敏感。</li>
-					<li>引擎耦合逻辑优先收口到 <code>runtime</code>。</li>
+					<li>Blackboard <code>SetAgent</code> 存裸指针，改存 object-id 防悬挂。</li>
+					<li>Random 节点用全局 <code>rand()</code>，破坏可复现，应走可控种子。</li>
+					<li>反应式重评估对非幂等 Action 会重入，前缀宜限纯条件。</li>
 				</ul>
 			</div>
 		</div>

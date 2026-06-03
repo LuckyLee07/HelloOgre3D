@@ -375,6 +375,24 @@ void AgentObject::SetHealth(Ogre::Real health)
 	SandboxEventPayload::SetPosition(context, GetPosition());
 	context.Set_Number("health", GetHealth());
 	Event()->Emit("HEALTH_CHANGE", context);
+
+	if (currentHealth > 0.0f && GetHealth() <= 0.0f)
+	{
+		ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+		if (objectManager != nullptr)
+		{
+			objectManager->publishTacticalEvent(
+				SandboxEventTypes::DeadFriendlySighted(),
+				static_cast<int>(GetObjId()),
+				static_cast<int>(GetObjId()),
+				GetTeamId(),
+				GetTeamId(),
+				GetPosition(),
+				0,
+				"global",
+				false);
+		}
+	}
 }
 
 Ogre::Real AgentObject::GetMass() const
@@ -650,6 +668,21 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 
 	pBullet->SetNeedClear();
 	BlockObject::SpawnBulletImpact(collision);
+	ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+	if (objectManager != nullptr)
+	{
+		BaseObject* bulletOwner = pBullet->GetOwner();
+		objectManager->publishTacticalEvent(
+			SandboxEventTypes::BulletImpact(),
+			bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
+			static_cast<int>(GetObjId()),
+			bulletOwner != nullptr ? bulletOwner->GetTeamId() : -1,
+			GetTeamId(),
+			collision.pointA_,
+			0,
+			"global",
+			false);
+	}
 	const Ogre::Real damage = 5.0f;
 	this->SetHealth(std::max<Ogre::Real>(0.0f, GetHealth() - damage));
 }

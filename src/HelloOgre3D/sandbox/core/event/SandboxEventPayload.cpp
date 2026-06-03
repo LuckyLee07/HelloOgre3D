@@ -23,6 +23,7 @@ namespace SandboxEventTypes
 	const char* EnemySighted() { return "EnemySighted"; }
 	const char* BulletShot() { return "BulletShot"; }
 	const char* BulletImpact() { return "BulletImpact"; }
+	const char* DeadFriendlySighted() { return "DeadFriendlySighted"; }
 	const char* SupportRequested() { return "SupportRequested"; }
 	const char* SupportResponded() { return "SupportResponded"; }
 }

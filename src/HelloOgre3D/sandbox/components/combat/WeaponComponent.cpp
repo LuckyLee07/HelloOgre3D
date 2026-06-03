@@ -13,7 +13,9 @@
 #include "components/anim/AnimComponent.h"
 #include "components/render/RenderComponent.h"
 #include "systems/manager/SandboxMgr.h"
+#include "systems/manager/ObjectManager.h"
 #include "systems/service/SceneFactory.h"
+#include "event/SandboxEventPayload.h"
 
 namespace
 {
@@ -23,6 +25,14 @@ namespace
 		if (services != nullptr && services->sandbox != nullptr)
 			return services->sandbox;
 		return g_SandboxMgr;
+	}
+
+	ObjectManager* ResolveObjectManager(const WeaponComponent* component)
+	{
+		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
+		if (services != nullptr && services->objects != nullptr)
+			return services->objects;
+		return g_ObjectManager;
 	}
 
 	RenderComponent* FindOwnerRender(const WeaponComponent* component)
@@ -249,6 +259,21 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	{
 		bulletParticle->setOrientation(QuaternionFromRotationDegrees(-90, 0, 0));
 		bullet->addParticleNode(bulletParticle);
+	}
+
+	ObjectManager* objectManager = ResolveObjectManager(this);
+	if (objectManager != nullptr)
+	{
+		objectManager->publishTacticalEvent(
+			SandboxEventTypes::BulletShot(),
+			static_cast<int>(owner->GetObjId()),
+			-1,
+			owner->GetTeamId(),
+			-1,
+			position,
+			0,
+			"global",
+			false);
 	}
 
 	bullet->applyImpulse(forward * 750);

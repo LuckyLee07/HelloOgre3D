@@ -10,6 +10,7 @@
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
 #include "ai/tactics/InfluenceMapSystem.h"
+#include "ai/tactics/TacticalQueryService.h"
 #include "ai/team/TeamBlackboardService.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
@@ -268,7 +269,8 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	m_agentSpatialIndex = new AgentSpatialIndexSystem();
 	m_agentPerceptionSystem = new AgentPerceptionSystem();
 	m_teamBlackboardService = new TeamBlackboardService();
-	m_influenceMapSystem = new InfluenceMapSystem();
+	m_tacticalQueryService = new TacticalQueryService();
+	m_tacticalQueryService->Initialize();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_PERCEPTION_SYSTEM_ENABLE")))
@@ -295,7 +297,7 @@ ObjectManager::~ObjectManager()
 	SAFE_DELETE(m_agentSpatialIndex);
 	SAFE_DELETE(m_agentPerceptionSystem);
 	SAFE_DELETE(m_teamBlackboardService);
-	SAFE_DELETE(m_influenceMapSystem);
+	SAFE_DELETE(m_tacticalQueryService);
 
 	auto iter = m_navMeshes.begin();
 	for ( ; iter != m_navMeshes.end(); iter++)
@@ -346,6 +348,8 @@ void ObjectManager::Update(int deltaMilliseconds)
 	SandboxEventDispatcherManager::GetGlobalInst().FlushQueuedEvents();
 	if (perfEnabled)
 		perfTiming.eventFlushMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->Update(deltaMilliseconds);
 
 	if (m_agentPerceptionSystem != nullptr)
 	{
@@ -645,80 +649,242 @@ std::string ObjectManager::buildTeamBlackboardDebugSummary() const
 
 void ObjectManager::clearTacticalInfluence()
 {
-	if (m_influenceMapSystem != nullptr)
-		m_influenceMapSystem->Clear();
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->GetInfluenceMapSystem()->Clear();
 }
 
 void ObjectManager::configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize)
 {
-	if (m_influenceMapSystem != nullptr)
-		m_influenceMapSystem->Configure(minX, maxX, minZ, maxZ, cellSize);
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->GetInfluenceMapSystem()->Configure(minX, maxX, minZ, maxZ, cellSize);
 }
 
 void ObjectManager::clearTacticalInfluenceLayer(const std::string& layerName)
 {
-	if (m_influenceMapSystem != nullptr)
-		m_influenceMapSystem->ClearLayer(layerName);
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->GetInfluenceMapSystem()->ClearLayer(layerName);
+}
+
+void ObjectManager::setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia)
+{
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->GetInfluenceMapSystem()->SetLayerOptions(layerName, falloff, inertia);
 }
 
 int ObjectManager::addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius)
 {
-	if (m_influenceMapSystem == nullptr)
+	if (m_tacticalQueryService == nullptr)
 		return 0;
-	return m_influenceMapSystem->AddRadialSource(layerName, center, strength, radius);
+	return m_tacticalQueryService->GetInfluenceMapSystem()->AddRadialSource(layerName, center, strength, radius);
+}
+
+int ObjectManager::addTacticalInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+	return m_tacticalQueryService->GetInfluenceMapSystem()->AddPointSource(layerName, center, strength);
+}
+
+int ObjectManager::spreadTacticalInfluenceLayer(const std::string& layerName, int passCount)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+	return m_tacticalQueryService->GetInfluenceMapSystem()->SpreadLayer(layerName, passCount);
 }
 
 float ObjectManager::sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const
 {
-	if (m_influenceMapSystem == nullptr)
+	if (m_tacticalQueryService == nullptr)
 		return 0.0f;
-	return m_influenceMapSystem->SampleLayer(layerName, position);
+	return m_tacticalQueryService->GetInfluenceMapSystem()->SampleLayer(layerName, position);
 }
 
 float ObjectManager::scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const
 {
-	if (m_influenceMapSystem == nullptr)
+	if (m_tacticalQueryService == nullptr)
 		return 0.0f;
-	return m_influenceMapSystem->ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
+	return m_tacticalQueryService->GetInfluenceMapSystem()->ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
 }
 
 Ogre::Vector3 ObjectManager::findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight)
 {
-	if (m_influenceMapSystem == nullptr)
+	if (m_tacticalQueryService == nullptr)
 		return center;
-	return m_influenceMapSystem->FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+	return m_tacticalQueryService->GetInfluenceMapSystem()->FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+}
+
+float ObjectManager::scoreTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& position) const
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0.0f;
+	return m_tacticalQueryService->ScoreQueryPosition(queryType, position);
+}
+
+Ogre::Vector3 ObjectManager::findBestTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& center, float radius, float step)
+{
+	if (m_tacticalQueryService == nullptr)
+		return center;
+	return m_tacticalQueryService->FindBestQueryPosition(queryType, center, radius, step);
+}
+
+Ogre::Vector3 ObjectManager::findBestSupportPosition(const Ogre::Vector3& center, float radius, float step)
+{
+	if (m_tacticalQueryService == nullptr)
+		return center;
+	return m_tacticalQueryService->FindBestSupportPosition(center, radius, step);
+}
+
+Ogre::Vector3 ObjectManager::findLowThreatPosition(const Ogre::Vector3& center, float radius, float step)
+{
+	if (m_tacticalQueryService == nullptr)
+		return center;
+	return m_tacticalQueryService->FindLowThreatPosition(center, radius, step);
+}
+
+void ObjectManager::configureTacticalEvents(int eventTtlMs)
+{
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->SetEventTtlMs(eventTtlMs);
+}
+
+void ObjectManager::clearTacticalEvents()
+{
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->ClearEvents();
+}
+
+void ObjectManager::publishTacticalEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent)
+{
+	if (m_tacticalQueryService != nullptr)
+		m_tacticalQueryService->PublishEvent(eventType, senderId, targetId, teamId, targetTeamId, position, timeMs, scopeName, queueEvent);
+}
+
+int ObjectManager::getTacticalEventCount() const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventCount() : 0;
+}
+
+int ObjectManager::getTacticalEventTypeCount(const std::string& eventType) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventCountByType(eventType) : 0;
+}
+
+Ogre::Vector3 ObjectManager::getLastTacticalEventPosition(const std::string& eventType, const Ogre::Vector3& fallback) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetLastEventPosition(eventType, fallback) : fallback;
+}
+
+int ObjectManager::getTacticalEventDebugRecordCount() const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugRecordCount() : 0;
+}
+
+std::string ObjectManager::getTacticalEventDebugType(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugType(luaIndex) : "";
+}
+
+int ObjectManager::getTacticalEventDebugSenderId(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugSenderId(luaIndex) : -1;
+}
+
+int ObjectManager::getTacticalEventDebugTargetId(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugTargetId(luaIndex) : -1;
+}
+
+int ObjectManager::getTacticalEventDebugTeamId(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugTeamId(luaIndex) : -1;
+}
+
+int ObjectManager::getTacticalEventDebugTargetTeamId(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugTargetTeamId(luaIndex) : -1;
+}
+
+Ogre::Vector3 ObjectManager::getTacticalEventDebugPosition(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugPosition(luaIndex) : Ogre::Vector3::ZERO;
+}
+
+int ObjectManager::getTacticalEventDebugTimeMs(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugTimeMs(luaIndex) : 0;
+}
+
+int ObjectManager::getTacticalEventDebugRemainingTtlMs(int luaIndex) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetEventDebugRemainingTtlMs(luaIndex) : 0;
+}
+
+int ObjectManager::rebuildTacticalDangerLayer(int perspectiveTeamId, float dangerStrength, float bulletShotRadius, float bulletImpactRadius, float deadFriendlyRadius, float enemySightingRadius, int spreadPasses)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+	return m_tacticalQueryService->RebuildDangerLayer(perspectiveTeamId, dangerStrength, bulletShotRadius, bulletImpactRadius, deadFriendlyRadius, enemySightingRadius, spreadPasses);
+}
+
+int ObjectManager::rebuildTacticalTeamLayer(int positiveTeamId, float teamStrength, float radius, int spreadPasses)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+	return m_tacticalQueryService->RebuildTeamLayer(m_agents, positiveTeamId, teamStrength, radius, spreadPasses);
+}
+
+int ObjectManager::rebuildTacticalObjectiveLayer(const Ogre::Vector3& center, float strength, float radius, int spreadPasses)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+	return m_tacticalQueryService->RebuildObjectiveLayer(center, strength, radius, spreadPasses);
 }
 
 int ObjectManager::getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const
 {
-	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetLayerActiveCellCount(layerName) : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerActiveCellCount(layerName) : 0;
 }
 
 int ObjectManager::getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const
 {
-	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetLayerCellWriteCount(layerName) : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerCellWriteCount(layerName) : 0;
+}
+
+int ObjectManager::getTacticalInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellCount(layerName, threshold, maxCells) : 0;
+}
+
+Ogre::Vector3 ObjectManager::getTacticalInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellPosition(layerName, luaIndex, threshold) : Ogre::Vector3::ZERO;
+}
+
+float ObjectManager::getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellValue(layerName, luaIndex, threshold) : 0.0f;
 }
 
 int ObjectManager::getTacticalInfluenceActiveCellCount() const
 {
-	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().activeCellCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().activeCellCount : 0;
 }
 
 int ObjectManager::getTacticalInfluenceCellWriteCount() const
 {
-	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().cellWriteCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().cellWriteCount : 0;
 }
 
 int ObjectManager::getTacticalInfluenceQueryCount() const
 {
-	return m_influenceMapSystem != nullptr ? m_influenceMapSystem->GetStats().queryCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().queryCount : 0;
 }
 
 std::string ObjectManager::buildTacticalInfluenceDebugSummary() const
 {
-	if (m_influenceMapSystem == nullptr)
-		return "[TacticalInfluenceSystem] unavailable";
-	return m_influenceMapSystem->BuildDebugSummary();
+	if (m_tacticalQueryService == nullptr)
+		return "[TacticalQueryService] unavailable";
+	return m_tacticalQueryService->BuildDebugSummary();
 }
 
 std::string ObjectManager::buildAiSchedulerDebugSummary() const
@@ -976,8 +1142,8 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		stream << "\n" << m_agentPerceptionSystem->BuildDebugSummary();
 	if (m_teamBlackboardService != nullptr)
 		stream << "\n" << m_teamBlackboardService->BuildDebugSummary();
-	if (m_influenceMapSystem != nullptr)
-		stream << "\n" << m_influenceMapSystem->BuildDebugSummary();
+	if (m_tacticalQueryService != nullptr)
+		stream << "\n" << m_tacticalQueryService->BuildDebugSummary();
 
 	for (int index = 0; index < showingCount; ++index)
 	{
@@ -1163,10 +1329,21 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 			m_agentPerceptionSystem->Clear();
 		if (m_teamBlackboardService != nullptr)
 			m_teamBlackboardService->Clear();
-		if (m_influenceMapSystem != nullptr)
-			m_influenceMapSystem->Clear();
+		if (m_tacticalQueryService != nullptr)
+			m_tacticalQueryService->Clear();
 	}
 }
+
+const InfluenceMapSystem* ObjectManager::GetInfluenceMapSystem() const
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem() : nullptr;
+}
+
+InfluenceMapSystem* ObjectManager::GetInfluenceMapSystem()
+{
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem() : nullptr;
+}
+
 std::vector<BlockObject*> ObjectManager::getFixedObjects()
 {
 	std::size_t fixedObjects = 0;

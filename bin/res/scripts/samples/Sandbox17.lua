@@ -3,6 +3,7 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.IndirectSoldierAgent.lua")
+require("res.scripts.agent.DecisionSoldierAgent.lua")
 
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
 
@@ -85,6 +86,14 @@ local function _ReadBool(config, key, defaultValue)
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
 end
 
+local function _ReadString(config, key, defaultValue)
+	local value = config ~= nil and config[key] or nil
+	if value == nil then
+		return defaultValue
+	end
+	return tostring(value)
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -109,6 +118,34 @@ local function _ProjectToNav(pos)
 		return navPos
 	end
 	return pos
+end
+
+local function _HasCppTacticalEvents()
+	return ObjectManager ~= nil
+		and ObjectManager.configureTacticalEvents ~= nil
+		and ObjectManager.getTacticalEventDebugRecordCount ~= nil
+		and ObjectManager.getTacticalEventDebugType ~= nil
+		and ObjectManager.getTacticalEventDebugPosition ~= nil
+end
+
+local function _ConfigureCppTacticalEvents()
+	if not _HasCppTacticalEvents() then
+		return
+	end
+	local config = _GetConfig()
+	ObjectManager:clearTacticalEvents()
+	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
+end
+
+local function _GetCppTacticalEventCount()
+	if not _HasCppTacticalEvents() then
+		return 0
+	end
+	return ObjectManager:getTacticalEventDebugRecordCount()
+end
+
+local function _UseCppEventSource(config)
+	return _ReadBool(config, "useCppEventSource", true) == true and _GetCppTacticalEventCount() > 0
 end
 
 local function _EnsureInfluenceMap()
@@ -162,6 +199,27 @@ local function _PublishTacticEvent(eventType, event)
 	elseif eventType == "EnemySighted" and event.agent ~= nil then
 		_tactics.seenEnemies[_GetAgentId(event.agent)] = event
 	end
+
+	if _HasCppTacticalEvents() then
+		local position = event.position or event.seenAt
+		if position == nil and event.agent ~= nil then
+			position = event.agent:GetPosition()
+		end
+		if position ~= nil then
+			local sender = event.sender or event.spotter or event.reporter
+			if sender == nil and eventType ~= "EnemySighted" and eventType ~= "DeadFriendlySighted" then
+				sender = event.agent
+			end
+			local senderId = _GetAgentId(sender)
+			local targetId = event.agent ~= nil and _GetAgentId(event.agent) or -1
+			local teamId = sender ~= nil and sender:GetTeamId() or -1
+			local targetTeamId = event.agent ~= nil and event.agent:GetTeamId() or -1
+			if eventType == "DeadFriendlySighted" and event.agent ~= nil then
+				teamId = event.agent:GetTeamId()
+			end
+			ObjectManager:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
+		end
+	end
 end
 
 local function _PruneTimedEvents(events, deltaTimeInMillis)
@@ -186,7 +244,14 @@ end
 
 local function _PublishScriptedBurst(force)
 	local config = _GetConfig()
-	if _ReadBool(config, "scriptedEvents", true) ~= true then
+	local scriptedEnabled = _ReadBool(config, "scriptedEvents", false)
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true then
+		scriptedEnabled = scriptedEnabled or _ReadBool(config, "scriptedEventsInSmoke", true)
+	end
+	if scriptedEnabled ~= true then
+		return
+	end
+	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true and _UseCppEventSource(config) then
 		return
 	end
 
@@ -209,15 +274,15 @@ local function _PublishScriptedBurst(force)
 	local impactOffset = Vector3(math.sin(_tactics.eventCount + 1) * 2.5, 0, math.cos(_tactics.eventCount + 1) * 2.5)
 	local impactPos = _ProjectToNav(targetPos + impactOffset)
 
-	_PublishTacticEvent("BulletShot", { position = shotPos, agent = shooter })
-	_PublishTacticEvent("BulletImpact", { position = impactPos, agent = shooter })
-	_PublishTacticEvent("EnemySighted", { agent = target, seenAt = targetPos, lastSeen = _elapsedMs })
+	_PublishTacticEvent("BulletShot", { position = shotPos, agent = shooter, sender = shooter })
+	_PublishTacticEvent("BulletImpact", { position = impactPos, agent = shooter, sender = shooter })
+	_PublishTacticEvent("EnemySighted", { agent = target, sender = shooter, seenAt = targetPos, lastSeen = _elapsedMs })
 
 	local deadDelayMs = _ReadNumber(config, "deadFriendlyDelayMs", 2600)
 	if not _tactics.deadFriendlyPublished and _elapsedMs >= deadDelayMs then
 		local deadFriendly = _FindAgentByTeam(shooterTeam, shooter) or shooter
 		if deadFriendly ~= nil then
-			_PublishTacticEvent("DeadFriendlySighted", { agent = deadFriendly, seenAt = deadFriendly:GetPosition(), lastSeen = _elapsedMs })
+			_PublishTacticEvent("DeadFriendlySighted", { agent = deadFriendly, sender = shooter, seenAt = deadFriendly:GetPosition(), lastSeen = _elapsedMs })
 			_tactics.deadFriendlyPublished = true
 		end
 	end
@@ -248,20 +313,45 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local sightingRadius = _ReadNumber(config, "enemySightingRadius", 14.0)
 	local writes = 0
 
-	for _, event in ipairs(_tactics.bulletImpacts) do
-		writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, impactRadius)
-	end
-	for _, event in ipairs(_tactics.bulletShots) do
-		writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, shotRadius)
-	end
-	for _, event in pairs(_tactics.deadFriendlies) do
-		if event.agent ~= nil and event.agent:GetTeamId() == perspectiveTeamId then
-			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.agent:GetPosition()), dangerStrength, corpseRadius)
+	if _UseCppEventSource(config) then
+		local count = _GetCppTacticalEventCount()
+		for index = 1, count do
+			local eventType = ObjectManager:getTacticalEventDebugType(index)
+			local position = ObjectManager:getTacticalEventDebugPosition(index)
+			if eventType == "BulletImpact" then
+				writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, impactRadius)
+			elseif eventType == "BulletShot" then
+				writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, shotRadius)
+			elseif eventType == "DeadFriendlySighted" then
+				if ObjectManager:getTacticalEventDebugTeamId(index) == perspectiveTeamId then
+					writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, corpseRadius)
+				end
+			elseif eventType == "EnemySighted" then
+				local targetTeamId = ObjectManager:getTacticalEventDebugTargetTeamId(index)
+				if targetTeamId < 0 then
+					targetTeamId = perspectiveTeamId == 0 and 1 or 0
+				end
+				if targetTeamId ~= perspectiveTeamId then
+					writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, sightingRadius)
+				end
+			end
 		end
-	end
-	for _, event in pairs(_tactics.seenEnemies) do
-		if event.agent ~= nil and event.agent:GetTeamId() ~= perspectiveTeamId then
-			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.seenAt or event.agent:GetPosition()), dangerStrength, sightingRadius)
+	else
+		for _, event in ipairs(_tactics.bulletImpacts) do
+			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, impactRadius)
+		end
+		for _, event in ipairs(_tactics.bulletShots) do
+			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, shotRadius)
+		end
+		for _, event in pairs(_tactics.deadFriendlies) do
+			if event.agent ~= nil and event.agent:GetTeamId() == perspectiveTeamId then
+				writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.agent:GetPosition()), dangerStrength, corpseRadius)
+			end
+		end
+		for _, event in pairs(_tactics.seenEnemies) do
+			if event.agent ~= nil and event.agent:GetTeamId() ~= perspectiveTeamId then
+				writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.seenAt or event.agent:GetPosition()), dangerStrength, sightingRadius)
+			end
 		end
 	end
 
@@ -349,6 +439,10 @@ local function _DrawInfluenceMap()
 end
 
 local function _DrawTacticEvents()
+	local config = _GetConfig()
+	if _ReadBool(config, "drawEventMarkers", false) ~= true then
+		return
+	end
 	for _, event in ipairs(_tactics.bulletShots) do
 		DebugDrawer:drawCircle(event.position + Vector3(0, 0.24, 0), 1.2, 24, _colors.bullet, false)
 	end
@@ -365,6 +459,10 @@ local function _DrawTacticEvents()
 end
 
 local function _DrawAgents()
+	local config = _GetConfig()
+	if _ReadBool(config, "drawAgentMarkers", false) ~= true then
+		return
+	end
 	for _, agent in ipairs(_agents) do
 		local pos = agent:GetPosition()
 		local color = agent:GetTeamId() == 1 and _colors.team1 or _colors.team0
@@ -390,22 +488,71 @@ local function _MaybePrintSmoke()
 	end
 end
 
+local function _GetTeamIdForAgent(config, index)
+	if _ReadBool(config, "alternateTeams", true) then
+		return (index % 2 == 0) and 0 or 1
+	end
+	return ConfigManager:GetAgentTeamId(_sampleName, index)
+end
+
+local function _GetAppearanceForTeam(teamId)
+	return teamId == 0 and Soldier.AppearanceTypes.DARK or Soldier.AppearanceTypes.LIGHT
+end
+
+local function _PlaceAgentLikeChapter9(agent, preset, config, index)
+	if agent == nil then
+		return nil
+	end
+	if preset.spawnMode ~= "random" then
+		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
+	end
+
+	local minDistanceSq = _ReadNumber(config, "minSpawnDistanceSq", 725.0)
+	local maxAttempts = math.max(1, _ReadNumber(config, "maxSpawnAttempts", 4096))
+	local position = nil
+	for attempt = 1, maxAttempts do
+		position = Sandbox:RandomPoint("default")
+		if position ~= nil then
+			local found = true
+			for _, other in ipairs(_agents) do
+				local delta = position - other:GetPosition()
+				delta.y = 0
+				if delta:squaredLength() < minDistanceSq then
+					found = false
+					break
+				end
+			end
+			if found then
+				break
+			end
+		end
+		position = nil
+	end
+	if position == nil then
+		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
+	end
+
+	position.y = position.y + agent:GetHeight() * 0.5
+	agent:setPosition(position)
+	local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition()) or position
+	agent:SetTarget(navPosition)
+	agent:SetTargetRadius(preset.targetRadius or 1)
+	return position
+end
+
 local function _CreateAgents()
 	local preset = _GetPreset()
+	local config = _GetConfig()
 	local agentCount = ConfigManager:GetAgentCount(_sampleName, 6)
-	local agentLuafile = "res/scripts/agent/IndirectSoldierAgent.lua"
+	local agentLuafile = _ReadString(config, "agentScript", "res/scripts/agent/DecisionSoldierAgent.lua")
 	print(ConfigManager:BuildDebugSummary(_sampleName))
 
 	for i = 1, agentCount do
-		local teamId = ConfigManager:GetAgentTeamId(_sampleName, i)
-		local agentType = ConfigManager:GetAgentAppearance(_sampleName, i, Soldier.AppearanceTypes)
+		local teamId = _GetTeamIdForAgent(config, i)
+		local agentType = _GetAppearanceForTeam(teamId)
 		local agent = Create_Soldier(agentLuafile, agentType, teamId)
+		_PlaceAgentLikeChapter9(agent, preset, config, i)
 		table.insert(_agents, agent)
-		ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, i, "default")
-		agent:SetTarget(agent:GetPosition())
-		agent:SetTargetRadius(preset.targetRadius or 1)
-		agent:SetMaxSpeed(0)
-		agent:SetVelocity(Vector3(0, 0, 0))
 	end
 end
 
@@ -435,11 +582,16 @@ function EventHandle_WindowResized(width, height)
 end
 
 function Sandbox_Initialize()
+	local config = _GetConfig()
+	_G.HELLO_SUPPRESS_AI_PATH_DRAW = _ReadBool(config, "suppressPathDraw", true)
+
 	GUI_CreateCameraAndProfileInfo()
 	GUI_CreateSandboxText(infoText, textSize)
-	_CreatePanel()
+	if _ReadBool(config, "showTacticsPanel", false) then
+		_CreatePanel()
+	end
 
-	Sandbox:SetUseCppFsmFlag(false)
+	Sandbox:SetUseCppFsmFlag(true)
 
 	local camera = Sandbox:GetCamera()
 	camera:setPosition(Vector3(-30, 18, -17))
@@ -470,8 +622,8 @@ function Sandbox_Initialize()
 
 	_CreateAgents()
 	_EnsureInfluenceMap()
+	_ConfigureCppTacticalEvents()
 
-	local config = _GetConfig()
 	_tactics.dangerElapsedMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)
 	_tactics.teamElapsedMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
 	_PublishScriptedBurst(true)
