@@ -4,7 +4,7 @@
 #include "profiling/Profile.h"
 
 DebugDrawer::DebugDrawer() : m_pManualNode(nullptr), m_pManualObject(nullptr),
-	m_isEnable(true), m_linesIndex(0)
+	m_isEnable(true), m_linesIndex(0), m_trianglesIndex(0)
 {
 	//Initialize();
 }
@@ -29,6 +29,16 @@ void DebugDrawer::Initialize()
 	m_pManualObject->position(Ogre::Vector3::ZERO);
 	m_pManualObject->colour(Ogre::ColourValue::ZERO);
 	m_pManualObject->index(0);
+	m_pManualObject->end();
+
+	m_pManualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+	m_pManualObject->position(Ogre::Vector3::ZERO);
+	m_pManualObject->colour(Ogre::ColourValue::ZERO);
+	m_pManualObject->position(Ogre::Vector3::ZERO);
+	m_pManualObject->colour(Ogre::ColourValue::ZERO);
+	m_pManualObject->position(Ogre::Vector3::ZERO);
+	m_pManualObject->colour(Ogre::ColourValue::ZERO);
+	m_pManualObject->triangle(0, 1, 2);
 	m_pManualObject->end();
 
 	m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
@@ -64,16 +74,46 @@ void DebugDrawer::build()
 	}
 	m_pManualObject->end();
 
-	//m_pManualObject->beginUpdate(1);
-	//m_pManualObject->end();
+	m_pManualObject->beginUpdate(1);
+	if (m_isEnable && !m_triangleVertices.empty())
+	{
+		m_pManualObject->estimateVertexCount(m_triangleVertices.size());
+		m_pManualObject->estimateIndexCount(m_triangleIndices.size());
+
+		auto vIter = m_triangleVertices.begin();
+		for (; vIter != m_triangleVertices.end(); vIter++)
+		{
+			m_pManualObject->position(vIter->first);
+			m_pManualObject->colour(vIter->second);
+		}
+		auto iIter = m_triangleIndices.begin();
+		for (; iIter != m_triangleIndices.end(); iIter++)
+		{
+			m_pManualObject->index(*iIter);
+		}
+	}
+	else
+	{
+		m_pManualObject->position(Ogre::Vector3::ZERO);
+		m_pManualObject->colour(Ogre::ColourValue::ZERO);
+		m_pManualObject->position(Ogre::Vector3::ZERO);
+		m_pManualObject->colour(Ogre::ColourValue::ZERO);
+		m_pManualObject->position(Ogre::Vector3::ZERO);
+		m_pManualObject->colour(Ogre::ColourValue::ZERO);
+		m_pManualObject->triangle(0, 1, 2);
+	}
+	m_pManualObject->end();
 	m_pManualNode->_updateBounds();
 }
 
 void DebugDrawer::clear()
 {
 	m_linesIndex = 0;
+	m_trianglesIndex = 0;
 	m_lineVertices.clear();
 	m_lineIndices.clear();
+	m_triangleVertices.clear();
+	m_triangleIndices.clear();
 }
 
 void DebugDrawer::drawLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& color)
@@ -105,7 +145,14 @@ void DebugDrawer::drawSquare(const Ogre::Vector3& position, Ogre::Real length, c
 	square[3].x = position.x + halfLength;
 	square[3].y = position.y;
 	square[3].z = position.z - halfLength;
-	this->buildQuad(square, color);
+	if (isFilled)
+	{
+		this->buildFilledQuad(square, color, color.a);
+	}
+	else
+	{
+		this->buildQuad(square, color);
+	}
 }
 
 void DebugDrawer::drawPath(const std::vector<Ogre::Vector3> points, const Ogre::ColourValue& color, bool cyclic, const Ogre::Vector3& offset)
@@ -154,11 +201,23 @@ void DebugDrawer::buildCircle(const Ogre::Vector3& centre, float radius, int seg
 void DebugDrawer::buildQuad(const Ogre::Vector3* vertices, const Ogre::ColourValue& color, float alpha)
 {
 	int index = m_linesIndex;
-	for (size_t i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		addLineVertex(vertices[i], Ogre::ColourValue(color.r, color.g, color.b, alpha));
 		addLineIndices(index + i, (i + 1) == 4 ? index : (index + i + 1));
 	}
+}
+
+void DebugDrawer::buildFilledQuad(const Ogre::Vector3* vertices, const Ogre::ColourValue& color, float alpha)
+{
+	Ogre::ColourValue colorWithAlpha(color.r, color.g, color.b, alpha);
+	int index = m_trianglesIndex;
+	for (int i = 0; i < 4; i++)
+	{
+		addTriangleVertex(vertices[i], colorWithAlpha);
+	}
+	addTriangleIndices(index, index + 2, index + 1);
+	addTriangleIndices(index, index + 3, index + 2);
 }
 
 int DebugDrawer::addLineVertex(const Ogre::Vector3& vertex, const Ogre::ColourValue& color)
@@ -171,4 +230,17 @@ void DebugDrawer::addLineIndices(int index1, int index2)
 {
 	m_lineIndices.push_back(index1);
 	m_lineIndices.push_back(index2);
+}
+
+int DebugDrawer::addTriangleVertex(const Ogre::Vector3& vertex, const Ogre::ColourValue& color)
+{
+	m_triangleVertices.push_back(VertexPair(vertex, color));
+	return m_trianglesIndex++;
+}
+
+void DebugDrawer::addTriangleIndices(int index1, int index2, int index3)
+{
+	m_triangleIndices.push_back(index1);
+	m_triangleIndices.push_back(index2);
+	m_triangleIndices.push_back(index3);
 }

@@ -26,7 +26,9 @@ public:
 		int lastDangerWrites;
 		int lastTeamWrites;
 		int lastObjectiveWrites;
-		int lastSpreadWrites;
+		int lastDangerSpreadWrites;
+		int lastTeamSpreadWrites;
+		int lastObjectiveSpreadWrites;
 	};
 
 	TacticalQueryService();

@@ -25,6 +25,13 @@ local _colors = {
 	danger = ColourValue(1.0, 0.16, 0.08),
 	bullet = ColourValue(1.0, 0.75, 0.15),
 	dead = ColourValue(0.85, 0.85, 0.85),
+	grid = ColourValue(0.0, 0.0, 0.0, 0.6),
+}
+
+local _influencePalette = {
+	positive = { 0.0, 0.0, 1.0, 0.9 },
+	zero = { 0.0, 0.0, 0.0, 0.75 },
+	negative = { 1.0, 0.0, 0.0, 0.9 },
 }
 
 local _tactics = {
@@ -94,6 +101,29 @@ local function _ReadString(config, key, defaultValue)
 	return tostring(value)
 end
 
+local function _Clamp01(value)
+	value = tonumber(value) or 0.0
+	if value < 0.0 then return 0.0 end
+	if value > 1.0 then return 1.0 end
+	return value
+end
+
+local function _Lerp(startValue, endValue, t)
+	return startValue + (endValue - startValue) * t
+end
+
+local function _InfluenceColor(value, positiveSpec, negativeSpec)
+	local numberValue = tonumber(value) or 0.0
+	local amount = _Clamp01(math.abs(numberValue))
+	local target = numberValue >= 0.0 and positiveSpec or negativeSpec
+	local zero = _influencePalette.zero
+	return ColourValue(
+		_Lerp(zero[1], target[1], amount),
+		_Lerp(zero[2], target[2], amount),
+		_Lerp(zero[3], target[3], amount),
+		_Lerp(zero[4], target[4], amount))
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -118,6 +148,27 @@ local function _ProjectToNav(pos)
 		return navPos
 	end
 	return pos
+end
+
+local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
+	if pos == nil then
+		return nil
+	end
+	local config = _GetConfig()
+	if _ReadBool(config, "projectInfluenceToNav", true) then
+		local navPos = Sandbox:FindClosestPoint("default", pos)
+		if navPos == nil then
+			return nil
+		end
+		local dx = navPos.x - pos.x
+		local dz = navPos.z - pos.z
+		local maxDistance = _ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9)
+		if maxDistance > 0.0 and dx * dx + dz * dz > maxDistance * maxDistance then
+			return nil
+		end
+		return Vector3(navPos.x, navPos.y + yOffset, navPos.z)
+	end
+	return Vector3(pos.x, yOffset, pos.z)
 end
 
 local function _HasCppTacticalEvents()
@@ -395,16 +446,49 @@ local function _DrawCell(cell, color, y)
 		return
 	end
 	local map = _EnsureInfluenceMap()
-	local half = map.cellSize * 0.5
-	local center = Vector3(cell.position.x, y, cell.position.z)
-	local a = center + Vector3(-half, 0, -half)
-	local b = center + Vector3(half, 0, -half)
-	local c = center + Vector3(half, 0, half)
-	local d = center + Vector3(-half, 0, half)
-	DebugDrawer:drawLine(a, b, color)
-	DebugDrawer:drawLine(b, c, color)
-	DebugDrawer:drawLine(c, d, color)
-	DebugDrawer:drawLine(d, a, color)
+	local center = _ResolveInfluenceDrawPosition(cell.position, y, map.cellSize)
+	if center == nil then
+		return
+	end
+	DebugDrawer:drawSquare(center, map.cellSize, color, true)
+	DebugDrawer:drawSquare(center + Vector3(0, 0.01, 0), map.cellSize, _colors.grid, false)
+end
+
+local function _GetDrawCellLimit(config, map)
+	local limit = tonumber(config ~= nil and config.maxDrawCellsPerLayer or nil)
+	if limit == nil or limit <= 0 then
+		return map.width * map.height
+	end
+	return math.max(1, limit)
+end
+
+local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+	local config = _GetConfig()
+	local map = _EnsureInfluenceMap()
+	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	local maxCells = _GetDrawCellLimit(config, map)
+	local drawn = 0
+
+	for iz = 0, map.height - 1 do
+		for ix = 0, map.width - 1 do
+			local position = Vector3(
+				map.minX + (ix + 0.5) * map.cellSize,
+				y,
+				map.minZ + (iz + 0.5) * map.cellSize)
+			local value = map:Sample(layerName, position)
+			if drawNeutral or math.abs(value) >= threshold then
+				_DrawCell({
+					position = position,
+					value = value,
+				}, _InfluenceColor(value, positiveSpec, negativeSpec), y)
+				drawn = drawn + 1
+				if drawn >= maxCells then
+					return
+				end
+			end
+		end
+	end
 end
 
 local function _DrawInfluenceMap()
@@ -417,24 +501,11 @@ local function _DrawInfluenceMap()
 		return
 	end
 
-	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-	local maxCells = math.max(1, _ReadNumber(config, "maxDrawCellsPerLayer", 64))
-	local drawn = 0
-	for _, cell in ipairs(_influenceMap:GetActiveCells("danger", threshold)) do
-		_DrawCell(cell, _colors.danger, 0.12)
-		drawn = drawn + 1
-		if drawn >= maxCells then
-			break
-		end
+	if _ReadBool(config, "drawDangerLayer", false) then
+		_DrawInfluenceLayer("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
 	end
-	drawn = 0
-	for _, cell in ipairs(_influenceMap:GetActiveCells("team", threshold)) do
-		local color = cell.value >= 0 and _colors.teamPositive or _colors.teamNegative
-		_DrawCell(cell, color, 0.22)
-		drawn = drawn + 1
-		if drawn >= maxCells then
-			break
-		end
+	if _ReadBool(config, "drawTeamLayer", true) then
+		_DrawInfluenceLayer("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
 	end
 end
 

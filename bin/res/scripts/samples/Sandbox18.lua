@@ -23,6 +23,14 @@ local _colors = {
 	dead = ColourValue(0.85, 0.85, 0.85),
 	best = ColourValue(0.15, 0.9, 1.0),
 	objective = ColourValue(0.95, 0.9, 0.18),
+	grid = ColourValue(0.0, 0.0, 0.0, 0.6),
+}
+
+local _influencePalette = {
+	positive = { 0.0, 0.0, 1.0, 0.9 },
+	zero = { 0.0, 0.0, 0.0, 0.75 },
+	negative = { 1.0, 0.0, 0.0, 0.9 },
+	objective = { 0.95, 0.9, 0.18, 0.85 },
 }
 
 local _tactics = {
@@ -53,6 +61,7 @@ local _tactics = {
 
 local _tacticalDriver = {
 	agent = nil,
+	teamId = -1,
 	lastTarget = nil,
 	acc = Vector3(0.0),
 	moveCount = 0,
@@ -66,7 +75,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 	GUI.MarkupNewline ..
 	"F1: reset camera" .. GUI.MarkupNewline ..
 	"F3: toggle navigation mesh" .. GUI.MarkupNewline ..
-	"F4: toggle tactical draw" .. GUI.MarkupNewline ..
+	"F4: toggle influence map" .. GUI.MarkupNewline ..
 	"F5/F6/F7: profile/camera/physics"
 
 local function _GetPreset()
@@ -105,6 +114,29 @@ local function _ReadString(config, key, defaultValue)
 	return tostring(value)
 end
 
+local function _Clamp01(value)
+	value = tonumber(value) or 0.0
+	if value < 0.0 then return 0.0 end
+	if value > 1.0 then return 1.0 end
+	return value
+end
+
+local function _Lerp(startValue, endValue, t)
+	return startValue + (endValue - startValue) * t
+end
+
+local function _InfluenceColor(value, positiveSpec, negativeSpec)
+	local numberValue = tonumber(value) or 0.0
+	local amount = _Clamp01(math.abs(numberValue))
+	local target = numberValue >= 0.0 and positiveSpec or negativeSpec
+	local zero = _influencePalette.zero
+	return ColourValue(
+		_Lerp(zero[1], target[1], amount),
+		_Lerp(zero[2], target[2], amount),
+		_Lerp(zero[3], target[3], amount),
+		_Lerp(zero[4], target[4], amount))
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -131,6 +163,27 @@ local function _ProjectToNav(pos)
 	return pos
 end
 
+local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
+	if pos == nil then
+		return nil
+	end
+	local config = _GetConfig()
+	if _ReadBool(config, "projectInfluenceToNav", true) then
+		local navPos = Sandbox:FindClosestPoint("default", pos)
+		if navPos == nil then
+			return nil
+		end
+		local dx = navPos.x - pos.x
+		local dz = navPos.z - pos.z
+		local maxDistance = _ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9)
+		if maxDistance > 0.0 and dx * dx + dz * dz > maxDistance * maxDistance then
+			return nil
+		end
+		return Vector3(navPos.x, navPos.y + yOffset, navPos.z)
+	end
+	return Vector3(pos.x, yOffset, pos.z)
+end
+
 local function _HasCppTactics()
 	return ObjectManager ~= nil
 		and ObjectManager.configureTacticalInfluence ~= nil
@@ -148,6 +201,10 @@ end
 local function _ShouldRunTacticalAgent(config)
 	return _G.HELLO_SANDBOX_SMOKE_MODE == true
 		or _ReadBool(config, "tacticalAgentEnabled", false) == true
+end
+
+local function _GetTacticalDriverTeamId(config)
+	return _ReadNumber(config, "tacticalDriverTeamId", _ReadNumber(config, "teamPositiveTeamId", 0))
 end
 
 local function _ConfigureCppTactics()
@@ -374,7 +431,7 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	_tactics.teamElapsedMs = 0
 	_tactics.teamRunCount = _tactics.teamRunCount + 1
 
-	local positiveTeamId = _ReadNumber(config, "teamPositiveTeamId", 0)
+	local positiveTeamId = _tacticalDriver.teamId >= 0 and _tacticalDriver.teamId or _GetTacticalDriverTeamId(config)
 	local teamRadius = _ReadNumber(config, "teamInfluenceRadius", 11.0)
 	local teamStrength = _ReadNumber(config, "teamStrength", 1.0)
 	local writes = ObjectManager:rebuildTacticalTeamLayer(
@@ -476,19 +533,23 @@ local function _DrawCell(center, color, y, cellSize)
 	if center == nil then
 		return
 	end
-	local half = cellSize * 0.5
-	local p = Vector3(center.x, y, center.z)
-	local a = p + Vector3(-half, 0, -half)
-	local b = p + Vector3(half, 0, -half)
-	local c = p + Vector3(half, 0, half)
-	local d = p + Vector3(-half, 0, half)
-	DebugDrawer:drawLine(a, b, color)
-	DebugDrawer:drawLine(b, c, color)
-	DebugDrawer:drawLine(c, d, color)
-	DebugDrawer:drawLine(d, a, color)
+	local p = _ResolveInfluenceDrawPosition(center, y, cellSize)
+	if p == nil then
+		return
+	end
+	DebugDrawer:drawSquare(p, cellSize, color, true)
+	DebugDrawer:drawSquare(p + Vector3(0, 0.01, 0), cellSize, _colors.grid, false)
 end
 
-local function _DrawCppInfluenceLayer(layerName, y, colorFn)
+local function _GetDrawCellLimit(config)
+	local limit = tonumber(config ~= nil and config.maxDrawCellsPerLayer or nil)
+	if limit == nil or limit <= 0 then
+		return 100000
+	end
+	return math.max(1, limit)
+end
+
+local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	if not _drawTactics or not _HasCppTactics() then
 		return
 	end
@@ -499,23 +560,27 @@ local function _DrawCppInfluenceLayer(layerName, y, colorFn)
 	local mapConfig = config.influenceMap or {}
 	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-	local maxCells = math.max(1, _ReadNumber(config, "maxDrawCellsPerLayer", 64))
-	local count = ObjectManager:getTacticalInfluenceLayerDebugCellCount(layerName, threshold, maxCells)
+	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	local queryThreshold = drawNeutral and 0.0 or threshold
+	local maxCells = _GetDrawCellLimit(config)
+	local count = ObjectManager:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, maxCells)
 	for index = 1, count do
-		local pos = ObjectManager:getTacticalInfluenceLayerDebugCellPosition(layerName, index, threshold)
-		local value = ObjectManager:getTacticalInfluenceLayerDebugCellValue(layerName, index, threshold)
-		_DrawCell(pos, colorFn(value), y, cellSize)
+		local pos = ObjectManager:getTacticalInfluenceLayerDebugCellPosition(layerName, index, queryThreshold)
+		local value = ObjectManager:getTacticalInfluenceLayerDebugCellValue(layerName, index, queryThreshold)
+		_DrawCell(pos, _InfluenceColor(value, positiveSpec, negativeSpec), y, cellSize)
 	end
 end
 
 local function _DrawCppInfluenceMap()
 	local config = _GetConfig()
-	_DrawCppInfluenceLayer("danger", 0.12, function() return _colors.danger end)
-	_DrawCppInfluenceLayer("team", 0.22, function(value)
-		return value >= 0 and _colors.team1 or _colors.team0
-	end)
+	if _ReadBool(config, "drawDangerLayer", false) then
+		_DrawCppInfluenceLayer("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
+	end
+	if _ReadBool(config, "drawTeamLayer", true) then
+		_DrawCppInfluenceLayer("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
+	end
 	if _ReadBool(config, "drawObjectiveLayer", false) then
-		_DrawCppInfluenceLayer("objective", 0.32, function() return _colors.objective end)
+		_DrawCppInfluenceLayer("objective", 0.32, _influencePalette.objective, _influencePalette.negative, false)
 	end
 end
 
@@ -541,6 +606,9 @@ local function _UpdateTacticalAgent(deltaTimeInMillis)
 	local agent = _tacticalDriver.agent
 	local target = _ProjectToNav(_tactics.bestPosition)
 	if agent == nil or target == nil or not _IsAlive(agent) then
+		return
+	end
+	if _tacticalDriver.teamId >= 0 and agent:GetTeamId() ~= _tacticalDriver.teamId then
 		return
 	end
 
@@ -572,6 +640,8 @@ local function _MaybePrintSmoke()
 		and _tactics.teamCells > 0
 		and _tactics.queryCount > 0
 		and _tacticalDriver.moveCount > 0
+		and _tacticalDriver.agent ~= nil
+		and _tacticalDriver.agent:GetTeamId() == _tacticalDriver.teamId
 		and _tactics.eventCount >= 3 then
 		_tactics.smokePrinted = true
 		print("[Chapter9TacticsCppSmoke] PASS",
@@ -582,6 +652,7 @@ local function _MaybePrintSmoke()
 			"writes=", _tactics.lastCellWrites,
 			"queries=", _tactics.queryCount,
 			"moves=", _tacticalDriver.moveCount,
+			"driverTeam=", _tacticalDriver.teamId,
 			"bestScore=", string.format("%.2f", _tactics.bestScore),
 			"summary=", ObjectManager:buildTacticalInfluenceDebugSummary())
 		_tactics.smokeComplete = true
@@ -659,7 +730,11 @@ local function _CreateAgents()
 		_PlaceAgentLikeChapter9(agent, preset, config, i)
 		table.insert(_agents, agent)
 	end
-	_tacticalDriver.agent = _agents[1]
+	_tacticalDriver.teamId = _GetTacticalDriverTeamId(config)
+	_tacticalDriver.agent = _FindAgentByTeam(_tacticalDriver.teamId, nil) or _agents[1]
+	if _tacticalDriver.agent ~= nil and _tacticalDriver.agent:GetTeamId() ~= _tacticalDriver.teamId then
+		_tacticalDriver.teamId = _tacticalDriver.agent:GetTeamId()
+	end
 	if _tacticalDriver.agent ~= nil and _ShouldRunTacticalAgent(config) then
 		_tacticalDriver.agent:SetMaxSpeed(_ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
 	end

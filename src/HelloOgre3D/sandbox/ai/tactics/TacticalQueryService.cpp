@@ -68,7 +68,9 @@ TacticalQueryService::Stats::Stats()
 	, lastDangerWrites(0)
 	, lastTeamWrites(0)
 	, lastObjectiveWrites(0)
-	, lastSpreadWrites(0)
+	, lastDangerSpreadWrites(0)
+	, lastTeamSpreadWrites(0)
+	, lastObjectiveSpreadWrites(0)
 {
 }
 
@@ -296,7 +298,7 @@ int TacticalQueryService::RebuildDangerLayer(int perspectiveTeamId, float danger
 
 	const int spreadWrites = m_influenceMap.SpreadLayer("danger", spreadPasses);
 	m_stats.lastDangerWrites = writes;
-	m_stats.lastSpreadWrites = spreadWrites;
+	m_stats.lastDangerSpreadWrites = spreadWrites;
 	++m_stats.dangerBuildCount;
 	return writes + spreadWrites;
 }
@@ -316,7 +318,7 @@ int TacticalQueryService::RebuildTeamLayer(const std::vector<AgentObject*>& agen
 
 	const int spreadWrites = m_influenceMap.SpreadLayer("team", spreadPasses);
 	m_stats.lastTeamWrites = writes;
-	m_stats.lastSpreadWrites += spreadWrites;
+	m_stats.lastTeamSpreadWrites = spreadWrites;
 	++m_stats.teamBuildCount;
 	return writes + spreadWrites;
 }
@@ -327,7 +329,7 @@ int TacticalQueryService::RebuildObjectiveLayer(const Ogre::Vector3& center, flo
 	const int writes = m_influenceMap.AddRadialSource("objective", center, strength, radius);
 	const int spreadWrites = m_influenceMap.SpreadLayer("objective", spreadPasses);
 	m_stats.lastObjectiveWrites = writes;
-	m_stats.lastSpreadWrites += spreadWrites;
+	m_stats.lastObjectiveSpreadWrites = spreadWrites;
 	++m_stats.objectiveBuildCount;
 	return writes + spreadWrites;
 }
@@ -370,7 +372,7 @@ std::string TacticalQueryService::BuildDebugSummary() const
 		<< " teamBuilds=" << m_stats.teamBuildCount
 		<< " objectiveBuilds=" << m_stats.objectiveBuildCount
 		<< " writes=" << (m_stats.lastDangerWrites + m_stats.lastTeamWrites + m_stats.lastObjectiveWrites)
-		<< " spreadWrites=" << m_stats.lastSpreadWrites
+		<< " spreadWrites=" << (m_stats.lastDangerSpreadWrites + m_stats.lastTeamSpreadWrites + m_stats.lastObjectiveSpreadWrites)
 		<< "\n" << m_influenceMap.BuildDebugSummary();
 	return stream.str();
 }
@@ -432,7 +434,8 @@ void TacticalQueryService::AddOrUpdateEvent(const EventRecord& event)
 		{
 			if (SamePersistentEvent(iter->eventType, iter->senderId, iter->targetId, event.eventType, event.senderId, event.targetId))
 			{
-				*iter = event;
+				m_events.erase(iter);
+				m_events.push_back(event);
 				m_stats.currentEventCount = static_cast<int>(m_events.size());
 				return;
 			}

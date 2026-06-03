@@ -15,6 +15,7 @@
 #include "common/ScriptLuaVM.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "ClientManager.h"
+#include "GameManager.h"
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
@@ -30,6 +31,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <vector>
 
 ObjectManager* g_ObjectManager = nullptr;
@@ -756,7 +758,19 @@ void ObjectManager::clearTacticalEvents()
 void ObjectManager::publishTacticalEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent)
 {
 	if (m_tacticalQueryService != nullptr)
-		m_tacticalQueryService->PublishEvent(eventType, senderId, targetId, teamId, targetTeamId, position, timeMs, scopeName, queueEvent);
+	{
+		int resolvedTimeMs = timeMs;
+		if (resolvedTimeMs <= 0)
+		{
+			GameManager* gameManager = GetGameManager();
+			if (gameManager != nullptr)
+			{
+				const long long currentTimeMs = gameManager->getTimeInMillis();
+				resolvedTimeMs = static_cast<int>(std::max<long long>(0, std::min<long long>(currentTimeMs, std::numeric_limits<int>::max())));
+			}
+		}
+		m_tacticalQueryService->PublishEvent(eventType, senderId, targetId, teamId, targetTeamId, position, resolvedTimeMs, scopeName, queueEvent);
+	}
 }
 
 int ObjectManager::getTacticalEventCount() const

@@ -40,10 +40,13 @@ public:
 private:
 	int addLineVertex(const Ogre::Vector3& vertex, const Ogre::ColourValue& color);
 	void addLineIndices(int index1, int index2);
+	int addTriangleVertex(const Ogre::Vector3& vertex, const Ogre::ColourValue& color);
+	void addTriangleIndices(int index1, int index2, int index3);
 
 	void buildLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& color, float alpha = 1.0f);
 	void buildCircle(const Ogre::Vector3& centre, float radius, int segmentsCount, const Ogre::ColourValue& color, float alpha = 1.0f);
 	void buildQuad(const Ogre::Vector3* vertices, const Ogre::ColourValue& color, float alpha = 1.0f);
+	void buildFilledQuad(const Ogre::Vector3* vertices, const Ogre::ColourValue& color, float alpha = 1.0f);
 
 private:
 	Ogre::SceneNode* m_pManualNode;
@@ -53,8 +56,11 @@ private:
 
 	std::vector<VertexPair> m_lineVertices;
 	std::vector<int> m_lineIndices;
+	std::vector<VertexPair> m_triangleVertices;
+	std::vector<int> m_triangleIndices;
 
 	int  m_linesIndex;
+	int  m_trianglesIndex;
 }; //tolua_exports
 
 #endif; // __DEBUG_DRAWER_H__
