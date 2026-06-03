@@ -16,6 +16,10 @@ local _drawNavMesh = false
 local _drawInfluence = true
 local _elapsedMs = 0
 local _panelElapsedMs = 0
+local _drawCache = {}
+local _projectionCache = {}
+local _EnsureInfluenceMap = nil
+local _GetDrawCellLimit = nil
 
 local _colors = {
 	team1 = ColourValue(0.2, 0.95, 0.4),
@@ -124,6 +128,15 @@ local function _InfluenceColor(value, positiveSpec, negativeSpec)
 		_Lerp(zero[4], target[4], amount))
 end
 
+local function _ColorFromSpec(spec)
+	spec = spec or _influencePalette.zero
+	return ColourValue(
+		tonumber(spec[1]) or 0.0,
+		tonumber(spec[2]) or 0.0,
+		tonumber(spec[3]) or 0.0,
+		tonumber(spec[4]) or 1.0)
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -150,23 +163,50 @@ local function _ProjectToNav(pos)
 	return pos
 end
 
+local function _ClearInfluenceDrawCache()
+	_drawCache = {}
+	_projectionCache = {}
+end
+
+local function _MarkInfluenceDrawLayerDirty(layerName)
+	if layerName == nil then
+		_drawCache = {}
+	else
+		_drawCache[layerName] = nil
+	end
+end
+
 local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
 	if pos == nil then
 		return nil
 	end
 	local config = _GetConfig()
 	if _ReadBool(config, "projectInfluenceToNav", true) then
-		local navPos = Sandbox:FindClosestPoint("default", pos)
-		if navPos == nil then
-			return nil
-		end
-		local dx = navPos.x - pos.x
-		local dz = navPos.z - pos.z
 		local maxDistance = _ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9)
-		if maxDistance > 0.0 and dx * dx + dz * dz > maxDistance * maxDistance then
+		local cacheKey = tostring(pos.x) .. ":" .. tostring(pos.z) .. ":" .. tostring(maxDistance)
+		local cached = _projectionCache[cacheKey]
+		if cached == false then
 			return nil
 		end
-		return Vector3(navPos.x, navPos.y + yOffset, navPos.z)
+		if cached == nil then
+			local navPos = Sandbox:FindClosestPoint("default", pos)
+			if navPos == nil then
+				_projectionCache[cacheKey] = false
+				return nil
+			end
+			local dx = navPos.x - pos.x
+			local dz = navPos.z - pos.z
+			if maxDistance > 0.0 and dx * dx + dz * dz > maxDistance * maxDistance then
+				_projectionCache[cacheKey] = false
+				return nil
+			end
+			cached = { x = navPos.x, y = navPos.y, z = navPos.z }
+			_projectionCache[cacheKey] = cached
+		end
+		if cached == nil then
+			return nil
+		end
+		return Vector3(cached.x, cached.y + yOffset, cached.z)
 	end
 	return Vector3(pos.x, yOffset, pos.z)
 end
@@ -179,6 +219,15 @@ local function _HasCppTacticalEvents()
 		and ObjectManager.getTacticalEventDebugPosition ~= nil
 end
 
+local function _HasCppInfluenceDraw()
+	return ObjectManager ~= nil
+		and ObjectManager.configureTacticalInfluence ~= nil
+		and ObjectManager.clearTacticalInfluenceLayer ~= nil
+		and ObjectManager.addTacticalInfluenceSource ~= nil
+		and ObjectManager.rebuildTacticalInfluenceLayerDebugVisual ~= nil
+		and ObjectManager.setTacticalInfluenceDebugVisible ~= nil
+end
+
 local function _ConfigureCppTacticalEvents()
 	if not _HasCppTacticalEvents() then
 		return
@@ -186,6 +235,52 @@ local function _ConfigureCppTacticalEvents()
 	local config = _GetConfig()
 	ObjectManager:clearTacticalEvents()
 	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
+end
+
+local function _ConfigureCppInfluenceDraw()
+	if not _HasCppInfluenceDraw() then
+		return
+	end
+	local config = _GetConfig()
+	local mapConfig = config.influenceMap or {}
+	ObjectManager:clearTacticalInfluence()
+	ObjectManager:configureTacticalInfluence(
+		_ReadNumber(mapConfig, "minX", -32.0),
+		_ReadNumber(mapConfig, "maxX", 56.0),
+		_ReadNumber(mapConfig, "minZ", -8.0),
+		_ReadNumber(mapConfig, "maxZ", 62.0),
+		_ReadNumber(mapConfig, "cellSize", 4.0))
+end
+
+local function _AddCppInfluenceSource(layerName, position, strength, radius)
+	if position == nil or not _HasCppInfluenceDraw() then
+		return 0
+	end
+	return ObjectManager:addTacticalInfluenceSource(layerName, position, strength, radius)
+end
+
+local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+	if not _HasCppInfluenceDraw() then
+		return false
+	end
+	local config = _GetConfig()
+	local map = _EnsureInfluenceMap()
+	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	ObjectManager:rebuildTacticalInfluenceLayerDebugVisual(
+		layerName,
+		y,
+		_ColorFromSpec(positiveSpec),
+		_ColorFromSpec(_influencePalette.zero),
+		_ColorFromSpec(negativeSpec),
+		_colors.grid,
+		threshold,
+		_GetDrawCellLimit(config, map),
+		drawNeutral,
+		_ReadBool(config, "projectInfluenceToNav", true),
+		_ReadNumber(config, "drawNavProjectionMaxDistance", map.cellSize * 0.9),
+		"default")
+	return true
 end
 
 local function _GetCppTacticalEventCount()
@@ -199,10 +294,11 @@ local function _UseCppEventSource(config)
 	return _ReadBool(config, "useCppEventSource", true) == true and _GetCppTacticalEventCount() > 0
 end
 
-local function _EnsureInfluenceMap()
+_EnsureInfluenceMap = function()
 	if _influenceMap == nil then
 		local config = _GetConfig()
 		_influenceMap = InfluenceMap.New(config.influenceMap or {})
+		_ClearInfluenceDrawCache()
 	end
 	return _influenceMap
 end
@@ -352,6 +448,9 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 
 	local map = _EnsureInfluenceMap()
 	map:ClearLayer("danger")
+	if _HasCppInfluenceDraw() then
+		ObjectManager:clearTacticalInfluenceLayer("danger")
+	end
 
 	_tactics.bulletImpacts = _PruneTimedEvents(_tactics.bulletImpacts, intervalMs)
 	_tactics.bulletShots = _PruneTimedEvents(_tactics.bulletShots, intervalMs)
@@ -363,6 +462,11 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local corpseRadius = _ReadNumber(config, "deadFriendlyRadius", 12.0)
 	local sightingRadius = _ReadNumber(config, "enemySightingRadius", 14.0)
 	local writes = 0
+	local function addDangerSource(position, radius)
+		local navPosition = _ProjectToNav(position)
+		writes = writes + map:AddRadialSource("danger", navPosition, dangerStrength, radius)
+		_AddCppInfluenceSource("danger", navPosition, dangerStrength, radius)
+	end
 
 	if _UseCppEventSource(config) then
 		local count = _GetCppTacticalEventCount()
@@ -370,12 +474,12 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 			local eventType = ObjectManager:getTacticalEventDebugType(index)
 			local position = ObjectManager:getTacticalEventDebugPosition(index)
 			if eventType == "BulletImpact" then
-				writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, impactRadius)
+				addDangerSource(position, impactRadius)
 			elseif eventType == "BulletShot" then
-				writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, shotRadius)
+				addDangerSource(position, shotRadius)
 			elseif eventType == "DeadFriendlySighted" then
 				if ObjectManager:getTacticalEventDebugTeamId(index) == perspectiveTeamId then
-					writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, corpseRadius)
+					addDangerSource(position, corpseRadius)
 				end
 			elseif eventType == "EnemySighted" then
 				local targetTeamId = ObjectManager:getTacticalEventDebugTargetTeamId(index)
@@ -383,25 +487,25 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 					targetTeamId = perspectiveTeamId == 0 and 1 or 0
 				end
 				if targetTeamId ~= perspectiveTeamId then
-					writes = writes + map:AddRadialSource("danger", _ProjectToNav(position), dangerStrength, sightingRadius)
+					addDangerSource(position, sightingRadius)
 				end
 			end
 		end
 	else
 		for _, event in ipairs(_tactics.bulletImpacts) do
-			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, impactRadius)
+			addDangerSource(event.position, impactRadius)
 		end
 		for _, event in ipairs(_tactics.bulletShots) do
-			writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.position), dangerStrength, shotRadius)
+			addDangerSource(event.position, shotRadius)
 		end
 		for _, event in pairs(_tactics.deadFriendlies) do
 			if event.agent ~= nil and event.agent:GetTeamId() == perspectiveTeamId then
-				writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.agent:GetPosition()), dangerStrength, corpseRadius)
+				addDangerSource(event.agent:GetPosition(), corpseRadius)
 			end
 		end
 		for _, event in pairs(_tactics.seenEnemies) do
 			if event.agent ~= nil and event.agent:GetTeamId() ~= perspectiveTeamId then
-				writes = writes + map:AddRadialSource("danger", _ProjectToNav(event.seenAt or event.agent:GetPosition()), dangerStrength, sightingRadius)
+				addDangerSource(event.seenAt or event.agent:GetPosition(), sightingRadius)
 			end
 		end
 	end
@@ -409,6 +513,10 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	_tactics.dangerCells = #map:GetActiveCells("danger", threshold)
 	_tactics.lastCellWrites = writes
+	_MarkInfluenceDrawLayerDirty("danger")
+	if _ReadBool(config, "drawDangerLayer", false) then
+		_RebuildCppInfluenceLayerVisual("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
+	end
 end
 
 local function _UpdateTeamAreas(deltaTimeInMillis)
@@ -424,6 +532,9 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 
 	local map = _EnsureInfluenceMap()
 	map:ClearLayer("team")
+	if _HasCppInfluenceDraw() then
+		ObjectManager:clearTacticalInfluenceLayer("team")
+	end
 
 	local positiveTeamId = _ReadNumber(config, "teamPositiveTeamId", 0)
 	local teamRadius = _ReadNumber(config, "teamInfluenceRadius", 11.0)
@@ -432,29 +543,30 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	for _, agent in ipairs(_agents) do
 		if _IsAlive(agent) then
 			local value = agent:GetTeamId() == positiveTeamId and teamStrength or -teamStrength
-			writes = writes + map:AddRadialSource("team", _ProjectToNav(agent:GetPosition()), value, teamRadius)
+			local navPosition = _ProjectToNav(agent:GetPosition())
+			writes = writes + map:AddRadialSource("team", navPosition, value, teamRadius)
+			_AddCppInfluenceSource("team", navPosition, value, teamRadius)
 		end
 	end
 
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	_tactics.teamCells = #map:GetActiveCells("team", threshold)
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
+	_MarkInfluenceDrawLayerDirty("team")
+	if _ReadBool(config, "drawTeamLayer", true) then
+		_RebuildCppInfluenceLayerVisual("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
+	end
 end
 
-local function _DrawCell(cell, color, y)
-	if cell == nil or cell.position == nil then
+local function _DrawCachedCell(cell)
+	if cell == nil or cell.position == nil or cell.color == nil then
 		return
 	end
-	local map = _EnsureInfluenceMap()
-	local center = _ResolveInfluenceDrawPosition(cell.position, y, map.cellSize)
-	if center == nil then
-		return
-	end
-	DebugDrawer:drawSquare(center, map.cellSize, color, true)
-	DebugDrawer:drawSquare(center + Vector3(0, 0.01, 0), map.cellSize, _colors.grid, false)
+	DebugDrawer:drawSquare(cell.position, cell.cellSize, cell.color, true)
+	DebugDrawer:drawSquare(cell.position + Vector3(0, 0.01, 0), cell.cellSize, _colors.grid, false)
 end
 
-local function _GetDrawCellLimit(config, map)
+_GetDrawCellLimit = function(config, map)
 	local limit = tonumber(config ~= nil and config.maxDrawCellsPerLayer or nil)
 	if limit == nil or limit <= 0 then
 		return map.width * map.height
@@ -462,13 +574,13 @@ local function _GetDrawCellLimit(config, map)
 	return math.max(1, limit)
 end
 
-local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+local function _BuildInfluenceLayerDrawCache(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	local config = _GetConfig()
 	local map = _EnsureInfluenceMap()
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
 	local maxCells = _GetDrawCellLimit(config, map)
-	local drawn = 0
+	local cells = {}
 
 	for iz = 0, map.height - 1 do
 		for ix = 0, map.width - 1 do
@@ -478,26 +590,65 @@ local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, dra
 				map.minZ + (iz + 0.5) * map.cellSize)
 			local value = map:Sample(layerName, position)
 			if drawNeutral or math.abs(value) >= threshold then
-				_DrawCell({
-					position = position,
-					value = value,
-				}, _InfluenceColor(value, positiveSpec, negativeSpec), y)
-				drawn = drawn + 1
-				if drawn >= maxCells then
-					return
+				local drawPosition = _ResolveInfluenceDrawPosition(position, y, map.cellSize)
+				if drawPosition ~= nil then
+					table.insert(cells, {
+						position = drawPosition,
+						color = _InfluenceColor(value, positiveSpec, negativeSpec),
+						cellSize = map.cellSize,
+					})
+					if #cells >= maxCells then
+						return cells
+					end
 				end
 			end
 		end
 	end
+	return cells
+end
+
+local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+	if _HasCppInfluenceDraw() then
+		local config = _GetConfig()
+		local map = _EnsureInfluenceMap()
+		local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+		local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+		ObjectManager:drawTacticalInfluenceLayer(
+			layerName,
+			y,
+			_ColorFromSpec(positiveSpec),
+			_ColorFromSpec(_influencePalette.zero),
+			_ColorFromSpec(negativeSpec),
+			_colors.grid,
+			threshold,
+			_GetDrawCellLimit(config, map),
+			drawNeutral,
+			_ReadBool(config, "projectInfluenceToNav", true),
+			_ReadNumber(config, "drawNavProjectionMaxDistance", map.cellSize * 0.9),
+			"default")
+		return
+	end
+	local cells = _drawCache[layerName]
+	if cells == nil then
+		cells = _BuildInfluenceLayerDrawCache(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+		_drawCache[layerName] = cells
+	end
+	for _, cell in ipairs(cells) do
+		_DrawCachedCell(cell)
+	end
 end
 
 local function _DrawInfluenceMap()
-	if not _drawInfluence or _influenceMap == nil then
+	local config = _GetConfig()
+	local visible = _drawInfluence and _influenceMap ~= nil
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _ReadBool(config, "drawInSmoke", false) ~= true then
+		visible = false
+	end
+	if _HasCppInfluenceDraw() then
+		ObjectManager:setTacticalInfluenceDebugVisible(visible)
 		return
 	end
-
-	local config = _GetConfig()
-	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _ReadBool(config, "drawInSmoke", false) ~= true then
+	if not visible then
 		return
 	end
 
@@ -693,6 +844,7 @@ function Sandbox_Initialize()
 
 	_CreateAgents()
 	_EnsureInfluenceMap()
+	_ConfigureCppInfluenceDraw()
 	_ConfigureCppTacticalEvents()
 
 	_tactics.dangerElapsedMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)

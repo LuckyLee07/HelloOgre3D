@@ -86,8 +86,8 @@ void InfluenceMapSystem::Configure(float minX, float maxX, float minZ, float max
 	m_minZ = minZ;
 	m_maxZ = maxZ;
 	m_cellSize = cellSize > 0.01f ? cellSize : kDefaultCellSize;
-	m_width = std::max(1, static_cast<int>(std::ceil((m_maxX - m_minX) / m_cellSize)));
-	m_height = std::max(1, static_cast<int>(std::ceil((m_maxZ - m_minZ) / m_cellSize)));
+	m_width = std::max(1, static_cast<int>(std::floor((m_maxX - m_minX) / m_cellSize)) + 1);
+	m_height = std::max(1, static_cast<int>(std::floor((m_maxZ - m_minZ) / m_cellSize)) + 1);
 
 	for (std::unordered_map<std::string, Layer>::iterator iter = m_layers.begin(); iter != m_layers.end(); ++iter)
 		ResizeLayer(iter->second);
@@ -332,6 +332,14 @@ int InfluenceMapSystem::GetLayerCellWriteCount(const std::string& layerName) con
 {
 	const Layer* layer = FindLayer(layerName);
 	return layer != nullptr ? layer->cellWriteCount : 0;
+}
+
+float InfluenceMapSystem::GetLayerCellValue(const std::string& layerName, int x, int z) const
+{
+	const Layer* layer = FindLayer(layerName);
+	if (layer == nullptr || x < 0 || z < 0 || x >= m_width || z >= m_height)
+		return 0.0f;
+	return layer->values[GetCellIndex(x, z)];
 }
 
 int InfluenceMapSystem::GetLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const

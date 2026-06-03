@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Wed Jun  3 00:04:26 2026.
+** Generated automatically by tolua++-1.0.92 on Wed Jun  3 22:35:16 2026.
 */
 
 #ifndef __cplusplus
@@ -9229,6 +9229,186 @@ static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerDebugCellVa
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: drawTacticalInfluenceLayer of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_drawTacticalInfluenceLayer00
+static int tolua_SandboxToLua_ObjectManager_drawTacticalInfluenceLayer00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,6,&tolua_err) || !tolua_isusertype(tolua_S,6,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,7,&tolua_err) || !tolua_isusertype(tolua_S,7,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,9,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,10,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,11,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,12,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,13,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,14,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  float yOffset = ((float)  tolua_tonumber(tolua_S,3,0));
+  const Ogre::ColourValue* positiveValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
+  const Ogre::ColourValue* zeroValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,5,0));
+  const Ogre::ColourValue* negativeValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,6,0));
+  const Ogre::ColourValue* gridColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,7,0));
+  float threshold = ((float)  tolua_tonumber(tolua_S,8,0));
+  int maxCells = ((int)  tolua_tonumber(tolua_S,9,0));
+  bool drawNeutralCells = ((bool)  tolua_toboolean(tolua_S,10,0));
+  bool projectToNav = ((bool)  tolua_toboolean(tolua_S,11,0));
+  float maxProjectionDistance = ((float)  tolua_tonumber(tolua_S,12,0));
+  const std::string navMeshName = ((const std::string)  tolua_tocppstring(tolua_S,13,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'drawTacticalInfluenceLayer'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->drawTacticalInfluenceLayer(layerName,yOffset,*positiveValue,*zeroValue,*negativeValue,*gridColor,threshold,maxCells,drawNeutralCells,projectToNav,maxProjectionDistance,navMeshName);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+   tolua_pushcppstring(tolua_S,(const char*)navMeshName);
+  }
+ }
+ return 3;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'drawTacticalInfluenceLayer'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: rebuildTacticalInfluenceLayerDebugVisual of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_rebuildTacticalInfluenceLayerDebugVisual00
+static int tolua_SandboxToLua_ObjectManager_rebuildTacticalInfluenceLayerDebugVisual00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,4,&tolua_err) || !tolua_isusertype(tolua_S,4,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,6,&tolua_err) || !tolua_isusertype(tolua_S,6,"const Ogre::ColourValue",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,7,&tolua_err) || !tolua_isusertype(tolua_S,7,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,9,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,10,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,11,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,12,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,13,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,14,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  float yOffset = ((float)  tolua_tonumber(tolua_S,3,0));
+  const Ogre::ColourValue* positiveValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,4,0));
+  const Ogre::ColourValue* zeroValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,5,0));
+  const Ogre::ColourValue* negativeValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,6,0));
+  const Ogre::ColourValue* gridColor = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,7,0));
+  float threshold = ((float)  tolua_tonumber(tolua_S,8,0));
+  int maxCells = ((int)  tolua_tonumber(tolua_S,9,0));
+  bool drawNeutralCells = ((bool)  tolua_toboolean(tolua_S,10,0));
+  bool projectToNav = ((bool)  tolua_toboolean(tolua_S,11,0));
+  float maxProjectionDistance = ((float)  tolua_tonumber(tolua_S,12,0));
+  const std::string navMeshName = ((const std::string)  tolua_tocppstring(tolua_S,13,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'rebuildTacticalInfluenceLayerDebugVisual'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->rebuildTacticalInfluenceLayerDebugVisual(layerName,yOffset,*positiveValue,*zeroValue,*negativeValue,*gridColor,threshold,maxCells,drawNeutralCells,projectToNav,maxProjectionDistance,navMeshName);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+   tolua_pushcppstring(tolua_S,(const char*)navMeshName);
+  }
+ }
+ return 3;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'rebuildTacticalInfluenceLayerDebugVisual'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setTacticalInfluenceDebugVisible of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_setTacticalInfluenceDebugVisible00
+static int tolua_SandboxToLua_ObjectManager_setTacticalInfluenceDebugVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setTacticalInfluenceDebugVisible'", NULL);
+#endif
+  {
+   self->setTacticalInfluenceDebugVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setTacticalInfluenceDebugVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearTacticalInfluenceDebugVisuals of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceDebugVisuals00
+static int tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceDebugVisuals00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearTacticalInfluenceDebugVisuals'", NULL);
+#endif
+  {
+   self->clearTacticalInfluenceDebugVisuals();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearTacticalInfluenceDebugVisuals'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: getTacticalInfluenceActiveCellCount of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00
 static int tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00(lua_State* tolua_S)
@@ -13092,6 +13272,10 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getTacticalInfluenceLayerDebugCellCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerDebugCellCount00);
    tolua_function(tolua_S,"getTacticalInfluenceLayerDebugCellPosition",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerDebugCellPosition00);
    tolua_function(tolua_S,"getTacticalInfluenceLayerDebugCellValue",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceLayerDebugCellValue00);
+   tolua_function(tolua_S,"drawTacticalInfluenceLayer",tolua_SandboxToLua_ObjectManager_drawTacticalInfluenceLayer00);
+   tolua_function(tolua_S,"rebuildTacticalInfluenceLayerDebugVisual",tolua_SandboxToLua_ObjectManager_rebuildTacticalInfluenceLayerDebugVisual00);
+   tolua_function(tolua_S,"setTacticalInfluenceDebugVisible",tolua_SandboxToLua_ObjectManager_setTacticalInfluenceDebugVisible00);
+   tolua_function(tolua_S,"clearTacticalInfluenceDebugVisuals",tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceDebugVisuals00);
    tolua_function(tolua_S,"getTacticalInfluenceActiveCellCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceActiveCellCount00);
    tolua_function(tolua_S,"getTacticalInfluenceCellWriteCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceCellWriteCount00);
    tolua_function(tolua_S,"getTacticalInfluenceQueryCount",tolua_SandboxToLua_ObjectManager_getTacticalInfluenceQueryCount00);

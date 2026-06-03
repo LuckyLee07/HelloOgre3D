@@ -16,9 +16,12 @@
 #include "systems/physics/PhysicsWorld.h"
 #include "ClientManager.h"
 #include "GameManager.h"
+#include "debug/DebugDrawer.h"
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
+#include "OgreManualObject.h"
+#include "OgreAxisAlignedBox.h"
 #include "components/ai/AIController.h"
 #include "components/physics/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
@@ -92,6 +95,53 @@ namespace
 	bool NearlyEqual(float left, float right, float epsilon)
 	{
 		return std::fabs(left - right) <= epsilon;
+	}
+
+	float Clamp01(float value)
+	{
+		if (value < 0.0f)
+			return 0.0f;
+		if (value > 1.0f)
+			return 1.0f;
+		return value;
+	}
+
+	Ogre::ColourValue BlendInfluenceColor(float value, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue)
+	{
+		const float amount = Clamp01(std::fabs(value));
+		const Ogre::ColourValue& target = value >= 0.0f ? positiveValue : negativeValue;
+		return Ogre::ColourValue(
+			zeroValue.r + (target.r - zeroValue.r) * amount,
+			zeroValue.g + (target.g - zeroValue.g) * amount,
+			zeroValue.b + (target.b - zeroValue.b) * amount,
+			zeroValue.a + (target.a - zeroValue.a) * amount);
+	}
+
+	void BuildSquareVertices(const Ogre::Vector3& position, float length, Ogre::Vector3* vertices)
+	{
+		const float halfLength = length * 0.5f;
+		vertices[0] = Ogre::Vector3(position.x + halfLength, position.y, position.z + halfLength);
+		vertices[1] = Ogre::Vector3(position.x - halfLength, position.y, position.z + halfLength);
+		vertices[2] = Ogre::Vector3(position.x - halfLength, position.y, position.z - halfLength);
+		vertices[3] = Ogre::Vector3(position.x + halfLength, position.y, position.z - halfLength);
+	}
+
+	void AddDegenerateTriangleSection(Ogre::ManualObject& manualObject)
+	{
+		manualObject.position(Ogre::Vector3::ZERO);
+		manualObject.colour(Ogre::ColourValue::ZERO);
+		manualObject.position(Ogre::Vector3::ZERO);
+		manualObject.colour(Ogre::ColourValue::ZERO);
+		manualObject.position(Ogre::Vector3::ZERO);
+		manualObject.colour(Ogre::ColourValue::ZERO);
+		manualObject.triangle(0, 1, 2);
+	}
+
+	void AddDegenerateLineSection(Ogre::ManualObject& manualObject)
+	{
+		manualObject.position(Ogre::Vector3::ZERO);
+		manualObject.colour(Ogre::ColourValue::ZERO);
+		manualObject.index(0);
 	}
 
 	bool IsFalseEnvValue(const char* value)
@@ -264,7 +314,7 @@ namespace
 
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
-	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld)
+	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld), m_tacticalInfluenceDebugVisible(true)
 {
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
@@ -294,6 +344,7 @@ ObjectManager::~ObjectManager()
 	m_pScriptVM = nullptr;
 	m_pPhysicsWorld = nullptr;
 
+	clearTacticalInfluenceDebugVisuals();
 	this->clearAllObjects(MGR_OBJ_ALLS);
 	SAFE_DELETE(m_aiScheduler);
 	SAFE_DELETE(m_agentSpatialIndex);
@@ -659,6 +710,9 @@ void ObjectManager::configureTacticalInfluence(float minX, float maxX, float min
 {
 	if (m_tacticalQueryService != nullptr)
 		m_tacticalQueryService->GetInfluenceMapSystem()->Configure(minX, maxX, minZ, maxZ, cellSize);
+	m_tacticalInfluenceDrawProjectionKey.clear();
+	m_tacticalInfluenceDrawProjectionCache.clear();
+	clearTacticalInfluenceDebugVisuals();
 }
 
 void ObjectManager::clearTacticalInfluenceLayer(const std::string& layerName)
@@ -877,6 +931,293 @@ Ogre::Vector3 ObjectManager::getTacticalInfluenceLayerDebugCellPosition(const st
 float ObjectManager::getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const
 {
 	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellValue(layerName, luaIndex, threshold) : 0.0f;
+}
+
+int ObjectManager::drawTacticalInfluenceLayer(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+
+	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
+	if (influenceMap == nullptr)
+		return 0;
+
+	DebugDrawer* debugDrawer = DebugDrawer::GetInstance();
+	if (debugDrawer == nullptr)
+		return 0;
+
+	NavigationMesh* navMesh = projectToNav ? getNavigationMesh(navMeshName) : nullptr;
+	const int width = influenceMap->GetWidth();
+	const int height = influenceMap->GetHeight();
+	const int totalCells = width * height;
+	const float cellSize = influenceMap->GetCellSize();
+	const float safeThreshold = std::max(0.0f, threshold);
+	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
+	const float maxDistanceSq = maxProjectionDistance > 0.0f ? maxProjectionDistance * maxProjectionDistance : 0.0f;
+	int drawn = 0;
+
+	if (projectToNav && navMesh != nullptr)
+	{
+		const Ogre::Vector3 firstCell = influenceMap->GetCellCenter(0, 0);
+		const Ogre::Vector3 lastCell = influenceMap->GetCellCenter(width - 1, height - 1);
+		std::ostringstream key;
+		key << navMeshName << "|"
+			<< width << "x" << height << "|"
+			<< cellSize << "|"
+			<< maxProjectionDistance << "|"
+			<< firstCell.x << "," << firstCell.z << "|"
+			<< lastCell.x << "," << lastCell.z;
+		const std::string projectionKey = key.str();
+		if (projectionKey != m_tacticalInfluenceDrawProjectionKey || static_cast<int>(m_tacticalInfluenceDrawProjectionCache.size()) != totalCells)
+		{
+			m_tacticalInfluenceDrawProjectionKey = projectionKey;
+			m_tacticalInfluenceDrawProjectionCache.assign(totalCells, TacticalInfluenceDrawProjection());
+		}
+	}
+
+	for (int z = 0; z < height; ++z)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			const float value = influenceMap->GetLayerCellValue(layerName, x, z);
+			if (!drawNeutralCells && std::fabs(value) < safeThreshold)
+				continue;
+
+			Ogre::Vector3 drawPosition = influenceMap->GetCellCenter(x, z);
+			if (projectToNav && navMesh != nullptr)
+			{
+				const int projectionIndex = z * width + x;
+				TacticalInfluenceDrawProjection& projection = m_tacticalInfluenceDrawProjectionCache[projectionIndex];
+				if (!projection.resolved)
+				{
+					const Ogre::Vector3 navPosition = navMesh->FindClosestPoint(drawPosition);
+					const float dx = navPosition.x - drawPosition.x;
+					const float dz = navPosition.z - drawPosition.z;
+					projection.resolved = true;
+					projection.valid = maxDistanceSq <= 0.0f || dx * dx + dz * dz <= maxDistanceSq;
+					projection.position = navPosition;
+				}
+				if (!projection.valid)
+					continue;
+				drawPosition = Ogre::Vector3(projection.position.x, projection.position.y + yOffset, projection.position.z);
+			}
+			else
+			{
+				drawPosition.y = yOffset;
+			}
+
+			const Ogre::ColourValue color = BlendInfluenceColor(value, positiveValue, zeroValue, negativeValue);
+			debugDrawer->drawSquare(drawPosition, cellSize, color, true);
+			drawPosition.y += 0.01f;
+			debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
+
+			++drawn;
+			if (drawn >= limit)
+				return drawn;
+		}
+	}
+	return drawn;
+}
+
+int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
+{
+	if (m_tacticalQueryService == nullptr)
+		return 0;
+
+	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
+	if (influenceMap == nullptr)
+		return 0;
+
+	ClientManager* clientManager = GetClientMgr();
+	Ogre::SceneManager* sceneManager = clientManager != nullptr ? clientManager->getSceneManager() : nullptr;
+	if (sceneManager == nullptr)
+		return 0;
+
+	struct DrawCell
+	{
+		Ogre::Vector3 position;
+		Ogre::ColourValue color;
+	};
+
+	NavigationMesh* navMesh = projectToNav ? getNavigationMesh(navMeshName) : nullptr;
+	const int width = influenceMap->GetWidth();
+	const int height = influenceMap->GetHeight();
+	const int totalCells = width * height;
+	const float cellSize = influenceMap->GetCellSize();
+	const float safeThreshold = std::max(0.0f, threshold);
+	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
+	const float maxDistanceSq = maxProjectionDistance > 0.0f ? maxProjectionDistance * maxProjectionDistance : 0.0f;
+	std::vector<DrawCell> cells;
+	cells.reserve(std::min(totalCells, limit));
+
+	if (projectToNav && navMesh != nullptr)
+	{
+		const Ogre::Vector3 firstCell = influenceMap->GetCellCenter(0, 0);
+		const Ogre::Vector3 lastCell = influenceMap->GetCellCenter(width - 1, height - 1);
+		std::ostringstream key;
+		key << navMeshName << "|"
+			<< width << "x" << height << "|"
+			<< cellSize << "|"
+			<< maxProjectionDistance << "|"
+			<< firstCell.x << "," << firstCell.z << "|"
+			<< lastCell.x << "," << lastCell.z;
+		const std::string projectionKey = key.str();
+		if (projectionKey != m_tacticalInfluenceDrawProjectionKey || static_cast<int>(m_tacticalInfluenceDrawProjectionCache.size()) != totalCells)
+		{
+			m_tacticalInfluenceDrawProjectionKey = projectionKey;
+			m_tacticalInfluenceDrawProjectionCache.assign(totalCells, TacticalInfluenceDrawProjection());
+		}
+	}
+
+	for (int z = 0; z < height; ++z)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			const float value = influenceMap->GetLayerCellValue(layerName, x, z);
+			if (!drawNeutralCells && std::fabs(value) < safeThreshold)
+				continue;
+
+			Ogre::Vector3 drawPosition = influenceMap->GetCellCenter(x, z);
+			if (projectToNav && navMesh != nullptr)
+			{
+				const int projectionIndex = z * width + x;
+				TacticalInfluenceDrawProjection& projection = m_tacticalInfluenceDrawProjectionCache[projectionIndex];
+				if (!projection.resolved)
+				{
+					const Ogre::Vector3 navPosition = navMesh->FindClosestPoint(drawPosition);
+					const float dx = navPosition.x - drawPosition.x;
+					const float dz = navPosition.z - drawPosition.z;
+					projection.resolved = true;
+					projection.valid = maxDistanceSq <= 0.0f || dx * dx + dz * dz <= maxDistanceSq;
+					projection.position = navPosition;
+				}
+				if (!projection.valid)
+					continue;
+				drawPosition = Ogre::Vector3(projection.position.x, projection.position.y + yOffset, projection.position.z);
+			}
+			else
+			{
+				drawPosition.y = yOffset;
+			}
+
+			DrawCell cell;
+			cell.position = drawPosition;
+			cell.color = BlendInfluenceColor(value, positiveValue, zeroValue, negativeValue);
+			cells.push_back(cell);
+			if (static_cast<int>(cells.size()) >= limit)
+				break;
+		}
+		if (static_cast<int>(cells.size()) >= limit)
+			break;
+	}
+
+	TacticalInfluenceDebugVisual& visual = m_tacticalInfluenceDebugVisuals[layerName];
+	if (visual.manualObject == nullptr || visual.node == nullptr)
+	{
+		visual.node = sceneManager->getRootSceneNode()->createChildSceneNode();
+		visual.manualObject = sceneManager->createManualObject();
+		visual.manualObject->setDynamic(true);
+		visual.manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, 110);
+		visual.manualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
+		visual.node->attachObject(visual.manualObject);
+	}
+
+	Ogre::ManualObject* manualObject = visual.manualObject;
+	manualObject->clear();
+
+	manualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+	if (cells.empty())
+	{
+		AddDegenerateTriangleSection(*manualObject);
+	}
+	else
+	{
+		manualObject->estimateVertexCount(cells.size() * 4);
+		manualObject->estimateIndexCount(cells.size() * 6);
+		int vertexIndex = 0;
+		for (std::vector<DrawCell>::const_iterator iter = cells.begin(); iter != cells.end(); ++iter)
+		{
+			Ogre::Vector3 square[4];
+			BuildSquareVertices(iter->position, cellSize, square);
+			for (int index = 0; index < 4; ++index)
+			{
+				manualObject->position(square[index]);
+				manualObject->colour(iter->color);
+			}
+			manualObject->triangle(vertexIndex, vertexIndex + 2, vertexIndex + 1);
+			manualObject->triangle(vertexIndex, vertexIndex + 3, vertexIndex + 2);
+			vertexIndex += 4;
+		}
+	}
+	manualObject->end();
+
+	manualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_LINE_LIST);
+	if (cells.empty())
+	{
+		AddDegenerateLineSection(*manualObject);
+	}
+	else
+	{
+		manualObject->estimateVertexCount(cells.size() * 4);
+		manualObject->estimateIndexCount(cells.size() * 8);
+		int vertexIndex = 0;
+		for (std::vector<DrawCell>::const_iterator iter = cells.begin(); iter != cells.end(); ++iter)
+		{
+			Ogre::Vector3 square[4];
+			Ogre::Vector3 outlinePosition = iter->position;
+			outlinePosition.y += 0.01f;
+			BuildSquareVertices(outlinePosition, cellSize, square);
+			for (int index = 0; index < 4; ++index)
+			{
+				manualObject->position(square[index]);
+				manualObject->colour(gridColor);
+			}
+			manualObject->index(vertexIndex);
+			manualObject->index(vertexIndex + 1);
+			manualObject->index(vertexIndex + 1);
+			manualObject->index(vertexIndex + 2);
+			manualObject->index(vertexIndex + 2);
+			manualObject->index(vertexIndex + 3);
+			manualObject->index(vertexIndex + 3);
+			manualObject->index(vertexIndex);
+			vertexIndex += 4;
+		}
+	}
+	manualObject->end();
+	visual.node->setVisible(m_tacticalInfluenceDebugVisible);
+	visual.node->_updateBounds();
+	return static_cast<int>(cells.size());
+}
+
+void ObjectManager::setTacticalInfluenceDebugVisible(bool visible)
+{
+	m_tacticalInfluenceDebugVisible = visible;
+	for (std::unordered_map<std::string, TacticalInfluenceDebugVisual>::iterator iter = m_tacticalInfluenceDebugVisuals.begin(); iter != m_tacticalInfluenceDebugVisuals.end(); ++iter)
+	{
+		if (iter->second.node != nullptr)
+			iter->second.node->setVisible(visible);
+	}
+}
+
+void ObjectManager::clearTacticalInfluenceDebugVisuals()
+{
+	ClientManager* clientManager = GetClientMgr();
+	Ogre::SceneManager* sceneManager = clientManager != nullptr ? clientManager->getSceneManager() : nullptr;
+	if (sceneManager == nullptr)
+	{
+		m_tacticalInfluenceDebugVisuals.clear();
+		return;
+	}
+
+	for (std::unordered_map<std::string, TacticalInfluenceDebugVisual>::iterator iter = m_tacticalInfluenceDebugVisuals.begin(); iter != m_tacticalInfluenceDebugVisuals.end(); ++iter)
+	{
+		TacticalInfluenceDebugVisual& visual = iter->second;
+		if (visual.manualObject != nullptr)
+			sceneManager->destroyManualObject(visual.manualObject);
+		if (visual.node != nullptr)
+			sceneManager->destroySceneNode(visual.node);
+	}
+	m_tacticalInfluenceDebugVisuals.clear();
 }
 
 int ObjectManager::getTacticalInfluenceActiveCellCount() const
@@ -1514,6 +1855,9 @@ bool ObjectManager::addNavigationMesh(const Ogre::String& navName, NavigationMes
 		SAFE_DELETE(m_navMeshes[navName]);
 	}
 	m_navMeshes[navName] = pNavMesh;
+	m_tacticalInfluenceDrawProjectionKey.clear();
+	m_tacticalInfluenceDrawProjectionCache.clear();
+	clearTacticalInfluenceDebugVisuals();
 	return true;
 }
 

@@ -14,6 +14,7 @@ local _drawNavMesh = false
 local _drawTactics = true
 local _elapsedMs = 0
 local _panelElapsedMs = 0
+local _RebuildCppInfluenceLayerVisual = nil
 
 local _colors = {
 	team1 = ColourValue(0.2, 0.95, 0.4),
@@ -53,6 +54,7 @@ local _tactics = {
 	queryCount = 0,
 	bestPosition = nil,
 	bestScore = 0.0,
+	objectiveElapsedMs = 0,
 	lastBurstAtMs = -1,
 	deadFriendlyPublished = false,
 	smokePrinted = false,
@@ -137,6 +139,15 @@ local function _InfluenceColor(value, positiveSpec, negativeSpec)
 		_Lerp(zero[4], target[4], amount))
 end
 
+local function _ColorFromSpec(spec)
+	spec = spec or _influencePalette.zero
+	return ColourValue(
+		tonumber(spec[1]) or 0.0,
+		tonumber(spec[2]) or 0.0,
+		tonumber(spec[3]) or 0.0,
+		tonumber(spec[4]) or 1.0)
+end
+
 local function _GetAgentId(agent)
 	if agent == nil then return -1 end
 	if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -190,6 +201,12 @@ local function _HasCppTactics()
 		and ObjectManager.publishTacticalEvent ~= nil
 		and ObjectManager.rebuildTacticalDangerLayer ~= nil
 		and ObjectManager.findBestTacticalQueryPosition ~= nil
+end
+
+local function _HasCppInfluenceVisual()
+	return _HasCppTactics()
+		and ObjectManager.rebuildTacticalInfluenceLayerDebugVisual ~= nil
+		and ObjectManager.setTacticalInfluenceDebugVisible ~= nil
 end
 
 local function _ShouldRunObjectiveAndQuery(config)
@@ -414,6 +431,9 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	_tactics.dangerCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("danger")
 	_tactics.lastCellWrites = writes
 	_tactics.cppEventCount = ObjectManager:getTacticalEventCount()
+	if _ReadBool(config, "drawDangerLayer", false) then
+		_RebuildCppInfluenceLayerVisual("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
+	end
 end
 
 local function _UpdateTeamAreas(deltaTimeInMillis)
@@ -442,6 +462,9 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 
 	_tactics.teamCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("team")
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
+	if _ReadBool(config, "drawTeamLayer", true) then
+		_RebuildCppInfluenceLayerVisual("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
+	end
 end
 
 local function _FindObjectiveCenter()
@@ -460,7 +483,7 @@ local function _FindObjectiveCenter()
 	return _agents[1] ~= nil and _agents[1]:GetPosition() or Vector3(0, 0, 0)
 end
 
-local function _UpdateObjectiveAndQuery()
+local function _UpdateObjectiveAndQuery(deltaTimeInMillis)
 	if not _HasCppTactics() then
 		return
 	end
@@ -469,6 +492,12 @@ local function _UpdateObjectiveAndQuery()
 	if not _ShouldRunObjectiveAndQuery(config) then
 		return
 	end
+	local intervalMs = _ReadNumber(config, "objectiveUpdateIntervalMs", _ReadNumber(config, "teamUpdateIntervalMs", 500))
+	_tactics.objectiveElapsedMs = _tactics.objectiveElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
+	if _tactics.objectiveElapsedMs < intervalMs then
+		return
+	end
+	_tactics.objectiveElapsedMs = 0
 	local center = _ProjectToNav(_FindObjectiveCenter())
 	_tactics.lastCellWrites = _tactics.lastCellWrites + ObjectManager:rebuildTacticalObjectiveLayer(
 		center,
@@ -486,6 +515,9 @@ local function _UpdateObjectiveAndQuery()
 		_ReadString(config, "tacticalQueryType", "support"),
 		_tactics.bestPosition)
 	_tactics.queryCount = ObjectManager:getTacticalInfluenceQueryCount()
+	if _ReadBool(config, "drawObjectiveLayer", false) then
+		_RebuildCppInfluenceLayerVisual("objective", 0.32, _influencePalette.objective, _influencePalette.negative, false)
+	end
 end
 
 local function _DrawTacticEvents()
@@ -549,6 +581,31 @@ local function _GetDrawCellLimit(config)
 	return math.max(1, limit)
 end
 
+_RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
+	if not _HasCppInfluenceVisual() then
+		return false
+	end
+	local config = _GetConfig()
+	local mapConfig = config.influenceMap or {}
+	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
+	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	ObjectManager:rebuildTacticalInfluenceLayerDebugVisual(
+		layerName,
+		y,
+		_ColorFromSpec(positiveSpec),
+		_ColorFromSpec(_influencePalette.zero),
+		_ColorFromSpec(negativeSpec),
+		_colors.grid,
+		threshold,
+		_GetDrawCellLimit(config),
+		drawNeutral,
+		_ReadBool(config, "projectInfluenceToNav", true),
+		_ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9),
+		"default")
+	return true
+end
+
 local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	if not _drawTactics or not _HasCppTactics() then
 		return
@@ -563,6 +620,22 @@ local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, 
 	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
 	local queryThreshold = drawNeutral and 0.0 or threshold
 	local maxCells = _GetDrawCellLimit(config)
+	if ObjectManager.drawTacticalInfluenceLayer ~= nil then
+		ObjectManager:drawTacticalInfluenceLayer(
+			layerName,
+			y,
+			_ColorFromSpec(positiveSpec),
+			_ColorFromSpec(_influencePalette.zero),
+			_ColorFromSpec(negativeSpec),
+			_colors.grid,
+			threshold,
+			maxCells,
+			drawNeutral,
+			_ReadBool(config, "projectInfluenceToNav", true),
+			_ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9),
+			"default")
+		return
+	end
 	local count = ObjectManager:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, maxCells)
 	for index = 1, count do
 		local pos = ObjectManager:getTacticalInfluenceLayerDebugCellPosition(layerName, index, queryThreshold)
@@ -573,6 +646,14 @@ end
 
 local function _DrawCppInfluenceMap()
 	local config = _GetConfig()
+	local visible = _drawTactics
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _ReadBool(config, "drawInSmoke", false) ~= true then
+		visible = false
+	end
+	if _HasCppInfluenceVisual() then
+		ObjectManager:setTacticalInfluenceDebugVisible(visible)
+		return
+	end
 	if _ReadBool(config, "drawDangerLayer", false) then
 		_DrawCppInfluenceLayer("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
 	end
@@ -809,6 +890,7 @@ function Sandbox_Initialize()
 
 	_tactics.dangerElapsedMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)
 	_tactics.teamElapsedMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
+	_tactics.objectiveElapsedMs = _ReadNumber(config, "objectiveUpdateIntervalMs", _ReadNumber(config, "teamUpdateIntervalMs", 500))
 	_PublishScriptedBurst(true)
 	_RefreshPanel()
 end
@@ -826,7 +908,7 @@ function Sandbox_Update(deltaTimeInMillis)
 	_PublishScriptedBurst(false)
 	_UpdateDangerousAreas(deltaTimeInMillis)
 	_UpdateTeamAreas(deltaTimeInMillis)
-	_UpdateObjectiveAndQuery()
+	_UpdateObjectiveAndQuery(deltaTimeInMillis)
 	_UpdateTacticalAgent(deltaTimeInMillis)
 	_DrawAgents()
 	_DrawCppInfluenceMap()

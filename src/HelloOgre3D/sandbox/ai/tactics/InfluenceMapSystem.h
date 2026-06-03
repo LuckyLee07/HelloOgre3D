@@ -43,6 +43,11 @@ public:
 	Ogre::Vector3 FindBestPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
 
 	const Stats& GetStats() const { return m_stats; }
+	int GetWidth() const { return m_width; }
+	int GetHeight() const { return m_height; }
+	float GetCellSize() const { return m_cellSize; }
+	Ogre::Vector3 GetCellCenter(int x, int z) const;
+	float GetLayerCellValue(const std::string& layerName, int x, int z) const;
 	int GetLayerActiveCellCount(const std::string& layerName) const;
 	int GetLayerCellWriteCount(const std::string& layerName) const;
 	int GetLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
@@ -69,7 +74,6 @@ private:
 	void ResizeLayer(Layer& layer);
 	bool WorldToCell(const Ogre::Vector3& position, int& outX, int& outZ) const;
 	int GetCellIndex(int x, int z) const;
-	Ogre::Vector3 GetCellCenter(int x, int z) const;
 	float ReadCell(const Layer& layer, int x, int z) const;
 	void RecalculateStats();
 

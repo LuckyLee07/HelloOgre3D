@@ -7,12 +7,14 @@
 #include <unordered_map>
 #include "OISKeyboard.h"
 #include "GameDefine.h"
+#include "OgreColourValue.h"
 #include "OgreString.h"
 #include "OgreVector3.h"
 #include "SandboxServices.h"
 
 namespace Ogre
 {
+	class ManualObject;
 	class SceneNode;
 }
 class BaseObject;
@@ -110,6 +112,10 @@ public:
 	int getTacticalInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
 	Ogre::Vector3 getTacticalInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
 	float getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
+	int drawTacticalInfluenceLayer(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+	int rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+	void setTacticalInfluenceDebugVisible(bool visible);
+	void clearTacticalInfluenceDebugVisuals();
 	int getTacticalInfluenceActiveCellCount() const;
 	int getTacticalInfluenceCellWriteCount() const;
 	int getTacticalInfluenceQueryCount() const;
@@ -146,6 +152,32 @@ private:
 	bool realRemoveObject(BaseObject* pObject);
 
 private:
+	struct TacticalInfluenceDrawProjection
+	{
+		TacticalInfluenceDrawProjection()
+			: resolved(false)
+			, valid(false)
+			, position(Ogre::Vector3::ZERO)
+		{
+		}
+
+		bool resolved;
+		bool valid;
+		Ogre::Vector3 position;
+	};
+
+	struct TacticalInfluenceDebugVisual
+	{
+		TacticalInfluenceDebugVisual()
+			: node(nullptr)
+			, manualObject(nullptr)
+		{
+		}
+
+		Ogre::SceneNode* node;
+		Ogre::ManualObject* manualObject;
+	};
+
 	unsigned int m_objIndex;
 	unsigned int getNextObjId() { return ++m_objIndex; }
 
@@ -165,6 +197,10 @@ private:
 	AgentPerceptionSystem* m_agentPerceptionSystem;
 	TeamBlackboardService* m_teamBlackboardService;
 	TacticalQueryService* m_tacticalQueryService;
+	std::string m_tacticalInfluenceDrawProjectionKey;
+	std::vector<TacticalInfluenceDrawProjection> m_tacticalInfluenceDrawProjectionCache;
+	std::unordered_map<std::string, TacticalInfluenceDebugVisual> m_tacticalInfluenceDebugVisuals;
+	bool m_tacticalInfluenceDebugVisible;
 	SandboxServices m_services;
 }; //tolua_exports
 
