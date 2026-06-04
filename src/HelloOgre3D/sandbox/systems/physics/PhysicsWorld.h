@@ -22,7 +22,7 @@ public:
 	void initilize();
 	void cleanup();
 
-	void stepWorld();
+	void stepWorld(float deltaSeconds);
 	void checkCollision();
 
 	void addRigidBody(btRigidBody* pRigidBody);

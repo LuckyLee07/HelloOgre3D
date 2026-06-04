@@ -711,7 +711,7 @@ void GameManager::Update(int deltaMilliseconds)
 		H3D_PROFILE_SCOPE("PhysicsWorld::Step");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_pPhysicsWorld->stepWorld();
+		m_pPhysicsWorld->stepWorld(deltaMilliseconds / 1000.0f);
 		if (perfEnabled)
 			perfTiming.physicsMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}

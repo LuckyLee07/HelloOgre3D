@@ -420,7 +420,10 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 	drawDangerLayer = false,
 	drawTeamLayer = true,
 	drawNeutralCells = true,
-	projectInfluenceToNav = true,
+	-- 性能：关掉逐格 navMesh:FindClosestPoint 投影。影响图约 1540 格 × 每层 × 每 500ms 重建，
+	-- 投影会对每个格子做一次 navmesh 最近点查询，在平地上纯属多余，是 Sandbox17/18 周期性卡顿的主因。
+	-- 关掉后格子按网格 y 平铺绘制（平地视觉几乎无差别）。如需贴合地形再按需开启。
+	projectInfluenceToNav = false,
 	drawNavProjectionMaxDistance = 1.8,
 	influenceMap = {
 		minX = -32.0,
@@ -453,6 +456,8 @@ SamplePresets.chapter9_tactics_cpp.chapter9Tactics.influenceSpreadPasses = 2
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveEnabled = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryEnabled = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawObjectiveLayer = true
+-- 性能：错峰 objective 层重建，避免 team(500ms)与 objective 在同一帧重建影响图可视。
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveUpdateIntervalMs = 650
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawBestPosition = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryType = "support"
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryRadius = 24.0

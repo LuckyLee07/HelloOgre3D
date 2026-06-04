@@ -58,14 +58,22 @@ void PhysicsWorld::cleanup()
 		delete m_pBroadPhase;
 }
 
-void PhysicsWorld::stepWorld()
+void PhysicsWorld::stepWorld(float deltaSeconds)
 {
-	float timeStep = 1.0f / 30.0f; // 通常情况下，时间步长设置为1/30秒，即每秒30帧
-	int maxSubSteps = 1;         // 最大子步数，用于处理在长时间步长中的物理精度问题
-	float fixedTimeStep = 1.0f / 30.0f; // 每个子步的固定时间长度，通常与timeStep相同
+	// 用真实帧时间推进物理，与循环频率(60/30Hz)解耦。
+	// 此前硬编码 timeStep=1/30 且每个逻辑帧调用一次：60Hz 循环下物理以 2× 真实速度流逝，
+	// 导致所有 agent 实际移动是意图速度的 2 倍（脚底打滑/步子过大的真正根因）。
+	if (deltaSeconds <= 0.0f)
+		deltaSeconds = 1.0f / 60.0f;
 
-	//m_pDynamicsWorld->stepSimulation(1.0f / 30.0f, 1, 1.0f / 30.0f);
-	m_pDynamicsWorld->stepSimulation(timeStep, maxSubSteps, fixedTimeStep);
+	const float fixedTimeStep = 1.0f / 60.0f;
+	// maxSubSteps 需 >= deltaSeconds/fixedTimeStep，否则 Bullet 会"丢时间"导致物理变慢；
+	// 上限用于防止大停顿时子步爆炸（spiral of death）。
+	int maxSubSteps = (int)(deltaSeconds / fixedTimeStep) + 2;
+	if (maxSubSteps < 2) maxSubSteps = 2;
+	if (maxSubSteps > 16) maxSubSteps = 16;
+
+	m_pDynamicsWorld->stepSimulation(deltaSeconds, maxSubSteps, fixedTimeStep);
 
 	//碰撞检测相关逻辑处理
 	this->checkCollision();
