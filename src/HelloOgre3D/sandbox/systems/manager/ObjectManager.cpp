@@ -715,6 +715,26 @@ void ObjectManager::configureTacticalInfluence(float minX, float maxX, float min
 	clearTacticalInfluenceDebugVisuals();
 }
 
+void ObjectManager::configureTacticalInfluenceFromNavMesh(const std::string& navMeshName, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset)
+{
+	if (m_tacticalQueryService == nullptr)
+		return;
+
+	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
+	NavigationMesh* navMesh = getNavigationMesh(navMeshName);
+	if (navMesh != nullptr)
+	{
+		std::vector<float> verts;
+		std::vector<int> indices;
+		if (navMesh->GetWalkableTriangles(verts, indices))
+			influenceMap->BuildFromNavMesh(verts, indices, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
+	}
+
+	m_tacticalInfluenceDrawProjectionKey.clear();
+	m_tacticalInfluenceDrawProjectionCache.clear();
+	clearTacticalInfluenceDebugVisuals();
+}
+
 void ObjectManager::clearTacticalInfluenceLayer(const std::string& layerName)
 {
 	if (m_tacticalQueryService != nullptr)
@@ -946,75 +966,27 @@ int ObjectManager::drawTacticalInfluenceLayer(const std::string& layerName, floa
 	if (debugDrawer == nullptr)
 		return 0;
 
-	NavigationMesh* navMesh = projectToNav ? getNavigationMesh(navMeshName) : nullptr;
-	const int width = influenceMap->GetWidth();
-	const int height = influenceMap->GetHeight();
-	const int totalCells = width * height;
+	// 3D 影响图：直接画 used cell 的真实 3D 位置（cell 已贴在可走面上），不再投影。
+	(void)projectToNav;
+	(void)maxProjectionDistance;
+	(void)navMeshName;
 	const float cellSize = influenceMap->GetCellSize();
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
-	const float maxDistanceSq = maxProjectionDistance > 0.0f ? maxProjectionDistance * maxProjectionDistance : 0.0f;
 	int drawn = 0;
 
-	if (projectToNav && navMesh != nullptr)
+	std::vector<Ogre::Vector3> cellPositions;
+	std::vector<float> cellValues;
+	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
+	for (size_t i = 0; i < cellPositions.size(); ++i)
 	{
-		const Ogre::Vector3 firstCell = influenceMap->GetCellCenter(0, 0);
-		const Ogre::Vector3 lastCell = influenceMap->GetCellCenter(width - 1, height - 1);
-		std::ostringstream key;
-		key << navMeshName << "|"
-			<< width << "x" << height << "|"
-			<< cellSize << "|"
-			<< maxProjectionDistance << "|"
-			<< firstCell.x << "," << firstCell.z << "|"
-			<< lastCell.x << "," << lastCell.z;
-		const std::string projectionKey = key.str();
-		if (projectionKey != m_tacticalInfluenceDrawProjectionKey || static_cast<int>(m_tacticalInfluenceDrawProjectionCache.size()) != totalCells)
-		{
-			m_tacticalInfluenceDrawProjectionKey = projectionKey;
-			m_tacticalInfluenceDrawProjectionCache.assign(totalCells, TacticalInfluenceDrawProjection());
-		}
-	}
-
-	for (int z = 0; z < height; ++z)
-	{
-		for (int x = 0; x < width; ++x)
-		{
-			const float value = influenceMap->GetLayerCellValue(layerName, x, z);
-			if (!drawNeutralCells && std::fabs(value) < safeThreshold)
-				continue;
-
-			Ogre::Vector3 drawPosition = influenceMap->GetCellCenter(x, z);
-			if (projectToNav && navMesh != nullptr)
-			{
-				const int projectionIndex = z * width + x;
-				TacticalInfluenceDrawProjection& projection = m_tacticalInfluenceDrawProjectionCache[projectionIndex];
-				if (!projection.resolved)
-				{
-					const Ogre::Vector3 navPosition = navMesh->FindClosestPoint(drawPosition);
-					const float dx = navPosition.x - drawPosition.x;
-					const float dz = navPosition.z - drawPosition.z;
-					projection.resolved = true;
-					projection.valid = maxDistanceSq <= 0.0f || dx * dx + dz * dz <= maxDistanceSq;
-					projection.position = navPosition;
-				}
-				if (!projection.valid)
-					continue;
-				drawPosition = Ogre::Vector3(projection.position.x, projection.position.y + yOffset, projection.position.z);
-			}
-			else
-			{
-				drawPosition.y = yOffset;
-			}
-
-			const Ogre::ColourValue color = BlendInfluenceColor(value, positiveValue, zeroValue, negativeValue);
-			debugDrawer->drawSquare(drawPosition, cellSize, color, true);
-			drawPosition.y += 0.01f;
-			debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
-
-			++drawn;
-			if (drawn >= limit)
-				return drawn;
-		}
+		Ogre::Vector3 drawPosition = cellPositions[i];
+		drawPosition.y += yOffset;
+		const Ogre::ColourValue color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
+		debugDrawer->drawSquare(drawPosition, cellSize, color, true);
+		drawPosition.y += 0.01f;
+		debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
+		++drawn;
 	}
 	return drawn;
 }
@@ -1039,76 +1011,25 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 		Ogre::ColourValue color;
 	};
 
-	NavigationMesh* navMesh = projectToNav ? getNavigationMesh(navMeshName) : nullptr;
-	const int width = influenceMap->GetWidth();
-	const int height = influenceMap->GetHeight();
-	const int totalCells = width * height;
+	(void)projectToNav;
+	(void)maxProjectionDistance;
+	(void)navMeshName;
 	const float cellSize = influenceMap->GetCellSize();
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
-	const float maxDistanceSq = maxProjectionDistance > 0.0f ? maxProjectionDistance * maxProjectionDistance : 0.0f;
 	std::vector<DrawCell> cells;
-	cells.reserve(std::min(totalCells, limit));
 
-	if (projectToNav && navMesh != nullptr)
+	// 3D：直接收集 used cell 的真实 3D 中心 + 值（cell 已贴在可走面上），按 yOffset 抬一点点，不再投影。
+	std::vector<Ogre::Vector3> cellPositions;
+	std::vector<float> cellValues;
+	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
+	cells.reserve(cellPositions.size());
+	for (size_t i = 0; i < cellPositions.size(); ++i)
 	{
-		const Ogre::Vector3 firstCell = influenceMap->GetCellCenter(0, 0);
-		const Ogre::Vector3 lastCell = influenceMap->GetCellCenter(width - 1, height - 1);
-		std::ostringstream key;
-		key << navMeshName << "|"
-			<< width << "x" << height << "|"
-			<< cellSize << "|"
-			<< maxProjectionDistance << "|"
-			<< firstCell.x << "," << firstCell.z << "|"
-			<< lastCell.x << "," << lastCell.z;
-		const std::string projectionKey = key.str();
-		if (projectionKey != m_tacticalInfluenceDrawProjectionKey || static_cast<int>(m_tacticalInfluenceDrawProjectionCache.size()) != totalCells)
-		{
-			m_tacticalInfluenceDrawProjectionKey = projectionKey;
-			m_tacticalInfluenceDrawProjectionCache.assign(totalCells, TacticalInfluenceDrawProjection());
-		}
-	}
-
-	for (int z = 0; z < height; ++z)
-	{
-		for (int x = 0; x < width; ++x)
-		{
-			const float value = influenceMap->GetLayerCellValue(layerName, x, z);
-			if (!drawNeutralCells && std::fabs(value) < safeThreshold)
-				continue;
-
-			Ogre::Vector3 drawPosition = influenceMap->GetCellCenter(x, z);
-			if (projectToNav && navMesh != nullptr)
-			{
-				const int projectionIndex = z * width + x;
-				TacticalInfluenceDrawProjection& projection = m_tacticalInfluenceDrawProjectionCache[projectionIndex];
-				if (!projection.resolved)
-				{
-					const Ogre::Vector3 navPosition = navMesh->FindClosestPoint(drawPosition);
-					const float dx = navPosition.x - drawPosition.x;
-					const float dz = navPosition.z - drawPosition.z;
-					projection.resolved = true;
-					projection.valid = maxDistanceSq <= 0.0f || dx * dx + dz * dz <= maxDistanceSq;
-					projection.position = navPosition;
-				}
-				if (!projection.valid)
-					continue;
-				drawPosition = Ogre::Vector3(projection.position.x, projection.position.y + yOffset, projection.position.z);
-			}
-			else
-			{
-				drawPosition.y = yOffset;
-			}
-
-			DrawCell cell;
-			cell.position = drawPosition;
-			cell.color = BlendInfluenceColor(value, positiveValue, zeroValue, negativeValue);
-			cells.push_back(cell);
-			if (static_cast<int>(cells.size()) >= limit)
-				break;
-		}
-		if (static_cast<int>(cells.size()) >= limit)
-			break;
+		DrawCell cell;
+		cell.position = Ogre::Vector3(cellPositions[i].x, cellPositions[i].y + yOffset, cellPositions[i].z);
+		cell.color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
+		cells.push_back(cell);
 	}
 
 	TacticalInfluenceDebugVisual& visual = m_tacticalInfluenceDebugVisuals[layerName];

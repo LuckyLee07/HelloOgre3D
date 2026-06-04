@@ -77,6 +77,7 @@ public:
 	std::string buildTeamBlackboardDebugSummary() const;
 	void clearTacticalInfluence();
 	void configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
+	void configureTacticalInfluenceFromNavMesh(const std::string& navMeshName, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset);
 	void clearTacticalInfluenceLayer(const std::string& layerName);
 	void setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia);
 	int addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);

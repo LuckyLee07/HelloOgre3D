@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Wed Jun  3 22:35:16 2026.
+** Generated automatically by tolua++-1.0.92 on Thu Jun  4 20:19:02 2026.
 */
 
 #ifndef __cplusplus
@@ -7859,6 +7859,48 @@ static int tolua_SandboxToLua_ObjectManager_configureTacticalInfluence00(lua_Sta
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: configureTacticalInfluenceFromNavMesh of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_configureTacticalInfluenceFromNavMesh00
+static int tolua_SandboxToLua_ObjectManager_configureTacticalInfluenceFromNavMesh00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,6,&tolua_err) || !tolua_isusertype(tolua_S,6,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,7,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  const std::string navMeshName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  float cellWidth = ((float)  tolua_tonumber(tolua_S,3,0));
+  float cellHeight = ((float)  tolua_tonumber(tolua_S,4,0));
+  const Ogre::Vector3* boundaryMinOffset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+  const Ogre::Vector3* boundaryMaxOffset = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,6,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTacticalInfluenceFromNavMesh'", NULL);
+#endif
+  {
+   self->configureTacticalInfluenceFromNavMesh(navMeshName,cellWidth,cellHeight,*boundaryMinOffset,*boundaryMaxOffset);
+   tolua_pushcppstring(tolua_S,(const char*)navMeshName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTacticalInfluenceFromNavMesh'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: clearTacticalInfluenceLayer of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00
 static int tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00(lua_State* tolua_S)
@@ -13237,6 +13279,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"buildTeamBlackboardDebugSummary",tolua_SandboxToLua_ObjectManager_buildTeamBlackboardDebugSummary00);
    tolua_function(tolua_S,"clearTacticalInfluence",tolua_SandboxToLua_ObjectManager_clearTacticalInfluence00);
    tolua_function(tolua_S,"configureTacticalInfluence",tolua_SandboxToLua_ObjectManager_configureTacticalInfluence00);
+   tolua_function(tolua_S,"configureTacticalInfluenceFromNavMesh",tolua_SandboxToLua_ObjectManager_configureTacticalInfluenceFromNavMesh00);
    tolua_function(tolua_S,"clearTacticalInfluenceLayer",tolua_SandboxToLua_ObjectManager_clearTacticalInfluenceLayer00);
    tolua_function(tolua_S,"setTacticalInfluenceLayerOptions",tolua_SandboxToLua_ObjectManager_setTacticalInfluenceLayerOptions00);
    tolua_function(tolua_S,"addTacticalInfluenceSource",tolua_SandboxToLua_ObjectManager_addTacticalInfluenceSource00);

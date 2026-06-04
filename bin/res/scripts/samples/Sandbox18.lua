@@ -235,12 +235,13 @@ local function _ConfigureCppTactics()
 	ObjectManager:clearTacticalInfluence()
 	ObjectManager:clearTacticalEvents()
 	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
-	ObjectManager:configureTacticalInfluence(
-		_ReadNumber(mapConfig, "minX", -32.0),
-		_ReadNumber(mapConfig, "maxX", 56.0),
-		_ReadNumber(mapConfig, "minZ", -8.0),
-		_ReadNumber(mapConfig, "maxZ", 62.0),
-		_ReadNumber(mapConfig, "cellSize", 4.0))
+	-- 3D 影响图：从 navmesh 几何体素化建图，cell 自动贴在可走面上（对齐 chapter-9）。
+	ObjectManager:configureTacticalInfluenceFromNavMesh(
+		"default",
+		_ReadNumber(mapConfig, "cellSize", 2.0),
+		_ReadNumber(mapConfig, "cellHeight", 1.0),
+		Vector3(0.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 0.0))
 	local falloff = _ReadNumber(config, "influenceFalloff", 0.2)
 	local inertia = _ReadNumber(config, "influenceInertia", 0.5)
 	ObjectManager:setTacticalInfluenceLayerOptions("danger", falloff, inertia)

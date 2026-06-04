@@ -397,6 +397,7 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 	showTacticsPanel = false,
 	drawAgentMarkers = false,
 	drawEventMarkers = false,
+	drawTargetRadius = true,
 	useCppEventSource = true,
 	scriptedEvents = false,
 	scriptedEventsInSmoke = true,
@@ -419,11 +420,16 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 	maxDrawCellsPerLayer = 0,
 	drawDangerLayer = false,
 	drawTeamLayer = true,
+	-- team 层网格绘制高度偏移（相对 navmesh 表面）。0.0 = 画在 navmesh 表面（对齐 chapter-9：网格在
+	-- navmesh 上、比 block 顶面略高 ~0.05、不共面所以不闪）。负值会把网格压到和 block 共面而 z-fighting，
+	-- 想真正零间隙贴地需要给材质加 depth_bias（见对话说明），那是比 chapter-9 更进一步的做法。
+	teamDrawYOffset = -0.03,
 	drawNeutralCells = true,
-	-- 性能：关掉逐格 navMesh:FindClosestPoint 投影。影响图约 1540 格 × 每层 × 每 500ms 重建，
-	-- 投影会对每个格子做一次 navmesh 最近点查询，在平地上纯属多余，是 Sandbox17/18 周期性卡顿的主因。
-	-- 关掉后格子按网格 y 平铺绘制（平地视觉几乎无差别）。如需贴合地形再按需开启。
-	projectInfluenceToNav = false,
+	-- 贴合地形：把每个格子投影到 navmesh 表面，使网格贴在 block 上（对齐 chapter-9 表现）。
+	-- 逐格 navMesh:FindClosestPoint 结果由 C++ 端 m_tacticalInfluenceDrawProjectionCache 缓存
+	-- （key=navmesh+网格尺寸+格坐标，整 sample 不变），只在首次重建逐格算一次，之后全走缓存，
+	-- 不构成周期性开销。多层地形必须开启，否则平铺的格子会浮在 block 上方。
+	projectInfluenceToNav = true,
 	drawNavProjectionMaxDistance = 1.8,
 	influenceMap = {
 		minX = -32.0,

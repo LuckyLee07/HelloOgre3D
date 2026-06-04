@@ -37,6 +37,10 @@ public:
 
 	bool RebuildDebugVisual();
 	Ogre::SceneNode* GetDebugNode() const;
+
+	// 提取 navmesh 可走面的三角面（detail mesh 顶点 + 索引），供 InfluenceMap 3D 体素化建图使用。
+	// outVerts 为 xyz 连续数组，outIndices 每 3 个构成一个三角。返回是否有三角。非 tolua 导出。
+	bool GetWalkableTriangles(std::vector<float>& outVerts, std::vector<int>& outIndices) const;
 	
 	static void DrawMeshTile(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile);
 	static void DrawMeshOutline(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile);

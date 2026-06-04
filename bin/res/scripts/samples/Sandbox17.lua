@@ -30,6 +30,7 @@ local _colors = {
 	bullet = ColourValue(1.0, 0.75, 0.15),
 	dead = ColourValue(0.85, 0.85, 0.85),
 	grid = ColourValue(0.0, 0.0, 0.0, 0.6),
+	targetRadius = ColourValue(1.0, 0.12, 0.12),
 }
 
 local _influencePalette = {
@@ -244,12 +245,13 @@ local function _ConfigureCppInfluenceDraw()
 	local config = _GetConfig()
 	local mapConfig = config.influenceMap or {}
 	ObjectManager:clearTacticalInfluence()
-	ObjectManager:configureTacticalInfluence(
-		_ReadNumber(mapConfig, "minX", -32.0),
-		_ReadNumber(mapConfig, "maxX", 56.0),
-		_ReadNumber(mapConfig, "minZ", -8.0),
-		_ReadNumber(mapConfig, "maxZ", 62.0),
-		_ReadNumber(mapConfig, "cellSize", 4.0))
+	-- 3D 影响图：从 navmesh 几何体素化建图，cell 自动贴在可走面上（对齐 chapter-9）。
+	ObjectManager:configureTacticalInfluenceFromNavMesh(
+		"default",
+		_ReadNumber(mapConfig, "cellSize", 2.0),
+		_ReadNumber(mapConfig, "cellHeight", 1.0),
+		Vector3(0.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 0.0))
 end
 
 local function _AddCppInfluenceSource(layerName, position, strength, radius)
@@ -554,7 +556,7 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
 	_MarkInfluenceDrawLayerDirty("team")
 	if _ReadBool(config, "drawTeamLayer", true) then
-		_RebuildCppInfluenceLayerVisual("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
+		_RebuildCppInfluenceLayerVisual("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", -0.05), _influencePalette.positive, _influencePalette.negative, true)
 	end
 end
 
@@ -656,7 +658,7 @@ local function _DrawInfluenceMap()
 		_DrawInfluenceLayer("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
 	end
 	if _ReadBool(config, "drawTeamLayer", true) then
-		_DrawInfluenceLayer("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
+		_DrawInfluenceLayer("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", -0.05), _influencePalette.positive, _influencePalette.negative, true)
 	end
 end
 
@@ -690,6 +692,24 @@ local function _DrawAgents()
 		local color = agent:GetTeamId() == 1 and _colors.team1 or _colors.team0
 		DebugDrawer:drawCircle(pos + Vector3(0, 0.16, 0), 1.2, 24, color, false)
 		DebugDrawer:drawLine(pos + Vector3(0, 0.2, 0), pos + Vector3(0, 3.0, 0), color)
+	end
+end
+
+-- 对齐 chapter-9 的 AgentUtilities_DrawTargetRadius：在每个 agent 的移动目标点画红色目标半径圈。
+local function _DrawTargetRadius()
+	local config = _GetConfig()
+	if _ReadBool(config, "drawTargetRadius", true) ~= true then
+		return
+	end
+	-- 红圈半径：对齐 chapter-9 的大红圈观感（chapter-9 战术 agent 目标半径较大）。可在 preset 调 targetRingRadius。
+	local ringRadius = _ReadNumber(config, "targetRingRadius", 4.0)
+	for _, agent in ipairs(_agents) do
+		if _IsAlive(agent) then
+			local target = agent:GetTarget()
+			if target ~= nil and ringRadius > 0.0 then
+				DebugDrawer:drawCircle(target + Vector3(0, 0.12, 0), ringRadius, 28, _colors.targetRadius, false)
+			end
+		end
 	end
 end
 
@@ -863,6 +883,7 @@ function Sandbox_Update(deltaTimeInMillis)
 	_UpdateDangerousAreas(deltaTimeInMillis)
 	_UpdateTeamAreas(deltaTimeInMillis)
 	_DrawAgents()
+	_DrawTargetRadius()
 	_DrawTacticEvents()
 	_DrawInfluenceMap()
 	if _panelElapsedMs >= 250 then

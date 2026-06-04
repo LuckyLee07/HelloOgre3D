@@ -171,6 +171,58 @@ void NavigationMesh::DrawMeshTile(Ogre::ManualObject& manualObject, const dtNavM
 	}
 }
 
+bool NavigationMesh::GetWalkableTriangles(std::vector<float>& outVerts, std::vector<int>& outIndices) const
+{
+	outVerts.clear();
+	outIndices.clear();
+	if (m_navMesh == NULL)
+		return false;
+
+	// 通过 const 指针调用，命中 dtNavMesh 的 public const 版 getTile/getMaxTiles。
+	const dtNavMesh* const navMesh = m_navMesh;
+
+	// 与 DrawMeshTile 相同的 detail-mesh 三角遍历，但收集到顶点/索引缓冲而非绘制。
+	for (int ti = 0; ti < navMesh->getMaxTiles(); ++ti)
+	{
+		const dtMeshTile* tile = navMesh->getTile(ti);
+		if (!tile || !tile->header)
+			continue;
+
+		for (int pi = 0; pi < tile->header->polyCount; ++pi)
+		{
+			const dtPoly* poly = &tile->polys[pi];
+			if (!poly || poly->vertCount < 3)
+				continue;
+			if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
+				continue;
+
+			const dtPolyDetail* pd = &tile->detailMeshes[pi];
+			if (!pd || pd->triCount <= 0)
+				continue;
+
+			for (int tri = 0; tri < pd->triCount; ++tri)
+			{
+				const unsigned char* td = &tile->detailTris[(pd->triBase + tri) * 4];
+				for (int corner = 0; corner < 3; ++corner)
+				{
+					const float* vertex = 0;
+					if (td[corner] < poly->vertCount)
+						vertex = &tile->verts[poly->verts[td[corner]] * 3];
+					else
+						vertex = &tile->detailVerts[(pd->vertBase + td[corner] - poly->vertCount) * 3];
+
+					outIndices.push_back(static_cast<int>(outVerts.size() / 3));
+					outVerts.push_back(vertex[0]);
+					outVerts.push_back(vertex[1]);
+					outVerts.push_back(vertex[2]);
+				}
+			}
+		}
+	}
+
+	return !outIndices.empty();
+}
+
 void NavigationMesh::DrawMeshOutline(Ogre::ManualObject& manualObject, const dtNavMesh& navMesh, const dtMeshTile& tile)
 {
 	(void)navMesh;
