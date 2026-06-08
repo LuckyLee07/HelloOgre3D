@@ -154,6 +154,60 @@ local function is_truthy_env(name)
 	return value == "1" or value == "true" or value == "TRUE" or value == "on" or value == "ON"
 end
 
+local function get_premake_script_dir()
+	local script_path = _MAIN_SCRIPT or _SCRIPT or "premake.lua"
+	local script_dir = path.getdirectory(script_path)
+	if script_dir == nil or script_dir == "" then
+		return "."
+	end
+	return script_dir
+end
+
+local function premake_relative_path(relative_path)
+	return path.join(get_premake_script_dir(), relative_path)
+end
+
+local function read_all(file_path)
+	local file = io.open(file_path, "rb")
+	if file == nil then
+		error("Unable to read file: " .. file_path)
+	end
+	local contents = file:read("*a")
+	file:close()
+	return contents
+end
+
+local function write_if_changed(file_path, contents)
+	local existing = nil
+	local file = io.open(file_path, "rb")
+	if file ~= nil then
+		existing = file:read("*a")
+		file:close()
+	end
+
+	if existing == contents then
+		return
+	end
+
+	file = io.open(file_path, "wb")
+	if file == nil then
+		error("Unable to write file: " .. file_path)
+	end
+	file:write(contents)
+	file:close()
+end
+
+local function configure_ois_prereqs_header()
+	local source_path = premake_relative_path("../src/external/ois/includes/OISPrereqs.h.in")
+	local target_path = premake_relative_path("../src/external/ois/includes/OISPrereqs.h")
+	local contents = read_all(source_path)
+	contents = contents:gsub("@OIS_MAJOR_VERSION@", "1")
+	contents = contents:gsub("@OIS_MINOR_VERSION@", "5")
+	contents = contents:gsub("@OIS_PATCH_VERSION@", "0")
+	contents = contents:gsub("@OIS_SOVERSION@", "1.5.0")
+	write_if_changed(target_path, contents)
+end
+
 function IsTracyEnabled()
 	return _OPTIONS["with-tracy"] ~= nil or is_truthy_env("TRACY_ENABLE") or is_truthy_env("ENABLE_TRACY")
 end
@@ -164,6 +218,8 @@ end
 
 HELLO_TRACY_ENABLED = IsTracyEnabled()
 HELLO_FAIRYGUI_ENABLED = IsFairyGuiEnabled()
+
+configure_ois_prereqs_header()
 
 local _project = project
 project = function(...)
