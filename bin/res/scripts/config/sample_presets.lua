@@ -473,6 +473,25 @@ SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventInterv
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.deadFriendlyDelayMs = 60000
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.dangerPerspectiveTeamId = 1
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamPositiveTeamId = 1
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.traceRecentEventLimit = 16
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.movementProfile = {
+	enabled = true,
+	maxSpeed = 3.0,
+	maxForce = 1000.0,
+	mass = 90.7,
+	predictionTime = 0.5,
+	followWeight = 1.5,
+	stayWeight = 0.4,
+	avoidAgentWeight = 1.0,
+	avoidObjectWeight = 2.0,
+	speedWeight = 7.0,
+	accelerationBlend = 0.4,
+	forwardBlend = 0.2,
+	forceScale = 1.04,
+	slowDamping = 0.91,
+	minSteeringLengthSq = 0.1,
+	minForwardVelocityLengthSq = 0.1,
+}
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamUseLegacyPointSpread = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamFalloff = 0.2
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamInertia = 0.5
@@ -489,6 +508,7 @@ SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.projectInfluenceToN
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.maxDrawCellsPerLayer = 0
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawNeutralCells = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.targetRingRadius = 4.0
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.targetRingMode = "pursuedAgent"
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.influenceMap.cellSize = 2.0
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.influenceMap.cellHeight = 1.0
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.influenceMap.boundaryMinOffset = { 0.18, 0.0, 0.35 }

@@ -112,6 +112,55 @@ def get_agent_position(agent):
     return 0.0, 0.0, 0.0
 
 
+def as_number(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def sorted_dict_delta(modern, legacy):
+    modern = modern if isinstance(modern, dict) else {}
+    legacy = legacy if isinstance(legacy, dict) else {}
+    keys = sorted(set(modern.keys()) | set(legacy.keys()))
+    result = {}
+    for key in keys:
+        old_value = int(as_number(legacy.get(key), 0))
+        new_value = int(as_number(modern.get(key), 0))
+        if old_value != new_value:
+            result[key] = {
+                "old": old_value,
+                "new": new_value,
+                "delta": new_value - old_value,
+            }
+    return result
+
+
+def expected_motion_for_action(action):
+    return action in ("move", "pursue", "randomMove", "flee")
+
+
+def is_move_state(state_name):
+    state_name = str(state_name or "")
+    return "run" in state_name or "forward" in state_name or "move" in state_name
+
+
+def is_idle_state(state_name):
+    state_name = str(state_name or "")
+    return "idle" in state_name
+
+
+def classify_action_state_mismatch(agent):
+    action = agent.get("legacyAction") or (agent.get("extra") or {}).get("legacyAction")
+    state_name = agent.get("state")
+    speed = as_number(agent.get("speed"), 0.0)
+    if expected_motion_for_action(action) and speed > 0.25 and not is_move_state(state_name):
+        return "moving_action_visual_idle"
+    if action in ("idle", "shoot", "reload") and speed < 0.25 and not is_idle_state(state_name):
+        return "idle_action_visual_moving"
+    return None
+
+
 def compare_traces(capture_dir):
     legacy_records = read_trace(capture_dir / "legacy_trace.jsonl")
     modern_records = read_trace(capture_dir / "modern_trace.jsonl")
@@ -132,8 +181,11 @@ def compare_traces(capture_dir):
             if isinstance(agent, dict)
         }
         agent_deltas = []
+        action_state_mismatches = []
         max_distance = 0.0
+        max_speed_delta = 0.0
         distance_sum = 0.0
+        speed_delta_sum = 0.0
         distance_count = 0
         for index, legacy_agent in legacy_agents.items():
             modern_agent = modern_agents.get(index)
@@ -145,6 +197,21 @@ def compare_traces(capture_dir):
             max_distance = max(max_distance, xz_distance)
             distance_sum += xz_distance
             distance_count += 1
+            old_speed = as_number(legacy_agent.get("speed"), 0.0)
+            new_speed = as_number(modern_agent.get("speed"), 0.0)
+            speed_delta = new_speed - old_speed
+            max_speed_delta = max(max_speed_delta, abs(speed_delta))
+            speed_delta_sum += speed_delta
+            action_state_mismatch = classify_action_state_mismatch(modern_agent)
+            if action_state_mismatch is not None:
+                action_state_mismatches.append({
+                    "index": index,
+                    "id": modern_agent.get("id"),
+                    "action": modern_agent.get("legacyAction") or (modern_agent.get("extra") or {}).get("legacyAction"),
+                    "state": modern_agent.get("state"),
+                    "speed": modern_agent.get("speed"),
+                    "reason": action_state_mismatch,
+                })
             agent_deltas.append({
                 "index": index,
                 "posDelta": [
@@ -155,11 +222,19 @@ def compare_traces(capture_dir):
                 "xzDistance": round(xz_distance, 3),
                 "oldSpeed": legacy_agent.get("speed"),
                 "newSpeed": modern_agent.get("speed"),
+                "speedDelta": round(speed_delta, 3),
+                "newState": modern_agent.get("state"),
                 "newAction": modern_agent.get("legacyAction") or (modern_agent.get("extra") or {}).get("legacyAction"),
             })
 
         legacy_tactics = legacy.get("tactics") or {}
         modern_tactics = modern.get("tactics") or {}
+        legacy_event_types = legacy_tactics.get("eventTypes") if isinstance(legacy_tactics.get("eventTypes"), dict) else {}
+        modern_event_types = modern_tactics.get("eventTypes") if isinstance(modern_tactics.get("eventTypes"), dict) else {}
+        legacy_event_pairs = legacy_tactics.get("eventPairs") if isinstance(legacy_tactics.get("eventPairs"), dict) else {}
+        modern_event_pairs = modern_tactics.get("eventPairs") if isinstance(modern_tactics.get("eventPairs"), dict) else {}
+        event_type_delta = sorted_dict_delta(modern_event_types, legacy_event_types)
+        event_pair_delta = sorted_dict_delta(modern_event_pairs, legacy_event_pairs)
         samples.append({
             "sampleIndex": sample_index,
             "old_tMs": legacy.get("tMs"),
@@ -167,9 +242,22 @@ def compare_traces(capture_dir):
             "frameDelta": (modern.get("frame") or 0) - (legacy.get("frame") or 0),
             "maxAgentXzDistance": round(max_distance, 3),
             "avgAgentXzDistance": round(distance_sum / max(distance_count, 1), 3),
+            "maxAbsSpeedDelta": round(max_speed_delta, 3),
+            "avgSpeedDelta": round(speed_delta_sum / max(distance_count, 1), 3),
             "agentDeltas": agent_deltas,
             "oldEvents": legacy_tactics.get("events"),
             "newEvents": modern_tactics.get("events"),
+            "eventDelta": (modern_tactics.get("events") or 0) - (legacy_tactics.get("events") or 0),
+            "oldSeenEnemies": legacy_tactics.get("seenEnemies"),
+            "newSeenEnemies": modern_tactics.get("seenEnemies") or modern_tactics.get("legacySeenEnemies"),
+            "eventTypesDelta": event_type_delta,
+            "eventPairsDeltaTop": dict(sorted(
+                event_pair_delta.items(),
+                key=lambda item: abs(item[1]["delta"]),
+                reverse=True)[:12]),
+            "modernEventTypes": modern_event_types,
+            "modernRecentEvents": modern_tactics.get("recentEvents") or [],
+            "actionStateMismatches": action_state_mismatches,
             "newDangerCells": modern_tactics.get("dangerCells"),
             "newTeamCells": modern_tactics.get("teamCells"),
         })
@@ -184,6 +272,31 @@ def compare_traces(capture_dir):
         "last_legacy_tMs": legacy_samples[-1].get("tMs") if legacy_samples else None,
         "last_modern_tMs": modern_samples[-1].get("tMs") if modern_samples else None,
         "samples": samples,
+    }
+
+
+def build_summary(visual_stats, trace_stats):
+    samples = trace_stats.get("samples", [])
+    worst_position = max(samples, key=lambda item: item.get("maxAgentXzDistance") or 0.0, default=None)
+    worst_speed = max(samples, key=lambda item: item.get("maxAbsSpeedDelta") or 0.0, default=None)
+    first_event_delta = next((item for item in samples if item.get("eventDelta")), None)
+    mismatch_count = sum(len(item.get("actionStateMismatches") or []) for item in samples)
+    worst_visual = max(visual_stats, key=lambda item: item.get("changed_pixels_world_pct") or 0.0, default=None)
+    worst_red = max(visual_stats, key=lambda item: abs(item.get("red_delta_pct_new_vs_old") or 0.0), default=None)
+    worst_blue = max(visual_stats, key=lambda item: abs(item.get("blue_delta_pct_new_vs_old") or 0.0), default=None)
+
+    return {
+        "worstPositionSample": worst_position,
+        "worstSpeedSample": worst_speed,
+        "firstEventDeltaSample": first_event_delta,
+        "actionStateMismatchCount": mismatch_count,
+        "worstVisualSample": worst_visual,
+        "worstRedDeltaSample": worst_red,
+        "worstBlueDeltaSample": worst_blue,
+        "observationGaps": {
+            "legacyEventTypes": not any((item.get("eventTypesDelta") or {}) for item in samples),
+            "legacyEventPairs": not any((item.get("eventPairsDeltaTop") or {}) for item in samples),
+        },
     }
 
 
@@ -222,26 +335,32 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture-dir", required=True)
     parser.add_argument("--capture-ms", nargs="*", default=[])
+    parser.add_argument("--trace-only", action="store_true")
     args = parser.parse_args()
 
     capture_dir = Path(args.capture_dir)
     capture_times = parse_capture_times(args.capture_ms)
     if not capture_times:
         capture_times = discover_capture_times(capture_dir)
-    if not capture_times:
+    if not capture_times and not args.trace_only:
         raise SystemExit("no capture images found in {}".format(capture_dir))
 
     analysis_dir = capture_dir / "analysis"
     analysis_dir.mkdir(parents=True, exist_ok=True)
-    visual_stats = collect_visual_stats(capture_dir, capture_times)
+    visual_stats = [] if args.trace_only else collect_visual_stats(capture_dir, capture_times)
     trace_stats = compare_traces(capture_dir)
-    write_compare_images(capture_dir, capture_times)
+    summary = build_summary(visual_stats, trace_stats)
+    if not args.trace_only:
+        write_compare_images(capture_dir, capture_times)
     write_json(analysis_dir / "visual_stats.json", visual_stats)
     write_json(analysis_dir / "trace_compare.json", trace_stats)
+    write_json(analysis_dir / "trace_summary.json", summary)
     print("[CH9_ANALYZE] analysisDir={}".format(analysis_dir))
     print("[CH9_ANALYZE] visualStats={}".format(analysis_dir / "visual_stats.json"))
     print("[CH9_ANALYZE] traceCompare={}".format(analysis_dir / "trace_compare.json"))
-    print("[CH9_ANALYZE] compareSheet={}".format(analysis_dir / "chapter9_visual_compare_sheet.png"))
+    print("[CH9_ANALYZE] traceSummary={}".format(analysis_dir / "trace_summary.json"))
+    if not args.trace_only:
+        print("[CH9_ANALYZE] compareSheet={}".format(analysis_dir / "chapter9_visual_compare_sheet.png"))
 
 
 if __name__ == "__main__":

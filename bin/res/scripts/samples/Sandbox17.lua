@@ -56,6 +56,9 @@ local _tactics = {
 	dangerCells = 0,
 	teamCells = 0,
 	lastCellWrites = 0,
+	eventTypes = {},
+	eventPairs = {},
+	recentEvents = {},
 	lastBurstAtMs = -1,
 	deadFriendlyPublished = false,
 	smokePrinted = false,
@@ -101,6 +104,43 @@ local function _ReadBool(config, key, defaultValue)
 		return defaultValue
 	end
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
+local function _CopyTable(value)
+	local result = {}
+	if value == nil then
+		return result
+	end
+	for key, item in pairs(value) do
+		result[key] = item
+	end
+	return result
+end
+
+local function _CopyArray(value)
+	local result = {}
+	if value == nil then
+		return result
+	end
+	for index, item in ipairs(value) do
+		if type(item) == "table" then
+			result[index] = _CopyTable(item)
+		else
+			result[index] = item
+		end
+	end
+	return result
+end
+
+local function _CountTable(value)
+	if type(value) ~= "table" then
+		return 0
+	end
+	local count = 0
+	for _, _ in pairs(value) do
+		count = count + 1
+	end
+	return count
 end
 
 local function _GetInfoPanelOptions(config)
@@ -170,6 +210,45 @@ end
 
 local function _IsTacticDead(agent)
 	return agent ~= nil and _tactics.deadFriendlies[_GetAgentId(agent)] ~= nil
+end
+
+local function _GetEventTraceInfo(eventType, event)
+	event = event or {}
+	local sender = event.sender or event.spotter or event.reporter
+	if sender == nil and eventType ~= "EnemySighted" and eventType ~= "DeadFriendlySighted" then
+		sender = event.agent
+	end
+
+	local senderId = _GetAgentId(sender)
+	local targetId = event.agent ~= nil and _GetAgentId(event.agent) or -1
+	local teamId = sender ~= nil and sender:GetTeamId() or -1
+	local targetTeamId = event.agent ~= nil and event.agent:GetTeamId() or -1
+	if eventType == "DeadFriendlySighted" and event.agent ~= nil then
+		teamId = event.agent:GetTeamId()
+	end
+
+	return sender, senderId, targetId, teamId, targetTeamId
+end
+
+local function _RecordTacticEventTrace(eventType, event)
+	local _, senderId, targetId, teamId, targetTeamId = _GetEventTraceInfo(eventType, event)
+	_tactics.eventTypes[eventType] = (_tactics.eventTypes[eventType] or 0) + 1
+
+	local pairKey = tostring(eventType) .. ":" .. tostring(senderId) .. ">" .. tostring(targetId)
+	_tactics.eventPairs[pairKey] = (_tactics.eventPairs[pairKey] or 0) + 1
+
+	table.insert(_tactics.recentEvents, {
+		tMs = math.floor(_elapsedMs),
+		type = eventType,
+		sender = senderId,
+		target = targetId,
+		team = teamId,
+		targetTeam = targetTeamId,
+	})
+	local maxRecentEvents = _ReadNumber(_GetConfig(), "traceRecentEventLimit", 16)
+	while #_tactics.recentEvents > maxRecentEvents do
+		table.remove(_tactics.recentEvents, 1)
+	end
 end
 
 local function _IsAlive(agent)
@@ -378,6 +457,7 @@ local function _PublishTacticEvent(eventType, event)
 	event = event or {}
 	event.type = eventType
 	_tactics.eventCount = _tactics.eventCount + 1
+	_RecordTacticEventTrace(eventType, event)
 
 	local config = _GetConfig()
 	local ttlMs = _ReadNumber(config, "eventTtlMs", 1500)
@@ -397,17 +477,7 @@ local function _PublishTacticEvent(eventType, event)
 			position = event.agent:GetPosition()
 		end
 		if position ~= nil then
-			local sender = event.sender or event.spotter or event.reporter
-			if sender == nil and eventType ~= "EnemySighted" and eventType ~= "DeadFriendlySighted" then
-				sender = event.agent
-			end
-			local senderId = _GetAgentId(sender)
-			local targetId = event.agent ~= nil and _GetAgentId(event.agent) or -1
-			local teamId = sender ~= nil and sender:GetTeamId() or -1
-			local targetTeamId = event.agent ~= nil and event.agent:GetTeamId() or -1
-			if eventType == "DeadFriendlySighted" and event.agent ~= nil then
-				teamId = event.agent:GetTeamId()
-			end
+			local _, senderId, targetId, teamId, targetTeamId = _GetEventTraceInfo(eventType, event)
 			ObjectManager:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
 		end
 	end
@@ -759,14 +829,63 @@ local function _DrawAgents()
 	end
 end
 
--- 对齐 chapter-9 的 AgentUtilities_DrawTargetRadius：在每个 agent 的移动目标点画红色目标半径圈。
+local function _DrawFootRing(agent, radius, yOffset)
+	if agent == nil or radius <= 0.0 then
+		return
+	end
+	local position = agent:GetPosition()
+	if position ~= nil then
+		position.y = position.y - agent:GetHeight() * 0.5 + yOffset
+		DebugDrawer:drawCircle(position, radius, 28, _colors.targetRadius, false)
+	end
+end
+
+local function _FindAgentByObjectId(agentId)
+	for _, agent in ipairs(_agents) do
+		if _GetAgentId(agent) == agentId then
+			return agent
+		end
+	end
+	return nil
+end
+
+local function _DrawPursuedAgentFootRings(ringRadius, yOffset)
+	local drawnTargets = {}
+	for _, agent in ipairs(_agents) do
+		local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+		local bb = ai ~= nil and ai.GetBlackboard ~= nil and ai:GetBlackboard() or nil
+		if bb ~= nil and bb:GetString("legacy.action") == "pursue" then
+			local enemyId = bb:GetInt("legacy.enemyId", -1)
+			if enemyId >= 0 and drawnTargets[enemyId] ~= true then
+				drawnTargets[enemyId] = true
+				_DrawFootRing(_FindAgentByObjectId(enemyId), ringRadius, yOffset)
+			end
+		end
+	end
+end
+
+-- 对齐 chapter-9 的视觉：legacy parity 的红圈跟随被追击的 agent 脚下；
+-- 普通 sample 仍可选择保留移动目标点 target ring。
 local function _DrawTargetRadius()
 	local config = _GetConfig()
 	if _ReadBool(config, "drawTargetRadius", true) ~= true then
 		return
 	end
-	-- 红圈半径：对齐 chapter-9 的大红圈观感（chapter-9 战术 agent 目标半径较大）。可在 preset 调 targetRingRadius。
-	local ringRadius = _ReadNumber(config, "targetRingRadius", 4.0)
+	local ringRadius = _ReadNumber(config, "targetRingRadius", _ReadNumber(_GetPreset(), "targetRadius", 1.0))
+	local yOffset = _ReadNumber(config, "agentFootRingYOffset", 0.08)
+	local mode = _ReadString(config, "targetRingMode", "target")
+	if mode == "pursuedAgent" then
+		_DrawPursuedAgentFootRings(ringRadius, yOffset)
+		return
+	end
+	if mode == "agentFoot" then
+		for _, agent in ipairs(_agents) do
+			if _IsAlive(agent) then
+				_DrawFootRing(agent, ringRadius, yOffset)
+			end
+		end
+		return
+	end
 	for _, agent in ipairs(_agents) do
 		if _IsAlive(agent) then
 			local target = agent:GetTarget()
@@ -843,7 +962,14 @@ local function _BuildParitySnapshot(state)
 			teamUpdates = _tactics.teamRunCount,
 			dangerSkips = _tactics.dangerSkipCount,
 			teamSkips = _tactics.teamSkipCount,
+			bulletImpacts = #_tactics.bulletImpacts,
+			bulletShots = #_tactics.bulletShots,
+			deadFriendlies = _CountTable(_tactics.deadFriendlies),
+			seenEnemies = _CountTable(_tactics.seenEnemies),
 			lastCellWrites = _tactics.lastCellWrites,
+			eventTypes = _CopyTable(_tactics.eventTypes),
+			eventPairs = _CopyTable(_tactics.eventPairs),
+			recentEvents = _CopyArray(_tactics.recentEvents),
 			luaDangerActive = #(map:GetActiveCells("danger", threshold)),
 			luaTeamActive = #(map:GetActiveCells("team", threshold)),
 			cppEvents = _GetCppTacticalEventCount(),

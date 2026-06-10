@@ -68,6 +68,25 @@ local function _GetChapter9Config()
 	return preset ~= nil and (preset.chapter9Tactics or {}) or {}
 end
 
+local function _ReadProfileNumber(profile, key, defaultValue)
+	if profile == nil then
+		return defaultValue
+	end
+	local value = tonumber(profile[key])
+	if value == nil then
+		return defaultValue
+	end
+	return value
+end
+
+local function _GetMovementProfile(config)
+	local profile = config ~= nil and (config.movementProfile or config.legacyMovementProfile) or nil
+	if type(profile) ~= "table" or profile.enabled == false then
+		return nil
+	end
+	return profile
+end
+
 local function _GetAgentIndex(agent, config)
 	if agent == nil then
 		return -1
@@ -458,19 +477,95 @@ local function _HasMovePosition(agent)
 	return target ~= nil and _Distance(agent:GetPosition(), target) > _MOVE_REACH
 end
 
+local function _CalculateProfiledSteering(agent, profile)
+	local predictionTime = _ReadProfileNumber(profile, "predictionTime", 0.5)
+	local avoidForce = agent:ForceToAvoidAgents(_ReadProfileNumber(profile, "avoidPredictionTime", predictionTime))
+	local avoidObjectForce = agent:ForceToAvoidObjects(_ReadProfileNumber(profile, "avoidObjectPredictionTime", predictionTime))
+	local followForce = agent:ForceToFollowPath(_ReadProfileNumber(profile, "followPredictionTime", predictionTime))
+	local stayForce = agent:ForceToStayOnPath(_ReadProfileNumber(profile, "stayPredictionTime", predictionTime))
+
+	local totalForces = followForce * _ReadProfileNumber(profile, "followWeight", 1.5)
+		+ stayForce * _ReadProfileNumber(profile, "stayWeight", 0.4)
+		+ avoidForce * _ReadProfileNumber(profile, "avoidAgentWeight", 1.0)
+		+ avoidObjectForce * _ReadProfileNumber(profile, "avoidObjectWeight", 2.0)
+	totalForces.y = 0
+
+	local targetSpeed = _ReadProfileNumber(profile, "targetSpeed", agent:GetMaxSpeed())
+	if agent:GetSpeed() < targetSpeed then
+		local speedForce = agent:ForceToTargetSpeed(targetSpeed)
+		totalForces = totalForces + speedForce * _ReadProfileNumber(profile, "speedWeight", 7.0)
+	end
+
+	return totalForces
+end
+
+local function _ApplyProfiledSteering(agent, steeringForce, accelerationAccumulator, deltaTimeInSeconds, profile)
+	if Vector.LengthSquared(steeringForce) < _ReadProfileNumber(profile, "minSteeringLengthSq", 0.1) then
+		return
+	end
+	if agent:GetMass() <= 0 then
+		return
+	end
+
+	steeringForce.y = 0
+	steeringForce = Vector.Normalize(steeringForce) * agent:GetMaxForce() * _ReadProfileNumber(profile, "forceScale", 1.0)
+
+	local acceleration = steeringForce / agent:GetMass()
+	local blend = _ReadProfileNumber(profile, "accelerationBlend", 0.4)
+	acceleration = accelerationAccumulator + (acceleration - accelerationAccumulator) * blend
+
+	accelerationAccumulator.x = acceleration.x
+	accelerationAccumulator.y = acceleration.y
+	accelerationAccumulator.z = acceleration.z
+
+	local velocity = agent:GetVelocity() + acceleration * deltaTimeInSeconds
+	agent:SetVelocity(velocity)
+
+	if Vector.LengthSquared(velocity) > _ReadProfileNumber(profile, "minForwardVelocityLengthSq", 0.1) then
+		velocity.y = 0
+		local forward = agent:GetForward()
+		forward = forward + (Vector.Normalize(velocity) - forward) * _ReadProfileNumber(profile, "forwardBlend", 0.2)
+		agent:SetForward(forward)
+	end
+end
+
+local function _ClampHorizontalSpeedWithProfile(agent, profile)
+	local velocity = agent:GetVelocity()
+	local downwardVelocity = velocity.y
+	velocity.y = 0
+
+	local maxSpeed = _ReadProfileNumber(profile, "maxSpeed", agent:GetMaxSpeed())
+	local squaredSpeed = maxSpeed * maxSpeed
+	if Vector.LengthSquared(velocity) > squaredSpeed then
+		local newVelocity = Vector.Normalize(velocity) * maxSpeed
+		newVelocity.y = downwardVelocity
+		agent:SetVelocity(newVelocity)
+	end
+end
+
 local function _ApplyMove(agent, state, deltaMs)
 	local dtSec = deltaMs / 1000.0
-	local steering = Soldier_CalculateSteering(agent, dtSec)
-	AgentUtilities_ApplySteeringForce2(agent, steering, state.acc, dtSec)
-	AgentUtilities_ClampHorizontalSpeed(agent)
+	local profile = _GetMovementProfile(_GetChapter9Config())
+	if profile == nil then
+		local steering = Soldier_CalculateSteering(agent, dtSec)
+		AgentUtilities_ApplySteeringForce2(agent, steering, state.acc, dtSec)
+		AgentUtilities_ClampHorizontalSpeed(agent)
+		return
+	end
+
+	local steering = _CalculateProfiledSteering(agent, profile)
+	_ApplyProfiledSteering(agent, steering, state.acc, dtSec, profile)
+	_ClampHorizontalSpeedWithProfile(agent, profile)
 end
 
 local function _SlowMovement(agent, rate)
 	rate = rate or 1.0
+	local profile = _GetMovementProfile(_GetChapter9Config())
+	local damping = _ReadProfileNumber(profile, "slowDamping", 0.91)
 	local velocity = agent:GetVelocity()
 	local y = velocity.y
 	velocity.y = 0
-	velocity = velocity * 0.91 * (1.0 / rate)
+	velocity = velocity * damping * (1.0 / rate)
 	velocity.y = y
 	agent:SetVelocity(velocity)
 end
@@ -779,7 +874,14 @@ function Agent_Initialize(agent)
 		_lastDispatchTimeMs = nil
 	end
 
-	agent:SetMaxSpeed(SOLDIER_STAND_SPEED or 3.0)
+	local movementProfile = _GetMovementProfile(config)
+	agent:SetMaxSpeed(_ReadProfileNumber(movementProfile, "maxSpeed", SOLDIER_STAND_SPEED or 3.0))
+	if movementProfile ~= nil and agent.SetMaxForce ~= nil then
+		agent:SetMaxForce(_ReadProfileNumber(movementProfile, "maxForce", agent:GetMaxForce()))
+	end
+	if movementProfile ~= nil and agent.SetMass ~= nil then
+		agent:SetMass(_ReadProfileNumber(movementProfile, "mass", agent:GetMass()))
+	end
 	if agent.SetMaxAmmo ~= nil then agent:SetMaxAmmo(10) end
 	if agent.SetAmmo ~= nil then agent:SetAmmo(10) end
 

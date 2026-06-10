@@ -13,8 +13,12 @@ param(
 	[int]$WindowY = 40,
 	[int]$WindowWidth = 1280,
 	[int]$WindowHeight = 720,
+	[int]$ModernCaptureRetries = 3,
+	[int]$ModernRetryDelaySeconds = 5,
 	[switch]$CaptureLegacyExternal,
+	[string]$ReuseLegacyCaptureDir = "",
 	[switch]$SkipAnalysis,
+	[switch]$ModernNoSmoke,
 	[switch]$Visible,
 	[switch]$KeepAlive
 )
@@ -71,12 +75,16 @@ if ($sortedCaptures.Count -eq 0) {
 	throw "CaptureMs is empty."
 }
 $maxCaptureMs = ($sortedCaptures | Measure-Object -Maximum).Maximum
-$requiredSeconds = [int][Math]::Ceiling(($maxCaptureMs + $SettleMs) / 1000.0) + 18
+$requiredSeconds = [int][Math]::Ceiling(($maxCaptureMs + $SettleMs) / 1000.0) + 8
 if ($Seconds -lt $requiredSeconds) {
 	$Seconds = $requiredSeconds
 }
 $LegacySeconds = $Seconds
-$ModernSeconds = [int][Math]::Max($Seconds, [Math]::Ceiling((($maxCaptureMs + $SettleMs) / 1000.0) * 4.0) + 18)
+$ModernSeconds = [int][Math]::Max($Seconds, [Math]::Ceiling((($maxCaptureMs + $SettleMs) / 1000.0) * 3.0) + 10)
+$TraceDelayMs = 1000
+$TraceIntervalMs = 500
+$ModernTraceMaxSamples = [int][Math]::Max(1, [Math]::Ceiling(($maxCaptureMs - $TraceDelayMs) / [double]$TraceIntervalMs) + 2)
+$ModernTraceMaxAgents = [int][Math]::Max(1, $LightCount * 2)
 
 if (-not (Test-Path -LiteralPath $ModernExe)) {
 	throw "Modern HelloOgre3D exe not found: $ModernExe"
@@ -372,6 +380,42 @@ function Invoke-LegacyExternalCapture {
 	}
 }
 
+function Invoke-ReuseLegacyCapture {
+	param(
+		[string]$SourceDir
+	)
+
+	if ([string]::IsNullOrWhiteSpace($SourceDir)) {
+		throw "ReuseLegacyCaptureDir is empty."
+	}
+
+	$resolvedSourceDir = (Resolve-Path -LiteralPath $SourceDir).Path
+	$sourceOldDir = Join-Path $resolvedSourceDir "old"
+	$sourceTracePath = Join-Path $resolvedSourceDir "legacy_trace.jsonl"
+	if (-not (Test-Path -LiteralPath $sourceOldDir)) {
+		throw "Reuse legacy old image directory not found: $sourceOldDir"
+	}
+	if (-not (Test-Path -LiteralPath $sourceTracePath)) {
+		throw "Reuse legacy trace not found: $sourceTracePath"
+	}
+
+	Write-Host "[CH9_VISUAL] legacyReuse=START source=$resolvedSourceDir"
+	Get-ChildItem -LiteralPath $sourceOldDir -File | Copy-Item -Destination $OldOutputDir -Force
+	Copy-Item -LiteralPath $sourceTracePath -Destination (Join-Path $OutputDir "legacy_trace.jsonl") -Force
+
+	$missing = @()
+	foreach ($captureTime in $sortedCaptures) {
+		$filePath = Join-Path $OldOutputDir ("old_{0:D5}ms.png" -f $captureTime)
+		if (-not (Test-Path -LiteralPath $filePath)) {
+			$missing += $filePath
+		}
+	}
+	if ($missing.Count -gt 0) {
+		throw "Reuse legacy capture missing files: $($missing -join '; ')"
+	}
+	Write-Host "[CH9_VISUAL] legacyReuse=PASS source=$resolvedSourceDir"
+}
+
 function Invoke-LegacyRenderCapture {
 	Write-Host "[CH9_VISUAL] legacyRenderCapture=START exe=$LegacyExe"
 	Get-Process -Name "chapter_9_tactics" -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -431,9 +475,6 @@ function Invoke-LegacyRenderCapture {
 
 function Invoke-ModernRenderCapture {
 	Write-Host "[CH9_VISUAL] modernRenderCapture=START exe=$ModernExe"
-	Get-Process -Name "HelloOgre3D" -ErrorAction SilentlyContinue | Stop-Process -Force
-	Remove-Item -LiteralPath $ModernLog -Force -ErrorAction SilentlyContinue
-	Remove-Item -LiteralPath $ModernDebugLog -Force -ErrorAction SilentlyContinue
 
 	$modernTracePath = Join-Path $OutputDir "modern_trace.jsonl"
 	$modernEnv = @{
@@ -442,53 +483,96 @@ function Invoke-ModernRenderCapture {
 		HELLO_SAMPLE_SEED = "$Seed"
 		HELLO_SIM_FPS = "30"
 		HELLO_PARITY_TRACE = "1"
+		HELLO_PARITY_TRACE_DELAY_MS = "$TraceDelayMs"
+		HELLO_PARITY_TRACE_INTERVAL_MS = "$TraceIntervalMs"
+		HELLO_PARITY_TRACE_MAX_SAMPLES = "$ModernTraceMaxSamples"
+		HELLO_PARITY_TRACE_MAX_AGENTS = "$ModernTraceMaxAgents"
 		HELLO_PARITY_TRACE_FILE = $modernTracePath
 		HELLO_PARITY_TRACE_LOG = "0"
 		HELLO_RENDER_CAPTURE = "1"
-		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
 		HELLO_RENDER_CAPTURE_DIR = $NewOutputDir
 		HELLO_RENDER_CAPTURE_PREFIX = "new"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
 	}
+	if (-not $ModernNoSmoke) {
+		$modernEnv["HELLO_SANDBOX_SMOKE_TEST"] = "1"
+		$modernEnv["HELLO_SANDBOX_SMOKE_RUN_ID"] = "visual-$RunId"
+	}
 
-	$process = $null
-	Set-ProcessEnvironment -Values $modernEnv -Body {
-		if ($Visible) {
+	if ($ModernCaptureRetries -lt 1) {
+		$ModernCaptureRetries = 1
+	}
+
+	for ($attempt = 1; $attempt -le $ModernCaptureRetries; $attempt++) {
+		Write-Host "[CH9_VISUAL] modernRenderCaptureAttempt=$attempt/$ModernCaptureRetries"
+
+		$existingProcesses = @(Get-Process -Name "HelloOgre3D" -ErrorAction SilentlyContinue)
+		if ($existingProcesses.Count -gt 0) {
+			$existingProcesses | Stop-Process -Force
+			foreach ($existing in $existingProcesses) {
+				try { Wait-Process -Id $existing.Id -Timeout 5 -ErrorAction SilentlyContinue } catch {}
+			}
+		}
+		Start-Sleep -Milliseconds 500
+
+		Remove-Item -LiteralPath $ModernLog -Force -ErrorAction SilentlyContinue
+		Remove-Item -LiteralPath $ModernDebugLog -Force -ErrorAction SilentlyContinue
+		Get-ChildItem -LiteralPath $NewOutputDir -Filter "new_*.png" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+		Remove-Item -LiteralPath $modernTracePath -Force -ErrorAction SilentlyContinue
+
+		$process = $null
+		Set-ProcessEnvironment -Values $modernEnv -Body {
 			$script:CapturedProcess = Start-Process -FilePath $ModernExe -WorkingDirectory $ModernWorkDir -WindowStyle Normal -PassThru
 		}
-		else {
-			$script:CapturedProcess = Start-Process -FilePath $ModernExe -WorkingDirectory $ModernWorkDir -WindowStyle Normal -PassThru
-		}
-	}
-	$process = $script:CapturedProcess
-	$script:CapturedProcess = $null
-	Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$ModernSeconds"
+		$process = $script:CapturedProcess
+		$script:CapturedProcess = $null
+		Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$ModernSeconds"
 
-	Start-Sleep -Seconds $ModernSeconds
+		Start-Sleep -Seconds $ModernSeconds
 
-	if ($KeepAlive) {
-		Write-Host "[CH9_VISUAL] keepAlive name=new pid=$($process.Id)"
-	}
-	elseif (-not $process.HasExited) {
-		Stop-Process -Id $process.Id -Force
-		Write-Host "[CH9_VISUAL] stopped name=new pid=$($process.Id)"
-	}
-	elseif ($process.ExitCode -ne 0) {
-		throw "Modern process exited with code $($process.ExitCode)."
-	}
+		$processError = ""
+		if ($KeepAlive) {
+			Write-Host "[CH9_VISUAL] keepAlive name=new pid=$($process.Id)"
+		}
+		elseif (-not $process.HasExited) {
+			Stop-Process -Id $process.Id -Force
+			Write-Host "[CH9_VISUAL] stopped name=new pid=$($process.Id)"
+		}
+		elseif ($process.ExitCode -ne 0) {
+			$processError = "Modern process exited with code $($process.ExitCode)."
+		}
 
-	$missing = @()
-	foreach ($captureTime in $sortedCaptures) {
-		$filePath = Join-Path $NewOutputDir ("new_{0:D5}ms.png" -f $captureTime)
-		if (-not (Test-Path -LiteralPath $filePath)) {
-			$missing += $filePath
+		$missing = @()
+		foreach ($captureTime in $sortedCaptures) {
+			$filePath = Join-Path $NewOutputDir ("new_{0:D5}ms.png" -f $captureTime)
+			if (-not (Test-Path -LiteralPath $filePath)) {
+				$missing += $filePath
+			}
+			else {
+				Write-Host "[CH9_VISUAL] captured $filePath"
+			}
 		}
-		else {
-			Write-Host "[CH9_VISUAL] captured $filePath"
+
+		if ($processError -eq "" -and $missing.Count -eq 0) {
+			return
 		}
-	}
-	if ($missing.Count -gt 0) {
-		throw "Modern render capture missing files: $($missing -join '; ')"
+
+		$deviceFailure = $false
+		if (Test-Path -LiteralPath $ModernLog) {
+			$deviceFailure = [bool](Select-String -LiteralPath $ModernLog -Pattern "Cannot create device" -Quiet)
+		}
+		$errorMessage = $processError
+		if ($missing.Count -gt 0) {
+			$errorMessage = "Modern render capture missing files: $($missing -join '; ')"
+		}
+
+		if ($attempt -lt $ModernCaptureRetries -and $deviceFailure) {
+			Write-Host "[CH9_VISUAL] modernRenderCapture=RETRY reason=D3D9DeviceCreation delaySeconds=$ModernRetryDelaySeconds"
+			Start-Sleep -Seconds $ModernRetryDelaySeconds
+			continue
+		}
+
+		throw $errorMessage
 	}
 }
 
@@ -524,9 +608,12 @@ function Invoke-CaptureAnalysis {
 Write-Host "[CH9_VISUAL] runId=$RunId"
 Write-Host "[CH9_VISUAL] outputDir=$OutputDir"
 Write-Host "[CH9_VISUAL] capturesMs=$($sortedCaptures -join ',')"
-Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds captureLegacyExternal=$($CaptureLegacyExternal.IsPresent)"
+Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds modernRetries=$ModernCaptureRetries traceMaxSamples=$ModernTraceMaxSamples modernSmoke=$(-not $ModernNoSmoke) captureLegacyExternal=$($CaptureLegacyExternal.IsPresent) reuseLegacy=$ReuseLegacyCaptureDir"
 
-if ($CaptureLegacyExternal) {
+if (-not [string]::IsNullOrWhiteSpace($ReuseLegacyCaptureDir)) {
+	Invoke-ReuseLegacyCapture -SourceDir $ReuseLegacyCaptureDir
+}
+elseif ($CaptureLegacyExternal) {
 	Invoke-LegacyExternalCapture
 }
 else {

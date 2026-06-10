@@ -701,11 +701,13 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
-	const float floorY = m_minY;
 	for (int z = 0; z < m_height; ++z)
 	{
 		for (int x = 0; x < m_width; ++x)
 		{
+			bool hasCell = false;
+			Ogre::Vector3 drawPosition = Ogre::Vector3::ZERO;
+			float drawValue = 0.0f;
 			for (int y = 0; y < m_yCount; ++y)
 			{
 				if (!IsUsed(x, y, z))
@@ -715,12 +717,18 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 				if (!drawNeutral && std::fabs(value) < safeThreshold)
 					continue;
 				Ogre::Vector3 pos = GetCellCenter(x, y, z);
-				pos.y = floorY;
-				outPositions.push_back(pos);
-				outValues.push_back(value);
+				if (idx >= 0 && idx < static_cast<int>(m_surfaceY.size()))
+					pos.y = m_surfaceY[idx];
+				drawPosition = pos;
+				drawValue = value;
+				hasCell = true;
+			}
+			if (hasCell)
+			{
+				outPositions.push_back(drawPosition);
+				outValues.push_back(drawValue);
 				if (static_cast<int>(outPositions.size()) >= limit)
 					return;
-				break;
 			}
 		}
 	}
