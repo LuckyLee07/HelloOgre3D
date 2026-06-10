@@ -103,6 +103,17 @@ local function _ReadBool(config, key, defaultValue)
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
 end
 
+local function _ReadVector3(config, key, defaultValue)
+	local value = config ~= nil and config[key] or nil
+	if value == nil then
+		return defaultValue
+	end
+	return Vector3(
+		tonumber(value.x or value[1]) or defaultValue.x,
+		tonumber(value.y or value[2]) or defaultValue.y,
+		tonumber(value.z or value[3]) or defaultValue.z)
+end
+
 local function _ReadString(config, key, defaultValue)
 	local value = config ~= nil and config[key] or nil
 	if value == nil then
@@ -230,6 +241,9 @@ local function _HasCppInfluenceDraw()
 		and ObjectManager.configureTacticalInfluence ~= nil
 		and ObjectManager.clearTacticalInfluenceLayer ~= nil
 		and ObjectManager.addTacticalInfluenceSource ~= nil
+		and ObjectManager.addTacticalInfluencePoint ~= nil
+		and ObjectManager.spreadTacticalInfluenceLayer ~= nil
+		and ObjectManager.setTacticalInfluenceLayerOptions ~= nil
 		and ObjectManager.rebuildTacticalInfluenceLayerDebugVisual ~= nil
 		and ObjectManager.setTacticalInfluenceDebugVisible ~= nil
 end
@@ -255,8 +269,10 @@ local function _ConfigureCppInfluenceDraw()
 		"default",
 		_ReadNumber(mapConfig, "cellSize", 2.0),
 		_ReadNumber(mapConfig, "cellHeight", 1.0),
-		Vector3(0.0, 0.0, 0.0),
-		Vector3(0.0, 0.0, 0.0))
+		_ReadVector3(mapConfig, "boundaryMinOffset", Vector3(0.0, 0.0, 0.0)),
+		_ReadVector3(mapConfig, "boundaryMaxOffset", Vector3(0.0, 0.0, 0.0)))
+	ObjectManager:setTacticalInfluenceLayerOptions("danger", _ReadNumber(config, "dangerFalloff", 0.2), _ReadNumber(config, "dangerInertia", 0.5))
+	ObjectManager:setTacticalInfluenceLayerOptions("team", _ReadNumber(config, "teamFalloff", 0.2), _ReadNumber(config, "teamInertia", 0.5))
 end
 
 local function _AddCppInfluenceSource(layerName, position, strength, radius)
@@ -264,6 +280,20 @@ local function _AddCppInfluenceSource(layerName, position, strength, radius)
 		return 0
 	end
 	return ObjectManager:addTacticalInfluenceSource(layerName, position, strength, radius)
+end
+
+local function _AddCppInfluencePoint(layerName, position, strength)
+	if position == nil or not _HasCppInfluenceDraw() then
+		return 0
+	end
+	return ObjectManager:addTacticalInfluencePoint(layerName, position, strength)
+end
+
+local function _SpreadCppInfluenceLayer(layerName, passCount)
+	if not _HasCppInfluenceDraw() then
+		return 0
+	end
+	return ObjectManager:spreadTacticalInfluenceLayer(layerName, passCount)
 end
 
 local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
@@ -546,14 +576,25 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	local positiveTeamId = _ReadNumber(config, "teamPositiveTeamId", 0)
 	local teamRadius = _ReadNumber(config, "teamInfluenceRadius", 11.0)
 	local teamStrength = _ReadNumber(config, "teamStrength", 1.0)
+	local useLegacyPointSpread = _ReadBool(config, "teamUseLegacyPointSpread", false)
 	local writes = 0
 	for _, agent in ipairs(_agents) do
 		if _IsAlive(agent) then
 			local value = agent:GetTeamId() == positiveTeamId and teamStrength or -teamStrength
 			local navPosition = _ProjectToNav(agent:GetPosition())
-			writes = writes + map:AddRadialSource("team", navPosition, value, teamRadius)
-			_AddCppInfluenceSource("team", navPosition, value, teamRadius)
+			if useLegacyPointSpread then
+				writes = writes + map:AddPointSource("team", navPosition, value)
+				_AddCppInfluencePoint("team", navPosition, value)
+			else
+				writes = writes + map:AddRadialSource("team", navPosition, value, teamRadius)
+				_AddCppInfluenceSource("team", navPosition, value, teamRadius)
+			end
 		end
+	end
+	if useLegacyPointSpread then
+		local spreadPasses = _ReadNumber(config, "teamSpreadPasses", 20)
+		writes = writes + map:SpreadLayer("team", spreadPasses, _ReadNumber(config, "teamFalloff", 0.2), _ReadNumber(config, "teamInertia", 0.5))
+		_SpreadCppInfluenceLayer("team", spreadPasses)
 	end
 
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)

@@ -3,6 +3,7 @@
 #include "ClientManager.h"
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
+#include "diagnostics/RuntimeRenderCapture.h"
 
 Application::Application(const std::string& appTitle)
 {
@@ -86,6 +87,8 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
 
     if (perfEnabled)
         RuntimeStallProfiler::FinishFrame(frameTiming);
+
+    RuntimeRenderCapture::Update(m_pClientManager->getRenderWindow(), event.timeSinceLastFrame);
 
     return true;
 }

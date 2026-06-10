@@ -82,6 +82,29 @@ function InfluenceMap:WorldToCell(pos)
 	return ix, iz
 end
 
+function InfluenceMap:AddPointSource(layerName, center, strength)
+	if center == nil then
+		return 0
+	end
+	strength = tonumber(strength) or 0.0
+	if strength == 0.0 then
+		return 0
+	end
+	local ix, iz = self:WorldToCell(center)
+	if ix == nil then
+		return 0
+	end
+	local layer = self:_Layer(layerName)
+	local key = self:_CellKey(ix, iz)
+	layer[key] = {
+		ix = ix,
+		iz = iz,
+		position = self:_CellCenter(ix, iz),
+		value = _Clamp(strength, -1.0, 1.0),
+	}
+	return 1
+end
+
 function InfluenceMap:AddRadialSource(layerName, center, strength, radius)
 	if center == nil then
 		return 0
@@ -119,6 +142,63 @@ function InfluenceMap:AddRadialSource(layerName, center, strength, radius)
 		end
 	end
 	return written
+end
+
+function InfluenceMap:SpreadLayer(layerName, passCount, falloff, inertia)
+	local layer = self:_Layer(layerName)
+	passCount = math.max(0, math.min(20, tonumber(passCount) or 0))
+	if passCount <= 0 then
+		return 0
+	end
+	falloff = _Clamp(tonumber(falloff) or 0.2, 0.0, 1.0)
+	inertia = _Clamp(tonumber(inertia) or 0.5, 0.0, 1.0)
+	local propagationBase = 1.0 - falloff
+	local changed = 0
+
+	for pass = 1, passCount do
+		local previous = {}
+		for key, cell in pairs(layer) do
+			previous[key] = cell.value
+		end
+		local nextValues = {}
+		for ix = 0, self.width - 1 do
+			for iz = 0, self.height - 1 do
+				local maxPositive = 0.0
+				local maxNegative = 0.0
+				for dx = -1, 1 do
+					for dz = -1, 1 do
+						local nx = ix + dx
+						local nz = iz + dz
+						if nx >= 0 and nx < self.width and nz >= 0 and nz < self.height then
+							local value = previous[self:_CellKey(nx, nz)] or 0.0
+							local distance = math.sqrt(dx * dx + dz * dz)
+							local propagated = value * math.pow(propagationBase, distance)
+							maxPositive = math.max(maxPositive, propagated)
+							maxNegative = math.min(maxNegative, propagated)
+						end
+					end
+				end
+				local key = self:_CellKey(ix, iz)
+				local oldValue = previous[key] or 0.0
+				local newValue = _Clamp(oldValue * inertia + (maxPositive + maxNegative) * (1.0 - inertia), -1.0, 1.0)
+				if math.abs(newValue) > 0.0001 then
+					nextValues[key] = newValue
+				end
+				if math.abs(newValue - oldValue) > 0.0001 then
+					changed = changed + 1
+				end
+			end
+		end
+		layer = {}
+		for key, value in pairs(nextValues) do
+			local sep = string.find(key, ":", 1, true)
+			local ix = tonumber(string.sub(key, 1, sep - 1))
+			local iz = tonumber(string.sub(key, sep + 1))
+			layer[key] = { ix = ix, iz = iz, position = self:_CellCenter(ix, iz), value = value }
+		end
+		self.layers[tostring(layerName or "default")] = layer
+	end
+	return changed
 end
 
 function InfluenceMap:AddRingSources(layerName, center, strength, ringRadius, sourceRadius, sourceCount)

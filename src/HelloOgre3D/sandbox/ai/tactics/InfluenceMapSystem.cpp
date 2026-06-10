@@ -379,7 +379,7 @@ int InfluenceMapSystem::AddPointSource(const std::string& layerName, const Ogre:
 	if (!FindSurfaceCellY(x, z, center.y, sy))
 		return 0;
 
-	layer.values[GetCellIndex(x, sy, z)] += strength;
+	layer.values[GetCellIndex(x, sy, z)] = ClampFloat(strength, -1.0f, 1.0f);
 	++layer.sourceCount;
 	++layer.cellWriteCount;
 	RecalculateStats();
@@ -443,13 +443,14 @@ int InfluenceMapSystem::SpreadLayer(const std::string& layerName, int passCount)
 	if (layer == nullptr || layer->values.empty())
 		return 0;
 
-	const int passes = ClampInt(passCount, 0, 16);
+	const int passes = ClampInt(passCount, 0, 20);
 	if (passes <= 0)
 		return 0;
 
 	int changedCells = 0;
 	const float falloff = ClampFloat(layer->falloff, 0.0f, 1.0f);
 	const float inertia = ClampFloat(layer->inertia, 0.0f, 1.0f);
+	const float propagationBase = 1.0f - falloff;
 	for (int pass = 0; pass < passes; ++pass)
 	{
 		const std::vector<float> previous = layer->values;
@@ -463,15 +464,14 @@ int InfluenceMapSystem::SpreadLayer(const std::string& layerName, int passCount)
 					if (!IsUsed(x, y, z))
 						continue;
 					const int index = GetCellIndex(x, y, z);
-					float strongest = previous[index];
+					float maxPositive = 0.0f;
+					float maxNegative = 0.0f;
 					for (int dz = -1; dz <= 1; ++dz)
 					{
 						for (int dy = -1; dy <= 1; ++dy)
 						{
 							for (int dx = -1; dx <= 1; ++dx)
 							{
-								if (dx == 0 && dy == 0 && dz == 0)
-									continue;
 								const int nx = x + dx;
 								const int ny = y + dy;
 								const int nz = z + dz;
@@ -479,15 +479,17 @@ int InfluenceMapSystem::SpreadLayer(const std::string& layerName, int passCount)
 									continue;
 
 								const float neighbor = previous[GetCellIndex(nx, ny, nz)];
-								const float distanceScale = 1.0f / std::sqrt(static_cast<float>(dx * dx + dy * dy + dz * dz));
-								const float propagated = neighbor * falloff * distanceScale;
-								if (std::fabs(propagated) > std::fabs(strongest))
-									strongest = propagated;
+								const float distance = std::sqrt(static_cast<float>(dx * dx + dy * dy + dz * dz));
+								const float cellFalloff = std::pow(propagationBase, distance);
+								const float propagated = neighbor * cellFalloff;
+								maxPositive = std::max(propagated, maxPositive);
+								maxNegative = std::min(propagated, maxNegative);
 							}
 						}
 					}
 
-					const float value = previous[index] * inertia + strongest * (1.0f - inertia);
+					const float averageInfluence = maxPositive + maxNegative;
+					const float value = ClampFloat(previous[index] * inertia + averageInfluence * (1.0f - inertia), -1.0f, 1.0f);
 					if (std::fabs(value - previous[index]) > 0.0001f)
 					{
 						next[index] = value;
