@@ -47,6 +47,11 @@ param(
 	[int]$VisualTraceIntervalFrames = 15,
 	[int]$VisualTraceMaxSamples = 8,
 	[int]$VisualTraceMaxAgents = 16,
+	[switch]$ParityTrace,
+	[int]$ParityTraceDelayMs = 1000,
+	[int]$ParityTraceIntervalMs = 500,
+	[int]$ParityTraceMaxSamples = 16,
+	[int]$ParityTraceMaxAgents = 8,
 	[switch]$DisableSpatialIndex,
 	[switch]$DisablePerceptionSystem,
 	[int]$SpatialCellSize = 0,
@@ -99,6 +104,9 @@ if ($Preset -eq "formation_tactics" -and -not $PSBoundParameters.ContainsKey("Sa
 if ($Preset -eq "chapter9_tactics_lua" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox17"
 }
+if ($Preset -eq "chapter9_tactics_legacy_parity" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox17"
+}
 if ($Preset -eq "chapter9_tactics_cpp" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox18"
 }
@@ -133,6 +141,14 @@ $KnownEnvNames = @(
 	"HELLO_VISUAL_TRACE_INTERVAL_FRAMES",
 	"HELLO_VISUAL_TRACE_MAX_SAMPLES",
 	"HELLO_VISUAL_TRACE_MAX_AGENTS",
+	"HELLO_PARITY_TRACE",
+	"HELLO_PARITY_TRACE_DELAY_MS",
+	"HELLO_PARITY_TRACE_INTERVAL_MS",
+	"HELLO_PARITY_TRACE_MAX_SAMPLES",
+	"HELLO_PARITY_TRACE_MAX_AGENTS",
+	"HELLO_PARITY_TRACE_AI_SUMMARY",
+	"HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINES",
+	"HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINE_LENGTH",
 	"HELLO_AI_SPATIAL_INDEX_ENABLE",
 	"HELLO_AI_PERCEPTION_SYSTEM_ENABLE",
 	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE",
@@ -189,6 +205,13 @@ if ($VisualTrace) {
 	$SelectedEnv["HELLO_VISUAL_TRACE_MAX_SAMPLES"] = [string]$VisualTraceMaxSamples
 	$SelectedEnv["HELLO_VISUAL_TRACE_MAX_AGENTS"] = [string]$VisualTraceMaxAgents
 }
+if ($ParityTrace) {
+	$SelectedEnv["HELLO_PARITY_TRACE"] = "1"
+	$SelectedEnv["HELLO_PARITY_TRACE_DELAY_MS"] = [string]$ParityTraceDelayMs
+	$SelectedEnv["HELLO_PARITY_TRACE_INTERVAL_MS"] = [string]$ParityTraceIntervalMs
+	$SelectedEnv["HELLO_PARITY_TRACE_MAX_SAMPLES"] = [string]$ParityTraceMaxSamples
+	$SelectedEnv["HELLO_PARITY_TRACE_MAX_AGENTS"] = [string]$ParityTraceMaxAgents
+}
 if ($DisableSpatialIndex) {
 	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_ENABLE"] = "0"
 }
@@ -236,11 +259,14 @@ if ($Preset -eq "formation_tactics" -and $Seconds -lt 70) {
 if ($Preset -eq "chapter9_tactics_lua" -and $Seconds -lt 35) {
 	$Seconds = 35
 }
+if ($Preset -eq "chapter9_tactics_legacy_parity" -and $Seconds -lt 35) {
+	$Seconds = 35
+}
 if ($Preset -eq "chapter9_tactics_cpp" -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) parityTrace=$($ParityTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"

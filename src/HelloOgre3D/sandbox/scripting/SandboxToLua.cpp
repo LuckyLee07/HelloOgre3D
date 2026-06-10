@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Thu Jun  4 20:19:02 2026.
+** Generated automatically by tolua++-1.0.92 on Tue Jun  9 15:19:16 2026.
 */
 
 #ifndef __cplusplus
@@ -7202,6 +7202,42 @@ static int tolua_SandboxToLua_SandboxMgr_FindPath00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: RayCastObjectId of class  SandboxMgr */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SandboxMgr_RayCastObjectId00
+static int tolua_SandboxToLua_SandboxMgr_RayCastObjectId00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SandboxMgr",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SandboxMgr* self = (const SandboxMgr*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* from = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+  const Ogre::Vector3* to = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RayCastObjectId'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->RayCastObjectId(*from,*to);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'RayCastObjectId'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: clearAllObjects of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_clearAllObjects00
 static int tolua_SandboxToLua_ObjectManager_clearAllObjects00(lua_State* tolua_S)
@@ -13253,6 +13289,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"RandomPoint",tolua_SandboxToLua_SandboxMgr_RandomPoint00);
    tolua_function(tolua_S,"FindClosestPoint",tolua_SandboxToLua_SandboxMgr_FindClosestPoint00);
    tolua_function(tolua_S,"FindPath",tolua_SandboxToLua_SandboxMgr_FindPath00);
+   tolua_function(tolua_S,"RayCastObjectId",tolua_SandboxToLua_SandboxMgr_RayCastObjectId00);
   tolua_endmodule(tolua_S);
   tolua_constant(tolua_S,"MGR_OBJ_NONE",MGR_OBJ_NONE);
   tolua_constant(tolua_S,"MGR_OBJ_BLOCK",MGR_OBJ_BLOCK);

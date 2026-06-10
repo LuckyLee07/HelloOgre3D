@@ -12,7 +12,10 @@
 #include "recast/include/Recast.h"
 #include "ai/navigation/NavigationMesh.h"
 #include "components/agent/AgentLocomotion.h"
+#include "core/object/BaseObject.h"
 #include "ObjectManager.h"
+#include "systems/physics/PhysicsWorld.h"
+#include "btBulletDynamicsCommon.h"
 
 SandboxMgr* g_SandboxMgr = nullptr;
 
@@ -325,4 +328,28 @@ bool SandboxMgr::FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& 
         return pNavmesh->FindPath(start, end, outPath);
     }
     return false;
+}
+
+int SandboxMgr::RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vector3& to) const
+{
+	PhysicsWorld* physicsWorld = g_GameManager != nullptr ? g_GameManager->getPhysicsWorld() : nullptr;
+	if (physicsWorld == nullptr)
+	{
+		return -1;
+	}
+
+	btVector3 hitPoint(0.0f, 0.0f, 0.0f);
+	const btRigidBody* rigidBody = nullptr;
+	const bool result = physicsWorld->rayCastToRigidBody(
+		btVector3(from.x, from.y, from.z),
+		btVector3(to.x, to.y, to.z),
+		hitPoint,
+		rigidBody);
+	if (!result)
+	{
+		return 0;
+	}
+
+	const BaseObject* object = rigidBody != nullptr ? static_cast<const BaseObject*>(rigidBody->getUserPointer()) : nullptr;
+	return object != nullptr ? static_cast<int>(object->GetObjId()) : -1;
 }

@@ -84,6 +84,7 @@ public:
 	Ogre::Vector3 RandomPoint(const Ogre::String& navMeshName) const;
 	Ogre::Vector3 FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const;
 	bool FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const;
+	int RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vector3& to) const;
 	//tolua_end
 
 private:

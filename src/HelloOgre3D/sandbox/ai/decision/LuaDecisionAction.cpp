@@ -29,11 +29,36 @@ static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
 	return driver ? driver->GetBlackboard() : nullptr;
 }
 
+static const char* _StatusToString(DecisionAction::Status status)
+{
+	switch (status)
+	{
+	case DecisionAction::STATUS_UNINITIALIZED:
+		return "UNINITIALIZED";
+	case DecisionAction::STATUS_RUNNING:
+		return "RUNNING";
+	case DecisionAction::STATUS_TERMINATED:
+		return "TERMINATED";
+	default:
+		return "UNKNOWN";
+	}
+}
+
+static bool _IsDecisionTraceEnabled(Blackboard* bb)
+{
+	return bb != nullptr && bb->GetBool("__dt.traceEnabled", false);
+}
+
 void LuaDecisionAction::OnInitialize()
 {
 	H3D_PROFILE_SCOPE("LuaDecisionAction::OnInitialize");
 	// Lua signature: function OnInitialize(owner, blackboard) ... end
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
+	if (_IsDecisionTraceEnabled(bb))
+	{
+		bb->SetString("__dt.currentAction", GetName());
+		bb->SetString("__dt.currentActionStatus", "ENTER");
+	}
 	callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", m_owner, bb);
 }
 
@@ -45,8 +70,13 @@ DecisionAction::Status LuaDecisionAction::OnUpdate(float deltaMs)
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
 	int statusOut = (int)STATUS_TERMINATED;
 	callFunction("OnUpdate", "iu[SoldierObject]u[Blackboard]>i", (int)deltaMs, m_owner, bb, &statusOut);
-	if (statusOut == (int)STATUS_RUNNING) return STATUS_RUNNING;
-	return STATUS_TERMINATED;
+	Status status = statusOut == (int)STATUS_RUNNING ? STATUS_RUNNING : STATUS_TERMINATED;
+	if (_IsDecisionTraceEnabled(bb))
+	{
+		bb->SetString("__dt.currentAction", GetName());
+		bb->SetString("__dt.currentActionStatus", _StatusToString(status));
+	}
+	return status;
 }
 
 void LuaDecisionAction::OnCleanUp()
@@ -54,5 +84,10 @@ void LuaDecisionAction::OnCleanUp()
 	H3D_PROFILE_SCOPE("LuaDecisionAction::OnCleanUp");
 	// Lua signature: function OnCleanUp(owner, blackboard) ... end
 	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
+	if (_IsDecisionTraceEnabled(bb))
+	{
+		bb->SetString("__dt.currentAction", GetName());
+		bb->SetString("__dt.currentActionStatus", "CLEANUP");
+	}
 	callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", m_owner, bb);
 }

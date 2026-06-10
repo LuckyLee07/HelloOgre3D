@@ -1,7 +1,7 @@
 # 高优先级 TODO
 
 > 方向依据：`docs/project-direction.md` 与 `docs/ai-roadmap.md`。
-> 当前主线是 **AI 学习与实验沙盒**。数据驱动 Def、触发器玩法、编辑器、UGC 方向暂缓；只有在它们直接服务 AI 学习 sample 时再重新引入。
+> 当前阶段主线是 **AI 学习与实验沙盒**，长期目标是演进为生产级游戏项目 / 生产级玩法运行时。完整数据驱动 Def、触发器玩法、编辑器、UGC 方向暂缓一次性铺开；只有在它们直接服务 AI 学习 sample、生产级地基收口或清晰垂直切片时再小步引入。
 
 ## 当前目标
 
@@ -24,7 +24,7 @@
 - 2026-05-30：给对象层组件转发方法加上 legacy 护栏，并把 `WeaponComponent` 对宿主渲染组件的访问改成直接 typed component 查询，避免继续沿对象层新增转发口。
 - 2026-05-30：组件侧 owner 访问统一收敛为 `BaseObject*` + 局部类型转换；常用组件 key 集中到 `ComponentKeys`，对象/工厂侧优先走 typed component 查询；AI 敌人感知查询抽成 `IAgentPerceptionQuery` / `AgentPerceptionQuery` 小接口。
 - 2026-05-30：AI 感知查询从“返回敌人指针”推进为 `AgentPerceptionResult`，可按 blackboard 配置视野范围/寻路要求，并把目标 id、位置、距离、最后已知位置写回 blackboard；新增 `IAgentSpatialQuery` 作为后续空间查询替换点。
-- 2026-05-30：方向回正为 AI 学习与实验沙盒；清理 Lua 生物 Def、CreatureAssembler、TriggerRuntime、TriggerVolume、BehaviorEventRuntime、数据驱动触发器到 BT 的 Sandbox9 切片。
+- 2026-05-30：阶段方向回到 AI 学习与实验沙盒；清理 Lua 生物 Def、CreatureAssembler、TriggerRuntime、TriggerVolume、BehaviorEventRuntime、数据驱动触发器到 BT 的 Sandbox9 切片。
 - 2026-05-30：进入 `AIArchitectureBeyondBook.md` 的 Ch7/Ch8 Stage 3：`Blackboard` 增加 metadata entry 最小通道（typed value + confidence + timestamp + ttl + source），当前感知结果同步写入 `sense.*` / `memory.*` metadata，作为后续 VisionSensor / MemoryComponent 的地基。
 - 2026-05-30：完成 K-02 最小闭环：`Blackboard` 增加 TTL 自动过期和 confidence 衰减策略，`AIController` 为 `sense.*` / `memory.*` metadata 设置有效期，RuntimeDiag 可触发 Blackboard 自测。
 - 2026-05-30：完成 P-01 最小闭环：新增 `VisionSensor`，由 `AIController` 定时驱动视觉扫描并写入 `sense.*` / `memory.*` metadata，RuntimeDiag 可看到 vision sensor 摘要。
@@ -55,7 +55,7 @@
 
 ## P0 - 方向回正
 
-- [x] 把项目北极星改回 AI 学习与实验沙盒。
+- [x] 把当前阶段北极星收敛为 AI 学习与实验沙盒，并保留长期生产级项目目标。
 - [x] 删除偏数据驱动玩法切片的 Lua runtime 和 sample。
 - [x] 清理 `game_init.lua`、smoke 参数和 `BehaviorTreeLoader` 中只服务触发器切片的注册点。
 - [x] 重新选择一个 AI 学习 sample 作为下一阶段主验证面：`Sandbox9` / Chapter 7 Knowledge。

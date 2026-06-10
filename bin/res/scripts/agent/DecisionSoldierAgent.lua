@@ -11,6 +11,13 @@
 
 require("res.scripts.ai.decision.SoldierDecisionTree.lua")
 
+local function _ReadBool(value)
+    if value == nil then
+        return false
+    end
+    return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
 function Agent_Initialize(agent)
     if agent == nil then return end
 
@@ -34,6 +41,13 @@ function Agent_Initialize(agent)
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox7"
     if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
         ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)
+    end
+    if ConfigManager ~= nil and ConfigManager.GetSamplePreset ~= nil then
+        local preset = ConfigManager:GetSamplePreset(sampleName)
+        local tactics = preset ~= nil and preset.chapter9Tactics or nil
+        if tactics ~= nil and _ReadBool(tactics.movementTraceEnabled) then
+            bb:SetBool("__dt.traceEnabled", true)
+        end
     end
 
     local tree = SoldierDecisionTreeBuilder.Build(agent, driver, bb)

@@ -146,3 +146,23 @@ void PhysicsWorld::removeRigidBody(btRigidBody* pRigidBody)
 {
 	m_pDynamicsWorld->removeRigidBody(pRigidBody);
 }
+
+bool PhysicsWorld::rayCastToRigidBody(const btVector3& from, const btVector3& to, btVector3& hitPoint, const btRigidBody*& rigidBody) const
+{
+	rigidBody = nullptr;
+	if (m_pDynamicsWorld == nullptr)
+	{
+		return false;
+	}
+
+	btCollisionWorld::ClosestRayResultCallback rayResult(from, to);
+	m_pDynamicsWorld->rayTest(from, to, rayResult);
+	if (!rayResult.hasHit())
+	{
+		return false;
+	}
+
+	hitPoint = rayResult.m_hitPointWorld;
+	rigidBody = dynamic_cast<const btRigidBody*>(rayResult.m_collisionObject);
+	return rigidBody != nullptr;
+}

@@ -984,7 +984,7 @@ int ObjectManager::drawTacticalInfluenceLayer(const std::string& layerName, floa
 		drawPosition.y += yOffset;
 		const Ogre::ColourValue color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
 		debugDrawer->drawSquare(drawPosition, cellSize, color, true);
-		drawPosition.y += 0.01f;
+		drawPosition.y += -0.5f;
 		debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
 		++drawn;
 	}
@@ -1019,7 +1019,7 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
 	std::vector<DrawCell> cells;
 
-	// 3D：直接收集 used cell 的真实 3D 中心 + 值（cell 已贴在可走面上），按 yOffset 抬一点点，不再投影。
+	// 3D：直接收集 used cell 的真实 3D 位置 + 值；填充面和线框保持同一 Y 面，对齐 chapter-9。
 	std::vector<Ogre::Vector3> cellPositions;
 	std::vector<float> cellValues;
 	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
@@ -1086,7 +1086,6 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 		{
 			Ogre::Vector3 square[4];
 			Ogre::Vector3 outlinePosition = iter->position;
-			outlinePosition.y += 0.01f;
 			BuildSquareVertices(outlinePosition, cellSize, square);
 			for (int index = 0; index < 4; ++index)
 			{

@@ -2,7 +2,7 @@
 
 > 来源：静态阅读 `G:\MiniGame_Dev\Source` 与 `G:\MiniGame_Dev\AssetRuntime\CommonResource\Script\luascript\ai`。
 >
-> 定位：本文用于沉淀 MiniGame 生产级 AI 架构里可被 `HelloOgre3D` 吸收的做法。它不改变本项目当前 **AI 学习与实验沙盒** 的北极星，只帮助后续在感知、团队、战术、影响力图和 AI 性能观测上用更接近生产系统的方式设计。
+> 定位：本文用于沉淀 MiniGame 生产级 AI 架构里可被 `HelloOgre3D` 吸收的做法。它服务于本项目“当前阶段 AI 学习与实验沙盒、长期目标生产级游戏项目 / 玩法运行时”的北极星，帮助后续在感知、团队、战术、影响力图和 AI 性能观测上用更接近生产系统的方式设计。
 >
 > 与 `docs/reference-minigame-patterns.md` 的关系：后者是 MiniGame 沙盒体系的通用参考；本文只聚焦 AI 运行时、Lua/C++ 分界和后续落地任务。
 
@@ -359,7 +359,7 @@ Lua 侧仍可提供：
 
 | 文档 | 关系 |
 |---|---|
-| `docs/project-direction.md` | 北极星。本文所有建议必须服务 AI 学习与实验沙盒。 |
+| `docs/project-direction.md` | 北极星。本文所有建议必须服务当前 AI 学习验证面，并能沉淀为长期生产级项目能力。 |
 | `docs/ai-roadmap.md` | AI 长期路线。本文补充“生产级参考如何落地”。 |
 | `docs/behavior-tree-gap-analysis.md` | BT runtime 补强时参考。 |
 | `docs/high-priority-todo.md` | 如果把本文任务纳入当前迭代，需要同步拆到 TODO。 |
@@ -380,4 +380,4 @@ Lua 侧仍可提供：
 
 ## 8. 一句话原则
 
-`HelloOgre3D` 可以保留 AI 学习沙盒的清晰性，但在系统边界上要按生产级思路设计：**Lua 讲清楚行为，C++ 扛住规模，sample 验证概念，profiler 验证成本。**
+`HelloOgre3D` 当前阶段保留 AI 学习沙盒的清晰性，长期按生产级项目演进：**Lua 讲清楚行为，C++ 扛住规模，sample 验证概念，profiler 验证成本，工具链支撑内容生产。**

@@ -6,6 +6,7 @@ require("res.scripts.agent.IndirectSoldierAgent.lua")
 require("res.scripts.agent.DecisionSoldierAgent.lua")
 
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
+local ParityTrace = require("res.scripts.samples.parity_trace")
 
 local _sampleName = "Sandbox17"
 local _agents = {}
@@ -20,6 +21,7 @@ local _drawCache = {}
 local _projectionCache = {}
 local _EnsureInfluenceMap = nil
 local _GetDrawCellLimit = nil
+local _parityTrace = nil
 
 local _colors = {
 	team1 = ColourValue(0.2, 0.95, 0.4),
@@ -91,7 +93,10 @@ local function _ReadNumber(config, key, defaultValue)
 end
 
 local function _ReadBool(config, key, defaultValue)
-	local value = config ~= nil and config[key] or nil
+	if config == nil then
+		return defaultValue
+	end
+	local value = config[key]
 	if value == nil then
 		return defaultValue
 	end
@@ -730,6 +735,46 @@ local function _MaybePrintSmoke()
 	end
 end
 
+local function _BuildParitySnapshot(state)
+	local map = _EnsureInfluenceMap()
+	local config = _GetConfig()
+	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
+	local agents = {}
+	local maxAgents = state ~= nil and state.maxAgents or #_agents
+	for index, agent in ipairs(_agents) do
+		if index > maxAgents then
+			break
+		end
+		agents[#agents + 1] = ParityTrace.AgentSnapshot(agent, index, {
+			alive = _IsAlive(agent),
+			tacticDead = _IsTacticDead(agent),
+		})
+	end
+
+	local payload = {
+		agents = agents,
+		tactics = {
+			events = _tactics.eventCount,
+			dangerCells = _tactics.dangerCells,
+			teamCells = _tactics.teamCells,
+			dangerUpdates = _tactics.dangerRunCount,
+			teamUpdates = _tactics.teamRunCount,
+			dangerSkips = _tactics.dangerSkipCount,
+			teamSkips = _tactics.teamSkipCount,
+			lastCellWrites = _tactics.lastCellWrites,
+			luaDangerActive = #(map:GetActiveCells("danger", threshold)),
+			luaTeamActive = #(map:GetActiveCells("team", threshold)),
+			cppEvents = _GetCppTacticalEventCount(),
+		},
+	}
+	if state == nil or state.includeAiSummary then
+		if ObjectManager ~= nil and ObjectManager.buildAiDebugSummary ~= nil then
+			payload.aiSummary = ParityTrace.SplitLines(ObjectManager:buildAiDebugSummary(maxAgents), state.aiSummaryMaxLines, state.aiSummaryMaxLineLength)
+		end
+	end
+	return payload
+end
+
 local function _GetTeamIdForAgent(config, index)
 	if _ReadBool(config, "alternateTeams", true) then
 		return (index % 2 == 0) and 0 or 1
@@ -870,6 +915,13 @@ function Sandbox_Initialize()
 	_tactics.dangerElapsedMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)
 	_tactics.teamElapsedMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
 	_PublishScriptedBurst(true)
+	local preset = _GetPreset()
+	_parityTrace = ParityTrace.Start({
+		sample = _sampleName,
+		preset = preset.name,
+		seed = preset.seed,
+		config = preset.parityTrace,
+	})
 	_RefreshPanel()
 end
 
@@ -890,5 +942,6 @@ function Sandbox_Update(deltaTimeInMillis)
 		_panelElapsedMs = 0
 		_RefreshPanel()
 	end
+	ParityTrace.Tick(_parityTrace, deltaTimeInMillis, _BuildParitySnapshot)
 	_MaybePrintSmoke()
 end

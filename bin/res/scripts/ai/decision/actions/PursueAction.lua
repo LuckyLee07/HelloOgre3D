@@ -10,12 +10,25 @@ local _PURSUE_REACH    = 2.0    -- 接近到 2m 内停止追击；与 Sandbox6 P
 local _REPATH_INTERVAL = 500    -- ms（越小越准但越闪）
 local _REPATH_DELTA_SQ = 1.0    -- 敌人位置移动平方距离 > 1m² 重新规划
 
+local _pursueReach = _PURSUE_REACH
+local _repathInterval = _REPATH_INTERVAL
+local _repathDeltaSq = _REPATH_DELTA_SQ
 local _acc = nil
 local _msSinceRepath = 0
 local _lastEnemyPos = nil
 
+local function _ConfigureFromBlackboard(bb)
+    _pursueReach = bb and bb:GetFloat("pursue.reach", _PURSUE_REACH) or _PURSUE_REACH
+    _repathInterval = bb and bb:GetFloat("pursue.repathIntervalMs", _REPATH_INTERVAL) or _REPATH_INTERVAL
+    _repathDeltaSq = bb and bb:GetFloat("pursue.repathDeltaSq", _REPATH_DELTA_SQ) or _REPATH_DELTA_SQ
+    if _pursueReach <= 0 then _pursueReach = _PURSUE_REACH end
+    if _repathInterval < 0 then _repathInterval = _REPATH_INTERVAL end
+    if _repathDeltaSq < 0 then _repathDeltaSq = _REPATH_DELTA_SQ end
+end
+
 function OnInitialize(owner, bb)
     _msSinceRepath = 0
+    _ConfigureFromBlackboard(bb)
     if _acc == nil then _acc = Vector3(0, 0, 0) end
     if not owner then return end
 
@@ -43,17 +56,18 @@ function OnUpdate(deltaMs, owner, bb)
     -- 接近到 reach 距离即终止；CanShootEnemy 评估器（3m）会让 DT 切到 ShootAction
     local toEnemy = enemy:GetPosition() - owner:GetPosition()
     toEnemy.y = 0
-    if toEnemy:length() < _PURSUE_REACH then
+    if toEnemy:length() < _pursueReach then
         return ActionStatus.TERMINATED
     end
 
     -- 周期性按需 repath：到了检查间隔且敌人位移超阈值才重建
     _msSinceRepath = _msSinceRepath + deltaMs
-    if _msSinceRepath >= _REPATH_INTERVAL then
+    if _repathInterval <= 0 or _msSinceRepath >= _repathInterval then
         _msSinceRepath = 0
         local enemyPos = enemy:GetPosition()
         local needRepath = (_lastEnemyPos == nil)
-            or ((enemyPos - _lastEnemyPos):squaredLength() > _REPATH_DELTA_SQ)
+            or (_repathDeltaSq <= 0)
+            or ((enemyPos - _lastEnemyPos):squaredLength() > _repathDeltaSq)
         if needRepath and MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), enemyPos) then
             owner:SetMovePosition(enemyPos)
             _lastEnemyPos = enemyPos
@@ -63,8 +77,10 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     -- 仿 Sandbox6 C++ PursueState：红色折线 + 末端圆圈 = pursue reach 距离。
     -- 敌人 GetPosition() 是腰高，必须投到 navmesh 才能贴地，不然圆飘在空中。
-    local circleCenter = Sandbox:FindClosestPoint("default", enemy:GetPosition())
-    MoveHelpers.DrawPath(owner, circleCenter, UtilColors.Red, Vector3(0, 0.1, 0), _PURSUE_REACH)
+    if _G.HELLO_SUPPRESS_AI_PATH_DRAW ~= true then
+        local circleCenter = Sandbox:FindClosestPoint("default", enemy:GetPosition())
+        MoveHelpers.DrawPath(owner, circleCenter, UtilColors.Red, Vector3(0, 0.1, 0), _pursueReach)
+    end
     return ActionStatus.RUNNING
 end
 

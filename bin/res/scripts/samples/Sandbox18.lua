@@ -101,7 +101,10 @@ local function _ReadNumber(config, key, defaultValue)
 end
 
 local function _ReadBool(config, key, defaultValue)
-	local value = config ~= nil and config[key] or nil
+	if config == nil then
+		return defaultValue
+	end
+	local value = config[key]
 	if value == nil then
 		return defaultValue
 	end

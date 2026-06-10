@@ -11,6 +11,7 @@ class btDiscreteDynamicsWorld;
 class btRigidBody;
 class btManifoldPoint;
 class btPersistentManifold;
+class btVector3;
 class BaseObject;
 
 class PhysicsWorld
@@ -27,6 +28,7 @@ public:
 
 	void addRigidBody(btRigidBody* pRigidBody);
 	void removeRigidBody(btRigidBody* pRigidBody);
+	bool rayCastToRigidBody(const btVector3& from, const btVector3& to, btVector3& hitPoint, const btRigidBody*& rigidBody) const;
 
 	bool tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point);
 

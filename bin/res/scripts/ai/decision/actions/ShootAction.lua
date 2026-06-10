@@ -3,16 +3,36 @@
 -- 持续 ~600ms 给动画时间，然后终止以便 DT 重新评估（敌人也许已死/已远）。
 
 require("res.scripts.ai.decision.ActionStatus.lua")
+require("res.scripts.agent.AgentUtils.lua")
 
 local _elapsedMs = 0
 local _durationMs = 600
 local _hasFired = false
+local _idleRequested = false
+
+local function _IsShootBodyStateCurrent(owner)
+    if owner == nil or owner.GetObjectASM == nil then
+        return false
+    end
+
+    local asm = owner:GetObjectASM()
+    if asm == nil then
+        return false
+    end
+
+    if asm:IsTransitioning() then
+        return false
+    end
+
+    local stateName = asm:GetCurrStateName()
+    return stateName == "fire" or stateName == "crouch_fire"
+end
 
 function OnInitialize(owner, bb)
     _elapsedMs = 0
     _hasFired = false
+    _idleRequested = false
     if owner then
-        owner:SetVelocity(Vector3(0, 0, 0))
         owner:EnterShootAnim()
     end
 end
@@ -21,6 +41,10 @@ function OnUpdate(deltaMs, owner, bb)
     _elapsedMs = _elapsedMs + deltaMs
     if not owner or owner:GetHealth() <= 0 then
         return ActionStatus.TERMINATED
+    end
+
+    if owner:IsMoving() then
+        Soldier_SlowMovement(owner, deltaMs)
     end
 
     local enemy = bb:GetAgent("enemy")
@@ -42,13 +66,29 @@ function OnUpdate(deltaMs, owner, bb)
         end
     end
 
+    if _idleRequested then
+        return ActionStatus.TERMINATED
+    end
+
+    if _hasFired and _IsShootBodyStateCurrent(owner) then
+        _idleRequested = true
+        owner:EnterIdleAnim()
+        return ActionStatus.RUNNING
+    end
+
     if _elapsedMs >= _durationMs then
+        _idleRequested = true
+        owner:EnterIdleAnim()
         return ActionStatus.TERMINATED
     end
     return ActionStatus.RUNNING
 end
 
 function OnCleanUp(owner, bb)
+    if owner and owner:GetHealth() > 0 then
+        owner:EnterIdleAnim()
+    end
     _elapsedMs = 0
     _hasFired = false
+    _idleRequested = false
 end

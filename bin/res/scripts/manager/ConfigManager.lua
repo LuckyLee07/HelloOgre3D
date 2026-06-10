@@ -91,8 +91,10 @@ end
 
 function ConfigManager:ApplyStartupSeed(sampleName)
 	local preset = self:GetSamplePreset(sampleName)
-	--math.randomseed(preset.seed or 0)
-	print("[ConfigManager] preset=", tostring(preset.name), "sample=", tostring(preset.sampleName), "seed=", preset.seed, "agents=", preset.agentCount, "spawnMode=", tostring(preset.spawnMode))
+	local seed = math.floor(tonumber(preset.seed) or 0)
+	math.randomseed(seed)
+	_G.HELLO_SAMPLE_SEED = seed
+	print("[ConfigManager] preset=", tostring(preset.name), "sample=", tostring(preset.sampleName), "seed=", seed, "agents=", preset.agentCount, "spawnMode=", tostring(preset.spawnMode), "deterministic=", true)
 	return preset
 end
 

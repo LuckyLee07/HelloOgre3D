@@ -448,6 +448,46 @@ SamplePresets.chapter9_tactics_lua.diagnostics = {
 
 SamplePresets.Sandbox17 = SamplePresets.chapter9_tactics_lua
 
+SamplePresets.chapter9_tactics_legacy_parity = cloneTable(SamplePresets.chapter9_tactics_lua)
+SamplePresets.chapter9_tactics_legacy_parity.seed = 20260608
+SamplePresets.chapter9_tactics_legacy_parity.spawnMode = "fixed"
+SamplePresets.chapter9_tactics_legacy_parity.spawnPoints = {
+	{ 9.370, 0, 24.598 },
+	{ 31.151, 0, -7.671 },
+	{ -8.233, 0, -5.396 },
+	{ 22.090, 0, 62.469 },
+	{ -25.620, 0, 19.110 },
+	{ 33.025, 0, 37.661 },
+}
+SamplePresets.chapter9_tactics_legacy_parity.lightTeamCount = 3
+SamplePresets.chapter9_tactics_legacy_parity.aiBlackboard.floats["perception.fieldOfViewDegrees"] = 90.0
+SamplePresets.chapter9_tactics_legacy_parity.aiBlackboard.ints["perception.visionIntervalMs"] = 1
+SamplePresets.chapter9_tactics_legacy_parity.aiBlackboard.bools["perception.staggerScans"] = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.agentScript = "res/scripts/agent/Chapter9LegacySoldierAgent.lua"
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.alternateTeams = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.useCppEventSource = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEvents = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventsInSmoke = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventIntervalMs = 1500
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.deadFriendlyDelayMs = 60000
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.showTacticsPanel = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawAgentMarkers = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawEventMarkers = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawDangerLayer = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawTeamLayer = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawInSmoke = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.maxDrawCellsPerLayer = 240
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawNeutralCells = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.targetRingRadius = 4.0
+SamplePresets.chapter9_tactics_legacy_parity.parityTrace = {
+	enabled = true,
+	delayMs = 1000,
+	intervalMs = 500,
+	maxSamples = 16,
+	maxAgents = 6,
+	includeAiSummary = false,
+}
+
 SamplePresets.chapter9_tactics_cpp = cloneTable(SamplePresets.chapter9_tactics_lua)
 SamplePresets.chapter9_tactics_cpp.seed = 20260603
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.cppInfluenceMap = true

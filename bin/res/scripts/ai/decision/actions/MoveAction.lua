@@ -15,6 +15,8 @@ local _lastTarget = nil    -- 上一次实际建过 path 的目标点
 
 function OnInitialize(owner, bb)
     _elapsedMs = 0
+    _segmentMs = bb and bb:GetFloat("move.segmentMs", 2000.0) or 2000
+    if _segmentMs <= 0 then _segmentMs = 2000 end
     if _acc == nil then _acc = Vector3(0, 0, 0) end
     if not owner then return end
 

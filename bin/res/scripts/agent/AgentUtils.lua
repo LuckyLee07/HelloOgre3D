@@ -136,6 +136,19 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
     end
 end
 
+function Soldier_SlowMovement(agent, deltaTimeInMillis, rate)
+    rate = rate or 1;
+
+    local horizontalVelocity = agent:GetVelocity();
+    local yMovement = horizontalVelocity.y;
+
+    horizontalVelocity.y = 0;
+    horizontalVelocity = horizontalVelocity * 0.91 * (1 / rate);
+    horizontalVelocity.y = yMovement;
+
+    agent:SetVelocity(horizontalVelocity);
+end
+
 function Soldier_CalculateSteering(agent, deltaTimeInSeconds)
     local avoidForce = agent:ForceToAvoidAgents(0.5);
     local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
