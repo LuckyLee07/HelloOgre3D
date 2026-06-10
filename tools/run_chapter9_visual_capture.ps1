@@ -80,7 +80,7 @@ if ($Seconds -lt $requiredSeconds) {
 	$Seconds = $requiredSeconds
 }
 $LegacySeconds = $Seconds
-$ModernSeconds = [int][Math]::Max($Seconds, [Math]::Ceiling((($maxCaptureMs + $SettleMs) / 1000.0) * 3.0) + 10)
+$ModernSeconds = [int][Math]::Max($Seconds, [Math]::Ceiling((($maxCaptureMs + $SettleMs) / 1000.0) * 6.0) + 20)
 $TraceDelayMs = 1000
 $TraceIntervalMs = 500
 $ModernTraceMaxSamples = [int][Math]::Max(1, [Math]::Ceiling(($maxCaptureMs - $TraceDelayMs) / [double]$TraceIntervalMs) + 2)
@@ -435,6 +435,7 @@ function Invoke-LegacyRenderCapture {
 		HELLO_RENDER_CAPTURE_DIR = $OldOutputDir
 		HELLO_RENDER_CAPTURE_PREFIX = "old"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
+		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
 	}
 
 	$process = $null
@@ -493,6 +494,7 @@ function Invoke-ModernRenderCapture {
 		HELLO_RENDER_CAPTURE_DIR = $NewOutputDir
 		HELLO_RENDER_CAPTURE_PREFIX = "new"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
+		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
 	}
 	if (-not $ModernNoSmoke) {
 		$modernEnv["HELLO_SANDBOX_SMOKE_TEST"] = "1"
@@ -528,7 +530,31 @@ function Invoke-ModernRenderCapture {
 		$script:CapturedProcess = $null
 		Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$ModernSeconds"
 
-		Start-Sleep -Seconds $ModernSeconds
+		$deadline = (Get-Date).AddSeconds($ModernSeconds)
+		while ((Get-Date) -lt $deadline) {
+			Start-Sleep -Milliseconds 500
+			if ($process.HasExited) {
+				break
+			}
+
+			$allCaptured = $true
+			foreach ($captureTime in $sortedCaptures) {
+				$filePath = Join-Path $NewOutputDir ("new_{0:D5}ms.png" -f $captureTime)
+				if (-not (Test-Path -LiteralPath $filePath)) {
+					$allCaptured = $false
+					break
+				}
+			}
+
+			$traceFinished = $false
+			if (Test-Path -LiteralPath $modernTracePath) {
+				$traceFinished = $null -ne (Select-String -LiteralPath $modernTracePath -Pattern '"type":"finish"' -SimpleMatch | Select-Object -First 1)
+			}
+
+			if ($allCaptured -and $traceFinished) {
+				break
+			}
+		}
 
 		$processError = ""
 		if ($KeepAlive) {

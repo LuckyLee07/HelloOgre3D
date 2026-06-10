@@ -449,6 +449,9 @@ local function _BuildDebugState(state)
 	return {
 		action = state.action or "",
 		enemyId = enemyId,
+		agentIndex = state.agentIndex or -1,
+		randomMoveCount = state.randomMoveCount or 0,
+		moveSource = state.moveSource or "",
 		visibleCount = visibleCount,
 		visibleIds = visibleIds,
 		useHeadBoneVision = _USE_HEAD_BONE_VISION,
@@ -464,6 +467,9 @@ local function _WriteDebugState(agent, state)
 	local debugState = _BuildDebugState(state)
 	bb:SetString("legacy.action", debugState.action)
 	bb:SetInt("legacy.enemyId", debugState.enemyId)
+	bb:SetInt("legacy.agentIndex", debugState.agentIndex)
+	bb:SetInt("legacy.randomMoveCount", debugState.randomMoveCount)
+	bb:SetString("legacy.moveSource", debugState.moveSource)
 	bb:SetInt("legacy.visibleCount", debugState.visibleCount)
 	bb:SetBool("legacy.useHeadBoneVision", debugState.useHeadBoneVision)
 	bb:ClearIntArray("legacy.visibleIds")
@@ -610,6 +616,7 @@ end
 local function _BeginMove(agent, state)
 	state.action = "move"
 	state.elapsedMs = 0
+	state.moveSource = "movePosition"
 	agent:EnterMoveAnim()
 end
 
@@ -620,6 +627,7 @@ local function _BeginPursue(agent, state, enemy)
 	if enemy ~= nil then
 		local target = enemy:GetPosition()
 		if _BuildAndSetPath(agent, target) then
+			state.moveSource = "pursue"
 			agent:EnterMoveAnim()
 			_SendLegacyTeamMessage(agent, "EnemySelection", {
 				agent = agent,
@@ -636,9 +644,11 @@ local function _BeginRandomMove(agent, state)
 
 	local config = _GetChapter9Config()
 	local agentIndex = _GetAgentIndex(agent, config)
+	state.agentIndex = agentIndex
 	local agentPoints = _GetIndexedValue(config.legacyRandomMovePoints, agentIndex)
 	local fixedPoint = _ToVector3(_GetIndexedValue(agentPoints, state.randomMoveCount))
 	if fixedPoint ~= nil and _BuildAndSetPath(agent, fixedPoint) then
+		state.moveSource = "fixedRandom"
 		if _GetIndexedValue(config.legacyRandomMoveConsumesRandomPoint, agentIndex) == true then
 			Sandbox:RandomPoint("default")
 		end
@@ -648,6 +658,7 @@ local function _BeginRandomMove(agent, state)
 	for attempt = 1, _MAX_RANDOM_ATTEMPTS do
 		local target = Sandbox:RandomPoint("default")
 		if target ~= nil and _BuildAndSetPath(agent, target) then
+			state.moveSource = "random"
 			return
 		end
 	end
@@ -730,6 +741,7 @@ local function _UpdateAction(agent, state, deltaMs)
 		end
 		return true
 	elseif action == "move" then
+		agent:EnterMoveAnim()
 		_ApplyMove(agent, state, deltaMs)
 		if state.elapsedMs >= _MOVE_SEGMENT_MS then
 			_QueueActionCleanup(state, action)
@@ -750,7 +762,10 @@ local function _UpdateAction(agent, state, deltaMs)
 		end
 
 		local target = enemy:GetPosition()
-		_BuildAndSetPath(agent, target)
+		if _BuildAndSetPath(agent, target) then
+			state.moveSource = "pursue"
+			agent:EnterMoveAnim()
+		end
 		_ApplyMove(agent, state, deltaMs)
 		if _Distance(agent:GetPosition(), target) < _SHOOT_REACH then
 			_ClearPath(agent)
@@ -900,6 +915,7 @@ function Agent_Initialize(agent)
 	end
 
 	local state = _GetState(agent)
+	state.agentIndex = _GetAgentIndex(agent, config)
 	state.action = nil
 	state.elapsedMs = 0
 	state.timeMs = 0
@@ -957,6 +973,9 @@ function Chapter9Legacy_GetDebugState(agent)
 	return {
 		legacyAction = debugState.action,
 		legacyEnemyId = debugState.enemyId,
+		legacyAgentIndex = debugState.agentIndex,
+		legacyRandomMoveCount = debugState.randomMoveCount,
+		legacyMoveSource = debugState.moveSource,
 		legacyVisibleCount = debugState.visibleCount,
 		legacyVisibleIds = debugState.visibleIds,
 		legacyUseHeadBoneVision = debugState.useHeadBoneVision,

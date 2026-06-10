@@ -924,6 +924,9 @@ local function _BuildAgentParityExtra(agent)
 	if bb ~= nil then
 		extra.legacyAction = bb:GetString("legacy.action")
 		extra.legacyEnemyId = bb:GetInt("legacy.enemyId", -1)
+		extra.legacyAgentIndex = bb:GetInt("legacy.agentIndex", -1)
+		extra.legacyRandomMoveCount = bb:GetInt("legacy.randomMoveCount", 0)
+		extra.legacyMoveSource = bb:GetString("legacy.moveSource")
 		extra.legacyVisibleCount = bb:GetInt("legacy.visibleCount", 0)
 		extra.legacyUseHeadBoneVision = bb:GetBool("legacy.useHeadBoneVision", false)
 

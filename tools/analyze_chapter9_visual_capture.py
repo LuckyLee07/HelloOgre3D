@@ -150,13 +150,16 @@ def is_idle_state(state_name):
     return "idle" in state_name
 
 
+def has_state_matching(agent, predicate):
+    return any(predicate(agent.get(key)) for key in ("state", "stateNext", "stateDesired"))
+
+
 def classify_action_state_mismatch(agent):
     action = agent.get("legacyAction") or (agent.get("extra") or {}).get("legacyAction")
-    state_name = agent.get("state")
     speed = as_number(agent.get("speed"), 0.0)
-    if expected_motion_for_action(action) and speed > 0.25 and not is_move_state(state_name):
+    if expected_motion_for_action(action) and speed > 0.25 and not has_state_matching(agent, is_move_state):
         return "moving_action_visual_idle"
-    if action in ("idle", "shoot", "reload") and speed < 0.25 and not is_idle_state(state_name):
+    if action in ("idle", "shoot", "reload") and speed < 0.25 and not has_state_matching(agent, is_idle_state):
         return "idle_action_visual_moving"
     return None
 

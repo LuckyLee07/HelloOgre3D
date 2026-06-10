@@ -146,6 +146,7 @@ local function _SafeCall(object, methodName, defaultValue)
 end
 
 function ParityTrace.AgentSnapshot(agent, index, extra)
+	local bodyAsm = _SafeCall(agent, "GetObjectASM", nil)
 	local snapshot = {
 		index = index,
 		id = _SafeCall(agent, "GetObjId", -1),
@@ -153,6 +154,9 @@ function ParityTrace.AgentSnapshot(agent, index, extra)
 		hp = _Round(_SafeCall(agent, "GetHealth", 0), 10),
 		state = tostring(_SafeCall(agent, "GetCurStateName", "")),
 		stateId = _SafeCall(agent, "GetCurStateId", -1),
+		stateNext = tostring(_SafeCall(bodyAsm, "GetNextStateName", "")),
+		stateDesired = tostring(_SafeCall(bodyAsm, "GetDesiredStateName", "")),
+		stateTransitioning = _SafeCall(bodyAsm, "IsTransitioning", false) == true,
 		pos = ParityTrace.Vector3(_SafeCall(agent, "GetPosition", nil)),
 		forward = ParityTrace.Vector3(_SafeCall(agent, "GetForward", nil)),
 		vel = ParityTrace.Vector3(_SafeCall(agent, "GetVelocity", nil)),
