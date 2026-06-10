@@ -56,6 +56,8 @@ public:
 	bool HasEnemy(const Ogre::String& navMeshName = "default");
 	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
 	AgentObject* GetEnemy() const;
+	Ogre::Vector3 GetBonePosition(const Ogre::String& boneName) const;
+	Ogre::Vector3 GetBoneForward(const Ogre::String& boneName) const;
 
 	bool HasMovePosition(float reachDistance = 1.5f) const;
 	void SetMovePosition(const Ogre::Vector3& movePos);

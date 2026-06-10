@@ -735,6 +735,32 @@ local function _MaybePrintSmoke()
 	end
 end
 
+local function _BuildAgentParityExtra(agent)
+	local extra = {
+		alive = _IsAlive(agent),
+		tacticDead = _IsTacticDead(agent),
+	}
+
+	local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+	local bb = ai ~= nil and ai.GetBlackboard ~= nil and ai:GetBlackboard() or nil
+	if bb ~= nil then
+		extra.legacyAction = bb:GetString("legacy.action")
+		extra.legacyEnemyId = bb:GetInt("legacy.enemyId", -1)
+		extra.legacyVisibleCount = bb:GetInt("legacy.visibleCount", 0)
+		extra.legacyUseHeadBoneVision = bb:GetBool("legacy.useHeadBoneVision", false)
+
+		local visibleIds = {}
+		if bb.GetIntArrayCount ~= nil and bb.GetIntArrayValue ~= nil then
+			for i = 1, bb:GetIntArrayCount("legacy.visibleIds") do
+				visibleIds[#visibleIds + 1] = bb:GetIntArrayValue("legacy.visibleIds", i, -1)
+			end
+		end
+		extra.legacyVisibleIds = visibleIds
+	end
+
+	return extra
+end
+
 local function _BuildParitySnapshot(state)
 	local map = _EnsureInfluenceMap()
 	local config = _GetConfig()
@@ -745,10 +771,7 @@ local function _BuildParitySnapshot(state)
 		if index > maxAgents then
 			break
 		end
-		agents[#agents + 1] = ParityTrace.AgentSnapshot(agent, index, {
-			alive = _IsAlive(agent),
-			tacticDead = _IsTacticDead(agent),
-		})
+		agents[#agents + 1] = ParityTrace.AgentSnapshot(agent, index, _BuildAgentParityExtra(agent))
 	end
 
 	local payload = {

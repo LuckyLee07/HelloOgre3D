@@ -276,6 +276,45 @@ AgentObject* SoldierObject::GetEnemy() const
 	return ai != nullptr ? ai->GetEnemy() : nullptr;
 }
 
+Ogre::Vector3 SoldierObject::GetBonePosition(const Ogre::String& boneName) const
+{
+	if (m_renderComp != nullptr)
+	{
+		Ogre::SceneNode* node = m_renderComp->GetSceneNode();
+		Ogre::Vector3 position;
+		if (node != nullptr && SceneFactory::GetBonePosition(*node, boneName, position))
+			return position;
+	}
+
+	return GetPosition() + Ogre::Vector3(0.0f, GetHeight() * 0.5f, 0.0f);
+}
+
+Ogre::Vector3 SoldierObject::GetBoneForward(const Ogre::String& boneName) const
+{
+	if (m_renderComp != nullptr)
+	{
+		Ogre::SceneNode* node = m_renderComp->GetSceneNode();
+		Ogre::Quaternion orientation;
+		if (node != nullptr && SceneFactory::GetBoneOrientation(*node, boneName, orientation))
+		{
+			const Ogre::Vector3 rotation = QuaternionToRotationDegrees(orientation);
+			const Ogre::Quaternion legacyRotation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
+			Ogre::Vector3 forward = legacyRotation * Ogre::Vector3(0.0f, 0.0f, -1.0f);
+			if (!forward.isNaN() && !forward.isZeroLength())
+			{
+				forward.normalise();
+				return forward;
+			}
+		}
+	}
+
+	Ogre::Vector3 forward = GetForward();
+	if (forward.isNaN() || forward.isZeroLength())
+		return Ogre::Vector3::UNIT_Z;
+	forward.normalise();
+	return forward;
+}
+
 bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
 {
 	AIController* ai = GetAIController();

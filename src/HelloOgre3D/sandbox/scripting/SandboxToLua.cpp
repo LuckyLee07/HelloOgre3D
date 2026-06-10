@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Tue Jun  9 15:19:16 2026.
+** Generated automatically by tolua++-1.0.92 on Tue Jun  9 16:06:33 2026.
 */
 
 #ifndef __cplusplus
@@ -5279,6 +5279,96 @@ static int tolua_SandboxToLua_SoldierObject_GetEnemy00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetEnemy'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetBonePosition of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetBonePosition00
+static int tolua_SandboxToLua_SoldierObject_GetBonePosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string boneName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetBonePosition'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetBonePosition(boneName);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+   tolua_pushcppstring(tolua_S,(const char*)boneName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetBonePosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetBoneForward of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_GetBoneForward00
+static int tolua_SandboxToLua_SoldierObject_GetBoneForward00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const SoldierObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const SoldierObject* self = (const SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  const std::string boneName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetBoneForward'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->GetBoneForward(boneName);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+   tolua_pushcppstring(tolua_S,(const char*)boneName);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetBoneForward'.",&tolua_err);
  return 0;
 #endif
 }
@@ -13228,6 +13318,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CanShootEnemy",tolua_SandboxToLua_SoldierObject_CanShootEnemy00);
    tolua_function(tolua_S,"CanShootEnemy",tolua_SandboxToLua_SoldierObject_CanShootEnemy01);
    tolua_function(tolua_S,"GetEnemy",tolua_SandboxToLua_SoldierObject_GetEnemy00);
+   tolua_function(tolua_S,"GetBonePosition",tolua_SandboxToLua_SoldierObject_GetBonePosition00);
+   tolua_function(tolua_S,"GetBoneForward",tolua_SandboxToLua_SoldierObject_GetBoneForward00);
    tolua_function(tolua_S,"HasMovePosition",tolua_SandboxToLua_SoldierObject_HasMovePosition00);
    tolua_function(tolua_S,"SetMovePosition",tolua_SandboxToLua_SoldierObject_SetMovePosition00);
    tolua_function(tolua_S,"ClearMovePosition",tolua_SandboxToLua_SoldierObject_ClearMovePosition00);

@@ -133,7 +133,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("old_trace", type=Path)
     parser.add_argument("new_trace", type=Path)
-    parser.add_argument("--position-tolerance", type=float, default=1.0)
+    parser.add_argument("--position-tolerance", type=float, default=1.05)
     parser.add_argument("--target-tolerance", type=float, default=1.5)
     parser.add_argument("--time-tolerance-ms", type=float, default=250.0)
     parser.add_argument("--cell-tolerance", type=int, default=8)

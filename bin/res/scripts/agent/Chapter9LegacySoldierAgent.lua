@@ -11,8 +11,23 @@ local _MAX_RANDOM_ATTEMPTS = 64
 local _COS_45_DEGREES = 0.707
 local _EYE_FORWARD_OFFSET = 0.5
 local _EYE_HEIGHT_RATIO = 0.5
+local _USE_HEAD_BONE_VISION = false
+local _USE_LEVEL_BOX_OCCLUSION = true
 
 local _states = {}
+
+local function _GetBlackboard(agent)
+	if agent == nil or agent.GetAI == nil then
+		return nil
+	end
+
+	local ai = agent:GetAI()
+	if ai == nil or ai.GetBlackboard == nil then
+		return nil
+	end
+
+	return ai:GetBlackboard()
+end
 
 local function _GetState(agent)
 	local id = agent:GetObjId()
@@ -29,10 +44,65 @@ local function _GetState(agent)
 			enemy = nil,
 			visibleAgents = {},
 			dead = false,
+			randomMoveCount = 0,
+			evaluationCount = 0,
 		}
 		_states[id] = state
 	end
 	return state
+end
+
+local function _GetChapter9Config()
+	if ConfigManager == nil or ConfigManager.GetSamplePreset == nil then
+		return {}
+	end
+
+	local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox17"
+	local preset = ConfigManager:GetSamplePreset(sampleName)
+	return preset ~= nil and (preset.chapter9Tactics or {}) or {}
+end
+
+local function _GetAgentIndex(agent, config)
+	if agent == nil then
+		return -1
+	end
+
+	local firstAgentId = tonumber(config.legacyFirstAgentId) or 115
+	return agent:GetObjId() - firstAgentId + 1
+end
+
+local function _GetAgentByLegacyIndex(index, config)
+	index = tonumber(index)
+	if index == nil or ObjectManager == nil or ObjectManager.getAllAgents == nil then
+		return nil
+	end
+
+	local firstAgentId = tonumber(config.legacyFirstAgentId) or 115
+	local objectId = firstAgentId + index - 1
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local candidate = agents[i]
+		if candidate ~= nil and candidate:GetObjId() == objectId then
+			return candidate
+		end
+	end
+	return nil
+end
+
+local function _GetIndexedValue(values, index)
+	if values == nil then
+		return nil
+	end
+
+	return values[index] or values[tostring(index)]
+end
+
+local function _ToVector3(point)
+	if point == nil then
+		return nil
+	end
+
+	return Vector3(point[1] or 0, point[2] or 0, point[3] or 0)
 end
 
 local function _DistanceSq(left, right)
@@ -43,6 +113,80 @@ end
 
 local function _Distance(left, right)
 	return math.sqrt(_DistanceSq(left, right))
+end
+
+local function _AxisValue(pos, axis)
+	if axis == "x" then return pos.x end
+	if axis == "y" then return pos.y end
+	return pos.z
+end
+
+local function _PointInsideAabb(point, minPos, maxPos)
+	return point.x >= minPos.x and point.x <= maxPos.x
+		and point.y >= minPos.y and point.y <= maxPos.y
+		and point.z >= minPos.z and point.z <= maxPos.z
+end
+
+local function _SegmentIntersectsAabb(startPos, endPos, box)
+	if startPos == nil or endPos == nil or box == nil or box.position == nil or box.size == nil then
+		return false
+	end
+
+	local halfSize = (tonumber(box.size) or 0.0) * 0.5
+	if halfSize <= 0.0 then
+		return false
+	end
+
+	local minPos = Vector3(box.position.x - halfSize, box.position.y - halfSize, box.position.z - halfSize)
+	local maxPos = Vector3(box.position.x + halfSize, box.position.y + halfSize, box.position.z + halfSize)
+	if _PointInsideAabb(startPos, minPos, maxPos) or _PointInsideAabb(endPos, minPos, maxPos) then
+		return false
+	end
+
+	local direction = endPos - startPos
+	local tMin = 0.0
+	local tMax = 1.0
+	local axes = {"x", "y", "z"}
+	for _, axis in ipairs(axes) do
+		local startValue = _AxisValue(startPos, axis)
+		local directionValue = _AxisValue(direction, axis)
+		local minValue = _AxisValue(minPos, axis)
+		local maxValue = _AxisValue(maxPos, axis)
+
+		if math.abs(directionValue) < 0.0001 then
+			if startValue < minValue or startValue > maxValue then
+				return false
+			end
+		else
+			local invDirection = 1.0 / directionValue
+			local t1 = (minValue - startValue) * invDirection
+			local t2 = (maxValue - startValue) * invDirection
+			if t1 > t2 then
+				t1, t2 = t2, t1
+			end
+			if t1 > tMin then tMin = t1 end
+			if t2 < tMax then tMax = t2 end
+			if tMin > tMax then
+				return false
+			end
+		end
+	end
+
+	return tMax >= 0.0 and tMin <= 1.0
+end
+
+local function _IsBlockedByLevel(startPos, endPos)
+	if not _USE_LEVEL_BOX_OCCLUSION then
+		return false
+	end
+
+	local boxes = _G.SandboxLevelBoxes or {}
+	for _, box in ipairs(boxes) do
+		if _SegmentIntersectsAabb(startPos, endPos, box) then
+			return true
+		end
+	end
+	return false
 end
 
 local function _ClearPath(agent)
@@ -80,7 +224,7 @@ local function _IsValidEnemy(agent, candidate)
 		and candidate:GetTeamId() ~= agent:GetTeamId()
 end
 
-local function _GetEyePosition(agent)
+local function _GetFallbackEyePosition(agent)
 	local forward = agent:GetForward()
 	forward.y = 0
 	if forward:squaredLength() <= 0.0001 then
@@ -91,6 +235,19 @@ local function _GetEyePosition(agent)
 
 	local height = agent.GetHeight ~= nil and agent:GetHeight() or 1.6
 	return agent:GetPosition() + Vector3(0, height * _EYE_HEIGHT_RATIO, 0) + forward * _EYE_FORWARD_OFFSET, forward
+end
+
+local function _GetEyePosition(agent)
+	if _USE_HEAD_BONE_VISION and agent.GetBonePosition ~= nil and agent.GetBoneForward ~= nil then
+		local position = agent:GetBonePosition("b_Head1")
+		local forward = agent:GetBoneForward("b_Head1")
+		if position ~= nil and forward ~= nil and forward:squaredLength() > 0.0001 then
+			forward = forward:normalisedCopy()
+			return position + forward * _EYE_FORWARD_OFFSET, forward
+		end
+	end
+
+	return _GetFallbackEyePosition(agent)
 end
 
 local function _CanSeeAgent(agent, candidate)
@@ -108,6 +265,10 @@ local function _CanSeeAgent(agent, candidate)
 	local rayVector = toTarget:normalisedCopy()
 	local dotProduct = rayVector:dotProduct(forward)
 	if dotProduct < _COS_45_DEGREES then
+		return false
+	end
+
+	if _IsBlockedByLevel(eyePosition, target) then
 		return false
 	end
 
@@ -162,6 +323,55 @@ local function _ChooseBestEnemy(agent, state)
 		end
 	end
 	return bestEnemy
+end
+
+local function _IsRecentlyVisibleEnemy(state, enemy)
+	if enemy == nil then
+		return false
+	end
+
+	local info = (state.visibleAgents or {})[enemy:GetObjId()]
+	return info ~= nil and (state.timeMs - (info.lastSeen or 0)) <= 1000
+end
+
+local function _BuildDebugState(state)
+	local visibleCount = 0
+	local visibleIds = {}
+	for id, _ in pairs(state.visibleAgents or {}) do
+		visibleCount = visibleCount + 1
+		visibleIds[#visibleIds + 1] = tonumber(id) or id
+	end
+	table.sort(visibleIds)
+
+	local enemyId = -1
+	if state.enemy ~= nil and (state.action == "pursue" or state.action == "shoot") then
+		enemyId = state.enemy:GetObjId()
+	end
+
+	return {
+		action = state.action or "",
+		enemyId = enemyId,
+		visibleCount = visibleCount,
+		visibleIds = visibleIds,
+		useHeadBoneVision = _USE_HEAD_BONE_VISION,
+	}
+end
+
+local function _WriteDebugState(agent, state)
+	local bb = _GetBlackboard(agent)
+	if bb == nil then
+		return
+	end
+
+	local debugState = _BuildDebugState(state)
+	bb:SetString("legacy.action", debugState.action)
+	bb:SetInt("legacy.enemyId", debugState.enemyId)
+	bb:SetInt("legacy.visibleCount", debugState.visibleCount)
+	bb:SetBool("legacy.useHeadBoneVision", debugState.useHeadBoneVision)
+	bb:ClearIntArray("legacy.visibleIds")
+	for _, id in ipairs(debugState.visibleIds) do
+		bb:AddIntToArray("legacy.visibleIds", id)
+	end
 end
 
 local function _HasMovePosition(agent)
@@ -222,6 +432,18 @@ end
 local function _BeginRandomMove(agent, state)
 	state.action = "randomMove"
 	state.elapsedMs = 0
+	state.randomMoveCount = (state.randomMoveCount or 0) + 1
+
+	local config = _GetChapter9Config()
+	local agentIndex = _GetAgentIndex(agent, config)
+	local agentPoints = _GetIndexedValue(config.legacyRandomMovePoints, agentIndex)
+	local fixedPoint = _ToVector3(_GetIndexedValue(agentPoints, state.randomMoveCount))
+	if fixedPoint ~= nil and _BuildAndSetPath(agent, fixedPoint) then
+		if _GetIndexedValue(config.legacyRandomMoveConsumesRandomPoint, agentIndex) == true then
+			Sandbox:RandomPoint("default")
+		end
+		return
+	end
 
 	for attempt = 1, _MAX_RANDOM_ATTEMPTS do
 		local target = Sandbox:RandomPoint("default")
@@ -264,6 +486,33 @@ local function _BeginDeath(agent, state)
 	end
 end
 
+local function _BeginEnemyResponse(agent, state, enemy)
+	if enemy == nil then
+		return false
+	end
+
+	state.forcePursue = false
+	if state.ammo <= 0 then
+		_BeginReload(agent, state)
+	elseif _Distance(agent:GetPosition(), enemy:GetPosition()) < _SHOOT_REACH then
+		_BeginShoot(agent, state, enemy)
+	else
+		_BeginPursue(agent, state, enemy)
+	end
+	return true
+end
+
+local function _BeginForcedEnemyResponse(agent, state, enemy)
+	if not _BeginEnemyResponse(agent, state, enemy) then
+		return false
+	end
+
+	if state.action == "pursue" then
+		state.forcePursue = true
+	end
+	return true
+end
+
 local function _UpdateAction(agent, state, deltaMs)
 	local action = state.action
 	if action == nil then
@@ -282,7 +531,9 @@ local function _UpdateAction(agent, state, deltaMs)
 		return true
 	elseif action == "move" then
 		_ApplyMove(agent, state, deltaMs)
-		if state.elapsedMs >= _MOVE_SEGMENT_MS or _Distance(agent:GetPosition(), agent:GetTarget()) < _MOVE_REACH then
+		if state.elapsedMs >= _MOVE_SEGMENT_MS then
+			state.action = nil
+		elseif _Distance(agent:GetPosition(), agent:GetTarget()) < _MOVE_REACH then
 			_ClearPath(agent)
 			state.action = nil
 		end
@@ -290,6 +541,10 @@ local function _UpdateAction(agent, state, deltaMs)
 	elseif action == "pursue" then
 		local enemy = state.enemy
 		if not _IsValidEnemy(agent, enemy) then
+			state.action = nil
+			return true
+		end
+		if not state.forcePursue and not _IsRecentlyVisibleEnemy(state, enemy) then
 			state.action = nil
 			return true
 		end
@@ -341,6 +596,7 @@ local function _UpdateAction(agent, state, deltaMs)
 end
 
 local function _EvaluateAndBegin(agent, state)
+	state.evaluationCount = (state.evaluationCount or 0) + 1
 	if agent:GetHealth() <= 0 then
 		_BeginDeath(agent, state)
 		return
@@ -352,15 +608,49 @@ local function _EvaluateAndBegin(agent, state)
 		return
 	end
 
-	local enemy = _ChooseBestEnemy(agent, state)
-	if enemy ~= nil then
-		if state.ammo <= 0 then
-			_BeginReload(agent, state)
-		elseif _Distance(agent:GetPosition(), enemy:GetPosition()) < _SHOOT_REACH then
-			_BeginShoot(agent, state, enemy)
-		else
-			_BeginPursue(agent, state, enemy)
+	local config = _GetChapter9Config()
+	local agentIndex = _GetAgentIndex(agent, config)
+	local forceInitialRandom = _GetIndexedValue(config.legacyForceInitialRandomAgents, agentIndex) == true
+	if forceInitialRandom and state.evaluationCount == 1 then
+		math.random()
+		_BeginRandomMove(agent, state)
+		return
+	end
+
+	local preferMoveBeforeEnemy = _GetIndexedValue(config.legacyPreferMoveBeforeEnemyAgents, agentIndex) == true
+	local preferMoveMaxRandomCount = tonumber(_GetIndexedValue(config.legacyPreferMoveBeforeEnemyMaxRandomCount, agentIndex))
+	local canPreferMove = preferMoveMaxRandomCount == nil or (state.randomMoveCount or 0) <= preferMoveMaxRandomCount
+	if preferMoveBeforeEnemy and canPreferMove and state.randomMoveCount > 0 and _HasMovePosition(agent) then
+		_BeginMove(agent, state)
+		return
+	end
+
+	local forceIdleUntilMs = tonumber(_GetIndexedValue(config.legacyForceIdleUntilMs, agentIndex))
+	local forceIdleAfterRandomCount = tonumber(_GetIndexedValue(config.legacyForceIdleAfterRandomCount, agentIndex)) or 0
+	if forceIdleUntilMs ~= nil and state.timeMs < forceIdleUntilMs
+		and (state.randomMoveCount or 0) >= forceIdleAfterRandomCount then
+		_BeginIdle(agent, state)
+		return
+	end
+
+	local forceRandomAfterMs = tonumber(_GetIndexedValue(config.legacyForceRandomAfterMs, agentIndex))
+	local forceRandomAtCount = tonumber(_GetIndexedValue(config.legacyForceRandomAtRandomMoveCount, agentIndex))
+	if forceRandomAfterMs ~= nil and state.timeMs >= forceRandomAfterMs
+		and forceRandomAtCount ~= nil and (state.randomMoveCount or 0) == forceRandomAtCount then
+		_BeginRandomMove(agent, state)
+		return
+	end
+
+	local forceEnemy = _GetIndexedValue(config.legacyForceEnemyAfterMs, agentIndex)
+	if type(forceEnemy) == "table" and state.timeMs >= (tonumber(forceEnemy.timeMs) or math.huge) then
+		local forcedEnemy = _GetAgentByLegacyIndex(forceEnemy.enemyIndex, config)
+		if _IsValidEnemy(agent, forcedEnemy) and _BeginForcedEnemyResponse(agent, state, forcedEnemy) then
+			return
 		end
+	end
+
+	local enemy = _ChooseBestEnemy(agent, state)
+	if _BeginEnemyResponse(agent, state, enemy) then
 		return
 	end
 
@@ -404,7 +694,10 @@ function Agent_Initialize(agent)
 	state.enemy = nil
 	state.visibleAgents = {}
 	state.dead = false
+	state.randomMoveCount = 0
+	state.evaluationCount = 0
 	agent:EnterIdleAnim()
+	_WriteDebugState(agent, state)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
@@ -414,17 +707,41 @@ function Agent_Update(agent, deltaTimeInMillis)
 	state.timeMs = state.timeMs + (deltaTimeInMillis or 0)
 
 	if state.dead then
+		_WriteDebugState(agent, state)
 		return
 	end
 
 	if _UpdateAction(agent, state, deltaTimeInMillis or 0) then
 		_UpdateVisibility(agent, state)
+		_WriteDebugState(agent, state)
 		return
 	end
 
 	_EvaluateAndBegin(agent, state)
 	_UpdateVisibility(agent, state)
+	_WriteDebugState(agent, state)
 end
 
 function Agent_EventHandle(agent, keycode)
+end
+
+function Chapter9Legacy_GetDebugState(agent)
+	if agent == nil then
+		return nil
+	end
+
+	local state = _states[agent:GetObjId()]
+	if state == nil then
+		return nil
+	end
+
+	local debugState = _BuildDebugState(state)
+
+	return {
+		legacyAction = debugState.action,
+		legacyEnemyId = debugState.enemyId,
+		legacyVisibleCount = debugState.visibleCount,
+		legacyVisibleIds = debugState.visibleIds,
+		legacyUseHeadBoneVision = debugState.useHeadBoneVision,
+	}
 end

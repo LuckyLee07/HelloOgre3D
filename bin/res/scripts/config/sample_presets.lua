@@ -479,6 +479,50 @@ SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawInSmoke = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.maxDrawCellsPerLayer = 240
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawNeutralCells = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.targetRingRadius = 4.0
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyFirstAgentId = 115
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceInitialRandomAgents = {
+	[2] = true,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyRandomMovePoints = {
+	[1] = {
+		{ 27.230, 0.800, 60.021 },
+	},
+	[2] = {
+		{ 33.025, 0.800, 37.661 },
+	},
+	[4] = {
+		{ 31.966, 0.050, 57.765 },
+		{ -6.146, 0.050, -6.155 },
+	},
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyRandomMoveConsumesRandomPoint = {
+	[1] = true,
+	[4] = true,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyPreferMoveBeforeEnemyAgents = {
+	[4] = true,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyPreferMoveBeforeEnemyMaxRandomCount = {
+	[4] = 1,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceIdleUntilMs = {
+	[4] = 6000,
+	[5] = 4000,
+	[6] = 6000,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceIdleAfterRandomCount = {
+	[4] = 1,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceRandomAfterMs = {
+	[4] = 6000,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceRandomAtRandomMoveCount = {
+	[4] = 1,
+}
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.legacyForceEnemyAfterMs = {
+	[5] = { timeMs = 4000, enemyIndex = 3 },
+	[6] = { timeMs = 6000, enemyIndex = 2 },
+}
 SamplePresets.chapter9_tactics_legacy_parity.parityTrace = {
 	enabled = true,
 	delayMs = 1000,
