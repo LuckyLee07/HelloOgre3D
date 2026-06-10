@@ -83,6 +83,7 @@ private:
 	bool Configure();
 	void CreateCamera();
 	void CreateViewports();
+	void UpdateViewportLayout(bool force);
 	void LoadResources();
 	void SetupResources();
 	
@@ -102,6 +103,8 @@ private:
 	long long m_lastUpdateTimeInMicro;
 	long long m_lastDrawTimeInMicro;
 	long long m_profileTimes[PROFILE_TIME_COUNT];
+	unsigned int m_lastViewportWidth;
+	unsigned int m_lastViewportHeight;
 	
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;

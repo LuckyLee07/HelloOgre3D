@@ -85,6 +85,8 @@ ClientManager::ClientManager()
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();//微秒级
     //m_lastUpdateTimeInMicro = m_Timer.getMilliseconds();//毫秒级
     m_lastDrawTimeInMicro = m_Timer.getMicroseconds();   //微秒级
+    m_lastViewportWidth = 0;
+    m_lastViewportHeight = 0;
 }
 
 ClientManager::~ClientManager()
@@ -330,8 +332,32 @@ void ClientManager::CreateViewports()
     vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
     vp->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.0f));
 
-    // Alter the camera aspect ratio to match the viewport
-    m_pCamera->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));}
+    UpdateViewportLayout(true);
+}
+
+void ClientManager::UpdateViewportLayout(bool force)
+{
+    if (m_pRenderWindow == nullptr || m_pRenderWindow->getNumViewports() == 0)
+        return;
+
+    Ogre::Viewport* vp = m_pRenderWindow->getViewport(0);
+    if (vp == nullptr)
+        return;
+
+    const unsigned int currentWidth = vp->getActualWidth();
+    const unsigned int currentHeight = vp->getActualHeight();
+    if (!force && currentWidth == m_lastViewportWidth && currentHeight == m_lastViewportHeight)
+        return;
+
+    vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
+    const unsigned int viewportWidth = vp->getActualWidth();
+    const unsigned int viewportHeight = vp->getActualHeight();
+    if (m_pCamera != nullptr && viewportHeight > 0)
+        m_pCamera->setAspectRatio(Ogre::Real(viewportWidth) / Ogre::Real(viewportHeight));
+
+    m_lastViewportWidth = viewportWidth;
+    m_lastViewportHeight = viewportHeight;
+}
 
 void ClientManager::LoadResources(void)
 {
@@ -424,6 +450,7 @@ void ClientManager::Initialize()
     m_pInputManager->registerHandler(m_pGameManager);
 
     m_lastUpdateTimeInMicro = m_Timer.getMicroseconds();
+    UpdateViewportLayout(true);
 }
 
 void ClientManager::Run()
@@ -547,28 +574,7 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
         m_pFairyGuiSystem->Update(event.timeSinceLastFrame);
 #endif
 
-    if (m_pRenderWindow && m_pRenderWindow->getNumViewports() > 0)
-    {
-        Ogre::Viewport* vp = nullptr;
-        {
-            H3D_PROFILE_SCOPE("RenderWindow::getViewport");
-            vp = m_pRenderWindow->getViewport(0);
-        }
-        if (vp)
-        {
-            {
-                H3D_PROFILE_SCOPE("Viewport::setDimensions");
-                vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
-            }
-            const unsigned int vw = vp->getActualWidth();
-            const unsigned int vh = vp->getActualHeight();
-            if (m_pCamera && vh > 0)
-            {
-                H3D_PROFILE_SCOPE("Camera::setAspectRatio");
-                m_pCamera->setAspectRatio(Ogre::Real(vw) / Ogre::Real(vh));
-            }
-        }
-    }
+    UpdateViewportLayout(false);
 }
 
 void ClientManager::WindowClosed()
@@ -614,12 +620,5 @@ void ClientManager::WindowResized(unsigned int width, unsigned int height)
         m_pFairyGuiSystem->HandleWindowResized(uiWidth, uiHeight);
 #endif
 
-    if (vp)
-    {
-        vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
-        const unsigned int vw = vp->getActualWidth();
-        const unsigned int vh = vp->getActualHeight();
-        if (m_pCamera && vh > 0)
-            m_pCamera->setAspectRatio(Ogre::Real(vw) / Ogre::Real(vh));
-    }
+    UpdateViewportLayout(true);
 }
