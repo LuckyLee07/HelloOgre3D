@@ -413,6 +413,14 @@ local function _PublishTacticEvent(eventType, event)
 	end
 end
 
+_G.Chapter9Legacy_OnAgentTacticEvent = function(eventType, event)
+	local config = _GetConfig()
+	if _ReadBool(config, "useLegacyAgentEvents", false) ~= true then
+		return
+	end
+	_PublishTacticEvent(eventType, event)
+end
+
 local function _PruneTimedEvents(events, deltaTimeInMillis)
 	local validEvents = {}
 	for _, event in ipairs(events) do
@@ -435,6 +443,9 @@ end
 
 local function _PublishScriptedBurst(force)
 	local config = _GetConfig()
+	if _ReadBool(config, "useLegacyAgentEvents", false) == true then
+		return
+	end
 	local scriptedEnabled = _ReadBool(config, "scriptedEvents", false)
 	if _G.HELLO_SANDBOX_SMOKE_MODE == true then
 		scriptedEnabled = scriptedEnabled or _ReadBool(config, "scriptedEventsInSmoke", true)

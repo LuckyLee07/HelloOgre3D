@@ -155,7 +155,7 @@ def compare_traces(capture_dir):
                 "xzDistance": round(xz_distance, 3),
                 "oldSpeed": legacy_agent.get("speed"),
                 "newSpeed": modern_agent.get("speed"),
-                "newAction": (modern_agent.get("extra") or {}).get("legacyAction"),
+                "newAction": modern_agent.get("legacyAction") or (modern_agent.get("extra") or {}).get("legacyAction"),
             })
 
         legacy_tactics = legacy.get("tactics") or {}

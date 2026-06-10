@@ -403,6 +403,13 @@ Ogre::Real AgentObject::GetMass() const
 
 Ogre::Real AgentObject::GetSpeed() const
 {
+	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
+	{
+		const Ogre::Vector3 velocity = physicsComp->GetVelocity();
+		return Ogre::Vector3(velocity.x, 0, velocity.z).length();
+	}
+
 	const AgentLocomotion* locomotion = GetLocomotion();
 	return locomotion != nullptr ? locomotion->GetSpeed() : AgentLocomotion::DEFAULT_AGENT_SPEED;
 }

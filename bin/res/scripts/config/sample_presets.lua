@@ -466,10 +466,12 @@ SamplePresets.chapter9_tactics_legacy_parity.aiBlackboard.bools["perception.stag
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.agentScript = "res/scripts/agent/Chapter9LegacySoldierAgent.lua"
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.alternateTeams = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.useCppEventSource = false
-SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEvents = true
-SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventsInSmoke = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.useLegacyAgentEvents = true
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEvents = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventsInSmoke = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.scriptedEventIntervalMs = 1500
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.deadFriendlyDelayMs = 60000
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.dangerPerspectiveTeamId = 1
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamPositiveTeamId = 1
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamUseLegacyPointSpread = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamFalloff = 0.2

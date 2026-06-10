@@ -11,10 +11,13 @@ local _MAX_RANDOM_ATTEMPTS = 64
 local _COS_45_DEGREES = 0.707
 local _EYE_FORWARD_OFFSET = 0.5
 local _EYE_HEIGHT_RATIO = 0.5
+local _SIGHTING_REFRESH_MS = 500
 local _USE_HEAD_BONE_VISION = false
 local _USE_LEVEL_BOX_OCCLUSION = true
 
 local _states = {}
+local _pendingLegacyMessages = {}
+local _lastDispatchTimeMs = nil
 
 local function _GetBlackboard(agent)
 	if agent == nil or agent.GetAI == nil then
@@ -44,11 +47,14 @@ local function _GetState(agent)
 			enemy = nil,
 			visibleAgents = {},
 			dead = false,
+			agent = agent,
+			pendingCleanup = nil,
 			randomMoveCount = 0,
 			evaluationCount = 0,
 		}
 		_states[id] = state
 	end
+	state.agent = agent
 	return state
 end
 
@@ -224,6 +230,73 @@ local function _IsValidEnemy(agent, candidate)
 		and candidate:GetTeamId() ~= agent:GetTeamId()
 end
 
+local function _ApplyTeamEnemySighting(agent, state, event)
+	if agent == nil or state == nil or event == nil or event.agent == nil then
+		return
+	end
+	if not _IsValidEnemy(agent, event.agent) then
+		return
+	end
+
+	local visibleAgents = state.visibleAgents or {}
+	state.visibleAgents = visibleAgents
+	local enemyId = event.agent:GetObjId()
+	visibleAgents[enemyId] = {
+		agent = event.agent,
+		seenAt = event.seenAt or event.agent:GetPosition(),
+		lastSeen = event.lastSeen or state.timeMs,
+		teamShared = true,
+	}
+end
+
+local function _DispatchTeamEnemySighting(message)
+	if message == nil or message.senderTeam == nil or message.event == nil then
+		return
+	end
+	for _, state in pairs(_states) do
+		local agent = state.agent
+		if agent ~= nil and agent:GetTeamId() == message.senderTeam then
+			_ApplyTeamEnemySighting(agent, state, message.event)
+		end
+	end
+end
+
+local function _DispatchLegacyMessages(timeMs)
+	if _lastDispatchTimeMs == timeMs then
+		return
+	end
+	_lastDispatchTimeMs = timeMs
+
+	local messages = _pendingLegacyMessages
+	_pendingLegacyMessages = {}
+	for _, message in ipairs(messages) do
+		if _G.Chapter9Legacy_OnAgentTacticEvent ~= nil then
+			pcall(_G.Chapter9Legacy_OnAgentTacticEvent, message.eventType, message.event)
+		end
+		if message.eventType == "EnemySighted" then
+			_DispatchTeamEnemySighting(message)
+		end
+	end
+end
+
+local function _SendLegacyTeamMessage(agent, eventType, event)
+	if agent == nil or eventType == nil then
+		return
+	end
+
+	event = event or {}
+	event.type = eventType
+	event.sender = event.sender or agent
+	event.teamId = agent:GetTeamId()
+	event.teamOnly = true
+
+	table.insert(_pendingLegacyMessages, {
+		eventType = eventType,
+		event = event,
+		senderTeam = agent:GetTeamId(),
+	})
+end
+
 local function _GetFallbackEyePosition(agent)
 	local forward = agent:GetForward()
 	forward.y = 0
@@ -291,19 +364,25 @@ local function _UpdateVisibility(agent, state)
 			and candidate ~= agent
 			and candidate:GetHealth() > 0
 			and _CanSeeAgent(agent, candidate) then
-			visibleAgents[candidate:GetObjId()] = {
+			local candidateId = candidate:GetObjId()
+			local previous = visibleAgents[candidateId]
+			local sighting = {
 				agent = candidate,
 				seenAt = candidate:GetPosition(),
+				lastSeen = state.timeMs,
+			}
+			if _IsValidEnemy(agent, candidate)
+				and (previous == nil or (state.timeMs - (previous.lastSeen or 0)) > _SIGHTING_REFRESH_MS) then
+				_SendLegacyTeamMessage(agent, "EnemySighted", sighting)
+			end
+			visibleAgents[candidate:GetObjId()] = {
+				agent = candidate,
+				seenAt = sighting.seenAt,
 				lastSeen = state.timeMs,
 			}
 		end
 	end
 
-	for id, info in pairs(visibleAgents) do
-		if info == nil or info.agent == nil or (state.timeMs - (info.lastSeen or 0)) > 1000 then
-			visibleAgents[id] = nil
-		end
-	end
 end
 
 local function _ChooseBestEnemy(agent, state)
@@ -405,6 +484,28 @@ local function _Face(agent, target)
 	end
 end
 
+local function _QueueActionCleanup(state, action)
+	if action ~= nil and state.pendingCleanup == nil then
+		state.pendingCleanup = action
+	end
+	state.action = nil
+end
+
+local function _RunPendingCleanup(agent, state)
+	local action = state.pendingCleanup
+	if action == nil then
+		return
+	end
+	state.pendingCleanup = nil
+
+	if action == "pursue" then
+		_SendLegacyTeamMessage(agent, "PositionUpdate", {
+			agent = agent,
+			position = agent:GetPosition(),
+		})
+	end
+end
+
 local function _BeginIdle(agent, state)
 	state.action = "idle"
 	state.elapsedMs = 0
@@ -425,6 +526,10 @@ local function _BeginPursue(agent, state, enemy)
 		local target = enemy:GetPosition()
 		if _BuildAndSetPath(agent, target) then
 			agent:EnterMoveAnim()
+			_SendLegacyTeamMessage(agent, "EnemySelection", {
+				agent = agent,
+				position = agent:GetPosition(),
+			})
 		end
 	end
 end
@@ -526,26 +631,26 @@ local function _UpdateAction(agent, state, deltaMs)
 	elseif action == "idle" then
 		_SlowMovement(agent, 1.0)
 		if state.elapsedMs >= _IDLE_MS then
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		end
 		return true
 	elseif action == "move" then
 		_ApplyMove(agent, state, deltaMs)
 		if state.elapsedMs >= _MOVE_SEGMENT_MS then
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		elseif _Distance(agent:GetPosition(), agent:GetTarget()) < _MOVE_REACH then
 			_ClearPath(agent)
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		end
 		return true
 	elseif action == "pursue" then
 		local enemy = state.enemy
 		if not _IsValidEnemy(agent, enemy) then
-			state.action = nil
+			_QueueActionCleanup(state, action)
 			return true
 		end
 		if not state.forcePursue and not _IsRecentlyVisibleEnemy(state, enemy) then
-			state.action = nil
+			_QueueActionCleanup(state, action)
 			return true
 		end
 
@@ -554,11 +659,11 @@ local function _UpdateAction(agent, state, deltaMs)
 		_ApplyMove(agent, state, deltaMs)
 		if _Distance(agent:GetPosition(), target) < _SHOOT_REACH then
 			_ClearPath(agent)
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		end
 		return true
 	elseif action == "randomMove" then
-		state.action = nil
+		_QueueActionCleanup(state, action)
 		return true
 	elseif action == "shoot" then
 		local enemy = state.enemy
@@ -576,7 +681,7 @@ local function _UpdateAction(agent, state, deltaMs)
 			end
 		end
 		if state.elapsedMs >= _SHOOT_MS then
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		end
 		return true
 	elseif action == "reload" then
@@ -586,16 +691,17 @@ local function _UpdateAction(agent, state, deltaMs)
 			if agent.SetAmmo ~= nil then
 				agent:SetAmmo(state.ammo)
 			end
-			state.action = nil
+			_QueueActionCleanup(state, action)
 		end
 		return true
 	end
 
-	state.action = nil
+	_QueueActionCleanup(state, action)
 	return false
 end
 
 local function _EvaluateAndBegin(agent, state)
+	_RunPendingCleanup(agent, state)
 	state.evaluationCount = (state.evaluationCount or 0) + 1
 	if agent:GetHealth() <= 0 then
 		_BeginDeath(agent, state)
@@ -666,6 +772,13 @@ end
 function Agent_Initialize(agent)
 	if agent == nil then return end
 
+	local config = _GetChapter9Config()
+	if _GetAgentIndex(agent, config) == 1 then
+		_states = {}
+		_pendingLegacyMessages = {}
+		_lastDispatchTimeMs = nil
+	end
+
 	agent:SetMaxSpeed(SOLDIER_STAND_SPEED or 3.0)
 	if agent.SetMaxAmmo ~= nil then agent:SetMaxAmmo(10) end
 	if agent.SetAmmo ~= nil then agent:SetAmmo(10) end
@@ -692,6 +805,7 @@ function Agent_Initialize(agent)
 	state.maxAmmo = 10
 	state.fired = false
 	state.enemy = nil
+	state.pendingCleanup = nil
 	state.visibleAgents = {}
 	state.dead = false
 	state.randomMoveCount = 0
@@ -705,6 +819,7 @@ function Agent_Update(agent, deltaTimeInMillis)
 
 	local state = _GetState(agent)
 	state.timeMs = state.timeMs + (deltaTimeInMillis or 0)
+	_DispatchLegacyMessages(state.timeMs)
 
 	if state.dead then
 		_WriteDebugState(agent, state)
