@@ -24,6 +24,7 @@ namespace
 			: initialized(false)
 			, enabled(false)
 			, timingStarted(false)
+			, useSimulationClock(false)
 			, elapsedMs(0.0)
 			, maxDeltaMs(250.0)
 			, nextIndex(0)
@@ -34,6 +35,7 @@ namespace
 		bool initialized;
 		bool enabled;
 		bool timingStarted;
+		bool useSimulationClock;
 		double elapsedMs;
 		double maxDeltaMs;
 		size_t nextIndex;
@@ -62,6 +64,14 @@ namespace
 		if (value == nullptr || value[0] == '\0')
 			return false;
 		return !IsFalseEnvValue(value);
+	}
+
+	bool IsSimulationClockValue(const char* value)
+	{
+		if (value == nullptr || value[0] == '\0')
+			return false;
+		const std::string text(value);
+		return text == "simulation" || text == "sim" || text == "SIMULATION" || text == "Sim";
 	}
 
 	const char* GetEnvAlias(const char* primary, const char* legacy)
@@ -180,6 +190,8 @@ namespace
 		state.prefix = prefix != nullptr && prefix[0] != '\0' ? prefix : "capture";
 		state.captureMs = ParseCaptureTimes(GetEnvAlias("HELLO_RENDER_CAPTURE_MS", "HELLO_VISUAL_CAPTURE_MS"));
 		state.maxDeltaMs = ParsePositiveDoubleEnv("HELLO_RENDER_CAPTURE_MAX_DELTA_MS", 250.0);
+		state.useSimulationClock = IsSimulationClockValue(std::getenv("HELLO_RENDER_CAPTURE_CLOCK"))
+			|| IsTrueEnvValue(GetEnvAlias("HELLO_RENDER_CAPTURE_SIMULATION_CLOCK", "HELLO_VISUAL_CAPTURE_SIMULATION_CLOCK"));
 		if (state.captureMs.empty())
 		{
 			LogMessage("[RenderCapture] disabled missing capture times");
@@ -194,7 +206,8 @@ namespace
 			return;
 		}
 
-		LogMessage("[RenderCapture] enabled dir=" + state.outputDir + " prefix=" + state.prefix + " capturesMs=" + JoinCaptureTimes(state.captureMs));
+		LogMessage("[RenderCapture] enabled dir=" + state.outputDir + " prefix=" + state.prefix + " clock="
+			+ (state.useSimulationClock ? "simulation" : "render") + " capturesMs=" + JoinCaptureTimes(state.captureMs));
 	}
 
 	std::string BuildCapturePath(const CaptureState& state, int targetMs)
@@ -205,7 +218,7 @@ namespace
 	}
 }
 
-	static void Update(Ogre::RenderWindow* renderWindow, float deltaSeconds)
+	static void Update(Ogre::RenderWindow* renderWindow, float deltaSeconds, double simulationElapsedMs = -1.0)
 	{
 		Initialize();
 
@@ -220,7 +233,11 @@ namespace
 			return;
 		}
 
-		if (deltaSeconds > 0.0f)
+		if (state.useSimulationClock && simulationElapsedMs >= 0.0)
+		{
+			state.elapsedMs = std::max(0.0, simulationElapsedMs);
+		}
+		else if (deltaSeconds > 0.0f)
 		{
 			const double deltaMs = static_cast<double>(deltaSeconds) * 1000.0;
 			if (deltaMs > state.maxDeltaMs)

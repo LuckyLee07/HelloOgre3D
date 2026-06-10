@@ -103,6 +103,13 @@ local function _ReadBool(config, key, defaultValue)
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
 end
 
+local function _GetInfoPanelOptions(config)
+	if _ReadBool(config, "useLegacyInfoPanel", false) then
+		return nil, { w = 300, h = 180 }
+	end
+	return infoText, textSize
+end
+
 local function _ReadVector3(config, key, defaultValue)
 	local value = config ~= nil and config[key] or nil
 	if value == nil then
@@ -552,7 +559,7 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	_tactics.lastCellWrites = writes
 	_MarkInfluenceDrawLayerDirty("danger")
 	if _ReadBool(config, "drawDangerLayer", false) then
-		_RebuildCppInfluenceLayerVisual("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
+		_RebuildCppInfluenceLayerVisual("danger", 0.0, _influencePalette.positive, _influencePalette.negative, false)
 	end
 end
 
@@ -602,7 +609,7 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
 	_MarkInfluenceDrawLayerDirty("team")
 	if _ReadBool(config, "drawTeamLayer", true) then
-		_RebuildCppInfluenceLayerVisual("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", -0.05), _influencePalette.positive, _influencePalette.negative, true)
+		_RebuildCppInfluenceLayerVisual("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", 0.0), _influencePalette.positive, _influencePalette.negative, true)
 	end
 end
 
@@ -704,7 +711,7 @@ local function _DrawInfluenceMap()
 		_DrawInfluenceLayer("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
 	end
 	if _ReadBool(config, "drawTeamLayer", true) then
-		_DrawInfluenceLayer("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", -0.05), _influencePalette.positive, _influencePalette.negative, true)
+		_DrawInfluenceLayer("team", _ReadNumber(_GetConfig(), "teamDrawYOffset", 0.0), _influencePalette.positive, _influencePalette.negative, true)
 	end
 end
 
@@ -937,7 +944,8 @@ function Sandbox_Initialize()
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = _ReadBool(config, "suppressPathDraw", true)
 
 	GUI_CreateCameraAndProfileInfo()
-	GUI_CreateSandboxText(infoText, textSize)
+	local panelText, panelSize = _GetInfoPanelOptions(config)
+	GUI_CreateSandboxText(panelText, panelSize)
 	if _ReadBool(config, "showTacticsPanel", false) then
 		_CreatePanel()
 	end
@@ -954,10 +962,10 @@ function Sandbox_Initialize()
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 
-	Sandbox:SetAmbientLight(Vector3(0.35))
+	Sandbox:SetAmbientLight(Vector3(0.30))
 	local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1))
-	directLight:setDiffuseColour(ColourValue(1.6, 1.4, 1.0))
-	directLight:setSpecularColour(ColourValue(1.3, 1.2, 0.9))
+	directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9))
+	directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9))
 
 	SandboxUtilities_CreateLevel()
 	Sandbox:UpdateSceneGraph()

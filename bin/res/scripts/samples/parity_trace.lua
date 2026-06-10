@@ -41,6 +41,17 @@ local function _ConfigBool(config, key, envName, defaultValue)
 	return defaultValue
 end
 
+local function _ConfigString(config, key, envName, defaultValue)
+	local envValue = _GetEnv(envName)
+	if envValue ~= nil and envValue ~= "" then
+		return tostring(envValue)
+	end
+	if config ~= nil and config[key] ~= nil then
+		return tostring(config[key])
+	end
+	return defaultValue
+end
+
 local function _EscapeString(value)
 	value = tostring(value or "")
 	value = string.gsub(value, "\\", "\\\\")
@@ -198,7 +209,15 @@ function ParityTrace.Start(options)
 		aiSummaryMaxLines = math.max(1, math.floor(_ConfigNumber(config, "aiSummaryMaxLines", "HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINES", 8))),
 		aiSummaryMaxLineLength = math.max(1, math.floor(_ConfigNumber(config, "aiSummaryMaxLineLength", "HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINE_LENGTH", 220))),
 		nextSampleMs = math.max(0, _ConfigNumber(config, "delayMs", "HELLO_PARITY_TRACE_DELAY_MS", 1000)),
+		outputPath = _ConfigString(config, "outputPath", "HELLO_PARITY_TRACE_FILE", nil),
 	}
+	state.logToConsole = _ConfigBool(config, "logToConsole", "HELLO_PARITY_TRACE_LOG", state.outputPath == nil)
+	if state.outputPath ~= nil and io ~= nil and io.open ~= nil then
+		local file = io.open(state.outputPath, "w")
+		if file ~= nil then
+			file:close()
+		end
+	end
 	ParityTrace.Emit(state, "start", {
 		maxAgents = state.maxAgents,
 		maxSamples = state.maxSamples,
@@ -219,7 +238,21 @@ function ParityTrace.Emit(state, recordType, payload)
 	record.seed = state.seed
 	record.tMs = _Round(state.elapsedMs, 1)
 	record.frame = state.frame
-	print("[ParityTrace] " .. _EncodeJson(record))
+	local line = "[ParityTrace] " .. _EncodeJson(record)
+	if state.outputPath ~= nil and io ~= nil and io.open ~= nil then
+		local file = io.open(state.outputPath, "a")
+		if file ~= nil then
+			file:write(line .. "\n")
+			file:flush()
+			file:close()
+			if not state.logToConsole then
+				return
+			end
+		end
+	end
+	if state.logToConsole then
+		print(line)
+	end
 end
 
 function ParityTrace.Tick(state, deltaMs, snapshotFn)
@@ -232,7 +265,22 @@ function ParityTrace.Tick(state, deltaMs, snapshotFn)
 		return
 	end
 
-	local payload = snapshotFn ~= nil and snapshotFn(state) or {}
+	local ok, payload = true, {}
+	if snapshotFn ~= nil then
+		ok, payload = pcall(function()
+			return snapshotFn(state)
+		end)
+	end
+	if not ok then
+		ParityTrace.Emit(state, "error", {
+			message = tostring(payload),
+			nextSampleIndex = state.sampleCount + 1,
+			nextSampleMs = state.nextSampleMs,
+		})
+		state.enabled = false
+		return
+	end
+	payload = payload or {}
 	state.sampleCount = state.sampleCount + 1
 	payload.sampleIndex = state.sampleCount
 	ParityTrace.Emit(state, "sample", payload)

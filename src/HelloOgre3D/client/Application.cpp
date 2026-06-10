@@ -88,7 +88,10 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
     if (perfEnabled)
         RuntimeStallProfiler::FinishFrame(frameTiming);
 
-    RuntimeRenderCapture::Update(m_pClientManager->getRenderWindow(), event.timeSinceLastFrame);
+    RuntimeRenderCapture::Update(
+        m_pClientManager->getRenderWindow(),
+        event.timeSinceLastFrame,
+        static_cast<double>(m_pClientManager->GetSimulationTimeInMillis()));
 
     return true;
 }

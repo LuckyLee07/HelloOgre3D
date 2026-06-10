@@ -14,6 +14,7 @@ param(
 	[int]$WindowWidth = 1280,
 	[int]$WindowHeight = 720,
 	[switch]$CaptureLegacyExternal,
+	[switch]$SkipAnalysis,
 	[switch]$Visible,
 	[switch]$KeepAlive
 )
@@ -70,10 +71,12 @@ if ($sortedCaptures.Count -eq 0) {
 	throw "CaptureMs is empty."
 }
 $maxCaptureMs = ($sortedCaptures | Measure-Object -Maximum).Maximum
-$requiredSeconds = [int][Math]::Ceiling(($maxCaptureMs + $SettleMs) / 1000.0) + 8
+$requiredSeconds = [int][Math]::Ceiling(($maxCaptureMs + $SettleMs) / 1000.0) + 18
 if ($Seconds -lt $requiredSeconds) {
 	$Seconds = $requiredSeconds
 }
+$LegacySeconds = $Seconds
+$ModernSeconds = [int][Math]::Max($Seconds, [Math]::Ceiling((($maxCaptureMs + $SettleMs) / 1000.0) * 4.0) + 18)
 
 if (-not (Test-Path -LiteralPath $ModernExe)) {
 	throw "Modern HelloOgre3D exe not found: $ModernExe"
@@ -396,9 +399,9 @@ function Invoke-LegacyRenderCapture {
 	}
 	$process = $script:CapturedProcess
 	$script:CapturedProcess = $null
-	Write-Host "[CH9_VISUAL] started name=old pid=$($process.Id) seconds=$Seconds"
+	Write-Host "[CH9_VISUAL] started name=old pid=$($process.Id) seconds=$LegacySeconds"
 
-	Start-Sleep -Seconds $Seconds
+	Start-Sleep -Seconds $LegacySeconds
 
 	if ($KeepAlive) {
 		Write-Host "[CH9_VISUAL] keepAlive name=old pid=$($process.Id)"
@@ -432,13 +435,17 @@ function Invoke-ModernRenderCapture {
 	Remove-Item -LiteralPath $ModernLog -Force -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $ModernDebugLog -Force -ErrorAction SilentlyContinue
 
+	$modernTracePath = Join-Path $OutputDir "modern_trace.jsonl"
 	$modernEnv = @{
-		HELLO_SANDBOX_SMOKE_TEST = "1"
 		HELLO_SANDBOX_SAMPLE = "Sandbox17"
-		HELLO_SANDBOX_SMOKE_RUN_ID = "visual-$RunId"
 		HELLO_SAMPLE_PRESET = "chapter9_tactics_legacy_parity"
 		HELLO_SAMPLE_SEED = "$Seed"
+		HELLO_SIM_FPS = "30"
+		HELLO_PARITY_TRACE = "1"
+		HELLO_PARITY_TRACE_FILE = $modernTracePath
+		HELLO_PARITY_TRACE_LOG = "0"
 		HELLO_RENDER_CAPTURE = "1"
+		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
 		HELLO_RENDER_CAPTURE_DIR = $NewOutputDir
 		HELLO_RENDER_CAPTURE_PREFIX = "new"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
@@ -455,9 +462,9 @@ function Invoke-ModernRenderCapture {
 	}
 	$process = $script:CapturedProcess
 	$script:CapturedProcess = $null
-	Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$Seconds"
+	Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$ModernSeconds"
 
-	Start-Sleep -Seconds $Seconds
+	Start-Sleep -Seconds $ModernSeconds
 
 	if ($KeepAlive) {
 		Write-Host "[CH9_VISUAL] keepAlive name=new pid=$($process.Id)"
@@ -485,10 +492,39 @@ function Invoke-ModernRenderCapture {
 	}
 }
 
+function Invoke-CaptureAnalysis {
+	if ($SkipAnalysis) {
+		Write-Host "[CH9_VISUAL] analysis=SKIP reason=SkipAnalysis"
+		return
+	}
+
+	$analysisScript = Join-Path $ScriptRoot "analyze_chapter9_visual_capture.py"
+	if (-not (Test-Path -LiteralPath $analysisScript)) {
+		Write-Host "[CH9_VISUAL] analysis=SKIP reason=scriptMissing path=$analysisScript"
+		return
+	}
+
+	$pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+	if ($null -eq $pythonCommand) {
+		Write-Host "[CH9_VISUAL] analysis=SKIP reason=pythonMissing"
+		return
+	}
+
+	try {
+		& $pythonCommand.Source $analysisScript --capture-dir $OutputDir --capture-ms ($sortedCaptures -join ",")
+		if ($LASTEXITCODE -ne 0) {
+			throw "analysis exited with code $LASTEXITCODE"
+		}
+	}
+	catch {
+		Write-Host "[CH9_VISUAL] analysis=SKIP reason=$($_.Exception.Message)"
+	}
+}
+
 Write-Host "[CH9_VISUAL] runId=$RunId"
 Write-Host "[CH9_VISUAL] outputDir=$OutputDir"
 Write-Host "[CH9_VISUAL] capturesMs=$($sortedCaptures -join ',')"
-Write-Host "[CH9_VISUAL] seconds=$Seconds captureLegacyExternal=$($CaptureLegacyExternal.IsPresent)"
+Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds captureLegacyExternal=$($CaptureLegacyExternal.IsPresent)"
 
 if ($CaptureLegacyExternal) {
 	Invoke-LegacyExternalCapture
@@ -498,5 +534,6 @@ else {
 }
 
 Invoke-ModernRenderCapture
+Invoke-CaptureAnalysis
 
 Write-Host "[CH9_VISUAL] status=PASS outputDir=$OutputDir"

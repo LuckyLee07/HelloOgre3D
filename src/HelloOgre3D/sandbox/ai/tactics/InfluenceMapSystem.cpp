@@ -254,9 +254,12 @@ void InfluenceMapSystem::BuildFromNavMesh(
 
 	m_cellSize = cw;
 	m_cellHeight = ch;
-	m_minX = aMinX + boundaryMinOffset.x;
+	// XZ 原点吸附到 cellSize 世界栅格：影响格边界与地板砖缝（同为 cellSize 间距、对齐世界 0）重合。
+	// 否则 navmesh AABB 的非整数最小值 + boundaryMinOffset(0.18,0.35) 会让整张影响格相对地板偏移，
+	// 框线对不上地板网格（legacy 的 navmesh 最小值恰好落在栅格上，modern 不是 → 这就是错位根因）。
+	m_minX = std::floor(aMinX / cw) * cw;
+	m_minZ = std::floor(aMinZ / cw) * cw;
 	m_minY = aMinY + boundaryMinOffset.y;
-	m_minZ = aMinZ + boundaryMinOffset.z;
 	m_maxX = aMaxX + boundaryMaxOffset.x + cw;
 	m_maxY = aMaxY + boundaryMaxOffset.y + ch;
 	m_maxZ = aMaxZ + boundaryMaxOffset.z + cw;
@@ -698,11 +701,12 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
+	const float floorY = m_minY;
 	for (int z = 0; z < m_height; ++z)
 	{
-		for (int y = 0; y < m_yCount; ++y)
+		for (int x = 0; x < m_width; ++x)
 		{
-			for (int x = 0; x < m_width; ++x)
+			for (int y = 0; y < m_yCount; ++y)
 			{
 				if (!IsUsed(x, y, z))
 					continue;
@@ -711,13 +715,12 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 				if (!drawNeutral && std::fabs(value) < safeThreshold)
 					continue;
 				Ogre::Vector3 pos = GetCellCenter(x, y, z);
-				// 对齐 chapter-9：画在 cell 的“底面”（minY + y*cellHeight），而非 cell 中心或 navmesh 表面。
-				// 网格 Y 对齐到最低可走面 + cellHeight 与楼层间距匹配时，cell 底面正好落在该楼层地面上 → 贴地。
-				pos.y = m_minY + static_cast<float>(y) * m_cellHeight;
+				pos.y = floorY;
 				outPositions.push_back(pos);
 				outValues.push_back(value);
 				if (static_cast<int>(outPositions.size()) >= limit)
 					return;
+				break;
 			}
 		}
 	}

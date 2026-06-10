@@ -62,6 +62,7 @@ public:
 
 	long long GetProfileTime(ProfileTimeType profile);
 	void SetProfileTime(ProfileTimeType profile, long long time);
+	long long GetSimulationTimeInMillis() const;
 	
 	bool GetShutdown() { return m_shutdown; }
 	void SetShutdown(bool shutdown) { m_shutdown = shutdown; }

@@ -476,6 +476,7 @@ SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamFalloff = 0.2
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamInertia = 0.5
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamSpreadPasses = 20
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.showTacticsPanel = false
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.useLegacyInfoPanel = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawAgentMarkers = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawEventMarkers = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawDangerLayer = false

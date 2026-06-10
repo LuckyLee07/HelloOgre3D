@@ -489,6 +489,11 @@ void ClientManager::SetProfileTime(ProfileTimeType profile, long long time)
     }
 }
 
+long long ClientManager::GetSimulationTimeInMillis() const
+{
+    return m_pGameManager != nullptr ? m_pGameManager->getTimeInMillis() : 0;
+}
+
 void ClientManager::Update()
 {
     static int simulationHz = ReadSimulationHz();
