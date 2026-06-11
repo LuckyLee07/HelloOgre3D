@@ -1,5 +1,7 @@
 local SamplePresets = {}
 
+local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
+
 local fixedSpawnPoints = {
 	{ -5, 0, 13 },
 	{ 5, 0, 4 },
@@ -358,6 +360,7 @@ SamplePresets.formation_tactics.chapter8Comms.chapter9Formation = {
 SamplePresets.Sandbox15 = SamplePresets.formation_tactics
 
 SamplePresets.chapter9_tactics_lua = cloneTable(SamplePresets.default)
+SamplePresets.chapter9_tactics_lua.chapter9Profile = Chapter9Profile.Make("luaTeaching")
 SamplePresets.chapter9_tactics_lua.seed = 20260602
 SamplePresets.chapter9_tactics_lua.agentCount = 6
 SamplePresets.chapter9_tactics_lua.lightTeamCount = 3
@@ -437,6 +440,7 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 		minZ = -8.0,
 		maxZ = 62.0,
 		cellSize = 2.0,
+		cellHeight = 1.0,
 		y = 0.12,
 	},
 }
@@ -449,6 +453,7 @@ SamplePresets.chapter9_tactics_lua.diagnostics = {
 SamplePresets.Sandbox17 = SamplePresets.chapter9_tactics_lua
 
 SamplePresets.chapter9_tactics_legacy_parity = cloneTable(SamplePresets.chapter9_tactics_lua)
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Profile = Chapter9Profile.Make("legacyParity")
 SamplePresets.chapter9_tactics_legacy_parity.seed = 20260608
 SamplePresets.chapter9_tactics_legacy_parity.spawnMode = "fixed"
 SamplePresets.chapter9_tactics_legacy_parity.spawnPoints = {
@@ -567,6 +572,7 @@ SamplePresets.chapter9_tactics_legacy_parity.parityTrace = {
 }
 
 SamplePresets.chapter9_tactics_cpp = cloneTable(SamplePresets.chapter9_tactics_lua)
+SamplePresets.chapter9_tactics_cpp.chapter9Profile = Chapter9Profile.Make("cppProduction")
 SamplePresets.chapter9_tactics_cpp.seed = 20260603
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.cppInfluenceMap = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveStrength = 1.0

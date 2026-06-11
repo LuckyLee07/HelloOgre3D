@@ -4,6 +4,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.agent.AgentUtils.lua")
+local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 
 local _elapsedMs = 0
 local _durationMs = 600
@@ -34,16 +35,37 @@ function OnInitialize(owner, bb)
     _idleRequested = false
     if owner then
         owner:EnterShootAnim()
+        ActionIntent.Record(owner, bb, {
+            action = "shoot",
+            phase = "initialize",
+            movement = "stopForShoot",
+            animation = "shoot",
+            enemy = bb ~= nil and bb:GetAgent("enemy") or nil,
+            elapsedMs = _elapsedMs,
+            durationMs = _durationMs,
+            reason = "enterShoot",
+        })
     end
 end
 
 function OnUpdate(deltaMs, owner, bb)
     _elapsedMs = _elapsedMs + deltaMs
     if not owner or owner:GetHealth() <= 0 then
+        ActionIntent.Record(owner, bb, {
+            action = "shoot",
+            phase = "terminate",
+            movement = "none",
+            animation = "shoot",
+            elapsedMs = _elapsedMs,
+            durationMs = _durationMs,
+            reason = "deadOrMissingOwner",
+        })
         return ActionStatus.TERMINATED
     end
 
+    local movementIntent = "hold"
     if owner:IsMoving() then
+        movementIntent = "brake"
         Soldier_SlowMovement(owner, deltaMs)
     end
 
@@ -67,20 +89,60 @@ function OnUpdate(deltaMs, owner, bb)
     end
 
     if _idleRequested then
+        ActionIntent.Record(owner, bb, {
+            action = "shoot",
+            phase = "terminate",
+            movement = movementIntent,
+            animation = "idle",
+            enemy = enemy,
+            elapsedMs = _elapsedMs,
+            durationMs = _durationMs,
+            reason = "idleRequested",
+        })
         return ActionStatus.TERMINATED
     end
 
     if _hasFired and _IsShootBodyStateCurrent(owner) then
         _idleRequested = true
         owner:EnterIdleAnim()
+        ActionIntent.Record(owner, bb, {
+            action = "shoot",
+            phase = "update",
+            movement = movementIntent,
+            animation = "idle",
+            enemy = enemy,
+            elapsedMs = _elapsedMs,
+            durationMs = _durationMs,
+            reason = "fireStateReached",
+        })
         return ActionStatus.RUNNING
     end
 
     if _elapsedMs >= _durationMs then
         _idleRequested = true
         owner:EnterIdleAnim()
+        ActionIntent.Record(owner, bb, {
+            action = "shoot",
+            phase = "terminate",
+            movement = movementIntent,
+            animation = "idle",
+            enemy = enemy,
+            elapsedMs = _elapsedMs,
+            durationMs = _durationMs,
+            reason = "durationExpired",
+        })
         return ActionStatus.TERMINATED
     end
+    ActionIntent.Record(owner, bb, {
+        action = "shoot",
+        phase = "update",
+        movement = movementIntent,
+        animation = "shoot",
+        enemy = enemy,
+        elapsedMs = _elapsedMs,
+        durationMs = _durationMs,
+        reason = _hasFired and "fired" or "aiming",
+    })
     return ActionStatus.RUNNING
 end
 
@@ -88,6 +150,15 @@ function OnCleanUp(owner, bb)
     if owner and owner:GetHealth() > 0 then
         owner:EnterIdleAnim()
     end
+    ActionIntent.Record(owner, bb, {
+        action = "shoot",
+        phase = "cleanup",
+        movement = "hold",
+        animation = "idle",
+        elapsedMs = _elapsedMs,
+        durationMs = _durationMs,
+        reason = "cleanupIdle",
+    })
     _elapsedMs = 0
     _hasFired = false
     _idleRequested = false

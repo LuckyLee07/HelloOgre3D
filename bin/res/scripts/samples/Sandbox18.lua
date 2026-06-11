@@ -6,6 +6,9 @@ require("res.scripts.agent.IndirectSoldierAgent.lua")
 require("res.scripts.agent.DecisionSoldierAgent.lua")
 require("res.scripts.agent.AgentUtils.lua")
 
+local ParityTrace = require("res.scripts.samples.parity_trace")
+local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
+
 local _sampleName = "Sandbox18"
 local _agents = {}
 local _navMesh = nil
@@ -15,6 +18,7 @@ local _drawTactics = true
 local _elapsedMs = 0
 local _panelElapsedMs = 0
 local _RebuildCppInfluenceLayerVisual = nil
+local _parityTrace = nil
 
 local _colors = {
 	team1 = ColourValue(0.2, 0.95, 0.4),
@@ -715,6 +719,61 @@ local function _UpdateTacticalAgent(deltaTimeInMillis)
 	AgentUtilities_ClampHorizontalSpeed(agent)
 end
 
+local function _BuildParitySnapshot(state)
+	local agents = {}
+	local maxAgents = state ~= nil and state.maxAgents or #_agents
+	for index, agent in ipairs(_agents) do
+		if index > maxAgents then
+			break
+		end
+		agents[#agents + 1] = ParityTrace.AgentSnapshot(agent, index, {
+			alive = _IsAlive(agent),
+			tacticDead = _IsTacticDead(agent),
+			intent = ParityTrace.AgentIntentSnapshot(agent),
+		})
+	end
+
+	local payload = {
+		agents = agents,
+		tactics = {
+			events = _tactics.eventCount,
+			cppEvents = _tactics.cppEventCount,
+			dangerCells = _tactics.dangerCells,
+			teamCells = _tactics.teamCells,
+			objectiveCells = _tactics.objectiveCells,
+			dangerUpdates = _tactics.dangerRunCount,
+			teamUpdates = _tactics.teamRunCount,
+			dangerSkips = _tactics.dangerSkipCount,
+			teamSkips = _tactics.teamSkipCount,
+			lastCellWrites = _tactics.lastCellWrites,
+			queryCount = _tactics.queryCount,
+			bestPosition = ParityTrace.Vector3(_tactics.bestPosition),
+			bestScore = _tactics.bestScore,
+			tacticalDriverTeamId = _tacticalDriver.teamId,
+			tacticalDriverAgentId = _GetAgentId(_tacticalDriver.agent),
+			tacticalMoveCount = _tacticalDriver.moveCount,
+			tacticalLastTarget = ParityTrace.Vector3(_tacticalDriver.lastTarget),
+		},
+	}
+	if state == nil or state.includeAiSummary then
+		local summaryMaxLines = state ~= nil and state.aiSummaryMaxLines or 8
+		local summaryMaxLineLength = state ~= nil and state.aiSummaryMaxLineLength or 220
+		if ObjectManager ~= nil and ObjectManager.buildAiDebugSummary ~= nil then
+			payload.aiSummary = ParityTrace.SplitLines(ObjectManager:buildAiDebugSummary(maxAgents), summaryMaxLines, summaryMaxLineLength)
+		end
+		if ObjectManager ~= nil and ObjectManager.buildTacticalInfluenceDebugSummary ~= nil then
+			payload.tacticalSummary = ParityTrace.SplitLines(ObjectManager:buildTacticalInfluenceDebugSummary(), summaryMaxLines, summaryMaxLineLength)
+		end
+	end
+	return payload
+end
+
+local function _ParityTracePending()
+	return _parityTrace ~= nil
+		and _parityTrace.enabled == true
+		and (_parityTrace.sampleCount or 0) < (_parityTrace.maxSamples or 0)
+end
+
 local function _MaybePrintSmoke()
 	if _tactics.smokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
 		return
@@ -807,6 +866,7 @@ local function _CreateAgents()
 	local agentCount = ConfigManager:GetAgentCount(_sampleName, 6)
 	local agentLuafile = _ReadString(config, "agentScript", "res/scripts/agent/DecisionSoldierAgent.lua")
 	print(ConfigManager:BuildDebugSummary(_sampleName))
+	Chapter9Profile.PrintStartupSummary(_sampleName, preset)
 
 	for i = 1, agentCount do
 		local teamId = _GetTeamIdForAgent(config, i)
@@ -896,6 +956,14 @@ function Sandbox_Initialize()
 	_tactics.teamElapsedMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
 	_tactics.objectiveElapsedMs = _ReadNumber(config, "objectiveUpdateIntervalMs", _ReadNumber(config, "teamUpdateIntervalMs", 500))
 	_PublishScriptedBurst(true)
+	local preset = _GetPreset()
+	_parityTrace = ParityTrace.Start({
+		sample = _sampleName,
+		preset = preset.name,
+		seed = preset.seed,
+		profile = Chapter9Profile.BuildTraceMetadata(preset),
+		config = preset.parityTrace,
+	})
 	_RefreshPanel()
 end
 
@@ -903,7 +971,7 @@ function Sandbox_Update(deltaTimeInMillis)
 	GUI_UpdateCameraInfo()
 	GUI_UpdateProfileInfo()
 
-	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _tactics.smokeComplete then
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true and _tactics.smokeComplete and not _ParityTracePending() then
 		return
 	end
 
@@ -921,5 +989,6 @@ function Sandbox_Update(deltaTimeInMillis)
 		_panelElapsedMs = 0
 		_RefreshPanel()
 	end
+	ParityTrace.Tick(_parityTrace, deltaTimeInMillis, _BuildParitySnapshot)
 	_MaybePrintSmoke()
 end

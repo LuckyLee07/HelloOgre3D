@@ -145,6 +145,119 @@ local function _SafeCall(object, methodName, defaultValue)
 	return defaultValue
 end
 
+local function _GetAgentBlackboard(agent)
+	local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+	if ai ~= nil and ai.GetBlackboard ~= nil then
+		return ai:GetBlackboard()
+	end
+	return nil
+end
+
+local function _BlackboardHas(bb, key)
+	if bb == nil or bb.Has == nil then
+		return false
+	end
+	local ok, result = pcall(function()
+		return bb:Has(key)
+	end)
+	return ok and result == true
+end
+
+local function _BlackboardInt(bb, key, defaultValue)
+	if bb == nil or bb.GetInt == nil then
+		return defaultValue
+	end
+	local ok, result = pcall(function()
+		return bb:GetInt(key, defaultValue)
+	end)
+	if ok and result ~= nil then
+		return result
+	end
+	return defaultValue
+end
+
+local function _BlackboardFloat(bb, key, defaultValue)
+	if bb == nil or bb.GetFloat == nil then
+		return defaultValue
+	end
+	local ok, result = pcall(function()
+		return bb:GetFloat(key, defaultValue)
+	end)
+	if ok and result ~= nil then
+		return result
+	end
+	return defaultValue
+end
+
+local function _BlackboardBool(bb, key, defaultValue)
+	if bb == nil or bb.GetBool == nil then
+		return defaultValue
+	end
+	local ok, result = pcall(function()
+		return bb:GetBool(key, defaultValue)
+	end)
+	if ok and result ~= nil then
+		return result
+	end
+	return defaultValue
+end
+
+local function _BlackboardString(bb, key, defaultValue)
+	if bb == nil or bb.GetString == nil or not _BlackboardHas(bb, key) then
+		return defaultValue
+	end
+	local ok, result = pcall(function()
+		return bb:GetString(key)
+	end)
+	if ok and result ~= nil then
+		return tostring(result)
+	end
+	return defaultValue
+end
+
+local function _BlackboardVec3(bb, key)
+	if bb == nil or bb.GetVec3 == nil or not _BlackboardHas(bb, key) then
+		return nil
+	end
+	local ok, result = pcall(function()
+		return bb:GetVec3(key)
+	end)
+	if ok then
+		return result
+	end
+	return nil
+end
+
+function ParityTrace.AgentIntentSnapshot(agent)
+	local bb = _GetAgentBlackboard(agent)
+	local sequence = _BlackboardInt(bb, "intent.sequence", 0)
+	if sequence <= 0 then
+		return nil
+	end
+
+	return {
+		sequence = sequence,
+		action = _BlackboardString(bb, "intent.action", ""),
+		phase = _BlackboardString(bb, "intent.phase", ""),
+		movement = _BlackboardString(bb, "intent.movement", ""),
+		animation = _BlackboardString(bb, "intent.animation", ""),
+		reason = _BlackboardString(bb, "intent.reason", ""),
+		elapsedMs = _Round(_BlackboardFloat(bb, "intent.elapsedMs", 0.0), 10),
+		durationMs = _Round(_BlackboardFloat(bb, "intent.durationMs", 0.0), 10),
+		distance = _Round(_BlackboardFloat(bb, "intent.distance", -1.0), 1000),
+		speed = _Round(_BlackboardFloat(bb, "intent.speed", 0.0), 1000),
+		maxSpeed = _Round(_BlackboardFloat(bb, "intent.maxSpeed", 0.0), 1000),
+		moving = _BlackboardBool(bb, "intent.moving", false),
+		position = ParityTrace.Vector3(_BlackboardVec3(bb, "intent.position")),
+		target = ParityTrace.Vector3(_BlackboardVec3(bb, "intent.target")),
+		velocity = ParityTrace.Vector3(_BlackboardVec3(bb, "intent.velocity")),
+		enemyId = _BlackboardInt(bb, "intent.enemyId", -1),
+		enemyTeam = _BlackboardInt(bb, "intent.enemyTeam", -1),
+		enemyPosition = ParityTrace.Vector3(_BlackboardVec3(bb, "intent.enemyPosition")),
+		enemyDistance = _Round(_BlackboardFloat(bb, "intent.enemyDistance", -1.0), 1000),
+	}
+end
+
 function ParityTrace.AgentSnapshot(agent, index, extra)
 	local bodyAsm = _SafeCall(agent, "GetObjectASM", nil)
 	local snapshot = {
@@ -214,6 +327,7 @@ function ParityTrace.Start(options)
 		aiSummaryMaxLineLength = math.max(1, math.floor(_ConfigNumber(config, "aiSummaryMaxLineLength", "HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINE_LENGTH", 220))),
 		nextSampleMs = math.max(0, _ConfigNumber(config, "delayMs", "HELLO_PARITY_TRACE_DELAY_MS", 1000)),
 		outputPath = _ConfigString(config, "outputPath", "HELLO_PARITY_TRACE_FILE", nil),
+		profile = options.profile,
 	}
 	state.logToConsole = _ConfigBool(config, "logToConsole", "HELLO_PARITY_TRACE_LOG", state.outputPath == nil)
 	if state.outputPath ~= nil and io ~= nil and io.open ~= nil then
@@ -227,6 +341,7 @@ function ParityTrace.Start(options)
 		maxSamples = state.maxSamples,
 		intervalMs = state.intervalMs,
 		delayMs = state.delayMs,
+		profile = state.profile,
 	})
 	return state
 end

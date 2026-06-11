@@ -3,6 +3,7 @@
 -- 实际移动由后续触发的 MoveAction 完成（这与 chapter_6 的"先选点再走"一致）。
 
 require("res.scripts.ai.decision.ActionStatus.lua")
+local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 
 local _maxAttempts = 10
 
@@ -12,6 +13,14 @@ function OnInitialize(owner, bb)
         local fleePos = bb:GetVec3("knowledge.bestFleePosition")
         bb:SetVec3("movePos", fleePos)
         owner:SetMovePosition(fleePos)
+        ActionIntent.Record(owner, bb, {
+            action = "flee",
+            phase = "initialize",
+            movement = "selectMoveTarget",
+            animation = "none",
+            target = fleePos,
+            reason = "knowledgeBestFlee",
+        })
         return
     end
 
@@ -29,15 +38,40 @@ function OnInitialize(owner, bb)
         if fleePos == nil then fleePos = Sandbox:RandomPoint("default") end
         bb:SetVec3("movePos", fleePos)
         owner:SetMovePosition(fleePos)
+        ActionIntent.Record(owner, bb, {
+            action = "flee",
+            phase = "initialize",
+            movement = "selectMoveTarget",
+            animation = "none",
+            target = fleePos,
+            enemy = enemy,
+            reason = "awayFromEnemy",
+        })
     else
         local p = Sandbox:RandomPoint("default")
         bb:SetVec3("movePos", p)
         owner:SetMovePosition(p)
+        ActionIntent.Record(owner, bb, {
+            action = "flee",
+            phase = "initialize",
+            movement = "selectMoveTarget",
+            animation = "none",
+            target = p,
+            reason = "randomFallback",
+        })
     end
 end
 
 function OnUpdate(deltaMs, owner, bb)
     -- Flee 在 Initialize 阶段已完成"选点"，立即终止。
+    ActionIntent.Record(owner, bb, {
+        action = "flee",
+        phase = "terminate",
+        movement = "selectMoveTarget",
+        animation = "none",
+        target = bb ~= nil and bb:GetVec3("movePos") or nil,
+        reason = "targetSelected",
+    })
     return ActionStatus.TERMINATED
 end
 

@@ -5,6 +5,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
+local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 
 local _SAME_TARGET_SQ = 0.25  -- 上次 movePos 与本次差距 < 0.5m 就不重建 path
 
@@ -32,11 +33,29 @@ function OnInitialize(owner, bb)
             _lastTarget = target
         end
     end
+    ActionIntent.Record(owner, bb, {
+        action = "move",
+        phase = "initialize",
+        movement = "pathFollow",
+        animation = "move",
+        target = target,
+        durationMs = _segmentMs,
+        reason = needRebuild and "pathRebuild" or "reusePath",
+    })
 end
 
 function OnUpdate(deltaMs, owner, bb)
     _elapsedMs = _elapsedMs + deltaMs
     if not owner or owner:GetHealth() <= 0 then
+        ActionIntent.Record(owner, bb, {
+            action = "move",
+            phase = "terminate",
+            movement = "none",
+            animation = "move",
+            elapsedMs = _elapsedMs,
+            durationMs = _segmentMs,
+            reason = "deadOrMissingOwner",
+        })
         return ActionStatus.TERMINATED
     end
 
@@ -46,16 +65,55 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.DrawPath(owner, owner:GetTarget(), UtilColors.Orange, Vector3(0, 0.05, 0), 1.5)
 
     if owner:IsTargetReached(1.5) then
+        ActionIntent.Record(owner, bb, {
+            action = "move",
+            phase = "terminate",
+            movement = "pathFollow",
+            animation = "move",
+            target = owner:GetTarget(),
+            elapsedMs = _elapsedMs,
+            durationMs = _segmentMs,
+            reason = "targetReached",
+        })
         return ActionStatus.TERMINATED
     end
     if _elapsedMs >= _segmentMs then
+        ActionIntent.Record(owner, bb, {
+            action = "move",
+            phase = "terminate",
+            movement = "pathFollow",
+            animation = "move",
+            target = owner:GetTarget(),
+            elapsedMs = _elapsedMs,
+            durationMs = _segmentMs,
+            reason = "segmentExpired",
+        })
         return ActionStatus.TERMINATED
     end
+    ActionIntent.Record(owner, bb, {
+        action = "move",
+        phase = "update",
+        movement = "pathFollow",
+        animation = "move",
+        target = owner:GetTarget(),
+        elapsedMs = _elapsedMs,
+        durationMs = _segmentMs,
+        reason = "running",
+    })
     return ActionStatus.RUNNING
 end
 
 function OnCleanUp(owner, bb)
     -- 不刹车：velocity 留给下一段 / 下一个 action 自己接管。
     -- 真正想停下来的 action（Idle / Shoot / Reload）会自己 SetVelocity(0)。
+    ActionIntent.Record(owner, bb, {
+        action = "move",
+        phase = "cleanup",
+        movement = "handoff",
+        animation = "move",
+        elapsedMs = _elapsedMs,
+        durationMs = _segmentMs,
+        reason = "preserveVelocity",
+    })
     _elapsedMs = 0
 end

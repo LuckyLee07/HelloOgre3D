@@ -7,6 +7,7 @@ require("res.scripts.agent.DecisionSoldierAgent.lua")
 
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
 local ParityTrace = require("res.scripts.samples.parity_trace")
+local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
 
 local _sampleName = "Sandbox17"
 local _agents = {}
@@ -917,6 +918,7 @@ local function _BuildAgentParityExtra(agent)
 	local extra = {
 		alive = _IsAlive(agent),
 		tacticDead = _IsTacticDead(agent),
+		intent = ParityTrace.AgentIntentSnapshot(agent),
 	}
 
 	local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
@@ -1044,6 +1046,7 @@ local function _CreateAgents()
 	local agentCount = ConfigManager:GetAgentCount(_sampleName, 6)
 	local agentLuafile = _ReadString(config, "agentScript", "res/scripts/agent/DecisionSoldierAgent.lua")
 	print(ConfigManager:BuildDebugSummary(_sampleName))
+	Chapter9Profile.PrintStartupSummary(_sampleName, preset)
 
 	for i = 1, agentCount do
 		local teamId = _GetTeamIdForAgent(config, i)
@@ -1132,6 +1135,7 @@ function Sandbox_Initialize()
 		sample = _sampleName,
 		preset = preset.name,
 		seed = preset.seed,
+		profile = Chapter9Profile.BuildTraceMetadata(preset),
 		config = preset.parityTrace,
 	})
 	_RefreshPanel()

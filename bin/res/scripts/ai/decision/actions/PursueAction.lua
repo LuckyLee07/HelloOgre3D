@@ -5,6 +5,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
+local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 
 local _PURSUE_REACH    = 2.0    -- 接近到 2m 内停止追击；与 Sandbox6 PursueState.cpp kPursueReachDistance 对齐
 local _REPATH_INTERVAL = 500    -- ms（越小越准但越闪）
@@ -41,15 +42,46 @@ function OnInitialize(owner, bb)
             owner:SetMovePosition(enemyPos)
             _lastEnemyPos = enemyPos
         end
+        ActionIntent.Record(owner, bb, {
+            action = "pursue",
+            phase = "initialize",
+            movement = "pursue",
+            animation = "move",
+            target = enemyPos,
+            enemy = enemy,
+            reason = "pathToEnemy",
+        })
+    else
+        ActionIntent.Record(owner, bb, {
+            action = "pursue",
+            phase = "initialize",
+            movement = "none",
+            animation = "move",
+            reason = "missingEnemy",
+        })
     end
 end
 
 function OnUpdate(deltaMs, owner, bb)
     if not owner or owner:GetHealth() <= 0 then
+        ActionIntent.Record(owner, bb, {
+            action = "pursue",
+            phase = "terminate",
+            movement = "none",
+            animation = "move",
+            reason = "deadOrMissingOwner",
+        })
         return ActionStatus.TERMINATED
     end
     local enemy = bb:GetAgent("enemy")
     if enemy == nil or enemy:GetHealth() <= 0 then
+        ActionIntent.Record(owner, bb, {
+            action = "pursue",
+            phase = "terminate",
+            movement = "none",
+            animation = "move",
+            reason = "missingOrDeadEnemy",
+        })
         return ActionStatus.TERMINATED
     end
 
@@ -57,11 +89,22 @@ function OnUpdate(deltaMs, owner, bb)
     local toEnemy = enemy:GetPosition() - owner:GetPosition()
     toEnemy.y = 0
     if toEnemy:length() < _pursueReach then
+        ActionIntent.Record(owner, bb, {
+            action = "pursue",
+            phase = "terminate",
+            movement = "pursue",
+            animation = "move",
+            target = enemy:GetPosition(),
+            enemy = enemy,
+            distance = toEnemy:length(),
+            reason = "reachDistance",
+        })
         return ActionStatus.TERMINATED
     end
 
     -- 周期性按需 repath：到了检查间隔且敌人位移超阈值才重建
     _msSinceRepath = _msSinceRepath + deltaMs
+    local repathReason = "trackEnemy"
     if _repathInterval <= 0 or _msSinceRepath >= _repathInterval then
         _msSinceRepath = 0
         local enemyPos = enemy:GetPosition()
@@ -71,6 +114,7 @@ function OnUpdate(deltaMs, owner, bb)
         if needRepath and MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), enemyPos) then
             owner:SetMovePosition(enemyPos)
             _lastEnemyPos = enemyPos
+            repathReason = "repath"
         end
     end
 
@@ -81,10 +125,27 @@ function OnUpdate(deltaMs, owner, bb)
         local circleCenter = Sandbox:FindClosestPoint("default", enemy:GetPosition())
         MoveHelpers.DrawPath(owner, circleCenter, UtilColors.Red, Vector3(0, 0.1, 0), _pursueReach)
     end
+    ActionIntent.Record(owner, bb, {
+        action = "pursue",
+        phase = "update",
+        movement = "pursue",
+        animation = "move",
+        target = owner:GetTarget(),
+        enemy = enemy,
+        distance = toEnemy:length(),
+        reason = repathReason,
+    })
     return ActionStatus.RUNNING
 end
 
 function OnCleanUp(owner, bb)
     -- 同 MoveAction：不刹车，velocity 留给下一段。终止条件是"进入射程"，
     -- 此时正要切到 ShootAction，ShootAction 自己会 SetVelocity(0) 站住。
+    ActionIntent.Record(owner, bb, {
+        action = "pursue",
+        phase = "cleanup",
+        movement = "handoff",
+        animation = "move",
+        reason = "preserveVelocity",
+    })
 end
