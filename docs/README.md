@@ -18,6 +18,7 @@
 | `ai-technical-iteration-plan.md` | 下一阶段 AI 技术迭代规划：Spatial/AOI、感知系统、TeamBlackboard、InfluenceMap、BT runtime 与 benchmark | AI P0/P1 执行 |
 | `foundation-modules-inventory.md` | 地基模块盘点(已有/缺/不做)+ 切片最小 base 集 | L0–L2 家底 |
 | `architecture-improvement-plan.md` | 架构优化实施(解耦 SandboxServices / 组件化 / 所有权 / 感知)，带 file:line 证据与验收 | L0/L1/L2 落地 |
+| `chapter9-parity-architecture-notes.md` | Chapter 9 复刻过程暴露的架构问题归档：sample profile、trace、AI/移动/动画意图链路、战术绘制边界 | L0/L1 落地参考 |
 | `cpp-object-model-refactor-roadmap.md` | C++ 对象模型分阶段路线(术语已同步当前继承链) | L1-④ 依据 |
 | `behavior-tree-gap-analysis.md` | BT 执行模型差异与补强(G1 中断 / G3 参数求值 / G4 Parallel·Random …) | L1-⑤ |
 | `trigger-system-gap-analysis.md` | 触发器/事件系统差异与补强(T-G1 事件总线四件套 / T-G2 参数化事件名 …) | L0-③ / L1-⑥ |
