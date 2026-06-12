@@ -79,12 +79,12 @@ public:
 	int GetLayerActiveCellCount(const std::string& layerName) const;
 	int GetLayerCellWriteCount(const std::string& layerName) const;
 
-	// debug cell 遍历：遍历 used 且 |value|>=threshold 的 cell，位置为真实 3D 中心。
+	// debug cell 遍历：遍历 used 且 |value|>=threshold 的 cell。
 	int GetLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
 	Ogre::Vector3 GetLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
 	float GetLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
 
-	// 一次性收集某层用于绘制的 cell：只含 used cell，位置为真实 3D 中心，值为该 cell 的 layer 值。
+	// 一次性收集某层用于绘制的 cell：只含 used cell，位置为旧版 cell 底面中心，值为该 cell 的 layer 值。
 	// drawNeutral=false 时跳过 |value|<threshold 的 cell；maxCells>0 时限制数量。
 	void CollectDebugCells(const std::string& layerName, float threshold, int maxCells, bool drawNeutral,
 		std::vector<Ogre::Vector3>& outPositions, std::vector<float>& outValues) const;
@@ -129,7 +129,6 @@ private:
 	int m_height;        // Z
 	int m_yCount;        // Y
 	std::vector<unsigned char> m_used; // 每 cell 一个标记，1=贴在可走面
-	std::vector<float> m_surfaceY;     // 每 cell 的真实可走面高度（体素化时由标记三角写入），用于贴地绘制
 	std::unordered_map<std::string, Layer> m_layers;
 	Stats m_stats;
 };

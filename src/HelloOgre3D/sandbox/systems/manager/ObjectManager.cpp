@@ -1019,15 +1019,15 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
 	std::vector<DrawCell> cells;
 
-	// 3D：直接收集 used cell 的真实 3D 位置 + 值；填充面和线框保持同一 Y 面，对齐 chapter-9。
-	std::vector<Ogre::Vector3> cellPositions;
+	// Use the same 3D used-cell set for filled quads and outlines.
+	std::vector<Ogre::Vector3> positions;
 	std::vector<float> cellValues;
-	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
-	cells.reserve(cellPositions.size());
-	for (size_t i = 0; i < cellPositions.size(); ++i)
+	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, positions, cellValues);
+	cells.reserve(positions.size());
+	for (size_t i = 0; i < positions.size(); ++i)
 	{
 		DrawCell cell;
-		cell.position = Ogre::Vector3(cellPositions[i].x, cellPositions[i].y + yOffset, cellPositions[i].z);
+		cell.position = Ogre::Vector3(positions[i].x, positions[i].y + yOffset, positions[i].z);
 		cell.color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
 		cells.push_back(cell);
 	}

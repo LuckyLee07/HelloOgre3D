@@ -295,8 +295,6 @@ void InfluenceMapSystem::BuildFromNavMesh(
 			tri[c][1] = verts[ids[c] * 3 + 1];
 			tri[c][2] = verts[ids[c] * 3 + 2];
 		}
-		const float triAvgY = (tri[0][1] + tri[1][1] + tri[2][1]) / 3.0f;
-
 		// triBoxOverlap 测的是完整 cell box，不是 cell center。候选范围要按半个 cell 外扩，
 		// 否则只在三角边缘相交的 cell 会被提前排除，导致 influence grid 覆盖缺块。
 		float tMinX = std::min(tri[0][0], std::min(tri[1][0], tri[2][0]));
@@ -330,9 +328,6 @@ void InfluenceMapSystem::BuildFromNavMesh(
 					if (triBoxOverlap(boxCenter, const_cast<float*>(halfSize), tri))
 					{
 						m_used[idx] = 1;
-						// 记录该 cell 的真实表面高度（标记三角的平均 Y，clamp 到 cell 的 Y 范围内），用于贴地绘制。
-						const float cellBottom = m_minY + static_cast<float>(cy) * m_cellHeight;
-						m_surfaceY[idx] = ClampFloat(triAvgY, cellBottom, cellBottom + m_cellHeight);
 					}
 				}
 			}
@@ -768,7 +763,6 @@ void InfluenceMapSystem::AllocateGrid()
 {
 	const int totalCells = std::max(1, m_width * m_yCount * m_height);
 	m_used.assign(totalCells, static_cast<unsigned char>(0));
-	m_surfaceY.assign(totalCells, 0.0f);
 	for (std::unordered_map<std::string, Layer>::iterator iter = m_layers.begin(); iter != m_layers.end(); ++iter)
 		ResizeLayer(iter->second);
 }

@@ -34,7 +34,7 @@ local _colors = {
 	danger = ColourValue(1.0, 0.16, 0.08),
 	bullet = ColourValue(1.0, 0.75, 0.15),
 	dead = ColourValue(0.85, 0.85, 0.85),
-	grid = ColourValue(0.0, 0.0, 0.0, 0.6),
+	grid = ColourValue(0.0, 0.0, 0.0, 0.14),
 	targetRadius = ColourValue(1.0, 0.12, 0.12),
 }
 
@@ -108,6 +108,14 @@ local function _ReadBool(config, key, defaultValue)
 		return defaultValue
 	end
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
+local function _ReadString(config, key, defaultValue)
+	local value = config ~= nil and config[key] or nil
+	if value == nil then
+		return defaultValue
+	end
+	return tostring(value)
 end
 
 local function _ReadEnvBool(name, defaultValue)
@@ -212,14 +220,6 @@ local function _ReadVector3(config, key, defaultValue)
 		tonumber(value.x or value[1]) or defaultValue.x,
 		tonumber(value.y or value[2]) or defaultValue.y,
 		tonumber(value.z or value[3]) or defaultValue.z)
-end
-
-local function _ReadString(config, key, defaultValue)
-	local value = config ~= nil and config[key] or nil
-	if value == nil then
-		return defaultValue
-	end
-	return tostring(value)
 end
 
 local function _Clamp01(value)
