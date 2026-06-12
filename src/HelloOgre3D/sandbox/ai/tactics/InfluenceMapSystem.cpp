@@ -297,7 +297,8 @@ void InfluenceMapSystem::BuildFromNavMesh(
 		}
 		const float triAvgY = (tri[0][1] + tri[1][1] + tri[2][1]) / 3.0f;
 
-		// 三角 AABB → cell 范围。
+		// triBoxOverlap 测的是完整 cell box，不是 cell center。候选范围要按半个 cell 外扩，
+		// 否则只在三角边缘相交的 cell 会被提前排除，导致 influence grid 覆盖缺块。
 		float tMinX = std::min(tri[0][0], std::min(tri[1][0], tri[2][0]));
 		float tMaxX = std::max(tri[0][0], std::max(tri[1][0], tri[2][0]));
 		float tMinY = std::min(tri[0][1], std::min(tri[1][1], tri[2][1]));
@@ -305,12 +306,12 @@ void InfluenceMapSystem::BuildFromNavMesh(
 		float tMinZ = std::min(tri[0][2], std::min(tri[1][2], tri[2][2]));
 		float tMaxZ = std::max(tri[0][2], std::max(tri[1][2], tri[2][2]));
 
-		const int cx0 = ClampInt(static_cast<int>(std::floor((tMinX - m_minX) / m_cellSize)), 0, m_width - 1);
-		const int cx1 = ClampInt(static_cast<int>(std::floor((tMaxX - m_minX) / m_cellSize)), 0, m_width - 1);
-		const int cy0 = ClampInt(static_cast<int>(std::floor((tMinY - m_minY) / m_cellHeight)), 0, m_yCount - 1);
-		const int cy1 = ClampInt(static_cast<int>(std::floor((tMaxY - m_minY) / m_cellHeight)), 0, m_yCount - 1);
-		const int cz0 = ClampInt(static_cast<int>(std::floor((tMinZ - m_minZ) / m_cellSize)), 0, m_height - 1);
-		const int cz1 = ClampInt(static_cast<int>(std::floor((tMaxZ - m_minZ) / m_cellSize)), 0, m_height - 1);
+		const int cx0 = ClampInt(static_cast<int>(std::floor((tMinX - halfSize[0] - m_minX) / m_cellSize)), 0, m_width - 1);
+		const int cx1 = ClampInt(static_cast<int>(std::floor((tMaxX + halfSize[0] - m_minX) / m_cellSize)), 0, m_width - 1);
+		const int cy0 = ClampInt(static_cast<int>(std::floor((tMinY - halfSize[1] - m_minY) / m_cellHeight)), 0, m_yCount - 1);
+		const int cy1 = ClampInt(static_cast<int>(std::floor((tMaxY + halfSize[1] - m_minY) / m_cellHeight)), 0, m_yCount - 1);
+		const int cz0 = ClampInt(static_cast<int>(std::floor((tMinZ - halfSize[2] - m_minZ) / m_cellSize)), 0, m_height - 1);
+		const int cz1 = ClampInt(static_cast<int>(std::floor((tMaxZ + halfSize[2] - m_minZ) / m_cellSize)), 0, m_height - 1);
 
 		for (int cz = cz0; cz <= cz1; ++cz)
 		{
@@ -703,12 +704,9 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
 	for (int z = 0; z < m_height; ++z)
 	{
-		for (int x = 0; x < m_width; ++x)
+		for (int y = 0; y < m_yCount; ++y)
 		{
-			bool hasCell = false;
-			Ogre::Vector3 drawPosition = Ogre::Vector3::ZERO;
-			float drawValue = 0.0f;
-			for (int y = 0; y < m_yCount; ++y)
+			for (int x = 0; x < m_width; ++x)
 			{
 				if (!IsUsed(x, y, z))
 					continue;
@@ -717,16 +715,9 @@ void InfluenceMapSystem::CollectDebugCells(const std::string& layerName, float t
 				if (!drawNeutral && std::fabs(value) < safeThreshold)
 					continue;
 				Ogre::Vector3 pos = GetCellCenter(x, y, z);
-				if (idx >= 0 && idx < static_cast<int>(m_surfaceY.size()))
-					pos.y = m_surfaceY[idx];
-				drawPosition = pos;
-				drawValue = value;
-				hasCell = true;
-			}
-			if (hasCell)
-			{
-				outPositions.push_back(drawPosition);
-				outValues.push_back(drawValue);
+				pos.y = m_minY + static_cast<float>(y) * m_cellHeight;
+				outPositions.push_back(pos);
+				outValues.push_back(value);
 				if (static_cast<int>(outPositions.size()) >= limit)
 					return;
 			}

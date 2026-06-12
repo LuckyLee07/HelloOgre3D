@@ -20,7 +20,11 @@ param(
 	[switch]$SkipAnalysis,
 	[switch]$ModernNoSmoke,
 	[switch]$Visible,
-	[switch]$KeepAlive
+	[switch]$KeepAlive,
+	[switch]$InfluenceOnly,
+	[switch]$CoverageRed,
+	[ValidateSet("current", "top")]
+	[string]$CameraPreset = "current"
 )
 
 $ErrorActionPreference = "Stop"
@@ -148,7 +152,10 @@ namespace Chapter9VisualCapture
 		public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
 
 		[DllImport("user32.dll")]
-		public static extern bool SetForegroundWindow(IntPtr hWnd);
+		public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+		[DllImport("user32.dll")]
+		public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
 		public static IntPtr FindWindowForProcess(int targetProcessId)
 		{
@@ -256,13 +263,34 @@ function Wait-MainWindowHandle {
 		if ($handle -ne [IntPtr]::Zero) {
 			return $handle
 		}
-		if ($Process.MainWindowHandle -ne [IntPtr]::Zero) {
-			return $Process.MainWindowHandle
-		}
 		Start-Sleep -Milliseconds 100
 	} while ((Get-Date) -lt $deadline)
 
 	throw "Timed out waiting for main window: pid=$($Process.Id)"
+}
+
+function Set-WindowNoActivateLayout {
+	param(
+		[IntPtr]$WindowHandle,
+		[int]$X,
+		[int]$Y,
+		[int]$Width,
+		[int]$Height
+	)
+
+	if ($WindowHandle -eq [IntPtr]::Zero) {
+		return
+	}
+
+	$SW_SHOWNOACTIVATE = 4
+	$SWP_NOZORDER = 0x0004
+	$SWP_NOACTIVATE = 0x0010
+	$SWP_SHOWWINDOW = 0x0040
+	$SWP_NOOWNERZORDER = 0x0200
+	$flags = [uint32]($SWP_NOZORDER -bor $SWP_NOACTIVATE -bor $SWP_SHOWWINDOW -bor $SWP_NOOWNERZORDER)
+
+	[void][Chapter9VisualCapture.NativeMethods]::ShowWindowAsync($WindowHandle, $SW_SHOWNOACTIVATE)
+	[void][Chapter9VisualCapture.NativeMethods]::SetWindowPos($WindowHandle, [IntPtr]::Zero, $X, $Y, $Width, $Height, $flags)
 }
 
 function Save-WindowScreenshot {
@@ -335,6 +363,15 @@ function Invoke-LegacyExternalCapture {
 		HELLO_SAMPLE_PRESET = "legacy_chapter9_fixed"
 		HELLO_PARITY_SEED = "$Seed"
 		HELLO_SAMPLE_SEED = "$Seed"
+		HELLO_CH9_CAMERA_PRESET = $CameraPreset
+	}
+	if ($InfluenceOnly) {
+		$legacyEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($CoverageRed) {
+		$legacyEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
 	}
 
 	$process = $null
@@ -347,8 +384,7 @@ function Invoke-LegacyExternalCapture {
 	try {
 		$handle = Wait-MainWindowHandle -Process $process -TimeoutMs $StartupTimeoutMs
 		Write-Host "[CH9_VISUAL] legacyWindow $(Get-WindowInfoText -WindowHandle $handle)"
-		[void][Chapter9VisualCapture.NativeMethods]::MoveWindow($handle, $WindowX, $WindowY, $WindowWidth, $WindowHeight, $true)
-		[void][Chapter9VisualCapture.NativeMethods]::SetForegroundWindow($handle)
+		Set-WindowNoActivateLayout -WindowHandle $handle -X $WindowX -Y $WindowY -Width $WindowWidth -Height $WindowHeight
 		Start-Sleep -Milliseconds $SettleMs
 		Start-Sleep -Milliseconds $LegacyWarmupMs
 
@@ -362,7 +398,6 @@ function Invoke-LegacyExternalCapture {
 			if ($process.HasExited) {
 				throw "Legacy process exited before capture ${captureTime}ms: exitCode=$($process.ExitCode)"
 			}
-			[void][Chapter9VisualCapture.NativeMethods]::SetForegroundWindow($handle)
 			Start-Sleep -Milliseconds 100
 			$filePath = Join-Path $OldOutputDir ("old_{0:D5}ms.png" -f $captureTime)
 			Save-WindowScreenshot -WindowHandle $handle -Path $filePath
@@ -431,11 +466,20 @@ function Invoke-LegacyRenderCapture {
 		HELLO_SAMPLE_PRESET = "legacy_chapter9_fixed"
 		HELLO_PARITY_SEED = "$Seed"
 		HELLO_SAMPLE_SEED = "$Seed"
+		HELLO_CH9_CAMERA_PRESET = $CameraPreset
 		HELLO_RENDER_CAPTURE = "1"
 		HELLO_RENDER_CAPTURE_DIR = $OldOutputDir
 		HELLO_RENDER_CAPTURE_PREFIX = "old"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
 		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
+	}
+	if ($InfluenceOnly) {
+		$legacyEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($CoverageRed) {
+		$legacyEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
 	}
 
 	$process = $null
@@ -445,6 +489,14 @@ function Invoke-LegacyRenderCapture {
 	$process = $script:CapturedProcess
 	$script:CapturedProcess = $null
 	Write-Host "[CH9_VISUAL] started name=old pid=$($process.Id) seconds=$LegacySeconds"
+	try {
+		$handle = Wait-MainWindowHandle -Process $process -TimeoutMs $StartupTimeoutMs
+		Write-Host "[CH9_VISUAL] legacyWindow $(Get-WindowInfoText -WindowHandle $handle)"
+		Set-WindowNoActivateLayout -WindowHandle $handle -X $WindowX -Y $WindowY -Width $WindowWidth -Height $WindowHeight
+	}
+	catch {
+		Write-Host "[CH9_VISUAL] legacyWindow=SKIP reason=$($_.Exception.Message)"
+	}
 
 	Start-Sleep -Seconds $LegacySeconds
 
@@ -478,9 +530,13 @@ function Invoke-ModernRenderCapture {
 	Write-Host "[CH9_VISUAL] modernRenderCapture=START exe=$ModernExe"
 
 	$modernTracePath = Join-Path $OutputDir "modern_trace.jsonl"
+	$modernPreset = "chapter9_tactics_legacy_parity"
+	if ($InfluenceOnly) {
+		$modernPreset = "chapter9_tactics_influence_only"
+	}
 	$modernEnv = @{
 		HELLO_SANDBOX_SAMPLE = "Sandbox17"
-		HELLO_SAMPLE_PRESET = "chapter9_tactics_legacy_parity"
+		HELLO_SAMPLE_PRESET = $modernPreset
 		HELLO_SAMPLE_SEED = "$Seed"
 		HELLO_SIM_FPS = "30"
 		HELLO_PARITY_TRACE = "1"
@@ -495,6 +551,15 @@ function Invoke-ModernRenderCapture {
 		HELLO_RENDER_CAPTURE_PREFIX = "new"
 		HELLO_RENDER_CAPTURE_MS = ($sortedCaptures -join ",")
 		HELLO_RENDER_CAPTURE_CLOCK = "simulation"
+		HELLO_CH9_CAMERA_PRESET = $CameraPreset
+	}
+	if ($InfluenceOnly) {
+		$modernEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
+		$modernEnv["HELLO_CH9_HIDE_UI"] = "1"
+		$modernEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($CoverageRed) {
+		$modernEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
 	}
 	if (-not $ModernNoSmoke) {
 		$modernEnv["HELLO_SANDBOX_SMOKE_TEST"] = "1"
@@ -529,6 +594,14 @@ function Invoke-ModernRenderCapture {
 		$process = $script:CapturedProcess
 		$script:CapturedProcess = $null
 		Write-Host "[CH9_VISUAL] started name=new pid=$($process.Id) seconds=$ModernSeconds"
+		try {
+			$handle = Wait-MainWindowHandle -Process $process -TimeoutMs $StartupTimeoutMs
+			Write-Host "[CH9_VISUAL] modernWindow $(Get-WindowInfoText -WindowHandle $handle)"
+			Set-WindowNoActivateLayout -WindowHandle $handle -X ($WindowX + $WindowWidth + 24) -Y $WindowY -Width $WindowWidth -Height $WindowHeight
+		}
+		catch {
+			Write-Host "[CH9_VISUAL] modernWindow=SKIP reason=$($_.Exception.Message)"
+		}
 
 		$deadline = (Get-Date).AddSeconds($ModernSeconds)
 		while ((Get-Date) -lt $deadline) {
@@ -634,7 +707,7 @@ function Invoke-CaptureAnalysis {
 Write-Host "[CH9_VISUAL] runId=$RunId"
 Write-Host "[CH9_VISUAL] outputDir=$OutputDir"
 Write-Host "[CH9_VISUAL] capturesMs=$($sortedCaptures -join ',')"
-Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds modernRetries=$ModernCaptureRetries traceMaxSamples=$ModernTraceMaxSamples modernSmoke=$(-not $ModernNoSmoke) captureLegacyExternal=$($CaptureLegacyExternal.IsPresent) reuseLegacy=$ReuseLegacyCaptureDir"
+Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds modernRetries=$ModernCaptureRetries traceMaxSamples=$ModernTraceMaxSamples modernSmoke=$(-not $ModernNoSmoke) captureLegacyExternal=$($CaptureLegacyExternal.IsPresent) reuseLegacy=$ReuseLegacyCaptureDir cameraPreset=$CameraPreset coverageRed=$($CoverageRed.IsPresent)"
 
 if (-not [string]::IsNullOrWhiteSpace($ReuseLegacyCaptureDir)) {
 	Invoke-ReuseLegacyCapture -SourceDir $ReuseLegacyCaptureDir

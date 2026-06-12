@@ -8,6 +8,13 @@
 >
 > 关联：补强项最终会以新任务并入 `docs/visual-editor-task-breakdown.md`；可视化编辑器的“积木库丰富度 / 参数绑定 / 行为正确性”直接受这些能力制约。
 
+> 🔁 复核状态（2026-06-11，对代码核实）：本文成文于 2026-06-01，其后已落地多项补强，**下文 §1/§2 的"现状/差距"部分已过时**，最新以本注为准：
+> - 🟢 **G4 已完成**：`BehaviorParallel`、`BehaviorRandomSelector` 已实现（`sandbox/ai/behavior/BehaviorComposite.*`），`BehaviorTreeDriver` 有对应工厂、`BehaviorTreeLoader.lua` 支持其节点类型。
+> - 🟢 **G1 已完成（reevaluation 路径）**：`BehaviorComposite::ConfigureReevaluation()` 提供 `reevaluateMs`，Sequence/Selector 可按周期重判更高优先级分支并切换。
+> - `project-direction.md` §4「保留」明确列入 Parallel / Random / reactive 重评估。
+> - **仍开放**：G2（事件节点，依赖统一事件总线）、G3（参数运行时求值 GetValue）、G5（子树复用）、G6（黑板 Object/数组/Timer）、G7（条件缓存/脏标记）、G8–G11。
+> - 注：G1/G4 实际是为「AI 学习阶梯」而非「可视化编辑器」落地的；下文与 `visual-editor-*` 的绑定关系已被 `project-direction.md` 北极星取代，按历史参考读。
+
 ---
 
 ## 1. 一句话结论
@@ -29,9 +36,9 @@
 | 返回值 | 3 态：RUNNING/SUCCESS/FAILURE（`BehaviorNode.h:16-22`） | 5 态：SUCCESS/FAIL/WAIT/LOGIC_WAIT/NO_RUN | 本项目 RUNNING 兼任跨帧；够用，差异不关键 |
 | 节点生命周期 | `Tick()` + `Reset()`；Action 另有 `OnInitialize/OnUpdate/OnCleanUp`（`LuaBehaviorAction.cpp:32-59`） | 6 段：RunBefore/ActivateCondition/OnStart/RunActive/RunBack/OnEnd | 本项目更简；Action 已有 init/update/cleanup，基本够 |
 | running 记忆 | ✅ `m_runningIdx` 续跑（`BehaviorComposite.cpp:35,63`） | ✅ `m_activeChild` | 对齐 |
-| **中断/重评估(abort)** | ❌ 无。Selector/Sequence 只从 `m_runningIdx` 续跑，**不回头重判更高优先级条件**（`BehaviorComposite.cpp:30-84`） | ✅ `InterruptType None/Self/LowerPriority/Both`，高优先级条件变化即打断切换 | **关键缺口** |
+| **中断/重评估(abort)** | ✅ **已补（2026-06）** `BehaviorComposite::ConfigureReevaluation(reevaluateMs)`，Selector/Sequence 按周期重判更高优先级分支并切换 | ✅ `InterruptType None/Self/LowerPriority/Both` | 已补 reevaluation 路径（事件驱动反应仍缺，见 G2） |
 | **事件节点** | ❌ 无 | ✅ 11 类事件节点 + 实例/全局/AINPC 三级分发，接事件总线 | **关键缺口** |
-| 组合节点 | Sequence / Selector | + Parallel/SimpleParallel/Random/Priority/Branch/Condition/Loop/LoopInterval | 缺并行、随机、循环、子树式 |
+| 组合节点 | Sequence / Selector / **Parallel** / **RandomSelector**（后两者 2026-06 已补） | + SimpleParallel/Priority/Branch/Condition/Loop/LoopInterval | 已补并行/随机；仍缺循环、子树式（G5） |
 | 装饰器 | Inverter / ForceSuccess / ForceFailure | + Single/三合一 Decorator(Inversion/Once/While) | 缺 Once/While/Loop 装饰 |
 | 叶子任务 | LuaAction（Lua）+ Condition（Lua/C++ evaluator） | Lua 任务 + 14+ C++ 原生任务(移动/攻击/挖块/导航) | 本项目热点任务尚未 C++ 化（在 Lua）|
 | 条件求值 | **每帧求值**，无缓存（`LuaCondition.cpp:33-51`） | 帧内缓存 + 黑板脏标记 `bbChange/needrun`，黑板未变不重算 | 缺缓存/脏标记（性能项） |
@@ -51,7 +58,8 @@
 
 ### P0 —— 不补，反应式 AI 和可视化配置立不住
 
-#### G1. 行为中断 / 条件重评估（abort）
+#### G1. 行为中断 / 条件重评估（abort） — 🟢 已完成（2026-06）
+> 已落地：`BehaviorComposite::ConfigureReevaluation(reevaluateMs)`，Selector/Sequence 续跑前按周期重判更高优先级分支并 `Reset()` 切换。下方为当时的设计说明，保留作背景。
 - **是什么**：让 Selector/Sequence 在续跑当前分支前，先重判“更高优先级、带条件守卫的兄弟分支”；若更高优先级条件变为真，则 `Reset()` 当前运行分支、切过去。
 - **为什么 P0**：这是“生物对环境/战斗即时反应”的根本机制。没有它，生物进入“巡逻”分支后即便敌人出现/被攻击也要等当前分支自然结束才会切。本项目当前完全没有。
 - **怎么加（落点）**：
@@ -76,7 +84,8 @@
   - C++ 原生任务的 GetValue 后置（等 C++ 任务化时再说）。
   - 文件：`BehaviorTreeLoader.lua`（参数解析约定）；Lua 任务模板（`controller.subparam` 取值约定，照搬 MiniGame `BTTask_*` 契约）。
 
-#### G4. 补齐常用组合/装饰节点：Parallel、Random（最少这两个）
+#### G4. 补齐常用组合/装饰节点：Parallel、Random（最少这两个） — 🟢 已完成（2026-06）
+> 已落地：`BehaviorParallel`、`BehaviorRandomSelector`（`BehaviorComposite.*`）+ `BehaviorTreeDriver` 工厂 + `BehaviorTreeLoader.lua` 节点类型。下方为当时的设计说明，保留作背景。
 - **是什么**：Parallel（多分支同时跑 + 成功/失败策略）、Random（按权重随机选分支）。
 - **为什么 P0（对编辑器）**：积木库太贫会让编辑器没人用。Parallel 是“一边移动一边攻击/警戒”的刚需；Random 是“随机闲逛/随机技能”的刚需。
 - **怎么加（落点）**：`BehaviorComposite.{h,cpp}` 加 `BehaviorParallel`（先支持 oncefail/oncesuccess/all 策略）、`BehaviorRandom`（权重）；`BehaviorTreeDriver` 加 `NewParallel/NewRandom` 工厂；`BehaviorTreeLoader.lua` 加节点类型。
@@ -125,9 +134,9 @@
 
 > 与可视化任务 E0/E1 并行推进，互不阻塞。
 
-1. **G4 补 Parallel + Random**（改动集中在 `BehaviorComposite`/`Driver`/`Loader`，最易、立刻让积木库像样）。
+1. ~~**G4 补 Parallel + Random**~~ —— 🟢 已完成（2026-06）。
 2. **G3 参数运行时求值（先做“常量 + 黑板键”两态）**（Lua 任务侧约定，成本低，解锁编辑器动态参数）。
-3. **G1 行为中断/条件重评估**（最有价值的行为能力，改 Selector/Sequence Tick + 节点 interrupt 字段）。
+3. ~~**G1 行为中断/条件重评估**~~ —— 🟢 已完成（2026-06，reevaluation 路径）。
 4. **G6 黑板加 Object-by-id + 数组**（目标引用/目标列表）。
 5. **统一事件总线就绪后 → G2 事件节点**（与触发器编辑器 E4 协同）。
 6. G5 子树、G7 条件缓存、G8–G11 按规模与性能需要补。

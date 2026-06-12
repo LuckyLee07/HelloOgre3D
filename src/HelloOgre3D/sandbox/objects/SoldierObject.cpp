@@ -131,6 +131,16 @@ WeaponComponent* SoldierObject::getWeapon()
 	return FindComponent<WeaponComponent>();
 }
 
+void SoldierObject::SetRenderVisible(bool visible)
+{
+	AgentObject::SetRenderVisible(visible);
+	WeaponComponent* weaponComp = getWeapon();
+	if (weaponComp != nullptr)
+	{
+		weaponComp->SetRenderVisible(visible);
+	}
+}
+
 int SoldierObject::getStanceType() const
 {
 	const AgentAttrib* attrib = FindComponent<AgentAttrib>();

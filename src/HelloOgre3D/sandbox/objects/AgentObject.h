@@ -46,6 +46,7 @@ public:
 	// component accessors such as FindComponent<T>() / GetLocomotion().
 	AgentAnim* GetAnimation(const char* animationName);
 	AgentAnimStateMachine* GetObjectASM() const;
+	virtual void SetRenderVisible(bool visible);
 
 	AGENT_OBJ_TYPE getAgentType() { return m_agentType; }
 	void setAgentType(AGENT_OBJ_TYPE agentType) { m_agentType = agentType; }

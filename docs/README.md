@@ -1,71 +1,69 @@
-# docs 索引（按状态分类）
+# docs 索引
 
-> 这份索引只解决一件事：**施工/阅读前先按状态找对文档**。方向与优先级看 🧭 北极星；按 🔨 active 文档施工；📚 reference 只作依据不直接施工；🗄 historical 的“优先级/排期”已被北极星取代，只看其具体条目、不看其排序。
+> 目的：让阅读和施工先找对文档，避免被历史路线图带偏。
 >
-> 一句话治理规则：**任何取舍先翻北极星 `project-direction.md`；它与其它文档冲突时，以北极星为准。**
+> 治理规则：方向取舍先看 `project-direction.md`；阶段排期看 `long-term-iteration-plan.md`；具体实现看对应专项文档。历史文档只看证据和具体条目，不看旧排期。
 
-## 🧭 北极星（最高真源）
+## 1. 必读入口
 
-| 文档 | 作用 |
+| 文档 | 用途 |
 |---|---|
-| `project-direction.md` | 项目身份(当前阶段 AI 学习与实验沙盒，长期目标生产级游戏项目 / 玩法运行时)、核心主轴(把 AI 能力讲清楚、跑起来、看得见，并沉淀生产级地基)、近期优先级、先做/缓做/别做。**统领以下所有文档。** |
+| `project-direction.md` | 北极星。定义当前阶段是 AI 学习与实验沙盒，长期目标是生产级游戏项目 / 玩法运行时。 |
+| `long-term-iteration-plan.md` | 长期迭代总规划。把后续阶段拆成可比较/可复现、AI 热点 C++ 化、意图链路、运行时边界、工具门禁、编辑器/UGC 后置。 |
+| `ai-technical-iteration-plan.md` | AI 技术执行计划。落到 spatial、perception cache、TeamBlackboard、TacticalQuery、InfluenceMap、BT runtime 和 benchmark。 |
 
-## 🔨 Active 规划（按这些施工）
+## 2. 当前施工参考
 
-| 文档 | 作用 | 对应北极星层 |
-|---|---|---|
-| `high-priority-todo.md` | 当前高优先级施工 TODO（L0 地基 + 第一个垂直切片 + 必要 BT 补强） | L0/L1 执行 |
-| `ai-technical-iteration-plan.md` | 下一阶段 AI 技术迭代规划：Spatial/AOI、感知系统、TeamBlackboard、InfluenceMap、BT runtime 与 benchmark | AI P0/P1 执行 |
-| `foundation-modules-inventory.md` | 地基模块盘点(已有/缺/不做)+ 切片最小 base 集 | L0–L2 家底 |
-| `architecture-improvement-plan.md` | 架构优化实施(解耦 SandboxServices / 组件化 / 所有权 / 感知)，带 file:line 证据与验收 | L0/L1/L2 落地 |
-| `chapter9-parity-architecture-notes.md` | Chapter 9 复刻过程暴露的架构问题归档：sample profile、trace、AI/移动/动画意图链路、战术绘制边界 | L0/L1 落地参考 |
-| `cpp-object-model-refactor-roadmap.md` | C++ 对象模型分阶段路线(术语已同步当前继承链) | L1-④ 依据 |
-| `behavior-tree-gap-analysis.md` | BT 执行模型差异与补强(G1 中断 / G3 参数求值 / G4 Parallel·Random …) | L1-⑤ |
-| `trigger-system-gap-analysis.md` | 触发器/事件系统差异与补强(T-G1 事件总线四件套 / T-G2 参数化事件名 …) | L0-③ / L1-⑥ |
-| `visual-editor-implementation-plan.md` | 可视化编辑器实施方案(自写 FGUI 积木编辑器) | L3 |
-| `visual-editor-task-breakdown.md` | 可视化编辑器开发任务清单(带真实接口签名) | L3 |
-
-## 📚 Reference（参考依据，不直接施工）
-
-| 文档 | 作用 |
+| 文档 | 用途 |
 |---|---|
-| `reference-minigame-patterns.md` | 生产级沙盒 MiniGame 可借鉴架构调研(已纠正反射/Blockly/dev-VM 表述)；“为什么这么做”的依据 |
-| `minigame-ai-production-reference.md` | MiniGame AI 生产架构专项参考，聚焦 C++ 热路径、Lua 行为层、BT runtime、AOI/SoA/Job 与本项目落地路线 |
+| `chapter9-parity-architecture-notes.md` | Chapter9 对齐暴露的问题：profile、trace、意图链路、InfluenceMap 视觉边界。 |
+| `architecture-improvement-plan.md` | 架构解耦证据和方案：SandboxServices、组件化、所有权、反向依赖。⚠️ P6/C5 已解决、P1/P5/P7 部分完成，详见文内复核状态与 §7 跟踪清单。 |
+| `high-priority-todo.md` | 执行记录 + 细粒度 backlog。不要把它当最高优先级入口。 |
+| `cpp-object-model-refactor-roadmap.md` | C++ 对象模型与组件化长期路线。 |
+| `behavior-tree-gap-analysis.md` | 行为树执行模型补强参考。⚠️ G1(重评估)/G4(Parallel/Random) 已完成，开放项为 G2/G3/G5–G11，详见文内复核状态。 |
 
-## 🗄 Historical / 补充（具体条目可参考，排序以北极星为准）
+## 3. 参考资料
 
-| 文档 | 作用 | 状态 |
-|---|---|---|
-| `project-roadmap.md` | 早期非 AI 主线路线(UI/runtime/调试/构建/稳定性) | 历史；FGUI-first 排期已被北极星取代 |
-| `ai-roadmap.md` | AI 长期愿景(Knowledge/Perception/Tactics 等) | 补充；近期 AI 工作以 `behavior-tree-gap-analysis.md` 为准 |
-| `AIArchitectureBeyondBook.md` | AI 架构延伸思考 | 补充 |
-| `SoldierObjectRefactor.md` | Soldier/Agent 对象链路重构记录 | 历史/记录 |
-
-## 🎨 FGUI 专项（编辑器 UI 基座 + 回归门禁，不占主线优先级）
-
-| 入口 | 作用 |
+| 文档 | 用途 |
 |---|---|
-| `fgui/fairygui-final-roadmap.md`、`fgui/fairygui-business-framework-todo.md` | FGUI 业务框架路线与 TODO（已基本完成） |
-| `fgui/fairygui-production-gate.md` | FGUI 阶段性生产验收(配 `tools/run_fgui_production_gate.ps1`) |
-| `fgui/`(其余) | AutoGen 工作流、资源、标准流程等专项 |
+| `minigame-ai-production-reference.md` | MiniGame AI 生产级架构参考，聚焦 AOI、缓存、调度、BT runtime、Lua/C++ 分界。 |
+| `reference-minigame-patterns.md` | MiniGame 通用沙盒架构参考。 |
+| `AIArchitectureBeyondBook.md` | Chapter 7-9 概念在当前架构下的设计参考。 |
+| `ai-roadmap.md` | AI 长期愿景和能力地图，排期以新总规划为准。 |
 
-> 说明：FGUI 已接近生产级，定位转为“可视化编辑器的 UI 基座 + 回归门禁”，不再是项目主线 P0。
+## 4. 历史 / 暂缓
 
-## 📊 Evidence（实测证据）
-
-| 入口 | 作用 |
+| 文档 | 状态 |
 |---|---|
-| `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 实测基线：100 / 500 / 1000 agent，spatial on/off 与 perception system on/off 对照，当前入口为 `Sandbox16` |
-| `perf/ai-spatial-filter-retest-20260602.md` | Spatial query 过滤二期复测：500 / 1000 agent 下 filtered / reject / queryMs 与旧基线对照，当前入口为 `Sandbox16` |
-| `perf/fgui-tracy-sample-*.md` | FGUI Tracy 性能实测报告（visible pressure 等） |
+| `project-roadmap.md` | 历史非 AI 主线整理。UI/runtime/调试/构建条目可参考，排序已失效。 |
+| `foundation-modules-inventory.md` | 历史地基盘点。保留模块清单价值，数据驱动切片排期已失效。 |
+| `trigger-system-gap-analysis.md` | 触发器方向暂缓。事件系统四件套可在服务 AI/生产级边界时小步引入。 |
+| `SoldierObjectRefactor.md` | 历史重构记录。查旧设计和对象链路时参考。 |
+| `visual-editor-implementation-plan.md` / `visual-editor-task-breakdown.md` | 编辑器/UGC 后置方向，当前不作为主线施工。 |
 
----
+## 5. FGUI 专项
 
-## 阅读路径建议
+| 文档 | 用途 |
+|---|---|
+| `fgui/fairygui-production-gate.md` | FGUI 验收入口，配 `tools/run_fgui_production_gate.ps1`。 |
+| `fgui/fairygui-production-convergence-todo.md` | FGUI 生产级收口状态。 |
+| `fgui/fairygui-business-ui-standard-flow.md` | 业务 UI 标准接入流程。 |
+| `fgui/fairygui-final-roadmap.md` / `fgui/fairygui-business-framework-todo.md` | FGUI 长期能力地图和历史 TODO。 |
+| `fgui/` 其余文档 | AutoGen、资源、接入计划、重构计划等专项资料。 |
 
-- **想知道项目往哪走 / 该先做什么** → `project-direction.md`（北极星）。
-- **想知道下一阶段 AI 技术迭代怎么排** → `ai-technical-iteration-plan.md`。
-- **想知道还缺哪些地基、下一步碰什么** → `foundation-modules-inventory.md`。
-- **要动某个系统**：架构/解耦 → `architecture-improvement-plan.md`；BT → `behavior-tree-gap-analysis.md`；触发器/事件 → `trigger-system-gap-analysis.md`；编辑器 → `visual-editor-*`。
-- **想了解参考来源(MiniGame 怎么做的)** → `reference-minigame-patterns.md`。
-- 顶层项目说明与命令见仓库根 `README.md` 与 `AGENTS.md`。
+## 6. 性能与实测证据
+
+| 文档 | 用途 |
+|---|---|
+| `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 基线，含 100 / 500 / 1000 agent 对照。 |
+| `perf/ai-spatial-filter-retest-20260602.md` | Spatial filter 复测，记录 candidates / filtered / reject / queryMs。 |
+| `perf/fgui-tracy-sample-*.md` | FGUI Tracy 实测报告。 |
+
+## 7. 阅读路径
+
+- 判断项目方向：读 `project-direction.md`。
+- 安排后续阶段：读 `long-term-iteration-plan.md`。
+- 做 AI 热点系统：读 `ai-technical-iteration-plan.md`，再读对应 C++/Lua 实现。
+- 处理 Chapter9 视觉/行为差异：读 `chapter9-parity-architecture-notes.md`。
+- 做架构解耦：读 `architecture-improvement-plan.md`。
+- 查参考项目怎么做：读 `minigame-ai-production-reference.md` 或 `reference-minigame-patterns.md`。

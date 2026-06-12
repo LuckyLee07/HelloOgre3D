@@ -2,7 +2,7 @@
 
 > 目标：把 `Sandbox9`-`Sandbox15`、`Sandbox17` 与 `Sandbox18` 已经跑通的 AI 学习 sample，从 Lua-first / sample-first 的实验形态，逐步收口成更高性能、可观测、可扩展的 C++ AI 底座；`Sandbox16` 作为 AI perception pressure / ai_perf 的性能压力入口保留，`Sandbox18` 承接 Chapter 9 C++ 第二版第一切片。
 >
-> 方向依据：`docs/project-direction.md`、`docs/ai-roadmap.md`、`docs/minigame-ai-production-reference.md`。
+> 方向依据：`docs/project-direction.md`、`docs/long-term-iteration-plan.md`、`docs/ai-roadmap.md`、`docs/minigame-ai-production-reference.md`。
 >
 > 一句话原则：**Lua 讲清楚行为，C++ 扛住规模，sample 验证概念，profiler 验证成本。**
 
@@ -46,6 +46,17 @@ AgentSpatialIndexSystem
 3. 然后把团队和战术层从 Lua table 迁到 C++ service。
 4. 最后优化 BT runtime 和 debug / benchmark，确保规模上来后可观测。
 
+### 2.1 规模化性能原则
+
+参考 `docs/minigame-ai-production-reference.md` 对 MiniGame 的代码分析，后续 AI 性能目标不应理解成“1000 个 agent 每帧完整跑同一套逻辑也不卡”，而应拆成以下设计约束：
+
+- 每帧先确定 active set；不在验证范围、AOI 或重要性阈值内的 agent 只做低频或跳过更新。
+- 每个批量系统必须支持 interval、bucket、budget 或 distance LOD，避免感知、BT、TeamBlackboard、InfluenceMap 同帧集中重算。
+- 所有邻域查询必须走 C++ spatial / AOI facade，并且有 `maxResults`、候选访问上限和统计输出。
+- Lua 行为节点只读 C++ 产出的 perception / team / tactical result，不新增全局对象遍历。
+- 热路径优先优化数据布局和缓存，而不是先引入完整第三方 ECS；必要时再把可批处理系统 job 化。
+- `ai_perf_1000` 的验收要同时看 Debug / Release、spatial on/off、scheduler on/off、perception cache on/off 和 Lua callback 数量。
+
 ## 3. Phase 1：Agent Spatial / AOI 底座
 
 ### 目标
@@ -64,6 +75,7 @@ AgentSpatialIndexSystem
   - alive / dead 过滤。
   - includeSelf 开关。
   - maxResults 上限。
+  - 候选访问上限与最近优先 / 远处采样策略，避免密集场景结果爆炸。
   - 可选 tag / type 过滤。
 - 统计支持：
   - registeredAgents。
@@ -101,6 +113,7 @@ AgentSpatialIndexSystem
   - source。
 - 增加 `HearingSense` / `DangerSense` 的 C++ 结果入口，Lua sample 只负责触发声音或危险源。
 - 可见性检测、距离过滤、遮挡预算集中到 system。
+- 扫描结果写入 cache 后由 Blackboard / BT 消费，避免每个 Lua action 重复执行感知查询。
 - 感知写 Blackboard 的路径保持稳定，避免破坏现有 BT action / condition。
 
 ### 验收
@@ -291,7 +304,7 @@ score = objective + support + cover - threat - crowd
 - [x] 输出 spatial / perception / scheduler 统计入口，`run_sandbox_smoke.ps1` 会为 `ai_perf_*` 自动启用 `FramePerf`。
 - [x] 提供线性查询与 grid 查询成本对照入口：`-DisableSpatialIndex`。
 - [x] 实际记录 100 / 500 / 1000 在 spatial on/off、perception system on/off 下的 Debug x64 基线结果：见 `docs/perf/ai-perception-baseline-20260602.md`。
-- [ ] 补 scheduler on/off、Release x64 和必要 Tracy capture 对照。
+- [ ] 补 scheduler on/off、Release x64、perception cache on/off、Lua callback 数量和必要 Tracy capture 对照。
 
 ### 近期三：Perception System
 

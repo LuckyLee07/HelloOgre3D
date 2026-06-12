@@ -1,8 +1,8 @@
 # 地基模块盘点（已有 / 缺 / 故意不做）
 
-> 目的：把“做一个数据驱动沙盒需要哪些基础设施”一次性盘清，消解“好像还差一整个引擎”的模糊焦虑，并明确**第一个垂直切片真正要碰的最小集**。知道一个沙盒需要哪些地基、各自现状如何、哪些可以不做——这本身就是架构判断力的一部分。
+> 文档状态：**历史盘点 / 参考清单**。本文保留“有哪些地基模块、哪些已有、哪些故意不做”的清单价值；其中“第一个垂直切片”“数据驱动沙盒”等排期表述已被 `docs/project-direction.md` 和 `docs/long-term-iteration-plan.md` 取代。
 >
-> 上位：方向与整体优先级以 `docs/project-direction.md`（北极星）为准；本文是 L0–L2 地基的“家底清单”，与 `architecture-improvement-plan.md` / `behavior-tree-gap-analysis.md` / `trigger-system-gap-analysis.md` 互补。
+> 上位：方向与整体优先级以 `docs/project-direction.md`（北极星）为准；长期阶段以 `docs/long-term-iteration-plan.md` 为准。本文与 `architecture-improvement-plan.md` / `behavior-tree-gap-analysis.md` / `trigger-system-gap-analysis.md` 互补。
 >
 > 状态图例：✅ 已有可用 ｜ 🟡 部分（有骨架/雏形，需扩） ｜ ❌ 缺 ｜ 🚫 故意不做。证据指向本仓库；核对于 2026-05-29，标“需确认”的未逐行验证。
 

@@ -32,6 +32,7 @@ public:
 	const Ogre::Vector3& GetOriginPos() const { return GetVisualOffset(); };
 	
 	void SetMaterial(const Ogre::String& materialName);
+	void SetVisible(bool visible);
 
 	void SetPosition(const Ogre::Vector3& position);
 	void SetRotation(const Ogre::Vector3& rotation);

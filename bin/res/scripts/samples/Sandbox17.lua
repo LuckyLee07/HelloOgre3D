@@ -22,7 +22,9 @@ local _drawCache = {}
 local _projectionCache = {}
 local _EnsureInfluenceMap = nil
 local _GetDrawCellLimit = nil
+local _GetCppDrawCellLimit = nil
 local _parityTrace = nil
+local _uiEnabled = true
 
 local _colors = {
 	team1 = ColourValue(0.2, 0.95, 0.4),
@@ -41,6 +43,7 @@ local _influencePalette = {
 	zero = { 0.0, 0.0, 0.0, 0.75 },
 	negative = { 1.0, 0.0, 0.0, 0.9 },
 }
+local _gridCoverageRedSpec = { 1.0, 0.0, 0.0, 0.9 }
 
 local _tactics = {
 	bulletImpacts = {},
@@ -105,6 +108,55 @@ local function _ReadBool(config, key, defaultValue)
 		return defaultValue
 	end
 	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
+local function _ReadEnvBool(name, defaultValue)
+	local value = os.getenv and os.getenv(name) or nil
+	if value == nil then
+		return defaultValue
+	end
+	return value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
+local function _IsVisualIsolationEnabled(config)
+	return _ReadBool(config, "visualIsolation", false)
+		or _ReadEnvBool("HELLO_CH9_VISUAL_ISOLATION", false)
+end
+
+local function _ShouldHideUi(config)
+	return _IsVisualIsolationEnabled(config)
+		or _ReadBool(config, "hideUi", false)
+		or _ReadEnvBool("HELLO_CH9_HIDE_UI", false)
+end
+
+local function _ShouldHideAgentRender(config)
+	return _IsVisualIsolationEnabled(config)
+		or _ReadBool(config, "hideAgentRender", false)
+		or _ReadEnvBool("HELLO_CH9_HIDE_AGENT_RENDER", false)
+end
+
+local function _ShouldForceGridCoverageRed(config)
+	return _ReadBool(config, "forceGridCoverageRed", false)
+		or _ReadEnvBool("HELLO_CH9_FORCE_GRID_RED", false)
+end
+
+local function _GetCameraPreset(config)
+	local preset = os.getenv and os.getenv("HELLO_CH9_CAMERA_PRESET") or nil
+	if preset ~= nil and preset ~= "" then
+		return string.lower(tostring(preset))
+	end
+	return string.lower(_ReadString(config, "cameraPreset", "current"))
+end
+
+local function _ApplyCameraPreset(config)
+	local camera = Sandbox:GetCamera()
+	if _GetCameraPreset(config) == "top" then
+		camera:setPosition(Vector3(12, 95, 27))
+		camera:setOrientation(Quaternion(-90, 0, -180))
+		return
+	end
+	camera:setPosition(Vector3(-30, 18, -17))
+	camera:setOrientation(Quaternion(-146, -40, -157))
 end
 
 local function _CopyTable(value)
@@ -182,6 +234,9 @@ local function _Lerp(startValue, endValue, t)
 end
 
 local function _InfluenceColor(value, positiveSpec, negativeSpec)
+	if _ShouldForceGridCoverageRed(_GetConfig()) then
+		return ColourValue(_gridCoverageRedSpec[1], _gridCoverageRedSpec[2], _gridCoverageRedSpec[3], _gridCoverageRedSpec[4])
+	end
 	local numberValue = tonumber(value) or 0.0
 	local amount = _Clamp01(math.abs(numberValue))
 	local target = numberValue >= 0.0 and positiveSpec or negativeSpec
@@ -391,15 +446,21 @@ local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negat
 	local map = _EnsureInfluenceMap()
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	local zeroSpec = _influencePalette.zero
+	if _ShouldForceGridCoverageRed(config) then
+		positiveSpec = _gridCoverageRedSpec
+		negativeSpec = _gridCoverageRedSpec
+		zeroSpec = _gridCoverageRedSpec
+	end
 	ObjectManager:rebuildTacticalInfluenceLayerDebugVisual(
 		layerName,
 		y,
 		_ColorFromSpec(positiveSpec),
-		_ColorFromSpec(_influencePalette.zero),
+		_ColorFromSpec(zeroSpec),
 		_ColorFromSpec(negativeSpec),
 		_colors.grid,
 		threshold,
-		_GetDrawCellLimit(config, map),
+		_GetCppDrawCellLimit(config),
 		drawNeutral,
 		_ReadBool(config, "projectInfluenceToNav", true),
 		_ReadNumber(config, "drawNavProjectionMaxDistance", map.cellSize * 0.9),
@@ -711,6 +772,14 @@ _GetDrawCellLimit = function(config, map)
 	return math.max(1, limit)
 end
 
+_GetCppDrawCellLimit = function(config)
+	local limit = tonumber(config ~= nil and config.maxDrawCellsPerLayer or nil)
+	if limit == nil or limit <= 0 then
+		return 0
+	end
+	return math.max(1, limit)
+end
+
 local function _BuildInfluenceLayerDrawCache(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	local config = _GetConfig()
 	local map = _EnsureInfluenceMap()
@@ -750,15 +819,21 @@ local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, dra
 		local map = _EnsureInfluenceMap()
 		local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 		local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+		local zeroSpec = _influencePalette.zero
+		if _ShouldForceGridCoverageRed(config) then
+			positiveSpec = _gridCoverageRedSpec
+			negativeSpec = _gridCoverageRedSpec
+			zeroSpec = _gridCoverageRedSpec
+		end
 		ObjectManager:drawTacticalInfluenceLayer(
 			layerName,
 			y,
 			_ColorFromSpec(positiveSpec),
-			_ColorFromSpec(_influencePalette.zero),
+			_ColorFromSpec(zeroSpec),
 			_ColorFromSpec(negativeSpec),
 			_colors.grid,
 			threshold,
-			_GetDrawCellLimit(config, map),
+			_GetCppDrawCellLimit(config),
 			drawNeutral,
 			_ReadBool(config, "projectInfluenceToNav", true),
 			_ReadNumber(config, "drawNavProjectionMaxDistance", map.cellSize * 0.9),
@@ -799,6 +874,9 @@ end
 
 local function _DrawTacticEvents()
 	local config = _GetConfig()
+	if _IsVisualIsolationEnabled(config) then
+		return
+	end
 	if _ReadBool(config, "drawEventMarkers", false) ~= true then
 		return
 	end
@@ -819,6 +897,9 @@ end
 
 local function _DrawAgents()
 	local config = _GetConfig()
+	if _IsVisualIsolationEnabled(config) then
+		return
+	end
 	if _ReadBool(config, "drawAgentMarkers", false) ~= true then
 		return
 	end
@@ -869,6 +950,9 @@ end
 -- 普通 sample 仍可选择保留移动目标点 target ring。
 local function _DrawTargetRadius()
 	local config = _GetConfig()
+	if _IsVisualIsolationEnabled(config) then
+		return
+	end
 	if _ReadBool(config, "drawTargetRadius", true) ~= true then
 		return
 	end
@@ -1045,6 +1129,7 @@ local function _CreateAgents()
 	local config = _GetConfig()
 	local agentCount = ConfigManager:GetAgentCount(_sampleName, 6)
 	local agentLuafile = _ReadString(config, "agentScript", "res/scripts/agent/DecisionSoldierAgent.lua")
+	local hideAgentRender = _ShouldHideAgentRender(config)
 	print(ConfigManager:BuildDebugSummary(_sampleName))
 	Chapter9Profile.PrintStartupSummary(_sampleName, preset)
 
@@ -1053,18 +1138,21 @@ local function _CreateAgents()
 		local agentType = _GetAppearanceForTeam(teamId)
 		local agent = Create_Soldier(agentLuafile, agentType, teamId)
 		_PlaceAgentLikeChapter9(agent, preset, config, i)
+		if hideAgentRender and agent.SetRenderVisible ~= nil then
+			agent:SetRenderVisible(false)
+		end
 		table.insert(_agents, agent)
 	end
 end
 
 function EventHandle_Keyboard(keycode, pressed)
-	GUI_HandleKeyEvent(keycode, pressed)
+	if _uiEnabled then
+		GUI_HandleKeyEvent(keycode, pressed)
+	end
 
 	if not pressed then return end
 	if keycode == OIS.KC_F1 then
-		local camera = Sandbox:GetCamera()
-		camera:setPosition(Vector3(-30, 18, -17))
-		camera:setOrientation(Quaternion(-146, -40, -157))
+		_ApplyCameraPreset(_GetConfig())
 	elseif keycode == OIS.KC_F3 then
 		_drawNavMesh = not _drawNavMesh
 		if _navMesh ~= nil then
@@ -1079,25 +1167,28 @@ function EventHandle_Mouse(ctype)
 end
 
 function EventHandle_WindowResized(width, height)
-	GUI_WindowResized(width, height)
+	if _uiEnabled then
+		GUI_WindowResized(width, height)
+	end
 end
 
 function Sandbox_Initialize()
 	local config = _GetConfig()
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = _ReadBool(config, "suppressPathDraw", true)
+	_uiEnabled = not _ShouldHideUi(config)
 
-	GUI_CreateCameraAndProfileInfo()
-	local panelText, panelSize = _GetInfoPanelOptions(config)
-	GUI_CreateSandboxText(panelText, panelSize)
-	if _ReadBool(config, "showTacticsPanel", false) then
-		_CreatePanel()
+	if _uiEnabled then
+		GUI_CreateCameraAndProfileInfo()
+		local panelText, panelSize = _GetInfoPanelOptions(config)
+		GUI_CreateSandboxText(panelText, panelSize)
+		if _ReadBool(config, "showTacticsPanel", false) then
+			_CreatePanel()
+		end
 	end
 
 	Sandbox:SetUseCppFsmFlag(true)
 
-	local camera = Sandbox:GetCamera()
-	camera:setPosition(Vector3(-30, 18, -17))
-	camera:setOrientation(Quaternion(-146, -40, -157))
+	_ApplyCameraPreset(config)
 
 	Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
 
@@ -1142,8 +1233,10 @@ function Sandbox_Initialize()
 end
 
 function Sandbox_Update(deltaTimeInMillis)
-	GUI_UpdateCameraInfo()
-	GUI_UpdateProfileInfo()
+	if _uiEnabled then
+		GUI_UpdateCameraInfo()
+		GUI_UpdateProfileInfo()
+	end
 
 	_elapsedMs = _elapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
 	_panelElapsedMs = _panelElapsedMs + math.max(0, tonumber(deltaTimeInMillis) or 0)
@@ -1154,7 +1247,7 @@ function Sandbox_Update(deltaTimeInMillis)
 	_DrawTargetRadius()
 	_DrawTacticEvents()
 	_DrawInfluenceMap()
-	if _panelElapsedMs >= 250 then
+	if _uiEnabled and _panelElapsedMs >= 250 then
 		_panelElapsedMs = 0
 		_RefreshPanel()
 	end

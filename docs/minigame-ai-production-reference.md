@@ -26,6 +26,20 @@ Actor / GameObject / Component / Controller
 
 因此对 `HelloOgre3D` 的启发不是“所有 AI 都 ECS 化”，而是：**对象和脚本层保表达力，热路径系统化、数据化、可观测化。**
 
+### 1.1 千级 agent 不不卡的关键机制
+
+MiniGame 值得参考的点，不是让 1000 个 agent 每帧都完整跑 AI，而是从运行链路上避免“1000 份最贵逻辑同时发生”：
+
+- **先裁剪 active set**：AOI、可见性、冻结/延迟更新先决定哪些 actor 需要进入本帧逻辑，不在 AOI 或不重要的对象不进入完整 AI tick。
+- **再分散 tick 成本**：AI task、BT、感知、战术查询都应支持 interval、bucket、budget 或 LOD，避免同一帧集中重算。
+- **空间查询替代全表扫描**：附近敌人、队友、目标、危险源一律通过 spatial / AOI query，禁止 Lua 或单 agent 逻辑线性扫全局对象。
+- **查询结果有上限**：密集场景必须有 `maxResults`、候选访问上限、最近优先或远处采样策略，防止局部拥挤退化成 O(N²)。
+- **热路径数据缓存**：位置、team、alive、AABB、感知结果、BT 节点结果等高频数据要尽量缓存到 C++ 系统侧，减少跨语言调用和重复计算。
+- **批量工作可观测、可并行**：AOI、感知、战术评分这类批处理要有 profiler counter；必要时再引入 job 化，但第一步先让系统边界和数据快照稳定。
+- **Lua 只消费结果**：Lua 行为树负责“如何使用感知/战术结果”，不负责生成这些结果。
+
+这条原则应作为后续 `ai_perf_1000`、`Sandbox16`、`Sandbox18` 和 Chapter9 战术收口的共同性能约束。
+
 ## 2. 可参考的设计点
 
 ### 2.1 GameObject + Component 只做表达层

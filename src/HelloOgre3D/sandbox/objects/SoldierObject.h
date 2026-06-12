@@ -24,6 +24,7 @@ public:
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
 	WeaponComponent* getWeapon();
+	virtual void SetRenderVisible(bool visible) override;
 
 	void changeStanceType(int stanceType);
 	int getStanceType() const;

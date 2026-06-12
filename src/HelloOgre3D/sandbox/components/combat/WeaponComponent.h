@@ -24,6 +24,7 @@ public:
 
 	void Init(const Ogre::String& meshFile);
 	RenderComponent* GetRenderComponent() const { return m_weaponRender; }
+	void SetRenderVisible(bool visible);
 
 	//tolua_begin
 	AgentAnim* GetAnimation(const char* animationName);

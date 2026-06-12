@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Tue Jun  9 16:06:33 2026.
+** Generated automatically by tolua++-1.0.92 on Thu Jun 11 15:40:27 2026.
 */
 
 #ifndef __cplusplus
@@ -2209,6 +2209,39 @@ static int tolua_SandboxToLua_AgentObject_GetObjectASM00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetObjectASM'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRenderVisible of class  AgentObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentObject_SetRenderVisible00
+static int tolua_SandboxToLua_AgentObject_SetRenderVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentObject",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentObject* self = (AgentObject*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRenderVisible'", NULL);
+#endif
+  {
+   self->SetRenderVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRenderVisible'.",&tolua_err);
  return 0;
 #endif
 }
@@ -4475,6 +4508,39 @@ static int tolua_SandboxToLua_SoldierObject_getWeapon00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getWeapon'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRenderVisible of class  SoldierObject */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_SoldierObject_SetRenderVisible00
+static int tolua_SandboxToLua_SoldierObject_SetRenderVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"SoldierObject",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  SoldierObject* self = (SoldierObject*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRenderVisible'", NULL);
+#endif
+  {
+   self->SetRenderVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRenderVisible'.",&tolua_err);
  return 0;
 #endif
 }
@@ -13224,6 +13290,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getBody",tolua_SandboxToLua_AgentObject_getBody00);
    tolua_function(tolua_S,"GetAnimation",tolua_SandboxToLua_AgentObject_GetAnimation00);
    tolua_function(tolua_S,"GetObjectASM",tolua_SandboxToLua_AgentObject_GetObjectASM00);
+   tolua_function(tolua_S,"SetRenderVisible",tolua_SandboxToLua_AgentObject_SetRenderVisible00);
    tolua_function(tolua_S,"getAgentType",tolua_SandboxToLua_AgentObject_getAgentType00);
    tolua_function(tolua_S,"setAgentType",tolua_SandboxToLua_AgentObject_setAgentType00);
    tolua_function(tolua_S,"GetPosition",tolua_SandboxToLua_AgentObject_GetPosition00);
@@ -13293,6 +13360,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"SoldierObject");
    tolua_function(tolua_S,"initWeapon",tolua_SandboxToLua_SoldierObject_initWeapon00);
    tolua_function(tolua_S,"getWeapon",tolua_SandboxToLua_SoldierObject_getWeapon00);
+   tolua_function(tolua_S,"SetRenderVisible",tolua_SandboxToLua_SoldierObject_SetRenderVisible00);
    tolua_function(tolua_S,"changeStanceType",tolua_SandboxToLua_SoldierObject_changeStanceType00);
    tolua_function(tolua_S,"getStanceType",tolua_SandboxToLua_SoldierObject_getStanceType00);
    tolua_function(tolua_S,"ShootBullet",tolua_SandboxToLua_SoldierObject_ShootBullet00);

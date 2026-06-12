@@ -571,6 +571,16 @@ SamplePresets.chapter9_tactics_legacy_parity.parityTrace = {
 	includeAiSummary = false,
 }
 
+SamplePresets.chapter9_tactics_influence_only = cloneTable(SamplePresets.chapter9_tactics_legacy_parity)
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.visualIsolation = true
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.hideUi = true
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.hideAgentRender = true
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.showTacticsPanel = false
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.useLegacyInfoPanel = false
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawAgentMarkers = false
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawEventMarkers = false
+SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawTargetRadius = false
+
 SamplePresets.chapter9_tactics_cpp = cloneTable(SamplePresets.chapter9_tactics_lua)
 SamplePresets.chapter9_tactics_cpp.chapter9Profile = Chapter9Profile.Make("cppProduction")
 SamplePresets.chapter9_tactics_cpp.seed = 20260603

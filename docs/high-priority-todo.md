@@ -1,15 +1,20 @@
 # 高优先级 TODO
 
-> 方向依据：`docs/project-direction.md` 与 `docs/ai-roadmap.md`。
+> 文档状态：**执行记录 + 细粒度 backlog**。当前方向与阶段排期先看 `docs/project-direction.md` 和 `docs/long-term-iteration-plan.md`；AI 技术细节看 `docs/ai-technical-iteration-plan.md`。本文保留已完成轨迹和待办细项，不再作为最高优先级入口。
 > 当前阶段主线是 **AI 学习与实验沙盒**，长期目标是演进为生产级游戏项目 / 生产级玩法运行时。完整数据驱动 Def、触发器玩法、编辑器、UGC 方向暂缓一次性铺开；只有在它们直接服务 AI 学习 sample、生产级地基收口或清晰垂直切片时再小步引入。
 
 ## 当前目标
 
-先跑通一个更贴近 AI 学习的切片：
+下一阶段目标从“继续新增 sample”转向“把已跑通的 AI 概念收口为可观测、可承压的 C++ runtime”。近期应优先：
 
-> agent 通过感知发现敌人，把目标 id、位置、距离写入 blackboard；目标离开视野后保留最后已知位置；行为树能根据这些信息追击、搜索或回到待机，并能通过 trace / 日志看懂它为什么这么做。
+- 补 Release x64 `ai_perf_1000` 基线。
+- 建立 `PerceptionResultCache`，让 BT / Lua 只读结果。
+- 抽出 `TacticalQueryService`。
+- 补 `InfluenceMapSystem` interval / dirty region / layer debug draw。
+- 做 BT runtime cache / LOD 第一版。
+- 统一 AI RuntimeDiag 输出。
 
-换句话说：先把“AI 如何感知、记忆、决策、行动”讲清楚，而不是先做玩法数据管线或触发器编辑器地基。
+历史上“agent 感知、记忆、决策、行动”的学习切片已通过 `Sandbox9`-`Sandbox15`、`Sandbox17`、`Sandbox18` 覆盖；后续重点是生产化收口和性能基线。
 
 ## 迭代记录
 

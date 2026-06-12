@@ -94,6 +94,18 @@ void RenderComponent::SetMaterial(const Ogre::String& materialName)
 	}
 }
 
+void RenderComponent::SetVisible(bool visible)
+{
+	if (m_pSceneNode != nullptr)
+	{
+		m_pSceneNode->setVisible(visible, true);
+	}
+	if (m_pEntity != nullptr)
+	{
+		m_pEntity->setVisible(visible);
+	}
+}
+
 void RenderComponent::SetPosition(const Ogre::Vector3& position)
 {
 	m_pSceneNode->setPosition(position);

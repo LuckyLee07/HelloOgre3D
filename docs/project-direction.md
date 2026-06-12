@@ -37,6 +37,7 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 - 脱离当前 AI 验证面、一次性铺开完整 Def 管线、触发器编辑器、UGC、世界 streaming 的，暂缓。
 - 数据配置可以作为 AI 实验的辅助，但不是当前主目标。
 - 能沉淀稳定对象系统、脚本边界、调试观测、性能基线和工程化验证的，按生产级方向小步推进。
+- 能让 100 / 500 / 1000 agent 场景避免全量每帧重算，并沉淀 spatial / AOI、分桶调度、结果上限、Lua/C++ 热路径边界和 Release 性能基线的，升优先级。
 
 ## 3. 近期优先级
 
@@ -47,7 +48,7 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 | P0 | 保持 AI driver / 组件入口清爽 | 新增 AI 能力优先走 `AIController`、组件和 `SandboxServices`，减少全局单例和对象层转发。 |
 | P1 | 团队通信与 TeamBlackboard | 一个 agent 发现敌人后，同队 agent 能共享信息并改变行为。 |
 | P1 | InfluenceMap 与战术移动 | AI 能根据危险/偏好区域选择移动目标，并有 debug 显示。 |
-| P1 | AI 更新调度与性能观测 | 多 agent 场景下感知、知识源、影响力地图不会每帧集中全量更新。 |
+| P1 | AI 更新调度与性能观测 | 多 agent 场景下感知、知识源、影响力地图、BT tick 不会每帧集中全量更新，并能用 100 / 500 / 1000 agent preset 记录 Debug / Release 基线。 |
 | P1 | 生产级运行时边界 | 新增能力有清晰对象/组件/服务/脚本边界，并能被 sample、smoke 或日志验证。 |
 | P2 | 录制、回放、可复现测试 | 固定随机种子后 sample 行为可复现，异常行为能从日志中解释。 |
 
@@ -97,7 +98,10 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 
 | 文档 | 当前定位 |
 |---|---|
-| `docs/ai-roadmap.md` | AI 长期路线事实来源，优先参考。 |
+| `docs/ai-roadmap.md` | AI 长期愿景和能力地图，近期排期以本文和 `docs/long-term-iteration-plan.md` 为准。 |
+| `docs/long-term-iteration-plan.md` | 长期迭代总规划，把北极星拆成阶段、近期执行队列和暂缓清单。 |
+| `docs/ai-technical-iteration-plan.md` | AI 技术落地顺序，承接 spatial、perception、team、tactics、BT runtime 与 benchmark。 |
+| `docs/minigame-ai-production-reference.md` | MiniGame 生产级 AI 性能与架构参考；只吸收热路径系统化、AOI、缓存、调度和 benchmark 思路，不照搬历史包袱。 |
 | `docs/high-priority-todo.md` | 当前迭代任务清单，必须随方向变化更新。 |
 | `docs/behavior-tree-gap-analysis.md` | 行为树学习与补强参考。 |
 | `docs/trigger-system-gap-analysis.md` | 触发器方向暂缓，作为历史参考。 |

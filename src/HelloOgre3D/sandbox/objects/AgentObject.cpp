@@ -116,6 +116,14 @@ AgentAnimStateMachine* AgentObject::GetObjectASM() const
 	return anim != nullptr ? anim->GetBodyAsm() : nullptr;
 }
 
+void AgentObject::SetRenderVisible(bool visible)
+{
+	if (m_renderComp != nullptr)
+	{
+		m_renderComp->SetVisible(visible);
+	}
+}
+
 void AgentObject::ApplyCommand(const AICommand& command)
 {
 	switch (command.kind)

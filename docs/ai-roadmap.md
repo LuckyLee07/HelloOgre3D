@@ -1,5 +1,7 @@
 # AI Chapter 7-9 迁移后续扩展路线图
 
+> 文档状态：**AI 长期愿景 / 历史扩展路线**。当前阶段排期以 `docs/project-direction.md`、`docs/long-term-iteration-plan.md` 和 `docs/ai-technical-iteration-plan.md` 为准；本文保留 Chapter 7-9 概念、调试能力和中长期 AI 能力地图。
+
 > 目标：在迁入 HelloOgre3DX chapter 7-9 的 Knowledge / Perception / Tactics 能力后，把 AI 系统继续推进到可调试、可观测、可复用、可扩展的状态。
 >
 > 范围：`src/HelloOgre3D/sandbox/ai/`、`src/HelloOgre3D/runtime/` 中与 AI 可视化相关的适配层，以及 `bin/res/scripts/ai/`、`bin/res/scripts/samples/` 下的 Lua AI 脚本与样例。

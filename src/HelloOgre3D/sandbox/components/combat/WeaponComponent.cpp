@@ -108,6 +108,14 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 	SyncToHandBone();
 }
 
+void WeaponComponent::SetRenderVisible(bool visible)
+{
+	if (m_weaponRender != nullptr)
+	{
+		m_weaponRender->SetVisible(visible);
+	}
+}
+
 void WeaponComponent::SyncToHandBone()
 {
 	RenderComponent* ownerRender = FindOwnerRender(this);
