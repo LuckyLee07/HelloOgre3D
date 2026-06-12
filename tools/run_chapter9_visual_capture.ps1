@@ -22,12 +22,18 @@ param(
 	[switch]$Visible,
 	[switch]$KeepAlive,
 	[switch]$InfluenceOnly,
+	[switch]$AgentOnly,
 	[switch]$CoverageRed,
-	[ValidateSet("current", "top")]
+	[int]$SimulationFps = 30,
+	[ValidateSet("current", "top", "agent")]
 	[string]$CameraPreset = "current"
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($InfluenceOnly -and $AgentOnly) {
+	throw "InfluenceOnly and AgentOnly are mutually exclusive."
+}
 
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = (Resolve-Path (Join-Path $ScriptRoot "..")).Path
@@ -363,12 +369,24 @@ function Invoke-LegacyExternalCapture {
 		HELLO_SAMPLE_PRESET = "legacy_chapter9_fixed"
 		HELLO_PARITY_SEED = "$Seed"
 		HELLO_SAMPLE_SEED = "$Seed"
+		HELLO_SIM_FPS = "$SimulationFps"
 		HELLO_CH9_CAMERA_PRESET = $CameraPreset
 	}
 	if ($InfluenceOnly) {
 		$legacyEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
 		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
 		$legacyEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($AgentOnly) {
+		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_INFLUENCE"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_COUNT"] = "1"
+		$legacyEnv["HELLO_CH9_SUPPRESS_DEBUG_DRAW"] = "1"
+		$legacyEnv["HELLO_PARITY_LIGHT_COUNT"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_OVERRIDE"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_X"] = "-28.000"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_Y"] = "0"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_Z"] = "14.000"
 	}
 	if ($CoverageRed) {
 		$legacyEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
@@ -466,6 +484,7 @@ function Invoke-LegacyRenderCapture {
 		HELLO_SAMPLE_PRESET = "legacy_chapter9_fixed"
 		HELLO_PARITY_SEED = "$Seed"
 		HELLO_SAMPLE_SEED = "$Seed"
+		HELLO_SIM_FPS = "$SimulationFps"
 		HELLO_CH9_CAMERA_PRESET = $CameraPreset
 		HELLO_RENDER_CAPTURE = "1"
 		HELLO_RENDER_CAPTURE_DIR = $OldOutputDir
@@ -477,6 +496,17 @@ function Invoke-LegacyRenderCapture {
 		$legacyEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
 		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
 		$legacyEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($AgentOnly) {
+		$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
+		$legacyEnv["HELLO_CH9_HIDE_INFLUENCE"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_COUNT"] = "1"
+		$legacyEnv["HELLO_CH9_SUPPRESS_DEBUG_DRAW"] = "1"
+		$legacyEnv["HELLO_PARITY_LIGHT_COUNT"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_OVERRIDE"] = "1"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_X"] = "-28.000"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_Y"] = "0"
+		$legacyEnv["HELLO_CH9_AGENT_SPAWN_Z"] = "14.000"
 	}
 	if ($CoverageRed) {
 		$legacyEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
@@ -534,11 +564,14 @@ function Invoke-ModernRenderCapture {
 	if ($InfluenceOnly) {
 		$modernPreset = "chapter9_tactics_influence_only"
 	}
+	if ($AgentOnly) {
+		$modernPreset = "chapter9_tactics_agent_only"
+	}
 	$modernEnv = @{
 		HELLO_SANDBOX_SAMPLE = "Sandbox17"
 		HELLO_SAMPLE_PRESET = $modernPreset
 		HELLO_SAMPLE_SEED = "$Seed"
-		HELLO_SIM_FPS = "30"
+		HELLO_SIM_FPS = "$SimulationFps"
 		HELLO_PARITY_TRACE = "1"
 		HELLO_PARITY_TRACE_DELAY_MS = "$TraceDelayMs"
 		HELLO_PARITY_TRACE_INTERVAL_MS = "$TraceIntervalMs"
@@ -557,6 +590,9 @@ function Invoke-ModernRenderCapture {
 		$modernEnv["HELLO_CH9_VISUAL_ISOLATION"] = "1"
 		$modernEnv["HELLO_CH9_HIDE_UI"] = "1"
 		$modernEnv["HELLO_CH9_HIDE_AGENT_RENDER"] = "1"
+	}
+	if ($AgentOnly) {
+		$modernEnv["HELLO_CH9_HIDE_UI"] = "1"
 	}
 	if ($CoverageRed) {
 		$modernEnv["HELLO_CH9_FORCE_GRID_RED"] = "1"
@@ -707,7 +743,7 @@ function Invoke-CaptureAnalysis {
 Write-Host "[CH9_VISUAL] runId=$RunId"
 Write-Host "[CH9_VISUAL] outputDir=$OutputDir"
 Write-Host "[CH9_VISUAL] capturesMs=$($sortedCaptures -join ',')"
-Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds modernRetries=$ModernCaptureRetries traceMaxSamples=$ModernTraceMaxSamples modernSmoke=$(-not $ModernNoSmoke) captureLegacyExternal=$($CaptureLegacyExternal.IsPresent) reuseLegacy=$ReuseLegacyCaptureDir cameraPreset=$CameraPreset coverageRed=$($CoverageRed.IsPresent)"
+Write-Host "[CH9_VISUAL] seconds=$Seconds legacySeconds=$LegacySeconds modernSeconds=$ModernSeconds modernRetries=$ModernCaptureRetries traceMaxSamples=$ModernTraceMaxSamples modernSmoke=$(-not $ModernNoSmoke) captureLegacyExternal=$($CaptureLegacyExternal.IsPresent) reuseLegacy=$ReuseLegacyCaptureDir cameraPreset=$CameraPreset influenceOnly=$($InfluenceOnly.IsPresent) agentOnly=$($AgentOnly.IsPresent) coverageRed=$($CoverageRed.IsPresent) simulationFps=$SimulationFps"
 
 if (-not [string]::IsNullOrWhiteSpace($ReuseLegacyCaptureDir)) {
 	Invoke-ReuseLegacyCapture -SourceDir $ReuseLegacyCaptureDir

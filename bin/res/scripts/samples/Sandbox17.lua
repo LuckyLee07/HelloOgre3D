@@ -158,9 +158,15 @@ end
 
 local function _ApplyCameraPreset(config)
 	local camera = Sandbox:GetCamera()
-	if _GetCameraPreset(config) == "top" then
+	local preset = _GetCameraPreset(config)
+	if preset == "top" then
 		camera:setPosition(Vector3(12, 95, 27))
 		camera:setOrientation(Quaternion(-90, 0, -180))
+		return
+	end
+	if preset == "agent" then
+		camera:setPosition(Vector3(-43, 10, -3))
+		camera:setOrientation(Quaternion(-135, -25, -147))
 		return
 	end
 	camera:setPosition(Vector3(-30, 18, -17))

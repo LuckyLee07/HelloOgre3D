@@ -107,6 +107,9 @@ if ($Preset -eq "chapter9_tactics_lua" -and -not $PSBoundParameters.ContainsKey(
 if ($Preset -eq "chapter9_tactics_legacy_parity" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox17"
 }
+if ($Preset -eq "chapter9_tactics_agent_motion_probe" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox17"
+}
 if ($Preset -eq "chapter9_tactics_cpp" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox18"
 }
@@ -261,6 +264,9 @@ if ($Preset -eq "chapter9_tactics_lua" -and $Seconds -lt 35) {
 }
 if ($Preset -eq "chapter9_tactics_legacy_parity" -and $Seconds -lt 35) {
 	$Seconds = 35
+}
+if ($Preset -eq "chapter9_tactics_agent_motion_probe" -and $Seconds -lt 12) {
+	$Seconds = 12
 }
 if ($Preset -eq "chapter9_tactics_cpp" -and $Seconds -lt 35) {
 	$Seconds = 35

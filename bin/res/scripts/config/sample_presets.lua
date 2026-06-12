@@ -581,6 +581,52 @@ SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawAgentMarkers =
 SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawEventMarkers = false
 SamplePresets.chapter9_tactics_influence_only.chapter9Tactics.drawTargetRadius = false
 
+SamplePresets.chapter9_tactics_agent_only = cloneTable(SamplePresets.chapter9_tactics_legacy_parity)
+SamplePresets.chapter9_tactics_agent_only.agentCount = 1
+SamplePresets.chapter9_tactics_agent_only.lightTeamCount = 1
+SamplePresets.chapter9_tactics_agent_only.spawnPoints = {
+	{ -8.233, 0, -5.396 },
+}
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.hideUi = true
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.hideAgentRender = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.showTacticsPanel = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.useLegacyInfoPanel = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawAgentMarkers = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawEventMarkers = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawTargetRadius = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawDangerLayer = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawTeamLayer = false
+SamplePresets.chapter9_tactics_agent_only.chapter9Tactics.drawInSmoke = false
+
+SamplePresets.chapter9_tactics_agent_motion_probe = cloneTable(SamplePresets.chapter9_tactics_agent_only)
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceInitialRandomAgents = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyRandomMovePoints = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyRandomMoveConsumesRandomPoint = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyPreferMoveBeforeEnemyAgents = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyPreferMoveBeforeEnemyMaxRandomCount = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceIdleUntilMs = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceIdleAfterRandomCount = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceRandomAfterMs = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceRandomAtRandomMoveCount = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.legacyForceEnemyAfterMs = {}
+SamplePresets.chapter9_tactics_agent_motion_probe.chapter9Tactics.motionProbe = {
+	enabled = true,
+	target = { 1.490, 4.050, 25.958 },
+	startDelayMs = 1000,
+	durationMs = 4000,
+	reachDistance = 1.5,
+	stopOnReach = false,
+}
+SamplePresets.chapter9_tactics_agent_motion_probe.parityTrace = {
+	enabled = true,
+	delayMs = 0,
+	intervalMs = 200,
+	maxSamples = 32,
+	maxAgents = 1,
+	logToConsole = true,
+	includeAiSummary = false,
+}
+
 SamplePresets.chapter9_tactics_cpp = cloneTable(SamplePresets.chapter9_tactics_lua)
 SamplePresets.chapter9_tactics_cpp.chapter9Profile = Chapter9Profile.Make("cppProduction")
 SamplePresets.chapter9_tactics_cpp.seed = 20260603

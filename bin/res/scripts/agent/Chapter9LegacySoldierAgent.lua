@@ -1,5 +1,7 @@
 require("res.scripts.agent.AgentUtils.lua")
 
+local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+
 local _MOVE_SEGMENT_MS = 500
 local _IDLE_MS = 2000
 local _SHOOT_MS = 600
@@ -87,6 +89,33 @@ local function _GetMovementProfile(config)
 	return profile
 end
 
+local function _GetMotionProbe(config)
+	local probe = config ~= nil and config.motionProbe or nil
+	if type(probe) ~= "table" or probe.enabled ~= true then
+		return nil
+	end
+	return probe
+end
+
+local function _ReadProbeNumber(probe, key, defaultValue)
+	if probe == nil then
+		return defaultValue
+	end
+	local value = tonumber(probe[key])
+	if value == nil then
+		return defaultValue
+	end
+	return value
+end
+
+local function _ReadProbeBool(probe, key, defaultValue)
+	if probe == nil or probe[key] == nil then
+		return defaultValue
+	end
+	local value = probe[key]
+	return value == true or value == "1" or value == "true" or value == "TRUE" or value == "yes"
+end
+
 local function _GetAgentIndex(agent, config)
 	if agent == nil then
 		return -1
@@ -128,6 +157,10 @@ local function _ToVector3(point)
 	end
 
 	return Vector3(point[1] or 0, point[2] or 0, point[3] or 0)
+end
+
+local function _ProbeTarget(probe)
+	return _ToVector3(probe ~= nil and probe.target or nil)
 end
 
 local function _DistanceSq(left, right)
@@ -478,6 +511,24 @@ local function _WriteDebugState(agent, state)
 	end
 end
 
+local function _RecordIntent(agent, state, phase, movement, animation, reason, durationMs, target)
+	local bb = _GetBlackboard(agent)
+	if bb == nil then
+		return
+	end
+
+	ActionIntent.Record(agent, bb, {
+		action = state.action or "",
+		phase = phase or "",
+		movement = movement or "",
+		animation = animation or "",
+		reason = reason or "",
+		elapsedMs = state.elapsedMs or 0,
+		durationMs = durationMs or 0,
+		target = target or agent:GetTarget(),
+	})
+end
+
 local function _HasMovePosition(agent)
 	local target = agent:GetTarget()
 	return target ~= nil and _Distance(agent:GetPosition(), target) > _MOVE_REACH
@@ -618,6 +669,76 @@ local function _BeginMove(agent, state)
 	state.elapsedMs = 0
 	state.moveSource = "movePosition"
 	agent:EnterMoveAnim()
+end
+
+local function _BeginMotionProbeMove(agent, state, probe, target)
+	state.action = "motionProbeMove"
+	state.elapsedMs = 0
+	state.moveSource = "motionProbe"
+	state.motionProbeStarted = true
+	state.motionProbeComplete = false
+	state.motionProbeTarget = target
+
+	if target ~= nil and _BuildAndSetPath(agent, target) then
+		agent:EnterMoveAnim()
+		_RecordIntent(agent, state, "begin", "move", "run_forward", "motionProbe", _ReadProbeNumber(probe, "durationMs", 4000), target)
+		return true
+	end
+
+	state.action = "motionProbeFailed"
+	state.motionProbeComplete = true
+	state.motionProbeFailure = "path"
+	agent:EnterIdleAnim()
+	_RecordIntent(agent, state, "failed", "idle", "idle_aim", "motionProbe.path", 0, target)
+	return false
+end
+
+local function _UpdateMotionProbe(agent, state, deltaMs)
+	local config = _GetChapter9Config()
+	local probe = _GetMotionProbe(config)
+	if probe == nil then
+		return false
+	end
+
+	local target = state.motionProbeTarget or _ProbeTarget(probe)
+	local startDelayMs = _ReadProbeNumber(probe, "startDelayMs", 1000)
+	local durationMs = _ReadProbeNumber(probe, "durationMs", 4000)
+	local reachDistance = _ReadProbeNumber(probe, "reachDistance", _MOVE_REACH)
+	local stopOnReach = _ReadProbeBool(probe, "stopOnReach", false)
+
+	if not state.motionProbeStarted then
+		state.action = "motionProbeWait"
+		state.elapsedMs = state.timeMs
+		state.moveSource = "motionProbe"
+		state.motionProbeTarget = target
+		agent:EnterIdleAnim()
+		_SlowMovement(agent, 1.0)
+		_RecordIntent(agent, state, "wait", "idle", "idle_aim", "motionProbe", startDelayMs, target)
+		if state.timeMs < startDelayMs then
+			return true
+		end
+		_BeginMotionProbeMove(agent, state, probe, target)
+	end
+
+	if state.action == "motionProbeMove" then
+		state.elapsedMs = state.elapsedMs + (deltaMs or 0)
+		state.motionProbeTarget = target
+		agent:EnterMoveAnim()
+		_ApplyMove(agent, state, deltaMs or 0)
+		_RecordIntent(agent, state, "update", "move", "run_forward", "motionProbe", durationMs, target)
+		if state.elapsedMs >= durationMs or (stopOnReach and _Distance(agent:GetPosition(), agent:GetTarget()) < reachDistance) then
+			_ClearPath(agent)
+			state.action = "motionProbeDone"
+			state.motionProbeComplete = true
+			agent:EnterIdleAnim()
+			_RecordIntent(agent, state, "done", "idle", "idle_aim", "motionProbe", durationMs, target)
+		end
+		return true
+	end
+
+	_SlowMovement(agent, 1.0)
+	_RecordIntent(agent, state, "done", "idle", "idle_aim", "motionProbe", durationMs, target)
+	return true
 end
 
 local function _BeginPursue(agent, state, enemy)
@@ -911,6 +1032,9 @@ function Agent_Initialize(agent)
 			if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
 				ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)
 			end
+			if _GetMotionProbe(config) ~= nil then
+				bb:SetBool("intent.traceEnabled", true)
+			end
 		end
 	end
 
@@ -928,6 +1052,9 @@ function Agent_Initialize(agent)
 	state.dead = false
 	state.randomMoveCount = 0
 	state.evaluationCount = 0
+	state.motionProbeStarted = false
+	state.motionProbeComplete = false
+	state.motionProbeTarget = _ProbeTarget(_GetMotionProbe(config))
 	agent:EnterIdleAnim()
 	_WriteDebugState(agent, state)
 end
@@ -940,6 +1067,11 @@ function Agent_Update(agent, deltaTimeInMillis)
 	_DispatchLegacyMessages(state.timeMs)
 
 	if state.dead then
+		_WriteDebugState(agent, state)
+		return
+	end
+
+	if _UpdateMotionProbe(agent, state, deltaTimeInMillis or 0) then
 		_WriteDebugState(agent, state)
 		return
 	end

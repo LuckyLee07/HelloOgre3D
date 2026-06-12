@@ -9,8 +9,20 @@ param(
 	[int]$Seed = 20260608,
 	[int]$FirstAgentId = 115,
 	[int]$LightCount = 3,
+	[int]$SimulationFps = 30,
+	[switch]$AgentOnly,
+	[switch]$MotionProbe,
+	[double]$AgentSpawnX = -8.233,
+	[double]$AgentSpawnY = 0.000,
+	[double]$AgentSpawnZ = -5.396,
+	[double]$MotionTargetX = 1.490,
+	[double]$MotionTargetY = 4.050,
+	[double]$MotionTargetZ = 25.958,
+	[int]$MotionStartDelayMs = 1000,
+	[int]$MotionDurationMs = 4000,
 	[switch]$DisableFixedSpawn,
 	[switch]$Visible,
+	[switch]$Activate,
 	[switch]$KeepAlive,
 	[switch]$NoTail
 )
@@ -52,6 +64,26 @@ $legacyEnv = @{
 	HELLO_PARITY_TRACE_MAX_SAMPLES = "$TraceMaxSamples"
 	HELLO_PARITY_TRACE_MAX_AGENTS = "$TraceMaxAgents"
 	HELLO_PARITY_TRACE_FILE = $tracePath
+	HELLO_SIM_FPS = "$SimulationFps"
+}
+if ($AgentOnly) {
+	$legacyEnv["HELLO_CH9_HIDE_UI"] = "1"
+	$legacyEnv["HELLO_CH9_HIDE_INFLUENCE"] = "1"
+	$legacyEnv["HELLO_CH9_SUPPRESS_DEBUG_DRAW"] = "1"
+	$legacyEnv["HELLO_CH9_AGENT_COUNT"] = "1"
+	$legacyEnv["HELLO_PARITY_LIGHT_COUNT"] = "1"
+	$legacyEnv["HELLO_CH9_AGENT_SPAWN_OVERRIDE"] = "1"
+	$legacyEnv["HELLO_CH9_AGENT_SPAWN_X"] = ([string]$AgentSpawnX)
+	$legacyEnv["HELLO_CH9_AGENT_SPAWN_Y"] = ([string]$AgentSpawnY)
+	$legacyEnv["HELLO_CH9_AGENT_SPAWN_Z"] = ([string]$AgentSpawnZ)
+}
+if ($MotionProbe) {
+	$legacyEnv["HELLO_CH9_MOTION_PROBE"] = "1"
+	$legacyEnv["HELLO_CH9_MOTION_TARGET_X"] = ([string]$MotionTargetX)
+	$legacyEnv["HELLO_CH9_MOTION_TARGET_Y"] = ([string]$MotionTargetY)
+	$legacyEnv["HELLO_CH9_MOTION_TARGET_Z"] = ([string]$MotionTargetZ)
+	$legacyEnv["HELLO_CH9_MOTION_START_DELAY_MS"] = "$MotionStartDelayMs"
+	$legacyEnv["HELLO_CH9_MOTION_DURATION_MS"] = "$MotionDurationMs"
 }
 foreach ($key in $legacyEnv.Keys) {
 	Set-Item -Path "Env:$key" -Value $legacyEnv[$key]
@@ -60,7 +92,7 @@ foreach ($key in $legacyEnv.Keys) {
 
 Write-Host "[LEGACY] exe=$exePath"
 Write-Host "[LEGACY] trace=$tracePath"
-Write-Host "[LEGACY] seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent) seed=$Seed fixedSpawn=$(-not $DisableFixedSpawn.IsPresent)"
+Write-Host "[LEGACY] seconds=$Seconds visible=$($Visible.IsPresent) activate=$($Activate.IsPresent) keepAlive=$($KeepAlive.IsPresent) seed=$Seed fixedSpawn=$(-not $DisableFixedSpawn.IsPresent) agentOnly=$($AgentOnly.IsPresent) motionProbe=$($MotionProbe.IsPresent) simulationFps=$SimulationFps"
 
 $startArgs = @{
 	FilePath = $exePath
@@ -74,7 +106,7 @@ if (-not $Visible) {
 $process = Start-Process @startArgs
 Write-Host "[LEGACY] started pid=$($process.Id)"
 
-if ($Visible) {
+if ($Visible -and $Activate) {
 	Start-Sleep -Milliseconds 1000
 	try {
 		$wshell = New-Object -ComObject WScript.Shell
