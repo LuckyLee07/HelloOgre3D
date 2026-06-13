@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(rm -f *_prepshadow.log NavMeshDebug_*.log stdout.log stderr.log Sandbox.log)",
+      "Bash(timeout 20 ./HelloOgre3D.exe)",
+      "Bash(find . -name \"ScriptLuaVM.h\")",
+      "Bash(find . -name \"DecisionBranch.cpp\")",
+      "Bash(dir /s /b hello1.tracy)",
+      "Bash(dir \"tools\\\\tracy-viewer\" /b)",
+      "Bash(./tools/tracy-viewer/tracy-csvexport.exe --help)",
+      "Bash(./tools/tracy-viewer/tracy-csvexport.exe ./hello1.tracy > /tmp/zones.csv 2>&1 ; head -1 /tmp/zones.csv ; echo \"---rows---\" ; wc -l /tmp/zones.csv)",
+      "Bash(./tools/tracy-viewer/tracy-csvexport.exe -e ./hello1.tracy > /tmp/zones_self.csv 2>&1 ; cat /tmp/zones_self.csv)",
+      "Bash(ls \"/f/env1_trunk/client/miniModule/MiniSandbox/BehaviorTreeAI\" 2>&1 | head -40)",
+      "Read(//f/env1_trunk/client/miniModule/MiniSandbox/BehaviorTreeAI/**)",
+      "Bash(find /f/env1_trunk -name \"OgreScriptLuaVM*\" 2>/dev/null | head -5 ; echo \"---\" ; find /f/env1_trunk -name \"ScriptVM*\" 2>/dev/null | head -10)",
+      "Read(//f/env1_trunk/**)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

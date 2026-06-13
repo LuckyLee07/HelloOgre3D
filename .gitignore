@@ -6,7 +6,6 @@
 /libs/*.pdb
 
 # Local agent / IDE state
-/.claude/
 /.vscode/
 /vs2017-profile.bat
 
@@ -16,3 +15,6 @@ __pycache__/
 # Local Tracy viewer downloads
 /tools/tracy-viewer/tracy-csvexport.exe
 /tools/tracy-viewer/tracy-windows-*.zip
+
+# Codex 跨项目记忆 dump（非本仓文档，工具无关记忆在 docs/memory/）
+docs/memories/

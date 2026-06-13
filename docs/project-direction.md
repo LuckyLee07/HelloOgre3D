@@ -98,16 +98,16 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 
 | 文档 | 当前定位 |
 |---|---|
-| `docs/ai-roadmap.md` | AI 长期愿景和能力地图，近期排期以本文和 `docs/long-term-iteration-plan.md` 为准。 |
-| `docs/long-term-iteration-plan.md` | 长期迭代总规划，把北极星拆成阶段、近期执行队列和暂缓清单。 |
-| `docs/ai-technical-iteration-plan.md` | AI 技术落地顺序，承接 spatial、perception、team、tactics、BT runtime 与 benchmark。 |
-| `docs/minigame-ai-production-reference.md` | MiniGame 生产级 AI 性能与架构参考；只吸收热路径系统化、AOI、缓存、调度和 benchmark 思路，不照搬历史包袱。 |
-| `docs/high-priority-todo.md` | 当前迭代任务清单，必须随方向变化更新。 |
-| `docs/behavior-tree-gap-analysis.md` | 行为树学习与补强参考。 |
-| `docs/trigger-system-gap-analysis.md` | 触发器方向暂缓，作为历史参考。 |
-| `docs/foundation-modules-inventory.md` | 生产级地基盘点参考；近期只选能支撑当前验证面的部分。 |
-| `docs/project-roadmap.md` | 长期生产级路线参考，阶段优先级低于本文。 |
-| `docs/visual-editor-implementation-plan.md` / `docs/visual-editor-task-breakdown.md` | 长期编辑器工具链参考；近期只在支撑当前验证面时推进。 |
+| `docs/planning/ai-roadmap.md` | AI 长期愿景和能力地图，近期排期以本文和 `docs/planning/long-term-iteration-plan.md` 为准。 |
+| `docs/planning/long-term-iteration-plan.md` | 长期迭代总规划，把北极星拆成阶段、近期执行队列和暂缓清单。 |
+| `docs/planning/ai-technical-iteration-plan.md` | AI 技术落地顺序，承接 spatial、perception、team、tactics、BT runtime 与 benchmark。 |
+| `docs/reference/minigame-ai-production-reference.md` | MiniGame 生产级 AI 性能与架构参考；只吸收热路径系统化、AOI、缓存、调度和 benchmark 思路，不照搬历史包袱。 |
+| `docs/planning/high-priority-todo.md` | 当前迭代任务清单，必须随方向变化更新。 |
+| `docs/design/behavior-tree-gap-analysis.md` | 行为树学习与补强参考。 |
+| `docs/archive/trigger-system-gap-analysis.md` | 触发器方向暂缓，作为历史参考。 |
+| `docs/archive/foundation-modules-inventory.md` | 生产级地基盘点参考；近期只选能支撑当前验证面的部分。 |
+| `docs/archive/project-roadmap.md` | 长期生产级路线参考，阶段优先级低于本文。 |
+| `docs/archive/visual-editor-implementation-plan.md` / `docs/archive/visual-editor-task-breakdown.md` | 长期编辑器工具链参考；近期只在支撑当前验证面时推进。 |
 
 ## 7. 工作原则
 

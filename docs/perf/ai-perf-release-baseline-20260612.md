@@ -1,6 +1,6 @@
 # ai_perf Release x64 基线（2026-06-12）
 
-> 对应 `docs/long-term-iteration-plan.md` §8 执行队列 #1、`docs/high-priority-todo.md` 的 `ai_perf baseline 二期`（Release x64 部分）。
+> 对应 `docs/planning/long-term-iteration-plan.md` §8 执行队列 #1、`docs/planning/high-priority-todo.md` 的 `ai_perf baseline 二期`（Release x64 部分）。
 >
 > 配套 Debug x64 基线见 `docs/perf/ai-perception-baseline-20260602.md`；spatial filter 复测见 `docs/perf/ai-spatial-filter-retest-20260602.md`。
 

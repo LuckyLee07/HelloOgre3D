@@ -1,5 +1,14 @@
 # AGENTS.md
 
+## 项目记忆（所有 AI agent 通用，不区分工具）
+
+本仓库的**唯一权威项目记忆**在 `docs/memory/`（纯 markdown，随仓库走，Claude Code / Codex / 其它 agent 都读写这里）：
+
+- **开工前**先读 `docs/memory/MEMORY.md` 索引，再按需读对应条目（用户偏好、构建/运行坑、验证环、进度快照等）。
+- **学到非显然、跨会话有用、且代码本身不记录的经验**，就在 `docs/memory/` 新建 `<slug>.md` 并在 `MEMORY.md` 加一行索引；一文件一事实。
+- 别记代码已记录的（结构、修复、git 历史）——查代码 / `git log` 即可。
+- 各工具自带的记忆机制（如 Claude Code 的 `.claude/.../memory`）一律降级为指向此目录的薄指针，**以 `docs/memory/` 为准**。
+
 ## 项目定位
 
 `HelloOgre3D` 的当前阶段定位是 **“AI 学习与实验沙盒”**：通过可运行、可观察、可逐步扩展的 sandbox 学习并验证游戏 AI、对象系统、脚本编排、调试可视化与性能观测。长期目标是演进为 **生产级游戏项目 / 生产级玩法运行时**，具备稳定对象系统、数据驱动能力、工具链、编辑器、UGC 与工程化验证能力。完整定调与优先级以 `docs/project-direction.md`（方向总纲 / 北极星）为准。
@@ -94,7 +103,7 @@ src/Engine + src/External
 | `src/HelloOgre3D/common` | 跨层通用工具和 Lua VM 等历史公共代码。 | 不要再塞 Ogre 专属 helper，除非确实与引擎实现无关。 |
 | `bin/res/scripts` | 运行时 Lua 脚本。 | 修改 C++ 行为时要同步检查脚本调用点。 |
 | `bin/res/scripts/samples` | sample 入口，是行为回归的重要验证面。 | 影响 sample 表现的改动必须手动或脚本验证。 |
-| `bin/res/scripts/ai` | AI 决策树、行为树、条件、action 配置。 | 后续 AI 方向参考 `docs/ai-roadmap.md`。 |
+| `bin/res/scripts/ai` | AI 决策树、行为树、条件、action 配置。 | 后续 AI 方向参考 `docs/planning/ai-roadmap.md`。 |
 | `bin/res/scripts/ui` | FairyGUI Lua 侧 UI 框架和业务 UI。 | 复杂 UI 默认走 MVC / AutoGen 约定。 |
 | `media` | 材质、shader、模型、贴图、粒子等资源。 | 只在任务直接相关时修改。 |
 | `premake` | 工程生成和第三方依赖配置事实来源。 | 新增 C++ 文件或库配置优先检查这里。 |
@@ -110,14 +119,14 @@ src/Engine + src/External
 - Chapter 3：动画状态机与有限状态机，角色状态支持 C++ 与 Lua 双侧扩展。
 - Lua 绑定扩展：新增 `LuaPluginMgr`，支持 C++ 对象与 Lua 文件绑定。
 - 当前重构方向：处理 Object 体系长继承链、减少冗余、拆分引擎耦合逻辑与业务逻辑。
-- AI 后续方向：以 `docs/ai-roadmap.md` 为事实来源。
-- 非 AI 后续方向：以 `docs/project-roadmap.md` 为事实来源。
+- AI 后续方向：以 `docs/planning/ai-roadmap.md` 为事实来源。
+- 非 AI 后续方向：以 `docs/archive/project-roadmap.md` 为事实来源。
 - FGUI 后续方向：优先参考 `docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`、`docs/fgui/fairygui-autogen-workflow.md`。
 - FGUI 阶段性生产验收：以 `docs/fgui/fairygui-production-gate.md` 和 `tools/run_fgui_production_gate.ps1` 为准。
 
 ## 中长期规划
 
-`README.md`、`docs/ai-roadmap.md` 与 `docs/project-roadmap.md` 已记录的兼容目标包括：
+`README.md`、`docs/planning/ai-roadmap.md` 与 `docs/archive/project-roadmap.md` 已记录的兼容目标包括：
 
 - 决策树、行为树、黑板、知识源、感知、通信、影响力地图、战术层。
 - 触发器、技能 timeline、团队 Blackboard、AI 调试面板、AI 更新调度。
@@ -156,7 +165,7 @@ src/Engine + src/External
 
 ## AI 专项规则
 
-- AI 长期路线以 `docs/ai-roadmap.md` 为准。
+- AI 长期路线以 `docs/planning/ai-roadmap.md` 为准。
 - 当前已有 FSM / DecisionTree / BehaviorTree / Blackboard 能力，新增 AI 功能时优先复用现有 driver 和 Blackboard。
 - Knowledge、Perception、Tactics 迁移时，应保持 C++ 热点逻辑与 Lua 配置逻辑分离。
 - 感知扫描、影响力传播、寻路预算等热点逻辑优先放 C++；Lua 侧负责编排、配置和可读性。

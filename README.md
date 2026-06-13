@@ -5,17 +5,17 @@
 ## 当前路线索引 ##
 
 - 🧭 方向总纲（北极星，统领以下所有文档）：`docs/project-direction.md`
-- 项目级路线：`docs/project-roadmap.md`
-- 架构优化实施方案（基于代码现状评审，含证据与可执行步骤）：`docs/architecture-improvement-plan.md`
-- 生产级沙盒/UGC 可借鉴架构参考（MiniGame系深读提炼）：`docs/reference-minigame-patterns.md`
-- 可视化编辑器实施方案（AI 行为树 + 触发器，自写 FairyGUI 积木编辑器）：`docs/visual-editor-implementation-plan.md`
-- 可视化编辑器开发任务清单（可逐条认领，带真实接口签名）：`docs/visual-editor-task-breakdown.md`
-- 行为树执行模型差异与补强分析（对比 MiniGame，列出需补能力）：`docs/behavior-tree-gap-analysis.md`
-- 触发器/事件系统差异与补强分析（对比 MiniGame，列出需补能力）：`docs/trigger-system-gap-analysis.md`
-- 地基模块盘点（已有 / 缺 / 故意不做 + 切片最小集）：`docs/foundation-modules-inventory.md`
-- C++ 对象模型与组件化边界：`docs/cpp-object-model-refactor-roadmap.md`
-- Soldier / Agent 对象链路重构：`docs/SoldierObjectRefactor.md`
-- AI 后续能力路线：`docs/ai-roadmap.md`、`docs/AIArchitectureBeyondBook.md`
+- 项目级路线：`docs/archive/project-roadmap.md`
+- 架构优化实施方案（基于代码现状评审，含证据与可执行步骤）：`docs/design/architecture-improvement-plan.md`
+- 生产级沙盒/UGC 可借鉴架构参考（MiniGame系深读提炼）：`docs/reference/reference-minigame-patterns.md`
+- 可视化编辑器实施方案（AI 行为树 + 触发器，自写 FairyGUI 积木编辑器）：`docs/archive/visual-editor-implementation-plan.md`
+- 可视化编辑器开发任务清单（可逐条认领，带真实接口签名）：`docs/archive/visual-editor-task-breakdown.md`
+- 行为树执行模型差异与补强分析（对比 MiniGame，列出需补能力）：`docs/design/behavior-tree-gap-analysis.md`
+- 触发器/事件系统差异与补强分析（对比 MiniGame，列出需补能力）：`docs/archive/trigger-system-gap-analysis.md`
+- 地基模块盘点（已有 / 缺 / 故意不做 + 切片最小集）：`docs/archive/foundation-modules-inventory.md`
+- C++ 对象模型与组件化边界：`docs/design/cpp-object-model-refactor-roadmap.md`
+- Soldier / Agent 对象链路重构：`docs/archive/SoldierObjectRefactor.md`
+- AI 后续能力路线：`docs/planning/ai-roadmap.md`、`docs/reference/AIArchitectureBeyondBook.md`
 - FGUI 专项路线：`docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`
 - FGUI 阶段性生产验收：`docs/fgui/fairygui-production-gate.md`
 

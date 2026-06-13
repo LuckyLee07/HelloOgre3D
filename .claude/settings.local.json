@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\lizhibao\\\\.claude\\\\projects\\\\e--Workspace-HelloOgre3D\\\\memory\\\\\" 2>&1 | head -30)",
+      "Bash(xargs wc -l)",
+      "Bash(awk '$1 > 500 {print}')",
+      "PowerShell(& \"e:\\\\Workspace\\\\HelloOgre3D\\\\tools\\\\check_fgui_static.ps1\")",
+      "PowerShell(\\(Get-Command python\\).Source; python --version)"
+    ]
+  }
+}
