@@ -131,7 +131,8 @@
 - [x] `InfluenceMapSystem` 迁移准备：先用 `Sandbox17` Lua-first 版本固化 Chapter 9 tactics 的事件输入、danger/team layer、统计和 smoke 验收，作为 `Sandbox18` C++ 第二版对照。
 - [x] `InfluenceMapSystem` 第一切片：支持 danger / team / objective 3 层，提供 `cellWrites`、`queryCount`、`bestScore`、active cells 和 debug summary 统计，并通过 `ObjectManager` Lua facade 接入 `Sandbox18`。
 - [ ] `InfluenceMapSystem` 第二阶段：补 dirty region / interval 更新、cover / crowd / support schema、layer debug draw 和更多 pressure preset。
-- [ ] `TacticalQueryService` 第一阶段：提供 `FindBestSupportPosition`、`FindLowThreatPosition`、`ScorePosition`，Lua 只传 query 类型和权重，不直接遍历网格。
+- [x] `TacticalQueryService` 第一阶段：`sandbox/ai/tactics/TacticalQueryService.h` 已落地——持有 `InfluenceMapSystem`，提供事件订阅/TTL/发布、`RebuildDanger/Team/ObjectiveLayer`，以及查询 API `FindBestSupportPosition`、`FindLowThreatPosition`、`ScoreQueryPosition`、`FindBestQueryPosition` 和 stats。
+- [ ] `TacticalQueryService` 收口+二期：把 `ObjectManager` 里仍承担的 tactical 逻辑（`rebuildTacticalInfluenceLayerDebugVisual` 影响图可视化构建、`configureTacticalInfluenceFromNavMesh` 建图编排）下沉到 service / 独立 `TacticalDebugDrawService`，`ObjectManager` 只剩薄转发（service 成唯一实现事实来源，不强迫 Lua 直连）；并补 interval/dirty region、候选点上限、cover/crowd/support schema、layer debug 显式配置。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
 - [ ] BT runtime 性能化分步落地：先做 trace sampling / cache 统计，再做 dirty key 依赖和 LOD，避免在感知热点未稳定前扩大改动面。
 - [ ] AI debug / RuntimeDiag：统一输出 perception、memory、team facts、influence score、BT trace 和 scheduler stats。

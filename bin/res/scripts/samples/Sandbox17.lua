@@ -468,6 +468,8 @@ local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negat
 		threshold,
 		_GetCppDrawCellLimit(config),
 		drawNeutral,
+		-- 注意：projectInfluenceToNav / drawNavProjectionMaxDistance 当前是 C++ 端死参数（已改 2D 拍平绘制），
+		-- 这里仍传是为兼容绑定签名；待 Tactical 收口重构时一并从签名和此处删除。
 		_ReadBool(config, "projectInfluenceToNav", true),
 		_ReadNumber(config, "drawNavProjectionMaxDistance", map.cellSize * 0.9),
 		"default")

@@ -967,6 +967,9 @@ int ObjectManager::drawTacticalInfluenceLayer(const std::string& layerName, floa
 		return 0;
 
 	// 3D 影响图：直接画 used cell 的真实 3D 位置（cell 已贴在可走面上），不再投影。
+	// 注意：projectToNav / maxProjectionDistance / navMeshName 是 Lua 绑定签名里的**死参数**——
+	// 早期 navmesh 投影方案的遗留入参，现已改为 2D 拍平到 m_minY 平面（见 InfluenceMapSystem::CollectDebugCells），
+	// 这三个参数当前完全无效。不是 bug；待 Tactical 收口重构 service 时连同 tolua 绑定一起删除。
 	(void)projectToNav;
 	(void)maxProjectionDistance;
 	(void)navMeshName;
@@ -1011,6 +1014,9 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 		Ogre::ColourValue color;
 	};
 
+	// 死参数：projectToNav / maxProjectionDistance / navMeshName 是早期 navmesh 投影方案的遗留入参，
+	// 现已改为 2D 拍平绘制（CollectDebugCells 取每列最低 used cell 画在 m_minY 平面），这三个参数当前完全无效。
+	// 不是 bug；待 Tactical 收口重构时连同 tolua 绑定与 Lua 调用处一起删除。
 	(void)projectToNav;
 	(void)maxProjectionDistance;
 	(void)navMeshName;

@@ -192,6 +192,7 @@ score = objective + support + cover - threat - crowd
 当前已落地的第一切片：
 
 - 新增 C++ `InfluenceMapSystem`，支持 configurable grid、string layer、radial source、nearest-cell sample、组合评分、best position 查询和 debug summary。
+- 新增 C++ `TacticalQueryService`（`sandbox/ai/tactics/TacticalQueryService.h`）：持有 `InfluenceMapSystem`，封装事件订阅/TTL/发布、`Rebuild{Danger,Team,Objective}Layer` 与查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。剩余工作是把 `ObjectManager` 仍持有的 tactical 逻辑（debug visual 构建、navmesh 建图编排）下沉，让 service 成唯一事实来源。
 - `ObjectManager` 暴露 Lua facade：clear / configure / clearLayer / addSource / sample / score / findBest / stats。
 - `Sandbox18` 复用 Chapter 9 的 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件语义，Lua 只负责喂事件和读取 C++ 查询结果。
 
@@ -324,7 +325,8 @@ score = objective + support + cover - threat - crowd
 - [x] 用 `Sandbox17` 固化 Chapter 9 Tactics Lua-first 对照面：DangerousAreas / TeamAreas、事件 TTL、layer 更新统计和 `[Chapter9TacticsSmoke] PASS`。
 - [x] 设计 C++ `InfluenceMapSystem` layer schema，并在第一切片中落地 danger / team / objective 三层。
 - [x] 用 `Sandbox18` 固化 Chapter 9 Tactics C++ 第二版第一切片：Lua 喂事件，C++ 写入 influence layer、执行 tactical score / best position query，并输出 `[Chapter9TacticsCppSmoke] PASS`。
-- [ ] 抽出独立 `TacticalQueryService`，把当前 `ObjectManager` tactical facade 收敛为 service API。
+- [x] 抽出独立 `TacticalQueryService`：`sandbox/ai/tactics/TacticalQueryService.h` 已落地，持有 `InfluenceMapSystem`、跑事件订阅/TTL、`Rebuild{Danger,Team,Objective}Layer` 和查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
+- [ ] `TacticalQueryService` 收口：service 已是查询/层实现的事实来源，但 `ObjectManager` 仍承担 `rebuildTacticalInfluenceLayerDebugVisual`、`configureTacticalInfluenceFromNavMesh` 等 tactical 逻辑；下一步把这些下沉 service / `TacticalDebugDrawService`，`ObjectManager` 只保留薄转发（不强制 Lua 直连）。
 - [ ] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema 和 layer debug draw。
 
 ## 11. 成功标准

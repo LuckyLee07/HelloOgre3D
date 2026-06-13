@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 #include "GameFunction.h"
@@ -152,15 +154,19 @@ void AIController::TickPerception(int deltaMs, AIPerceptionTickStats* outStats)
 				outStats->memoryMs += memoryMs;
 		}
 	}
+	bool perceptionScanned = false;
+	double perceptionScanMs = 0.0;
 	{
 		H3D_PROFILE_SCOPE("AIController::VisionSensor");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		bool scanned = false;
 		const bool hasVisibleTarget = UpdateVisionSensor(elapsedMs, "default", true, false, &scanned);
+		perceptionScanned = scanned;
 		if (perfEnabled)
 		{
 			const double visionMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			perceptionScanMs = visionMs;
 			if (outStats != nullptr)
 				outStats->visionMs = visionMs;
 		}
@@ -182,6 +188,9 @@ void AIController::TickPerception(int deltaMs, AIPerceptionTickStats* outStats)
 				outStats->memoryMs += memoryMs;
 		}
 	}
+
+	// 收口本帧感知结果到显式缓存（增量观测；不改 blackboard / HasEnemy / 行为路径）。
+	UpdatePerceptionCache(perceptionScanned, perceptionScanMs);
 }
 
 void AIController::TickAI(int deltaMs)
@@ -414,6 +423,52 @@ void AIController::ClearPerceptionResult()
 	m_blackboard.Remove(kSenseTargetDistance);
 }
 
+void AIController::UpdatePerceptionCache(bool scannedThisTick, double scanCostMs)
+{
+	PerceptionResultCache& cache = m_perceptionCache;
+
+	// 当前可见目标：读当帧 WritePerceptionResult 写入的 perception.* 键。
+	cache.hasCurrentTarget = m_blackboard.GetBool(kPerceptionHasTarget, false);
+	if (cache.hasCurrentTarget)
+	{
+		cache.currentTargetId = m_blackboard.GetObjectId(kPerceptionTargetId, -1);
+		cache.currentTargetPos = m_blackboard.GetVec3(kPerceptionTargetPos);
+		cache.currentDistance = m_blackboard.GetFloat(kPerceptionTargetDistance, 0.0f);
+		cache.currentConfidence = 1.0f; // 当前可见 = 满置信；细分置信留待与 sense entry 合并的后续切片
+	}
+	else
+	{
+		cache.currentTargetId = -1;
+		cache.currentTargetPos = Ogre::Vector3::ZERO;
+		cache.currentDistance = 0.0f;
+		cache.currentConfidence = 0.0f;
+	}
+
+	// 最后已知位置：读 memory snapshot 键（目标丢失后仍保留并衰减）。
+	cache.hasLastKnown = m_blackboard.GetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, false);
+	if (cache.hasLastKnown)
+	{
+		cache.lastKnownTargetId = m_blackboard.GetObjectId(AIMemoryKeys::kMemorySnapshotLastKnownEnemyId, -1);
+		cache.lastKnownPos = m_blackboard.GetVec3(AIMemoryKeys::kMemorySnapshotLastKnownEnemyPos);
+		cache.lastKnownConfidence = m_blackboard.GetFloat(AIMemoryKeys::kMemorySnapshotLastKnownEnemyConfidence, 0.0f);
+		cache.lastKnownAgeMs = m_blackboard.GetInt(AIMemoryKeys::kMemorySnapshotLastKnownEnemyAgeMs, 0);
+	}
+	else
+	{
+		cache.lastKnownTargetId = -1;
+		cache.lastKnownPos = Ogre::Vector3::ZERO;
+		cache.lastKnownConfidence = 0.0f;
+		cache.lastKnownAgeMs = 0;
+	}
+
+	cache.scannedThisTick = scannedThisTick;
+	if (scannedThisTick)
+		cache.lastScanTimeMs = m_localTimeMs;
+	cache.scanCostMs = scanCostMs;
+	cache.source = kPerceptionSource;
+	++cache.updateCount;
+}
+
 void AIController::SetEnemy(AgentObject* enemy)
 {
 	m_enemy = enemy;
@@ -434,7 +489,15 @@ AgentObject* AIController::GetEnemy() const
 
 bool AIController::HasEnemy(const Ogre::String& navMeshName)
 {
-	const bool forceInitialScan = !m_blackboard.GetBool(kPerceptionStaggerScans, false) && !m_visionSensor.HasScanned();
+	// 改读 PerceptionResultCache（4b）：感知系统 / TickPerception 每帧已在 driver/Agent_Update 之前
+	// 填充缓存，cache.hasCurrentTarget 与 m_visionSensor.HasVisibleTarget() 来自同一条扫描路径、恒等。
+	// 这里直接读缓存，避免每个 BT/DT 条件 tick 重复构造 AgentPerceptionQuery + 走一遍 Tick(0)。
+	// 仅在尚未发生过任何扫描的边界情况回退到原首扫逻辑，保持原语义。
+	if (m_visionSensor.HasScanned())
+	{
+		return m_perceptionCache.hasCurrentTarget;
+	}
+	const bool forceInitialScan = !m_blackboard.GetBool(kPerceptionStaggerScans, false);
 	return UpdateVisionSensor(0, navMeshName, true, forceInitialScan);
 }
 
@@ -539,7 +602,20 @@ AgentStateController* AIController::GetFsmController() const
 
 std::string AIController::BuildSensorDebugString() const
 {
-	return m_visionSensor.BuildDebugString();
+	std::ostringstream stream;
+	stream << m_visionSensor.BuildDebugString();
+	// 感知结果缓存快照（便于核实缓存填充与一致性）。
+	const PerceptionResultCache& c = m_perceptionCache;
+	stream << " | cache cur=" << (c.hasCurrentTarget ? 1 : 0)
+		<< " curId=" << c.currentTargetId
+		<< " curDist=" << std::fixed << std::setprecision(1) << c.currentDistance
+		<< " lastKnown=" << (c.hasLastKnown ? 1 : 0)
+		<< " lkId=" << c.lastKnownTargetId
+		<< " lkConf=" << std::fixed << std::setprecision(2) << c.lastKnownConfidence
+		<< " lkAgeMs=" << c.lastKnownAgeMs
+		<< " scanned=" << (c.scannedThisTick ? 1 : 0)
+		<< " updates=" << c.updateCount;
+	return stream.str();
 }
 
 std::string AIController::BuildMemoryDebugString() const

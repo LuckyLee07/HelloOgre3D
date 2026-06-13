@@ -7,6 +7,7 @@
 #include "OgreVector3.h"
 #include "ai/common/Blackboard.h"
 #include "ai/perception/MemoryStore.h"
+#include "ai/perception/PerceptionResultCache.h"
 #include "ai/perception/VisionSensor.h"
 #include "component/IComponent.h"
 #include "script/LuaClassNameTraits.h"
@@ -69,6 +70,9 @@ public:
 	std::string BuildSensorDebugString() const;
 	std::string BuildMemoryDebugString() const;
 
+	// 感知结果缓存（单一事实来源）。第一切片：增量观测，由 TickPerception 在扫描后填充。
+	const PerceptionResultCache& GetPerceptionCache() const { return m_perceptionCache; }
+
 	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
 	void TickPerception(int deltaMs, AIPerceptionTickStats* outStats = nullptr);
@@ -95,6 +99,8 @@ private:
 	bool UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshName, bool requirePath, bool forceScan, bool* outScanned = nullptr);
 	void WritePerceptionResult(const AgentPerceptionResult& result);
 	void ClearPerceptionResult();
+	// 从当帧已写入的 blackboard / memory snapshot 收口感知结果到 m_perceptionCache（增量观测，不改其它路径）。
+	void UpdatePerceptionCache(bool scannedThisTick, double scanCostMs);
 
 private:
 	Blackboard m_blackboard;
@@ -108,6 +114,7 @@ private:
 	long long m_localTimeMs;
 	VisionSensor m_visionSensor;
 	MemoryStore m_memoryStore;
+	PerceptionResultCache m_perceptionCache;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(AIController);

@@ -56,6 +56,7 @@
 | 文档 | 用途 |
 |---|---|
 | `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 基线，含 100 / 500 / 1000 agent 对照。 |
+| `perf/ai-perf-release-baseline-20260612.md` | AI perf **Release x64** 基线，含 100/500/1000 分项耗时；结论：帧时间被 VM 渲染(engineGap)主导，AI 主成本是 perceptionSystem。 |
 | `perf/ai-spatial-filter-retest-20260602.md` | Spatial filter 复测，记录 candidates / filtered / reject / queryMs。 |
 | `perf/fgui-tracy-sample-*.md` | FGUI Tracy 实测报告。 |
 
