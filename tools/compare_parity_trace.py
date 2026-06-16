@@ -129,6 +129,70 @@ def compare(old_records: list[dict], new_records: list[dict], args: argparse.Nam
     return not failures, messages
 
 
+def compare_anim(old_records, new_records, args):
+    failures = []
+    n = min(len(old_records), len(new_records))
+    max_prog_err = 0.0
+    for i in range(n):
+        oa = (old_records[i].get("agents") or [{}])[0]
+        na = (new_records[i].get("agents") or [{}])[0]
+        label = f"sample#{i+1}"
+        if oa.get("state") != na.get("state"):
+            failures.append(f"{label}: state old={oa.get('state')} new={na.get('state')}")
+        op, npv = oa.get("progress"), na.get("progress")
+        if op is not None and npv is not None:
+            err = abs(float(op) - float(npv))
+            max_prog_err = max(max_prog_err, err)
+            if err > args.progress_tolerance:
+                failures.append(f"{label}: progress err {err:.3f} > {args.progress_tolerance:.3f}")
+    status = "PASS" if not failures else "FAIL"
+    msgs = [f"[ParityCompare] ANIM {status} samples={n} maxProgressError={max_prog_err:.3f}"]
+    msgs += [f"[ParityCompare] failure: {f}" for f in failures[:args.max_failures]]
+    return not failures, msgs
+
+
+def _progress_deltas(records):
+    deltas, prev = [], None
+    for r in records:
+        a = (r.get("agents") or [{}])[0]
+        p = a.get("progress")
+        if p is None: continue
+        p = float(p)
+        if prev is not None:
+            d = p - prev
+            if d < 0: d += 1.0
+            deltas.append(d)
+        prev = p
+    return deltas
+
+
+def _delta_ms(records):
+    out = []
+    for r in records:
+        a = (r.get("agents") or [{}])[0]
+        if a.get("deltaTimeMs") is not None:
+            out.append(float(a["deltaTimeMs"]))
+    return out
+
+
+def report_jitter(label, records):
+    pds = _progress_deltas(records)
+    dms = _delta_ms(records)
+    def stats(xs):
+        if not xs: return (0,0,0,0)
+        m = sum(xs)/len(xs)
+        var = sum((x-m)**2 for x in xs)/len(xs)
+        return (m, var**0.5, min(xs), max(xs))
+    pm, psd, pmin, pmax = stats(pds)
+    dm, dsd, dmin, dmax = stats(dms)
+    stalls = sum(1 for d in pds if d < 1e-4)
+    return [
+        f"[Jitter] {label} frames={len(records)} "
+        f"progDelta(mean={pm:.4f} std={psd:.4f} min={pmin:.4f} max={pmax:.4f} stalls={stalls}) "
+        f"deltaMs(mean={dm:.2f} std={dsd:.2f} min={dmin:.2f} max={dmax:.2f})"
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("old_trace", type=Path)
@@ -139,10 +203,27 @@ def main() -> int:
     parser.add_argument("--cell-tolerance", type=int, default=8)
     parser.add_argument("--max-failures", type=int, default=60)
     parser.add_argument("--strict-json", action="store_true")
+    parser.add_argument("--anim", action="store_true", help="动画 parity 模式：逐帧对齐 state/progress")
+    parser.add_argument("--anim-jitter", action="store_true", help="模式 B：各自输出 progress/deltaTime 抖动统计，不判 PASS/FAIL")
+    parser.add_argument("--progress-tolerance", type=float, default=0.05)
     args = parser.parse_args()
 
     old_records = _load_records(args.old_trace, args.strict_json)
     new_records = _load_records(args.new_trace, args.strict_json)
+
+    if args.anim_jitter:
+        for message in report_jitter("legacy", old_records):
+            print(message)
+        for message in report_jitter("modern", new_records):
+            print(message)
+        return 0
+
+    if args.anim:
+        ok, messages = compare_anim(old_records, new_records, args)
+        for message in messages:
+            print(message)
+        return 0 if ok else 1
+
     ok, messages = compare(old_records, new_records, args)
     for message in messages:
         print(message)

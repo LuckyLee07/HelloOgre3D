@@ -282,6 +282,25 @@ function ParityTrace.AgentSnapshot(agent, index, extra)
 	return snapshot
 end
 
+-- 采集单个 C++ ObjectASM 的动画度量（chapter3 原地动画对比用）。
+-- asm 来自 soldier:GetObjectASM()。extra 可附 deltaTimeMs/role 等。
+function ParityTrace.AnimSnapshot(asm, index, extra)
+	local snapshot = {
+		index = index,
+		state = tostring(_SafeCall(asm, "GetCurrStateName", "")),
+		stateNext = tostring(_SafeCall(asm, "GetNextStateName", "")),
+		stateTransitioning = _SafeCall(asm, "IsTransitioning", false) == true,
+		stateTime = _Round(_SafeCall(asm, "GetCurrStateTime", 0), 1000),
+		stateLength = _Round(_SafeCall(asm, "GetCurrStateLength", 0), 1000),
+		progress = _Round(_SafeCall(asm, "GetCurrStateProgress", 0), 1000),
+		weight = nil,
+	}
+	for key, value in pairs(extra or {}) do
+		snapshot[key] = value
+	end
+	return snapshot
+end
+
 function ParityTrace.SplitLines(text, maxLines, maxLength)
 	local lines = {}
 	if text == nil then

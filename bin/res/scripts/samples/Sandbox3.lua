@@ -1,4 +1,28 @@
 require("res.scripts.agent.SoldierAgent.lua")
+local ParityTrace = require("res.scripts.samples.parity_trace")
+
+local _parityTrace = nil
+local _ch3Compare = false
+
+local function _IsTruthy(value)
+    if value == nil then return false end
+    value = string.lower(tostring(value))
+    return value == "1" or value == "true" or value == "yes" or value == "on"
+end
+
+local function _GetSeed()
+    return tonumber(os.getenv("HELLO_PARITY_SEED") or os.getenv("HELLO_SAMPLE_SEED") or "") or 0
+end
+
+local function _BuildAnimSnapshot(state)
+    local extra = {}
+    if state ~= nil and state.lastDeltaMs ~= nil then
+        extra.deltaTimeMs = state.lastDeltaMs
+    end
+    return {
+        agents = { ParityTrace.AnimSnapshot(soldierAsm, 1, extra) },
+    }
+end
 
 local textSize = {w = 300, h = 300}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -80,8 +104,10 @@ function EventHandle_WindowResized(width, height)
 end
 
 function Sandbox_Initialize(ctype)
-    GUI_CreateCameraAndProfileInfo()
-    GUI_CreateSandboxText(infoText, textSize)
+    if not _IsTruthy(os.getenv("HELLO_CH3_HIDE_UI")) then
+        GUI_CreateCameraAndProfileInfo()
+        GUI_CreateSandboxText(infoText, textSize)
+    end
 
     -- Create The Sky.
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
@@ -205,9 +231,30 @@ function Sandbox_Initialize(ctype)
 
     soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
     --]]
+
+    _ch3Compare = _IsTruthy(os.getenv("HELLO_CH3_COMPARE"))
+    if _ch3Compare then
+        soldierAsm:RequestState("run_forward")
+        _parityTrace = ParityTrace.Start({
+            sample = "Sandbox3",
+            preset = os.getenv("HELLO_SAMPLE_PRESET") or "chapter3_compare",
+            seed = _GetSeed(),
+        })
+    end
 end
 
 function Sandbox_Update(deltaTimeInMillis)
+    if _ch3Compare then
+        if _parityTrace ~= nil then
+            _parityTrace.lastDeltaMs = math.floor(deltaTimeInMillis + 0.5)
+        end
+        ParityTrace.Tick(_parityTrace, deltaTimeInMillis, _BuildAnimSnapshot)
+        if soldierAsm:GetCurrStateName() ~= "run_forward" then
+            soldierAsm:RequestState("run_forward")
+        end
+        return
+    end
+
     GUI_UpdateCameraInfo()
     GUI_UpdateProfileInfo()
 

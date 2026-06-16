@@ -31,16 +31,18 @@ namespace
 {
     int ReadSimulationHz()
     {
+        // 默认 30Hz（与历史硬编码一致）；HELLO_SIM_FPS / HELLO_SIM_HZ 可覆盖。
+        // 此前首行硬编码 return 30 把下面的读取逻辑短路成死代码，导致环境变量失效。
         const char* value = std::getenv("HELLO_SIM_FPS");
         if (value == nullptr || value[0] == '\0')
             value = std::getenv("HELLO_SIM_HZ");
 
         if (value == nullptr || value[0] == '\0')
-            return 60;
+            return 30;
 
         const int hz = std::atoi(value);
         if (hz <= 0)
-            return 60;
+            return 30;
         if (hz < 15)
             return 15;
         if (hz > 240)
@@ -530,7 +532,13 @@ void ClientManager::Update()
             if (perfEnabled)
                 perfTiming.gameUpdateMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
         }
-        m_lastUpdateTimeInMicro = currTimeInMicros;
+        // 累加器步进：用固定间隔推进 lastUpdate，保留时间余数，避免在 render 帧率
+        // 量化（VSync 锁 60fps、每帧 16.67ms）下丢节拍——此前 = currTimeInMicros
+        // 丢弃余数，使 30Hz 目标实测掉到 ~24Hz。偶发长卡顿致积压超过 4 步时直接
+        // 对齐当前时刻，防止追赶滞后（spiral of death）。
+        m_lastUpdateTimeInMicro += updatePerSecondInMicros;
+        if (currTimeInMicros - m_lastUpdateTimeInMicro >= updatePerSecondInMicros * 4)
+            m_lastUpdateTimeInMicro = currTimeInMicros;
 
         {
             H3D_PROFILE_SCOPE("DebugDrawer::Build");
