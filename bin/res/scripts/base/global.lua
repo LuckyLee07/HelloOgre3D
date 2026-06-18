@@ -58,7 +58,7 @@ function CreateBlockObject(objectName, position, rotation)
     local filePath = NewSandboxUtilities.Objects[objectName].file;
     local fileMass = NewSandboxUtilities.Objects[objectName].mass;
 
-    local object = Sandbox:CreateBlockObject(filePath);
+    local object = SandboxObjects:CreateBlockObject(filePath);
     if fileMass >= 0 then object:SetMass(fileMass); end
     
     if position ~= nil then object:setPosition(position); end
@@ -108,7 +108,7 @@ UtilColors = {
 function CreateLevelBox(size, position, rotation)
 	local width, height, length = size, size, size
 	local uTile, vTile = size * 0.5, size * 0.5
-    local object = Sandbox:CreateBlockBox(width, height, length, uTile, vTile);
+    local object = SandboxObjects:CreateBlockBox(width, height, length, uTile, vTile);
 	object:setPosition(position);
 	object:setRotation(rotation);
     object:setMaterial("Ground2");

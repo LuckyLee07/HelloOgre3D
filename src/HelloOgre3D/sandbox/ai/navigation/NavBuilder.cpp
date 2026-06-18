@@ -470,8 +470,8 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 	size_t totalIdx = 0;
 	bool addedShared = false;
 
-	const unsigned short numSubMeshes = mesh->getNumSubMeshes();
-	for (unsigned short si = 0; si < numSubMeshes; ++si)
+	const size_t numSubMeshes = mesh->getNumSubMeshes();
+	for (size_t si = 0; si < numSubMeshes; ++si)
 	{
 		Ogre::SubMesh* sm = mesh->getSubMesh(si);
 		if (!sm) continue;
@@ -515,7 +515,7 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 	int indexOffset = 0;
 	addedShared = false;
 
-	for (unsigned short si = 0; si < numSubMeshes; ++si)
+	for (size_t si = 0; si < numSubMeshes; ++si)
 	{
 		Ogre::SubMesh* sm = mesh->getSubMesh(si);
 		if (!sm) continue;

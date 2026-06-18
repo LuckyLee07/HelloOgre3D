@@ -71,6 +71,44 @@ namespace
 		++stats.filteredCandidates;
 		return true;
 	}
+
+	void AddResultCandidate(
+		AgentObject* agent,
+		float distanceSquared,
+		const AgentSpatialQueryOptions& options,
+		std::vector<AgentObject*>& outAgents,
+		std::vector<float>& outDistances)
+	{
+		if (options.maxResults <= 0)
+		{
+			outAgents.push_back(agent);
+			return;
+		}
+
+		if (static_cast<int>(outAgents.size()) < options.maxResults)
+		{
+			outAgents.push_back(agent);
+			outDistances.push_back(distanceSquared);
+			return;
+		}
+
+		int farthestIndex = -1;
+		float farthestDistance = -1.0f;
+		for (int i = 0; i < static_cast<int>(outDistances.size()); ++i)
+		{
+			if (outDistances[i] > farthestDistance)
+			{
+				farthestDistance = outDistances[i];
+				farthestIndex = i;
+			}
+		}
+
+		if (farthestIndex >= 0 && distanceSquared < farthestDistance)
+		{
+			outAgents[farthestIndex] = agent;
+			outDistances[farthestIndex] = distanceSquared;
+		}
+	}
 }
 
 AgentSpatialIndexSystem::AgentSpatialIndexSystem(float cellSize)
@@ -192,8 +230,10 @@ void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, fl
 	if (!m_enabled || !m_built)
 		return;
 
-	const bool limitResults = options.maxResults > 0;
 	QueryFilterStats filterStats;
+	std::vector<float> resultDistances;
+	if (options.maxResults > 0)
+		resultDistances.reserve(options.maxResults);
 
 	if (radius <= 0.0f)
 	{
@@ -205,12 +245,7 @@ void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, fl
 				if (!PassesQueryOptions(agent, options, filterStats))
 					continue;
 
-				outAgents.push_back(agent);
-				if (limitResults && static_cast<int>(outAgents.size()) >= options.maxResults)
-				{
-					RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
-					return;
-				}
+				AddResultCandidate(agent, center.squaredDistance(agent->GetPosition()), options, outAgents, resultDistances);
 			}
 		}
 		RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
@@ -236,18 +271,14 @@ void AgentSpatialIndexSystem::QueryAgentsInRange(const Ogre::Vector3& center, fl
 				if (agent == nullptr)
 					continue;
 
-				if (center.squaredDistance(agent->GetPosition()) > radiusSquared)
+				const float distanceSquared = center.squaredDistance(agent->GetPosition());
+				if (distanceSquared > radiusSquared)
 					continue;
 
 				if (!PassesQueryOptions(agent, options, filterStats))
 					continue;
 
-				outAgents.push_back(agent);
-				if (limitResults && static_cast<int>(outAgents.size()) >= options.maxResults)
-				{
-					RecordQueryStats(filterStats.rawCandidates, filterStats.filteredCandidates, static_cast<int>(outAgents.size()), filterStats.rejectedSelf, filterStats.rejectedTeam, filterStats.rejectedDead, filterStats.rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
-					return;
-				}
+				AddResultCandidate(agent, distanceSquared, options, outAgents, resultDistances);
 			}
 		}
 	}

@@ -4,7 +4,6 @@
 #include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 
 namespace
 {
@@ -63,14 +62,9 @@ std::string MoveState::OnUpdate(float dt)
 		actions->DrawPath(Ogre::ColourValue(1.0f, 0.5f, 0.0f), Ogre::Vector3(0.0f, 0.05f, 0.0f), 1.5f);
 	}
 
-	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
-	const bool reached = actions ? actions->IsTargetReached(1.5f, true) : (soldier && soldier->IsTargetReached(1.5f));
+	const bool reached = actions ? actions->IsTargetReached(1.5f, true) : false;
 	if (reached)
 	{
-		if (!actions && soldier)
-		{
-			soldier->ClearMovePosition();
-		}
 		SetTerminated(true);
 		return "";
 	}

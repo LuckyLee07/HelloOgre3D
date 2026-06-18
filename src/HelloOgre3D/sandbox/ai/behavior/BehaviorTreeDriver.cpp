@@ -8,9 +8,11 @@
 #include "BehaviorUtility.h"
 #include "LuaBehaviorAction.h"
 #include "LuaCondition.h"
+#include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
 
-BehaviorTreeDriver::BehaviorTreeDriver(SoldierObject* owner, Blackboard* blackboard)
+BehaviorTreeDriver::BehaviorTreeDriver(AgentObject* owner, Blackboard* blackboard)
 	: m_owner(owner)
 	, m_fallbackBlackboard(owner)
 	, m_blackboard(blackboard != nullptr ? blackboard : &m_fallbackBlackboard)
@@ -28,6 +30,11 @@ BehaviorTreeDriver::~BehaviorTreeDriver()
 	m_ownedNodes.clear();
 	for (BehaviorTree* tree : m_ownedTrees) delete tree;
 	m_ownedTrees.clear();
+}
+
+SoldierObject* BehaviorTreeDriver::GetOwner() const
+{
+	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 BehaviorTree* BehaviorTreeDriver::NewTree()
@@ -67,7 +74,7 @@ BehaviorRandomSelector* BehaviorTreeDriver::NewRandomSelector()
 
 LuaBehaviorAction* BehaviorTreeDriver::NewLuaAction(const std::string& name)
 {
-	LuaBehaviorAction* a = new LuaBehaviorAction(name, m_owner);
+	LuaBehaviorAction* a = new LuaBehaviorAction(name, m_owner, m_blackboard);
 	m_ownedNodes.push_back(a);
 	return a;
 }

@@ -21,7 +21,7 @@ function Sandbox_Initialize(ctype)
     GUI_CreateSandboxText(infoText, textSize)
 
     -- Initialize the camera position to focus on the soldier.
-    local camera = Sandbox:GetCamera();
+    local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(7, 5, -18));
     camera:setOrientation(Quaternion(-160, 0, -180));
 
@@ -36,7 +36,7 @@ function Sandbox_Initialize(ctype)
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
 
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setOrientation(Quaternion(0, 0, 0));
     plane:setPosition(Vector3(0, 0, 0));
     Sandbox:setMaterial(plane, "Ground2");
@@ -97,7 +97,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
-        local camera = Sandbox:GetCamera();
+        local camera = SandboxCamera:GetCamera();
         camera:setPosition(Vector3(7, 5, -18));
         camera:setOrientation(Quaternion(-160, 0, -180));
     elseif (keycode == OIS.KC_SPACE) then
@@ -117,17 +117,17 @@ function Sandbox_ShootBox()
     Shoot_BoxCount = Shoot_BoxCount + 1
     local object = CreateBlockObject("modular_block")
 
-    local cameraPosition = Sandbox:GetCameraPosition()
-    local cameraForward = Sandbox:GetCameraForward()
+    local cameraPosition = SandboxCamera:GetCameraPosition()
+    local cameraForward = SandboxCamera:GetCameraForward()
 
     local position = cameraPosition + cameraForward * 2;
-    local rotation = Sandbox:GetCameraOrientation();
+    local rotation = SandboxCamera:GetCameraOrientation();
     object:setPosition(position)
     object:setOrientation(rotation)
 
 
     local impulse = cameraForward * 15000
-    local angularImpulse = Sandbox:GetCameraLeft() * 10
+    local angularImpulse = SandboxCamera:GetCameraLeft() * 10
     object:applyImpulse(impulse)
     object:applyAngularImpulse(angularImpulse)
 end

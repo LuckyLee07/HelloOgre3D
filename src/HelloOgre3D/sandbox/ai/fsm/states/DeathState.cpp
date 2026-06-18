@@ -1,16 +1,23 @@
 #include "DeathState.h"
 
 #include "GameDefine.h"
+#include "components/anim/AnimComponent.h"
+#include "components/anim/IAnimContextProvider.h"
+#include "components/anim/IAnimController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
-#include "objects/animation/SoldierAnimController.h"
 #include "objects/animation/SoldierAnimProfile.h"
 
 namespace
 {
 	const float kDeathCleanupDelaySec = 3.5f;
 	const float kDeathFallbackMs = 2000.0f;
+
+	IAnimController* GetAnimController(AgentObject* agent)
+	{
+		AnimComponent* animComp = agent != nullptr ? agent->FindComponent<AnimComponent>() : nullptr;
+		return animComp != nullptr ? animComp->GetController() : nullptr;
+	}
 }
 
 DeathState::DeathState(AgentObject* pAgent)
@@ -31,11 +38,11 @@ void DeathState::OnEnter()
 	m_elapsedMs = 0.0f;
 	m_cleanupQueued = false;
 
-	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController(m_pAgent);
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->ClearAllActions();
-		soldier->GetAnimController()->RequestAction(SoldierActionIntent::Death, true);
+		animController->ClearAllActions();
+		animController->RequestAction(SoldierActionIntent::Death, true);
 	}
 	else
 	{
@@ -56,16 +63,18 @@ std::string DeathState::OnUpdate(float dt)
 {
 	m_elapsedMs += dt;
 
-	SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
+	IAnimContextProvider* animContext = dynamic_cast<IAnimContextProvider*>(m_pAgent);
 	AgentAnimStateMachine* bodyAsm = nullptr;
 	int deathStateId = SSTATE_DEAD;
-	if (soldier)
+	if (animContext != nullptr)
 	{
-		deathStateId = SoldierAnimProfile::ResolveBodyActionState(soldier->getStanceType(), SoldierActionIntent::Death);
-		bodyAsm = soldier->GetObjectASM();
-		if (soldier->GetAnimController())
+		deathStateId = SoldierAnimProfile::ResolveBodyActionState(animContext->GetAnimStanceType(), SoldierActionIntent::Death);
+		bodyAsm = animContext->GetBodyAnimStateMachine();
+
+		IAnimController* animController = GetAnimController(m_pAgent);
+		if (animController != nullptr)
 		{
-			soldier->GetAnimController()->RequestAction(SoldierActionIntent::Death, false);
+			animController->RequestAction(SoldierActionIntent::Death, false);
 		}
 	}
 

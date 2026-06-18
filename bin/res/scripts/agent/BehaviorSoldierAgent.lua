@@ -3,7 +3,7 @@
 --
 -- 流程：
 --   1. C++ 创建 SoldierObject 后绑定本脚本到该对象的 plugin env
---   2. agent:GetAI():SetDriverByType("bt") 拆掉 FSM controller、建出 BehaviorTreeDriver + Blackboard
+--   2. agent:GetAIComponent():SetDriverByType("bt") 拆掉 FSM controller、建出 BehaviorTreeDriver + Blackboard
 --   3. BehaviorTreeLoader loads SoldierBT.lua and builds the C++ BT via driver factories
 --   4. driver 持有所有节点的所有权，agent 销毁时统一释放
 --   5. C++ 每帧 tick driver，driver 走 tree:Tick → 各节点逐级 Tick → action lua 回调
@@ -12,12 +12,14 @@ require("res.scripts.ai.behavior.SoldierConditions.lua")
 require("res.scripts.ai.behavior.BehaviorTreeLoader.lua")
 require("res.scripts.ai.behavior.config.SoldierBT.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 function Agent_Initialize(agent)
     if agent == nil then return end
 
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-    local ai = agent:GetAI()
+    local ai = AgentComponents.GetAI(agent)
     if ai == nil then
         print("Error: AIController not available")
         return
@@ -31,7 +33,7 @@ function Agent_Initialize(agent)
     end
 
     local bb = driver:GetBlackboard()
-    bb:SetFloat("maxHealth", agent:GetMaxHealth())
+    bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox8"
     if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
         ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)

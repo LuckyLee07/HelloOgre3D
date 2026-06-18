@@ -4,6 +4,8 @@
 
 require("res.scripts.ai.behavior.SoldierConditions.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local _ACTION_DIR = "res/scripts/ai/decision/actions/"
 
 local function _NewLuaAction(driver, name, scriptName)
@@ -89,7 +91,7 @@ function Agent_Initialize(agent)
 
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-    local ai = agent:GetAI()
+    local ai = AgentComponents.GetAI(agent)
     if ai == nil then
         print("Error: AIController not available")
         return
@@ -103,7 +105,7 @@ function Agent_Initialize(agent)
     end
 
     local bb = driver:GetBlackboard()
-    bb:SetFloat("maxHealth", agent:GetMaxHealth())
+    bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox17"
     if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
         ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)

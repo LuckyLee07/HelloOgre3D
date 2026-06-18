@@ -2,6 +2,8 @@ require("res.scripts.agent.AgentUtils.lua")
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierState.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local _soldierStates = {
     DEATH = "DEATH",
     FALLING = "FALLING",
@@ -27,7 +29,7 @@ end
 
 function Agent_Initialize(agent)
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED);
-    local ai = agent:GetAI()
+    local ai = AgentComponents.GetAI(agent)
     local bb = ai ~= nil and ai:GetBlackboard() or nil
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox6"
     if bb ~= nil and ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then

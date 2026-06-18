@@ -257,7 +257,7 @@ local function _ConfigureCppTactics()
 end
 
 local function _CreatePanel()
-	_panel = Sandbox:CreateUIFrame()
+	_panel = SandboxUI:CreateUIFrame()
 	_panel:setPosition(Vector2(20, 280))
 	_panel:setDimension(Vector2(640, 160))
 	_panel:setTextMargin(12, 10)
@@ -890,7 +890,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
 	if not pressed then return end
 	if keycode == OIS.KC_F1 then
-		local camera = Sandbox:GetCamera()
+		local camera = SandboxCamera:GetCamera()
 		camera:setPosition(Vector3(-30, 18, -17))
 		camera:setOrientation(Quaternion(-146, -40, -157))
 	elseif keycode == OIS.KC_F3 then
@@ -922,13 +922,13 @@ function Sandbox_Initialize()
 
 	Sandbox:SetUseCppFsmFlag(true)
 
-	local camera = Sandbox:GetCamera()
+	local camera = SandboxCamera:GetCamera()
 	camera:setPosition(Vector3(-30, 18, -17))
 	camera:setOrientation(Quaternion(-146, -40, -157))
 
 	Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
 
-	local plane = Sandbox:CreatePlane(200, 200)
+	local plane = SandboxObjects:CreatePlane(200, 200)
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 

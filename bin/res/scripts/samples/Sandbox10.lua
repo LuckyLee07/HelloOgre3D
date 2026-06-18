@@ -3,6 +3,7 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local textSize = {w = 360, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -38,8 +39,8 @@ local function _PointToVector3(point)
 end
 
 local function _SetAgentDemoPhase(agent, phase)
-    if agent == nil or agent.GetAI == nil then return end
-    local ai = agent:GetAI()
+    if agent == nil then return end
+    local ai = AgentComponents.GetAI(agent)
     local bb = ai ~= nil and ai:GetBlackboard() or nil
     if bb ~= nil then
         bb:SetString("debug.demoPhase", phase)
@@ -47,8 +48,8 @@ local function _SetAgentDemoPhase(agent, phase)
 end
 
 local function _GetBlackboard(agent)
-    if agent == nil or agent.GetAI == nil then return nil end
-    local ai = agent:GetAI()
+    if agent == nil then return nil end
+    local ai = AgentComponents.GetAI(agent)
     return ai ~= nil and ai:GetBlackboard() or nil
 end
 
@@ -110,7 +111,7 @@ local function _GetMemoryState(bb)
 end
 
 local function _CreateDemoPanel()
-    local panel = Sandbox:CreateUIFrame()
+    local panel = SandboxUI:CreateUIFrame()
     panel:setPosition(Vector2(20, 20))
     panel:setDimension(Vector2(_demoPanelSize.w, _demoPanelSize.h))
     panel:setTextMargin(12, 10)
@@ -301,7 +302,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
-        local camera = Sandbox:GetCamera();
+        local camera = SandboxCamera:GetCamera();
         camera:setPosition(Vector3(15, 65, 15));
         camera:setOrientation(Quaternion(-90, 0, -180));
     end
@@ -325,13 +326,13 @@ function Sandbox_Initialize()
 
     Sandbox:SetUseCppFsmFlag(true)
 
-    local camera = Sandbox:GetCamera();
+    local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(-30, 18, -17));
     camera:setOrientation(Quaternion(-146, -40, -157));
 
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 

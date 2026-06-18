@@ -1,6 +1,7 @@
 require("res.scripts.agent.AgentUtils.lua")
 
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _MOVE_SEGMENT_MS = 500
 local _IDLE_MS = 2000
@@ -22,11 +23,11 @@ local _pendingLegacyMessages = {}
 local _lastDispatchTimeMs = nil
 
 local function _GetBlackboard(agent)
-	if agent == nil or agent.GetAI == nil then
+	if agent == nil then
 		return nil
 	end
 
-	local ai = agent:GetAI()
+	local ai = AgentComponents.GetAI(agent)
 	if ai == nil or ai.GetBlackboard == nil then
 		return nil
 	end
@@ -939,7 +940,7 @@ local function _EvaluateAndBegin(agent, state)
 		return
 	end
 
-	local maxHealth = agent.GetMaxHealth ~= nil and agent:GetMaxHealth() or 100.0
+	local maxHealth = AgentComponents.GetMaxHealth(agent, 100.0)
 	if agent:GetHealth() < maxHealth * 0.2 then
 		_BeginRandomMove(agent, state)
 		return
@@ -1021,13 +1022,13 @@ function Agent_Initialize(agent)
 	if agent.SetMaxAmmo ~= nil then agent:SetMaxAmmo(10) end
 	if agent.SetAmmo ~= nil then agent:SetAmmo(10) end
 
-	local ai = agent:GetAI()
+	local ai = AgentComponents.GetAI(agent)
 	if ai ~= nil then
 		ai:SetDriverByType("dt")
 		local driver = ai:GetDecisionTreeDriver()
 		local bb = driver ~= nil and driver:GetBlackboard() or ai:GetBlackboard()
 		if bb ~= nil then
-			bb:SetFloat("maxHealth", agent:GetMaxHealth())
+			bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
 			local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox17"
 			if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
 				ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)

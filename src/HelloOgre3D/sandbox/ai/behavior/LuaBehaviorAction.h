@@ -7,6 +7,7 @@
 #include "object/LuaEnvObject.h"
 #include "script/LuaClassNameTraits.h"
 
+class AgentObject;
 class SoldierObject;
 class Blackboard;
 
@@ -17,12 +18,13 @@ class LuaBehaviorAction : public BehaviorAction //tolua_exports
 	, public LuaEnvObject
 { //tolua_exports
 public:
+	LuaBehaviorAction(const std::string& name, AgentObject* owner, Blackboard* blackboard = nullptr);
 	LuaBehaviorAction(const std::string& name, SoldierObject* owner);
 	virtual ~LuaBehaviorAction();
 
 	//tolua_begin
 	bool BindToScript(const std::string& filepath);
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 	//tolua_end
 
 protected:
@@ -31,7 +33,10 @@ protected:
 	virtual void   OnCleanUp() override;
 
 private:
-	SoldierObject* m_owner;
+	Blackboard* ResolveBlackboard() const;
+
+	AgentObject* m_owner;
+	Blackboard* m_blackboard;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(LuaBehaviorAction);

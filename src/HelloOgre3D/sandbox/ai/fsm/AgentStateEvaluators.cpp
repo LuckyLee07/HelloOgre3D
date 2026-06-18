@@ -4,15 +4,15 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "AgentActionContext.h"
 #include "AgentStateController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 
 namespace
 {
-	SoldierObject* GetSoldier(AgentStateController& controller)
+	AgentActionContext* GetActions(AgentStateController& controller)
 	{
-		return dynamic_cast<SoldierObject*>(controller.GetAgent());
+		return controller.GetActionContext();
 	}
 
 	bool EvalIsNotAlive(AgentStateController& controller)
@@ -23,36 +23,32 @@ namespace
 
 	bool EvalHasCriticalHealth(AgentStateController& controller)
 	{
-		SoldierObject* soldier = GetSoldier(controller);
-		if (!soldier)
-			return false;
-
-		const float maxHealth = std::max(1.0f, static_cast<float>(soldier->GetMaxHealth()));
-		return soldier->GetHealth() < (maxHealth * 0.2f);
+		AgentActionContext* actions = GetActions(controller);
+		return actions != nullptr && actions->HasCriticalHealth(0.2f);
 	}
 
 	bool EvalHasNoAmmo(AgentStateController& controller)
 	{
-		SoldierObject* soldier = GetSoldier(controller);
-		return soldier ? !soldier->HasAmmo() : false;
+		AgentActionContext* actions = GetActions(controller);
+		return actions != nullptr && actions->HasWeapon() && !actions->HasAmmo();
 	}
 
 	bool EvalCanShootEnemy(AgentStateController& controller)
 	{
-		SoldierObject* soldier = GetSoldier(controller);
-		return soldier ? soldier->CanShootEnemy(controller.GetNavMeshName(), 3.0f) : false;
+		AgentActionContext* actions = GetActions(controller);
+		return actions != nullptr && actions->CanShootEnemy(3.0f);
 	}
 
 	bool EvalHasEnemy(AgentStateController& controller)
 	{
-		SoldierObject* soldier = GetSoldier(controller);
-		return soldier ? soldier->HasEnemy(controller.GetNavMeshName()) : false;
+		AgentActionContext* actions = GetActions(controller);
+		return actions != nullptr && actions->HasEnemy();
 	}
 
 	bool EvalHasMovePosition(AgentStateController& controller)
 	{
-		SoldierObject* soldier = GetSoldier(controller);
-		return soldier ? soldier->HasMovePosition(1.5f) : false;
+		AgentActionContext* actions = GetActions(controller);
+		return actions != nullptr && actions->HasMovePosition(1.5f);
 	}
 
 	bool EvalRandom(AgentStateController&)

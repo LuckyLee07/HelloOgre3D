@@ -8,13 +8,14 @@
 #include "ai/common/Blackboard.h"
 #include "script/LuaClassNameTraits.h"
 
+class AgentObject;
 class SoldierObject;
 class DecisionTree;
 class DecisionBranch;
 class LuaDecisionAction;
 class DecisionNode;
 
-// Decision-tree flavour of IDecisionDriver. Each SoldierObject that uses DT
+// Decision-tree flavour of IDecisionDriver. Each AgentObject that uses DT
 // holds one of these; the active Blackboard is injected by AIController and
 // remains stable across driver switches.
 //
@@ -25,11 +26,11 @@ class DecisionNode;
 class DecisionTreeDriver : public IDecisionDriver //tolua_exports
 { //tolua_exports
 public:
-	explicit DecisionTreeDriver(SoldierObject* owner, Blackboard* blackboard = nullptr);
+	explicit DecisionTreeDriver(AgentObject* owner, Blackboard* blackboard = nullptr);
 	virtual ~DecisionTreeDriver();
 
 	//tolua_begin
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 	Blackboard*    GetBlackboard() { return m_blackboard; }
 
 	// Factories — driver retains ownership of every returned pointer.
@@ -44,9 +45,10 @@ public:
 	// IDecisionDriver impl
 	virtual void Init() override;
 	virtual void Tick(float deltaMs) override;
+	AgentObject* GetAgentOwner() const { return m_owner; }
 
 private:
-	SoldierObject*               m_owner;
+	AgentObject*                 m_owner;
 	Blackboard                   m_fallbackBlackboard;
 	Blackboard*                  m_blackboard;
 	DecisionTree*                m_tree;            // points into m_ownedTrees

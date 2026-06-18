@@ -24,6 +24,7 @@ struct AgentPerceptionOptions
 		, maxDistance(0.0f)
 		, requirePath(true)
 		, fieldOfViewDegrees(0.0f)
+		, maxSpatialResults(0)
 	{
 	}
 
@@ -31,6 +32,7 @@ struct AgentPerceptionOptions
 	float maxDistance;
 	bool requirePath;
 	float fieldOfViewDegrees;
+	int maxSpatialResults;
 };
 
 struct AgentPerceptionResult
@@ -163,6 +165,7 @@ public:
 		spatialOptions.includeSelf = false;
 		spatialOptions.requireAlive = true;
 		spatialOptions.excludedTeamId = static_cast<int>(owner->GetTeamId());
+		spatialOptions.maxResults = options.maxSpatialResults;
 		m_spatialQuery->QueryAgentsInRange(owner->GetPosition(), options.maxDistance, agents, spatialOptions);
 		float nearestDistance = std::numeric_limits<float>::max();
 

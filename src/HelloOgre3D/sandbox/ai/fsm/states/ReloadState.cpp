@@ -4,7 +4,6 @@
 #include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 
 namespace
 {

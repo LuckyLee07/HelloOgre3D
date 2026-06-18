@@ -5,6 +5,7 @@ require("res.scripts.ai.knowledge.Chapter7Knowledge.lua")
 require("res.scripts.ai.behavior.BehaviorTreeLoader.lua")
 local Chapter7Conditions = require("res.scripts.ai.behavior.Chapter7Conditions.lua")
 local Chapter7BTConfig = require("res.scripts.ai.behavior.config.Chapter7BT.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _knowledgeByAgentId = {}
 
@@ -13,7 +14,7 @@ function Agent_Initialize(agent)
 
 	agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-	local ai = agent:GetAI()
+	local ai = AgentComponents.GetAI(agent)
 	if ai == nil then
 		print("Error: AIController not available")
 		return
@@ -27,7 +28,7 @@ function Agent_Initialize(agent)
 	end
 
 	local bb = driver:GetBlackboard()
-	bb:SetFloat("maxHealth", agent:GetMaxHealth())
+	bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
 	bb:SetString("chapter", "chapter7-knowledge")
 
 	local knowledge = Chapter7Knowledge.CreateContext(agent, bb)

@@ -50,7 +50,7 @@ local function _GetNestedValue(root, firstKey, secondKey, defaultValue)
 end
 
 local function _CreatePanel()
-	_panel = Sandbox:CreateUIFrame()
+	_panel = SandboxUI:CreateUIFrame()
 	_panel:setPosition(Vector2(20, 20))
 	_panel:setDimension(Vector2(_panelSize.w, _panelSize.h))
 	_panel:setTextMargin(12, 10)
@@ -175,7 +175,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
 	if not pressed then return end
 	if keycode == OIS.KC_F1 then
-		local camera = Sandbox:GetCamera()
+		local camera = SandboxCamera:GetCamera()
 		camera:setPosition(Vector3(0, 120, 120))
 		camera:setOrientation(Quaternion(-45, 0, 180))
 	end
@@ -199,7 +199,7 @@ function Sandbox_Initialize()
 
 	Sandbox:SetUseCppFsmFlag(false)
 
-	local camera = Sandbox:GetCamera()
+	local camera = SandboxCamera:GetCamera()
 	camera:setPosition(Vector3(0, 120, 120))
 	camera:setOrientation(Quaternion(-45, 0, 180))
 
@@ -207,7 +207,7 @@ function Sandbox_Initialize()
 
 	local config = _GetPressureConfig()
 	local planeSize = tonumber(config.planeSize) or 260
-	local plane = Sandbox:CreatePlane(planeSize, planeSize)
+	local plane = SandboxObjects:CreatePlane(planeSize, planeSize)
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 

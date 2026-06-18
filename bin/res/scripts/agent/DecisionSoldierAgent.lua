@@ -4,12 +4,14 @@
 -- 流程：
 --   1. C++ 创建 SoldierObject 后绑定本脚本到该对象的 plugin env
 --   2. C++ 调用 Agent_Initialize(agent)
---   3. agent:GetAI():SetDriverByType("dt") 拆掉 FSM controller、建出 DecisionTreeDriver + Blackboard
+--   3. agent:GetAIComponent():SetDriverByType("dt") 拆掉 FSM controller、建出 DecisionTreeDriver + Blackboard
 --   4. 用 SoldierDecisionTreeBuilder + driver 工厂方法拼装 DT
 --   5. driver 持有所有节点的所有权，agent 销毁时统一释放（无需 Lua 端保活）
 --   6. C++ 每帧 tick driver，driver 走 tree.Tick → resolve action → action lua 回调
 
 require("res.scripts.ai.decision.SoldierDecisionTree.lua")
+
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local function _ReadBool(value)
     if value == nil then
@@ -23,7 +25,7 @@ function Agent_Initialize(agent)
 
     agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
 
-    local ai = agent:GetAI()
+    local ai = AgentComponents.GetAI(agent)
     if ai == nil then
         print("Error: AIController not available")
         return
@@ -37,7 +39,7 @@ function Agent_Initialize(agent)
     end
 
     local bb = driver:GetBlackboard()
-    bb:SetFloat("maxHealth", agent:GetMaxHealth())
+    bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox7"
     if ConfigManager ~= nil and ConfigManager.ApplyAiBlackboardDefaults ~= nil then
         ConfigManager:ApplyAiBlackboardDefaults(bb, sampleName)

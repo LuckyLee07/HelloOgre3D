@@ -7,6 +7,8 @@
 #include "object/LuaEnvObject.h"
 #include "script/LuaClassNameTraits.h"
 
+class AgentObject;
+class Blackboard;
 class SoldierObject;
 
 // Lua-backed Action leaf — body of Initialize/Update/CleanUp lives in a Lua file.
@@ -16,18 +18,19 @@ class SoldierObject;
 //   - BindToScript(filepath) loads the Lua file and binds it to this object's env
 //   - the three virtual hooks forward to Lua functions: OnInitialize / OnUpdate / OnCleanUp
 //
-// The action holds a weak reference to the owning SoldierObject so Lua callbacks
+// The action holds a weak reference to the owning AgentObject so Lua callbacks
 // can reach the agent without the Lua side having to stash a pointer explicitly.
 class LuaDecisionAction : public DecisionAction //tolua_exports
 	, public LuaEnvObject
 { //tolua_exports
 public:
+	LuaDecisionAction(const std::string& name, AgentObject* owner, Blackboard* blackboard = nullptr);
 	LuaDecisionAction(const std::string& name, SoldierObject* owner);
 	virtual ~LuaDecisionAction();
 
 	//tolua_begin
 	bool BindToScript(const std::string& filepath);
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 	//tolua_end
 
 protected:
@@ -36,7 +39,10 @@ protected:
 	virtual void   OnCleanUp() override;
 
 private:
-	SoldierObject* m_owner;
+	Blackboard* ResolveBlackboard() const;
+
+	AgentObject* m_owner;
+	Blackboard* m_blackboard;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(LuaDecisionAction);

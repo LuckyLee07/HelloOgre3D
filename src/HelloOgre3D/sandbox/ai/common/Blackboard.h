@@ -76,9 +76,9 @@ public:
 
 	void SetOwner(SoldierObject* owner);
 	void SetOwner(AgentObject* owner);
-	AgentObject* GetAgentOwner() const { return m_owner; }
 
 	//tolua_begin
+	AgentObject* GetAgentOwner() const { return m_owner; }
 	SoldierObject* GetOwner() const;
 
 	void SetAgent(const std::string& key, AgentObject* value);

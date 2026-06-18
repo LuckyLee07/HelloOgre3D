@@ -3,9 +3,11 @@
 #include "DecisionTree.h"
 #include "DecisionBranch.h"
 #include "LuaDecisionAction.h"
+#include "objects/AgentObject.h"
+#include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
 
-DecisionTreeDriver::DecisionTreeDriver(SoldierObject* owner, Blackboard* blackboard)
+DecisionTreeDriver::DecisionTreeDriver(AgentObject* owner, Blackboard* blackboard)
 	: m_owner(owner)
 	, m_fallbackBlackboard(owner)
 	, m_blackboard(blackboard != nullptr ? blackboard : &m_fallbackBlackboard)
@@ -20,6 +22,11 @@ DecisionTreeDriver::~DecisionTreeDriver()
 	m_ownedNodes.clear();
 	for (DecisionTree* tree : m_ownedTrees) delete tree;
 	m_ownedTrees.clear();
+}
+
+SoldierObject* DecisionTreeDriver::GetOwner() const
+{
+	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 DecisionTree* DecisionTreeDriver::NewTree()
@@ -38,7 +45,7 @@ DecisionBranch* DecisionTreeDriver::NewBranch()
 
 LuaDecisionAction* DecisionTreeDriver::NewLuaAction(const std::string& name)
 {
-	LuaDecisionAction* a = new LuaDecisionAction(name, m_owner);
+	LuaDecisionAction* a = new LuaDecisionAction(name, m_owner, m_blackboard);
 	m_ownedNodes.push_back(a);
 	return a;
 }

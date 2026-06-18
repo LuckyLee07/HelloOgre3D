@@ -31,7 +31,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
-        local camera = Sandbox:GetCamera();
+        local camera = SandboxCamera:GetCamera();
         camera:setPosition(Vector3(15, 65, 15));
         camera:setOrientation(Quaternion(-90, 0, -180));
     end
@@ -51,13 +51,13 @@ function Sandbox_Initialize()
     -- 保留 C++ FSM flag = true：DT 驱动接管决策，但 SoldierAnimController 仍然需要这个 flag 来 tick。
     Sandbox:SetUseCppFsmFlag(true)
 
-    local camera = Sandbox:GetCamera();
+    local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(-30, 18, -17));
     camera:setOrientation(Quaternion(-146, -40, -157));
 
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 

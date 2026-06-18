@@ -1,19 +1,16 @@
 #include "AgentActionContext.h"
 
+#include <algorithm>
+
 #include "AgentStateController.h"
 #include "GameDefine.h"
+#include "components/agent/AgentAttrib.h"
+#include "components/ai/AIController.h"
+#include "components/anim/AnimComponent.h"
+#include "components/anim/IAnimController.h"
+#include "components/combat/WeaponComponent.h"
 #include "debug/DebugDrawer.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
-#include "objects/animation/SoldierAnimController.h"
-
-namespace
-{
-	SoldierObject* AsSoldier(AgentObject* agent)
-	{
-		return dynamic_cast<SoldierObject*>(agent);
-	}
-}
 
 AgentActionContext::AgentActionContext(AgentStateController& controller)
 	: m_controller(&controller)
@@ -25,9 +22,29 @@ AgentObject* AgentActionContext::GetAgent() const
 	return m_controller ? m_controller->GetAgent() : nullptr;
 }
 
-SoldierObject* AgentActionContext::GetSoldier() const
+AIController* AgentActionContext::GetAIController() const
 {
-	return AsSoldier(GetAgent());
+	AgentObject* agent = GetAgent();
+	return agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
+}
+
+IAnimController* AgentActionContext::GetAnimController() const
+{
+	AgentObject* agent = GetAgent();
+	AnimComponent* anim = agent != nullptr ? agent->FindComponent<AnimComponent>() : nullptr;
+	return anim != nullptr ? anim->GetController() : nullptr;
+}
+
+WeaponComponent* AgentActionContext::GetWeapon() const
+{
+	AgentObject* agent = GetAgent();
+	return agent != nullptr ? agent->FindComponent<WeaponComponent>() : nullptr;
+}
+
+AgentAttrib* AgentActionContext::GetAttrib() const
+{
+	AgentObject* agent = GetAgent();
+	return agent != nullptr ? agent->FindComponent<AgentAttrib>() : nullptr;
 }
 
 const std::string& AgentActionContext::GetNavMeshName() const
@@ -37,11 +54,11 @@ const std::string& AgentActionContext::GetNavMeshName() const
 
 void AgentActionContext::EnterIdle()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->ClearAllActions();
-		soldier->GetAnimController()->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+		animController->ClearAllActions();
+		animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 		return;
 	}
 
@@ -54,12 +71,12 @@ void AgentActionContext::EnterIdle()
 
 void AgentActionContext::EnterMove(bool forceUpdate)
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
 		(void)forceUpdate;
-		soldier->GetAnimController()->ClearAllActions();
-		soldier->GetAnimController()->SetLocomotionIntent(SoldierLocomotionIntent::Move);
+		animController->ClearAllActions();
+		animController->SetLocomotionIntent(SoldierLocomotionIntent::Move);
 		return;
 	}
 
@@ -72,11 +89,11 @@ void AgentActionContext::EnterMove(bool forceUpdate)
 
 void AgentActionContext::EnterShoot()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
-		soldier->GetAnimController()->RequestAction(SoldierActionIntent::Shoot, true);
+		animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+		animController->RequestAction(SoldierActionIntent::Shoot, true);
 		return;
 	}
 
@@ -89,11 +106,11 @@ void AgentActionContext::EnterShoot()
 
 void AgentActionContext::EnterReload()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
-		soldier->GetAnimController()->RequestAction(SoldierActionIntent::Reload, true);
+		animController->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+		animController->RequestAction(SoldierActionIntent::Reload, true);
 		return;
 	}
 
@@ -106,19 +123,19 @@ void AgentActionContext::EnterReload()
 
 void AgentActionContext::ExitShoot()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->ClearAction(SoldierActionIntent::Shoot);
+		animController->ClearAction(SoldierActionIntent::Shoot);
 	}
 }
 
 void AgentActionContext::ExitReload()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		soldier->GetAnimController()->ClearAction(SoldierActionIntent::Reload);
+		animController->ClearAction(SoldierActionIntent::Reload);
 	}
 }
 void AgentActionContext::SlowMovement(float rate)
@@ -165,10 +182,10 @@ void AgentActionContext::TickMovement(float deltaTimeInMillis, bool slowMode)
 		return;
 	}
 
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		if (soldier->GetAnimController()->IsMovePresentationReady())
+		if (animController->IsMovePresentationReady())
 		{
 			m_controller->ApplySteering(deltaTimeInMillis * 0.001f, slowMode);
 		}
@@ -183,22 +200,22 @@ void AgentActionContext::TickMovement(float deltaTimeInMillis, bool slowMode)
 
 void AgentActionContext::FaceEnemy()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (!soldier)
+	AgentObject* agent = GetAgent();
+	if (!agent)
 	{
 		return;
 	}
 
-	AgentObject* enemy = soldier->GetEnemy();
+	AgentObject* enemy = GetEnemy();
 	if (!enemy)
 	{
 		return;
 	}
 
-	const Ogre::Vector3 forwardToEnemy = enemy->GetPosition() - soldier->GetPosition();
+	const Ogre::Vector3 forwardToEnemy = enemy->GetPosition() - agent->GetPosition();
 	if (!forwardToEnemy.isZeroLength())
 	{
-		soldier->SetForward(forwardToEnemy);
+		agent->SetForward(forwardToEnemy);
 	}
 }
 
@@ -257,13 +274,12 @@ bool AgentActionContext::SelectRandomDestination(int maxTries)
 
 bool AgentActionContext::SelectFleeDestination(int maxTries, float minDistance)
 {
-	SoldierObject* soldier = GetSoldier();
-	if (!m_controller || !soldier)
+	if (!m_controller || !GetAgent())
 	{
 		return false;
 	}
 
-	AgentObject* enemy = soldier->GetEnemy();
+	AgentObject* enemy = GetEnemy();
 	const bool hasEnemy = (enemy != nullptr);
 	const float minDistanceSq = minDistance * minDistance;
 
@@ -291,22 +307,66 @@ bool AgentActionContext::SelectFleeDestination(int maxTries, float minDistance)
 
 bool AgentActionContext::HasEnemy() const
 {
-	SoldierObject* soldier = GetSoldier();
-	return soldier ? soldier->HasEnemy(GetNavMeshName()) : false;
+	AIController* ai = GetAIController();
+	return ai ? ai->HasEnemy(GetNavMeshName()) : false;
 }
 
-bool AgentActionContext::IsTargetReached(float threshold, bool clearMovePosition) const
+AgentObject* AgentActionContext::GetEnemy() const
 {
-	SoldierObject* soldier = GetSoldier();
-	if (!soldier)
+	AIController* ai = GetAIController();
+	return ai ? ai->GetEnemy() : nullptr;
+}
+
+bool AgentActionContext::CanShootEnemy(float shootDistance) const
+{
+	AIController* ai = GetAIController();
+	return ai ? ai->CanShootEnemy(GetNavMeshName(), shootDistance) : false;
+}
+
+bool AgentActionContext::HasMovePosition(float reachDistance) const
+{
+	AIController* ai = GetAIController();
+	return ai ? ai->HasMovePosition(reachDistance) : false;
+}
+
+bool AgentActionContext::HasCriticalHealth(float healthRatio) const
+{
+	AgentObject* agent = GetAgent();
+	if (agent == nullptr)
 	{
 		return false;
 	}
 
-	const bool reached = soldier->IsTargetReached(threshold);
+	const AgentAttrib* attrib = GetAttrib();
+	const float maxHealth = attrib != nullptr
+		? std::max(1.0f, static_cast<float>(attrib->GetMaxHealth()))
+		: std::max(1.0f, static_cast<float>(agent->GetHealth()));
+	return agent->GetHealth() < (maxHealth * healthRatio);
+}
+
+bool AgentActionContext::HasWeapon() const
+{
+	return GetWeapon() != nullptr;
+}
+
+bool AgentActionContext::HasAmmo() const
+{
+	WeaponComponent* weapon = GetWeapon();
+	return weapon == nullptr || weapon->HasAmmo();
+}
+
+bool AgentActionContext::IsTargetReached(float threshold, bool clearMovePosition) const
+{
+	AIController* ai = GetAIController();
+	if (ai == nullptr)
+	{
+		return false;
+	}
+
+	const bool reached = ai->IsTargetReached(threshold);
 	if (reached && clearMovePosition)
 	{
-		soldier->ClearMovePosition();
+		ai->ClearMovePosition();
 	}
 
 	return reached;
@@ -314,10 +374,10 @@ bool AgentActionContext::IsTargetReached(float threshold, bool clearMovePosition
 
 bool AgentActionContext::IsShootAnimationReady() const
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		return soldier->GetAnimController()->IsShootPresentationReady();
+		return animController->IsShootPresentationReady();
 	}
 
 	AgentObject* agent = GetAgent();
@@ -326,28 +386,28 @@ bool AgentActionContext::IsShootAnimationReady() const
 
 bool AgentActionContext::ConsumeShootExecution()
 {
-	SoldierObject* soldier = GetSoldier();
-	return soldier && soldier->GetAnimController() ? soldier->GetAnimController()->ConsumeShootExecution() : false;
+	IAnimController* animController = GetAnimController();
+	return animController != nullptr ? animController->ConsumeShootExecution() : false;
 }
 
 bool AgentActionContext::IsShootPresentationFinished() const
 {
-	SoldierObject* soldier = GetSoldier();
-	return soldier && soldier->GetAnimController() ? soldier->GetAnimController()->IsShootPresentationFinished() : false;
+	IAnimController* animController = GetAnimController();
+	return animController != nullptr ? animController->IsShootPresentationFinished() : false;
 }
 
 bool AgentActionContext::IsReloadPresentationFinished() const
 {
-	SoldierObject* soldier = GetSoldier();
-	return soldier && soldier->GetAnimController() ? soldier->GetAnimController()->IsReloadPresentationFinished() : false;
+	IAnimController* animController = GetAnimController();
+	return animController != nullptr ? animController->IsReloadPresentationFinished() : false;
 }
 
 bool AgentActionContext::HasPendingAnimation() const
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier && soldier->GetAnimController())
+	IAnimController* animController = GetAnimController();
+	if (animController != nullptr)
 	{
-		return soldier->GetAnimController()->HasPendingPresentation();
+		return animController->HasPendingPresentation();
 	}
 
 	AgentObject* agent = GetAgent();
@@ -356,18 +416,18 @@ bool AgentActionContext::HasPendingAnimation() const
 
 void AgentActionContext::ConsumeAmmo(int amount)
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier)
+	WeaponComponent* weapon = GetWeapon();
+	if (weapon != nullptr)
 	{
-		soldier->ConsumeAmmo(amount);
+		weapon->ConsumeAmmo(amount);
 	}
 }
 
 void AgentActionContext::RestoreAmmo()
 {
-	SoldierObject* soldier = GetSoldier();
-	if (soldier)
+	WeaponComponent* weapon = GetWeapon();
+	if (weapon != nullptr)
 	{
-		soldier->RestoreAmmo();
+		weapon->RestoreAmmo();
 	}
 }

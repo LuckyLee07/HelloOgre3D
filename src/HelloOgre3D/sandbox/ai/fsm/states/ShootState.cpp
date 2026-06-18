@@ -4,7 +4,6 @@
 #include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 
 ShootState::ShootState(AgentObject* pAgent)
 	: AgentState(pAgent)
@@ -60,15 +59,11 @@ std::string ShootState::OnUpdate(float dt)
 	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
 	if (actions)
 	{
-		SoldierObject* soldier = dynamic_cast<SoldierObject*>(m_pAgent);
-		if (soldier)
+		AgentObject* enemy = actions->GetEnemy();
+		if (enemy == nullptr || enemy->GetHealth() <= 0.0f)
 		{
-			AgentObject* enemy = soldier->GetEnemy();
-			if (enemy == nullptr || enemy->GetHealth() <= 0.0f)
-			{
-				SetTerminated(true);
-				return "";
-			}
+			SetTerminated(true);
+			return "";
 		}
 
 		actions->SlowMovement();

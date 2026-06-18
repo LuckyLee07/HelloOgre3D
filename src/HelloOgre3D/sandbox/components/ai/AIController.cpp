@@ -38,6 +38,7 @@ namespace
 	const char* const kPerceptionVisionInitialDelayMs = "perception.visionInitialDelayMs";
 	const char* const kPerceptionStaggerScans = "perception.staggerScans";
 	const char* const kPerceptionFieldOfViewDegrees = "perception.fieldOfViewDegrees";
+	const char* const kPerceptionMaxSpatialResults = "perception.maxSpatialResults";
 	const char* const kSenseTargetId = "sense.targetId";
 	const char* const kSenseTargetPos = "sense.targetPos";
 	const char* const kSenseTargetDistance = "sense.targetDistance";
@@ -47,12 +48,22 @@ namespace
 	const int kMemoryEntryTtlMs = 8000;
 	const float kMemoryConfidenceDecayPerMs = 1.0f / static_cast<float>(kMemoryEntryTtlMs);
 
+	typedef bool (*DriverMatchFn)(IDecisionDriver*);
+	typedef IDecisionDriver* (*DriverCreateFn)(AgentObject*, Blackboard*);
+
+	struct DriverFactoryEntry
+	{
+		const char* key;
+		DriverMatchFn matches;
+		DriverCreateFn create;
+	};
+
 	ObjectManager* ResolveObjectManager(const AIController* controller)
 	{
 		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->objects != nullptr)
 			return services->objects;
-		return g_ObjectManager;
+		return nullptr;
 	}
 
 	SandboxMgr* ResolveSandboxMgr(const AIController* controller)
@@ -60,7 +71,69 @@ namespace
 		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->sandbox != nullptr)
 			return services->sandbox;
-		return g_SandboxMgr;
+		return nullptr;
+	}
+
+	bool IsFsmDriver(IDecisionDriver* driver)
+	{
+		return dynamic_cast<AgentStateController*>(driver) != nullptr;
+	}
+
+	bool IsDecisionTreeDriver(IDecisionDriver* driver)
+	{
+		return dynamic_cast<DecisionTreeDriver*>(driver) != nullptr;
+	}
+
+	bool IsBehaviorTreeDriver(IDecisionDriver* driver)
+	{
+		return dynamic_cast<BehaviorTreeDriver*>(driver) != nullptr;
+	}
+
+	IDecisionDriver* CreateFsmDriver(AgentObject* owner, Blackboard*)
+	{
+		if (owner == nullptr)
+			return nullptr;
+
+		AgentStateController* fsm = new AgentStateController(owner);
+		fsm->Init();
+		return fsm;
+	}
+
+	IDecisionDriver* CreateDecisionTreeDriver(AgentObject* owner, Blackboard* blackboard)
+	{
+		if (owner == nullptr || blackboard == nullptr)
+			return nullptr;
+
+		DecisionTreeDriver* dt = new DecisionTreeDriver(owner, blackboard);
+		dt->Init();
+		return dt;
+	}
+
+	IDecisionDriver* CreateBehaviorTreeDriver(AgentObject* owner, Blackboard* blackboard)
+	{
+		if (owner == nullptr || blackboard == nullptr)
+			return nullptr;
+
+		BehaviorTreeDriver* bt = new BehaviorTreeDriver(owner, blackboard);
+		bt->Init();
+		return bt;
+	}
+
+	const DriverFactoryEntry* FindDriverFactory(const std::string& key)
+	{
+		static const DriverFactoryEntry kEntries[] =
+		{
+			{ "fsm", IsFsmDriver, CreateFsmDriver },
+			{ "dt", IsDecisionTreeDriver, CreateDecisionTreeDriver },
+			{ "bt", IsBehaviorTreeDriver, CreateBehaviorTreeDriver },
+		};
+
+		for (size_t i = 0; i < sizeof(kEntries) / sizeof(kEntries[0]); ++i)
+		{
+			if (key == kEntries[i].key)
+				return &kEntries[i];
+		}
+		return nullptr;
 	}
 }
 
@@ -91,6 +164,7 @@ void AIController::onAttach(BaseObject* owner)
 	m_localTimeMs = 0;
 	m_perceptionTickInAiTickEnabled = true;
 	m_visionSensor.Clear();
+	m_perceptionCache.Reset();
 	InitDefaultDriver();
 }
 
@@ -99,7 +173,19 @@ void AIController::onDetach()
 	m_visionSensor.Clear();
 	m_memoryStore.SetBlackboard(nullptr);
 	m_blackboard.SetOwner(static_cast<AgentObject*>(nullptr));
+	m_perceptionCache.Reset();
 	IComponent::onDetach();
+}
+
+int AIController::getUpdateOrder() const
+{
+	return ComponentUpdateOrder::AI;
+}
+
+void AIController::update(int deltaMs)
+{
+	if (IsTickInOwnerUpdateEnabled())
+		TickAI(deltaMs);
 }
 
 void AIController::InitDefaultDriver()
@@ -112,9 +198,7 @@ void AIController::InitDefaultDriver()
 
 	if (owner->GetUseCppFSM())
 	{
-		AgentStateController* fsm = new AgentStateController(owner);
-		fsm->Init();
-		m_driver = fsm;
+		SetDriverByNormalizedType("fsm");
 	}
 }
 
@@ -309,6 +393,7 @@ AgentPerceptionOptions AIController::BuildPerceptionOptions(const Ogre::String& 
 	options.maxDistance = std::max(0.0f, m_blackboard.GetFloat(kPerceptionVisionRange, 0.0f));
 	options.requirePath = requirePath && m_blackboard.GetBool(kPerceptionRequirePath, true);
 	options.fieldOfViewDegrees = std::max(0.0f, m_blackboard.GetFloat(kPerceptionFieldOfViewDegrees, 0.0f));
+	options.maxSpatialResults = std::max(0, m_blackboard.GetInt(kPerceptionMaxSpatialResults, 0));
 	return options;
 }
 
@@ -498,7 +583,14 @@ bool AIController::HasEnemy(const Ogre::String& navMeshName)
 		return m_perceptionCache.hasCurrentTarget;
 	}
 	const bool forceInitialScan = !m_blackboard.GetBool(kPerceptionStaggerScans, false);
-	return UpdateVisionSensor(0, navMeshName, true, forceInitialScan);
+	bool scanned = false;
+	const bool hasEnemy = UpdateVisionSensor(0, navMeshName, true, forceInitialScan, &scanned);
+	if (scanned)
+	{
+		m_memoryStore.SyncSnapshot(m_localTimeMs);
+		UpdatePerceptionCache(true, 0.0);
+	}
+	return hasEnemy;
 }
 
 bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
@@ -520,6 +612,8 @@ bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDis
 	}
 
 	WritePerceptionResult(result);
+	m_memoryStore.SyncSnapshot(m_localTimeMs);
+	UpdatePerceptionCache(true, 0.0);
 	return true;
 }
 
@@ -655,20 +749,16 @@ void AIController::SetDriverByType(const char* type)
 	});
 
 	if (key == "fsm")
-	{
 		SetFsmDriver();
-	}
 	else if (key == "dt")
-	{
 		SetDecisionTreeDriver();
-	}
 	else if (key == "bt")
-	{
 		SetBehaviorTreeDriver();
-	}
+	else
+		SetDriverByNormalizedType(key);
 }
 
-void AIController::SetFsmDriver()
+void AIController::SetDriverByNormalizedType(const std::string& key)
 {
 	AgentObject* owner = GetAgentOwner();
 	if (owner == nullptr)
@@ -676,51 +766,38 @@ void AIController::SetFsmDriver()
 		return;
 	}
 
-	if (dynamic_cast<AgentStateController*>(m_driver) != nullptr)
+	const DriverFactoryEntry* factory = FindDriverFactory(key);
+	if (factory == nullptr)
 	{
 		return;
 	}
-	SAFE_DELETE(m_driver);
 
-	AgentStateController* fsm = new AgentStateController(owner);
-	fsm->Init();
-	m_driver = fsm;
+	if (factory->matches != nullptr && factory->matches(m_driver))
+	{
+		return;
+	}
+
+	IDecisionDriver* nextDriver = factory->create(owner, &m_blackboard);
+	if (nextDriver == nullptr)
+	{
+		return;
+	}
+
+	SAFE_DELETE(m_driver);
+	m_driver = nextDriver;
+}
+
+void AIController::SetFsmDriver()
+{
+	SetDriverByNormalizedType("fsm");
 }
 
 void AIController::SetDecisionTreeDriver()
 {
-	SoldierObject* soldier = GetSoldierOwner();
-	if (soldier == nullptr)
-	{
-		return;
-	}
-
-	if (dynamic_cast<DecisionTreeDriver*>(m_driver) != nullptr)
-	{
-		return;
-	}
-	SAFE_DELETE(m_driver);
-
-	DecisionTreeDriver* dt = new DecisionTreeDriver(soldier, &m_blackboard);
-	dt->Init();
-	m_driver = dt;
+	SetDriverByNormalizedType("dt");
 }
 
 void AIController::SetBehaviorTreeDriver()
 {
-	SoldierObject* soldier = GetSoldierOwner();
-	if (soldier == nullptr)
-	{
-		return;
-	}
-
-	if (dynamic_cast<BehaviorTreeDriver*>(m_driver) != nullptr)
-	{
-		return;
-	}
-	SAFE_DELETE(m_driver);
-
-	BehaviorTreeDriver* bt = new BehaviorTreeDriver(soldier, &m_blackboard);
-	bt->Init();
-	m_driver = bt;
+	SetDriverByNormalizedType("bt");
 }

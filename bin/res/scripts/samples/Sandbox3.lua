@@ -4,10 +4,17 @@ local ParityTrace = require("res.scripts.samples.parity_trace")
 local _parityTrace = nil
 local _ch3Compare = false
 
+function Agent_Initialize(agent)
+end
+
 local function _IsTruthy(value)
     if value == nil then return false end
     value = string.lower(tostring(value))
     return value == "1" or value == "true" or value == "yes" or value == "on"
+end
+
+local function _IsAnimAsmReady()
+    return soldierAsm ~= nil and weaponAsm ~= nil
 end
 
 local function _GetSeed()
@@ -18,6 +25,10 @@ local function _BuildAnimSnapshot(state)
     local extra = {}
     if state ~= nil and state.lastDeltaMs ~= nil then
         extra.deltaTimeMs = state.lastDeltaMs
+    end
+    if not _IsAnimAsmReady() then
+        extra.notReady = true
+        return { agents = {} }
     end
     return {
         agents = { ParityTrace.AnimSnapshot(soldierAsm, 1, extra) },
@@ -54,7 +65,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
-        local camera = Sandbox:GetCamera();
+        local camera = SandboxCamera:GetCamera();
         camera:setPosition(Vector3(0, 1, -3));
         camera:setOrientation(GetForward(Vector3(0, 0, -1)));
     elseif (keycode == OIS.KC_F12) then
@@ -113,7 +124,7 @@ function Sandbox_Initialize(ctype)
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create a plane in the physics world
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setOrientation(Quaternion(0, 0, 0));
     plane:setPosition(Vector3(0, 0, 0));
     Sandbox:setMaterial(plane, "Ground2");
@@ -126,7 +137,7 @@ function Sandbox_Initialize(ctype)
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
     -- Initialize the camera position to focus on the soldier.
-    local camera = Sandbox:GetCamera();
+    local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(0, 1, -3));
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
 
@@ -134,7 +145,7 @@ function Sandbox_Initialize(ctype)
     Sandbox:SetUseCppFsmFlag(false)
     
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath)
+    local soldierAgent = SandboxObjects:CreateSoldier(soldierPath)
     Soldier_InitSoldierAsm(soldierAgent)
 
     soldierAgent:setPosition(Vector3(0, 0, 0))
@@ -244,6 +255,10 @@ function Sandbox_Initialize(ctype)
 end
 
 function Sandbox_Update(deltaTimeInMillis)
+    if not _IsAnimAsmReady() then
+        return
+    end
+
     if _ch3Compare then
         if _parityTrace ~= nil then
             _parityTrace.lastDeltaMs = math.floor(deltaTimeInMillis + 0.5)

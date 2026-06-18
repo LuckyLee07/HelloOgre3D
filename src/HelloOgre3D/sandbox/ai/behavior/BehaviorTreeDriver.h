@@ -9,6 +9,7 @@
 #include "ai/behavior/BehaviorTrace.h"
 #include "script/LuaClassNameTraits.h"
 
+class AgentObject;
 class SoldierObject;
 class BehaviorTree;
 class BehaviorNode;
@@ -20,7 +21,7 @@ class LuaBehaviorAction;
 class LuaCondition;
 
 // BT flavour of IDecisionDriver。Mirrors DecisionTreeDriver 的设计：
-//   - 每个 SoldierObject 持有一个 driver
+//   - 每个 AgentObject 持有一个 driver
 //   - driver 使用 AIController 注入的 Blackboard（同一 agent 的 driver 间稳定共享）
 //   - 提供 NewXxx 工厂创建并持有所有节点的所有权（绕开 tolua 不暴露 .new() 的问题，
 //     避免 tolua 双重所有权问题）
@@ -28,11 +29,11 @@ class LuaCondition;
 class BehaviorTreeDriver : public IDecisionDriver //tolua_exports
 { //tolua_exports
 public:
-	explicit BehaviorTreeDriver(SoldierObject* owner, Blackboard* blackboard = nullptr);
+	explicit BehaviorTreeDriver(AgentObject* owner, Blackboard* blackboard = nullptr);
 	virtual ~BehaviorTreeDriver();
 
 	//tolua_begin
-	SoldierObject* GetOwner() const { return m_owner; }
+	SoldierObject* GetOwner() const;
 	Blackboard*    GetBlackboard() { return m_blackboard; }
 
 	// 节点工厂 —— driver 保留所有权。
@@ -63,9 +64,10 @@ public:
 	// IDecisionDriver impl
 	virtual void Init() override;
 	virtual void Tick(float deltaMs) override;
+	AgentObject* GetAgentOwner() const { return m_owner; }
 
 private:
-	SoldierObject*               m_owner;
+	AgentObject*                 m_owner;
 	Blackboard                   m_fallbackBlackboard;
 	Blackboard*                  m_blackboard;
 	BehaviorTree*                m_tree;            // 指向 m_ownedTrees 中的某棵

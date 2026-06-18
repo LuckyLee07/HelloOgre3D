@@ -7,7 +7,10 @@
 
 class AgentObject;
 class AgentStateController;
-class SoldierObject;
+class AgentAttrib;
+class AIController;
+class IAnimController;
+class WeaponComponent;
 
 class AgentActionContext
 {
@@ -15,7 +18,6 @@ public:
 	explicit AgentActionContext(AgentStateController& controller);
 
 	AgentObject* GetAgent() const;
-	SoldierObject* GetSoldier() const;
 	const std::string& GetNavMeshName() const;
 
 	void EnterIdle();
@@ -38,6 +40,12 @@ public:
 	bool SelectFleeDestination(int maxTries = 16, float minDistance = 16.0f);
 
 	bool HasEnemy() const;
+	AgentObject* GetEnemy() const;
+	bool CanShootEnemy(float shootDistance = 3.0f) const;
+	bool HasMovePosition(float reachDistance = 1.5f) const;
+	bool HasCriticalHealth(float healthRatio = 0.2f) const;
+	bool HasWeapon() const;
+	bool HasAmmo() const;
 	bool IsTargetReached(float threshold, bool clearMovePosition) const;
 	bool IsShootAnimationReady() const;
 	bool ConsumeShootExecution();
@@ -49,6 +57,11 @@ public:
 	void RestoreAmmo();
 
 private:
+	AIController* GetAIController() const;
+	IAnimController* GetAnimController() const;
+	WeaponComponent* GetWeapon() const;
+	AgentAttrib* GetAttrib() const;
+
 	AgentStateController* m_controller;
 };
 

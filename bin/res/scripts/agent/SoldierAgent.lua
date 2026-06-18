@@ -184,7 +184,7 @@ function Create_Soldier(luafile, soldier1Type, teamId)
     if soldierType == Soldier.AppearanceTypes.DARK then
         soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
     end
-    local soldierAgent = Sandbox:CreateSoldier(soldierPath, luafile)
+    local soldierAgent = SandboxObjects:CreateSoldier(soldierPath, luafile)
     soldierAgent:SetTeamId(teamId or 0)
     Soldier_InitSoldierAsm(soldierAgent)
 

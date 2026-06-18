@@ -46,6 +46,8 @@ public:
 
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
+	virtual int getUpdateOrder() const override;
+	virtual void update(int deltaMs) override;
 
 	//tolua_begin
 	SoldierObject* GetOwner() const;
@@ -86,6 +88,7 @@ private:
 	AgentObject* GetAgentOwner() const;
 	SoldierObject* GetSoldierOwner() const;
 	void InitDefaultDriver();
+	void SetDriverByNormalizedType(const std::string& key);
 	void SetFsmDriver();
 	void SetDecisionTreeDriver();
 	void SetBehaviorTreeDriver();

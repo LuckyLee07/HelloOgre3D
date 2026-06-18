@@ -2,6 +2,7 @@
 -- Structured trace helper for reproducible sample-to-sample comparisons.
 
 local ParityTrace = {}
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local function _GetEnv(name)
 	return os.getenv and os.getenv(name) or nil
@@ -146,7 +147,7 @@ local function _SafeCall(object, methodName, defaultValue)
 end
 
 local function _GetAgentBlackboard(agent)
-	local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+	local ai = AgentComponents.GetAI(agent)
 	if ai ~= nil and ai.GetBlackboard ~= nil then
 		return ai:GetBlackboard()
 	end

@@ -509,6 +509,7 @@ SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawDangerLayer = f
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawTeamLayer = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawInSmoke = true
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.teamDrawYOffset = 0.0
+SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.gridLineAlpha = 0.5
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.projectInfluenceToNav = false
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.maxDrawCellsPerLayer = 0
 SamplePresets.chapter9_tactics_legacy_parity.chapter9Tactics.drawNeutralCells = true
@@ -667,6 +668,7 @@ SamplePresets.ai_perception_pressure.aiBlackboard = {
 	},
 	ints = {
 		["perception.visionIntervalMs"] = 1,
+		["perception.maxSpatialResults"] = 16,
 	},
 	bools = {
 		["perception.requirePath"] = false,

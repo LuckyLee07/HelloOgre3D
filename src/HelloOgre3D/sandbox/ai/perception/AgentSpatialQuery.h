@@ -58,6 +58,9 @@ public:
 		int rejectedTeam = 0;
 		int rejectedDead = 0;
 		int rejectedType = 0;
+		std::vector<float> resultDistances;
+		if (options.maxResults > 0)
+			resultDistances.reserve(options.maxResults);
 		for (AgentObject* agent : agents)
 		{
 			++candidates;
@@ -66,7 +69,8 @@ public:
 				continue;
 			}
 
-			if (radius > 0.0f && center.squaredDistance(agent->GetPosition()) > radiusSquared)
+			const float distanceSquared = center.squaredDistance(agent->GetPosition());
+			if (radius > 0.0f && distanceSquared > radiusSquared)
 			{
 				continue;
 			}
@@ -77,13 +81,7 @@ public:
 			}
 
 			++filteredCandidates;
-			outAgents.push_back(agent);
-			if (options.maxResults > 0 && static_cast<int>(outAgents.size()) >= options.maxResults)
-			{
-				if (spatialIndex != nullptr)
-					spatialIndex->RecordFallbackQueryStats(candidates, filteredCandidates, static_cast<int>(outAgents.size()), rejectedSelf, rejectedTeam, rejectedDead, rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
-				return;
-			}
+			AddResultCandidate(agent, distanceSquared, options, outAgents, resultDistances);
 		}
 		if (spatialIndex != nullptr)
 			spatialIndex->RecordFallbackQueryStats(candidates, filteredCandidates, static_cast<int>(outAgents.size()), rejectedSelf, rejectedTeam, rejectedDead, rejectedType, RuntimeStallProfiler::ElapsedMsSince(queryStartMicros));
@@ -126,6 +124,44 @@ private:
 		}
 
 		return true;
+	}
+
+	static void AddResultCandidate(
+		AgentObject* agent,
+		float distanceSquared,
+		const AgentSpatialQueryOptions& options,
+		std::vector<AgentObject*>& outAgents,
+		std::vector<float>& outDistances)
+	{
+		if (options.maxResults <= 0)
+		{
+			outAgents.push_back(agent);
+			return;
+		}
+
+		if (static_cast<int>(outAgents.size()) < options.maxResults)
+		{
+			outAgents.push_back(agent);
+			outDistances.push_back(distanceSquared);
+			return;
+		}
+
+		int farthestIndex = -1;
+		float farthestDistance = -1.0f;
+		for (int i = 0; i < static_cast<int>(outDistances.size()); ++i)
+		{
+			if (outDistances[i] > farthestDistance)
+			{
+				farthestDistance = outDistances[i];
+				farthestIndex = i;
+			}
+		}
+
+		if (farthestIndex >= 0 && distanceSquared < farthestDistance)
+		{
+			outAgents[farthestIndex] = agent;
+			outDistances[farthestIndex] = distanceSquared;
+		}
 	}
 
 	ObjectManager* m_objectManager;

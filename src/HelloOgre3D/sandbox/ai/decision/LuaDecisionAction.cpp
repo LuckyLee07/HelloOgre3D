@@ -1,14 +1,20 @@
 #include "LuaDecisionAction.h"
 
 #include "components/ai/AIController.h"
+#include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
 #include "profiling/Profile.h"
 
+LuaDecisionAction::LuaDecisionAction(const std::string& name, AgentObject* owner, Blackboard* blackboard)
+	: DecisionAction(name), m_owner(owner), m_blackboard(blackboard)
+{
+}
+
 LuaDecisionAction::LuaDecisionAction(const std::string& name, SoldierObject* owner)
-	: DecisionAction(name), m_owner(owner)
+	: LuaDecisionAction(name, static_cast<AgentObject*>(owner), nullptr)
 {
 }
 
@@ -21,10 +27,17 @@ bool LuaDecisionAction::BindToScript(const std::string& filepath)
 	return LuaPluginMgr::BindLuaPluginByFile(this, filepath);
 }
 
-static Blackboard* _GetBlackboardFromOwner(SoldierObject* owner)
+SoldierObject* LuaDecisionAction::GetOwner() const
 {
-	if (!owner) return nullptr;
-	AIController* ai = owner->GetAIController();
+	return dynamic_cast<SoldierObject*>(m_owner);
+}
+
+Blackboard* LuaDecisionAction::ResolveBlackboard() const
+{
+	if (m_blackboard != nullptr)
+		return m_blackboard;
+	if (!m_owner) return nullptr;
+	AIController* ai = m_owner->FindComponent<AIController>();
 	DecisionTreeDriver* driver = ai ? ai->GetDecisionTreeDriver() : nullptr;
 	return driver ? driver->GetBlackboard() : nullptr;
 }
@@ -53,13 +66,17 @@ void LuaDecisionAction::OnInitialize()
 {
 	H3D_PROFILE_SCOPE("LuaDecisionAction::OnInitialize");
 	// Lua signature: function OnInitialize(owner, blackboard) ... end
-	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
+	Blackboard* bb = ResolveBlackboard();
 	if (_IsDecisionTraceEnabled(bb))
 	{
 		bb->SetString("__dt.currentAction", GetName());
 		bb->SetString("__dt.currentActionStatus", "ENTER");
 	}
-	callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", m_owner, bb);
+	SoldierObject* soldier = GetOwner();
+	if (soldier != nullptr)
+		callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", soldier, bb);
+	else
+		callFunction("OnInitialize", "u[AgentObject]u[Blackboard]", m_owner, bb);
 }
 
 DecisionAction::Status LuaDecisionAction::OnUpdate(float deltaMs)
@@ -67,9 +84,13 @@ DecisionAction::Status LuaDecisionAction::OnUpdate(float deltaMs)
 	H3D_PROFILE_SCOPE("LuaDecisionAction::OnUpdate");
 	// Lua signature: function OnUpdate(deltaMs, owner, blackboard) return status end
 	// Status: 1 = RUNNING, 2 = TERMINATED.
-	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
+	Blackboard* bb = ResolveBlackboard();
 	int statusOut = (int)STATUS_TERMINATED;
-	callFunction("OnUpdate", "iu[SoldierObject]u[Blackboard]>i", (int)deltaMs, m_owner, bb, &statusOut);
+	SoldierObject* soldier = GetOwner();
+	if (soldier != nullptr)
+		callFunction("OnUpdate", "iu[SoldierObject]u[Blackboard]>i", (int)deltaMs, soldier, bb, &statusOut);
+	else
+		callFunction("OnUpdate", "iu[AgentObject]u[Blackboard]>i", (int)deltaMs, m_owner, bb, &statusOut);
 	Status status = statusOut == (int)STATUS_RUNNING ? STATUS_RUNNING : STATUS_TERMINATED;
 	if (_IsDecisionTraceEnabled(bb))
 	{
@@ -83,11 +104,15 @@ void LuaDecisionAction::OnCleanUp()
 {
 	H3D_PROFILE_SCOPE("LuaDecisionAction::OnCleanUp");
 	// Lua signature: function OnCleanUp(owner, blackboard) ... end
-	Blackboard* bb = _GetBlackboardFromOwner(m_owner);
+	Blackboard* bb = ResolveBlackboard();
 	if (_IsDecisionTraceEnabled(bb))
 	{
 		bb->SetString("__dt.currentAction", GetName());
 		bb->SetString("__dt.currentActionStatus", "CLEANUP");
 	}
-	callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", m_owner, bb);
+	SoldierObject* soldier = GetOwner();
+	if (soldier != nullptr)
+		callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", soldier, bb);
+	else
+		callFunction("OnCleanUp", "u[AgentObject]u[Blackboard]", m_owner, bb);
 }

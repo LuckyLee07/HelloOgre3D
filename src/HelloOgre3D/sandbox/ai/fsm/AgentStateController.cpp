@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "AgentActionContext.h"
+#include "components/ai/AIController.h"
 #include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "AgentStateEvaluators.h"
 #include "AgentStateFactory.h"
 #include "AgentFSM.h"
@@ -22,7 +22,7 @@ namespace
 		const SandboxServices* services = agent != nullptr ? agent->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->objects != nullptr)
 			return services->objects;
-		return g_ObjectManager;
+		return nullptr;
 	}
 
 	SandboxMgr* ResolveSandboxMgr(const AgentObject* agent)
@@ -30,12 +30,12 @@ namespace
 		const SandboxServices* services = agent != nullptr ? agent->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->sandbox != nullptr)
 			return services->sandbox;
-		return g_SandboxMgr;
+		return nullptr;
 	}
 
-	SoldierObject* AsSoldier(AgentObject* agent)
+	AIController* GetAIController(AgentObject* agent)
 	{
-		return dynamic_cast<SoldierObject*>(agent);
+		return agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
 	}
 
 	void AlignAgentToPath(AgentObject* agent)
@@ -184,10 +184,10 @@ bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMo
 
 	if (updateMovePos)
 	{
-		SoldierObject* soldier = AsSoldier(m_agent);
-		if (soldier)
+		AIController* ai = GetAIController(m_agent);
+		if (ai != nullptr)
 		{
-			soldier->SetMovePosition(target);
+			ai->SetMovePosition(target);
 		}
 	}
 
@@ -196,14 +196,14 @@ bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMo
 
 bool AgentStateController::PlanPathToEnemy()
 {
-	SoldierObject* soldier = AsSoldier(m_agent);
-	if (!soldier)
+	AIController* ai = GetAIController(m_agent);
+	if (ai == nullptr)
 		return false;
 
-	if (!soldier->HasEnemy(m_navMeshName))
+	if (!ai->HasEnemy(m_navMeshName))
 		return false;
 
-	AgentObject* enemy = soldier->GetEnemy();
+	AgentObject* enemy = ai->GetEnemy();
 	if (!enemy)
 		return false;
 

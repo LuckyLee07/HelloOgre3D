@@ -1,4 +1,5 @@
 local RuntimeDiagnostics = {}
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local function getEnvValue(name)
 	return os.getenv and os.getenv(name) or nil
@@ -26,6 +27,76 @@ local function printLines(text)
 	for line in string.gmatch(tostring(text), "[^\r\n]+") do
 		print(line)
 	end
+end
+
+local function runComponentAccessSelfTest()
+	local ok = true
+	local detail = {}
+
+	if SandboxObjects == nil or SandboxObjects.CreateAgent == nil then
+		print("[ComponentAccessSelfTest] SandboxObjects:CreateAgent unavailable")
+		return false
+	end
+
+	local agentType = _G.AGENT_OBJ_NONE or 0
+	local agent = SandboxObjects:CreateAgent(agentType, "res/scripts/agent/ComponentProbeAgent.lua")
+	if agent == nil then
+		print("[ComponentAccessSelfTest] failed to create non-soldier agent")
+		return false
+	end
+	if agent.SetRenderVisible ~= nil then
+		agent:SetRenderVisible(false)
+	end
+
+	local componentCount = agent.GetComponentCount ~= nil and agent:GetComponentCount() or 0
+	local hasAi = agent.HasComponent ~= nil and agent:HasComponent("ai") or false
+	local hasAttrib = agent.HasComponent ~= nil and agent:HasComponent("attrib") or false
+	local ai = AgentComponents.GetAI(agent)
+	local attrib = AgentComponents.GetAttrib(agent)
+	local debugString = agent.BuildComponentDebugString ~= nil and agent:BuildComponentDebugString() or ""
+	local blackboardOwnerMatches = false
+
+	if componentCount < 2 then
+		ok = false
+		table.insert(detail, "componentCount<2")
+	end
+	if not hasAi or ai == nil then
+		ok = false
+		table.insert(detail, "aiMissing")
+	end
+	if not hasAttrib or attrib == nil then
+		ok = false
+		table.insert(detail, "attribMissing")
+	end
+	if ai ~= nil and ai.GetBlackboard ~= nil then
+		local blackboard = ai:GetBlackboard()
+		local blackboardOwner = blackboard ~= nil and blackboard.GetAgentOwner ~= nil and blackboard:GetAgentOwner() or nil
+		blackboardOwnerMatches = blackboardOwner == agent
+	end
+	if not blackboardOwnerMatches then
+		ok = false
+		table.insert(detail, "blackboardAgentOwner")
+	end
+
+	if attrib ~= nil then
+		attrib:SetMaxHealth(123)
+		attrib:SetHealth(77)
+		local health = AgentComponents.GetHealth(agent, -1)
+		local maxHealth = AgentComponents.GetMaxHealth(agent, -1)
+		if health ~= 77 or maxHealth ~= 123 then
+			ok = false
+			table.insert(detail, "attribRoundTrip")
+		end
+	end
+
+	print("[ComponentAccessSelfTest] result=" .. tostring(ok),
+		"componentCount=" .. tostring(componentCount),
+		"hasAi=" .. tostring(hasAi),
+		"hasAttrib=" .. tostring(hasAttrib),
+		"blackboardOwner=" .. tostring(blackboardOwnerMatches),
+		"debug=" .. tostring(debugString),
+		"detail=" .. table.concat(detail, ","))
+	return ok
 end
 
 function RuntimeDiagnostics.RunSelfTest()
@@ -92,6 +163,10 @@ function RuntimeDiagnostics.RunSelfTest()
 		ok = false
 	else
 		printLines(GameManager:buildRuntimeResourceDump(maxResources))
+	end
+
+	if not runComponentAccessSelfTest() then
+		ok = false
 	end
 
 	print("[RuntimeDiag] self test result:", ok)

@@ -83,7 +83,7 @@ function GUI_CreateCameraInfo()
     local screenWidth = GameManager:getScreenWidth()
     --local screenHeight = GameManager:getScreenHeight()
 
-    local uiComponent = Sandbox:CreateUIFrame()
+    local uiComponent = SandboxUI:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     local ui_posy = 35 + ui_height;
     uiComponent:setPosition(Vector2(ui_posx, ui_posy))
@@ -104,7 +104,7 @@ function GUI_CreateProfileInfo()
     local screenWidth = GameManager:getScreenWidth()
     --local screenHeight = GameManager:getScreenHeight()
 
-    local uiComponent = Sandbox:CreateUIFrame()
+    local uiComponent = SandboxUI:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     uiComponent:setPosition(Vector2(ui_posx, 20))
     uiComponent:setDimension(Vector2(ui_width, ui_height))
@@ -124,11 +124,11 @@ function GUI_UpdateCameraInfo()
         return
 	end
 	
-	local forward = Sandbox:GetCameraForward()
-	local rotation = Sandbox:GetCameraRotation()
-	local position = Sandbox:GetCameraPosition()
-	local left = Sandbox:GetCameraLeft()
-	local up = Sandbox:GetCameraUp()
+	local forward = SandboxCamera:GetCameraForward()
+	local rotation = SandboxCamera:GetCameraRotation()
+	local position = SandboxCamera:GetCameraPosition()
+	local left = SandboxCamera:GetCameraLeft()
+	local up = SandboxCamera:GetCameraUp()
 
 	local cameraInfo = GUI.Markup.SmallMono ..
     "Camera Information:" .. GUI.MarkupNewline .. GUI.MarkupNewline ..
@@ -151,13 +151,13 @@ function GUI_UpdateProfileInfo()
         return
 	end
 
-	local renderTime = Sandbox:GetRenderTime() / 1000
+	local renderTime = SandboxCamera:GetRenderTime() / 1000
 	local avgRenderTime = __ComputerNewTime__(__averageRenderTimes__, renderTime);
 
-	local simulateTime = Sandbox:GetSimulateTime() / 1000
+	local simulateTime = SandboxCamera:GetSimulateTime() / 1000
 	local avgSimulateTime = __ComputerNewTime__(__averageSimTimes__, simulateTime);
 
-	local totalSimTime = Sandbox:GetTotalSimulateTime() / 1000
+	local totalSimTime = SandboxCamera:GetTotalSimulateTime() / 1000
 	local avgTotalSimTime = __ComputerNewTime__(__averageTotalSimTimes__, totalSimTime);
 
 	local fps = 1000 / avgRenderTime
@@ -190,7 +190,7 @@ end
 
 function GUI_CreateCameraAndProfileInfo()
     for index, color in pairs(GUI.MarkupColorTable) do
-        Sandbox:SetMarkupColor(index, color)
+        SandboxUI:SetMarkupColor(index, color)
     end
 	
 	cameraInfoPanel = GUI_CreateCameraInfo()
@@ -246,7 +246,7 @@ function GUI_CreateSandboxText(infoText, boxSize)
     
     --local ui_width, ui_height = 300, 180;
     local ui_width, ui_height = boxSize.w, boxSize.h;
-    local sandboxMenuInfo = Sandbox:CreateUIFrame()
+    local sandboxMenuInfo = SandboxUI:CreateUIFrame()
     local ui_posx = screenWidth - ui_width - 20;
     local ui_posy = screenHeight - ui_height - 35;
     sandboxMenuInfo:setPosition(Vector2(ui_posx, ui_posy))

@@ -3,6 +3,7 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 local TeamBlackboard = require("res.scripts.ai.team.TeamBlackboard.lua")
 
 local textSize = {w = 300, h = 185}
@@ -233,8 +234,8 @@ local function _EnsureTeamMemory(teamId)
 end
 
 local function _GetBlackboard(agent)
-    if agent == nil or agent.GetAI == nil then return nil end
-    local ai = agent:GetAI()
+    if agent == nil then return nil end
+    local ai = AgentComponents.GetAI(agent)
     return ai ~= nil and ai:GetBlackboard() or nil
 end
 
@@ -291,7 +292,7 @@ local function _Chapter8DebugLog(...)
 end
 
 local function _ApplyChapter8Camera()
-    local camera = Sandbox:GetCamera()
+    local camera = SandboxCamera:GetCamera()
     local preset = ConfigManager:GetSamplePreset("Sandbox12")
     local config = preset ~= nil and preset.chapter8Comms or nil
     local position = config ~= nil and config.cameraPosition or nil
@@ -370,7 +371,7 @@ local function _CreateDemoPanel()
         return
     end
 
-    local panel = Sandbox:CreateUIFrame()
+    local panel = SandboxUI:CreateUIFrame()
     panel:setPosition(Vector2(20, 20))
     panel:setDimension(Vector2(_demoPanelSize.w, _demoPanelSize.h))
     panel:setTextMargin(12, 10)
@@ -1108,7 +1109,7 @@ function Sandbox_Initialize()
 
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 

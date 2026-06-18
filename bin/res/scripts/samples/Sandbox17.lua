@@ -8,6 +8,7 @@ require("res.scripts.agent.DecisionSoldierAgent.lua")
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
 local ParityTrace = require("res.scripts.samples.parity_trace")
 local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _sampleName = "Sandbox17"
 local _agents = {}
@@ -126,6 +127,13 @@ local function _ReadEnvBool(name, defaultValue)
 	return value == "1" or value == "true" or value == "TRUE" or value == "yes"
 end
 
+-- 影响图网格轮廓线颜色。alpha 默认 0.14（teaching 偏淡），legacy parity 用
+-- gridLineAlpha=0.5 复刻 chapter-9 旧版那种明显的黑色网格线。
+local function _GetGridColor()
+	local alpha = _ReadNumber(_GetConfig(), "gridLineAlpha", 0.14)
+	return ColourValue(0.0, 0.0, 0.0, alpha)
+end
+
 local function _IsVisualIsolationEnabled(config)
 	return _ReadBool(config, "visualIsolation", false)
 		or _ReadEnvBool("HELLO_CH9_VISUAL_ISOLATION", false)
@@ -157,7 +165,7 @@ local function _GetCameraPreset(config)
 end
 
 local function _ApplyCameraPreset(config)
-	local camera = Sandbox:GetCamera()
+	local camera = SandboxCamera:GetCamera()
 	local preset = _GetCameraPreset(config)
 	if preset == "top" then
 		camera:setPosition(Vector3(12, 95, 27))
@@ -464,7 +472,7 @@ local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negat
 		_ColorFromSpec(positiveSpec),
 		_ColorFromSpec(zeroSpec),
 		_ColorFromSpec(negativeSpec),
-		_colors.grid,
+		_GetGridColor(),
 		threshold,
 		_GetCppDrawCellLimit(config),
 		drawNeutral,
@@ -497,7 +505,7 @@ _EnsureInfluenceMap = function()
 end
 
 local function _CreatePanel()
-	_panel = Sandbox:CreateUIFrame()
+	_panel = SandboxUI:CreateUIFrame()
 	_panel:setPosition(Vector2(20, 280))
 	_panel:setDimension(Vector2(600, 145))
 	_panel:setTextMargin(12, 10)
@@ -769,7 +777,7 @@ local function _DrawCachedCell(cell)
 		return
 	end
 	DebugDrawer:drawSquare(cell.position, cell.cellSize, cell.color, true)
-	DebugDrawer:drawSquare(cell.position + Vector3(0, 0.01, 0), cell.cellSize, _colors.grid, false)
+	DebugDrawer:drawSquare(cell.position + Vector3(0, 0.01, 0), cell.cellSize, _GetGridColor(), false)
 end
 
 _GetDrawCellLimit = function(config, map)
@@ -839,7 +847,7 @@ local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, dra
 			_ColorFromSpec(positiveSpec),
 			_ColorFromSpec(zeroSpec),
 			_ColorFromSpec(negativeSpec),
-			_colors.grid,
+			_GetGridColor(),
 			threshold,
 			_GetCppDrawCellLimit(config),
 			drawNeutral,
@@ -942,7 +950,7 @@ end
 local function _DrawPursuedAgentFootRings(ringRadius, yOffset)
 	local drawnTargets = {}
 	for _, agent in ipairs(_agents) do
-		local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+		local ai = AgentComponents.GetAI(agent)
 		local bb = ai ~= nil and ai.GetBlackboard ~= nil and ai:GetBlackboard() or nil
 		if bb ~= nil and bb:GetString("legacy.action") == "pursue" then
 			local enemyId = bb:GetInt("legacy.enemyId", -1)
@@ -1013,7 +1021,7 @@ local function _BuildAgentParityExtra(agent)
 		intent = ParityTrace.AgentIntentSnapshot(agent),
 	}
 
-	local ai = agent ~= nil and agent.GetAI ~= nil and agent:GetAI() or nil
+	local ai = AgentComponents.GetAI(agent)
 	local bb = ai ~= nil and ai.GetBlackboard ~= nil and ai:GetBlackboard() or nil
 	if bb ~= nil then
 		extra.legacyAction = bb:GetString("legacy.action")
@@ -1200,7 +1208,7 @@ function Sandbox_Initialize()
 
 	Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
 
-	local plane = Sandbox:CreatePlane(200, 200)
+	local plane = SandboxObjects:CreatePlane(200, 200)
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 

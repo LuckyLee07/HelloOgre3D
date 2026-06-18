@@ -69,7 +69,7 @@ function EventHandle_Keyboard(keycode, pressed)
 
     if not pressed then return end
     if (keycode == OIS.KC_F1) then
-        local camera = Sandbox:GetCamera();
+        local camera = SandboxCamera:GetCamera();
         camera:setPosition(Vector3(15, 65, 15));
         camera:setOrientation(Quaternion(-90, 0, -180));
     elseif (keycode == OIS.KC_F3) then
@@ -89,7 +89,7 @@ function Sandbox_Initialize()
     GUI_CreateSandboxText(infoText, textSize)
 
     -- Initialize the camera position to focus on the soldier.
-    local camera = Sandbox:GetCamera();
+    local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(15, 65, 15));
     camera:setOrientation(Quaternion(-90, 0, 180));
 
@@ -97,7 +97,7 @@ function Sandbox_Initialize()
     Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create a plane in the physics world
-    local plane = Sandbox:CreatePlane(200, 200);
+    local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 

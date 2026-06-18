@@ -179,7 +179,9 @@ _G.__init__ = function(sec, msec)
 		_G.__gc__()
 	end)
 
-	--FGUI_Init()
+	if _G.HELLO_FGUI_AUTOMATION_MODE and FGUI_Init ~= nil then
+		FGUI_Init()
+	end
 	tryConfigureAiScheduler()
 	tryRunRuntimeDiagnosticSelfTest()
 	tryRunVisualTraceGate()
