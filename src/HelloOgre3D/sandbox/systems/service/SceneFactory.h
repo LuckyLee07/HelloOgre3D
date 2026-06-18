@@ -14,12 +14,16 @@ namespace Ogre {
 class SceneFactory
 {
 public:
+	static void SetRootSceneNode(Ogre::SceneNode* rootSceneNode);
+	static Ogre::SceneNode* GetRootSceneNode();
+	static Ogre::SceneManager* GetSceneManager();
 	static Ogre::SceneNode* CreateChildSceneNode();
 	static Ogre::SceneNode* CreateNodePlane(Ogre::Real length, Ogre::Real width);
 
 	static Ogre::SceneNode* CreateNodeCapsule(Ogre::Real height, Ogre::Real radius);
 
 	static void RemParticleBySceneNode(Ogre::SceneNode* particleNode);
+	static Ogre::SceneNode* CreateParticle(const Ogre::String& particleName);
 	static Ogre::SceneNode* CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName);
 
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);
@@ -31,6 +35,7 @@ public:
 	static bool GetBoneOrientation(Ogre::MovableObject& object, const Ogre::String& boneName, Ogre::Quaternion& outOrientation);
 
 private:
+	static Ogre::SceneNode* s_rootSceneNode;
 	static Ogre::NameGenerator s_nameGenerator;
 };
 

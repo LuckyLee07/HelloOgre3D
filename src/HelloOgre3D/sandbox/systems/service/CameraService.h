@@ -3,22 +3,37 @@
 
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
+#include <functional>
 
 namespace Ogre {
 	class Camera;
 	class SceneManager;
 }
-class ClientManager;
 
-class CameraService
-{
+class CameraService //tolua_exports
+{ //tolua_exports
 public:
-	CameraService(ClientManager* pMananger);
-	~CameraService() { m_clientManger = nullptr; }
+	enum ProfileTimeKind
+	{
+		PROFILE_RENDER_TIME,
+		PROFILE_SIMULATE_TIME,
+		PROFILE_TOTAL_SIMULATE_TIME
+	};
 
-	Ogre::Camera* GetCamera();
+	typedef std::function<long long(ProfileTimeKind)> ProfileTimeGetter;
+
+	CameraService(Ogre::Camera* camera, Ogre::SceneManager* sceneManager, const ProfileTimeGetter& profileTimeGetter);
+	~CameraService()
+	{
+		m_camera = nullptr;
+		m_sceneManager = nullptr;
+		m_profileTimeGetter = nullptr;
+	}
+
 	Ogre::SceneManager* GetSceneManager();
 
+	//tolua_begin
+	Ogre::Camera* GetCamera();
 	Ogre::Vector3 GetCameraUp();
 	Ogre::Vector3 GetCameraLeft();
 	Ogre::Vector3 GetCameraForward();
@@ -29,9 +44,14 @@ public:
 	long long GetRenderTime();
 	long long GetSimulateTime();
 	long long GetTotalSimulateTime();
+	//tolua_end
 
 private:
-	ClientManager* m_clientManger;
-};
+	long long GetProfileTime(ProfileTimeKind kind) const;
+
+	Ogre::Camera* m_camera;
+	Ogre::SceneManager* m_sceneManager;
+	ProfileTimeGetter m_profileTimeGetter;
+}; //tolua_exports
 
 #endif // __CAMERA_SERVICE_H__

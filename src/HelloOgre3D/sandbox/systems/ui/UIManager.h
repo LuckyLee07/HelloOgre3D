@@ -6,6 +6,11 @@
 
 #define UI_LAYER_COUNT	16
 
+namespace Ogre
+{
+	class Camera;
+}
+
 namespace Gorilla
 {
 	class Layer;
@@ -13,12 +18,11 @@ namespace Gorilla
 	class MarkupText;
 }
 class UIFrame;
-class GameManager;
 
-class UIManager
-{
+class UIManager //tolua_exports
+{ //tolua_exports
 public:
-	explicit UIManager(GameManager* gamaMnanager);
+	explicit UIManager(Ogre::Camera* camera);
 	~UIManager();
 
 	void InitConfig();
@@ -26,8 +30,10 @@ public:
 	Ogre::Real GetScreenWidth();
 	Ogre::Real GetScreenHeight();
 
-	UIFrame* CreateUIFrame(unsigned int index);
+	//tolua_begin
+	UIFrame* CreateUIFrame(unsigned int index = 1);
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
+	//tolua_end
 
 	void HandleWindowResized(unsigned int width, unsigned int height);
 
@@ -39,8 +45,8 @@ private:
 	Gorilla::Layer* m_pUILayers[UI_LAYER_COUNT];
 
 private:
-	GameManager* m_pGameManager;
+	Ogre::Camera* m_pCamera;
 	std::vector<UIFrame*> m_uiframes;
-};
+}; //tolua_exports
 
 #endif; // __UI_MANAGER_H__

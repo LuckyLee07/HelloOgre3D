@@ -3,10 +3,7 @@
 #include "OgreManualObject.h"
 #include "ScriptLuaVM.h"
 #include "GameFunction.h"
-#include "GameManager.h"
 #include "objects/BlockObject.h"
-#include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 #include "recast/include/Recast.h"
@@ -15,9 +12,8 @@
 #include "core/object/BaseObject.h"
 #include "ObjectManager.h"
 #include "systems/physics/PhysicsWorld.h"
+#include "systems/service/CameraService.h"
 #include "btBulletDynamicsCommon.h"
-
-SandboxMgr* g_SandboxMgr = nullptr;
 
 namespace
 {
@@ -25,13 +21,11 @@ namespace
 	const float DEFAULT_AGENT_WALKABLE_SLOPE = 45.0f;
 }
 
-SandboxMgr::SandboxMgr(UIService& uiService,
-	CameraService& cameraService,
-	ObjectFactory& objectFactory,
+SandboxMgr::SandboxMgr(CameraService* cameraService,
+	ObjectManager* objectManager,
 	Ogre::SceneManager* sceneManager)
-	: m_uiService(uiService), 
-	m_cameraService(cameraService),
-	m_objectFactory(objectFactory),
+	: m_cameraService(cameraService),
+	m_objectManager(objectManager),
 	m_pRootSceneNode(nullptr)
 {
 	m_pRootSceneNode = sceneManager->getRootSceneNode();
@@ -42,99 +36,19 @@ SandboxMgr::~SandboxMgr()
     m_pRootSceneNode = nullptr;
 }
 
-SandboxMgr* SandboxMgr::GetInstance()
-{
-	return g_SandboxMgr;
-}
-
 Ogre::SceneManager* SandboxMgr::GetSceneCreator()
 {
 	return m_pRootSceneNode->getCreator();
 }
 
-Ogre::Camera* SandboxMgr::GetCamera()
+Ogre::Camera* SandboxMgr::GetSceneGraphCamera()
 {
-	return m_cameraService.GetCamera();
-}
-
-Ogre::Vector3 SandboxMgr::GetCameraUp()
-{
-	return m_cameraService.GetCameraUp();
-}
-
-Ogre::Vector3 SandboxMgr::GetCameraLeft()
-{
-	return m_cameraService.GetCameraLeft();
-}
-
-Ogre::Vector3 SandboxMgr::GetCameraForward()
-{
-	return m_cameraService.GetCameraForward();
-}
-
-Ogre::Vector3 SandboxMgr::GetCameraPosition()
-{
-	return m_cameraService.GetCameraPosition();
-}
-
-Ogre::Vector3 SandboxMgr::GetCameraRotation()
-{
-	return m_cameraService.GetCameraRotation();
-}
-
-Ogre::Quaternion SandboxMgr::GetCameraOrientation()
-{
-	return m_cameraService.GetCameraOrientation();
-}
-
-long long SandboxMgr::GetRenderTime()
-{
-	return m_cameraService.GetRenderTime();
-}
-
-long long SandboxMgr::GetSimulateTime()
-{
-	return m_cameraService.GetSimulateTime();
-}
-
-long long SandboxMgr::GetTotalSimulateTime()
-{
-	return m_cameraService.GetTotalSimulateTime();
+	return m_cameraService != nullptr ? m_cameraService->GetCamera() : nullptr;
 }
 
 void SandboxMgr::CallFile(const Ogre::String& filepath)
 {
     GetScriptLuaVM()->callFile(filepath.c_str());
-}
-
-BlockObject* SandboxMgr::CreatePlane(float length, float width)
-{
-	return m_objectFactory.CreatePlane(length, width);
-}
-
-BlockObject* SandboxMgr::CreateBlockObject(const Ogre::String& meshfilePath)
-{
-	return m_objectFactory.CreateBlockObject(meshfilePath);
-}
-
-BlockObject* SandboxMgr::CreateBlockBox(float width, float height, float length, float uTile, float vTile)
-{
-	return m_objectFactory.CreateBlockBox(width, height, length, uTile, vTile);
-}
-
-BlockObject* SandboxMgr::CreateBullet(Ogre::Real height, Ogre::Real radius)
-{
-	return m_objectFactory.CreateBullet(height, radius);
-}
-
-AgentObject* SandboxMgr::CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath/* = nullptr */)
-{
-	return m_objectFactory.CreateAgent(agentType, filepath);
-}
-
-SoldierObject* SandboxMgr::CreateSoldier(const Ogre::String& meshFile, const char* filepath/* = nullptr */)
-{
-	return m_objectFactory.CreateSoldier(meshFile, filepath);
 }
 
 void SandboxMgr::SetUseCppFsmFlag(bool value)
@@ -210,25 +124,15 @@ void SandboxMgr::setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materia
     }
 }
 
-UIFrame* SandboxMgr::CreateUIFrame(unsigned int index/* = 1 */)
-{
-	return m_uiService.CreateUIFrame(index);
-}
-
-void SandboxMgr::SetMarkupColor(unsigned int index, const Ogre::ColourValue& color)
-{
-    return m_uiService.SetMarkupColor(index, color);
-}
-
 void SandboxMgr::UpdateSceneGraph()
 {
     Ogre::SceneManager* sceneMgr = GetSceneCreator();
-    if (sceneMgr) sceneMgr->_updateSceneGraph(GetCamera());
+    if (sceneMgr) sceneMgr->_updateSceneGraph(GetSceneGraphCamera());
 }
 
 NavigationMesh* SandboxMgr::CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName)
 {
-	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	ObjectManager* objectManager = m_objectManager;
 	if (objectManager == nullptr) return NULL;
 
     const std::vector<BlockObject*> objects = objectManager->getFixedObjects();
@@ -293,7 +197,7 @@ void SandboxMgr::ApplySettingConfig(rcConfig& config, float height, float radius
 
 Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
 {
-	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	ObjectManager* objectManager = m_objectManager;
 	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
 
     NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
@@ -306,7 +210,7 @@ Ogre::Vector3 SandboxMgr::RandomPoint(const Ogre::String& navMeshName) const
 
 Ogre::Vector3 SandboxMgr::FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const
 {
-	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	ObjectManager* objectManager = m_objectManager;
 	if (objectManager == nullptr) return Ogre::Vector3::ZERO;
 
     NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
@@ -319,7 +223,7 @@ Ogre::Vector3 SandboxMgr::FindClosestPoint(const Ogre::String& navMeshName, cons
 
 bool SandboxMgr::FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const
 {
-	ObjectManager* objectManager = m_objectFactory.GetObjectManager();
+	ObjectManager* objectManager = m_objectManager;
 	if (objectManager == nullptr) return false;
 
     NavigationMesh* pNavmesh = objectManager->getNavigationMesh(navMeshName);
@@ -332,7 +236,8 @@ bool SandboxMgr::FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& 
 
 int SandboxMgr::RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vector3& to) const
 {
-	PhysicsWorld* physicsWorld = g_GameManager != nullptr ? g_GameManager->getPhysicsWorld() : nullptr;
+	ObjectManager* objectManager = m_objectManager;
+	PhysicsWorld* physicsWorld = objectManager != nullptr ? objectManager->GetSandboxServices().physics : nullptr;
 	if (physicsWorld == nullptr)
 	{
 		return -1;

@@ -431,7 +431,11 @@ void ClientManager::Initialize()
     }
 
     // Initialize InputManager
-    m_pInputManager = new InputManager();
+    m_pInputManager = new InputManager(
+        m_pRenderWindow,
+        m_pCameraController,
+        [this](bool state) { SetShutdown(state); },
+        [this](bool state) { SetWindowActive(state); });
     m_pInputManager->Initialize();
 
 #if defined(HELLO_ENABLE_FGUI)

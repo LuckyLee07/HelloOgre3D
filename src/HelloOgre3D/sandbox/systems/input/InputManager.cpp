@@ -1,6 +1,5 @@
 #include "InputManager.h"
 #include "OISInputManager.h"
-#include "ClientManager.h"
 #include "OgreRenderWindow.h"
 #include "ogre/OgreCameraController.h"
 
@@ -16,14 +15,17 @@ namespace
 	}
 }
 
-InputManager::InputManager() : m_windowHnd(0),
+InputManager::InputManager(Ogre::RenderWindow* renderWindow, OgreCameraController* cameraController,
+	const WindowStateSetter& shutdownSetter, const WindowStateSetter& windowActiveSetter)
+	: m_windowHnd(0), m_renderWindow(renderWindow), m_cameraController(cameraController),
+	m_shutdownSetter(shutdownSetter), m_windowActiveSetter(windowActiveSetter),
 	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr)
 #if defined(OIS_APPLE_PLATFORM)
 	, m_nativeMouseBridge(nullptr), m_nativeMouseState()
 #endif
 {
-	Ogre::RenderWindow* pRenderWindow = GetClientMgr()->getRenderWindow();
-	pRenderWindow->getCustomAttribute("WINDOW", &m_windowHnd);
+	if (m_renderWindow != nullptr)
+		m_renderWindow->getCustomAttribute("WINDOW", &m_windowHnd);
 }
 
 InputManager::~InputManager()
@@ -67,15 +69,14 @@ void InputManager::Initialize()
 	if (m_pKeyboard != nullptr)
 		m_pKeyboard->setEventCallback(this);
 
-	Ogre::RenderWindow* renderWindow = GetClientMgr()->getRenderWindow();
-	if (renderWindow != nullptr)
+	if (m_renderWindow != nullptr)
 	{
 		unsigned int width = 0;
 		unsigned int height = 0;
 		unsigned int colourDepth = 0;
 		int left = 0;
 		int top = 0;
-		renderWindow->getMetrics(width, height, colourDepth, left, top);
+		m_renderWindow->getMetrics(width, height, colourDepth, left, top);
 		resizeMouseState(width, height);
 	}
 
@@ -143,11 +144,11 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnKeyPressed(event.key, event.text) || consumed;
 
-	if (!consumed && event.key == OIS::KC_ESCAPE)
-		GetClientMgr()->SetShutdown(true);
+	if (!consumed && event.key == OIS::KC_ESCAPE && m_shutdownSetter)
+		m_shutdownSetter(true);
 
-	if (!consumed)
-		GetClientMgr()->getCameraController()->injectKeyDown(event);
+	if (!consumed && m_cameraController != nullptr)
+		m_cameraController->injectKeyDown(event);
 
 	m_KeyMap[event.key] = true;
 	m_KeyDownMap[event.key] = true;
@@ -161,8 +162,8 @@ bool InputManager::keyReleased(const OIS::KeyEvent& event)
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnKeyReleased(event.key, event.text) || consumed;
 
-	if (!consumed)
-		GetClientMgr()->getCameraController()->injectKeyUp(event);
+	if (!consumed && m_cameraController != nullptr)
+		m_cameraController->injectKeyUp(event);
 
 	m_KeyMap[event.key] = false;
 	m_KeyUpMap[event.key] = true;
@@ -176,10 +177,11 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnMouseMoved(event) || consumed;
 
-	if (!consumed && event.state.buttonDown(OIS::MB_Right))
-		GetClientMgr()->getCameraController()->injectMouseMove(event);
+	if (!consumed && event.state.buttonDown(OIS::MB_Right) && m_cameraController != nullptr)
+		m_cameraController->injectMouseMove(event);
 
-	GetClientMgr()->SetWindowActive(true);
+	if (m_windowActiveSetter)
+		m_windowActiveSetter(true);
 
 	return true;
 }
@@ -190,8 +192,8 @@ bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnMousePressed(event, btnId) || consumed;
 
-	if (!consumed)
-		GetClientMgr()->getCameraController()->injectMouseDown(event, btnId);
+	if (!consumed && m_cameraController != nullptr)
+		m_cameraController->injectMouseDown(event, btnId);
 	
 	return true;
 }
@@ -202,8 +204,8 @@ bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonI
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnMouseReleased(event, btnId) || consumed;
 
-	if (!consumed)
-		GetClientMgr()->getCameraController()->injectMouseUp(event, btnId);
+	if (!consumed && m_cameraController != nullptr)
+		m_cameraController->injectMouseUp(event, btnId);
 	
 	return true;
 }

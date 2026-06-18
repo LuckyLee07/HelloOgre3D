@@ -9,12 +9,13 @@ class AgentObject;
 class SoldierObject;
 class ObjectManager;
 
-class ObjectFactory
-{
+class ObjectFactory //tolua_exports
+{ //tolua_exports
 public:
 	ObjectFactory(ObjectManager* pMananger);
 	~ObjectFactory() { m_objectManager = nullptr; }
 
+	//tolua_begin
 	BlockObject* CreatePlane(float length, float width);
 	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
 	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
@@ -22,10 +23,12 @@ public:
 
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
+	//tolua_end
+
 	ObjectManager* GetObjectManager() const { return m_objectManager; }
 
 private:
 	ObjectManager* m_objectManager;
-};
+}; //tolua_exports
 
 #endif // __OBJECT_FACTORY_H__

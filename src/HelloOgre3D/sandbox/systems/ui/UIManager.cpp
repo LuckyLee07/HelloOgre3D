@@ -1,10 +1,10 @@
 #include "UIManager.h"
 #include "UIFrame.h"
 #include "AppConfig.h"
-#include "GameManager.h"
+#include "OgreCamera.h"
 
-UIManager::UIManager(GameManager* gameMnanager)
-	: m_pGameManager(gameMnanager), m_pUIScene(nullptr), m_pMarkupText(nullptr)
+UIManager::UIManager(Ogre::Camera* camera)
+	: m_pUIScene(nullptr), m_pMarkupText(nullptr), m_pCamera(camera)
 {
 	std::fill_n(m_pUILayers, UI_LAYER_COUNT, nullptr);
 }
@@ -28,10 +28,9 @@ UIManager::~UIManager()
 void UIManager::InitConfig()
 {
 	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
-	if (pSilverback == nullptr)
+	if (pSilverback == nullptr || m_pCamera == nullptr)
 		return;
-	Ogre::Camera* pCamera = m_pGameManager->getCamera();
-	m_pUIScene = pSilverback->createScreen(pCamera->getViewport(), DEFAULT_ATLAS);
+	m_pUIScene = pSilverback->createScreen(m_pCamera->getViewport(), DEFAULT_ATLAS);
 	if (m_pUIScene == nullptr)
 		return;
 
@@ -97,7 +96,7 @@ void UIManager::SetMarkupColor(unsigned int index, const Ogre::ColourValue& colo
 	if (m_pUIScene == nullptr)
 		return;
 
-	for (size_t layerIndex = 0; layerIndex < UI_LAYER_COUNT; layerIndex++)
+	for (unsigned int layerIndex = 0; layerIndex < UI_LAYER_COUNT; layerIndex++)
 	{
 		Gorilla::Layer* layer = GetUILayer(layerIndex);
 		if (layer != nullptr)

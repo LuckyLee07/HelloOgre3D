@@ -1,15 +1,32 @@
 #include "SceneFactory.h"
 #include "Ogre.h"
 #include "Procedural.h"
-#include "GameManager.h"
 #include "AppConfig.h"
 
+#include <cassert>
+
+Ogre::SceneNode* SceneFactory::s_rootSceneNode = nullptr;
 Ogre::NameGenerator SceneFactory::s_nameGenerator("UnnamedParticle_");
+
+void SceneFactory::SetRootSceneNode(Ogre::SceneNode* rootSceneNode)
+{
+	s_rootSceneNode = rootSceneNode;
+}
+
+Ogre::SceneNode* SceneFactory::GetRootSceneNode()
+{
+	return s_rootSceneNode;
+}
+
+Ogre::SceneManager* SceneFactory::GetSceneManager()
+{
+	return s_rootSceneNode != nullptr ? s_rootSceneNode->getCreator() : nullptr;
+}
 
 Ogre::SceneNode* SceneFactory::CreateChildSceneNode()
 {
-	Ogre::SceneNode* pRootSceneNode = GetGameManager()->getRootSceneNode();
-	return pRootSceneNode->createChildSceneNode();
+	assert(s_rootSceneNode != nullptr);
+	return s_rootSceneNode != nullptr ? s_rootSceneNode->createChildSceneNode() : nullptr;
 }
 
 Ogre::SceneNode* SceneFactory::CreateNodePlane(Ogre::Real length, Ogre::Real width)
@@ -62,8 +79,20 @@ Ogre::SceneNode* SceneFactory::CreateNodeCapsule(Ogre::Real height, Ogre::Real r
 	return capsule;
 }
 
+Ogre::SceneNode* SceneFactory::CreateParticle(const Ogre::String& particleName)
+{
+	assert(s_rootSceneNode != nullptr);
+	return CreateParticle(s_rootSceneNode, particleName);
+}
+
 Ogre::SceneNode* SceneFactory::CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName)
 {
+	assert(parentNode != nullptr);
+	if (parentNode == nullptr)
+	{
+		return nullptr;
+	}
+
 	Ogre::SceneNode* particle = parentNode->createChildSceneNode();
 
 	const Ogre::String& particleId = s_nameGenerator.generate();

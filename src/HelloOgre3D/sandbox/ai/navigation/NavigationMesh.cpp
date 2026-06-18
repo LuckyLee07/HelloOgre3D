@@ -6,7 +6,7 @@
 #include "detour/include/DetourNavMeshQuery.h"
 #include "objects/BlockObject.h"
 #include "NavBuilder.h"
-#include "ClientManager.h"
+#include "systems/service/SceneFactory.h"
 #include "Ogre.h"
 #include <cmath>
 #include <cstdint>
@@ -17,58 +17,6 @@
 
 namespace
 {
-	// TODO：先使用固定 width/height = 2001/2001 后续再优化成真实重算边界
-	static bool SetBoundsFromObjects(rcConfig& cfg, const std::vector<BlockObject*>& objects)
-	{
-		bool hasBounds = false;
-		Ogre::Vector3 minv(1e9f, 1e9f, 1e9f);
-		Ogre::Vector3 maxv(-1e9f, -1e9f, -1e9f);
-
-		for (size_t i = 0; i < objects.size(); ++i)
-		{
-			BlockObject* obj = objects[i];
-			if (!obj)
-				continue;
-
-			Ogre::SceneNode* node = obj->GetSceneNode();
-			if (!node)
-				continue;
-
-			const Ogre::AxisAlignedBox aabb = node->_getWorldAABB();
-			if (aabb.isNull() || !aabb.isFinite())
-				continue;
-
-			if (!hasBounds)
-			{
-				minv = aabb.getMinimum();
-				maxv = aabb.getMaximum();
-				hasBounds = true;
-			}
-			else
-			{
-				minv.makeFloor(aabb.getMinimum());
-				maxv.makeCeil(aabb.getMaximum());
-			}
-		}
-
-		if (!hasBounds)
-			return false;
-
-		const Ogre::Vector3 padding(cfg.cs * 2.0f, cfg.ch * 2.0f, cfg.cs * 2.0f);
-		minv -= padding;
-		maxv += padding;
-
-		cfg.bmin[0] = minv.x;
-		cfg.bmin[1] = minv.y;
-		cfg.bmin[2] = minv.z;
-		cfg.bmax[0] = maxv.x;
-		cfg.bmax[1] = maxv.y;
-		cfg.bmax[2] = maxv.z;
-
-		rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
-		return (cfg.width > 0 && cfg.height > 0);
-	}
-
 	static bool FindNearestPoly(const dtNavMeshQuery& query,
 		const Ogre::Vector3& point,
 		dtPolyRef& outPoly,
@@ -419,11 +367,7 @@ bool NavigationMesh::RebuildDebugVisual()
 	if (!m_navMesh)
 		return false;
 
-	ClientManager* clientMgr = GetClientMgr();
-	if (!clientMgr)
-		return false;
-
-	Ogre::SceneManager* sceneMgr = clientMgr->getSceneManager();
+	Ogre::SceneManager* sceneMgr = SceneFactory::GetSceneManager();
 	if (!sceneMgr)
 		return false;
 

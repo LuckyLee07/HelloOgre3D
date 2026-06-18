@@ -19,8 +19,11 @@
 #include "systems/ui/UIManager.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
+#include "systems/service/ObjectFactory.h"
+#include "systems/service/CameraService.h"
 #include "debug/DebugDrawer.h"
 #include "systems/physics/PhysicsWorld.h"
+#include "systems/service/SceneFactory.h"
 #include "core/SandboxMacros.h"
 #include "core/SandboxServices.h"
 #include "profiling/Profile.h"
@@ -54,8 +57,8 @@ FairyGuiSystem* ResolveFairyGuiSystem(ClientManager* clientManager)
 }
 
 GameManager::GameManager(ClientManager* pClientMgr)
-	: m_pClientManager(pClientMgr), m_SimulationTime(0), m_pScriptVM(nullptr),
-	m_pPhysicsWorld(nullptr), m_pSandboxMgr(nullptr), m_pObjectManager(nullptr), m_pUIManager(nullptr),
+	: m_pClientManager(pClientMgr), m_pScriptVM(nullptr), m_pSandboxMgr(nullptr), m_pPhysicsWorld(nullptr),
+	m_pCameraService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
 	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr)))
 {
 	
@@ -63,14 +66,16 @@ GameManager::GameManager(ClientManager* pClientMgr)
 
 GameManager::~GameManager()
 {
+	SceneFactory::SetRootSceneNode(nullptr);
+
 	SAFE_DELETE(m_pSandboxMgr);
+	SAFE_DELETE(m_pObjectFactory);
 	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pPhysicsWorld);
 	SAFE_DELETE(m_pUIManager);
+	SAFE_DELETE(m_pCameraService);
 	SAFE_DELETE(m_pFairyGuiLuaApi);
 
-	g_SandboxMgr = nullptr;
-	g_ObjectManager = nullptr;
 	m_pClientManager = nullptr;
 }
 
@@ -79,578 +84,50 @@ GameManager* GameManager::GetInstance()
 	return g_GameManager;
 }
 
-bool GameManager::isFairyGuiAvailable()
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->IsAvailable();
-}
-
-const char* GameManager::loadFairyGuiPackage(const char* packagePath)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->LoadPackage(packagePath) : "";
-}
-
-bool GameManager::removeFairyGuiPackage(const char* packageName)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RemovePackage(packageName);
-}
-
-int GameManager::createFairyGuiObject(const char* packageName, const char* objectName)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateObject(packageName, objectName) : 0;
-}
-
-int GameManager::createFairyGuiContainer(const char* name)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateContainer(name) : 0;
-}
-
-int GameManager::createFairyGuiChildContainer(int ownerHandle, const char* name)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateChildContainer(ownerHandle, name) : 0;
-}
-
-int GameManager::createFairyGuiLoader(int ownerHandle, const char* name, const char* url)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateLoader(ownerHandle, name, url) : 0;
-}
-
-int GameManager::createFairyGuiText(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateText(ownerHandle, name, text, fontSize, red, green, blue) : 0;
-}
-
-int GameManager::createFairyGuiTextInput(int ownerHandle, const char* name, const char* text, Ogre::Real fontSize, Ogre::Real red, Ogre::Real green, Ogre::Real blue)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateTextInput(ownerHandle, name, text, fontSize, red, green, blue) : 0;
-}
-
-int GameManager::createFairyGuiGraphRect(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateGraphRect(ownerHandle, name, width, height, red, green, blue, alpha) : 0;
-}
-
-int GameManager::createFairyGuiGraphRegularPolygon(int ownerHandle, const char* name, Ogre::Real width, Ogre::Real height, int sides, Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateGraphRegularPolygon(ownerHandle, name, width, height, sides, red, green, blue, alpha) : 0;
-}
-
-int GameManager::createFairyGuiModalMask(Ogre::Real red, Ogre::Real green, Ogre::Real blue, Ogre::Real alpha)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->CreateModalMask(red, green, blue, alpha) : 0;
-}
-
-int GameManager::getFairyGuiLastRenderCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastRenderCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiScreenWidth()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetScreenWidth() : 0;
-}
-
-int GameManager::getFairyGuiScreenHeight()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetScreenHeight() : 0;
-}
-
-int GameManager::getFairyGuiRuntimeObjectHandleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetRuntimeObjectHandleCount() : 0;
-}
-
-int GameManager::getFairyGuiRuntimeListenerBindingCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetRuntimeListenerBindingCount() : 0;
-}
-
-int GameManager::getFairyGuiMaterialCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetMaterialCount() : 0;
-}
-
-int GameManager::getFairyGuiTextureCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetTextureCount() : 0;
-}
-
-int GameManager::getFairyGuiMaterialAliasCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetMaterialAliasCount() : 0;
-}
-
-int GameManager::getFairyGuiTextureAliasCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetTextureAliasCount() : 0;
-}
-
-int GameManager::getFairyGuiLastDrawCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastDrawCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastDrawTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastDrawTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiLastMaterialSwitchCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastMaterialSwitchCount() : 0;
-}
-
-int GameManager::getFairyGuiLastTextureSwitchCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastTextureSwitchCount() : 0;
-}
-
-int GameManager::getFairyGuiLastClippedCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastClippedCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastClippedTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastClippedTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiLastCulledCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastCulledCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastStencilCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastStencilCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastStencilTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastStencilTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiLastCpuClipSourceTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastCpuClipSourceTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiLastCpuClipOutputTriangleCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastCpuClipOutputTriangleCount() : 0;
-}
-
-int GameManager::getFairyGuiLastCpuClipFragmentCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastCpuClipFragmentCount() : 0;
-}
-
-int GameManager::getFairyGuiLastStencilClipScopeCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastStencilClipScopeCount() : 0;
-}
-
-int GameManager::getFairyGuiLastStencilClipPolygonCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastStencilClipPolygonCount() : 0;
-}
-
-int GameManager::getFairyGuiLastCustomCommandCount()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastCustomCommandCount() : 0;
-}
-
-int GameManager::getFairyGuiLastMaxBatchTriangles()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastMaxBatchTriangles() : 0;
-}
-
-int GameManager::getFairyGuiLastMaxBatchVertices()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetLastMaxBatchVertices() : 0;
-}
-
-bool GameManager::isFairyGuiHardwareStencilSupported()
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->IsHardwareStencilSupported();
-}
-
-const char* GameManager::getFairyGuiStencilBackendString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetStencilBackendString() : "";
-}
-
-const char* GameManager::getFairyGuiStencilBackendDetailString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetStencilBackendDetailString() : "";
-}
-
-const char* GameManager::getFairyGuiMaterialDetailString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetMaterialDetailString() : "";
-}
-
-const char* GameManager::getFairyGuiTextureDetailString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetTextureDetailString() : "";
-}
-
-const char* GameManager::getFairyGuiFrameRenderDetailString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetFrameRenderDetailString() : "";
-}
-
-bool GameManager::plotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->PlotServiceStats(serviceOpenTotal, serviceKindCount, toastQueueCount, loadingRefTotal, serviceCreatedTotal, serviceClosedTotal, serviceFailedTotal, servicePeakOpen);
-}
-
-int GameManager::getFairyGuiChild(int objectHandle, const char* childPath)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetChild(objectHandle, childPath) : 0;
-}
-
-int GameManager::getFairyGuiListItem(int objectHandle, int itemIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListItem(objectHandle, itemIndex) : 0;
-}
-
-int GameManager::getFairyGuiListItemCount(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListItemCount(objectHandle) : 0;
-}
-
-bool GameManager::addFairyGuiObjectToRoot(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->AddObjectToRoot(objectHandle);
-}
-
-bool GameManager::addFairyGuiObjectToParent(int objectHandle, int parentHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->AddObjectToParent(objectHandle, parentHandle);
-}
-
-bool GameManager::setFairyGuiObjectPosition(int objectHandle, Ogre::Real x, Ogre::Real y)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectPosition(objectHandle, x, y);
-}
-
-bool GameManager::setFairyGuiObjectSize(int objectHandle, Ogre::Real width, Ogre::Real height)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectSize(objectHandle, width, height);
-}
-
-bool GameManager::setFairyGuiObjectVisible(int objectHandle, bool visible)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectVisible(objectHandle, visible);
-}
-
-bool GameManager::setFairyGuiObjectAlpha(int objectHandle, Ogre::Real alpha)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectAlpha(objectHandle, alpha);
-}
-
-bool GameManager::setFairyGuiObjectTouchable(int objectHandle, bool touchable)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectTouchable(objectHandle, touchable);
-}
-
-bool GameManager::setFairyGuiObjectMask(int objectHandle, int maskHandle, bool inverted)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMask(objectHandle, maskHandle, inverted);
-}
-
-bool GameManager::setFairyGuiObjectSortingOrder(int objectHandle, int sortingOrder)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectSortingOrder(objectHandle, sortingOrder);
-}
-
-bool GameManager::setFairyGuiObjectText(int objectHandle, const char* text)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectText(objectHandle, text);
-}
-
-const char* GameManager::getFairyGuiObjectText(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectText(objectHandle) : "";
-}
-
-bool GameManager::setFairyGuiObjectIcon(int objectHandle, const char* icon)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectIcon(objectHandle, icon);
-}
-
-bool GameManager::setFairyGuiObjectLoaderUrl(int objectHandle, const char* url)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectLoaderUrl(objectHandle, url);
-}
-
-bool GameManager::setFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName, int selectedIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectControllerIndex(objectHandle, controllerName, selectedIndex);
-}
-
-int GameManager::getFairyGuiObjectControllerIndex(int objectHandle, const char* controllerName)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerIndex(objectHandle, controllerName) : -1;
-}
-
-bool GameManager::setFairyGuiObjectControllerPage(int objectHandle, const char* controllerName, const char* pageName)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectControllerPage(objectHandle, controllerName, pageName);
-}
-
-const char* GameManager::getFairyGuiObjectControllerPage(int objectHandle, const char* controllerName)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPage(objectHandle, controllerName) : "";
-}
-
-const char* GameManager::getFairyGuiObjectControllerPageId(int objectHandle, const char* controllerName)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageId(objectHandle, controllerName) : "";
-}
-
-int GameManager::getFairyGuiObjectControllerPageCount(int objectHandle, const char* controllerName)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageCount(objectHandle, controllerName) : 0;
-}
-
-const char* GameManager::getFairyGuiObjectControllerPageNameAt(int objectHandle, const char* controllerName, int pageIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageNameAt(objectHandle, controllerName, pageIndex) : "";
-}
-
-const char* GameManager::getFairyGuiObjectControllerPageIdAt(int objectHandle, const char* controllerName, int pageIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectControllerPageIdAt(objectHandle, controllerName, pageIndex) : "";
-}
-
-bool GameManager::setFairyGuiObjectValue(int objectHandle, Ogre::Real value)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectValue(objectHandle, value);
-}
-
-Ogre::Real GameManager::getFairyGuiObjectValue(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectValue(objectHandle) : 0;
-}
-
-bool GameManager::setFairyGuiObjectMin(int objectHandle, Ogre::Real minValue)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMin(objectHandle, minValue);
-}
-
-Ogre::Real GameManager::getFairyGuiObjectMin(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectMin(objectHandle) : 0;
-}
-
-bool GameManager::setFairyGuiObjectMax(int objectHandle, Ogre::Real maxValue)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetObjectMax(objectHandle, maxValue);
-}
-
-Ogre::Real GameManager::getFairyGuiObjectMax(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetObjectMax(objectHandle) : 0;
-}
-
-bool GameManager::setFairyGuiComboBoxSelectedIndex(int objectHandle, int selectedIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetComboBoxSelectedIndex(objectHandle, selectedIndex);
-}
-
-int GameManager::getFairyGuiComboBoxSelectedIndex(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetComboBoxSelectedIndex(objectHandle) : -1;
-}
-
-bool GameManager::setFairyGuiComboBoxValue(int objectHandle, const char* value)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetComboBoxValue(objectHandle, value);
-}
-
-const char* GameManager::getFairyGuiComboBoxValue(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetComboBoxValue(objectHandle) : "";
-}
-
-bool GameManager::playFairyGuiTransition(int objectHandle, const char* transitionName, int times, Ogre::Real delay, int callbackId)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->PlayTransition(objectHandle, transitionName, times, delay, callbackId);
-}
-
-bool GameManager::stopFairyGuiTransition(int objectHandle, const char* transitionName, bool setToComplete, bool processCallback)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->StopTransition(objectHandle, transitionName, setToComplete, processCallback);
-}
-
-bool GameManager::focusFairyGuiObject(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->FocusObject(objectHandle);
-}
-
-bool GameManager::clearFairyGuiFocus()
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ClearFocus();
-}
-
-int GameManager::getFairyGuiFocusedObject()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetFocusedObject() : 0;
-}
-
-bool GameManager::setFairyGuiListItemCount(int objectHandle, int itemCount)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListItemCount(objectHandle, itemCount);
-}
-
-bool GameManager::setFairyGuiListSelectedIndex(int objectHandle, int selectedIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListSelectedIndex(objectHandle, selectedIndex);
-}
-
-int GameManager::getFairyGuiListSelectedIndex(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetListSelectedIndex(objectHandle) : -1;
-}
-
-bool GameManager::setFairyGuiListVirtual(int objectHandle, bool loop)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->SetListVirtual(objectHandle, loop);
-}
-
-bool GameManager::refreshFairyGuiList(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RefreshList(objectHandle);
-}
-
-bool GameManager::scrollFairyGuiListToView(int objectHandle, int itemIndex)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ScrollListToView(objectHandle, itemIndex);
-}
-
-bool GameManager::centerFairyGuiObject(int objectHandle, bool restraint)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->CenterObject(objectHandle, restraint);
-}
-
-bool GameManager::injectFairyGuiMouseMove(int x, int y)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseMove(x, y);
-}
-
-bool GameManager::injectFairyGuiMouseDown(int x, int y, int button)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseDown(x, y, button);
-}
-
-bool GameManager::injectFairyGuiMouseUp(int x, int y, int button)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseUp(x, y, button);
-}
-
-bool GameManager::injectFairyGuiMouseWheel(int x, int y, int wheelDelta)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalMouseWheel(x, y, wheelDelta);
-}
-
-bool GameManager::injectFairyGuiClick(int x, int y, int button)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectLogicalClick(x, y, button);
-}
-
-bool GameManager::injectFairyGuiKeyPressed(int keyCode, int keyText)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyPressed(keyCode, keyText);
-}
-
-bool GameManager::injectFairyGuiKeyReleased(int keyCode, int keyText)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectKeyReleased(keyCode, keyText);
-}
-
-bool GameManager::injectFairyGuiImeCompositionText(const char* text)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectImeCompositionText(text);
-}
-
-bool GameManager::injectFairyGuiImeCommitText(const char* text)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->InjectImeCommitText(text);
-}
-
-bool GameManager::clearFairyGuiImeComposition()
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->ClearImeComposition();
-}
-
-const char* GameManager::getFairyGuiImeDebugString()
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->GetImeDebugString() : "";
-}
-
-int GameManager::addFairyGuiEventListener(int objectHandle, const char* childPath, int eventType, int callbackId)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddEventListener(objectHandle, childPath, eventType, callbackId) : 0;
-}
-
-int GameManager::addFairyGuiClickListener(int objectHandle, const char* childPath, int callbackId)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddClickListener(objectHandle, childPath, callbackId) : 0;
-}
-
-int GameManager::addFairyGuiControllerChangedListener(int objectHandle, const char* controllerName, int callbackId)
-{
-	return m_pFairyGuiLuaApi != nullptr ? m_pFairyGuiLuaApi->AddControllerChangedListener(objectHandle, controllerName, callbackId) : 0;
-}
-
-bool GameManager::removeFairyGuiListener(int bindingId)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RemoveListener(bindingId);
-}
-
-bool GameManager::removeFairyGuiObject(int objectHandle)
-{
-	return m_pFairyGuiLuaApi != nullptr && m_pFairyGuiLuaApi->RemoveObject(objectHandle);
-}
-
-void GameManager::clearFairyGuiObjects()
-{
-	if (m_pFairyGuiLuaApi != nullptr)
-		m_pFairyGuiLuaApi->ClearObjects();
-}
-
 void GameManager::Initialize()
 {
 	m_pScriptVM = GetScriptLuaVM();
 
-	m_pUIManager = new UIManager(this);
+	Ogre::Camera* uiCamera = m_pClientManager != nullptr ? m_pClientManager->getCamera() : nullptr;
+	m_pUIManager = new UIManager(uiCamera);
 	m_pUIManager->InitConfig();
 
 	m_pPhysicsWorld = new PhysicsWorld();
 	m_pPhysicsWorld->initilize();
 
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
-	g_ObjectManager = m_pObjectManager;
+	m_pObjectFactory = new ObjectFactory(m_pObjectManager);
 
-	UIService uiservice(m_pUIManager);
-	ObjectFactory objfactory(m_pObjectManager);
-	CameraService camservice(m_pClientManager);
-
-	Ogre::SceneManager* pSceneManager = m_pClientManager->getSceneManager();
-	m_pSandboxMgr = new SandboxMgr(uiservice, camservice, objfactory, pSceneManager);
-	g_SandboxMgr = m_pSandboxMgr;
+	Ogre::SceneManager* pSceneManager = m_pClientManager != nullptr ? m_pClientManager->getSceneManager() : nullptr;
+	m_pCameraService = new CameraService(
+		m_pClientManager != nullptr ? m_pClientManager->getCamera() : nullptr,
+		pSceneManager,
+		[this](CameraService::ProfileTimeKind kind) -> long long
+		{
+			if (m_pClientManager == nullptr)
+				return 0;
+			switch (kind)
+			{
+			case CameraService::PROFILE_RENDER_TIME:
+				return m_pClientManager->GetProfileTime(ClientManager::P_RENDER_TIME);
+			case CameraService::PROFILE_SIMULATE_TIME:
+				return m_pClientManager->GetProfileTime(ClientManager::P_SIMULATE_TIME);
+			case CameraService::PROFILE_TOTAL_SIMULATE_TIME:
+				return m_pClientManager->GetProfileTime(ClientManager::P_TOTAL_SIMULATE_TIME);
+			default:
+				return 0;
+		}
+	});
+	SceneFactory::SetRootSceneNode(pSceneManager != nullptr ? pSceneManager->getRootSceneNode() : nullptr);
+	m_pSandboxMgr = new SandboxMgr(m_pCameraService, m_pObjectManager, pSceneManager);
 
 	SandboxServices services;
 	services.objects = m_pObjectManager;
 	services.physics = m_pPhysicsWorld;
+	services.input = m_pClientManager != nullptr ? m_pClientManager->getInputManager() : nullptr;
 	services.sandbox = m_pSandboxMgr;
 	services.script = m_pScriptVM;
+	services.objectFactory = m_pObjectFactory;
 	m_pObjectManager->SetSandboxServices(services);
 
 	this->InitLuaEnv();
@@ -666,6 +143,9 @@ void GameManager::InitLuaEnv()
 
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
+	m_pScriptVM->setUserTypePointer("SandboxCamera", "CameraService", m_pCameraService);
+	m_pScriptVM->setUserTypePointer("SandboxUI", "UIManager", m_pUIManager);
+	m_pScriptVM->setUserTypePointer("SandboxObjects", "ObjectFactory", m_pObjectFactory);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
 	m_pScriptVM->setUserTypePointer("FairyGuiRuntime", "FairyGuiLuaApi", m_pFairyGuiLuaApi);
 	m_pScriptVM->setUserTypePointer("ObjectManager", "ObjectManager", m_pObjectManager);
@@ -702,6 +182,7 @@ void GameManager::Update(int deltaMilliseconds)
 		H3D_PROFILE_SCOPE("ObjectManager::Update");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+		m_pObjectManager->SetCurrentTimeMs(m_SimulationTime);
 		m_pObjectManager->Update(deltaMilliseconds);
 		if (perfEnabled)
 			perfTiming.objectManagerMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);

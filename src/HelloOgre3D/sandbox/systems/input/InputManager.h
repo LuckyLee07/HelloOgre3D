@@ -1,6 +1,7 @@
 #ifndef __INPUT_MANAGER_H__  
 #define __INPUT_MANAGER_H__
 
+#include <functional>
 #include <map>
 #include "systems/input/IInputHandler.h"
 
@@ -9,10 +10,20 @@ namespace OIS
 	class InputManager;
 }
 
+namespace Ogre
+{
+	class RenderWindow;
+}
+
+class OgreCameraController;
+
 class InputManager : public OIS::KeyListener, public OIS::MouseListener
 {
 public:
-	InputManager();
+	typedef std::function<void(bool)> WindowStateSetter;
+
+	InputManager(Ogre::RenderWindow* renderWindow, OgreCameraController* cameraController,
+		const WindowStateSetter& shutdownSetter, const WindowStateSetter& windowActiveSetter);
 	~InputManager();
 	
 	void Initialize();
@@ -53,6 +64,10 @@ private:
 #endif
 
 	size_t m_windowHnd;
+	Ogre::RenderWindow* m_renderWindow;
+	OgreCameraController* m_cameraController;
+	WindowStateSetter m_shutdownSetter;
+	WindowStateSetter m_windowActiveSetter;
 
 	// OIS Input devices
 	OIS::Mouse* m_pMouse;

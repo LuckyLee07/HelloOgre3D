@@ -2,7 +2,6 @@
 
 #if defined(OIS_APPLE_PLATFORM)
 
-#include "ClientManager.h"
 #include "OgreRenderWindow.h"
 
 #import <AppKit/AppKit.h>
@@ -226,12 +225,11 @@ void InputManager::InstallNativeMouseBridge()
 	if (m_nativeMouseBridge != nullptr)
 		return;
 
-	Ogre::RenderWindow* renderWindow = GetClientMgr()->getRenderWindow();
-	if (renderWindow == nullptr)
+	if (m_renderWindow == nullptr)
 		return;
 
 	void* viewPtr = nullptr;
-	renderWindow->getCustomAttribute("VIEW", &viewPtr);
+	m_renderWindow->getCustomAttribute("VIEW", &viewPtr);
 	NSView* view = static_cast<NSView*>(viewPtr);
 	if (view == nil)
 		return;
