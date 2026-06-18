@@ -362,6 +362,19 @@ try {
 			$Failures | Select-Object -First 12 | ForEach-Object { Write-Host $_.Line }
 			throw "FGUI selftest log contains failure patterns."
 		}
+		if ($Mode -eq "All") {
+			$suitePattern = "\[FGUI\] self test suite end:\s*(\d+)\s*/\s*(\d+)"
+			$suiteMatches = @($NewLogLines | Select-String -Pattern $suitePattern)
+			if ($suiteMatches.Count -eq 0) {
+				throw "FGUI All selftest did not report a suite result."
+			}
+			$suiteResult = [regex]::Match($suiteMatches[-1].Line, $suitePattern)
+			$passCount = [int]$suiteResult.Groups[1].Value
+			$totalCount = [int]$suiteResult.Groups[2].Value
+			if ($totalCount -le 0 -or $passCount -ne $totalCount) {
+				throw "FGUI All selftest failed: $passCount / $totalCount passed."
+			}
+		}
 	}
 } finally {
 	foreach ($name in $KnownEnvNames) {

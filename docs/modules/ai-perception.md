@@ -15,7 +15,7 @@
 | 文件 | 角色 | 说明 |
 |---|---|---|
 | `AgentPerceptionSystem.{h,cpp}` | 系统 | 每帧批量驱动各 agent `AIController::TickPerception`，输出 scans/visible/spatial 统计 |
-| `AgentSpatialIndexSystem.{h,cpp}` | 系统 | uniform grid 邻域查询，team/alive/includeSelf/maxResults 过滤 + 命中/拒绝统计 |
+| `AgentSpatialIndexSystem.{h,cpp}` | 系统 | uniform grid 邻域查询，team/alive/includeSelf/maxResults 过滤 + 命中/拒绝统计；maxResults 保留近邻候选而非首批命中 |
 | `AgentSpatialQuery.h` | 接口 | `IAgentSpatialQuery::QueryAgentsInRange`；默认实现仍 `getAllAgents()` 线性（下沉一层，未做分区淘汰） |
 | `VisionSensor.h` | 传感器 | 单 agent 定时扫描，`scanIntervalMs`/`initialDelayMs`/lastResult |
 | `MemoryStore.h` | 记忆 | 敌人 TTL 衰减 + `kMemorySnapshot*` blackboard key 兼容 |
@@ -26,11 +26,12 @@
 
 - 批量感知调度（每帧全量，scheduler 可降频）；spatial grid 范围查询带过滤与统计。
 - VisionSensor 已支持 `scanIntervalMs` 门控（ai_perf pressure 故意设 1 压测）。
-- `PerceptionResultCache`（4a 落地）：感知结果单一事实来源；`AIController::HasEnemy` 已改读它（4b，等价）。
+- AIController 会从 blackboard 读取 `perception.maxSpatialResults`，并透传到 spatial query；`ai_perception_pressure` / `ai_perf_*` 默认限制为 16 个近邻候选，用于避免 500/1000 agent pressure 下继续把所有过滤后候选交给每个 agent 二次筛选。
+- `PerceptionResultCache`（4a 落地）：感知结果单一事实来源；`AIController::HasEnemy` 已改读它（4b，等价），`CanShootEnemy` 成功路径会同步 cache 但保留短距离/无寻路重查语义。
 
 ## 5. 约束与红线
 
-- 空间查询线性扫描只是下沉到 `ObjectManagerAgentSpatialQuery` 一层，**尚未空间分区淘汰**。
+- 空间查询线性扫描只是下沉到 `ObjectManagerAgentSpatialQuery` 一层；maxResults 现在会保留近邻候选，但仍不是完整 AOI / visibility set 淘汰。
 - `PerceptionResultCache` 须在 `TickPerception` 内填充（driver 之前），勿被 Lua 旁路重扫。
 - MemoryStore 必须保持 `kMemorySnapshot*` key 兼容（BT/Lua 在读）。
 - hearing / danger 的 C++ sense 入口**未做**（仍 Lua）。
@@ -47,5 +48,5 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 待：PerceptionResultCache 全量集成（HasEnemy 已读，余路径待迁）、hearing/danger C++ sense、空间分区。
+- 待：hearing/danger C++ sense、空间查询上限调参 / Release + scheduler 对照，以及更完整的 AOI / visibility set 淘汰。
 - `docs/planning/ai-technical-iteration-plan.md` §3/§4、`docs/perf/ai-perf-release-baseline-20260612.md`、`docs/design/architecture-improvement-plan.md` P7（已解决-感知抽象）。

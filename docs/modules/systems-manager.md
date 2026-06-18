@@ -4,7 +4,7 @@
 
 ## 1. 职责
 
-ObjectManager（对象注册/更新/AI 调度/导航/战术 facade）与 SandboxMgr（场景/相机/UI 门面）。
+ObjectManager（对象生命周期/update/AI 调度/导航/战术 facade）、ObjectRegistry（对象注册表与 Agent/Block 二级索引）与 SandboxMgr（场景/nav 门面）。
 
 ## 2. 源码位置
 
@@ -14,8 +14,9 @@ ObjectManager（对象注册/更新/AI 调度/导航/战术 facade）与 Sandbox
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `ObjectManager.{h,cpp}` | 枢纽 | registry + Update 循环 + AIScheduler/Perception/Team/Tactical facade + navmesh + 战术调试绘制；持 SandboxServices owner |
-| `SandboxMgr.{h,cpp}` | 门面 | 相机/光照/场景/CreateAgent/CallFile；部分纯转发 ObjectFactory/service |
+| `ObjectManager.{h,cpp}` | 枢纽 | 生命周期 + Update 阶段编排 + AIScheduler/Perception/Team/Tactical facade + navmesh + 战术调试绘制；对象生命周期/update loop 已收口到 `UpdateManagedObjects`，延迟 scene node 清理已收口到 `CleanupRemovedSceneNodes`；持 SandboxServices owner；场景访问走 SceneFactory，当前时间由 GameManager 每帧写入 |
+| `ObjectRegistry.h` | registry | 对象 id 分配、object map、Agent/Block 二级索引、对象查找；non-owning，不负责删除对象 |
+| `SandboxMgr.{h,cpp}` | 门面 | 光照/场景/CallFile/nav/raycast；对象创建已移到 `SandboxObjects`/`ObjectFactory`，Gorilla UI frame/color 已移到 `SandboxUI`/`UIManager`，相机/profile 查询已移到 `SandboxCamera`/`CameraService`；RayCastObjectId 通过 SandboxServices.physics 取物理世界 |
 
 ## 4. 公开能力要点
 
@@ -23,9 +24,10 @@ ObjectManager（对象注册/更新/AI 调度/导航/战术 facade）与 Sandbox
 
 ## 5. 约束与红线
 
-- **C3**：ObjectManager 职责过载（registry+update+调度+输入+navmesh+战术绘制揉一起），待拆薄服务。
+- **C3**：ObjectRegistry 已拆出 registry/id/Agent/Block 二级索引；`ObjectManager::Update` 已拆出对象 update loop 和 scene node cleanup 两个 stage helper；ObjectManager 仍承担生命周期编排、AI调度、感知、navmesh/tactical debug draw，待继续拆薄服务。
 - 战术调试绘制（`rebuildTacticalInfluenceLayerDebugVisual`/`configureTacticalInfluenceFromNavMesh`）逻辑待下沉 [[ai-tactics]] service。
-- **C2**：SandboxMgr 部分"门面转发门面"。
+- **C2**：SandboxMgr 对象创建转发已下沉到 `SandboxObjects`/`ObjectFactory`，Gorilla UI frame/color 转发已下沉到 `SandboxUI`/`UIManager`，相机/profile 查询已下沉到 `SandboxCamera`/`CameraService`；剩余场景/nav 门面边界继续收口；raycast 已不再通过 `g_GameManager` 获取 PhysicsWorld。
+- ObjectManager 不应 include `GameManager.h` / `ClientManager.h`；需要场景访问走 SceneFactory，需要当前时间走 `SetCurrentTimeMs`。
 - 改导出给 Lua 的方法走**手术式** tolua（[[scripting-tolua]]），勿全量重生成。
 
 ## 6. 数据流 / 与其他模块关系
@@ -38,4 +40,4 @@ ObjectManager（对象注册/更新/AI 调度/导航/战术 facade）与 Sandbox
 
 ## 8. 已知 gap / 相关文档
 
-- 待：C3 拆服务（ObjectRegistry/UpdateSystem/TacticalDebugDraw）、C2 SandboxMgr 减肥、P1 g_* 清零。`docs/design/architecture-improvement-plan.md` C2/C3/P1、`docs/planning/long-term-iteration-plan.md`。
+- 待：C3 继续把 update stage helper 提升为独立 UpdateSystem、拆 TacticalDebugDraw/更薄 tactical facade，C2 剩余场景/nav 门面减肥。`docs/design/architecture-improvement-plan.md` C2/C3、`docs/planning/long-term-iteration-plan.md`。

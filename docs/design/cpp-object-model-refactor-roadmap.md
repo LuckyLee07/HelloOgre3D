@@ -125,12 +125,12 @@ Lua Binding Adapter
 
 ### GameManager
 
-当前 `GameManager` 同时承担 gameplay 编排、Lua VM、FGUI API 转发、输入处理、资源诊断等职责。
+当前 `GameManager` 同时承担 gameplay 编排、Lua VM、输入处理、资源诊断等职责；FGUI API 转发壳已从 `GameManager` 删除，仅保留 `FairyGuiRuntime` 注册和真实输入到 runtime 的直达链路。
 
 目标：
 
-- `GameManager` 只保留应用级 gameplay 编排和旧接口兼容。
-- FGUI 转发拆到 `FairyGuiLuaApi` 或类似 binding adapter。
+- `GameManager` 只保留应用级 gameplay 编排、Lua 环境注册和必要输入入口。
+- FGUI API 只通过 `RuntimeToLua.pkg` / `FairyGuiLuaApi` 暴露，`GameManager` 不再保留兼容转发。
 - 资源诊断、输入注入、Lua API 注册分别拆出清晰入口。
 
 ### FairyGuiSystem
@@ -192,12 +192,12 @@ Lua Binding Adapter
 
 - 新增 `FairyGuiLuaApi`，承接 `GameManager` 中 FGUI 相关 tolua 导出实现。
 - 新增或整理 `SandboxLuaApi`，承接对象、sample、debug dump 相关 Lua API。
-- `GameManager` 保留旧函数签名，内部只转发到 binding adapter。
+- 删除 `GameManager` 旧兼容转发签名，Lua 侧只走 `FairyGuiRuntime`。
 - 后续新增 Lua API 不再直接加到 `GameManager`。
 
 验收：
 
-- Lua 调用不需要改名即可运行。
+- Lua 调用通过 `FairyGuiNativeApi` 保持业务侧方法名稳定。
 - `GameManager` 的新增代码明显减少。
 - FGUI / Sandbox / diagnostics 的绑定实现有独立文件和职责边界。
 
@@ -295,7 +295,7 @@ Lua Binding Adapter
 
 1. 给 `BaseObject / IComponent` 补齐所有权和生命周期注释，明确当前组件容器规则。
 2. 增加组件 debug name / typed access helper，减少字符串 key 的隐式约定。
-3. 把 `GameManager` 中 FGUI tolua 实现拆到 `FairyGuiLuaApi`，保留旧函数签名转发。
+3. 把 `GameManager` 中 FGUI tolua 实现拆到 `FairyGuiLuaApi`，并删除旧函数签名转发。
 4. 把 `FairyGuiSystem` 的 diagnostics 函数先拆出文件。
 5. 新增 `HealthComponent`，让 `AgentObject / SoldierObject` 先通过它读写生命值，但保留旧 `GetHealth / SetHealth`。
 6. 新增 `AiDriverComponent`，把 `SoldierObject` 的 `m_driver` 挪进去，旧接口转发。
@@ -322,7 +322,7 @@ Lua Binding Adapter
 - [x] 输入注入、IME debug、事件监听接口迁移到 `FairyGuiLuaApi`，形成 Lua / 自测桥接层。
 - [x] 对象属性、controller、列表、focus、transition、删除清理等 FGUI Lua 接口迁移到 `FairyGuiLuaApi`，`GameManager` 不再直接承接 `FairyGuiSystem` 细节实现。
 - [x] 2026-05-25：`FairyGuiLuaApi` 实现按 package/create、diagnostics、object、input、event/lifetime 拆分到独立 cpp，并新增 private internal include 收口 `FairyGuiSystem` 依赖。
-- [x] 2026-05-25：`FairyGuiLuaApi*` 从 `game` 迁移到 `runtime/ui/fairygui/lua_bridge`，物理位置贴近 `FairyGuiSystem`，`GameManager` 仅保留旧 tolua API 转发兼容层。
+- [x] 2026-05-25：`FairyGuiLuaApi*` 从 `game` 迁移到 `runtime/ui/fairygui/lua_bridge`，物理位置贴近 `FairyGuiSystem`；当时 `GameManager` 只保留旧 tolua API 转发兼容层，作为后续删除前的过渡。
 - [x] 2026-05-25：新增 `runtime/RuntimeToLua.pkg` 作为 runtime 侧 tolua 绑定入口，后续 runtime-owned API 不再继续堆到 `game/GameToLua.pkg`。
 - [x] 2026-05-25：`FairyGuiLuaApi` 构造依赖从 `ClientManager*` 收缩为 `FairyGuiSystem*`，runtime Lua bridge 不再反向认识 game manager 汇聚对象。
 - [x] 2026-05-25：真实键鼠输入链路改为 `GameManager -> FairyGuiSystem`，Lua 注入、自测和兼容 tolua API 继续走 `FairyGuiLuaApi`，避免 runtime 输入被 Lua bridge 概念污染。
@@ -330,6 +330,7 @@ Lua Binding Adapter
 - [x] 2026-05-25：`RuntimeToLua.pkg` 生成 `RuntimeToLua.cpp`，`GameManager::InitLuaEnv` 注册 `FairyGuiRuntime` 全局对象；Lua facade 默认只走 runtime 后端，`GameManager` 不再作为 FGUI Lua fallback。
 - [x] 2026-05-25：FGUI Health/DebugPanel/selftest 显式检查 native backend 为 `FairyGuiRuntime`，`tools/check_fgui_static.ps1` 增加入口护栏，阻止 `manager/fairygui` 子模块直接回退 `GameManager`。
 - [x] 2026-05-25：`GameManager` tolua 导出移除 `*FairyGui*` API，旧函数仅保留为 C++ 内部过渡转发；新增 FGUI Lua API 必须走 `RuntimeToLua.pkg`。
+- [x] 2026-06-18：`GameManager` 旧 C++ 兼容转发壳也已删除；`GameManager` 只持有并注册 `FairyGuiRuntime`，`tools/run_fgui_selftest.ps1 -Mode All` 修复空跑并要求 suite 全通过。
 - [ ] 后续新增 FGUI Lua API 继续按分组落到 adapter 对应文件；Lua 导出名和 generated binding 边界保持兼容。
 
 ### 2026-05-25 FairyGuiSystem 内部实现拆分
@@ -359,8 +360,8 @@ Lua Binding Adapter
 ## 11. 跟踪清单
 
 - [ ] Phase 0：关键对象所有权注释和 Lua 兼容边界梳理。
-- [ ] Phase 1：组件生命周期和 typed access 规则落地。
-- [x] Phase 2：`GameManager` FGUI binding adapter 拆分。
+- [x] Phase 1：组件生命周期和 typed access 规则落地。
+- [x] Phase 2：`GameManager` FGUI binding adapter 拆分，并删除旧兼容转发壳。
 - [x] Phase 3：`FairyGuiSystem` diagnostics / input / event / renderer 分拆。
 - [ ] Phase 4：`HealthComponent`、`WeaponComponent`、`AnimComponent`、`AiDriverComponent` 分阶段接入。
 - [ ] Phase 5：`ObjectManager` registry 化，跨对象逻辑 system 化。

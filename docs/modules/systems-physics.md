@@ -16,7 +16,7 @@ Bullet 物理世界、刚体生命周期、碰撞检测、raycast；为对象提
 |---|---|---|
 | `PhysicsWorld.{h,cpp}` | 世界 | btDiscreteDynamicsWorld 包装；stepWorld/碰撞/raycast |
 | `Collision.h` | 数据 | 碰撞点/法线 |
-| `components/physics/PhysicsComponent.{h,cpp}` | 组件 | 持 btRigidBody；注册/反注册到 PhysicsWorld；ApplyForce/SetPosition/RebuildCapsule |
+| `components/physics/PhysicsComponent.{h,cpp}` | 组件 | 持 btRigidBody；通过 SandboxServices 注册/反注册到 PhysicsWorld；ApplyForce/SetPosition/RebuildCapsule |
 | `systems/service/PhysicsFactory.{h,cpp}` | 工厂 | 刚体/形状创建 |
 
 ## 4. 公开能力要点
@@ -26,13 +26,14 @@ Bullet 物理世界、刚体生命周期、碰撞检测、raycast；为对象提
 ## 5. 约束与红线
 
 - **位置真源**：有刚体则 Bullet 权威、RenderComponent 从刚体同步（勿直改 scenenode）。
+- PhysicsComponent 通过 `IComponent::onSandboxServicesChanged` 延迟接入 PhysicsWorld，不再直接回退到 `g_GameManager`。
 - PhysicsComponent 持的 btRigidBody 由 PhysicsFactory 建、PhysicsWorld 拥有（非组件拥有）。
 - **PhysicsFactory 复合形状当前只支持单个子形状**（多形状代码注释掉）。
 - 碰撞经 `BaseObject::CollideWithObject` 虚回调分发。
 
 ## 6. 数据流 / 与其他模块关系
 
-`SoldierFactory → PhysicsFactory.CreateCapsule → PhysicsComponent → PhysicsWorld.addRigidBody`；每帧 `Locomotion.ApplyForce → stepWorld → RenderComponent 同步`。关联 [[components]] [[objects]] [[systems-service]]。
+`SoldierFactory → PhysicsFactory.CreateCapsule → PhysicsComponent → SandboxServices.physics → PhysicsWorld.addRigidBody`；每帧 `Locomotion.ApplyForce → stepWorld → RenderComponent 同步`。关联 [[components]] [[objects]] [[systems-service]]。
 
 ## 7. 验证策略
 

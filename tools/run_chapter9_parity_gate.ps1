@@ -65,6 +65,9 @@ Write-Host "[CH9_PARITY] samples=$TraceMaxSamples delayMs=$TraceDelayMs interval
 	-Visible:$Visible.IsPresent `
 	-NoTail:$NoTail.IsPresent
 
+# 让新版 parity trace 直接落地到 ModernTrace 文件（outputPath 非空时 parity_trace.lua
+# 自动不再写 console）。smoke 不清理 HELLO_PARITY_TRACE_FILE，exe 会继承此设置。
+$env:HELLO_PARITY_TRACE_FILE = $ModernTrace
 & $SmokeScript `
 	-Preset chapter9_tactics_legacy_parity `
 	-ParityTrace `
@@ -77,14 +80,18 @@ Write-Host "[CH9_PARITY] samples=$TraceMaxSamples delayMs=$TraceDelayMs interval
 	-Visible:$Visible.IsPresent `
 	-NoTail:$NoTail.IsPresent
 
-$sourceModernLog = $ModernLog
-if (-not (Test-Path -LiteralPath $sourceModernLog) -and (Test-Path -LiteralPath $ModernDebugLog)) {
-	$sourceModernLog = $ModernDebugLog
+# 新版应已把 trace 直接写到 ModernTrace。若未写成（旧行为/异常）再从 Sandbox.log 兜底。
+Remove-Item -Path "Env:HELLO_PARITY_TRACE_FILE" -ErrorAction SilentlyContinue
+if (-not (Test-Path -LiteralPath $ModernTrace)) {
+	$sourceModernLog = $ModernLog
+	if (-not (Test-Path -LiteralPath $sourceModernLog) -and (Test-Path -LiteralPath $ModernDebugLog)) {
+		$sourceModernLog = $ModernDebugLog
+	}
+	if (-not (Test-Path -LiteralPath $sourceModernLog)) {
+		throw "Modern parity trace missing: $ModernTrace (no Sandbox.log fallback)"
+	}
+	Copy-Item -LiteralPath $sourceModernLog -Destination $ModernTrace -Force
 }
-if (-not (Test-Path -LiteralPath $sourceModernLog)) {
-	throw "Modern parity log missing: $ModernLog"
-}
-Copy-Item -LiteralPath $sourceModernLog -Destination $ModernTrace -Force
 
 $compareArgs = @(
 	$CompareScript,

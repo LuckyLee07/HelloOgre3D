@@ -8,14 +8,15 @@
     "parity_gate": "tools\\run_chapter9_parity_gate.ps1 -Python E:\\SoftWare\\Python\\Python310\\python.exe",
     "visual_capture": "tools\\run_chapter9_visual_capture.ps1 -CaptureMs 2500",
     "fgui_gate": "tools\\run_fgui_production_gate.ps1 -Mode Full -StopExisting",
-    "ai_perf": "tools\\run_sandbox_smoke.ps1 -Preset ai_perf_1000（看 [FramePerf] perceptionSystem/updateCall，非 cpuFrame）"
+    "ai_perf": "tools\\run_sandbox_smoke.ps1 -Preset ai_perf_1000（看 [FramePerf] perceptionSystem/updateCall，非 cpuFrame）",
+    "sandbox_arch_gate": "powershell -ExecutionPolicy Bypass -File tools\\check_sandbox_architecture.ps1"
   },
   "entries": {
     "ai-perception": {
       "name": "AI 感知系统（视觉/空间索引/记忆/结果缓存）",
       "doc_path": "docs/modules/ai-perception.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/perception"],
-      "constraints_summary": "批量感知：AgentPerceptionSystem 每帧驱动 TickPerception；AgentSpatialIndexSystem uniform grid 查询（含 team/alive/maxResults 过滤），线性查询下沉一层未做空间分区淘汰；PerceptionResultCache 为感知结果显式快照（4a 已落地，HasEnemy 已改读它）；MemoryStore 保持 kMemorySnapshot* blackboard key 兼容；hearing/danger C++ sense 未做",
+      "constraints_summary": "批量感知：AgentPerceptionSystem 每帧驱动 TickPerception；AgentSpatialIndexSystem uniform grid 查询（含 team/alive/maxResults 过滤），maxResults 保留近邻候选并可由 blackboard perception.maxSpatialResults 控制，pressure preset 默认 16；PerceptionResultCache 为感知结果显式快照，HasEnemy 已读 cache，CanShootEnemy 成功路径会同步 cache 但保留短距离/无寻路重查语义；MemoryStore 保持 kMemorySnapshot* blackboard key 兼容；hearing/danger C++ sense 未做；仍待 Release/scheduler 调参与完整 AOI 淘汰",
       "tags": ["ai", "perception", "vision", "memory", "spatial", "感知", "记忆", "视野"],
       "verify": { "sample": ["Sandbox10", "Sandbox16"], "gate": ["ai_perf", "parity_gate"] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/perf/ai-perception-baseline-20260602.md", "docs/perf/ai-perf-release-baseline-20260612.md", "docs/design/architecture-improvement-plan.md"]
@@ -42,7 +43,7 @@
       "name": "AI 导航（Recast/Detour 寻路网格）",
       "doc_path": "docs/modules/ai-navigation.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/navigation"],
-      "constraints_summary": "NavigationMesh 包装 dtNavMesh/Query；NavBuilder 跑 Recast 编译；NavMesh 当前固定 2001×2001（NavigationMesh.cpp:20 TODO，未按真实边界重算）；GetWalkableTriangles 供影响图 3D 体素化；多 navmesh 按 name 隔离但影响图只用单个；无运行时动态障碍",
+      "constraints_summary": "NavigationMesh 包装 dtNavMesh/Query；NavBuilder 跑 Recast 编译；NavMesh 当前固定 2001×2001（NavigationMesh.cpp:20 TODO，未按真实边界重算）；GetWalkableTriangles 供影响图 3D 体素化；debug visual 场景访问走 SceneFactory 不再 include ClientManager；多 navmesh 按 name 隔离但影响图只用单个；无运行时动态障碍",
       "tags": ["ai", "navigation", "navmesh", "recast", "detour", "寻路", "导航"],
       "verify": { "sample": ["Sandbox6", "Sandbox5"], "gate": [] },
       "related_docs": ["docs/design/chapter9-parity-architecture-notes.md", "docs/design/architecture-improvement-plan.md"]
@@ -87,7 +88,7 @@
       "name": "AIController 组件（AI 控制面板）",
       "doc_path": "docs/modules/ai-controller.md",
       "source_paths": ["src/HelloOgre3D/sandbox/components/ai"],
-      "constraints_summary": "聚合 Blackboard+driver+VisionSensor+MemoryStore+PerceptionResultCache；SetDriverByType 仍 string if-else+inline new(driver 工厂未做 P7)；HasEnemy 已改读缓存(4b)、CanShootEnemy 仍重查+publish EnemySighted(刻意不动)；TickPerception 在 driver 前填缓存",
+      "constraints_summary": "聚合 Blackboard+driver+VisionSensor+MemoryStore+PerceptionResultCache；SetDriverByType 仅做字符串归一化，driver 创建走 factory/registry 且 DT/BT owner 只需 AgentObject+Blackboard；HasEnemy 已改读缓存(4b)，CanShootEnemy 仍重查+publish EnemySighted 但成功路径同步缓存；TickPerception 在 driver 前填缓存",
       "tags": ["ai", "controller", "aicontroller", "driver", "感知驱动"],
       "verify": { "sample": ["Sandbox6", "Sandbox7", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/design/architecture-improvement-plan.md"]
@@ -96,7 +97,7 @@
       "name": "游戏对象（Agent/Soldier/Block + 转向/路径）",
       "doc_path": "docs/modules/objects.md",
       "source_paths": ["src/HelloOgre3D/sandbox/objects"],
-      "constraints_summary": "AgentObject(~788行)/SoldierObject(~651行) 保留 150+ forwarder 样板(P2)；位置真源：有刚体则 PhysicsComponent 权威、否则 RenderComponent；BlockObject 双重持有组件(P4)；OpenSteerAdapter 部分转向方法是空桩；新增对象类型勿复制 forwarder",
+      "constraints_summary": "AgentObject(~788行)/SoldierObject(~651行) 保留 150+ forwarder 样板(P2)；BaseObject 已向 Lua 暴露 AI/Weapon/Anim/Attrib typed component getter，agent 入口已通过 AgentComponentAccess.lua 优先走组件直取，Sandbox10-13/parity_trace 的 Blackboard 入口已迁到组件优先，RuntimeDiag ComponentProbeAgent 已验证非 Soldier AgentObject 复用 AI/Attrib 等组件但 legacy forwarder 主体仍待迁；位置真源：有刚体则 PhysicsComponent 权威、否则 RenderComponent；AgentObject/BlockObject 事件发布和粒子清理只走 SandboxServices，SoldierObject 通过 SandboxServices.input 获取输入，不再回退 g_* 或 include GameManager；BaseObject 组件容器已 unique_ptr 化，组件 lifecycle 断言/dump 已落地，BlockObject 缓存组件裸成员已标注 non-owning(P4)；OpenSteerAdapter 部分转向方法是空桩；新增对象类型勿复制 forwarder",
       "tags": ["objects", "agent", "soldier", "block", "对象", "steer", "转向"],
       "verify": { "sample": ["Sandbox6", "Sandbox7", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "docs/design/cpp-object-model-refactor-roadmap.md", "docs/archive/SoldierObjectRefactor.md", "docs/design/chapter9-parity-architecture-notes.md"]
@@ -105,7 +106,7 @@
       "name": "角色动画子系统（动画状态机）",
       "doc_path": "docs/modules/objects-anim.md",
       "source_paths": ["src/HelloOgre3D/sandbox/objects/animation"],
-      "constraints_summary": "AgentAnimStateMachine 通用动画 FSM + SoldierAnimController 意图驱动(locomotion/action intent)；SoldierAnimController 持 SoldierObject* owner(P5)；SoldierObject::Update 硬编码 anim 在 render 前的顺序(C4)；SMG 无 reload 动画资源(兜底 sniper_idle)",
+      "constraints_summary": "AgentAnimStateMachine 通用动画 FSM + SoldierAnimController 意图驱动(locomotion/action intent)；AnimComponent/SoldierAnimController 已通过 IAnimContextProvider 解除 SoldierObject 直接依赖(P5 动画侧收口)；C4 已解决：AnimComponent 通过 getUpdateOrder 排在 Render 后、Weapon 前，SoldierObject::Update 不再手写组件顺序；SMG 无 reload 动画资源(兜底 sniper_idle)",
       "tags": ["animation", "anim", "动画", "状态机", "soldier"],
       "verify": { "sample": ["Sandbox3", "Sandbox6"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "docs/design/cpp-object-model-refactor-roadmap.md"]
@@ -114,7 +115,7 @@
       "name": "组件系统（agent/anim/combat/physics/render/script/ai）",
       "doc_path": "docs/modules/components.md",
       "source_paths": ["src/HelloOgre3D/sandbox/components"],
-      "constraints_summary": "ComponentKeys.h 已常量化(P6 完成)；组件容器仍 IComponent* 裸指针 map(P4)；AnimComponent/WeaponComponent 仍持 SoldierObject* owner(P5，WeaponComponent 跨组件访问已改 FindComponent<RenderComponent>)；跨组件依赖走 FindComponent<T>()；服务走 GetSandboxServices()",
+      "constraints_summary": "ComponentKeys.h 已常量化(P6 完成)；BaseObject 组件容器已迁 std::map<string,unique_ptr<IComponent>>，查询接口返回 non-owning 裸指针，IComponent lifecycle state + BaseObject attach/destroy/update 断言与 BuildComponentDebugString 状态 dump 已落地(P4 核心完成)，BaseObject::Update 按 IComponent::getUpdateOrder 驱动组件(C4 完成)，AI/Render/Anim/Weapon 顺序为100/200/300/400；BaseObject 已向 Lua 暴露 GetAIComponent/GetWeaponComponent/GetAnimComponent/GetAttribComponent，AIController/WeaponComponent/AnimComponent/AgentAttrib 常用接口已可直取，agent 入口已通过 AgentComponentAccess.lua 组件优先、旧接口兜底，Sandbox10-13/Sandbox17/parity_trace 已迁到组件优先，RuntimeDiag ComponentProbeAgent 验证非 Soldier AgentObject 组件复用(P2 前置能力)；AnimComponent Entity 缓存已标注 non-owning 并在 detach 清空；AnimComponent/WeaponComponent 已不持 SoldierObject* owner 成员，WeaponComponent 已移除 SoldierObject 依赖并走 BaseObject/RenderComponent/SandboxServices，AnimComponent/SoldierAnimController 已走 IAnimContextProvider，不再直接 include/call SoldierObject，DT/BT driver 与 Lua action 真实 owner 已泛化到 AgentObject，Blackboard Lua 已导出 GetAgentOwner 泛化 owner 入口并由 RuntimeDiag 验证非 Soldier owner round-trip，FSM 通用查询已走 AIController/Weapon/Attrib，AgentActionContext 动画表现入口已走 AnimComponent/IAnimController，DeathState 已走 AnimComponent/IAnimContextProvider/IAnimController，旧 SoldierObject owner 仅作 Lua 兼容桥；WeaponComponent/AgentLocomotion/AIController 服务访问不再 g_* 兜底；RenderComponent/AnimComponent 已移除 GameManager.h；跨组件依赖走 FindComponent<T>()；服务走 GetSandboxServices()",
       "tags": ["components", "component", "组件", "weapon", "physics", "render", "locomotion"],
       "verify": { "sample": ["Sandbox6", "Sandbox7", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "docs/design/cpp-object-model-refactor-roadmap.md"]
@@ -123,16 +124,16 @@
       "name": "对象核心基础（BaseObject/IComponent/事件/SandboxServices）",
       "doc_path": "docs/modules/core-object.md",
       "source_paths": ["src/HelloOgre3D/sandbox/core"],
-      "constraints_summary": "BaseObject 组件容器 std::map<string,IComponent*> 裸指针+SAFE_DELETE(P4)；SandboxServices 注入已落地(P1 部分，仍 15 文件 include GameManager、g_* 未清零)；SandboxEventDispatcher 事件总线；SandboxContext 是事件 payload(勿与 SandboxServices 撞名)",
+      "constraints_summary": "BaseObject 组件容器已迁 std::map<string,unique_ptr<IComponent>> 并集中销毁，GetComponent/FindComponent 返回 non-owning 裸指针，IComponent lifecycle state + BaseObject attach/destroy/update 断言与 BuildComponentDebugString 状态 dump 已落地(P4 核心完成)；SandboxServices 注入已落地并通过 IComponent.onSandboxServicesChanged 通知组件(P1 已解决)，聚合 objects/physics/input/sandbox/script/objectFactory；tools/check_sandbox_architecture.ps1 已加门禁防新增 GameManager/ClientManager include 和裸 g_*，PhysicsComponent/WeaponComponent/AIController/AgentLocomotion/AgentStateController/AgentObject/BlockObject/SoldierObject 热点已清掉 g_* 兜底，RenderComponent/AnimComponent 已清 GameManager include，InputManager 已通过构造注入 RenderWindow/OgreCameraController/状态回调并清掉 ClientManager include，SandboxMgr::RayCastObjectId 已走 SandboxServices.physics，SceneFactory root node/UIManager camera/CameraService 依赖已由应用层注入，NavigationMesh/ObjectManager 场景访问已走 SceneFactory，manager 层 g_ObjectManager/g_SandboxMgr 已删除；SandboxEventDispatcher 事件总线；SandboxContext 是事件 payload(勿与 SandboxServices 撞名)",
       "tags": ["core", "baseobject", "icomponent", "event", "sandboxservices", "基础", "所有权"],
-      "verify": { "sample": ["Sandbox6"], "gate": [] },
+      "verify": { "sample": ["Sandbox6"], "gate": ["sandbox_arch_gate"] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "docs/design/cpp-object-model-refactor-roadmap.md"]
     },
     "systems-physics": {
       "name": "物理系统（Bullet 世界 / 碰撞）",
       "doc_path": "docs/modules/systems-physics.md",
       "source_paths": ["src/HelloOgre3D/sandbox/systems/physics", "src/HelloOgre3D/sandbox/components/physics"],
-      "constraints_summary": "PhysicsWorld 包装 btDiscreteDynamicsWorld(stepWorld/碰撞/raycast)；PhysicsComponent 持 btRigidBody(PhysicsFactory 建、PhysicsWorld 拥有)；位置真源：有刚体则 Bullet 权威 RenderComponent 同步；PhysicsFactory 复合形状当前只支持单子形状；力经 Locomotion→ApplyForce→stepWorld",
+      "constraints_summary": "PhysicsWorld 包装 btDiscreteDynamicsWorld(stepWorld/碰撞/raycast)；PhysicsComponent 持 btRigidBody(PhysicsFactory 建、PhysicsWorld 拥有)，通过 SandboxServices.physics 和 onSandboxServicesChanged 注册到世界，不再 g_GameManager 兜底；位置真源：有刚体则 Bullet 权威 RenderComponent 同步；PhysicsFactory 复合形状当前只支持单子形状；力经 Locomotion→ApplyForce→stepWorld",
       "tags": ["physics", "bullet", "collision", "物理", "刚体", "碰撞"],
       "verify": { "sample": ["Sandbox1", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md"]
@@ -141,16 +142,16 @@
       "name": "系统管理枢纽（ObjectManager / SandboxMgr）",
       "doc_path": "docs/modules/systems-manager.md",
       "source_paths": ["src/HelloOgre3D/sandbox/systems/manager"],
-      "constraints_summary": "ObjectManager 职责过载(registry+update+AI调度+输入+navmesh+战术debug绘制 C3)；持 SandboxServices owner；战术/团队/影响图 facade 都在此转发；tactical 调试可视化逻辑待下沉 service；SandboxMgr 是场景/相机/UI 门面(部分纯转发 C2)；改导出 API 走手术式 tolua",
+      "constraints_summary": "ObjectRegistry 已拆出对象 id 分配、object map、Agent/Block 二级索引和对象查找(C3 registry 第一切片)；ObjectManager::Update 已拆出 UpdateManagedObjects 对象生命周期/update loop 与 CleanupRemovedSceneNodes 延迟 scene node 清理(C3 update stage 第一切片)；ObjectManager 仍职责过载(update阶段编排+AI调度+感知+输入+navmesh+战术debug绘制 C3 剩余)，持 SandboxServices owner；战术/团队/影响图 facade 都在此转发；tactical 调试可视化逻辑待下沉 service；ObjectManager 场景访问走 SceneFactory，当前时间由 GameManager 每帧 SetCurrentTimeMs 写入，不再 include GameManager/ClientManager；SandboxMgr 是场景/nav 门面，已不再持有或导出 ObjectFactory 对象创建纯转发，也不再持有或导出 UIManager/Gorilla UI frame/color 纯转发，相机/profile 查询已下沉到 SandboxCamera/CameraService(C2 部分完成)，RayCastObjectId 已通过 SandboxServices.physics 取 PhysicsWorld；改导出 API 走手术式 tolua",
       "tags": ["systems", "objectmanager", "sandboxmgr", "manager", "管理器", "facade"],
       "verify": { "sample": ["Sandbox6", "Sandbox12", "Sandbox18"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "docs/planning/long-term-iteration-plan.md"]
     },
     "systems-service": {
-      "name": "系统服务（对象/物理/场景工厂 + 相机/UI 服务）",
+      "name": "系统服务（对象/物理/场景工厂 + 相机服务）",
       "doc_path": "docs/modules/systems-service.md",
       "source_paths": ["src/HelloOgre3D/sandbox/systems/service"],
-      "constraints_summary": "ObjectFactory→AgentFactory/SoldierFactory 分层装配组件；AgentFactory 组件装配硬编码(P5)；SoldierFactory 绑死 SoldierObject(新 NPC 需复制)；UIService 纯空壳转发(C1)；CameraService 与 OgreCameraController 耦合；PhysicsFactory 见 systems-physics",
+      "constraints_summary": "ObjectFactory→AgentFactory/SoldierFactory 分层装配组件，已 tolua 导出为 Lua 全局 SandboxObjects，Lua sample 不再通过 SandboxMgr 创建对象；SandboxServices.objectFactory 供组件侧创建 bullet 等运行时对象；AgentFactory 组件装配硬编码(P5)；SoldierFactory 绑死 SoldierObject(新 NPC 需复制)；SceneFactory root scene node 由 GameManager::Initialize 注入，不再 include GameManager.h；UIManager camera 由构造注入并 tolua 导出为 Lua 全局 SandboxUI，Gorilla UI frame/color API 不再通过 SandboxMgr 转发；UIService 空壳已删除(C1 完成)；CameraService 由 GameManager 持有，camera/scene/profile time 由构造注入并 tolua 导出为 Lua 全局 SandboxCamera，相机/profile 查询不再通过 SandboxMgr 转发；InputManager render window/camera controller/状态回调由 ClientManager 构造注入，不再 include ClientManager.h；PhysicsFactory 见 systems-physics",
       "tags": ["systems", "factory", "service", "工厂", "camera", "相机"],
       "verify": { "sample": ["Sandbox1", "Sandbox6", "Sandbox16"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md"]
@@ -159,7 +160,7 @@
       "name": "Lua 绑定（tolua++ / 手工钩子 / 插件管理）",
       "doc_path": "docs/modules/scripting-tolua.md",
       "source_paths": ["src/HelloOgre3D/sandbox/scripting"],
-      "constraints_summary": "SandboxToLua.cpp 是 tolua++ 生成物；改导出 API 优先手术式改 .cpp 绑定函数+头文件，禁 tolua.bat 全量重生成（曾致 Sandbox18 崩溃）；ManualToLua.cpp 是手工钩子(setPluginEnv/SetEvaluator/SetCondition 捕获 Lua function ref)；LuaPluginMgr 管对象级隔离 env；改绑定必须跑用到它的 sample(影响图改动跑 Sandbox17+18)",
+      "constraints_summary": "SandboxToLua.cpp 是 tolua++ 生成物；ObjectFactory 已导出为 ObjectFactory usertype，并由 GameManager 注册 Lua 全局 SandboxObjects；改导出 API 优先手术式改 .cpp 绑定函数+头文件，禁 tolua.bat 全量重生成（曾致 Sandbox18 崩溃）；ManualToLua.cpp 是手工钩子(setPluginEnv/SetEvaluator/SetCondition 捕获 Lua function ref)；LuaPluginMgr 管对象级隔离 env；改绑定必须跑用到它的 sample(影响图改动跑 Sandbox17+18)",
       "tags": ["scripting", "lua", "tolua", "binding", "绑定", "脚本"],
       "verify": { "sample": ["Sandbox7", "Sandbox8", "Sandbox17", "Sandbox18"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "AGENTS.md"]
@@ -195,7 +196,7 @@
       "name": "FairyGUI UI 框架（C++ 系统 + Lua bridge + MVC/service 框架）",
       "doc_path": "docs/modules/fgui.md",
       "source_paths": ["src/HelloOgre3D/runtime/ui/fairygui", "bin/res/scripts/ui", "bin/res/scripts/manager/fairygui"],
-      "constraints_summary": "FairyGuiSystem(cocoslite 内嵌) + lua_bridge(手工 C++/Lua glue 非 tolua，改功能两端同步) + FairyGuiManager(service 模式 Toast/MessageBox/Loading/...)；handle 生命周期需显式销毁；输入 Inject* 返回 bool 表是否拦截；改动跑 run_fgui_production_gate.ps1",
+      "constraints_summary": "FairyGuiSystem(cocoslite 内嵌) + FairyGuiRuntime/RuntimeToLua/FairyGuiLuaApi + FairyGuiManager(service 模式 Toast/MessageBox/Loading/...)；GameManager 不再暴露或保留 *FairyGui* API 转发；handle 生命周期需显式销毁；输入 Inject* 返回 bool 表是否拦截；改动跑 run_fgui_selftest.ps1 -Mode All 或 run_fgui_production_gate.ps1",
       "tags": ["fgui", "fairygui", "ui", "界面", "mvc"],
       "verify": { "sample": [], "gate": ["fgui_gate"] },
       "related_docs": ["docs/fgui/fairygui-production-gate.md", "docs/fgui/fairygui-final-roadmap.md", "docs/planning/long-term-iteration-plan.md"]

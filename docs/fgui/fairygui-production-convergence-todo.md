@@ -15,14 +15,15 @@
 
 ### P0：入口收敛与防回流
 
-- [x] 从 `GameManager` tolua 导出中移除 `*FairyGui*` API，只保留 C++ 内部兼容转发。
+- [x] 从 `GameManager` tolua 导出中移除 `*FairyGui*` API，并删除 C++ 内部兼容转发；`GameManager` 只负责注册 `FairyGuiRuntime`。
 - [x] `FairyGuiNativeApi` 默认只解析 `FairyGuiRuntime`，不再使用 `GameManager` fallback。
 - [x] `tools/check_fgui_static.ps1` 增加旧入口护栏，检查：
   - `manager/fairygui` 下 Lua 文件不得出现 `GameManager`。
   - `GameManager.h` 的 `//tolua_begin` 到 `//tolua_end` 区间不得出现 `FairyGui`。
   - `game/GameToLua.cpp` 不得注册 `*FairyGui*` 方法。
 - [x] 重新生成 `GameToLua.cpp`，旧 Lua binding 已消失。
-- [x] 更新路线文档，明确 `GameManager` 仅保留 C++ 兼容转发，不再作为 Lua FGUI 后端。
+- [x] 更新路线文档，明确 `GameManager` 不再保留 FGUI API 转发，不再作为 Lua FGUI 后端。
+- [x] `tools/run_fgui_selftest.ps1 -Mode All` 已修复空跑问题，必须看到 `self test suite end: N / N` 且全通过才算成功。
 
 ### P0：验证门禁稳定
 

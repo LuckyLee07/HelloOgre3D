@@ -25,14 +25,17 @@
 
 ## 4. 公开能力要点
 
-- `IComponent`：onAttach/onDetach/update；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
+- `IComponent`：onAttach/onDetach/update；`getUpdateOrder()` 显式声明组件更新顺序；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
 - 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。
 
 ## 5. 约束与红线
 
 - **P6 完成**：ComponentKeys 常量化，C++ 内无散落字符串 key。
-- **P4**：容器仍 `std::map<string,IComponent*>` 裸指针 + SAFE_DELETE。
-- **P5**：AnimComponent/WeaponComponent 仍持 `SoldierObject* owner`（WeaponComponent 跨组件访问已改 `FindComponent<RenderComponent>`）。
+- **C4 完成**：AI/Render/Anim/Weapon 通过 `ComponentUpdateOrder` 声明 100/200/300/400 顺序，`BaseObject::Update` 稳定排序后驱动。
+- **P4（核心完成）**：`BaseObject` 组件容器已迁到 `std::map<string,unique_ptr<IComponent>>`；组件查询接口仍返回 non-owning 裸指针以保持兼容；`IComponent` lifecycle state 与 `BaseObject` attach/destroy/update 断言已落地，组件 debug dump 会输出状态；AnimComponent 的 Entity 缓存已标注 non-owning 并在 detach 清空。
+- **P5**：AnimComponent/WeaponComponent 已不持有 `SoldierObject* owner` 成员；WeaponComponent 已移除 `SoldierObject` include/dynamic_cast，射击链依赖 BaseObject/RenderComponent/SandboxServices；AnimComponent / SoldierAnimController 已走 `IAnimContextProvider`，不再直接 include/call `SoldierObject`；DT/BT driver 与 Lua action 的真实 owner 已泛化到 `AgentObject`，旧 `SoldierObject` owner 仅作 Lua 兼容桥；FSM 通用查询经 AgentActionContext 走 AIController/Weapon/Attrib，Move/Shoot/Pursue/Reload state 与 evaluator 不再直接依赖 Soldier；Blackboard Lua owner 已泛化，DeathState 与 AgentActionContext 动画表现入口已走 AnimComponent/IAnimContextProvider/IAnimController；WeaponComponent / AgentLocomotion / AIController 服务访问不再回退 `g_*`；RenderComponent / AnimComponent 已移除 `GameManager.h`。
+- **P2 前置能力**：`BaseObject` 已向 Lua 暴露 `GetAIComponent()` / `GetWeaponComponent()` / `GetAnimComponent()` / `GetAttribComponent()`；`AIController`、`WeaponComponent`、`AnimComponent`、`AgentAttrib` 常用接口已可由 Lua 直取，agent 入口、`Sandbox10`-`Sandbox13`、`Sandbox17` 与 `parity_trace.lua` 通过 `AgentComponentAccess.lua` 统一走组件优先、旧对象方法兜底；RuntimeDiag `ComponentProbeAgent` 会创建非 Soldier `AgentObject` 并验证 AI/Attrib 组件复用。
+- **P5 Blackboard owner**：`Blackboard` 内部 owner 为 `AgentObject*`，Lua 已可通过 `GetAgentOwner()` 获取泛化 owner；旧 `GetOwner()` 保留为 `SoldierObject*` 兼容桥。
 - 跨组件依赖走 `FindComponent<T>()`，勿调具体对象方法；服务走 `GetSandboxServices()`。
 - 位置真源同步在 `RenderComponent::Update`（见 [[objects]]）。
 
@@ -42,8 +45,8 @@
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox6/7/8`；`soldier:FindComponent<WeaponComponent>():ShootBullet()`。
+- 回归 sample：`Sandbox6/7/8/9/10/11/12/13/16/17` 与 `chapter9_tactics_legacy_parity`；RuntimeDiag `Sandbox2 -RuntimeDiag` 的 `[ComponentAccessSelfTest] result=true`；Lua 侧优先 `agent:GetAIComponent()` / `agent:GetAttribComponent()` 或 `AgentComponentAccess.lua`，C++ 侧优先 `owner->FindComponent<WeaponComponent>()->ShootBullet()`。
 
 ## 8. 已知 gap / 相关文档
 
-- 待：P5 owner 泛化、P4 unique_ptr、P2 减负。`docs/design/architecture-improvement-plan.md` P2/P4/P5/P6、`docs/design/cpp-object-model-refactor-roadmap.md`。
+- 待：P5 旧 Lua Soldier 签名兼容桥按 sample 节奏继续收窄、P4 其它缓存裸指针审计、P2 继续迁移 legacy forwarder 与更多 Lua/sample 调用。`docs/design/architecture-improvement-plan.md` P2/P4/P5/P6、`docs/design/cpp-object-model-refactor-roadmap.md`。

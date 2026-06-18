@@ -27,7 +27,7 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 - **NavMesh 当前固定 2001×2001**（`NavigationMesh.cpp:20` TODO，未按真实边界重算）。
 - 无运行时动态障碍（编译后固定）。
 - 影响图 3D 体素化只用单个 navmesh；多层地形未支持。
-- debug visual 涉及 ManualObject 增删，仅在 navmesh 变更时重建，勿每帧。
+- debug visual 涉及 ManualObject 增删，仅在 navmesh 变更时重建，勿每帧；场景访问走 SceneFactory，不再 include ClientManager。
 
 ## 6. 数据流 / 与其他模块关系
 

@@ -21,10 +21,10 @@
 
 当前主要技术缺口：
 
-- `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。500 / 1000 agent 复测已沉淀到 `docs/perf/ai-spatial-filter-retest-20260602.md`，下一步重点转向 `PerceptionResultCache`。
+- `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。`maxResults` 现在保留近邻候选，`perception.maxSpatialResults` 可从 blackboard 控制，pressure preset 默认 16；仍需继续做 Release / scheduler 调参与更完整 AOI 淘汰。
 - `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；后续仍缺更完整 fact schema 和 Lua 全局状态迁移。
 - Lua `InfluenceMap` 仍适合作为教学对照；`Sandbox18` 已把 Chapter 9 DangerousAreas / TeamAreas 的事件输入迁到 C++ `InfluenceMapSystem` 第一切片，但仍缺独立 `TacticalQueryService`、dirty region / interval 更新、cover / crowd schema 和 layer debug draw。
-- `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；后续仍缺独立 `PerceptionResultCache`、hearing / danger C++ sense 和 Lua 扫描清理。
+- `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；`PerceptionResultCache` 已作为显式快照接入 HasEnemy / TickPerception，CanShootEnemy 成功路径同步 cache；后续仍缺 hearing / danger C++ sense 和 Lua 扫描清理。
 - BT runtime 已有教学级扩展，但还缺 instance pool、node result cache、blackboard dirty 依赖和距离 LOD。
 - 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，当前压力入口仍是 `Sandbox16`；后续仍需补 scheduler on/off、Release x64 和必要 Tracy capture。
 
@@ -52,7 +52,7 @@ AgentSpatialIndexSystem
 
 - 每帧先确定 active set；不在验证范围、AOI 或重要性阈值内的 agent 只做低频或跳过更新。
 - 每个批量系统必须支持 interval、bucket、budget 或 distance LOD，避免感知、BT、TeamBlackboard、InfluenceMap 同帧集中重算。
-- 所有邻域查询必须走 C++ spatial / AOI facade，并且有 `maxResults`、候选访问上限和统计输出。
+- 所有邻域查询必须走 C++ spatial / AOI facade，并且有 `maxResults`、近邻保留 / 候选访问上限和统计输出。
 - Lua 行为节点只读 C++ 产出的 perception / team / tactical result，不新增全局对象遍历。
 - 热路径优先优化数据布局和缓存，而不是先引入完整第三方 ECS；必要时再把可批处理系统 job 化。
 - `ai_perf_1000` 的验收要同时看 Debug / Release、spatial on/off、scheduler on/off、perception cache on/off 和 Lua callback 数量。
@@ -74,8 +74,8 @@ AgentSpatialIndexSystem
   - teamId 过滤。
   - alive / dead 过滤。
   - includeSelf 开关。
-  - maxResults 上限。
-  - 候选访问上限与最近优先 / 远处采样策略，避免密集场景结果爆炸。
+  - maxResults 上限，当前语义为保留最近候选而不是首批命中。
+  - 候选访问上限与远处采样策略，避免密集场景结果爆炸。
   - 可选 tag / type 过滤。
 - 统计支持：
   - registeredAgents。
@@ -103,7 +103,7 @@ AgentSpatialIndexSystem
 
 - 新增 `AgentPerceptionSystem`。
 - `VisionSensor` 从单 agent 定时扫描，升级为 system 分片调度。
-- 增加 `PerceptionResultCache`：
+- `PerceptionResultCache` 已建立，后续扩展字段时保持：
   - currentTargetId。
   - currentTargetPos。
   - distance。
@@ -305,13 +305,14 @@ score = objective + support + cover - threat - crowd
 - [x] 输出 spatial / perception / scheduler 统计入口，`run_sandbox_smoke.ps1` 会为 `ai_perf_*` 自动启用 `FramePerf`。
 - [x] 提供线性查询与 grid 查询成本对照入口：`-DisableSpatialIndex`。
 - [x] 实际记录 100 / 500 / 1000 在 spatial on/off、perception system on/off 下的 Debug x64 基线结果：见 `docs/perf/ai-perception-baseline-20260602.md`。
+- [x] pressure preset 接入 `perception.maxSpatialResults=16`，spatial maxResults 保留近邻候选而不是首批命中。
 - [ ] 补 scheduler on/off、Release x64、perception cache on/off、Lua callback 数量和必要 Tracy capture 对照。
 
 ### 近期三：Perception System
 
 - [x] 将 `VisionSensor` 接入 spatial query。
 - [x] 建立 `AgentPerceptionSystem` 第一阶段：保持每帧全量更新，把 per-agent perception tick 集中到 system 级执行和统计。
-- [ ] 建立独立 `PerceptionResultCache`。
+- [x] 建立独立 `PerceptionResultCache`，`HasEnemy` 读 cache，`CanShootEnemy` 成功路径同步 cache。
 - [x] 在感知 query 层提前过滤 teamId / alive / includeSelf，避免无效候选进入 memory / vision 热路径。
 - [ ] 将 hearing / danger sample 的结果入口收口到 C++ sense。
 - [ ] Lua BT 只读结果，不做对象扫描。

@@ -14,27 +14,27 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `object/BaseObject.{h,cpp}` | 对象根 | 组件容器 `std::map<string,IComponent*>` + objid/teamid + `SetSandboxServices` |
+| `object/BaseObject.{h,cpp}` | 对象根 | 组件容器 `std::map<string,unique_ptr<IComponent>>` + 组件生命周期断言/dump + objid/teamid + `SetSandboxServices` |
 | `object/SandboxObject.{h,cpp}` | 基类 | 虚 Update |
-| `component/IComponent.{h,cpp}` | 组件接口 | onAttach/onDetach/update + `GetSandboxServices()` |
-| `SandboxServices.h` | 注入聚合 | `{objects, physics, sandbox, script}`（P1 核心） |
+| `component/IComponent.{h,cpp}` | 组件接口 | onAttach/onDetach/update + `GetSandboxServices()` + `onSandboxServicesChanged()` |
+| `SandboxServices.h` | 注入聚合 | `{objects, physics, input, sandbox, script}`（P1 核心） |
 | `event/SandboxEventDispatcher*.h` | 事件 | name→dispatcher / Subscribe/Emit/Token |
 | `event/SandboxContext.h` | payload | 事件上下文（勿与 SandboxServices 撞名） |
 | `SandboxMacros.h` | 宏 | SAFE_DELETE |
 
 ## 4. 公开能力要点
 
-- 对象生命周期 + 组件容器（AddComponent/FindComponent<T>/GetComponent(key)）+ 服务注入 + 事件总线。
+- 对象生命周期 + 组件容器（AddComponent/FindComponent<T>/GetComponent(key)）+ `BaseObject::Update` 按 `IComponent::getUpdateOrder()` 驱动组件 + 服务注入/变更通知 + 事件总线。
 
 ## 5. 约束与红线
 
-- **P4**：组件容器裸指针 + SAFE_DELETE（待 unique_ptr）；BlockObject 双重持有。
-- **P1（部分）**：SandboxServices 已落地下发，但仍 15 文件 `#include GameManager`、`g_*` 未清零、静态门禁未加；新代码禁直接 `g_*`。
+- **P4（核心完成）**：组件容器已迁到 `std::unique_ptr<IComponent>` 并由 `BaseObject` 统一销毁；`IComponent` 记录 lifecycle state，`BaseObject` 在 attach/destroy/update 做断言，`BuildComponentDebugString()` 会输出组件状态；BlockObject/AnimComponent 关键缓存裸指针已标注 non-owning 并在生命周期尾部清空。
+- **P1（已解决）**：SandboxServices 已落地下发并通知组件，`tools/check_sandbox_architecture.ps1` 已加静态门禁；Physics/Weapon/AI/Locomotion/FSM/AgentObject/BlockObject/SoldierObject 热点已移除 `g_*`/`GameManager` 兜底，Render/Anim/Input include 已清，`SandboxMgr::RayCastObjectId` 已通过 SandboxServices.physics 访问物理世界，SceneFactory root node / UIManager camera / CameraService / InputManager 依赖已由应用层注入，NavigationMesh/ObjectManager 场景访问已走 SceneFactory，manager 层 `g_ObjectManager`/`g_SandboxMgr` 已删除。
 - 事件总线目前同步直发，无缓冲队列/节流。
 
 ## 6. 数据流 / 与其他模块关系
 
-`ObjectManager 填 SandboxServices → BaseObject.SetSandboxServices → IComponent.GetSandboxServices`；对象创建链（[[systems-service]]）透传。被所有对象/组件依赖。
+`ObjectManager 填 SandboxServices → BaseObject.SetSandboxServices → IComponent.onSandboxServicesChanged / GetSandboxServices`；对象创建链（[[systems-service]]）透传。被所有对象/组件依赖。
 
 ## 7. 验证策略
 
@@ -42,4 +42,4 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 待：P1 收尾（g_* 清零+门禁）、P4 unique_ptr。`docs/design/architecture-improvement-plan.md` P1/P4、`docs/design/cpp-object-model-refactor-roadmap.md`。
+- 待：P4 其它缓存裸指针审计。`docs/design/architecture-improvement-plan.md` P4、`docs/design/cpp-object-model-refactor-roadmap.md`。

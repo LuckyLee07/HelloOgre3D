@@ -27,6 +27,7 @@ FairyGUI UI 完整栈：C++ 系统（init/render/input/对象管理）+ Lua brid
 ## 5. 约束与红线
 
 - lua_bridge 是**手工 glue（非 tolua）**，新增功能 C++/Lua 两端同步。
+- Lua native 后端只走 `FairyGuiRuntime`；`GameManager` 不再暴露或保留 `*FairyGui*` API 转发。
 - handle 生命周期需显式销毁（销毁父容器不自动清子）；二次销毁崩溃。
 - 输入 `Inject*` 返回 bool 表是否被 FGUI 拦截，主循环据此决定是否透传游戏逻辑。
 - cocoslite 内嵌渲染，改版本需完整回归 FGUI gate。
@@ -38,7 +39,7 @@ FairyGUI UI 完整栈：C++ 系统（init/render/input/对象管理）+ Lua brid
 ## 7. 验证策略
 
 - gate：`tools/run_fgui_production_gate.ps1 -Mode Full -StopExisting`（含 Fast/All/LongLoop/Pressure + 静态检查）。
-- 自测：`HELLO_FGUI_SELF_TEST_ALL=1`。
+- 自测：`tools/run_fgui_selftest.ps1 -Mode All -StopExisting`（要求 suite `N / N` 全通过）。
 
 ## 8. 已知 gap / 相关文档
 
