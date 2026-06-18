@@ -10,7 +10,6 @@
 class AgentAnim;
 class AgentAnimStateMachine;
 class RenderComponent;
-class SoldierObject;
 
 class WeaponComponent : public IComponent //tolua_exports
 { //tolua_exports
@@ -20,6 +19,7 @@ public:
 
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
+	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaMs) override;
 
 	void Init(const Ogre::String& meshFile);
@@ -29,11 +29,8 @@ public:
 	//tolua_begin
 	AgentAnim* GetAnimation(const char* animationName);
 	AgentAnimStateMachine* GetObjectASM() const;
-	//tolua_end
-
 	void SyncToHandBone();
 	void ShootBullet();
-	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 
 	void SetAmmo(int ammo);
 	int GetAmmo() const { return m_ammo; }
@@ -42,12 +39,12 @@ public:
 	bool HasAmmo() const { return m_ammo > 0; }
 	void ConsumeAmmo(int amount);
 	void RestoreAmmo();
+	//tolua_end
+
+	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 
 	const Ogre::Vector3& GetHandOffsetPos() const { return m_handOffsetPos; }
 	const Ogre::Quaternion& GetHandOffsetOrientation() const { return m_handOffsetOrientation; }
-
-private:
-	SoldierObject* GetSoldierOwner() const;
 
 private:
 	RenderComponent* m_weaponRender;

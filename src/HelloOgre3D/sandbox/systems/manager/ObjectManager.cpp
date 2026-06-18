@@ -13,9 +13,8 @@
 #include "ai/tactics/TacticalQueryService.h"
 #include "ai/team/TeamBlackboardService.h"
 #include "common/ScriptLuaVM.h"
+#include "systems/manager/ObjectRegistry.h"
 #include "systems/physics/PhysicsWorld.h"
-#include "ClientManager.h"
-#include "GameManager.h"
 #include "debug/DebugDrawer.h"
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneNode.h"
@@ -36,8 +35,6 @@
 #include <cstdlib>
 #include <limits>
 #include <vector>
-
-ObjectManager* g_ObjectManager = nullptr;
 
 namespace
 {
@@ -314,7 +311,7 @@ namespace
 
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
-	: m_objIndex(0), m_pPhysicsWorld(pPhysicsWorld), m_tacticalInfluenceDebugVisible(true)
+	: m_registry(new ObjectRegistry()), m_pPhysicsWorld(pPhysicsWorld), m_tacticalInfluenceDebugVisible(true), m_currentTimeMs(0)
 {
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
@@ -346,6 +343,7 @@ ObjectManager::~ObjectManager()
 
 	clearTacticalInfluenceDebugVisuals();
 	this->clearAllObjects(MGR_OBJ_ALLS);
+	SAFE_DELETE(m_registry);
 	SAFE_DELETE(m_aiScheduler);
 	SAFE_DELETE(m_agentSpatialIndex);
 	SAFE_DELETE(m_agentPerceptionSystem);
@@ -360,18 +358,13 @@ ObjectManager::~ObjectManager()
 	m_navMeshes.clear();
 }
 
-ObjectManager* ObjectManager::GetInstance()
-{
-	return g_ObjectManager;
-}
-
 void ObjectManager::Update(int deltaMilliseconds)
 {
 	H3D_PROFILE_SCOPE("ObjectManager::Update");
 	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
 	RuntimeObjectUpdateTiming perfTiming;
-	perfTiming.objectCount = static_cast<int>(m_objects.size());
-	perfTiming.agentCount = static_cast<int>(m_agents.size());
+	perfTiming.objectCount = static_cast<int>(m_registry->Objects().size());
+	perfTiming.agentCount = static_cast<int>(m_registry->Agents().size());
 	long long stageStartMicros = 0;
 	const bool useAiScheduler = m_aiScheduler != nullptr && m_aiScheduler->IsEnabled();
 	const int aiControllerCount = getAiSoldierCount();
@@ -389,9 +382,9 @@ void ObjectManager::Update(int deltaMilliseconds)
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		if (m_agentSpatialIndex->IsEnabled())
-			m_agentSpatialIndex->Rebuild(m_agents);
+			m_agentSpatialIndex->Rebuild(m_registry->Agents());
 		else
-			m_agentSpatialIndex->BeginFrameLinearFallback(static_cast<int>(m_agents.size()));
+			m_agentSpatialIndex->BeginFrameLinearFallback(static_cast<int>(m_registry->Agents().size()));
 		if (perfEnabled)
 			perfTiming.spatialRebuildMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 	}
@@ -408,97 +401,28 @@ void ObjectManager::Update(int deltaMilliseconds)
 	{
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_agentPerceptionSystem->Update(m_agents, deltaMilliseconds, this);
+		m_agentPerceptionSystem->Update(m_registry->Agents(), deltaMilliseconds, this);
 		if (perfEnabled)
 			perfTiming.perceptionSystemMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 		m_agentPerceptionSystem->PublishTracyCounters();
 	}
 
-	const long long objectLoopStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-	for (auto iter = m_objects.begin(); iter != m_objects.end();)
-	{
-		BaseObject* pObject = iter->second;
-		if (pObject == nullptr || pObject->CheckNeedClear())
-		{
-			if (m_aiScheduler != nullptr && pObject != nullptr)
-				m_aiScheduler->RemoveAgent(pObject->GetObjId());
-			iter = m_objects.erase(iter);
-			this->realRemoveObject(pObject);
-		}
-		else
-		{
-			AIController* ai = pObject->FindComponent<AIController>();
-			if (ai != nullptr && useAiScheduler)
-			{
-				ai->SetTickInOwnerUpdateEnabled(false);
-				int aiDeltaMs = 0;
-				if (m_aiScheduler->ShouldTick(ai->GetAgentId(), deltaMilliseconds, &aiDeltaMs))
-					ai->TickAI(aiDeltaMs);
-			}
-			else if (ai != nullptr)
-			{
-				ai->SetTickInOwnerUpdateEnabled(true);
-			}
-
-			const long long objectUpdateStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-			pObject->Update(deltaMilliseconds);
-			if (perfEnabled)
-			{
-				const double objectUpdateMs = RuntimeStallProfiler::ElapsedMsSince(objectUpdateStartMicros);
-				perfTiming.objectUpdateMs += objectUpdateMs;
-				perfTiming.objectUpdateMaxMs = std::max(perfTiming.objectUpdateMaxMs, objectUpdateMs);
-				++perfTiming.objectUpdateCount;
-			}
-			const long long objectEventStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-			pObject->FlushQueuedEvents();
-			if (perfEnabled)
-				perfTiming.objectEventFlushMs += RuntimeStallProfiler::ElapsedMsSince(objectEventStartMicros);
-			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
-			{
-				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
-			}
-			iter++;
-		}
-	}
-	if (perfEnabled)
-		perfTiming.objectLoopMs = RuntimeStallProfiler::ElapsedMsSince(objectLoopStartMicros);
+	UpdateManagedObjects(deltaMilliseconds, useAiScheduler, perfEnabled, perfTiming);
 	if (m_aiScheduler != nullptr)
 		m_aiScheduler->PublishTracyCounters();
 	if (m_teamBlackboardService != nullptr)
 	{
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_teamBlackboardService->SyncFromAgents(m_agents, deltaMilliseconds);
+		m_teamBlackboardService->SyncFromAgents(m_registry->Agents(), deltaMilliseconds);
 		if (perfEnabled)
 			perfTiming.teamBlackboardMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 		m_teamBlackboardService->PublishTracyCounters();
 	}
 
-	Ogre::SceneNode* pRootScene = GetClientMgr()->getRootSceneNode();
-	if (perfEnabled)
-		stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-	for (auto iter = m_remSceneNodes.begin(); iter != m_remSceneNodes.end();)
-	{
-		int lastMilliSeconds = iter->second;
-		lastMilliSeconds -= deltaMilliseconds;
-		if (lastMilliSeconds <= 0)
-		{
-			auto pSceneNode = iter->first;
-			SceneFactory::RemParticleBySceneNode(pSceneNode);
-			pRootScene->removeChild(pSceneNode);
-			pRootScene->getCreator()->destroySceneNode(pSceneNode);
-
-			iter = m_remSceneNodes.erase(iter);
-		}
-		else
-		{
-			iter->second = lastMilliSeconds;
-			iter++;
-		}
-	}
+	CleanupRemovedSceneNodes(deltaMilliseconds, perfEnabled, perfTiming);
 	if (perfEnabled)
 	{
-		perfTiming.sceneCleanupMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 		if (m_agentSpatialIndex != nullptr)
 		{
 			const AgentSpatialIndexSystem::Stats& stats = m_agentSpatialIndex->GetStats();
@@ -554,9 +478,88 @@ void ObjectManager::Update(int deltaMilliseconds)
 	}
 }
 
+void ObjectManager::UpdateManagedObjects(int deltaMilliseconds, bool useAiScheduler, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming)
+{
+	const long long objectLoopStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+	for (auto iter = m_registry->Objects().begin(); iter != m_registry->Objects().end();)
+	{
+		BaseObject* pObject = iter->second;
+		if (pObject == nullptr || pObject->CheckNeedClear())
+		{
+			if (m_aiScheduler != nullptr && pObject != nullptr)
+				m_aiScheduler->RemoveAgent(pObject->GetObjId());
+			iter = m_registry->Objects().erase(iter);
+			this->realRemoveObject(pObject);
+		}
+		else
+		{
+			AIController* ai = pObject->FindComponent<AIController>();
+			if (ai != nullptr && useAiScheduler)
+			{
+				ai->SetTickInOwnerUpdateEnabled(false);
+				int aiDeltaMs = 0;
+				if (m_aiScheduler->ShouldTick(ai->GetAgentId(), deltaMilliseconds, &aiDeltaMs))
+					ai->TickAI(aiDeltaMs);
+			}
+			else if (ai != nullptr)
+			{
+				ai->SetTickInOwnerUpdateEnabled(true);
+			}
+
+			const long long objectUpdateStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+			pObject->Update(deltaMilliseconds);
+			if (perfEnabled)
+			{
+				const double objectUpdateMs = RuntimeStallProfiler::ElapsedMsSince(objectUpdateStartMicros);
+				perfTiming.objectUpdateMs += objectUpdateMs;
+				perfTiming.objectUpdateMaxMs = std::max(perfTiming.objectUpdateMaxMs, objectUpdateMs);
+				++perfTiming.objectUpdateCount;
+			}
+			const long long objectEventStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+			pObject->FlushQueuedEvents();
+			if (perfEnabled)
+				perfTiming.objectEventFlushMs += RuntimeStallProfiler::ElapsedMsSince(objectEventStartMicros);
+			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
+			{
+				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
+			}
+			iter++;
+		}
+	}
+	if (perfEnabled)
+		perfTiming.objectLoopMs = RuntimeStallProfiler::ElapsedMsSince(objectLoopStartMicros);
+}
+
+void ObjectManager::CleanupRemovedSceneNodes(int deltaMilliseconds, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming)
+{
+	Ogre::SceneNode* pRootScene = SceneFactory::GetRootSceneNode();
+	const long long stageStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+	for (auto iter = m_remSceneNodes.begin(); pRootScene != nullptr && iter != m_remSceneNodes.end();)
+	{
+		int lastMilliSeconds = iter->second;
+		lastMilliSeconds -= deltaMilliseconds;
+		if (lastMilliSeconds <= 0)
+		{
+			auto pSceneNode = iter->first;
+			SceneFactory::RemParticleBySceneNode(pSceneNode);
+			pRootScene->removeChild(pSceneNode);
+			pRootScene->getCreator()->destroySceneNode(pSceneNode);
+
+			iter = m_remSceneNodes.erase(iter);
+		}
+		else
+		{
+			iter->second = lastMilliSeconds;
+			iter++;
+		}
+	}
+	if (perfEnabled)
+		perfTiming.sceneCleanupMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+}
+
 void ObjectManager::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
 {
-	for (auto iter = m_agents.begin(); iter != m_agents.end(); iter++)
+	for (auto iter = m_registry->Agents().begin(); iter != m_registry->Agents().end(); iter++)
 	{
 		if (AgentObject* pAgent = *iter)
 		{
@@ -575,24 +578,34 @@ void ObjectManager::SetSandboxServices(const SandboxServices& services)
 	if (m_services.script == nullptr)
 		m_services.script = m_pScriptVM;
 
-	for (std::unordered_map<int, BaseObject*>::iterator iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+	for (std::unordered_map<int, BaseObject*>::iterator iter = m_registry->Objects().begin(); iter != m_registry->Objects().end(); ++iter)
 	{
 		if (iter->second != nullptr)
 			iter->second->SetSandboxServices(&m_services);
 	}
 }
 
+const std::vector<AgentObject*>& ObjectManager::getAllAgents()
+{
+	return m_registry->Agents();
+}
+
+const std::vector<BlockObject*>& ObjectManager::getAllBlocks()
+{
+	return m_registry->Blocks();
+}
+
 std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentType)
 {
 	if (agentType == AGENT_OBJ_NONE)
 	{
-		return m_agents;
+		return m_registry->Agents();
 	}
 
 	std::vector<AgentObject*> specifyAgents;
 
 	std::vector<AgentObject*>::iterator iter;
-	for (iter = m_agents.begin(); iter != m_agents.end(); iter++)
+	for (iter = m_registry->Agents().begin(); iter != m_registry->Agents().end(); iter++)
 	{
 		AgentObject* pAgentObject = *iter;
 		if (pAgentObject->getAgentType() == agentType)
@@ -606,18 +619,18 @@ std::vector<AgentObject*> ObjectManager::getSpecifyAgents(AGENT_OBJ_TYPE agentTy
 
 int ObjectManager::getObjectCount() const
 {
-	return static_cast<int>(m_objects.size());
+	return static_cast<int>(m_registry->Objects().size());
 }
 
 int ObjectManager::getAiAgentCount() const
 {
-	return static_cast<int>(m_agents.size());
+	return static_cast<int>(m_registry->Agents().size());
 }
 
 int ObjectManager::getAiSoldierCount() const
 {
 	int count = 0;
-	for (std::unordered_map<int, BaseObject*>::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it)
+	for (std::unordered_map<int, BaseObject*>::const_iterator it = m_registry->Objects().begin(); it != m_registry->Objects().end(); ++it)
 	{
 		if (it->second != nullptr && it->second->FindComponent<AIController>() != nullptr)
 			++count;
@@ -836,12 +849,7 @@ void ObjectManager::publishTacticalEvent(const std::string& eventType, int sende
 		int resolvedTimeMs = timeMs;
 		if (resolvedTimeMs <= 0)
 		{
-			GameManager* gameManager = GetGameManager();
-			if (gameManager != nullptr)
-			{
-				const long long currentTimeMs = gameManager->getTimeInMillis();
-				resolvedTimeMs = static_cast<int>(std::max<long long>(0, std::min<long long>(currentTimeMs, std::numeric_limits<int>::max())));
-			}
+			resolvedTimeMs = static_cast<int>(std::max<long long>(0, std::min<long long>(m_currentTimeMs, std::numeric_limits<int>::max())));
 		}
 		m_tacticalQueryService->PublishEvent(eventType, senderId, targetId, teamId, targetTeamId, position, resolvedTimeMs, scopeName, queueEvent);
 	}
@@ -918,7 +926,7 @@ int ObjectManager::rebuildTacticalTeamLayer(int positiveTeamId, float teamStreng
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0;
-	return m_tacticalQueryService->RebuildTeamLayer(m_agents, positiveTeamId, teamStrength, radius, spreadPasses);
+	return m_tacticalQueryService->RebuildTeamLayer(m_registry->Agents(), positiveTeamId, teamStrength, radius, spreadPasses);
 }
 
 int ObjectManager::rebuildTacticalObjectiveLayer(const Ogre::Vector3& center, float strength, float radius, int spreadPasses)
@@ -1003,8 +1011,7 @@ int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& l
 	if (influenceMap == nullptr)
 		return 0;
 
-	ClientManager* clientManager = GetClientMgr();
-	Ogre::SceneManager* sceneManager = clientManager != nullptr ? clientManager->getSceneManager() : nullptr;
+	Ogre::SceneManager* sceneManager = SceneFactory::GetSceneManager();
 	if (sceneManager == nullptr)
 		return 0;
 
@@ -1127,8 +1134,7 @@ void ObjectManager::setTacticalInfluenceDebugVisible(bool visible)
 
 void ObjectManager::clearTacticalInfluenceDebugVisuals()
 {
-	ClientManager* clientManager = GetClientMgr();
-	Ogre::SceneManager* sceneManager = clientManager != nullptr ? clientManager->getSceneManager() : nullptr;
+	Ogre::SceneManager* sceneManager = SceneFactory::GetSceneManager();
 	if (sceneManager == nullptr)
 	{
 		m_tacticalInfluenceDebugVisuals.clear();
@@ -1186,14 +1192,14 @@ std::string ObjectManager::buildAiEventDebugSummary(int maxAgents, int maxEvents
 	if (maxEvents > 32)
 		maxEvents = 32;
 
-	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
+	const int showingCount = maxAgents < static_cast<int>(m_registry->Agents().size()) ? maxAgents : static_cast<int>(m_registry->Agents().size());
 	std::ostringstream stream;
-	stream << "[AIEvent] agents=" << m_agents.size()
+	stream << "[AIEvent] agents=" << m_registry->Agents().size()
 		<< " showing=" << showingCount
 		<< " maxEvents=" << maxEvents;
 	for (int index = 0; index < showingCount; ++index)
 	{
-		AgentObject* agent = m_agents[index];
+		AgentObject* agent = m_registry->Agents()[index];
 		if (agent == nullptr)
 			continue;
 
@@ -1390,11 +1396,11 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		maxAgents = 32;
 
 	const int aiControllerCount = getAiSoldierCount();
-	const int showingCount = maxAgents < static_cast<int>(m_agents.size()) ? maxAgents : static_cast<int>(m_agents.size());
+	const int showingCount = maxAgents < static_cast<int>(m_registry->Agents().size()) ? maxAgents : static_cast<int>(m_registry->Agents().size());
 	int visibleTargetCount = 0;
 	int memoryTargetCount = 0;
 	int blackboardEntryCount = 0;
-	for (AgentObject* agent : m_agents)
+	for (AgentObject* agent : m_registry->Agents())
 	{
 		if (agent == nullptr)
 			continue;
@@ -1411,7 +1417,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 		blackboardEntryCount += blackboard->GetEntryCount();
 	}
 	std::ostringstream stream;
-	stream << "AI agents=" << m_agents.size()
+	stream << "AI agents=" << m_registry->Agents().size()
 		<< " controllers=" << aiControllerCount
 		<< " showing=" << showingCount
 		<< " visibleTargets=" << visibleTargetCount
@@ -1428,7 +1434,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 
 	for (int index = 0; index < showingCount; ++index)
 	{
-		AgentObject* agent = m_agents[index];
+		AgentObject* agent = m_registry->Agents()[index];
 		if (agent == nullptr)
 			continue;
 
@@ -1503,8 +1509,8 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 		maxObjects = 64;
 
 	std::vector<int> objectIds;
-	objectIds.reserve(m_objects.size());
-	for (std::unordered_map<int, BaseObject*>::const_iterator iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+	objectIds.reserve(m_registry->Objects().size());
+	for (std::unordered_map<int, BaseObject*>::const_iterator iter = m_registry->Objects().begin(); iter != m_registry->Objects().end(); ++iter)
 	{
 		objectIds.push_back(iter->first);
 	}
@@ -1512,17 +1518,17 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 
 	const int showingCount = maxObjects < static_cast<int>(objectIds.size()) ? maxObjects : static_cast<int>(objectIds.size());
 	std::ostringstream stream;
-	stream << "[ObjectInspector] objects=" << m_objects.size()
-		<< " agents=" << m_agents.size()
-		<< " blocks=" << m_blocks.size()
+	stream << "[ObjectInspector] objects=" << m_registry->Objects().size()
+		<< " agents=" << m_registry->Agents().size()
+		<< " blocks=" << m_registry->Blocks().size()
 		<< " navMeshes=" << m_navMeshes.size()
 		<< " pendingSceneNodes=" << m_remSceneNodes.size()
 		<< " showing=" << showingCount;
 
 	for (int index = 0; index < showingCount; ++index)
 	{
-		std::unordered_map<int, BaseObject*>::const_iterator found = m_objects.find(objectIds[index]);
-		if (found == m_objects.end() || found->second == nullptr)
+		std::unordered_map<int, BaseObject*>::const_iterator found = m_registry->Objects().find(objectIds[index]);
+		if (found == m_registry->Objects().end() || found->second == nullptr)
 			continue;
 
 		BaseObject* object = found->second;
@@ -1576,32 +1582,32 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 {
 	if ((objType & MGR_OBJ_BLOCK) != 0)
 	{
-		auto iter = m_blocks.begin();
-		for (; iter != m_blocks.end(); iter++)
+		auto iter = m_registry->Blocks().begin();
+		for (; iter != m_registry->Blocks().end(); iter++)
 		{
 			auto pBlock = *iter;
 			if (!forceAll && pBlock->GetObjType() != BaseObject::OBJ_TYPE_BLOCK)
 				continue; //防止删除Plane
 
-			m_objects.erase(pBlock->GetObjId());
+			m_registry->Objects().erase(pBlock->GetObjId());
 			SAFE_DELETE(pBlock);
 		}
-		m_blocks.clear();
+		m_registry->Blocks().clear();
 	}
 
 	if ((objType & MGR_OBJ_AGENT) != 0)
 	{
-		auto iter = m_agents.begin();
-		for (; iter != m_agents.end(); iter++)
+		auto iter = m_registry->Agents().begin();
+		for (; iter != m_registry->Agents().end(); iter++)
 		{
 			auto pAgent = *iter;
-			m_objects.erase(pAgent->GetObjId());
+			m_registry->Objects().erase(pAgent->GetObjId());
 			if (m_aiScheduler != nullptr)
 				m_aiScheduler->RemoveAgent(pAgent->GetObjId());
 
 			SAFE_DELETE(pAgent);
 		}
-		m_agents.clear();
+		m_registry->Agents().clear();
 		if (m_aiScheduler != nullptr)
 			m_aiScheduler->Clear();
 		if (m_agentSpatialIndex != nullptr)
@@ -1629,8 +1635,8 @@ std::vector<BlockObject*> ObjectManager::getFixedObjects()
 {
 	std::size_t fixedObjects = 0;
 
-	auto iter = m_objects.begin();
-	for (; iter != m_objects.end(); iter++)
+	auto iter = m_registry->Objects().begin();
+	for (; iter != m_registry->Objects().end(); iter++)
 	{
 		BaseObject* pObject = iter->second;
 		if (pObject && pObject->GetMass() <= 0.0f)
@@ -1645,8 +1651,8 @@ std::vector<BlockObject*> ObjectManager::getFixedObjects()
 	std::vector<BlockObject*> objects;
 	objects.reserve(fixedObjects);
 
-	auto iter1 = m_objects.begin();
-	for (; iter1 != m_objects.end(); iter1++)
+	auto iter1 = m_registry->Objects().begin();
+	for (; iter1 != m_registry->Objects().end(); iter1++)
 	{
 		BlockObject* pObject = dynamic_cast<BlockObject*>(iter1->second);
 		if (pObject && pObject->GetMass() <= 0.0f)
@@ -1668,10 +1674,10 @@ void ObjectManager::addNewObject(BaseObject* pObject)
 
 	pObject->SetSandboxServices(&m_services);
 
-	unsigned int objectId = getNextObjId();
+	unsigned int objectId = m_registry->AllocateObjectId();
 	pObject->SetObjId(objectId);
 	pObject->Init();
-	m_objects[objectId] = pObject;
+	m_registry->RegisterObject(objectId, pObject);
 
 	this->realAddObject(pObject);
 }
@@ -1683,15 +1689,12 @@ void ObjectManager::realAddObject(BaseObject* pObject)
 	{
 		auto newObject = dynamic_cast<AgentObject*>(pObject);
 		assert(newObject != nullptr);
-		m_agents.push_back(newObject);
 		if (m_agentSpatialIndex != nullptr)
 			m_agentSpatialIndex->AddOrUpdateAgent(newObject);
 	}
 	else if (objtype >= BaseObject::OBJ_TYPE_BLOCK)
 	{
-		auto newObject = dynamic_cast<BlockObject*>(pObject);
-		assert(newObject != nullptr);
-		m_blocks.push_back(newObject);
+		assert(dynamic_cast<BlockObject*>(pObject) != nullptr);
 	}
 }
 
@@ -1704,32 +1707,25 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	unsigned int objid = pObject->GetObjId();
 	if (objtype >= BaseObject::OBJ_TYPE_AGENT)
 	{
-		for (auto it = m_agents.begin(); it != m_agents.end(); it++)
-		{
-			if ((*it)->GetObjId() == objid)
-			{
-				if (m_agentSpatialIndex != nullptr)
-					m_agentSpatialIndex->RemoveAgent(static_cast<AgentObject*>(pObject));
-				m_agents.erase(it);
-				if (m_aiScheduler != nullptr)
-					m_aiScheduler->RemoveAgent(objid);
-				SAFE_DELETE(pObject);
-				return true;
-			}
-		}
+		AgentObject* agent = dynamic_cast<AgentObject*>(pObject);
+		assert(agent != nullptr);
+		if (!m_registry->UnregisterTypeIndex(pObject))
+			return false;
+		if (m_agentSpatialIndex != nullptr)
+			m_agentSpatialIndex->RemoveAgent(agent);
+		if (m_aiScheduler != nullptr)
+			m_aiScheduler->RemoveAgent(objid);
+		SAFE_DELETE(pObject);
+		return true;
 	}
 	
 	if (objtype >= BaseObject::OBJ_TYPE_BLOCK)
 	{
-		for (auto it = m_blocks.begin(); it != m_blocks.end(); it++)
-		{
-			if ((*it)->GetObjId() == objid)
-			{
-				m_blocks.erase(it);
-				SAFE_DELETE(pObject);
-				return true;
-			}
-		}
+		assert(dynamic_cast<BlockObject*>(pObject) != nullptr);
+		if (!m_registry->UnregisterTypeIndex(pObject))
+			return false;
+		SAFE_DELETE(pObject);
+		return true;
 	}
 	
 	return false;
@@ -1737,25 +1733,15 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 
 bool ObjectManager::removeObjectById(int objid)
 {
-	auto iter = m_objects.find(objid);
-	if (iter != m_objects.end())
-	{
-		BaseObject *pObject = iter->second;
-		m_objects.erase(iter);
-		bool result = realRemoveObject(pObject);
-		return result;
-	}
-	return false;
+	BaseObject* pObject = nullptr;
+	if (!m_registry->EraseObjectById(objid, &pObject))
+		return false;
+	return realRemoveObject(pObject);
 }
 
 BaseObject* ObjectManager::getObjectById(int objid)
 {
-	auto iter = m_objects.find(objid);
-	if (iter != m_objects.end())
-	{
-		return iter->second;
-	}
-	return nullptr;
+	return m_registry->FindObject(objid);
 }
 
 void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds)

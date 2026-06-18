@@ -1,8 +1,14 @@
 #include "PhysicsComponent.h"
-#include "GameManager.h"
 #include "core/SandboxServices.h"
 #include "systems/physics/PhysicsWorld.h"
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4100 4127)
+#endif
 #include "btBulletDynamicsCommon.h"
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 #include "SandboxMacros.h"
 #include "GameFunction.h"
 #include "systems/service/PhysicsFactory.h"
@@ -14,7 +20,7 @@ namespace
 		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->physics != nullptr)
 			return services->physics;
-		return g_GameManager != nullptr ? g_GameManager->getPhysicsWorld() : nullptr;
+		return nullptr;
 	}
 }
 
@@ -50,6 +56,12 @@ void PhysicsComponent::onDetach()
 	IComponent::onDetach();
 }
 
+void PhysicsComponent::onSandboxServicesChanged(const SandboxServices* services)
+{
+	if (services != nullptr && services->physics != nullptr)
+		AddToWorld();
+}
+
 void PhysicsComponent::DeleteRigidBody()
 {
 	if (m_body != nullptr)
@@ -67,19 +79,27 @@ void PhysicsComponent::DeleteRigidBody()
 void PhysicsComponent::AddToWorld()
 {
 	if (!m_body) return;
+	if (m_addedToWorld) return;
 
 	PhysicsWorld* pPhysicsWorld = ResolvePhysicsWorld(this);
 	if (pPhysicsWorld)
+	{
 		pPhysicsWorld->addRigidBody(m_body);
+		m_addedWorld = pPhysicsWorld;
+		m_addedToWorld = true;
+	}
 }
 
 void PhysicsComponent::RemoveFromWorld()
 {
 	if (!m_body) return;
+	if (!m_addedToWorld) return;
 
-	PhysicsWorld* pPhysicsWorld = ResolvePhysicsWorld(this);
+	PhysicsWorld* pPhysicsWorld = m_addedWorld != nullptr ? m_addedWorld : ResolvePhysicsWorld(this);
 	if (pPhysicsWorld)
 		pPhysicsWorld->removeRigidBody(m_body);
+	m_addedWorld = nullptr;
+	m_addedToWorld = false;
 }
 
 // RigidBody ops

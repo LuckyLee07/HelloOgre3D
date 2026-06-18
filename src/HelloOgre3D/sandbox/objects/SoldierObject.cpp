@@ -1,5 +1,5 @@
 #include "SoldierObject.h"
-#include "GameManager.h"
+#include "core/SandboxServices.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "OgreMath.h"
@@ -54,8 +54,12 @@ void SoldierObject::Init()
 {
 	AgentObject::Init();
 
-	auto inputMgr = GetGameManager()->getInputManager();
-	m_inputInfo = new PlayerInput(inputMgr);
+	const SandboxServices* services = GetSandboxServices();
+	InputManager* inputMgr = services != nullptr ? services->input : nullptr;
+	if (inputMgr != nullptr)
+	{
+		m_inputInfo = new PlayerInput(inputMgr);
+	}
 }
 
 AIController* SoldierObject::GetAIController() const
@@ -153,28 +157,7 @@ void SoldierObject::Update(int deltaMilisec)
 	// Keep body transform in sync with physics before animation/bone evaluation.
 	this->updateWorldTransform();
 
-	AIController* ai = GetAIController();
-	if (ai != nullptr && ai->IsTickInOwnerUpdateEnabled())
-		TickAi(deltaMilisec);
-
-	AnimComponent* animComp = GetAnimComponent();
-	if (animComp != nullptr)
-		animComp->UpdateController(deltaMilisec);
-
-	{
-		H3D_PROFILE_SCOPE("AgentBody::Update");
-		if (m_renderComp != nullptr)
-			m_renderComp->Update(deltaMilisec);
-		if (animComp != nullptr)
-			animComp->UpdateBodyAnimations(deltaMilisec);
-	}
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp)
-	{
-		H3D_PROFILE_SCOPE("Weapon::Update");
-		weaponComp->update(deltaMilisec);
-	}
-
+	BaseObject::Update(deltaMilisec);
 	TryApplyPendingStance();
 }
 
@@ -528,6 +511,42 @@ AgentStateController* SoldierObject::GetFsmController() const
 {
 	AIController* ai = GetAIController();
 	return ai != nullptr ? ai->GetFsmController() : nullptr;
+}
+
+BaseObject* SoldierObject::GetAnimOwnerObject()
+{
+	return this;
+}
+
+AgentAnimStateMachine* SoldierObject::GetBodyAnimStateMachine() const
+{
+	return GetObjectASM();
+}
+
+AgentAnimStateMachine* SoldierObject::GetWeaponAnimStateMachine() const
+{
+	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	return weaponComp != nullptr ? weaponComp->GetObjectASM() : nullptr;
+}
+
+int SoldierObject::GetAnimStanceType() const
+{
+	return getStanceType();
+}
+
+bool SoldierObject::IsCppAnimControllerEnabled() const
+{
+	return const_cast<SoldierObject*>(this)->GetUseCppFSM();
+}
+
+void SoldierObject::ExecuteAnimShoot()
+{
+	ShootBullet();
+}
+
+AgentStateController* SoldierObject::GetAnimFsmController() const
+{
+	return GetFsmController();
 }
 
 void SoldierObject::EnterIdleAnim()

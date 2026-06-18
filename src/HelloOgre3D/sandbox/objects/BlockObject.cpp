@@ -8,7 +8,6 @@
 #include "core/SandboxServices.h"
 #include "systems/manager/SandboxMgr.h"
 #include "systems/physics/PhysicsWorld.h"
-#include "game/GameManager.h"
 #include "systems/manager/ObjectManager.h"
 #include "OgreParticleSystemManager.h"
 #include "OgreParticleSystem.h"
@@ -84,6 +83,8 @@ BlockObject::~BlockObject()
 	m_particleNodes.clear();
 
 	m_renderComp = nullptr;
+	m_physicsComp = nullptr;
+	m_ownerObject = nullptr;
 }
 
 void BlockObject::Init()
@@ -199,7 +200,8 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 		pCollideObj->SetNeedClear(); // 标记为清理
 		SpawnBulletImpactWithServices(collision, GetSandboxServices());
 		BlockObject* bullet = dynamic_cast<BlockObject*>(pCollideObj);
-		ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+		const SandboxServices* services = GetSandboxServices();
+		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
 		if (bullet != nullptr && objectManager != nullptr)
 		{
 			BaseObject* bulletOwner = bullet->GetOwner();
@@ -227,16 +229,20 @@ void BlockObject::SpawnBulletImpact(const Collision& collision)
 	SpawnBulletImpactWithServices(collision, nullptr);
 }
 
+void BlockObject::SpawnBulletImpact(const Collision& collision, const SandboxServices* services)
+{
+	SpawnBulletImpactWithServices(collision, services);
+}
+
 namespace
 {
 void SpawnBulletImpactWithServices(const Collision& collision, const SandboxServices* services)
 {
 	// 创建射击碰撞效果
-	Ogre::SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
-	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle(pRootScene, "BulletImpact");
+	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle("BulletImpact");
 
 	// 2秒后清掉该粒子效果
-	ObjectManager* objectManager = services != nullptr && services->objects != nullptr ? services->objects : g_ObjectManager;
+	ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
 	if (objectManager != nullptr)
 		objectManager->markNodeRemInSeconds(particleImpact, 2.0f);
 

@@ -6,25 +6,25 @@
 #include "SandboxMacros.h"
 #include "OgreSceneNode.h"
 #include "core/SandboxServices.h"
+#include "core/object/BaseObject.h"
 #include "objects/BlockObject.h"
-#include "objects/SoldierObject.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimProfile.h"
 #include "components/anim/AnimComponent.h"
 #include "components/render/RenderComponent.h"
-#include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
+#include "systems/service/ObjectFactory.h"
 #include "systems/service/SceneFactory.h"
 #include "event/SandboxEventPayload.h"
 
 namespace
 {
-	SandboxMgr* ResolveSandboxMgr(const WeaponComponent* component)
+	ObjectFactory* ResolveObjectFactory(const WeaponComponent* component)
 	{
 		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
-		if (services != nullptr && services->sandbox != nullptr)
-			return services->sandbox;
-		return g_SandboxMgr;
+		if (services != nullptr && services->objectFactory != nullptr)
+			return services->objectFactory;
+		return nullptr;
 	}
 
 	ObjectManager* ResolveObjectManager(const WeaponComponent* component)
@@ -32,7 +32,7 @@ namespace
 		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->objects != nullptr)
 			return services->objects;
-		return g_ObjectManager;
+		return nullptr;
 	}
 
 	RenderComponent* FindOwnerRender(const WeaponComponent* component)
@@ -73,9 +73,9 @@ void WeaponComponent::onDetach()
 	IComponent::onDetach();
 }
 
-SoldierObject* WeaponComponent::GetSoldierOwner() const
+int WeaponComponent::getUpdateOrder() const
 {
-	return dynamic_cast<SoldierObject*>(getOwner());
+	return ComponentUpdateOrder::Weapon;
 }
 
 void WeaponComponent::update(int deltaMs)
@@ -219,9 +219,9 @@ AgentAnimStateMachine* WeaponComponent::GetObjectASM() const
 
 void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
 {
-	SandboxMgr* sandbox = ResolveSandboxMgr(this);
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner == nullptr || sandbox == nullptr)
+	ObjectFactory* objectFactory = ResolveObjectFactory(this);
+	BaseObject* owner = getOwner();
+	if (owner == nullptr || objectFactory == nullptr)
 	{
 		return;
 	}
@@ -235,7 +235,8 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 
 	if (forward.isNaN() || forward.isZeroLength())
 	{
-		forward = owner->GetForward();
+		RenderComponent* ownerRender = FindOwnerRender(this);
+		forward = ownerRender != nullptr ? ownerRender->GetDerivedOrientation() * Ogre::Vector3::UNIT_X : Ogre::Vector3::UNIT_X;
 	}
 	forward.normalise();
 	if (up.isNaN() || up.isZeroLength())
@@ -250,7 +251,7 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	}
 	left.normalise();
 
-	BlockObject* bullet = sandbox->CreateBullet(0.3f, 0.01f);
+	BlockObject* bullet = objectFactory->CreateBullet(0.3f, 0.01f);
 	if (bullet == nullptr)
 	{
 		return;

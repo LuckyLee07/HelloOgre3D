@@ -2,7 +2,6 @@
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
 #include "btBulletDynamicsCommon.h"
-#include "GameManager.h"
 #include "BlockObject.h"
 #include "ai/common/AICommand.h"
 #include "core/SandboxServices.h"
@@ -20,7 +19,6 @@
 #include "event/SandboxEventPayload.h"
 #include "objects/steer/AgentPath.h"
 #include "systems/physics/Collision.h"
-#include "BlockObject.h"
 #include "LogSystem.h"
 #include <algorithm>
 
@@ -386,7 +384,8 @@ void AgentObject::SetHealth(Ogre::Real health)
 
 	if (currentHealth > 0.0f && GetHealth() <= 0.0f)
 	{
-		ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+		const SandboxServices* services = GetSandboxServices();
+		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
 		if (objectManager != nullptr)
 		{
 			objectManager->publishTacticalEvent(
@@ -682,8 +681,9 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	}
 
 	pBullet->SetNeedClear();
-	BlockObject::SpawnBulletImpact(collision);
-	ObjectManager* objectManager = GetSandboxServices() != nullptr && GetSandboxServices()->objects != nullptr ? GetSandboxServices()->objects : g_ObjectManager;
+	const SandboxServices* services = GetSandboxServices();
+	BlockObject::SpawnBulletImpact(collision, services);
+	ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
 	if (objectManager != nullptr)
 	{
 		BaseObject* bulletOwner = pBullet->GetOwner();
@@ -783,6 +783,6 @@ bool AgentObject::GetUseCppFSM()
 #endif // USE_CPP_FSM
 	*/
 	const SandboxServices* services = GetSandboxServices();
-	SandboxMgr* sandbox = services != nullptr && services->sandbox != nullptr ? services->sandbox : g_SandboxMgr;
+	SandboxMgr* sandbox = services != nullptr ? services->sandbox : nullptr;
 	return sandbox != nullptr ? sandbox->GetUseCppFsmFlag() : true;
 }

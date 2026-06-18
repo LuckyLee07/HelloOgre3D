@@ -49,6 +49,7 @@ public:
 	Ogre::Quaternion GetDerivedOrientation() const;
 
 	void Update(int deltaInMillis);
+	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaInMillis) override;
 	void SyncFromOwnerTransform();
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);

@@ -4,19 +4,18 @@
 #include "OgreSceneManager.h"
 #include "GameFunction.h"
 #include "OgreManualObject.h"
-#include "GameManager.h"
 #include "object/BaseObject.h"
 #include "components/physics/PhysicsComponent.h"
 #include "objects/animation/AgentAnim.h"
 #include "objects/animation/AgentAnimStateMachine.h"
+#include "systems/service/SceneFactory.h"
 
 using namespace Ogre;
 
 RenderComponent::RenderComponent(const Ogre::String& meshFile)
 	: m_visualOffset(Ogre::Vector3::ZERO)
 {
-	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
-	m_pSceneNode = pRootScene->createChildSceneNode();
+	m_pSceneNode = SceneFactory::CreateChildSceneNode();
 
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshFile);
 	m_pSceneNode->attachObject(m_pEntity);
@@ -25,8 +24,7 @@ RenderComponent::RenderComponent(const Ogre::String& meshFile)
 RenderComponent::RenderComponent(const Ogre::MeshPtr& meshPtr)
 	: m_visualOffset(Ogre::Vector3::ZERO)
 {
-	SceneNode* pRootScene = GetGameManager()->getRootSceneNode();
-	m_pSceneNode = pRootScene->createChildSceneNode();
+	m_pSceneNode = SceneFactory::CreateChildSceneNode();
 
 	m_pEntity = m_pSceneNode->getCreator()->createEntity(meshPtr);
 	m_pSceneNode->attachObject(m_pEntity);
@@ -48,8 +46,11 @@ RenderComponent::~RenderComponent()
 {
 	if (m_pEntity != nullptr)
 	{
-		SceneManager* pSceneMananger = GetGameManager()->getSceneManager();
-		pSceneMananger->destroyEntity(m_pEntity);
+		SceneManager* pSceneMananger = m_pSceneNode != nullptr ? m_pSceneNode->getCreator() : nullptr;
+		if (pSceneMananger != nullptr)
+		{
+			pSceneMananger->destroyEntity(m_pEntity);
+		}
 		m_pEntity = nullptr;
 	}
 	if (m_pSceneNode != nullptr)
@@ -176,6 +177,11 @@ void RenderComponent::AttachToBone(const Ogre::String& boneName, Ogre::Entity* e
 void RenderComponent::Update(int deltaInMillis)
 {
 	update(deltaInMillis);
+}
+
+int RenderComponent::getUpdateOrder() const
+{
+	return ComponentUpdateOrder::Render;
 }
 
 void RenderComponent::update(int deltaInMillis)

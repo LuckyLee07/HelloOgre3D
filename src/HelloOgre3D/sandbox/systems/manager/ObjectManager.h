@@ -29,6 +29,8 @@ class AgentSpatialIndexSystem;
 class InfluenceMapSystem;
 class TacticalQueryService;
 class TeamBlackboardService;
+class ObjectRegistry;
+struct RuntimeObjectUpdateTiming;
 
 //tolua_begin
 enum MGR_OBJ_TYPE
@@ -46,9 +48,8 @@ public:
 	ObjectManager(PhysicsWorld* pPhysicsWorld);
 	~ObjectManager();
 
-	static ObjectManager* GetInstance();
-
 	void Update(int deltaMilliseconds);
+	void SetCurrentTimeMs(long long currentTimeMs) { m_currentTimeMs = currentTimeMs; }
 	
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 	void SetSandboxServices(const SandboxServices& services);
@@ -58,8 +59,8 @@ public:
 	//tolua_begin
 	void clearAllObjects(int objType, bool forceAll = true);
 
-	const std::vector<AgentObject*>& getAllAgents() { return m_agents; }
-	const std::vector<BlockObject*>& getAllBlocks() { return m_blocks; }
+	const std::vector<AgentObject*>& getAllAgents();
+	const std::vector<BlockObject*>& getAllBlocks();
 
 	std::vector<AgentObject*> getSpecifyAgents(AGENT_OBJ_TYPE agentType);
 	int getObjectCount() const;
@@ -151,6 +152,8 @@ public:
 private:
 	void realAddObject(BaseObject* pObject);
 	bool realRemoveObject(BaseObject* pObject);
+	void UpdateManagedObjects(int deltaMilliseconds, bool useAiScheduler, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming);
+	void CleanupRemovedSceneNodes(int deltaMilliseconds, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming);
 
 private:
 	struct TacticalInfluenceDrawProjection
@@ -179,12 +182,7 @@ private:
 		Ogre::ManualObject* manualObject;
 	};
 
-	unsigned int m_objIndex;
-	unsigned int getNextObjId() { return ++m_objIndex; }
-
-	std::vector<AgentObject*> m_agents;
-	std::vector<BlockObject*> m_blocks;
-	std::unordered_map<int, BaseObject*> m_objects;
+	ObjectRegistry* m_registry;
 
 	// 存储需要定时删除的RootScene下的Node
 	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;
@@ -202,9 +200,8 @@ private:
 	std::vector<TacticalInfluenceDrawProjection> m_tacticalInfluenceDrawProjectionCache;
 	std::unordered_map<std::string, TacticalInfluenceDebugVisual> m_tacticalInfluenceDebugVisuals;
 	bool m_tacticalInfluenceDebugVisible;
+	long long m_currentTimeMs;
 	SandboxServices m_services;
 }; //tolua_exports
-
-extern ObjectManager* g_ObjectManager;
 
 #endif; // __OBJECT_MANAGER_H__

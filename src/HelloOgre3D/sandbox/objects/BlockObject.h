@@ -15,6 +15,7 @@ namespace Ogre {
 class btRigidBody;
 class PhysicsComponent;
 class RenderComponent;
+struct SandboxServices;
 
 class BlockObject : public BaseObject //tolua_exports
 	, public OpenSteer::SphericalObstacle
@@ -58,6 +59,7 @@ public:
 	Ogre::SceneNode* GetSceneNode();
 
 	static void SpawnBulletImpact(const Collision& collision); //设置子弹碰撞后的效果
+	static void SpawnBulletImpact(const Collision& collision, const SandboxServices* services);
 
 public:
 	OpenSteer::Vec3 getPosition() const;
@@ -69,10 +71,10 @@ public:
 		const float minTimeToCollision) const;
 
 private:
-	RenderComponent* m_renderComp = nullptr;
-	PhysicsComponent* m_physicsComp = nullptr;
-	std::vector<Ogre::SceneNode*> m_particleNodes;
-	BaseObject* m_ownerObject = nullptr;
+	RenderComponent* m_renderComp = nullptr; // non-owning; owned by BaseObject component map
+	PhysicsComponent* m_physicsComp = nullptr; // non-owning; owned by BaseObject component map
+	std::vector<Ogre::SceneNode*> m_particleNodes; // non-owning; nodes are removed through SceneFactory
+	BaseObject* m_ownerObject = nullptr; // non-owning bullet owner
 
 }; //tolua_exports
 

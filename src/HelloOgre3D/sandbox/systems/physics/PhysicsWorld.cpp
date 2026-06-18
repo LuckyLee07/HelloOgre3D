@@ -1,6 +1,13 @@
 #include "PhysicsWorld.h"
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4100 4127)
+#endif
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 #include "systems/manager/ObjectManager.h"
 #include "object/BaseObject.h"
 #include "systems/physics/Collision.h"

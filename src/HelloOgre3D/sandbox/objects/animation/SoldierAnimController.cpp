@@ -2,8 +2,7 @@
 
 #include "AgentAnimStateMachine.h"
 #include "SoldierAnimProfile.h"
-#include "objects/SoldierObject.h"
-#include "components/combat/WeaponComponent.h"
+#include "components/anim/IAnimContextProvider.h"
 #include "GameFunction.h"
 
 namespace
@@ -29,8 +28,8 @@ namespace
 	}
 }
 
-SoldierAnimController::SoldierAnimController(SoldierObject& owner)
-	: m_owner(&owner)
+SoldierAnimController::SoldierAnimController(IAnimContextProvider& context)
+	: m_context(&context)
 	, m_locomotionIntent(SoldierLocomotionIntent::Idle)
 	, m_actionIntent(SoldierActionIntent::None)
 	, m_forceActionRestart(false)
@@ -48,14 +47,15 @@ void SoldierAnimController::Update(float deltaTimeInMillis)
 	(void)deltaTimeInMillis;
 	EnsureBodyNotifiesRegistered();
 
-	const int actionStateId = SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), m_actionIntent);
+	const int stanceType = m_context != nullptr ? m_context->GetAnimStanceType() : SOLDIER_STAND;
+	const int actionStateId = SoldierAnimProfile::ResolveBodyActionState(stanceType, m_actionIntent);
 	if (actionStateId >= 0)
 	{
 		ApplyBodyState(actionStateId, m_forceActionRestart);
 	}
 	else
 	{
-		ApplyBodyState(SoldierAnimProfile::ResolveBodyLocomotionState(m_owner->getStanceType(), m_locomotionIntent), false);
+		ApplyBodyState(SoldierAnimProfile::ResolveBodyLocomotionState(stanceType, m_locomotionIntent), false);
 	}
 
 	AgentAnimStateMachine* weaponAsmForResolve = GetWeaponAsm();
@@ -67,7 +67,7 @@ void SoldierAnimController::Update(float deltaTimeInMillis)
 	AgentAnimStateMachine* weaponAsm = weaponAsmForResolve;
 	if (m_actionIntent == SoldierActionIntent::Reload)
 	{
-		const std::string reloadState = SoldierAnimProfile::GetStateNameById(SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), SoldierActionIntent::Reload));
+		const std::string reloadState = SoldierAnimProfile::GetStateNameById(SoldierAnimProfile::ResolveBodyActionState(stanceType, SoldierActionIntent::Reload));
 		const bool bodyReloadQueued = IsAsmStateQueued(bodyAsm, reloadState);
 		const std::string reloadWeaponState = SoldierAnimProfile::ResolveWeaponState(SoldierActionIntent::Reload, currentWeaponState);
 		const bool weaponReloadQueued = !reloadWeaponState.empty() && IsAsmStateQueued(weaponAsm, reloadWeaponState);
@@ -89,7 +89,8 @@ void SoldierAnimController::OnBodyStateChanged(int stateId)
 {
 	if (m_actionIntent == SoldierActionIntent::Reload)
 	{
-		const int reloadStateId = SoldierAnimProfile::ResolveBodyActionState(m_owner->getStanceType(), SoldierActionIntent::Reload);
+		const int stanceType = m_context != nullptr ? m_context->GetAnimStanceType() : SOLDIER_STAND;
+		const int reloadStateId = SoldierAnimProfile::ResolveBodyActionState(stanceType, SoldierActionIntent::Reload);
 		if (stateId == reloadStateId)
 		{
 			m_reloadPresentationStarted = true;
@@ -200,13 +201,12 @@ bool SoldierAnimController::HasPendingPresentation() const
 
 AgentAnimStateMachine* SoldierAnimController::GetBodyAsm() const
 {
-	return m_owner ? m_owner->GetObjectASM() : nullptr;
+	return m_context ? m_context->GetBodyAnimStateMachine() : nullptr;
 }
 
 AgentAnimStateMachine* SoldierAnimController::GetWeaponAsm() const
 {
-	WeaponComponent* weapon = m_owner ? m_owner->getWeapon() : nullptr;
-	return weapon ? weapon->GetObjectASM() : nullptr;
+	return m_context ? m_context->GetWeaponAnimStateMachine() : nullptr;
 }
 
 void SoldierAnimController::EnsureBodyNotifiesRegistered()

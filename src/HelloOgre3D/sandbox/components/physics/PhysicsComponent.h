@@ -5,14 +5,16 @@
 #include "component/IComponent.h"
 
 class btRigidBody;
+class PhysicsWorld;
 class PhysicsComponent : public IComponent
 {
 public:
 	explicit PhysicsComponent(btRigidBody* body);
 	virtual ~PhysicsComponent();
 
-	virtual void onAttach(BaseObject* owner);
-	virtual void onDetach();
+	virtual void onAttach(BaseObject* owner) override;
+	virtual void onDetach() override;
+	virtual void onSandboxServicesChanged(const SandboxServices* services) override;
 	
 	// RigidBody ops
 	btRigidBody* GetRigidBody() const { return m_body; }
@@ -50,6 +52,8 @@ private:
 
 private:
 	btRigidBody* m_body = nullptr;
+	PhysicsWorld* m_addedWorld = nullptr;
+	bool m_addedToWorld = false;
 };
 
 #endif // __PHYSICS_COMPONENT_H__

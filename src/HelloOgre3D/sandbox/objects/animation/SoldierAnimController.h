@@ -4,13 +4,13 @@
 #include "GameDefine.h"
 #include "components/anim/IAnimController.h"
 
-class SoldierObject;
+class IAnimContextProvider;
 class AgentAnimStateMachine;
 
 class SoldierAnimController : public IAnimController
 {
 public:
-	explicit SoldierAnimController(SoldierObject& owner);
+	explicit SoldierAnimController(IAnimContextProvider& context);
 
 	virtual void Update(float deltaTimeInMillis) override;
 	virtual void OnBodyStateChanged(int stateId) override;
@@ -32,7 +32,6 @@ public:
 	virtual bool HasPendingPresentation() const override;
 
 private:
-	SoldierObject* GetOwner() const { return m_owner; }
 	AgentAnimStateMachine* GetBodyAsm() const;
 	AgentAnimStateMachine* GetWeaponAsm() const;
 
@@ -42,7 +41,7 @@ private:
 	void ResetActionRuntime(SoldierActionIntent intent);
 
 private:
-	SoldierObject* m_owner;
+	IAnimContextProvider* m_context;
 	SoldierLocomotionIntent m_locomotionIntent;
 	SoldierActionIntent m_actionIntent;
 	bool m_forceActionRestart;

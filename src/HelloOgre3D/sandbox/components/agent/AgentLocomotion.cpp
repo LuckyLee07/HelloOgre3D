@@ -18,7 +18,7 @@ namespace
 		const SandboxServices* services = locomotion != nullptr ? locomotion->GetSandboxServices() : nullptr;
 		if (services != nullptr && services->objects != nullptr)
 			return services->objects;
-		return g_ObjectManager;
+		return nullptr;
 	}
 }
 

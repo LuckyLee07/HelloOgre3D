@@ -2,12 +2,12 @@
 
 #include "GameDefine.h"
 #include "GameFunction.h"
-#include "GameManager.h"
 #include "SandboxMacros.h"
 #include "ai/fsm/AgentStateController.h"
 #include "ai/fsm/states/AgentState.h"
+#include "components/anim/IAnimContextProvider.h"
 #include "event/SandboxContext.h"
-#include "objects/SoldierObject.h"
+#include "object/BaseObject.h"
 #include "objects/animation/AgentAnim.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimController.h"
@@ -15,12 +15,15 @@
 #include "profiling/Profile.h"
 #include "OgreEntity.h"
 
+#include <algorithm>
+
 AnimComponent::AnimComponent(BaseObject* owner)
 	: m_controller(nullptr)
 	, m_bodyEntity(nullptr)
 	, m_weaponEntity(nullptr)
 	, m_bodyAsm(nullptr)
 	, m_weaponAsm(nullptr)
+	, m_localTimeMs(0)
 	, m_asmStateChangeEventToken(0)
 	, m_asmNotifyEventToken(0)
 {
@@ -46,12 +49,25 @@ void AnimComponent::onAttach(BaseObject* owner)
 void AnimComponent::onDetach()
 {
 	UnsubscribeAnimEvents();
+	SAFE_DELETE(m_bodyAsm);
+	SAFE_DELETE(m_weaponAsm);
+	ClearAnimations(m_bodyAnimations);
+	ClearAnimations(m_weaponAnimations);
+	SAFE_DELETE(m_controller);
+	m_bodyEntity = nullptr;
+	m_weaponEntity = nullptr;
+	m_localTimeMs = 0;
 	IComponent::onDetach();
 }
 
-SoldierObject* AnimComponent::GetSoldierOwner() const
+int AnimComponent::getUpdateOrder() const
 {
-	return dynamic_cast<SoldierObject*>(getOwner());
+	return ComponentUpdateOrder::Anim;
+}
+
+IAnimContextProvider* AnimComponent::GetAnimContext() const
+{
+	return dynamic_cast<IAnimContextProvider*>(getOwner());
 }
 
 void AnimComponent::update(int deltaMs)
@@ -65,11 +81,12 @@ void AnimComponent::InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent)
 	m_bodyEntity = entity;
 	SAFE_DELETE(m_bodyAsm);
 	ClearAnimations(m_bodyAnimations);
-	SoldierObject* owner = GetSoldierOwner();
+	BaseObject* owner = getOwner();
 	if (owner != nullptr)
 	{
 		m_bodyAsm = new AgentAnimStateMachine(owner, canFireEvent);
-		m_bodyAsm->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
+		if (GetAnimContext() != nullptr)
+			m_bodyAsm->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
 	}
 }
 
@@ -78,18 +95,19 @@ void AnimComponent::InitWeaponAnimations(Ogre::Entity* entity, bool canFireEvent
 	m_weaponEntity = entity;
 	SAFE_DELETE(m_weaponAsm);
 	ClearAnimations(m_weaponAnimations);
-	SoldierObject* owner = GetSoldierOwner();
+	BaseObject* owner = getOwner();
 	if (owner != nullptr)
 	{
 		m_weaponAsm = new AgentAnimStateMachine(owner, canFireEvent);
-		m_weaponAsm->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
+		if (GetAnimContext() != nullptr)
+			m_weaponAsm->SetStateIdResolver(&SoldierAnimProfile::GetStateIdByName);
 	}
 }
 
 void AnimComponent::UpdateController(int deltaMs)
 {
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner == nullptr || m_controller == nullptr || !owner->GetUseCppFSM())
+	IAnimContextProvider* context = GetAnimContext();
+	if (context == nullptr || m_controller == nullptr || !context->IsCppAnimControllerEnabled())
 	{
 		return;
 	}
@@ -100,6 +118,7 @@ void AnimComponent::UpdateController(int deltaMs)
 
 void AnimComponent::UpdateBodyAnimations(int deltaMs)
 {
+	m_localTimeMs += std::max(0, deltaMs);
 	UpdateAsm(m_bodyAsm, deltaMs);
 }
 
@@ -133,41 +152,42 @@ bool AnimComponent::HasNextAnim() const
 
 bool AnimComponent::IsAnimReadyForMove() const
 {
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner == nullptr) return false;
+	IAnimContextProvider* context = GetAnimContext();
+	if (context == nullptr) return false;
 
 	AgentAnimStateMachine* pAsm = GetBodyAsm();
 	if (pAsm == nullptr) return false;
 
-	const std::string moveStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_RUN_FORWARD, owner->getStanceType()));
+	const std::string moveStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_RUN_FORWARD, context->GetAnimStanceType()));
 	return pAsm->IsCurrentState(moveStateName) || pAsm->IsNextState(moveStateName);
 }
 
 bool AnimComponent::IsAnimReadyForShoot() const
 {
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner == nullptr) return false;
+	IAnimContextProvider* context = GetAnimContext();
+	if (context == nullptr) return false;
 
 	AgentAnimStateMachine* pAsm = GetBodyAsm();
 	if (pAsm == nullptr) return false;
 
-	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, owner->getStanceType()));
+	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, context->GetAnimStanceType()));
 	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
 }
 
 void AnimComponent::EnsureController()
 {
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner != nullptr && m_controller == nullptr)
+	IAnimContextProvider* context = GetAnimContext();
+	if (context != nullptr && m_controller == nullptr)
 	{
-		m_controller = new SoldierAnimController(*owner);
+		m_controller = new SoldierAnimController(*context);
 	}
 }
 
 void AnimComponent::SubscribeAnimEvents()
 {
-	SoldierObject* owner = GetSoldierOwner();
-	if (owner == nullptr)
+	BaseObject* owner = getOwner();
+	IAnimContextProvider* context = GetAnimContext();
+	if (owner == nullptr || context == nullptr)
 	{
 		return;
 	}
@@ -175,19 +195,19 @@ void AnimComponent::SubscribeAnimEvents()
 	owner->Event()->CreateDispatcher("ASM_STATE_CHANGE");
 	owner->Event()->CreateDispatcher("ASM_NOTIFY");
 	m_asmStateChangeEventToken = owner->Event()->Subscribe("ASM_STATE_CHANGE", [&](const SandboxContext& context) -> void {
-		SoldierObject* owner = GetSoldierOwner();
-		if (owner == nullptr) return;
+		IAnimContextProvider* animContext = GetAnimContext();
+		if (animContext == nullptr) return;
 
 		int stateId = (int)context.Get_Number("StateId");
-		if (!owner->GetUseCppFSM() && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
+		if (!animContext->IsCppAnimControllerEnabled() && (stateId == SSTATE_FIRE || stateId == CROUCH_SSTATE_FIRE))
 		{
-			owner->ShootBullet();
+			animContext->ExecuteAnimShoot();
 		}
 		if (m_controller)
 		{
 			m_controller->OnBodyStateChanged(stateId);
 		}
-		AgentStateController* fsm = owner->GetFsmController();
+		AgentStateController* fsm = animContext->GetAnimFsmController();
 		if (!fsm) return;
 
 		AgentState* pState = fsm->GetCurrState();
@@ -195,15 +215,15 @@ void AnimComponent::SubscribeAnimEvents()
 		pState->Event()->Emit("FSM_STATE_CHANGE", context);
 	});
 	m_asmNotifyEventToken = owner->Event()->Subscribe("ASM_NOTIFY", [&](const SandboxContext& context) -> void {
-		SoldierObject* owner = GetSoldierOwner();
-		if (owner == nullptr) return;
+		IAnimContextProvider* animContext = GetAnimContext();
+		if (animContext == nullptr) return;
 
 		const std::string eventName = context.Get_String("EventName");
 		const int stateId = (int)context.Get_Number("StateId");
 		const float normalizedTime = (float)context.Get_Number("NormalizedTime");
-		if (owner->GetUseCppFSM() && eventName == "shoot_fire")
+		if (animContext->IsCppAnimControllerEnabled() && eventName == "shoot_fire")
 		{
-			owner->ShootBullet();
+			animContext->ExecuteAnimShoot();
 		}
 		if (m_controller)
 		{
@@ -214,7 +234,7 @@ void AnimComponent::SubscribeAnimEvents()
 
 void AnimComponent::UnsubscribeAnimEvents()
 {
-	SoldierObject* owner = GetSoldierOwner();
+	BaseObject* owner = getOwner();
 	if (owner == nullptr)
 	{
 		return;
@@ -253,8 +273,7 @@ void AnimComponent::UpdateAsm(AgentAnimStateMachine* asmMachine, int deltaMs)
 		return;
 	}
 
-	long long currTimeInMillis = GetGameManager()->getTimeInMillis();
-	asmMachine->Update((float)deltaMs, currTimeInMillis);
+	asmMachine->Update((float)deltaMs, m_localTimeMs);
 }
 
 void AnimComponent::ClearAnimations(std::unordered_map<std::string, AgentAnim*>& animations)

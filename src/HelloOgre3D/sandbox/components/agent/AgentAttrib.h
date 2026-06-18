@@ -5,8 +5,8 @@
 #include "GameDefine.h"
 #include "OgrePrerequisites.h"
 
-class AgentAttrib : public IComponent
-{
+class AgentAttrib : public IComponent //tolua_exports
+{ //tolua_exports
 public:
 	AgentAttrib();
 	AgentAttrib(Ogre::Real health, Ogre::Real maxHealth, int stanceType, int pendingStanceType = -1);
@@ -15,6 +15,7 @@ public:
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
 
+	//tolua_begin
 	void SetHealth(Ogre::Real health);
 	Ogre::Real GetHealth() const { return m_health; }
 
@@ -23,6 +24,7 @@ public:
 
 	void SetStanceType(int stanceType);
 	int GetStanceType() const { return m_stanceType; }
+	//tolua_end
 
 	void SetPendingStanceType(int stanceType) { m_pendingStanceType = stanceType; }
 	int GetPendingStanceType() const { return m_pendingStanceType; }
@@ -36,6 +38,6 @@ private:
 	int m_stanceType;
 	int m_pendingStanceType;
 	int m_healthChangeEventToken;
-};
+}; //tolua_exports
 
 #endif // __AGENT_ATTRIB_H__

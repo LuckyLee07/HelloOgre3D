@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 #include <vector>
 #include "SandboxMacros.h"
 #include "component/IComponent.h"
@@ -11,9 +12,17 @@
 
 struct Collision;
 struct SandboxServices;
+class AgentAttrib;
+class AIController;
+class AnimComponent;
+class WeaponComponent;
 
 class BaseObject : public SandboxObject //tolua_exports
 { //tolua_exports
+protected:
+	typedef std::unique_ptr<IComponent> ComponentPtr;
+	typedef std::map<std::string, ComponentPtr> ComponentMap;
+
 public:
 	enum ObjectType
 	{
@@ -38,6 +47,13 @@ public:
 	unsigned int GetObjId() const;
 	unsigned int GetTeamId() const;
 	void SetTeamId(unsigned int teamId);
+	bool HasComponent(const std::string& key) const;
+	int GetComponentCount() const;
+	std::string BuildComponentDebugString() const;
+	AIController* GetAIComponent();
+	WeaponComponent* GetWeaponComponent();
+	AnimComponent* GetAnimComponent();
+	AgentAttrib* GetAttribComponent();
 	//tolua_end
 
 	void SetObjId(unsigned int objId);
@@ -58,7 +74,6 @@ public:
 	// BaseObject owns its component container. Components added here are owned by
 	// the container and deleted when removed or when the object is destroyed.
 	bool AddComponent(const std::string& key, IComponent* comp);
-	bool HasComponent(const std::string& key) const;
 	bool RemoveComponent(const std::string& key);
 	bool RemoveComponent(IComponent* comp);
 
@@ -80,9 +95,9 @@ public:
 	template<typename T>
 	T* FindComponent()
 	{
-		for (std::map<std::string, IComponent*>::iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+		for (ComponentMap::iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
 		{
-			T* component = dynamic_cast<T*>(iter->second);
+			T* component = dynamic_cast<T*>(iter->second.get());
 			if (component != nullptr)
 				return component;
 		}
@@ -92,25 +107,25 @@ public:
 	template<typename T>
 	const T* FindComponent() const
 	{
-		for (std::map<std::string, IComponent*>::const_iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+		for (ComponentMap::const_iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
 		{
-			const T* component = dynamic_cast<const T*>(iter->second);
+			const T* component = dynamic_cast<const T*>(iter->second.get());
 			if (component != nullptr)
 				return component;
 		}
 		return nullptr;
 	}
 
-	int GetComponentCount() const;
 	std::vector<std::string> GetComponentKeys() const;
-	std::string BuildComponentDebugString() const;
 
 protected:
 	ObjectType m_objType;
 	// BaseObject owns every component inserted through AddComponent.
-	std::map<std::string, IComponent*> m_components;
+	ComponentMap m_components;
 
 private:
+	void DestroyComponent(ComponentPtr& component);
+
 	const SandboxServices* m_services;
 	unsigned int m_objId;
 	unsigned int m_teamId;

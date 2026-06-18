@@ -7,21 +7,22 @@
 
 class AgentAnim;
 class AgentAnimStateMachine;
+class IAnimContextProvider;
 class IAnimController;
 class SoldierAnimController;
-class SoldierObject;
 namespace Ogre {
 	class Entity;
 }
 
-class AnimComponent : public IComponent
-{
+class AnimComponent : public IComponent //tolua_exports
+{ //tolua_exports
 public:
 	explicit AnimComponent(BaseObject* owner = nullptr);
 	virtual ~AnimComponent();
 
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
+	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaMs) override;
 
 	IAnimController* GetController() const { return m_controller; }
@@ -32,6 +33,7 @@ public:
 	void UpdateController(int deltaMs);
 	void UpdateBodyAnimations(int deltaMs);
 	void UpdateWeaponAnimations(int deltaMs);
+	//tolua_begin
 	AgentAnim* GetBodyAnimation(const char* animationName);
 	AgentAnimStateMachine* GetBodyAsm() const { return m_bodyAsm; }
 	AgentAnim* GetWeaponAnimation(const char* animationName);
@@ -40,9 +42,10 @@ public:
 	bool HasNextAnim() const;
 	bool IsAnimReadyForMove() const;
 	bool IsAnimReadyForShoot() const;
+	//tolua_end
 
 private:
-	SoldierObject* GetSoldierOwner() const;
+	IAnimContextProvider* GetAnimContext() const;
 	void EnsureController();
 	void SubscribeAnimEvents();
 	void UnsubscribeAnimEvents();
@@ -52,14 +55,15 @@ private:
 
 private:
 	IAnimController* m_controller;
-	Ogre::Entity* m_bodyEntity;
-	Ogre::Entity* m_weaponEntity;
+	Ogre::Entity* m_bodyEntity; // non-owning; owned by RenderComponent/Ogre scene
+	Ogre::Entity* m_weaponEntity; // non-owning; owned by RenderComponent/Ogre scene
 	AgentAnimStateMachine* m_bodyAsm;
 	AgentAnimStateMachine* m_weaponAsm;
 	std::unordered_map<std::string, AgentAnim*> m_bodyAnimations;
 	std::unordered_map<std::string, AgentAnim*> m_weaponAnimations;
+	long long m_localTimeMs;
 	int m_asmStateChangeEventToken;
 	int m_asmNotifyEventToken;
-};
+}; //tolua_exports
 
 #endif // __ANIM_COMPONENT_H__
