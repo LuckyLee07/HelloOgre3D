@@ -13,7 +13,7 @@ end
 
 local function _HasPath(fromPos, toPos)
 	local path = std.vector_Ogre__Vector3_()
-	return Sandbox:FindPath("default", fromPos, toPos, path) and path:size() > 0
+	return SandboxNav:FindPath("default", fromPos, toPos, path) and path:size() > 0
 end
 
 local function _EvaluateNearestEnemy(context)
@@ -68,7 +68,7 @@ local function _EvaluateBestFleePosition(context)
 	local bb = context.blackboard
 	local enemy = bb ~= nil and bb:GetAgent("enemy") or nil
 	if enemy == nil or enemy:GetHealth() <= 0 then
-		local randomPoint = Sandbox:RandomPoint("default")
+		local randomPoint = SandboxNav:RandomPoint("default")
 		return { evaluation = randomPoint, confidence = 0.25 }
 	end
 
@@ -76,7 +76,7 @@ local function _EvaluateBestFleePosition(context)
 	local bestPoint = nil
 	local bestScore = nil
 	for i = 1, 32 do
-		local point = Sandbox:RandomPoint("default")
+		local point = SandboxNav:RandomPoint("default")
 		local score = _DistanceSq(point, enemyPos)
 		if bestScore == nil or score > bestScore then
 			bestPoint = point
@@ -85,7 +85,7 @@ local function _EvaluateBestFleePosition(context)
 	end
 
 	if bestPoint == nil then
-		bestPoint = Sandbox:RandomPoint("default")
+		bestPoint = SandboxNav:RandomPoint("default")
 		bestScore = _DistanceSq(bestPoint, enemyPos)
 	end
 

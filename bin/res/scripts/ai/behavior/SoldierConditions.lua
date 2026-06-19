@@ -4,6 +4,7 @@
 -- 副作用许可（HasEnemy 顺手把 enemy 写到 blackboard，与 chapter_6 一致）。
 
 require("res.scripts.base.global.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 SoldierConditions = {}
 
@@ -125,7 +126,7 @@ function SoldierConditions.HasLastKnownEnemyMemory(agent, bb, cfg)
 end
 
 function SoldierConditions.HasAmmo(agent, bb)
-    return agent:HasAmmo()
+    return AgentComponents.HasAmmo(agent)
 end
 
 function SoldierConditions.HasObjectId(key)

@@ -3,6 +3,8 @@
 
 Chapter7Conditions = {}
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 function Chapter7Conditions.IsNotAlive(agent, bb)
 	return agent:GetHealth() <= 0
 end
@@ -17,7 +19,7 @@ function Chapter7Conditions.HasEnemy(agent, bb)
 end
 
 function Chapter7Conditions.HasNoAmmo(agent, bb)
-	return not agent:HasAmmo()
+	return not AgentComponents.HasAmmo(agent)
 end
 
 function Chapter7Conditions.CanShootEnemy(agent, bb)

@@ -4,6 +4,7 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.agent.AgentUtils.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _elapsedMs = 0
 local _durationMs = 1500
@@ -46,7 +47,7 @@ function OnUpdate(deltaMs, owner, bb)
     end
 
     if _elapsedMs >= _durationMs then
-        owner:RestoreAmmo()
+        AgentComponents.RestoreAmmo(owner)
         owner:EnterIdleAnim()
         ActionIntent.Record(owner, bb, {
             action = "reload",

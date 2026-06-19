@@ -151,7 +151,7 @@ function Soldier_InitSoldierAsm(agent)
 end
 
 function Soldier_InitWeaponAsm(agent)
-    local weapon = agent:getWeapon();
+    local weapon = agent:GetWeaponComponent();
 
     -- Create an animation state machine to handle weapon animations.
     local weaponAsm = weapon:GetObjectASM();

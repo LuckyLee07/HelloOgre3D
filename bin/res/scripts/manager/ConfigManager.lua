@@ -1,5 +1,18 @@
 local ConfigManager = {}
 
+local function getAiSchedulerService(objectManager)
+	if SandboxAIScheduler ~= nil and SandboxAIScheduler.configureAiScheduler ~= nil then
+		return SandboxAIScheduler
+	end
+	if objectManager ~= nil and objectManager.configureAiScheduler ~= nil then
+		return objectManager
+	end
+	if ObjectManager ~= nil and ObjectManager.configureAiScheduler ~= nil then
+		return ObjectManager
+	end
+	return nil
+end
+
 local SamplePresets = require("res.scripts.config.sample_presets")
 
 local function getEnvValue(name)
@@ -99,7 +112,8 @@ function ConfigManager:ApplyStartupSeed(sampleName)
 end
 
 function ConfigManager:ConfigureAiScheduler(objectManager, sampleName)
-	if objectManager == nil or objectManager.configureAiScheduler == nil then
+	local schedulerService = getAiSchedulerService(objectManager)
+	if schedulerService == nil then
 		return false
 	end
 
@@ -111,7 +125,7 @@ function ConfigManager:ConfigureAiScheduler(objectManager, sampleName)
 	end
 	local tickMs = getEnvNumber("HELLO_AI_SCHEDULER_TICK_MS", scheduler.tickMs or 50)
 	local maxPerFrame = getEnvNumber("HELLO_AI_SCHEDULER_MAX_PER_FRAME", scheduler.maxPerFrame or 8)
-	objectManager:configureAiScheduler(enabled, tickMs, maxPerFrame)
+	schedulerService:configureAiScheduler(enabled, tickMs, maxPerFrame)
 	print("[AIScheduler] configured", "enabled=", tostring(enabled), "tickMs=", tickMs, "maxPerFrame=", maxPerFrame, "preset=", tostring(preset.name))
 	return enabled
 end
@@ -194,16 +208,16 @@ function ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, index, navMesh
 		spawnPoint = toVector3(preset.spawnPoints[spawnIndex])
 	end
 	if spawnPoint == nil then
-		spawnPoint = Sandbox:RandomPoint(navMeshName or "default")
+		spawnPoint = SandboxNav:RandomPoint(navMeshName or "default")
 	else
-		spawnPoint = Sandbox:FindClosestPoint(navMeshName or "default", spawnPoint)
+		spawnPoint = SandboxNav:FindClosestPoint(navMeshName or "default", spawnPoint)
 	end
 
 	local height = agent:GetHeight()
 	spawnPoint.y = spawnPoint.y + height * 0.5
 	agent:setPosition(spawnPoint)
 
-	local navPosition = Sandbox:FindClosestPoint(navMeshName or "default", agent:GetPosition())
+	local navPosition = SandboxNav:FindClosestPoint(navMeshName or "default", agent:GetPosition())
 	agent:SetTarget(navPosition)
 	agent:SetTargetRadius(preset.targetRadius or 1)
 	return spawnPoint

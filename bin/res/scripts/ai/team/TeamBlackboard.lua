@@ -9,6 +9,7 @@ TeamBlackboard.EventTypes = {
 }
 
 local _teams = {}
+local _CppService
 
 local function _CloneVec3(pos)
 	if pos == nil then
@@ -18,16 +19,29 @@ local function _CloneVec3(pos)
 end
 
 local function _HasCppService()
-	return ObjectManager ~= nil
+	return _CppService() ~= nil
+end
+
+_CppService = function()
+	if SandboxTeam ~= nil
+		and SandboxTeam.rememberTeamEnemyFact ~= nil
+		and SandboxTeam.writeBestTeamEnemyFactToBlackboard ~= nil then
+		return SandboxTeam
+	end
+	if ObjectManager ~= nil
 		and ObjectManager.rememberTeamEnemyFact ~= nil
-		and ObjectManager.writeBestTeamEnemyFactToBlackboard ~= nil
+		and ObjectManager.writeBestTeamEnemyFactToBlackboard ~= nil then
+		return ObjectManager
+	end
+	return nil
 end
 
 local function _RememberCppEnemyFact(sighting)
-	if not _HasCppService() or sighting == nil or sighting.targetPos == nil then
+	local service = _CppService()
+	if service == nil or sighting == nil or sighting.targetPos == nil then
 		return false
 	end
-	return ObjectManager:rememberTeamEnemyFact(
+	return service:rememberTeamEnemyFact(
 		tonumber(sighting.teamId) or 0,
 		tonumber(sighting.spotterId) or -1,
 		tonumber(sighting.targetId) or -1,
@@ -48,8 +62,9 @@ end
 
 function TeamBlackboard:Reset()
 	_teams = {}
-	if ObjectManager ~= nil and ObjectManager.clearTeamBlackboardFacts ~= nil then
-		ObjectManager:clearTeamBlackboardFacts()
+	local service = _CppService()
+	if service ~= nil and service.clearTeamBlackboardFacts ~= nil then
+		service:clearTeamBlackboardFacts()
 	end
 end
 
@@ -111,37 +126,42 @@ function TeamBlackboard:GetVisibleEnemies(teamId)
 end
 
 function TeamBlackboard:ConfigureCppService(ttlMs)
-	if ObjectManager ~= nil and ObjectManager.configureTeamBlackboard ~= nil then
-		ObjectManager:configureTeamBlackboard(tonumber(ttlMs) or 0)
+	local service = _CppService()
+	if service ~= nil and service.configureTeamBlackboard ~= nil then
+		service:configureTeamBlackboard(tonumber(ttlMs) or 0)
 		return true
 	end
 	return false
 end
 
 function TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, keyPrefix, allowOwnReport)
-	if ObjectManager == nil or ObjectManager.writeBestTeamEnemyFactToBlackboard == nil or agent == nil then
+	local service = _CppService()
+	if service == nil or service.writeBestTeamEnemyFactToBlackboard == nil or agent == nil then
 		return false
 	end
-	return ObjectManager:writeBestTeamEnemyFactToBlackboard(agent, keyPrefix or "team.cpp", allowOwnReport == true)
+	return service:writeBestTeamEnemyFactToBlackboard(agent, keyPrefix or "team.cpp", allowOwnReport == true)
 end
 
 function TeamBlackboard:GetCppFactCount()
-	if ObjectManager ~= nil and ObjectManager.getTeamBlackboardFactCount ~= nil then
-		return ObjectManager:getTeamBlackboardFactCount()
+	local service = _CppService()
+	if service ~= nil and service.getTeamBlackboardFactCount ~= nil then
+		return service:getTeamBlackboardFactCount()
 	end
 	return 0
 end
 
 function TeamBlackboard:GetCppReportCount()
-	if ObjectManager ~= nil and ObjectManager.getTeamBlackboardReportCount ~= nil then
-		return ObjectManager:getTeamBlackboardReportCount()
+	local service = _CppService()
+	if service ~= nil and service.getTeamBlackboardReportCount ~= nil then
+		return service:getTeamBlackboardReportCount()
 	end
 	return 0
 end
 
 function TeamBlackboard:BuildCppDebugSummary()
-	if ObjectManager ~= nil and ObjectManager.buildTeamBlackboardDebugSummary ~= nil then
-		return ObjectManager:buildTeamBlackboardDebugSummary()
+	local service = _CppService()
+	if service ~= nil and service.buildTeamBlackboardDebugSummary ~= nil then
+		return service:buildTeamBlackboardDebugSummary()
 	end
 	return "[TeamBlackboardService] unavailable"
 end

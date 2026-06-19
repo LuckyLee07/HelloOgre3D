@@ -12,7 +12,7 @@ MoveHelpers = {}
 -- agent 内部会做朝向预校正（见 AgentUtils.Agent_SetPath）。
 function MoveHelpers.BuildAndSetPath(agent, fromPos, toPos)
     local path = std.vector_Ogre__Vector3_()
-    local ok = Sandbox:FindPath("default", fromPos, toPos, path)
+    local ok = SandboxNav:FindPath("default", fromPos, toPos, path)
     if not ok or path:size() == 0 then
         return false
     end
@@ -37,7 +37,7 @@ end
 -- 仅在 action 处于 RUNNING 时调用，agent idle/shoot/reload 期间不画。
 -- 仿 Sandbox6 C++ MoveState/PursueState 的路径可视化：折线 + 末端圆圈。
 -- 圆心由 caller 传入：要确保 Y 在地面（navmesh 上），不然圆飘在空中很怪。
--- - MoveAction 直接用 agent:GetTarget()（来自 Sandbox:RandomPoint，已贴地）
+-- - MoveAction 直接用 agent:GetTarget()（来自 SandboxNav:RandomPoint，已贴地）
 -- - PursueAction 必须把敌人 GetPosition() 投影到 navmesh，再传进来
 function MoveHelpers.DrawPath(agent, circleCenter, color, offset, radius)
     if _G.HELLO_SUPPRESS_AI_PATH_DRAW == true then return end

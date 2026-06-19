@@ -5,6 +5,7 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.agent.AgentUtils.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _elapsedMs = 0
 local _durationMs = 600
@@ -82,8 +83,8 @@ function OnUpdate(deltaMs, owner, bb)
     -- 在动画大约播到一半时真正发射子弹（视觉反馈与子弹生成对齐）。
     if not _hasFired and _elapsedMs >= 200 then
         _hasFired = true
-        if owner:HasAmmo() then
-            owner:ConsumeAmmo(1)
+        if AgentComponents.HasAmmo(owner) then
+            AgentComponents.ConsumeAmmo(owner, 1)
             owner:ShootBullet()
         end
     end

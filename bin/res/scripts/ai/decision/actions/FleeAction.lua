@@ -29,13 +29,13 @@ function OnInitialize(owner, bb)
         local enemyPos = enemy:GetPosition()
         local fleePos = nil
         for i = 1, _maxAttempts do
-            local p = Sandbox:RandomPoint("default")
+            local p = SandboxNav:RandomPoint("default")
             if (p - enemyPos):squaredLength() >= 16.0 then
                 fleePos = p
                 break
             end
         end
-        if fleePos == nil then fleePos = Sandbox:RandomPoint("default") end
+        if fleePos == nil then fleePos = SandboxNav:RandomPoint("default") end
         bb:SetVec3("movePos", fleePos)
         owner:SetMovePosition(fleePos)
         ActionIntent.Record(owner, bb, {
@@ -48,7 +48,7 @@ function OnInitialize(owner, bb)
             reason = "awayFromEnemy",
         })
     else
-        local p = Sandbox:RandomPoint("default")
+        local p = SandboxNav:RandomPoint("default")
         bb:SetVec3("movePos", p)
         owner:SetMovePosition(p)
         ActionIntent.Record(owner, bb, {

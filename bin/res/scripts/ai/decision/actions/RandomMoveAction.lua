@@ -7,7 +7,7 @@ local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 
 function OnInitialize(owner, bb)
     if not owner then return end
-    local p = Sandbox:RandomPoint("default")
+    local p = SandboxNav:RandomPoint("default")
     bb:SetVec3("movePos", p)
     owner:SetMovePosition(p)
     ActionIntent.Record(owner, bb, {

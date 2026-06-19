@@ -6,6 +6,7 @@
 -- 找到的敌人塞进 blackboard 供后续 action 使用（与 chapter_6 一致）。
 
 require("res.scripts.base.global.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 SoldierEvaluators = {}
 
@@ -46,7 +47,7 @@ function SoldierEvaluators.HasEnemyBranch(agent, bb)
 end
 
 function SoldierEvaluators.HasAmmoBranch(agent, bb)
-    if agent:HasAmmo() then return 1 end
+    if AgentComponents.HasAmmo(agent) then return 1 end
     return 2
 end
 

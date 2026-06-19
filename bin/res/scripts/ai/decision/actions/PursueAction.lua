@@ -122,7 +122,7 @@ function OnUpdate(deltaMs, owner, bb)
     -- 仿 Sandbox6 C++ PursueState：红色折线 + 末端圆圈 = pursue reach 距离。
     -- 敌人 GetPosition() 是腰高，必须投到 navmesh 才能贴地，不然圆飘在空中。
     if _G.HELLO_SUPPRESS_AI_PATH_DRAW ~= true then
-        local circleCenter = Sandbox:FindClosestPoint("default", enemy:GetPosition())
+        local circleCenter = SandboxNav:FindClosestPoint("default", enemy:GetPosition())
         MoveHelpers.DrawPath(owner, circleCenter, UtilColors.Red, Vector3(0, 0.1, 0), _pursueReach)
     end
     ActionIntent.Record(owner, bb, {

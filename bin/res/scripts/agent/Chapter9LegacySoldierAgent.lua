@@ -258,7 +258,7 @@ end
 
 local function _BuildAndSetPath(agent, target)
 	local path = std.vector_Ogre__Vector3_()
-	if not Sandbox:FindPath("default", agent:GetPosition(), target, path) or path:size() == 0 then
+	if not SandboxNav:FindPath("default", agent:GetPosition(), target, path) or path:size() == 0 then
 		return false
 	end
 
@@ -273,7 +273,7 @@ end
 
 local function _HasPath(agent, target)
 	local path = std.vector_Ogre__Vector3_()
-	return Sandbox:FindPath("default", agent:GetPosition(), target, path) and path:size() > 0
+	return SandboxNav:FindPath("default", agent:GetPosition(), target, path) and path:size() > 0
 end
 
 local function _IsValidEnemy(agent, candidate)
@@ -377,7 +377,8 @@ local function _GetEyePosition(agent)
 end
 
 local function _CanSeeAgent(agent, candidate)
-	if Sandbox == nil or Sandbox.RayCastObjectId == nil then
+	local raycastApi = SandboxRaycast or Sandbox
+	if raycastApi == nil or raycastApi.RayCastObjectId == nil then
 		return true
 	end
 
@@ -398,7 +399,7 @@ local function _CanSeeAgent(agent, candidate)
 		return false
 	end
 
-	local hitObjectId = Sandbox:RayCastObjectId(eyePosition, target)
+	local hitObjectId = raycastApi:RayCastObjectId(eyePosition, target)
 	return hitObjectId == 0 or hitObjectId == candidate:GetObjId()
 end
 
@@ -772,13 +773,13 @@ local function _BeginRandomMove(agent, state)
 	if fixedPoint ~= nil and _BuildAndSetPath(agent, fixedPoint) then
 		state.moveSource = "fixedRandom"
 		if _GetIndexedValue(config.legacyRandomMoveConsumesRandomPoint, agentIndex) == true then
-			Sandbox:RandomPoint("default")
+			SandboxNav:RandomPoint("default")
 		end
 		return
 	end
 
 	for attempt = 1, _MAX_RANDOM_ATTEMPTS do
-		local target = Sandbox:RandomPoint("default")
+		local target = SandboxNav:RandomPoint("default")
 		if target ~= nil and _BuildAndSetPath(agent, target) then
 			state.moveSource = "random"
 			return
@@ -907,9 +908,7 @@ local function _UpdateAction(agent, state, deltaMs)
 			state.fired = true
 			if state.ammo > 0 then
 				state.ammo = state.ammo - 1
-				if agent.ConsumeAmmo ~= nil then
-					agent:ConsumeAmmo(1)
-				end
+				AgentComponents.ConsumeAmmo(agent, 1)
 			end
 		end
 		if state.elapsedMs >= _SHOOT_MS then
@@ -920,9 +919,7 @@ local function _UpdateAction(agent, state, deltaMs)
 		_SlowMovement(agent, 1.0)
 		if state.elapsedMs >= _RELOAD_MS then
 			state.ammo = state.maxAmmo
-			if agent.SetAmmo ~= nil then
-				agent:SetAmmo(state.ammo)
-			end
+			AgentComponents.SetAmmo(agent, state.ammo)
 			_QueueActionCleanup(state, action)
 		end
 		return true
@@ -1019,8 +1016,8 @@ function Agent_Initialize(agent)
 	if movementProfile ~= nil and agent.SetMass ~= nil then
 		agent:SetMass(_ReadProfileNumber(movementProfile, "mass", agent:GetMass()))
 	end
-	if agent.SetMaxAmmo ~= nil then agent:SetMaxAmmo(10) end
-	if agent.SetAmmo ~= nil then agent:SetAmmo(10) end
+	AgentComponents.SetMaxAmmo(agent, 10)
+	AgentComponents.SetAmmo(agent, 10)
 
 	local ai = AgentComponents.GetAI(agent)
 	if ai ~= nil then
