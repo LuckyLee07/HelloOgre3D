@@ -21,6 +21,12 @@ namespace
 		stream << static_cast<int>(value.x) << "," << static_cast<int>(value.y) << "," << static_cast<int>(value.z);
 		return stream.str();
 	}
+
+	std::string MakeBlackboardKey(const std::string& prefix, const char* suffix)
+	{
+		const std::string safePrefix = prefix.empty() ? "team.cpp" : prefix;
+		return safePrefix + "." + suffix;
+	}
 }
 
 TeamBlackboardService::EnemySightingFact::EnemySightingFact()
@@ -207,6 +213,68 @@ void TeamBlackboardService::PublishTracyCounters() const
 		m_stats.reportCount,
 		m_stats.lastWriterCount,
 		m_stats.expiredCount);
+}
+
+void TeamBlackboardService::clearTeamBlackboardFacts()
+{
+	Clear();
+}
+
+void TeamBlackboardService::configureTeamBlackboard(int ttlMs)
+{
+	SetFactTtlMs(ttlMs);
+}
+
+bool TeamBlackboardService::rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence)
+{
+	return RememberEnemySighting(teamId, reporterId, targetId, targetPosition, lastSeenMs, confidence);
+}
+
+bool TeamBlackboardService::writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport)
+{
+	if (agent == nullptr)
+		return false;
+
+	AIController* ai = agent->FindComponent<AIController>();
+	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+	if (blackboard == nullptr)
+		return false;
+
+	EnemySightingFact fact;
+	const int ignoredReporterId = allowOwnReport ? -1 : static_cast<int>(agent->GetObjId());
+	if (!GetBestEnemyFact(agent->GetTeamId(), ignoredReporterId, fact))
+	{
+		blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), false);
+		return false;
+	}
+
+	const long long currentTimeMs = GetStats().currentTimeMs;
+	const int ageMs = static_cast<int>(std::max<long long>(0, currentTimeMs - fact.lastSeenMs));
+	blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), true);
+	blackboard->SetObjectId(MakeBlackboardKey(keyPrefix, "targetId"), fact.targetId);
+	blackboard->SetVec3(MakeBlackboardKey(keyPrefix, "targetPos"), fact.targetPosition);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reporterId"), fact.reporterId);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "lastSeenMs"), static_cast<int>(fact.lastSeenMs));
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "ageMs"), ageMs);
+	blackboard->SetFloat(MakeBlackboardKey(keyPrefix, "confidence"), fact.confidence);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reportCount"), fact.reportCount);
+	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "priority"), fact.priority);
+	return true;
+}
+
+int TeamBlackboardService::getTeamBlackboardFactCount() const
+{
+	return GetStats().factCount;
+}
+
+int TeamBlackboardService::getTeamBlackboardReportCount() const
+{
+	return GetStats().reportCount;
+}
+
+std::string TeamBlackboardService::buildTeamBlackboardDebugSummary() const
+{
+	return BuildDebugSummary();
 }
 
 void TeamBlackboardService::RememberEnemyFact(const EnemySightingFact& fact)

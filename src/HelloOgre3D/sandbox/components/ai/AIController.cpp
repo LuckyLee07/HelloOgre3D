@@ -23,7 +23,7 @@
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
 #include "systems/manager/ObjectManager.h"
-#include "systems/manager/SandboxMgr.h"
+#include "systems/service/NavigationService.h"
 
 namespace
 {
@@ -66,11 +66,11 @@ namespace
 		return nullptr;
 	}
 
-	SandboxMgr* ResolveSandboxMgr(const AIController* controller)
+	NavigationService* ResolveNavigationService(const AIController* controller)
 	{
 		const SandboxServices* services = controller != nullptr ? controller->GetSandboxServices() : nullptr;
-		if (services != nullptr && services->sandbox != nullptr)
-			return services->sandbox;
+		if (services != nullptr && services->navigation != nullptr)
+			return services->navigation;
 		return nullptr;
 	}
 
@@ -174,6 +174,7 @@ void AIController::onDetach()
 	m_memoryStore.SetBlackboard(nullptr);
 	m_blackboard.SetOwner(static_cast<AgentObject*>(nullptr));
 	m_perceptionCache.Reset();
+	SetEnemy(nullptr);
 	IComponent::onDetach();
 }
 
@@ -369,7 +370,7 @@ SoldierObject* AIController::GetSoldierOwner() const
 
 bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
 {
-	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveNavigationService(this));
 	AgentPerceptionResult result;
 	return query.TryGetEnemy(GetAgentOwner(), enemy, BuildPerceptionOptions(navMeshName, requirePath), result);
 }
@@ -382,7 +383,7 @@ AgentObject* AIController::FindNearestEnemy(const Ogre::String& navMeshName) con
 
 bool AIController::FindNearestEnemy(const Ogre::String& navMeshName, AgentPerceptionResult& result) const
 {
-	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveNavigationService(this));
 	return query.FindNearestEnemy(GetAgentOwner(), BuildPerceptionOptions(navMeshName, true), result);
 }
 
@@ -434,7 +435,7 @@ bool AIController::UpdateVisionSensor(int deltaMs, const Ogre::String& navMeshNa
 		return false;
 	}
 
-	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveNavigationService(this));
 	const bool scanned = m_visionSensor.Tick(owner, GetEnemy(), &query, BuildVisionSensorConfig(navMeshName, requirePath), deltaMs, forceScan);
 	if (outScanned != nullptr)
 		*outScanned = scanned;
@@ -604,7 +605,7 @@ bool AIController::CanShootEnemy(const Ogre::String& navMeshName, float shootDis
 	AgentObject* enemy = GetEnemy();
 	AgentPerceptionOptions options = BuildPerceptionOptions(navMeshName, false);
 	options.maxDistance = std::max(0.0f, shootDistance);
-	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveSandboxMgr(this));
+	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveNavigationService(this));
 	AgentPerceptionResult result;
 	if (!query.TryGetEnemy(owner, enemy, options, result))
 	{

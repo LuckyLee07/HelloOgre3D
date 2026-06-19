@@ -37,6 +37,8 @@ void LuaScriptComponent::onAttach(BaseObject* owner)
 void LuaScriptComponent::onDetach()
 {
 	ReleaseLuaEnv();
+	m_localEnvOwner = nullptr;
+	m_localEnvClassName.clear();
 	IComponent::onDetach();
 }
 

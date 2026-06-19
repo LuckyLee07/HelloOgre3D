@@ -107,8 +107,8 @@ private:
 
 private:
 	Blackboard m_blackboard;
-	IDecisionDriver* m_driver;
-	AgentObject* m_enemy;
+	IDecisionDriver* m_driver; // owned decision driver
+	AgentObject* m_enemy; // non-owning cached target; validated by m_enemyId/ObjectManager on read
 	int m_enemyId;
 	bool m_hasMovePos;
 	Ogre::Vector3 m_movePos;

@@ -8,6 +8,7 @@
 #include "ai/tactics/InfluenceMapSystem.h"
 
 class AgentObject;
+class NavigationMesh;
 class SandboxContext;
 
 class TacticalQueryService
@@ -44,6 +45,26 @@ public:
 	InfluenceMapSystem* GetInfluenceMapSystem() { return &m_influenceMap; }
 	const InfluenceMapSystem* GetInfluenceMapSystem() const { return &m_influenceMap; }
 	const Stats& GetStats() const { return m_stats; }
+
+	void ClearInfluence();
+	void ConfigureInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
+	bool ConfigureInfluenceFromNavMesh(const NavigationMesh* navMesh, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset);
+	void ClearInfluenceLayer(const std::string& layerName);
+	void SetInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia);
+	int AddInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
+	int AddInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength);
+	int SpreadInfluenceLayer(const std::string& layerName, int passCount);
+	float SampleInfluenceLayer(const std::string& layerName, const Ogre::Vector3& position) const;
+	float ScoreInfluencePosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
+	Ogre::Vector3 FindBestInfluencePosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
+	int GetInfluenceLayerActiveCellCount(const std::string& layerName) const;
+	int GetInfluenceLayerCellWriteCount(const std::string& layerName) const;
+	int GetInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
+	Ogre::Vector3 GetInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
+	float GetInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
+	int GetInfluenceActiveCellCount() const;
+	int GetInfluenceCellWriteCount() const;
+	int GetInfluenceQueryCount() const;
 
 	void PublishEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent);
 	int GetEventCount() const;

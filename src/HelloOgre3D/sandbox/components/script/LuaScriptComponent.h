@@ -29,9 +29,9 @@ private:
 	void ReleaseLuaEnv();
 
 private:
-	ScriptLuaVM* m_pScriptVM = nullptr;
+	ScriptLuaVM* m_pScriptVM = nullptr; // non-owning global Lua VM
 	int m_luaRef = 0;
-	void* m_localEnvOwner = nullptr;
+	void* m_localEnvOwner = nullptr; // non-owning key used by LuaPluginMgr
 	std::string m_localEnvClassName;
 };
 

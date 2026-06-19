@@ -9,18 +9,16 @@
 #include "ai/perception/AgentPerceptionSystem.h"
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/perception/MemoryStore.h"
-#include "ai/tactics/InfluenceMapSystem.h"
+#include "ai/tactics/TacticalDebugDrawService.h"
 #include "ai/tactics/TacticalQueryService.h"
 #include "ai/team/TeamBlackboardService.h"
 #include "common/ScriptLuaVM.h"
 #include "systems/manager/ObjectRegistry.h"
 #include "systems/physics/PhysicsWorld.h"
-#include "debug/DebugDrawer.h"
+#include "systems/service/NavigationService.h"
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
-#include "OgreManualObject.h"
-#include "OgreAxisAlignedBox.h"
 #include "components/ai/AIController.h"
 #include "components/physics/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
@@ -94,53 +92,6 @@ namespace
 		return std::fabs(left - right) <= epsilon;
 	}
 
-	float Clamp01(float value)
-	{
-		if (value < 0.0f)
-			return 0.0f;
-		if (value > 1.0f)
-			return 1.0f;
-		return value;
-	}
-
-	Ogre::ColourValue BlendInfluenceColor(float value, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue)
-	{
-		const float amount = Clamp01(std::fabs(value));
-		const Ogre::ColourValue& target = value >= 0.0f ? positiveValue : negativeValue;
-		return Ogre::ColourValue(
-			zeroValue.r + (target.r - zeroValue.r) * amount,
-			zeroValue.g + (target.g - zeroValue.g) * amount,
-			zeroValue.b + (target.b - zeroValue.b) * amount,
-			zeroValue.a + (target.a - zeroValue.a) * amount);
-	}
-
-	void BuildSquareVertices(const Ogre::Vector3& position, float length, Ogre::Vector3* vertices)
-	{
-		const float halfLength = length * 0.5f;
-		vertices[0] = Ogre::Vector3(position.x + halfLength, position.y, position.z + halfLength);
-		vertices[1] = Ogre::Vector3(position.x - halfLength, position.y, position.z + halfLength);
-		vertices[2] = Ogre::Vector3(position.x - halfLength, position.y, position.z - halfLength);
-		vertices[3] = Ogre::Vector3(position.x + halfLength, position.y, position.z - halfLength);
-	}
-
-	void AddDegenerateTriangleSection(Ogre::ManualObject& manualObject)
-	{
-		manualObject.position(Ogre::Vector3::ZERO);
-		manualObject.colour(Ogre::ColourValue::ZERO);
-		manualObject.position(Ogre::Vector3::ZERO);
-		manualObject.colour(Ogre::ColourValue::ZERO);
-		manualObject.position(Ogre::Vector3::ZERO);
-		manualObject.colour(Ogre::ColourValue::ZERO);
-		manualObject.triangle(0, 1, 2);
-	}
-
-	void AddDegenerateLineSection(Ogre::ManualObject& manualObject)
-	{
-		manualObject.position(Ogre::Vector3::ZERO);
-		manualObject.colour(Ogre::ColourValue::ZERO);
-		manualObject.index(0);
-	}
-
 	bool IsFalseEnvValue(const char* value)
 	{
 		if (value == nullptr || value[0] == '\0')
@@ -148,12 +99,6 @@ namespace
 
 		const std::string text(value);
 		return text == "0" || text == "false" || text == "FALSE" || text == "False" || text == "off" || text == "OFF";
-	}
-
-	std::string MakeBlackboardKey(const std::string& prefix, const char* suffix)
-	{
-		const std::string safePrefix = prefix.empty() ? "team.cpp" : prefix;
-		return safePrefix + "." + suffix;
 	}
 
 	void AppendSelfTestFailure(std::ostringstream& stream, const std::string& text, int& failures)
@@ -311,7 +256,7 @@ namespace
 
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
-	: m_registry(new ObjectRegistry()), m_pPhysicsWorld(pPhysicsWorld), m_tacticalInfluenceDebugVisible(true), m_currentTimeMs(0)
+	: m_registry(new ObjectRegistry()), m_pPhysicsWorld(pPhysicsWorld), m_currentTimeMs(0)
 {
 	m_pScriptVM = GetScriptLuaVM();
 	m_aiScheduler = new AIScheduler();
@@ -319,6 +264,7 @@ ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
 	m_agentPerceptionSystem = new AgentPerceptionSystem();
 	m_teamBlackboardService = new TeamBlackboardService();
 	m_tacticalQueryService = new TacticalQueryService();
+	m_tacticalDebugDrawService = new TacticalDebugDrawService();
 	m_tacticalQueryService->Initialize();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
@@ -349,13 +295,7 @@ ObjectManager::~ObjectManager()
 	SAFE_DELETE(m_agentPerceptionSystem);
 	SAFE_DELETE(m_teamBlackboardService);
 	SAFE_DELETE(m_tacticalQueryService);
-
-	auto iter = m_navMeshes.begin();
-	for ( ; iter != m_navMeshes.end(); iter++)
-	{
-		SAFE_DELETE(iter->second);
-	}
-	m_navMeshes.clear();
+	SAFE_DELETE(m_tacticalDebugDrawService);
 }
 
 void ObjectManager::Update(int deltaMilliseconds)
@@ -366,28 +306,19 @@ void ObjectManager::Update(int deltaMilliseconds)
 	perfTiming.objectCount = static_cast<int>(m_registry->Objects().size());
 	perfTiming.agentCount = static_cast<int>(m_registry->Agents().size());
 	long long stageStartMicros = 0;
-	const bool useAiScheduler = m_aiScheduler != nullptr && m_aiScheduler->IsEnabled();
 	const int aiControllerCount = getAiSoldierCount();
 	perfTiming.aiControllerCount = aiControllerCount;
-	if (m_aiScheduler != nullptr)
-	{
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_aiScheduler->BeginFrame(deltaMilliseconds, aiControllerCount);
-		if (perfEnabled)
-			perfTiming.schedulerBeginMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-	}
-	if (m_agentSpatialIndex != nullptr)
-	{
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		if (m_agentSpatialIndex->IsEnabled())
-			m_agentSpatialIndex->Rebuild(m_registry->Agents());
-		else
-			m_agentSpatialIndex->BeginFrameLinearFallback(static_cast<int>(m_registry->Agents().size()));
-		if (perfEnabled)
-			perfTiming.spatialRebuildMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-	}
+	AIUpdateSystem::FrameContext aiFrameContext;
+	aiFrameContext.agents = &m_registry->Agents();
+	aiFrameContext.objectManager = this;
+	aiFrameContext.scheduler = m_aiScheduler;
+	aiFrameContext.spatialIndex = m_agentSpatialIndex;
+	aiFrameContext.perceptionSystem = m_agentPerceptionSystem;
+	aiFrameContext.teamBlackboard = m_teamBlackboardService;
+	aiFrameContext.aiControllerCount = aiControllerCount;
+	aiFrameContext.perfEnabled = perfEnabled;
+	aiFrameContext.timing = &perfTiming;
+	const bool useAiScheduler = m_aiUpdateSystem.BeginFrame(deltaMilliseconds, aiFrameContext);
 
 	if (perfEnabled)
 		stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
@@ -397,164 +328,25 @@ void ObjectManager::Update(int deltaMilliseconds)
 	if (m_tacticalQueryService != nullptr)
 		m_tacticalQueryService->Update(deltaMilliseconds);
 
-	if (m_agentPerceptionSystem != nullptr)
-	{
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_agentPerceptionSystem->Update(m_registry->Agents(), deltaMilliseconds, this);
-		if (perfEnabled)
-			perfTiming.perceptionSystemMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-		m_agentPerceptionSystem->PublishTracyCounters();
-	}
+	ObjectLifecycleSystem::UpdateContext lifecycleContext;
+	lifecycleContext.objects = &m_registry->Objects();
+	lifecycleContext.removedSceneNodes = &m_remSceneNodes;
+	lifecycleContext.objectManager = this;
+	lifecycleContext.aiUpdateSystem = &m_aiUpdateSystem;
+	lifecycleContext.scheduler = m_aiScheduler;
+	lifecycleContext.useAiScheduler = useAiScheduler;
+	lifecycleContext.perfEnabled = perfEnabled;
+	lifecycleContext.timing = &perfTiming;
 
-	UpdateManagedObjects(deltaMilliseconds, useAiScheduler, perfEnabled, perfTiming);
-	if (m_aiScheduler != nullptr)
-		m_aiScheduler->PublishTracyCounters();
-	if (m_teamBlackboardService != nullptr)
-	{
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_teamBlackboardService->SyncFromAgents(m_registry->Agents(), deltaMilliseconds);
-		if (perfEnabled)
-			perfTiming.teamBlackboardMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-		m_teamBlackboardService->PublishTracyCounters();
-	}
-
-	CleanupRemovedSceneNodes(deltaMilliseconds, perfEnabled, perfTiming);
+	m_aiUpdateSystem.UpdatePerception(deltaMilliseconds, aiFrameContext);
+	m_objectLifecycleSystem.UpdateObjects(deltaMilliseconds, lifecycleContext);
+	m_aiUpdateSystem.EndFrame(deltaMilliseconds, aiFrameContext);
+	m_objectLifecycleSystem.CleanupRemovedSceneNodes(deltaMilliseconds, lifecycleContext);
 	if (perfEnabled)
 	{
-		if (m_agentSpatialIndex != nullptr)
-		{
-			const AgentSpatialIndexSystem::Stats& stats = m_agentSpatialIndex->GetStats();
-			perfTiming.spatialEnabled = m_agentSpatialIndex->IsEnabled() ? 1 : 0;
-			perfTiming.spatialAgentCount = stats.agentCount;
-			perfTiming.spatialCellCount = stats.occupiedCellCount;
-			perfTiming.spatialQueryCount = stats.queryCount;
-			perfTiming.spatialCandidateCount = stats.candidateCount;
-			perfTiming.spatialFilteredCandidateCount = stats.filteredCandidateCount;
-			perfTiming.spatialResultCount = stats.resultCount;
-			perfTiming.spatialMaxCandidates = stats.maxCandidatesPerQuery;
-			perfTiming.spatialMaxFilteredCandidates = stats.maxFilteredCandidatesPerQuery;
-			perfTiming.spatialMaxResults = stats.maxResultsPerQuery;
-			perfTiming.spatialRejectedSelfCount = stats.rejectedSelfCount;
-			perfTiming.spatialRejectedTeamCount = stats.rejectedTeamCount;
-			perfTiming.spatialRejectedDeadCount = stats.rejectedDeadCount;
-			perfTiming.spatialRejectedTypeCount = stats.rejectedTypeCount;
-			perfTiming.spatialQueryCostMs = stats.queryCostMs;
-			perfTiming.spatialAvgCandidates = stats.queryCount > 0 ? static_cast<double>(stats.candidateCount) / static_cast<double>(stats.queryCount) : 0.0;
-			perfTiming.spatialAvgFilteredCandidates = stats.queryCount > 0 ? static_cast<double>(stats.filteredCandidateCount) / static_cast<double>(stats.queryCount) : 0.0;
-			perfTiming.spatialAvgResults = stats.queryCount > 0 ? static_cast<double>(stats.resultCount) / static_cast<double>(stats.queryCount) : 0.0;
-		}
-		if (m_agentPerceptionSystem != nullptr)
-		{
-			const AgentPerceptionSystem::Stats& stats = m_agentPerceptionSystem->GetStats();
-			perfTiming.perceptionEnabled = stats.enabled;
-			perfTiming.perceptionAgentCount = stats.agentCount;
-			perfTiming.perceptionControllerCount = stats.controllerCount;
-			perfTiming.perceptionScanCount = stats.scanCount;
-			perfTiming.perceptionVisibleCount = stats.visibleCount;
-			perfTiming.perceptionSpatialQueryCount = stats.spatialQueryCount;
-			perfTiming.perceptionSpatialCandidateCount = stats.spatialCandidateCount;
-			perfTiming.perceptionSpatialFilteredCandidateCount = stats.spatialFilteredCandidateCount;
-			perfTiming.perceptionSpatialResultCount = stats.spatialResultCount;
-			perfTiming.perceptionSpatialRejectedSelfCount = stats.spatialRejectedSelfCount;
-			perfTiming.perceptionSpatialRejectedTeamCount = stats.spatialRejectedTeamCount;
-			perfTiming.perceptionSpatialRejectedDeadCount = stats.spatialRejectedDeadCount;
-			perfTiming.perceptionSpatialRejectedTypeCount = stats.spatialRejectedTypeCount;
-			perfTiming.perceptionSpatialQueryCostMs = stats.spatialQueryCostMs;
-			perfTiming.perceptionMemoryMs = stats.memoryMs;
-			perfTiming.perceptionVisionMs = stats.visionMs;
-		}
-		if (m_teamBlackboardService != nullptr)
-		{
-			const TeamBlackboardService::Stats& stats = m_teamBlackboardService->GetStats();
-			perfTiming.teamCount = stats.teamCount;
-			perfTiming.teamFactCount = stats.factCount;
-			perfTiming.teamReportCount = stats.reportCount;
-			perfTiming.teamWriterCount = stats.lastWriterCount;
-			perfTiming.teamExpiredCount = stats.expiredCount;
-		}
+		m_aiUpdateSystem.FillPerfStats(aiFrameContext);
 		RuntimeStallProfiler::SetObjectUpdateTiming(perfTiming);
 	}
-}
-
-void ObjectManager::UpdateManagedObjects(int deltaMilliseconds, bool useAiScheduler, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming)
-{
-	const long long objectLoopStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-	for (auto iter = m_registry->Objects().begin(); iter != m_registry->Objects().end();)
-	{
-		BaseObject* pObject = iter->second;
-		if (pObject == nullptr || pObject->CheckNeedClear())
-		{
-			if (m_aiScheduler != nullptr && pObject != nullptr)
-				m_aiScheduler->RemoveAgent(pObject->GetObjId());
-			iter = m_registry->Objects().erase(iter);
-			this->realRemoveObject(pObject);
-		}
-		else
-		{
-			AIController* ai = pObject->FindComponent<AIController>();
-			if (ai != nullptr && useAiScheduler)
-			{
-				ai->SetTickInOwnerUpdateEnabled(false);
-				int aiDeltaMs = 0;
-				if (m_aiScheduler->ShouldTick(ai->GetAgentId(), deltaMilliseconds, &aiDeltaMs))
-					ai->TickAI(aiDeltaMs);
-			}
-			else if (ai != nullptr)
-			{
-				ai->SetTickInOwnerUpdateEnabled(true);
-			}
-
-			const long long objectUpdateStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-			pObject->Update(deltaMilliseconds);
-			if (perfEnabled)
-			{
-				const double objectUpdateMs = RuntimeStallProfiler::ElapsedMsSince(objectUpdateStartMicros);
-				perfTiming.objectUpdateMs += objectUpdateMs;
-				perfTiming.objectUpdateMaxMs = std::max(perfTiming.objectUpdateMaxMs, objectUpdateMs);
-				++perfTiming.objectUpdateCount;
-			}
-			const long long objectEventStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-			pObject->FlushQueuedEvents();
-			if (perfEnabled)
-				perfTiming.objectEventFlushMs += RuntimeStallProfiler::ElapsedMsSince(objectEventStartMicros);
-			if (pObject->GetObjType() == BaseObject::OBJ_TYPE_BLOCK)
-			{
-				//static_cast<BlockObject*>(pObject)->getSceneNode()->setVisible(false);
-			}
-			iter++;
-		}
-	}
-	if (perfEnabled)
-		perfTiming.objectLoopMs = RuntimeStallProfiler::ElapsedMsSince(objectLoopStartMicros);
-}
-
-void ObjectManager::CleanupRemovedSceneNodes(int deltaMilliseconds, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming)
-{
-	Ogre::SceneNode* pRootScene = SceneFactory::GetRootSceneNode();
-	const long long stageStartMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
-	for (auto iter = m_remSceneNodes.begin(); pRootScene != nullptr && iter != m_remSceneNodes.end();)
-	{
-		int lastMilliSeconds = iter->second;
-		lastMilliSeconds -= deltaMilliseconds;
-		if (lastMilliSeconds <= 0)
-		{
-			auto pSceneNode = iter->first;
-			SceneFactory::RemParticleBySceneNode(pSceneNode);
-			pRootScene->removeChild(pSceneNode);
-			pRootScene->getCreator()->destroySceneNode(pSceneNode);
-
-			iter = m_remSceneNodes.erase(iter);
-		}
-		else
-		{
-			iter->second = lastMilliSeconds;
-			iter++;
-		}
-	}
-	if (perfEnabled)
-		perfTiming.sceneCleanupMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
 }
 
 void ObjectManager::HandleKeyEvent(OIS::KeyCode keycode, unsigned int key)
@@ -642,89 +434,62 @@ void ObjectManager::configureAiScheduler(bool enabled, int tickIntervalMs, int m
 {
 	if (m_aiScheduler == nullptr)
 		return;
-	m_aiScheduler->Configure(enabled, tickIntervalMs, maxTicksPerFrame);
+	m_aiScheduler->configureAiScheduler(enabled, tickIntervalMs, maxTicksPerFrame);
 }
 
 void ObjectManager::clearTeamBlackboardFacts()
 {
 	if (m_teamBlackboardService != nullptr)
-		m_teamBlackboardService->Clear();
+		m_teamBlackboardService->clearTeamBlackboardFacts();
 }
 
 void ObjectManager::configureTeamBlackboard(int ttlMs)
 {
 	if (m_teamBlackboardService != nullptr)
-		m_teamBlackboardService->SetFactTtlMs(ttlMs);
+		m_teamBlackboardService->configureTeamBlackboard(ttlMs);
 }
 
 bool ObjectManager::rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence)
 {
 	if (m_teamBlackboardService == nullptr)
 		return false;
-	return m_teamBlackboardService->RememberEnemySighting(teamId, reporterId, targetId, targetPosition, lastSeenMs, confidence);
+	return m_teamBlackboardService->rememberTeamEnemyFact(teamId, reporterId, targetId, targetPosition, lastSeenMs, confidence);
 }
 
 bool ObjectManager::writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport)
 {
-	if (m_teamBlackboardService == nullptr || agent == nullptr)
+	if (m_teamBlackboardService == nullptr)
 		return false;
-
-	AIController* ai = agent->FindComponent<AIController>();
-	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
-	if (blackboard == nullptr)
-		return false;
-
-	TeamBlackboardService::EnemySightingFact fact;
-	const int ignoredReporterId = allowOwnReport ? -1 : static_cast<int>(agent->GetObjId());
-	if (!m_teamBlackboardService->GetBestEnemyFact(agent->GetTeamId(), ignoredReporterId, fact))
-	{
-		blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), false);
-		return false;
-	}
-
-	const long long currentTimeMs = m_teamBlackboardService->GetStats().currentTimeMs;
-	const int ageMs = static_cast<int>(std::max<long long>(0, currentTimeMs - fact.lastSeenMs));
-	blackboard->SetBool(MakeBlackboardKey(keyPrefix, "hasEnemy"), true);
-	blackboard->SetObjectId(MakeBlackboardKey(keyPrefix, "targetId"), fact.targetId);
-	blackboard->SetVec3(MakeBlackboardKey(keyPrefix, "targetPos"), fact.targetPosition);
-	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reporterId"), fact.reporterId);
-	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "lastSeenMs"), static_cast<int>(fact.lastSeenMs));
-	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "ageMs"), ageMs);
-	blackboard->SetFloat(MakeBlackboardKey(keyPrefix, "confidence"), fact.confidence);
-	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "reportCount"), fact.reportCount);
-	blackboard->SetInt(MakeBlackboardKey(keyPrefix, "priority"), fact.priority);
-	return true;
+	return m_teamBlackboardService->writeBestTeamEnemyFactToBlackboard(agent, keyPrefix, allowOwnReport);
 }
 
 int ObjectManager::getTeamBlackboardFactCount() const
 {
-	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->GetStats().factCount : 0;
+	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->getTeamBlackboardFactCount() : 0;
 }
 
 int ObjectManager::getTeamBlackboardReportCount() const
 {
-	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->GetStats().reportCount : 0;
+	return m_teamBlackboardService != nullptr ? m_teamBlackboardService->getTeamBlackboardReportCount() : 0;
 }
 
 std::string ObjectManager::buildTeamBlackboardDebugSummary() const
 {
 	if (m_teamBlackboardService == nullptr)
 		return "[TeamBlackboardService] unavailable";
-	return m_teamBlackboardService->BuildDebugSummary();
+	return m_teamBlackboardService->buildTeamBlackboardDebugSummary();
 }
 
 void ObjectManager::clearTacticalInfluence()
 {
 	if (m_tacticalQueryService != nullptr)
-		m_tacticalQueryService->GetInfluenceMapSystem()->Clear();
+		m_tacticalQueryService->ClearInfluence();
 }
 
 void ObjectManager::configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize)
 {
 	if (m_tacticalQueryService != nullptr)
-		m_tacticalQueryService->GetInfluenceMapSystem()->Configure(minX, maxX, minZ, maxZ, cellSize);
-	m_tacticalInfluenceDrawProjectionKey.clear();
-	m_tacticalInfluenceDrawProjectionCache.clear();
+		m_tacticalQueryService->ConfigureInfluence(minX, maxX, minZ, maxZ, cellSize);
 	clearTacticalInfluenceDebugVisuals();
 }
 
@@ -733,73 +498,64 @@ void ObjectManager::configureTacticalInfluenceFromNavMesh(const std::string& nav
 	if (m_tacticalQueryService == nullptr)
 		return;
 
-	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
 	NavigationMesh* navMesh = getNavigationMesh(navMeshName);
-	if (navMesh != nullptr)
-	{
-		std::vector<float> verts;
-		std::vector<int> indices;
-		if (navMesh->GetWalkableTriangles(verts, indices))
-			influenceMap->BuildFromNavMesh(verts, indices, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
-	}
+	m_tacticalQueryService->ConfigureInfluenceFromNavMesh(navMesh, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
 
-	m_tacticalInfluenceDrawProjectionKey.clear();
-	m_tacticalInfluenceDrawProjectionCache.clear();
 	clearTacticalInfluenceDebugVisuals();
 }
 
 void ObjectManager::clearTacticalInfluenceLayer(const std::string& layerName)
 {
 	if (m_tacticalQueryService != nullptr)
-		m_tacticalQueryService->GetInfluenceMapSystem()->ClearLayer(layerName);
+		m_tacticalQueryService->ClearInfluenceLayer(layerName);
 }
 
 void ObjectManager::setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia)
 {
 	if (m_tacticalQueryService != nullptr)
-		m_tacticalQueryService->GetInfluenceMapSystem()->SetLayerOptions(layerName, falloff, inertia);
+		m_tacticalQueryService->SetInfluenceLayerOptions(layerName, falloff, inertia);
 }
 
 int ObjectManager::addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius)
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->AddRadialSource(layerName, center, strength, radius);
+	return m_tacticalQueryService->AddInfluenceSource(layerName, center, strength, radius);
 }
 
 int ObjectManager::addTacticalInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength)
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->AddPointSource(layerName, center, strength);
+	return m_tacticalQueryService->AddInfluencePoint(layerName, center, strength);
 }
 
 int ObjectManager::spreadTacticalInfluenceLayer(const std::string& layerName, int passCount)
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->SpreadLayer(layerName, passCount);
+	return m_tacticalQueryService->SpreadInfluenceLayer(layerName, passCount);
 }
 
 float ObjectManager::sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0.0f;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->SampleLayer(layerName, position);
+	return m_tacticalQueryService->SampleInfluenceLayer(layerName, position);
 }
 
 float ObjectManager::scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const
 {
 	if (m_tacticalQueryService == nullptr)
 		return 0.0f;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
+	return m_tacticalQueryService->ScoreInfluencePosition(position, dangerWeight, teamWeight, objectiveWeight);
 }
 
 Ogre::Vector3 ObjectManager::findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight)
 {
 	if (m_tacticalQueryService == nullptr)
 		return center;
-	return m_tacticalQueryService->GetInfluenceMapSystem()->FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+	return m_tacticalQueryService->FindBestInfluencePosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
 }
 
 float ObjectManager::scoreTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& position) const
@@ -938,233 +694,68 @@ int ObjectManager::rebuildTacticalObjectiveLayer(const Ogre::Vector3& center, fl
 
 int ObjectManager::getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerActiveCellCount(layerName) : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceLayerActiveCellCount(layerName) : 0;
 }
 
 int ObjectManager::getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerCellWriteCount(layerName) : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceLayerCellWriteCount(layerName) : 0;
 }
 
 int ObjectManager::getTacticalInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellCount(layerName, threshold, maxCells) : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceLayerDebugCellCount(layerName, threshold, maxCells) : 0;
 }
 
 Ogre::Vector3 ObjectManager::getTacticalInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellPosition(layerName, luaIndex, threshold) : Ogre::Vector3::ZERO;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceLayerDebugCellPosition(layerName, luaIndex, threshold) : Ogre::Vector3::ZERO;
 }
 
 float ObjectManager::getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetLayerDebugCellValue(layerName, luaIndex, threshold) : 0.0f;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceLayerDebugCellValue(layerName, luaIndex, threshold) : 0.0f;
 }
 
 int ObjectManager::drawTacticalInfluenceLayer(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
 {
-	if (m_tacticalQueryService == nullptr)
+	if (m_tacticalQueryService == nullptr || m_tacticalDebugDrawService == nullptr)
 		return 0;
-
-	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
-	if (influenceMap == nullptr)
-		return 0;
-
-	DebugDrawer* debugDrawer = DebugDrawer::GetInstance();
-	if (debugDrawer == nullptr)
-		return 0;
-
-	// 3D 影响图：直接画 used cell 的真实 3D 位置（cell 已贴在可走面上），不再投影。
-	// 注意：projectToNav / maxProjectionDistance / navMeshName 是 Lua 绑定签名里的**死参数**——
-	// 早期 navmesh 投影方案的遗留入参，现已改为 2D 拍平到 m_minY 平面（见 InfluenceMapSystem::CollectDebugCells），
-	// 这三个参数当前完全无效。不是 bug；待 Tactical 收口重构 service 时连同 tolua 绑定一起删除。
-	(void)projectToNav;
-	(void)maxProjectionDistance;
-	(void)navMeshName;
-	const float cellSize = influenceMap->GetCellSize();
-	const float safeThreshold = std::max(0.0f, threshold);
-	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
-	int drawn = 0;
-
-	std::vector<Ogre::Vector3> cellPositions;
-	std::vector<float> cellValues;
-	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
-	for (size_t i = 0; i < cellPositions.size(); ++i)
-	{
-		Ogre::Vector3 drawPosition = cellPositions[i];
-		drawPosition.y += yOffset;
-		const Ogre::ColourValue color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
-		debugDrawer->drawSquare(drawPosition, cellSize, color, true);
-		drawPosition.y += -0.5f;
-		debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
-		++drawn;
-	}
-	return drawn;
+	return m_tacticalDebugDrawService->DrawLayer(m_tacticalQueryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 }
 
 int ObjectManager::rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
 {
-	if (m_tacticalQueryService == nullptr)
+	if (m_tacticalQueryService == nullptr || m_tacticalDebugDrawService == nullptr)
 		return 0;
-
-	InfluenceMapSystem* influenceMap = m_tacticalQueryService->GetInfluenceMapSystem();
-	if (influenceMap == nullptr)
-		return 0;
-
-	Ogre::SceneManager* sceneManager = SceneFactory::GetSceneManager();
-	if (sceneManager == nullptr)
-		return 0;
-
-	struct DrawCell
-	{
-		Ogre::Vector3 position;
-		Ogre::ColourValue color;
-	};
-
-	// 死参数：projectToNav / maxProjectionDistance / navMeshName 是早期 navmesh 投影方案的遗留入参，
-	// 现已改为 2D 拍平绘制（CollectDebugCells 取每列最低 used cell 画在 m_minY 平面），这三个参数当前完全无效。
-	// 不是 bug；待 Tactical 收口重构时连同 tolua 绑定与 Lua 调用处一起删除。
-	(void)projectToNav;
-	(void)maxProjectionDistance;
-	(void)navMeshName;
-	const float cellSize = influenceMap->GetCellSize();
-	const float safeThreshold = std::max(0.0f, threshold);
-	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
-	std::vector<DrawCell> cells;
-
-	// Use the same 3D used-cell set for filled quads and outlines.
-	std::vector<Ogre::Vector3> positions;
-	std::vector<float> cellValues;
-	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, positions, cellValues);
-	cells.reserve(positions.size());
-	for (size_t i = 0; i < positions.size(); ++i)
-	{
-		DrawCell cell;
-		cell.position = Ogre::Vector3(positions[i].x, positions[i].y + yOffset, positions[i].z);
-		cell.color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
-		cells.push_back(cell);
-	}
-
-	TacticalInfluenceDebugVisual& visual = m_tacticalInfluenceDebugVisuals[layerName];
-	if (visual.manualObject == nullptr || visual.node == nullptr)
-	{
-		visual.node = sceneManager->getRootSceneNode()->createChildSceneNode();
-		visual.manualObject = sceneManager->createManualObject();
-		visual.manualObject->setDynamic(true);
-		visual.manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, 110);
-		visual.manualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
-		visual.node->attachObject(visual.manualObject);
-	}
-
-	Ogre::ManualObject* manualObject = visual.manualObject;
-	manualObject->clear();
-
-	manualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_TRIANGLE_LIST);
-	if (cells.empty())
-	{
-		AddDegenerateTriangleSection(*manualObject);
-	}
-	else
-	{
-		manualObject->estimateVertexCount(cells.size() * 4);
-		manualObject->estimateIndexCount(cells.size() * 6);
-		int vertexIndex = 0;
-		for (std::vector<DrawCell>::const_iterator iter = cells.begin(); iter != cells.end(); ++iter)
-		{
-			Ogre::Vector3 square[4];
-			BuildSquareVertices(iter->position, cellSize, square);
-			for (int index = 0; index < 4; ++index)
-			{
-				manualObject->position(square[index]);
-				manualObject->colour(iter->color);
-			}
-			manualObject->triangle(vertexIndex, vertexIndex + 2, vertexIndex + 1);
-			manualObject->triangle(vertexIndex, vertexIndex + 3, vertexIndex + 2);
-			vertexIndex += 4;
-		}
-	}
-	manualObject->end();
-
-	manualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_LINE_LIST);
-	if (cells.empty())
-	{
-		AddDegenerateLineSection(*manualObject);
-	}
-	else
-	{
-		manualObject->estimateVertexCount(cells.size() * 4);
-		manualObject->estimateIndexCount(cells.size() * 8);
-		int vertexIndex = 0;
-		for (std::vector<DrawCell>::const_iterator iter = cells.begin(); iter != cells.end(); ++iter)
-		{
-			Ogre::Vector3 square[4];
-			Ogre::Vector3 outlinePosition = iter->position;
-			BuildSquareVertices(outlinePosition, cellSize, square);
-			for (int index = 0; index < 4; ++index)
-			{
-				manualObject->position(square[index]);
-				manualObject->colour(gridColor);
-			}
-			manualObject->index(vertexIndex);
-			manualObject->index(vertexIndex + 1);
-			manualObject->index(vertexIndex + 1);
-			manualObject->index(vertexIndex + 2);
-			manualObject->index(vertexIndex + 2);
-			manualObject->index(vertexIndex + 3);
-			manualObject->index(vertexIndex + 3);
-			manualObject->index(vertexIndex);
-			vertexIndex += 4;
-		}
-	}
-	manualObject->end();
-	visual.node->setVisible(m_tacticalInfluenceDebugVisible);
-	visual.node->_updateBounds();
-	return static_cast<int>(cells.size());
+	return m_tacticalDebugDrawService->RebuildLayerDebugVisual(m_tacticalQueryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 }
 
 void ObjectManager::setTacticalInfluenceDebugVisible(bool visible)
 {
-	m_tacticalInfluenceDebugVisible = visible;
-	for (std::unordered_map<std::string, TacticalInfluenceDebugVisual>::iterator iter = m_tacticalInfluenceDebugVisuals.begin(); iter != m_tacticalInfluenceDebugVisuals.end(); ++iter)
-	{
-		if (iter->second.node != nullptr)
-			iter->second.node->setVisible(visible);
-	}
+	if (m_tacticalDebugDrawService != nullptr)
+		m_tacticalDebugDrawService->SetVisible(visible);
 }
 
 void ObjectManager::clearTacticalInfluenceDebugVisuals()
 {
-	Ogre::SceneManager* sceneManager = SceneFactory::GetSceneManager();
-	if (sceneManager == nullptr)
-	{
-		m_tacticalInfluenceDebugVisuals.clear();
-		return;
-	}
-
-	for (std::unordered_map<std::string, TacticalInfluenceDebugVisual>::iterator iter = m_tacticalInfluenceDebugVisuals.begin(); iter != m_tacticalInfluenceDebugVisuals.end(); ++iter)
-	{
-		TacticalInfluenceDebugVisual& visual = iter->second;
-		if (visual.manualObject != nullptr)
-			sceneManager->destroyManualObject(visual.manualObject);
-		if (visual.node != nullptr)
-			sceneManager->destroySceneNode(visual.node);
-	}
-	m_tacticalInfluenceDebugVisuals.clear();
+	if (m_tacticalDebugDrawService != nullptr)
+		m_tacticalDebugDrawService->ClearVisuals();
 }
 
 int ObjectManager::getTacticalInfluenceActiveCellCount() const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().activeCellCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceActiveCellCount() : 0;
 }
 
 int ObjectManager::getTacticalInfluenceCellWriteCount() const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().cellWriteCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceCellWriteCount() : 0;
 }
 
 int ObjectManager::getTacticalInfluenceQueryCount() const
 {
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem()->GetStats().queryCount : 0;
+	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceQueryCount() : 0;
 }
 
 std::string ObjectManager::buildTacticalInfluenceDebugSummary() const
@@ -1178,7 +769,7 @@ std::string ObjectManager::buildAiSchedulerDebugSummary() const
 {
 	if (m_aiScheduler == nullptr)
 		return "[AIScheduler] unavailable";
-	return m_aiScheduler->BuildDebugSummary();
+	return m_aiScheduler->buildAiSchedulerDebugSummary();
 }
 
 std::string ObjectManager::buildAiEventDebugSummary(int maxAgents, int maxEvents)
@@ -1517,11 +1108,12 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 	std::sort(objectIds.begin(), objectIds.end());
 
 	const int showingCount = maxObjects < static_cast<int>(objectIds.size()) ? maxObjects : static_cast<int>(objectIds.size());
+	const int navMeshCount = m_services.navigation != nullptr ? m_services.navigation->GetNavigationMeshCount() : 0;
 	std::ostringstream stream;
 	stream << "[ObjectInspector] objects=" << m_registry->Objects().size()
 		<< " agents=" << m_registry->Agents().size()
 		<< " blocks=" << m_registry->Blocks().size()
-		<< " navMeshes=" << m_navMeshes.size()
+		<< " navMeshes=" << navMeshCount
 		<< " pendingSceneNodes=" << m_remSceneNodes.size()
 		<< " showing=" << showingCount;
 
@@ -1619,16 +1211,6 @@ void ObjectManager::clearAllObjects(int objType, bool forceAll)
 		if (m_tacticalQueryService != nullptr)
 			m_tacticalQueryService->Clear();
 	}
-}
-
-const InfluenceMapSystem* ObjectManager::GetInfluenceMapSystem() const
-{
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem() : nullptr;
-}
-
-InfluenceMapSystem* ObjectManager::GetInfluenceMapSystem()
-{
-	return m_tacticalQueryService != nullptr ? m_tacticalQueryService->GetInfluenceMapSystem() : nullptr;
 }
 
 std::vector<BlockObject*> ObjectManager::getFixedObjects()
@@ -1753,23 +1335,11 @@ void ObjectManager::markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seco
 
 NavigationMesh* ObjectManager::getNavigationMesh(const Ogre::String& navName)
 {
-	if (m_navMeshes.find(navName) == m_navMeshes.end())
-	{
-		return NULL;
-	}
-	return m_navMeshes[navName];
+	return m_services.navigation != nullptr ? m_services.navigation->GetNavigationMesh(navName) : nullptr;
 }
 
 bool ObjectManager::addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh)
 {
-	if (m_navMeshes[navName])
-	{
-		SAFE_DELETE(m_navMeshes[navName]);
-	}
-	m_navMeshes[navName] = pNavMesh;
-	m_tacticalInfluenceDrawProjectionKey.clear();
-	m_tacticalInfluenceDrawProjectionCache.clear();
-	clearTacticalInfluenceDebugVisuals();
-	return true;
+	return m_services.navigation != nullptr ? m_services.navigation->AddNavigationMesh(navName, pNavMesh) : false;
 }
 

@@ -130,6 +130,16 @@ std::string AIScheduler::BuildDebugSummary() const
 	return stream.str();
 }
 
+void AIScheduler::configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame)
+{
+	Configure(enabled, tickIntervalMs, maxTicksPerFrame);
+}
+
+std::string AIScheduler::buildAiSchedulerDebugSummary() const
+{
+	return BuildDebugSummary();
+}
+
 AIScheduler::AgentEntry AIScheduler::CreateEntry(unsigned int agentId) const
 {
 	AgentEntry entry;

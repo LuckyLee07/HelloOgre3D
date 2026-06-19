@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_map>
 
-class AIScheduler
-{
+class AIScheduler //tolua_exports
+{ //tolua_exports
 public:
 	AIScheduler();
 
@@ -18,6 +18,11 @@ public:
 	void Clear();
 	void PublishTracyCounters() const;
 	std::string BuildDebugSummary() const;
+
+	//tolua_begin
+	void configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame);
+	std::string buildAiSchedulerDebugSummary() const;
+	//tolua_end
 
 private:
 	struct AgentEntry
@@ -40,6 +45,6 @@ private:
 	int m_totalTickedCount;
 	int m_totalSkippedCount;
 	std::unordered_map<unsigned int, AgentEntry> m_entries;
-};
+}; //tolua_exports
 
 #endif // __AI_SCHEDULER_H__

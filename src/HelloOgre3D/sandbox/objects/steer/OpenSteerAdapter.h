@@ -68,7 +68,7 @@ public:
 	virtual OpenSteer::Vec3 globalRotateForwardToSide(const OpenSteer::Vec3& globalForward) const;
 
 protected:
-	AgentLocomotion* m_owner = nullptr;
+	AgentLocomotion* m_owner = nullptr; // non-owning; AgentLocomotion owns this adapter
 };
 
 #endif // __OPENSTEER_ADAPTER_H__

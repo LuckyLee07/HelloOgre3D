@@ -51,8 +51,8 @@ private:
 	void RemoveFromWorld();
 
 private:
-	btRigidBody* m_body = nullptr;
-	PhysicsWorld* m_addedWorld = nullptr;
+	btRigidBody* m_body = nullptr; // owned rigid body; removed from PhysicsWorld before delete
+	PhysicsWorld* m_addedWorld = nullptr; // non-owning; injected physics world that currently contains m_body
 	bool m_addedToWorld = false;
 };
 

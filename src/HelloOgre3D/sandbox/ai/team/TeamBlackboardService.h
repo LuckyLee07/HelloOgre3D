@@ -9,8 +9,8 @@
 
 class AgentObject;
 
-class TeamBlackboardService
-{
+class TeamBlackboardService //tolua_exports
+{ //tolua_exports
 public:
 	struct EnemySightingFact
 	{
@@ -55,6 +55,16 @@ public:
 	std::string BuildDebugSummary() const;
 	void PublishTracyCounters() const;
 
+	//tolua_begin
+	void clearTeamBlackboardFacts();
+	void configureTeamBlackboard(int ttlMs);
+	bool rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence);
+	bool writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport = false);
+	int getTeamBlackboardFactCount() const;
+	int getTeamBlackboardReportCount() const;
+	std::string buildTeamBlackboardDebugSummary() const;
+	//tolua_end
+
 private:
 	typedef std::unordered_map<int, EnemySightingFact> EnemyFactMap;
 
@@ -71,6 +81,6 @@ private:
 	std::unordered_map<int, TeamState> m_teams;
 	Stats m_stats;
 	int m_factTtlMs;
-};
+}; //tolua_exports
 
 #endif // __TEAM_BLACKBOARD_SERVICE_H__

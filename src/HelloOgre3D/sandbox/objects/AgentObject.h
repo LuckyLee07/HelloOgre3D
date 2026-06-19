@@ -155,7 +155,7 @@ public:
 	RenderComponent* GetRenderComponent() const { return m_renderComp; }
 
 protected:
-	RenderComponent* m_renderComp;
+	RenderComponent* m_renderComp; // non-owning; owned by BaseObject component map
 	bool m_onPlayDeathAnim = false;
 
 private:

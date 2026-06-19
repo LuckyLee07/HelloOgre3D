@@ -13,7 +13,7 @@
 #include "states/AgentLuaState.h"
 #include "LogSystem.h"
 #include "systems/manager/ObjectManager.h"
-#include "systems/manager/SandboxMgr.h"
+#include "systems/service/NavigationService.h"
 
 namespace
 {
@@ -25,11 +25,11 @@ namespace
 		return nullptr;
 	}
 
-	SandboxMgr* ResolveSandboxMgr(const AgentObject* agent)
+	NavigationService* ResolveNavigationService(const AgentObject* agent)
 	{
 		const SandboxServices* services = agent != nullptr ? agent->GetSandboxServices() : nullptr;
-		if (services != nullptr && services->sandbox != nullptr)
-			return services->sandbox;
+		if (services != nullptr && services->navigation != nullptr)
+			return services->navigation;
 		return nullptr;
 	}
 
@@ -170,12 +170,12 @@ void AgentStateController::AddTransitionByEvaluator(const std::string& from, con
 
 bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMovePos)
 {
-	SandboxMgr* sandbox = ResolveSandboxMgr(m_agent);
-	if (!m_agent || sandbox == nullptr)
+	NavigationService* navigation = ResolveNavigationService(m_agent);
+	if (!m_agent || navigation == nullptr)
 		return false;
 
 	std::vector<Ogre::Vector3> path;
-	if (!sandbox->FindPath(m_navMeshName, m_agent->GetPosition(), target, path) || path.empty())
+	if (!navigation->FindPath(m_navMeshName, m_agent->GetPosition(), target, path) || path.empty())
 		return false;
 
 	m_agent->SetPath(path, false);
@@ -212,11 +212,11 @@ bool AgentStateController::PlanPathToEnemy()
 
 Ogre::Vector3 AgentStateController::RandomPoint() const
 {
-	SandboxMgr* sandbox = ResolveSandboxMgr(m_agent);
-	if (sandbox == nullptr)
+	NavigationService* navigation = ResolveNavigationService(m_agent);
+	if (navigation == nullptr)
 		return Ogre::Vector3::ZERO;
 
-	return sandbox->RandomPoint(m_navMeshName);
+	return navigation->RandomPoint(m_navMeshName);
 }
 
 void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode)

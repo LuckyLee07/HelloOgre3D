@@ -107,7 +107,7 @@ private:
 	Ogre::Real m_targetRadius = 0.0f;
 	Ogre::Vector3 m_targetPos = Ogre::Vector3::ZERO;
 
-	OpenSteerAdapter* m_adapter = nullptr;  // OpenSteer 适配
+	OpenSteerAdapter* m_adapter = nullptr; // owned OpenSteer adapter
 };
 
 #endif // __AGENT_LOCOMOTION_H__

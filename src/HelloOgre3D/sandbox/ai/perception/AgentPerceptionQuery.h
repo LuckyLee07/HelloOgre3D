@@ -15,7 +15,7 @@
 #include "ai/perception/AgentSpatialQuery.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
-#include "systems/manager/SandboxMgr.h"
+#include "systems/service/NavigationService.h"
 
 struct AgentPerceptionOptions
 {
@@ -67,19 +67,19 @@ public:
 class AgentPerceptionQuery : public IAgentPerceptionQuery
 {
 public:
-	AgentPerceptionQuery(ObjectManager* objectManager, SandboxMgr* sandbox)
+	AgentPerceptionQuery(ObjectManager* objectManager, NavigationService* navigation)
 		: m_defaultSpatialQuery(objectManager)
 		, m_spatialQuery(&m_defaultSpatialQuery)
 		, m_objectManager(objectManager)
-		, m_sandbox(sandbox)
+		, m_navigation(navigation)
 	{
 	}
 
-	AgentPerceptionQuery(IAgentSpatialQuery* spatialQuery, SandboxMgr* sandbox)
+	AgentPerceptionQuery(IAgentSpatialQuery* spatialQuery, NavigationService* navigation)
 		: m_defaultSpatialQuery(nullptr)
 		, m_spatialQuery(spatialQuery)
 		, m_objectManager(nullptr)
-		, m_sandbox(sandbox)
+		, m_navigation(navigation)
 	{
 	}
 
@@ -134,10 +134,10 @@ public:
 			return false;
 		}
 
-		if (options.requirePath && m_sandbox != nullptr)
+		if (options.requirePath && m_navigation != nullptr)
 		{
 			std::vector<Ogre::Vector3> path;
-			if (!m_sandbox->FindPath(options.navMeshName, owner->GetPosition(), enemy->GetPosition(), path) || path.empty())
+			if (!m_navigation->FindPath(options.navMeshName, owner->GetPosition(), enemy->GetPosition(), path) || path.empty())
 			{
 				return false;
 			}
@@ -282,7 +282,7 @@ private:
 	ObjectManagerAgentSpatialQuery m_defaultSpatialQuery;
 	IAgentSpatialQuery* m_spatialQuery;
 	ObjectManager* m_objectManager;
-	SandboxMgr* m_sandbox;
+	NavigationService* m_navigation;
 };
 
 #endif // __AGENT_PERCEPTION_QUERY_H__

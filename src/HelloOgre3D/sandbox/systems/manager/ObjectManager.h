@@ -10,11 +10,12 @@
 #include "OgreColourValue.h"
 #include "OgreString.h"
 #include "OgreVector3.h"
+#include "ai/common/AIUpdateSystem.h"
+#include "systems/manager/ObjectLifecycleSystem.h"
 #include "SandboxServices.h"
 
 namespace Ogre
 {
-	class ManualObject;
 	class SceneNode;
 }
 class BaseObject;
@@ -23,10 +24,11 @@ class BlockObject;
 class ScriptLuaVM;
 class PhysicsWorld;
 class NavigationMesh;
+class NavigationService;
 class AIScheduler;
 class AgentPerceptionSystem;
 class AgentSpatialIndexSystem;
-class InfluenceMapSystem;
+class TacticalDebugDrawService;
 class TacticalQueryService;
 class TeamBlackboardService;
 class ObjectRegistry;
@@ -138,6 +140,8 @@ public:
 
 	NavigationMesh* getNavigationMesh(const Ogre::String& navName);
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
+	const AIScheduler* GetAIScheduler() const { return m_aiScheduler; }
+	AIScheduler* GetAIScheduler() { return m_aiScheduler; }
 	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex; }
 	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex; }
 	const AgentPerceptionSystem* GetAgentPerceptionSystem() const { return m_agentPerceptionSystem; }
@@ -146,48 +150,19 @@ public:
 	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
 	const TacticalQueryService* GetTacticalQueryService() const { return m_tacticalQueryService; }
 	TacticalQueryService* GetTacticalQueryService() { return m_tacticalQueryService; }
-	const InfluenceMapSystem* GetInfluenceMapSystem() const;
-	InfluenceMapSystem* GetInfluenceMapSystem();
 
 private:
+	friend class ObjectLifecycleSystem;
+
 	void realAddObject(BaseObject* pObject);
 	bool realRemoveObject(BaseObject* pObject);
-	void UpdateManagedObjects(int deltaMilliseconds, bool useAiScheduler, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming);
-	void CleanupRemovedSceneNodes(int deltaMilliseconds, bool perfEnabled, RuntimeObjectUpdateTiming& perfTiming);
-
-private:
-	struct TacticalInfluenceDrawProjection
-	{
-		TacticalInfluenceDrawProjection()
-			: resolved(false)
-			, valid(false)
-			, position(Ogre::Vector3::ZERO)
-		{
-		}
-
-		bool resolved;
-		bool valid;
-		Ogre::Vector3 position;
-	};
-
-	struct TacticalInfluenceDebugVisual
-	{
-		TacticalInfluenceDebugVisual()
-			: node(nullptr)
-			, manualObject(nullptr)
-		{
-		}
-
-		Ogre::SceneNode* node;
-		Ogre::ManualObject* manualObject;
-	};
 
 	ObjectRegistry* m_registry;
+	AIUpdateSystem m_aiUpdateSystem;
+	ObjectLifecycleSystem m_objectLifecycleSystem;
 
 	// 存储需要定时删除的RootScene下的Node
 	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;
-
-	std::unordered_map<Ogre::String, NavigationMesh*> m_navMeshes;
 
 	ScriptLuaVM* m_pScriptVM;
 	PhysicsWorld* m_pPhysicsWorld;
@@ -196,10 +171,7 @@ private:
 	AgentPerceptionSystem* m_agentPerceptionSystem;
 	TeamBlackboardService* m_teamBlackboardService;
 	TacticalQueryService* m_tacticalQueryService;
-	std::string m_tacticalInfluenceDrawProjectionKey;
-	std::vector<TacticalInfluenceDrawProjection> m_tacticalInfluenceDrawProjectionCache;
-	std::unordered_map<std::string, TacticalInfluenceDebugVisual> m_tacticalInfluenceDebugVisuals;
-	bool m_tacticalInfluenceDebugVisible;
+	TacticalDebugDrawService* m_tacticalDebugDrawService;
 	long long m_currentTimeMs;
 	SandboxServices m_services;
 }; //tolua_exports

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "ai/navigation/NavigationMesh.h"
 #include "event/SandboxContext.h"
 #include "event/SandboxEventDispatcherManager.h"
 #include "objects/AgentObject.h"
@@ -166,6 +167,110 @@ void TacticalQueryService::Update(int deltaMs)
 void TacticalQueryService::SetEventTtlMs(int ttlMs)
 {
 	m_eventTtlMs = std::max(1, ttlMs);
+}
+
+void TacticalQueryService::ClearInfluence()
+{
+	m_influenceMap.Clear();
+}
+
+void TacticalQueryService::ConfigureInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize)
+{
+	m_influenceMap.Configure(minX, maxX, minZ, maxZ, cellSize);
+}
+
+bool TacticalQueryService::ConfigureInfluenceFromNavMesh(const NavigationMesh* navMesh, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset)
+{
+	if (navMesh == nullptr)
+		return false;
+
+	std::vector<float> verts;
+	std::vector<int> indices;
+	if (!navMesh->GetWalkableTriangles(verts, indices))
+		return false;
+
+	m_influenceMap.BuildFromNavMesh(verts, indices, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
+	return true;
+}
+
+void TacticalQueryService::ClearInfluenceLayer(const std::string& layerName)
+{
+	m_influenceMap.ClearLayer(layerName);
+}
+
+void TacticalQueryService::SetInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia)
+{
+	m_influenceMap.SetLayerOptions(layerName, falloff, inertia);
+}
+
+int TacticalQueryService::AddInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius)
+{
+	return m_influenceMap.AddRadialSource(layerName, center, strength, radius);
+}
+
+int TacticalQueryService::AddInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength)
+{
+	return m_influenceMap.AddPointSource(layerName, center, strength);
+}
+
+int TacticalQueryService::SpreadInfluenceLayer(const std::string& layerName, int passCount)
+{
+	return m_influenceMap.SpreadLayer(layerName, passCount);
+}
+
+float TacticalQueryService::SampleInfluenceLayer(const std::string& layerName, const Ogre::Vector3& position) const
+{
+	return m_influenceMap.SampleLayer(layerName, position);
+}
+
+float TacticalQueryService::ScoreInfluencePosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const
+{
+	return m_influenceMap.ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
+}
+
+Ogre::Vector3 TacticalQueryService::FindBestInfluencePosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight)
+{
+	return m_influenceMap.FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+}
+
+int TacticalQueryService::GetInfluenceLayerActiveCellCount(const std::string& layerName) const
+{
+	return m_influenceMap.GetLayerActiveCellCount(layerName);
+}
+
+int TacticalQueryService::GetInfluenceLayerCellWriteCount(const std::string& layerName) const
+{
+	return m_influenceMap.GetLayerCellWriteCount(layerName);
+}
+
+int TacticalQueryService::GetInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const
+{
+	return m_influenceMap.GetLayerDebugCellCount(layerName, threshold, maxCells);
+}
+
+Ogre::Vector3 TacticalQueryService::GetInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const
+{
+	return m_influenceMap.GetLayerDebugCellPosition(layerName, luaIndex, threshold);
+}
+
+float TacticalQueryService::GetInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const
+{
+	return m_influenceMap.GetLayerDebugCellValue(layerName, luaIndex, threshold);
+}
+
+int TacticalQueryService::GetInfluenceActiveCellCount() const
+{
+	return m_influenceMap.GetStats().activeCellCount;
+}
+
+int TacticalQueryService::GetInfluenceCellWriteCount() const
+{
+	return m_influenceMap.GetStats().cellWriteCount;
+}
+
+int TacticalQueryService::GetInfluenceQueryCount() const
+{
+	return m_influenceMap.GetStats().queryCount;
 }
 
 void TacticalQueryService::PublishEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent)
