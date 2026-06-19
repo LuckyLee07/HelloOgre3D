@@ -141,13 +141,17 @@ local function tryConfigureAiScheduler()
 		return
 	end
 
-	if ObjectManager == nil or ObjectManager.configureAiScheduler == nil then
+	local schedulerService = SandboxAIScheduler
+	if schedulerService == nil or schedulerService.configureAiScheduler == nil then
+		schedulerService = ObjectManager
+	end
+	if schedulerService == nil or schedulerService.configureAiScheduler == nil then
 		return
 	end
 	local enabled = isEnvEnabled("HELLO_AI_SCHEDULER_ENABLE")
 	local tickMs = getEnvNumber("HELLO_AI_SCHEDULER_TICK_MS", 50)
 	local maxPerFrame = getEnvNumber("HELLO_AI_SCHEDULER_MAX_PER_FRAME", 8)
-	ObjectManager:configureAiScheduler(enabled, tickMs, maxPerFrame)
+	schedulerService:configureAiScheduler(enabled, tickMs, maxPerFrame)
 	if enabled then
 		print("[AIScheduler] configured", "enabled=", tostring(enabled), "tickMs=", tickMs, "maxPerFrame=", maxPerFrame)
 	end

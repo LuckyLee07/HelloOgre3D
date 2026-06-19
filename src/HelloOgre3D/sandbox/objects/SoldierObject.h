@@ -24,7 +24,9 @@ public:
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
+	//tolua_end
 	WeaponComponent* getWeapon();
+	//tolua_begin
 	virtual void SetRenderVisible(bool visible) override;
 
 	void changeStanceType(int stanceType);
@@ -39,11 +41,13 @@ public:
 	virtual bool IsAnimReadyForMove();
 	virtual bool IsAnimReadyForShoot();
 	SoldierAnimController* GetAnimController() const;
+	//tolua_end
+
 	AIController* GetAIController() const;
 	AIController* GetAI() const;
 
-	// Legacy Lua compatibility forwards. Keep old samples/actions working, but
-	// new C++ code should prefer getWeapon(), GetAIController(), or components.
+	// Legacy C++ compatibility forwards. Lua scripts should use BaseObject typed
+	// component getters or AgentComponentAccess helpers instead.
 	void SetMaxHealth(Ogre::Real maxHealth);
 	Ogre::Real GetMaxHealth() const;
 
@@ -55,6 +59,7 @@ public:
 	void ConsumeAmmo(int amount);
 	void RestoreAmmo();
 
+	//tolua_begin
 	bool HasEnemy(const Ogre::String& navMeshName = "default");
 	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
 	AgentObject* GetEnemy() const;
@@ -107,7 +112,7 @@ private:
 	void ApplyStopCommand();
 	void ReportUnsupportedCommand(const AICommand& command) const;
 
-	IPlayerInput* m_inputInfo;
+	IPlayerInput* m_inputInfo; // owned; created from injected InputManager and deleted by SoldierObject
 
 }; //tolua_exports
 

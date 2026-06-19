@@ -26,12 +26,12 @@ function Sandbox_Initialize(ctype)
     camera:setOrientation(Quaternion(-160, 0, -180));
 
     -- Create The Sky.
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create Lighting.
-    Sandbox:SetAmbientLight(Vector3(0.3));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
 
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
@@ -39,7 +39,7 @@ function Sandbox_Initialize(ctype)
     local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setOrientation(Quaternion(0, 0, 0));
     plane:setPosition(Vector3(0, 0, 0));
-    Sandbox:setMaterial(plane, "Ground2");
+    SandboxScene:setMaterial(plane, "Ground2");
 
     -- misc meshes
     CreateBlockObject("modular_block", Vector3(-3, 0, 0));

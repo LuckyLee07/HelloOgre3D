@@ -70,7 +70,7 @@ function Sandbox_Initialize()
     camera:setOrientation(Quaternion(-146, -40, -157));
 
     -- Create The Sky.
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create a plane in the physics world
     local plane = SandboxObjects:CreatePlane(200, 200);
@@ -78,9 +78,9 @@ function Sandbox_Initialize()
     plane:setMaterial("Ground2");
 
     -- Create Lighting.
-    Sandbox:SetAmbientLight(Vector3(0.3));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
     -- Create a directional light for the sun.
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
@@ -88,16 +88,16 @@ function Sandbox_Initialize()
     SandboxUtilities_CreateLevel()
     
     -- 强制刷新下场景图 防止getWorldAABB()时拿不到有效包围盒
-    Sandbox:UpdateSceneGraph()
+    SandboxScene:UpdateSceneGraph()
 
     -- Create default navigation mesh
     local navMeshConfig = rcConfig();
-    Sandbox:DefaultConfig(navMeshConfig)
-    Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
+    SandboxNav:DefaultConfig(navMeshConfig)
+    SandboxNav:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
     navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
-    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    local navMesh = SandboxNav:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     local sampleName = "Sandbox6"

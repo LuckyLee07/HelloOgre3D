@@ -203,7 +203,7 @@ function Sandbox_Initialize()
 	camera:setPosition(Vector3(0, 120, 120))
 	camera:setOrientation(Quaternion(-45, 0, 180))
 
-	Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
+	SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
 
 	local config = _GetPressureConfig()
 	local planeSize = tonumber(config.planeSize) or 260
@@ -211,8 +211,8 @@ function Sandbox_Initialize()
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 
-	Sandbox:SetAmbientLight(Vector3(0.45))
-	local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1))
+	SandboxScene:SetAmbientLight(Vector3(0.45))
+	local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1))
 	directLight:setDiffuseColour(ColourValue(1.6, 1.4, 1.1))
 	directLight:setSpecularColour(ColourValue(1.4, 1.3, 1.0))
 

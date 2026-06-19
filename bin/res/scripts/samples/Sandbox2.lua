@@ -29,13 +29,13 @@ function Sandbox_Initialize(ctype)
     camera:setOrientation(Quaternion(-131, -68, -133));
 
     -- Create The Sky.
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create Lighting.
-    Sandbox:SetAmbientLight(Vector3(0.3));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
 
     -- Create a directional light for the sun.
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
@@ -43,7 +43,7 @@ function Sandbox_Initialize(ctype)
     local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setOrientation(Quaternion(0, 0, 0));
     plane:setPosition(Vector3(0, 0, 0));
-    Sandbox:setMaterial(plane, "Ground2");
+    SandboxScene:setMaterial(plane, "Ground2");
 
     SandboxObjects:CreateAgent(AGENT_OBJ_SEEKING, GetFilePath("SeekingAgent.lua"))
     SandboxObjects:CreateAgent(AGENT_OBJ_PURSUING, GetFilePath("PursuingAgent.lua"))
@@ -103,8 +103,8 @@ function EventHandle_Keyboard(keycode, pressed)
     elseif (keycode == OIS.KC_F9) then
         ObjectManager:clearAllObjects(MGR_OBJ_BLOCK, false)
     elseif (keycode == OIS.KC_F12) then
-        Sandbox:CallFile("res/scripts/gui.lua")
-        Sandbox:CallFile("res/scripts/agent.lua")
+        SandboxScript:CallFile("res/scripts/gui.lua")
+        SandboxScript:CallFile("res/scripts/agent.lua")
     elseif (keycode == OIS.KC_SPACE) then
         Sandbox_ShootBox()
     end

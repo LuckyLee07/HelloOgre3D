@@ -55,27 +55,27 @@ function Sandbox_Initialize()
     camera:setPosition(Vector3(-30, 18, -17));
     camera:setOrientation(Quaternion(-146, -40, -157));
 
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 
-    Sandbox:SetAmbientLight(Vector3(0.3));
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
     SandboxUtilities_CreateLevel()
-    Sandbox:UpdateSceneGraph()
+    SandboxScene:UpdateSceneGraph()
 
     local navMeshConfig = rcConfig();
-    Sandbox:DefaultConfig(navMeshConfig)
-    Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
+    SandboxNav:DefaultConfig(navMeshConfig)
+    SandboxNav:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
     navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
-    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    local navMesh = SandboxNav:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     -- 7 个 DT 驱动的士兵：3 个 LIGHT (team 1) + 4 个 DARK (team 0)

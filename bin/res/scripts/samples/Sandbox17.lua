@@ -329,7 +329,7 @@ local function _ProjectToNav(pos)
 	if pos == nil then
 		return nil
 	end
-	local navPos = Sandbox:FindClosestPoint("default", pos)
+	local navPos = SandboxNav:FindClosestPoint("default", pos)
 	if navPos ~= nil then
 		return navPos
 	end
@@ -362,7 +362,7 @@ local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
 			return nil
 		end
 		if cached == nil then
-			local navPos = Sandbox:FindClosestPoint("default", pos)
+			local navPos = SandboxNav:FindClosestPoint("default", pos)
 			if navPos == nil then
 				_projectionCache[cacheKey] = false
 				return nil
@@ -1111,7 +1111,7 @@ local function _PlaceAgentLikeChapter9(agent, preset, config, index)
 	local maxAttempts = math.max(1, _ReadNumber(config, "maxSpawnAttempts", 4096))
 	local position = nil
 	for attempt = 1, maxAttempts do
-		position = Sandbox:RandomPoint("default")
+		position = SandboxNav:RandomPoint("default")
 		if position ~= nil then
 			local found = true
 			for _, other in ipairs(_agents) do
@@ -1134,7 +1134,7 @@ local function _PlaceAgentLikeChapter9(agent, preset, config, index)
 
 	position.y = position.y + agent:GetHeight() * 0.5
 	agent:setPosition(position)
-	local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition()) or position
+	local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition()) or position
 	agent:SetTarget(navPosition)
 	agent:SetTargetRadius(preset.targetRadius or 1)
 	return position
@@ -1206,27 +1206,27 @@ function Sandbox_Initialize()
 
 	_ApplyCameraPreset(config)
 
-	Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
+	SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0))
 
 	local plane = SandboxObjects:CreatePlane(200, 200)
 	plane:setPosition(Vector3(0, -10, 0))
 	plane:setMaterial("Ground2")
 
-	Sandbox:SetAmbientLight(Vector3(0.30))
-	local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1))
+	SandboxScene:SetAmbientLight(Vector3(0.30))
+	local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1))
 	directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9))
 	directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9))
 
 	SandboxUtilities_CreateLevel()
-	Sandbox:UpdateSceneGraph()
+	SandboxScene:UpdateSceneGraph()
 
 	local navMeshConfig = rcConfig()
-	Sandbox:DefaultConfig(navMeshConfig)
-	Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
+	SandboxNav:DefaultConfig(navMeshConfig)
+	SandboxNav:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
 	navMeshConfig.minRegionArea = math.pow(250, 2)
 	navMeshConfig.walkableSlopeAngle = 45
 
-	_navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, "default")
+	_navMesh = SandboxNav:CreateNavigationMesh(navMeshConfig, "default")
 	if _navMesh ~= nil then _navMesh:SetDebugVisible(_drawNavMesh) end
 
 	_CreateAgents()

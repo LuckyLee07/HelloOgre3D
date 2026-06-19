@@ -741,7 +741,7 @@ local function _FindOriginalChapter8Spawn(config)
 
     for _, distance in ipairs(distanceSteps) do
         for _ = 1, maxAttempts do
-            local position = Sandbox:RandomPoint("default")
+            local position = SandboxNav:RandomPoint("default")
             if position ~= nil
                 and position.y >= minSpawnY
                 and _IsFarEnoughFromPlacedAgents(position, distance) then
@@ -813,27 +813,27 @@ function Sandbox_Initialize()
 
     _ApplyChapter8Camera()
 
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     local plane = SandboxObjects:CreatePlane(200, 200);
     plane:setPosition(Vector3(0, -10, 0));
     plane:setMaterial("Ground2");
 
-    Sandbox:SetAmbientLight(Vector3(0.3));
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
     SandboxUtilities_CreateLevel()
-    Sandbox:UpdateSceneGraph()
+    SandboxScene:UpdateSceneGraph()
 
     local navMeshConfig = rcConfig();
-    Sandbox:DefaultConfig(navMeshConfig)
-    Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
+    SandboxNav:DefaultConfig(navMeshConfig)
+    SandboxNav:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
     navMeshConfig.minRegionArea = math.pow(250, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
-    _navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    _navMesh = SandboxNav:CreateNavigationMesh(navMeshConfig, 'default')
     _drawNavMesh = true
     if _navMesh ~= nil then _navMesh:SetDebugVisible(_drawNavMesh) end
 

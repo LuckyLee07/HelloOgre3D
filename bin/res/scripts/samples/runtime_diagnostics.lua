@@ -131,11 +131,15 @@ function RuntimeDiagnostics.RunSelfTest()
 		end
 	end
 
-	if ObjectManager == nil or ObjectManager.buildAiSchedulerDebugSummary == nil then
+	local schedulerService = SandboxAIScheduler
+	if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
+		schedulerService = ObjectManager
+	end
+	if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
 		print("[RuntimeDiag] AI scheduler diagnostics unavailable")
 		ok = false
 	else
-		printLines(ObjectManager:buildAiSchedulerDebugSummary())
+		printLines(schedulerService:buildAiSchedulerDebugSummary())
 	end
 
 	if ObjectManager == nil or ObjectManager.buildAiEventDebugSummary == nil then

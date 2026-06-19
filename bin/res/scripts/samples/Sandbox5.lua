@@ -40,7 +40,7 @@ end
 
 local function _UpdatePaths()
     for index, agent in pairs(_agents) do
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
+        local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition());
         local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
         local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
         -- Determine if the agent is within the target radius to their
@@ -52,8 +52,8 @@ local function _UpdatePaths()
             -- Randomly try and pathfind to a new navmesh point, keep trying
             -- until a valid path is found.
             while path:size() == 0 do
-                endPoint = Sandbox:RandomPoint("default");
-                result = Sandbox:FindPath("default", agent:GetPosition(), endPoint, path);
+                endPoint = SandboxNav:RandomPoint("default");
+                result = SandboxNav:FindPath("default", agent:GetPosition(), endPoint, path);
             end
             -- Assign a new path and target position.
             Agent_SetPath(agent, path)
@@ -94,7 +94,7 @@ function Sandbox_Initialize()
     camera:setOrientation(Quaternion(-90, 0, 180));
 
     -- Create The Sky.
-    Sandbox:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
+    SandboxScene:SetSkyBox("ThickCloudsWaterSkyBox", Vector3(0, 180, 0));
 
     -- Create a plane in the physics world
     local plane = SandboxObjects:CreatePlane(200, 200);
@@ -102,9 +102,9 @@ function Sandbox_Initialize()
     plane:setMaterial("Ground2");
 
     -- Create Lighting.
-    Sandbox:SetAmbientLight(Vector3(0.3));
+    SandboxScene:SetAmbientLight(Vector3(0.3));
     -- Create a directional light for the sun.
-    local directLight = Sandbox:CreateDirectionalLight(Vector3(1, -1, 1));
+    local directLight = SandboxScene:CreateDirectionalLight(Vector3(1, -1, 1));
     directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9));
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
@@ -112,16 +112,16 @@ function Sandbox_Initialize()
     SandboxUtilities_CreateLevel()
     
     -- 强制刷新下场景图 防止getWorldAABB()时拿不到有效包围盒
-    Sandbox:UpdateSceneGraph()
+    SandboxScene:UpdateSceneGraph()
 
     -- Create default navigation mesh
     local navMeshConfig = rcConfig();
-    Sandbox:DefaultConfig(navMeshConfig)
-    Sandbox:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
+    SandboxNav:DefaultConfig(navMeshConfig)
+    SandboxNav:ApplySettingConfig(navMeshConfig, 0.0, 0.4, 0.2)
     navMeshConfig.minRegionArea = math.pow(100, 2)
     navMeshConfig.walkableSlopeAngle = 45
 
-    local navMesh = Sandbox:CreateNavigationMesh(navMeshConfig, 'default')
+    local navMesh = SandboxNav:CreateNavigationMesh(navMeshConfig, 'default')
     if navMesh ~= nil then navMesh:SetDebugVisible(true) end
 
     -- Create agents and randomly place them on the navmesh.
@@ -130,11 +130,11 @@ function Sandbox_Initialize()
         local agent = Create_Soldier(agentLuafile)
         table.insert(_agents, agent);
 
-        local randomPoint = Sandbox:RandomPoint("default");
+        local randomPoint = SandboxNav:RandomPoint("default");
         agent:setPosition(randomPoint);
         
         -- Use the Agent's closest point to the navmesh as their target position.
-        local navPosition = Sandbox:FindClosestPoint("default", agent:GetPosition());
+        local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition());
         agent:SetTarget(navPosition);
 
         -- Increase the target radius to prevent agents from slowing to reach
