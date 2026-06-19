@@ -9,6 +9,7 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 ## 2. 源码位置
 
 - `src/HelloOgre3D/sandbox/ai/navigation/`（第三方在 `src/External/recast`、`detour`）
+- `src/HelloOgre3D/sandbox/systems/service/NavigationService.{h,cpp}`（Lua/AI 使用的导航门面）
 
 ## 3. 关键类 / 文件
 
@@ -16,11 +17,12 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 |---|---|---|
 | `NavigationMesh.{h,cpp}` | 包装 | dtNavMesh/dtNavMeshQuery 托管；`FindPath`/`FindClosestPoint`/`RandomPoint`/`GetWalkableTriangles`/debug visual |
 | `NavBuilder.{h,cpp}` | 编译 | Recast heightfield→poly mesh→detour navmesh；`Build`/`BuildDetour*` |
-| `ObjectManager`（registry） | 持有 | `getNavigationMesh(name)`/`addNavigationMesh` 多 navmesh 按 name 隔离 |
+| `NavigationService.{h,cpp}` | 门面 / owner | 默认 Recast config、agent 设置覆盖、navmesh 构建，按 name 持有 navmesh map，以及查询 `RandomPoint`/`FindClosestPoint`/`FindPath`；Lua 全局 `SandboxNav` |
+| `ObjectManager`（兼容） | fixed blocks 来源 | `NavigationService.CreateNavigationMesh` 通过 `ObjectManager.getFixedObjects()` 读取构建输入；`ObjectManager.getNavigationMesh/addNavigationMesh` 仅保留 C++ 兼容转发 |
 
 ## 4. 公开能力要点
 
-- 路径查询、最近点投影、随机点；`GetWalkableTriangles` 供 [[ai-tactics]] 影响图 3D 体素化。
+- `SandboxNav` 提供路径查询、最近点投影、随机点与 navmesh 构建；`NavigationMesh::GetWalkableTriangles` 供 [[ai-tactics]] 影响图 3D 体素化。
 
 ## 5. 约束与红线
 
@@ -28,14 +30,15 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 - 无运行时动态障碍（编译后固定）。
 - 影响图 3D 体素化只用单个 navmesh；多层地形未支持。
 - debug visual 涉及 ManualObject 增删，仅在 navmesh 变更时重建，勿每帧；场景访问走 SceneFactory，不再 include ClientManager。
+- Lua 和 AI/FSM 代码应通过 `SandboxNav` / `SandboxServices.navigation` 访问导航查询，不再把新导航 API 挂回 `SandboxMgr`。
 
 ## 6. 数据流 / 与其他模块关系
 
-`ObjectManager.Init → NavBuilder.Build → addNavigationMesh`；`AIController/Locomotion → SandboxMgr.FindPath → NavigationMesh.FindPath`；`InfluenceMapSystem.BuildFromNavMesh → GetWalkableTriangles`。
+`Lua SandboxNav.CreateNavigationMesh → NavigationService → ObjectManager.getFixedObjects → NavBuilder.Build → NavigationService.AddNavigationMesh`；`AIController/FSM/Lua → SandboxServices.navigation 或 SandboxNav → NavigationMesh.FindPath/RandomPoint/FindClosestPoint`；`InfluenceMapSystem.BuildFromNavMesh → GetWalkableTriangles`。
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox6`（自主导航）、`Sandbox5`（navmesh 可视化）；所有移动 sample 依赖。
+- 回归 sample：`Sandbox6`（自主导航/FSM）、`Sandbox5`（navmesh 可视化）、`Sandbox13`（战术导航查询）；所有移动 sample 依赖。
 
 ## 8. 已知 gap / 相关文档
 

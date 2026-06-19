@@ -10,7 +10,7 @@
 - 补 Release x64 `ai_perf_1000` 基线。
 - 建立 `PerceptionResultCache`，让 BT / Lua 只读结果。
 - 抽出 `TacticalQueryService`。
-- 补 `InfluenceMapSystem` interval / dirty region / layer debug draw。
+- 补 `InfluenceMapSystem` interval / dirty region、layer debug 显式配置和 pressure preset。
 - 做 BT runtime cache / LOD 第一版。
 - 统一 AI RuntimeDiag 输出。
 
@@ -30,6 +30,18 @@
 - 2026-05-30：组件侧 owner 访问统一收敛为 `BaseObject*` + 局部类型转换；常用组件 key 集中到 `ComponentKeys`，对象/工厂侧优先走 typed component 查询；AI 敌人感知查询抽成 `IAgentPerceptionQuery` / `AgentPerceptionQuery` 小接口。
 - 2026-06-18：`GameManager` 的 FGUI public/C++ 兼容转发壳已删除，Lua native 后端只走 `FairyGuiRuntime`；`tools/run_fgui_selftest.ps1 -Mode All` 已修复空跑问题，必须看到 suite 全通过。
 - 2026-06-18：P2 前置能力落地：`BaseObject` 向 Lua 暴露 AI/Weapon/Anim/Attrib typed component getter，agent 入口通过 `AgentComponentAccess.lua` 优先走组件直取并保留旧接口兜底；`Sandbox10`-`Sandbox13` 与 `parity_trace.lua` 的 Blackboard 入口已迁到组件优先；RuntimeDiag `ComponentProbeAgent` 验证非 Soldier `AgentObject` 可复用 AI/Attrib 等组件且不复制 Soldier forwarder。
+- 2026-06-19：P2 继续收窄：`SoldierObject` Lua 导出撤下 getWeapon/AI/maxHealth/ammo 纯组件转发，DT/BT 条件、射击/换弹 action、Chapter9 legacy agent、`SoldierAgent` 与 `Sandbox3` 改走 `AgentComponentAccess.lua` 或 typed component getter；剩余迁移面聚焦 AgentObject/其它 Soldier legacy forwarder。
+- 2026-06-19：C2 继续给 `SandboxMgr` 减肥：新增 `NavigationService` 并导出 Lua 全局 `SandboxNav`，导航 config/build/query API 从 `SandboxMgr` 迁出；AI 感知/FSM 通过 `SandboxServices.navigation` 查询路径和随机点。
+- 2026-06-19：C2 继续给 `SandboxMgr` 减肥：新增 `RaycastService` 并导出 Lua 全局 `SandboxRaycast`，raycast 实现从 `SandboxMgr` 迁出；`SandboxMgr::RayCastObjectId` 只保留兼容转发。
+- 2026-06-19：C2 继续给 `SandboxMgr` 减肥：新增 `SceneService` / `ScriptService` 并导出 Lua 全局 `SandboxScene` / `SandboxScript`，skybox/light/material/scene graph 与 CallFile 从 `SandboxMgr` 迁出；Lua sample 已迁到新全局，`SandboxMgr` 仅保留兼容转发。
+- 2026-06-19：C3/Tactics 继续收口：`TacticalQueryService` 包住 influence config/layer/source/sample/score/stats 与 navmesh 建图编排；`ObjectManager` 的 Lua 兼容入口改成薄转发，为后续 tactical debug visual 服务化留出边界。
+- 2026-06-19：C3/Tactics debug draw 收口：新增 `TacticalDebugDrawService`，承接 `DebugDrawer` 临时绘制与 Ogre `ManualObject` 持久 debug visual 生命周期；`ObjectManager` 的 tactical debug Lua 入口只做薄转发。
+- 2026-06-19：C3/Navigation 继续收口：navmesh map 与销毁责任从 `ObjectManager` 迁到 `NavigationService`；`ObjectManager::getNavigationMesh/addNavigationMesh` 只保留 C++ 兼容转发，debug summary 的 navmesh 计数来自 `SandboxServices.navigation`。
+- 2026-06-19：C3/TeamBlackboard 继续收口：`TeamBlackboardService` 直接 tolua 导出为 Lua 全局 `SandboxTeam`；Lua `TeamBlackboard.lua` 优先走新入口，`ObjectManager` 只保留旧 API 兼容转发。
+- 2026-06-19：C3/AIScheduler 继续收口：`AIScheduler` 直接 tolua 导出为 Lua 全局 `SandboxAIScheduler`；`ConfigManager` 与 `runtime_diagnostics.lua` 优先走新入口，`ObjectManager` 只保留旧 API 兼容转发。
+- 2026-06-19：C3/AI update 继续收口：新增 `AIUpdateSystem`，承接 scheduler begin/tick、spatial rebuild、`AgentPerceptionSystem` 批量 update、`TeamBlackboardService` 每帧 sync 和 AI perf stats 写回；`ObjectManager` 只保留对象生命周期与阶段编排。
+- 2026-06-19：C3/Lifecycle 继续收口：新增 `ObjectLifecycleSystem`，承接对象 update loop、待删对象移除、对象 event flush 与延迟 scene node 清理；`ObjectManager::Update` 只保留阶段总编排。
+- 2026-06-19：P4 裸指针审计继续收口：`AgentObject::m_renderComp`、`OpenSteerAdapter::m_owner`、`LuaScriptComponent` VM/env owner、`PhysicsComponent::m_addedWorld`、`AIController::m_enemy` 等关键裸指针已标注 owning/non-owning；Lua env owner 与 AI cached enemy 在 detach 清空。
 - 2026-05-30：AI 感知查询从“返回敌人指针”推进为 `AgentPerceptionResult`，可按 blackboard 配置视野范围/寻路要求，并把目标 id、位置、距离、最后已知位置写回 blackboard；新增 `IAgentSpatialQuery` 作为后续空间查询替换点。
 - 2026-05-30：阶段方向回到 AI 学习与实验沙盒；清理 Lua 生物 Def、CreatureAssembler、TriggerRuntime、TriggerVolume、BehaviorEventRuntime、数据驱动触发器到 BT 的 Sandbox9 切片。
 - 2026-05-30：进入 `AIArchitectureBeyondBook.md` 的 Ch7/Ch8 Stage 3：`Blackboard` 增加 metadata entry 最小通道（typed value + confidence + timestamp + ttl + source），当前感知结果同步写入 `sense.*` / `memory.*` metadata，作为后续 VisionSensor / MemoryComponent 的地基。
@@ -102,7 +114,7 @@
 - [x] `AgentObject` / `BlockObject` 战术事件、碰撞粒子清理和 FSM flag 读取只走 `SandboxServices`，并移除对 `GameManager.h` 的直接 include。
 - [x] `RenderComponent` 通过 `SceneFactory` / SceneNode creator 创建和销毁 Ogre 对象，移除 `GameManager.h`；`AnimComponent` 用本地累计时间更新 ASM，移除 `GameManager.h`。
 - [x] `SandboxServices` 增加 `input` 服务，`SoldierObject` 不再通过 `GameManager` 获取 `InputManager`。
-- [x] `SandboxMgr::RayCastObjectId` 通过 `ObjectManager::GetSandboxServices().physics` 获取物理世界，移除 `g_GameManager` 访问和 `GameManager.h` include。
+- [x] `SandboxMgr::RayCastObjectId` 通过 `ObjectManager::GetSandboxServices().physics` 获取物理世界，移除 `g_GameManager` 访问和 `GameManager.h` include；2026-06-19 已进一步迁到 `SandboxRaycast`/`RaycastService`，SandboxMgr 仅保留兼容转发。
 - [x] `SceneFactory` 通过 `SetRootSceneNode` 接收应用层 root scene node，不再直接 include `GameManager.h`。
 - [x] `UIManager` 通过构造注入 `Ogre::Camera*`，`UIService` 移除无用 `GameManager.h` include；UI 层不再为 Gorilla 初始化反向依赖 `GameManager`。
 - [x] `CameraService` 通过构造注入 camera / scene manager / profile time getter，不再持有 `ClientManager*`。
@@ -111,15 +123,22 @@
 - [x] 删除 manager 层历史 `g_ObjectManager` / `g_SandboxMgr` 与对应 `GetInstance()`；sandbox/runtime 反向 include 和裸 `g_*` 扫描为 0。
 - [x] `BaseObject` 组件容器迁向 `std::unique_ptr`，保持 `GetComponent`/`FindComponent` 返回 non-owning 裸指针兼容旧调用。
 - [x] 标注并清空 BlockObject/AnimComponent 关键缓存裸指针，排除这些点被误判为拥有关系或二次释放点。
+- [x] 标注 AgentObject/OpenSteer/LuaScript/Physics/AIController 关键裸指针 owning/non-owning 语义，并清理 Lua env owner / AI cached enemy detach 状态。
 - [x] 补组件生命周期状态、attach/destroy/update 断言与 debug dump 状态输出。
 - [ ] 继续审计其它缓存裸指针是否需要 non-owning 标注。
 - [x] `IComponent::getUpdateOrder` + `BaseObject::Update` 统一组件更新顺序，`SoldierObject::Update` 不再手写 AI/Render/Anim/Weapon update block。
-- [~] 继续迁移 AgentObject/SoldierObject legacy forwarder，让 Lua/sample 逐步通过组件直取；已完成 typed getter、agent 入口、`Sandbox10`-`Sandbox13`、`Sandbox17`、`parity_trace.lua` helper 迁移和非 Soldier ComponentProbeAgent 诊断验证，legacy forwarder 主体仍在。
+- [~] 继续迁移 AgentObject/SoldierObject legacy forwarder，让 Lua/sample 逐步通过组件直取；已完成 typed getter、agent 入口、`Sandbox3`、`Sandbox10`-`Sandbox13`、`Sandbox17`、DT/BT 条件、射击/换弹 action、Chapter9 legacy agent、`parity_trace.lua` helper 迁移和非 Soldier ComponentProbeAgent 诊断验证，`SoldierObject` getWeapon/AI/maxHealth/ammo 纯转发已撤出 Lua 导出；legacy forwarder 主体仍在。
 - [x] `SandboxMgr` 不再持有/导出对象创建 `Create*` 纯转发；Lua sample 统一通过 `SandboxObjects`/`ObjectFactory` 创建对象，`WeaponComponent` 创建 bullet 改走 `SandboxServices.objectFactory`。
 - [x] `SandboxMgr` 不再持有/导出 Gorilla UI `CreateUIFrame` / `SetMarkupColor` 纯转发；Lua sample/base UI 统一通过 `SandboxUI`/`UIManager` 创建面板和设置 markup 颜色。
 - [x] `SandboxMgr` 不再导出相机/profile 查询纯转发；Lua sample/base UI 统一通过 `SandboxCamera`/`CameraService` 获取相机、朝向和帧耗时信息。
+- [x] `SandboxMgr` 不再导出导航 config/build/query 纯转发；Lua sample/AI helper 统一通过 `SandboxNav`，AI/FSM C++ 侧通过 `SandboxServices.navigation`。
+- [x] `SandboxMgr` 不再实现 raycast；Lua Chapter9 legacy 视线遮挡优先通过 `SandboxRaycast`，旧 `Sandbox:RayCastObjectId` 仅兼容转发。
+- [x] `SandboxMgr` 不再作为 scene/light/material/CallFile 主入口；Lua sample 统一通过 `SandboxScene` / `SandboxScript`，旧 `Sandbox:*` 方法仅兼容转发。
 - [x] `ObjectRegistry` 第一切片：从 `ObjectManager` 拆出对象 id 分配、对象 map、Agent/Block 二级索引和对象查找，`ObjectManager` 保留生命周期、update/AI/感知/战术编排。
-- [x] `ObjectManager::Update` 第一切片：对象生命周期/update loop 拆到 `UpdateManagedObjects`，延迟 scene node 清理拆到 `CleanupRemovedSceneNodes`，主 Update 保持阶段编排。
+- [x] `ObjectManager::Update` 第一切片：对象生命周期/update loop 与延迟 scene node 清理从主 Update 拆出，主 Update 保持阶段编排。
+- [x] `ObjectLifecycleSystem` 第一切片：对象 map 遍历、待删对象移除、对象 update/event flush 与延迟 scene node 清理从 `ObjectManager` 私有 helper 提升为独立 system。
+- [x] `AIUpdateSystem` 第一切片：scheduler begin/tick、spatial rebuild、批量 perception、TeamBlackboard sync 与 AI perf stats 从 `ObjectManager` 主体中拆出。
+- [x] `ObjectManager` 不再持有 navmesh map；`NavigationService` 按 name 持有并销毁 navmesh，ObjectManager 只提供 fixed blocks 与兼容转发。
 - [x] `WeaponComponent` 移除 `SoldierObject` 依赖，射击链改为依赖 BaseObject/RenderComponent/SandboxServices。
 - [x] `AnimComponent` / `SoldierAnimController` 通过 `IAnimContextProvider` 解除对 `SoldierObject` 的直接 include / dynamic_cast / owner 持有。
 - [x] DT/BT driver 与 Lua action 的真实 owner 从 `SoldierObject*` 泛化为 `AgentObject*`，并保留旧 Lua `SoldierObject` 签名兼容桥。
@@ -155,18 +174,23 @@
 - [x] `ai_perf` preset：固定 seed，支持 100 / 500 / 1000 agent，输出 spatial / perception / scheduler 统计。
 - [x] `ai_perf` baseline 第一版：基于 `Sandbox16` 固化 100 / 500 / 1000 agent Debug x64 场景，记录 spatial on/off、perception system on/off 的 FramePerf 摘要。
 - [ ] `ai_perf` baseline 二期：补 scheduler on/off、Release x64、必要 Tracy capture 对照。
+- [x] `AIScheduler` Lua 主入口收口：`AIScheduler` 已导出为 `SandboxAIScheduler`，sample 配置和 RuntimeDiag scheduler summary 优先走新入口；`ObjectManager` 旧入口仅兼容转发。
+- [x] `AIScheduler` 帧执行收口：每帧 begin/tick/统计发布由 `AIUpdateSystem` 编排，对象循环只通过 `ObjectLifecycleSystem` 调用 helper tick。
 - [ ] `AgentPerceptionSystem`：把视觉、听觉、危险等感知收口到 C++ 批量系统，Lua 只读结果。
 - [x] `AgentPerceptionSystem` 第一阶段保持每帧全量更新，不启用 scheduler 降频；先把 `AIController` 内的 per-agent vision/memory 热点集中到 system 级统计和缓存。
 - [x] `PerceptionResultCache`：保存 currentTarget、lastKnown、confidence、ageMs、source、候选数和扫描耗时，保持现有 blackboard key 兼容；`HasEnemy` 已读 cache，`CanShootEnemy` 成功路径同步 cache。
 - [ ] `TeamBlackboardService`：把 Lua `TeamBlackboard` 迁移为 C++ service，支持 fact TTL、priority、统计和 Lua facade。
   - [x] 第一版 C++ service + Lua facade：Lua `EnemySighted` 会同步写入 C++ facts，Lua 可把最佳团队敌情写回 agent blackboard，并在 `Sandbox12` smoke 中验收 `cppFacts/cppReports/cppApplies`。
+  - [x] Lua 主入口收口：`TeamBlackboardService` 已导出为 `SandboxTeam`，`TeamBlackboard.lua` 优先走新入口；`ObjectManager` 旧入口仅兼容转发。
+  - [x] 每帧 sync 收口：`TeamBlackboardService::SyncFromAgents` 已由 `AIUpdateSystem` 调用并写回 perf stats。
 - [ ] `TeamBlackboardService` 二期：扩展 `SupportRequested`、`SupportResponded`、`FocusTarget`、`RetreatPoint`、`FormationSlot` 等 fact 类型，减少 Lua 全局表承担团队状态。
 - [ ] `InfluenceMapSystem` / `TacticalQueryService`：把 Lua 教学版 InfluenceMap 迁移为 C++ 多层战术评分系统。
 - [x] `InfluenceMapSystem` 迁移准备：先用 `Sandbox17` Lua-first 版本固化 Chapter 9 tactics 的事件输入、danger/team layer、统计和 smoke 验收，作为 `Sandbox18` C++ 第二版对照。
 - [x] `InfluenceMapSystem` 第一切片：支持 danger / team / objective 3 层，提供 `cellWrites`、`queryCount`、`bestScore`、active cells 和 debug summary 统计，并通过 `ObjectManager` Lua facade 接入 `Sandbox18`。
-- [ ] `InfluenceMapSystem` 第二阶段：补 dirty region / interval 更新、cover / crowd / support schema、layer debug draw 和更多 pressure preset。
+- [ ] `InfluenceMapSystem` 第二阶段：补 dirty region / interval 更新、cover / crowd / support schema、layer debug 显式配置和更多 pressure preset。
 - [x] `TacticalQueryService` 第一阶段：`sandbox/ai/tactics/TacticalQueryService.h` 已落地——持有 `InfluenceMapSystem`，提供事件订阅/TTL/发布、`RebuildDanger/Team/ObjectiveLayer`，以及查询 API `FindBestSupportPosition`、`FindLowThreatPosition`、`ScoreQueryPosition`、`FindBestQueryPosition` 和 stats。
-- [ ] `TacticalQueryService` 收口+二期：把 `ObjectManager` 里仍承担的 tactical 逻辑（`rebuildTacticalInfluenceLayerDebugVisual` 影响图可视化构建、`configureTacticalInfluenceFromNavMesh` 建图编排）下沉到 service / 独立 `TacticalDebugDrawService`，`ObjectManager` 只剩薄转发（service 成唯一实现事实来源，不强迫 Lua 直连）；并补 interval/dirty region、候选点上限、cover/crowd/support schema、layer debug 显式配置。
+- [x] `TacticalQueryService` / `TacticalDebugDrawService` 收口：`ObjectManager` 的 influence config/layer/source/sample/score/stats 与 `configureTacticalInfluenceFromNavMesh` 建图编排已薄转发到 service；`rebuildTacticalInfluenceLayerDebugVisual` 影响图可视化构建已下沉到独立 `TacticalDebugDrawService`。
+- [ ] Tactics 二期：补 interval/dirty region、候选点上限、cover/crowd/support schema、layer debug 显式配置和 pressure preset。
 - [ ] BehaviorTree runtime 补强：instance pool、node result cache、blackboard dirty 依赖、tick bucket、distance LOD 和每帧预算。
 - [ ] BT runtime 性能化分步落地：先做 trace sampling / cache 统计，再做 dirty key 依赖和 LOD，避免在感知热点未稳定前扩大改动面。
 - [ ] AI debug / RuntimeDiag：统一输出 perception、memory、team facts、influence score、BT trace 和 scheduler stats。

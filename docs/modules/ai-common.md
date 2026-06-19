@@ -15,13 +15,14 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 | 文件 | 角色 | 说明 |
 |---|---|---|
 | `Blackboard.{h,cpp}` | 知识库 | 7 类标量(Agent/Float/Int/Bool/String/Vec3/ObjectId)+4 类数组；entry 带 confidence/ttl/source/decay；无脏标记每帧全量 |
-| `AIScheduler.{h,cpp}` | 调度 | `Configure(enabled,tickIntervalMs,maxTicksPerFrame)`；`ShouldTick(agentId)` 错峰预算；ticked/skipped 统计 + Tracy |
+| `AIScheduler.{h,cpp}` | 调度 | `Configure(enabled,tickIntervalMs,maxTicksPerFrame)`；`ShouldTick(agentId)` 错峰预算；ticked/skipped 统计 + Tracy；Lua 全局 `SandboxAIScheduler` 直接配置/诊断 |
+| `AIUpdateSystem.{h,cpp}` | AI 帧编排 | 无状态 helper；统一执行 scheduler begin/tick、spatial rebuild、批量 perception、TeamBlackboard sync 与 AI perf stats 写回 |
 | `AICommand.h` | 指令 | 11 类（Idle/Move/Attack/MoveTo/RequestState/UseSkill/...）静态工厂 |
 | `IDecisionDriver.h` | 接口 | `Init()/Tick(deltaMs)`；实现者 BT/DT/FSM driver |
 
 ## 4. 公开能力要点
 
-- Blackboard 类型化读写（tolua 导出）；AIScheduler interval/budget/round-robin；AICommand 动作通道。
+- Blackboard 类型化读写（tolua 导出）；AIScheduler interval/budget/round-robin，已导出为 `SandboxAIScheduler`；AICommand 动作通道。
 
 ## 5. 约束与红线
 
@@ -31,11 +32,11 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 
 ## 6. 数据流 / 与其他模块关系
 
-[[ai-controller]] 创建并持有 Blackboard，注入给 driver；[[ai-perception]] 写感知 key；BT/DT/FSM 读；AIScheduler 决定每 agent 本帧 tick 与否。
+[[ai-controller]] 创建并持有 Blackboard，注入给 driver；[[ai-perception]] 写感知 key；BT/DT/FSM 读；`GameManager → SandboxAIScheduler → AIScheduler` 负责 Lua 配置/诊断，`ObjectManager` 每帧通过 `AIUpdateSystem` 统一执行 scheduler tick 判定、批量感知和 TeamBlackboard sync。
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox9`（Knowledge→Blackboard）、`Sandbox16`（scheduler 压力）；`ai_perf_1000`。
+- 回归 sample：`Sandbox9`（Knowledge→Blackboard）、`Sandbox16`（scheduler 压力）、带 `RuntimeDiag` 的 `Sandbox12`（scheduler summary）；`ai_perf_1000`。
 
 ## 8. 已知 gap / 相关文档
 

@@ -23,7 +23,7 @@
 
 - `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。`maxResults` 现在保留近邻候选，`perception.maxSpatialResults` 可从 blackboard 控制，pressure preset 默认 16；仍需继续做 Release / scheduler 调参与更完整 AOI 淘汰。
 - `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；后续仍缺更完整 fact schema 和 Lua 全局状态迁移。
-- Lua `InfluenceMap` 仍适合作为教学对照；`Sandbox18` 已把 Chapter 9 DangerousAreas / TeamAreas 的事件输入迁到 C++ `InfluenceMapSystem` 第一切片，但仍缺独立 `TacticalQueryService`、dirty region / interval 更新、cover / crowd schema 和 layer debug draw。
+- Lua `InfluenceMap` 仍适合作为教学对照；`Sandbox18` 已把 Chapter 9 DangerousAreas / TeamAreas 的事件输入迁到 C++ `InfluenceMapSystem` + `TacticalQueryService`，debug draw 生命周期也已下沉到 `TacticalDebugDrawService`；仍缺 dirty region / interval 更新、cover / crowd schema、显式 layer debug 配置和 pressure preset。
 - `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；`PerceptionResultCache` 已作为显式快照接入 HasEnemy / TickPerception，CanShootEnemy 成功路径同步 cache；后续仍缺 hearing / danger C++ sense 和 Lua 扫描清理。
 - BT runtime 已有教学级扩展，但还缺 instance pool、node result cache、blackboard dirty 依赖和距离 LOD。
 - 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，当前压力入口仍是 `Sandbox16`；后续仍需补 scheduler on/off、Release x64 和必要 Tracy capture。
@@ -164,7 +164,7 @@ AgentSpatialIndexSystem
 
 ### 目标
 
-把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、统计和 debug draw。`Sandbox17` 已作为 Lua-first 版本对齐 HelloOgre3DX Chapter 9 的 DangerousAreas / TeamAreas 语义；`Sandbox18` 已承接 C++ 版 `InfluenceMapSystem` 第一切片，后续继续补独立 `TacticalQueryService`、dirty region / interval 更新和 debug draw。
+把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、统计和 debug draw。`Sandbox17` 已作为 Lua-first 版本对齐 HelloOgre3DX Chapter 9 的 DangerousAreas / TeamAreas 语义；`Sandbox18` 已承接 C++ 版 `InfluenceMapSystem` 第一切片，`TacticalQueryService` 和 `TacticalDebugDrawService` 已拆出，后续继续补 dirty region / interval 更新、cover/crowd 和显式 layer debug 配置。
 
 ### 建议实现
 
@@ -192,8 +192,9 @@ score = objective + support + cover - threat - crowd
 当前已落地的第一切片：
 
 - 新增 C++ `InfluenceMapSystem`，支持 configurable grid、string layer、radial source、nearest-cell sample、组合评分、best position 查询和 debug summary。
-- 新增 C++ `TacticalQueryService`（`sandbox/ai/tactics/TacticalQueryService.h`）：持有 `InfluenceMapSystem`，封装事件订阅/TTL/发布、`Rebuild{Danger,Team,Objective}Layer` 与查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。剩余工作是把 `ObjectManager` 仍持有的 tactical 逻辑（debug visual 构建、navmesh 建图编排）下沉，让 service 成唯一事实来源。
-- `ObjectManager` 暴露 Lua facade：clear / configure / clearLayer / addSource / sample / score / findBest / stats。
+- 新增 C++ `TacticalQueryService`（`sandbox/ai/tactics/TacticalQueryService.h`）：持有 `InfluenceMapSystem`，封装事件订阅/TTL/发布、influence config/layer/source/sample/score 包装、`Rebuild{Danger,Team,Objective}Layer` 与查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
+- 新增 C++ `TacticalDebugDrawService`（`sandbox/ai/tactics/TacticalDebugDrawService.h`）：承接 `DebugDrawer` 临时绘制与 Ogre `ManualObject` 持久 debug visual 生命周期。
+- `ObjectManager` 暴露 Lua facade：clear / configure / clearLayer / addSource / sample / score / findBest / stats / debug draw，当前已薄转发到 `TacticalQueryService` / `TacticalDebugDrawService`。
 - `Sandbox18` 复用 Chapter 9 的 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件语义，Lua 只负责喂事件和读取 C++ 查询结果。
 
 ### 验收
@@ -327,8 +328,8 @@ score = objective + support + cover - threat - crowd
 - [x] 设计 C++ `InfluenceMapSystem` layer schema，并在第一切片中落地 danger / team / objective 三层。
 - [x] 用 `Sandbox18` 固化 Chapter 9 Tactics C++ 第二版第一切片：Lua 喂事件，C++ 写入 influence layer、执行 tactical score / best position query，并输出 `[Chapter9TacticsCppSmoke] PASS`。
 - [x] 抽出独立 `TacticalQueryService`：`sandbox/ai/tactics/TacticalQueryService.h` 已落地，持有 `InfluenceMapSystem`、跑事件订阅/TTL、`Rebuild{Danger,Team,Objective}Layer` 和查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
-- [ ] `TacticalQueryService` 收口：service 已是查询/层实现的事实来源，但 `ObjectManager` 仍承担 `rebuildTacticalInfluenceLayerDebugVisual`、`configureTacticalInfluenceFromNavMesh` 等 tactical 逻辑；下一步把这些下沉 service / `TacticalDebugDrawService`，`ObjectManager` 只保留薄转发（不强制 Lua 直连）。
-- [ ] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema 和 layer debug draw。
+- [x] `TacticalQueryService` / `TacticalDebugDrawService` 收口：service 已是查询/层实现事实来源，`ObjectManager` 的 clear/configure/layer/source/sample/score/findBest/stats 入口已薄转发到 service，`configureTacticalInfluenceFromNavMesh` 的三角提取与建图编排已下沉；`rebuildTacticalInfluenceLayerDebugVisual` / Ogre ManualObject 生命周期已下沉到 `TacticalDebugDrawService`。
+- [ ] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema、layer debug 显式配置和 pressure preset。
 
 ## 11. 成功标准
 
