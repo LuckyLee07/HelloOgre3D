@@ -17,6 +17,10 @@ class ObjectFactory;
 class ClientManager;
 class FairyGuiLuaApi;
 class CameraService;
+class NavigationService;
+class RaycastService;
+class SceneService;
+class ScriptService;
 
 class GameManager : public IInputHandler //tolua_exports
 { //tolua_exports
@@ -67,6 +71,10 @@ private:
 	PhysicsWorld* m_pPhysicsWorld;
 
 	CameraService* m_pCameraService;
+	NavigationService* m_pNavigationService;
+	RaycastService* m_pRaycastService;
+	SceneService* m_pSceneService;
+	ScriptService* m_pScriptService;
 	UIManager* m_pUIManager;
 	ObjectManager* m_pObjectManager;
 	ObjectFactory* m_pObjectFactory;

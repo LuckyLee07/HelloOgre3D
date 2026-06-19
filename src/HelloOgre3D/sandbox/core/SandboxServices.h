@@ -7,6 +7,10 @@ class InputManager;
 class SandboxMgr;
 class ScriptLuaVM;
 class ObjectFactory;
+class NavigationService;
+class RaycastService;
+class SceneService;
+class ScriptService;
 
 struct SandboxServices
 {
@@ -16,6 +20,10 @@ struct SandboxServices
 	SandboxMgr* sandbox = nullptr;
 	ScriptLuaVM* script = nullptr;
 	ObjectFactory* objectFactory = nullptr;
+	NavigationService* navigation = nullptr;
+	RaycastService* raycast = nullptr;
+	SceneService* scene = nullptr;
+	ScriptService* scriptService = nullptr;
 };
 
 #endif // __SANDBOX_SERVICES_H__

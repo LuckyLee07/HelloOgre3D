@@ -21,6 +21,12 @@
 #include "systems/manager/ObjectManager.h"
 #include "systems/service/ObjectFactory.h"
 #include "systems/service/CameraService.h"
+#include "systems/service/NavigationService.h"
+#include "systems/service/RaycastService.h"
+#include "systems/service/SceneService.h"
+#include "systems/service/ScriptService.h"
+#include "ai/common/AIScheduler.h"
+#include "ai/team/TeamBlackboardService.h"
 #include "debug/DebugDrawer.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/service/SceneFactory.h"
@@ -58,7 +64,7 @@ FairyGuiSystem* ResolveFairyGuiSystem(ClientManager* clientManager)
 
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_pScriptVM(nullptr), m_pSandboxMgr(nullptr), m_pPhysicsWorld(nullptr),
-	m_pCameraService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
+	m_pCameraService(nullptr), m_pNavigationService(nullptr), m_pRaycastService(nullptr), m_pSceneService(nullptr), m_pScriptService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
 	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr)))
 {
 	
@@ -69,8 +75,12 @@ GameManager::~GameManager()
 	SceneFactory::SetRootSceneNode(nullptr);
 
 	SAFE_DELETE(m_pSandboxMgr);
-	SAFE_DELETE(m_pObjectFactory);
 	SAFE_DELETE(m_pObjectManager);
+	SAFE_DELETE(m_pObjectFactory);
+	SAFE_DELETE(m_pNavigationService);
+	SAFE_DELETE(m_pRaycastService);
+	SAFE_DELETE(m_pSceneService);
+	SAFE_DELETE(m_pScriptService);
 	SAFE_DELETE(m_pPhysicsWorld);
 	SAFE_DELETE(m_pUIManager);
 	SAFE_DELETE(m_pCameraService);
@@ -97,6 +107,9 @@ void GameManager::Initialize()
 
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
 	m_pObjectFactory = new ObjectFactory(m_pObjectManager);
+	m_pNavigationService = new NavigationService(m_pObjectManager);
+	m_pRaycastService = new RaycastService(m_pPhysicsWorld);
+	m_pScriptService = new ScriptService(m_pScriptVM);
 
 	Ogre::SceneManager* pSceneManager = m_pClientManager != nullptr ? m_pClientManager->getSceneManager() : nullptr;
 	m_pCameraService = new CameraService(
@@ -118,8 +131,9 @@ void GameManager::Initialize()
 				return 0;
 		}
 	});
+	m_pSceneService = new SceneService(pSceneManager, m_pCameraService);
 	SceneFactory::SetRootSceneNode(pSceneManager != nullptr ? pSceneManager->getRootSceneNode() : nullptr);
-	m_pSandboxMgr = new SandboxMgr(m_pCameraService, m_pObjectManager, pSceneManager);
+	m_pSandboxMgr = new SandboxMgr(m_pSceneService, m_pScriptService, m_pRaycastService);
 
 	SandboxServices services;
 	services.objects = m_pObjectManager;
@@ -128,6 +142,10 @@ void GameManager::Initialize()
 	services.sandbox = m_pSandboxMgr;
 	services.script = m_pScriptVM;
 	services.objectFactory = m_pObjectFactory;
+	services.navigation = m_pNavigationService;
+	services.raycast = m_pRaycastService;
+	services.scene = m_pSceneService;
+	services.scriptService = m_pScriptService;
 	m_pObjectManager->SetSandboxServices(services);
 
 	this->InitLuaEnv();
@@ -144,6 +162,12 @@ void GameManager::InitLuaEnv()
 	// 设置lua可用的c++对象 
 	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
 	m_pScriptVM->setUserTypePointer("SandboxCamera", "CameraService", m_pCameraService);
+	m_pScriptVM->setUserTypePointer("SandboxNav", "NavigationService", m_pNavigationService);
+	m_pScriptVM->setUserTypePointer("SandboxRaycast", "RaycastService", m_pRaycastService);
+	m_pScriptVM->setUserTypePointer("SandboxScene", "SceneService", m_pSceneService);
+	m_pScriptVM->setUserTypePointer("SandboxScript", "ScriptService", m_pScriptService);
+	m_pScriptVM->setUserTypePointer("SandboxAIScheduler", "AIScheduler", m_pObjectManager->GetAIScheduler());
+	m_pScriptVM->setUserTypePointer("SandboxTeam", "TeamBlackboardService", m_pObjectManager->GetTeamBlackboardService());
 	m_pScriptVM->setUserTypePointer("SandboxUI", "UIManager", m_pUIManager);
 	m_pScriptVM->setUserTypePointer("SandboxObjects", "ObjectFactory", m_pObjectFactory);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);

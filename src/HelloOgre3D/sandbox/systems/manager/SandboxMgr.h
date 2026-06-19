@@ -11,18 +11,18 @@ namespace Ogre {
 	class SceneManager;
 }
 
-class ObjectManager;
 class CameraService;
+class RaycastService;
+class SceneService;
+class ScriptService;
 class BlockObject;
-struct rcConfig;
-class NavigationMesh;
 
 class SandboxMgr //tolua_exports
 { //tolua_exports
 public:
-	SandboxMgr(CameraService* cameraService,
-		ObjectManager* objectManager,
-		Ogre::SceneManager* sceneManager);
+	SandboxMgr(SceneService* sceneService,
+		ScriptService* scriptService,
+		RaycastService* raycastService);
 	~SandboxMgr();
 
 	//tolua_begin
@@ -44,24 +44,16 @@ public:
 	void SetUseCppFsmFlag(bool value); // 使用CppFSM标记
 
 	void UpdateSceneGraph(); // 强制刷新场景图
-	void DefaultConfig(rcConfig& config); // 获取默认的rcConfig
-	void ApplySettingConfig(rcConfig& config, float height, float radius, float climb);
-	NavigationMesh* CreateNavigationMesh(const rcConfig& config, const Ogre::String& navMeshName);
 
-	Ogre::Vector3 RandomPoint(const Ogre::String& navMeshName) const;
-	Ogre::Vector3 FindClosestPoint(const Ogre::String& navMeshName, const Ogre::Vector3& point) const;
-	bool FindPath(const Ogre::String& navMeshName, const Ogre::Vector3& start, const Ogre::Vector3& end, std::vector<Ogre::Vector3>& outPath) const;
 	int RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vector3& to) const;
 	//tolua_end
 
 private:
-	Ogre::Camera* GetSceneGraphCamera();
-
 	bool m_useCppFsmFlag = true;
-	Ogre::SceneNode* m_pRootSceneNode = nullptr;
 
-	CameraService* m_cameraService = nullptr;
-	ObjectManager* m_objectManager = nullptr;
+	SceneService* m_sceneService = nullptr;
+	ScriptService* m_scriptService = nullptr;
+	RaycastService* m_raycastService = nullptr;
 
 }; //tolua_exports
 
