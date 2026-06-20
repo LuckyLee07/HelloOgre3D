@@ -68,6 +68,7 @@ local _chapter8 = {
     teamApplySkipCount = 0,
     teamApplyAgentChecks = 0,
     cppFactApplyCount = 0,
+    cppFocusFactApplyCount = 0,
     teamPruneElapsedMs = 0,
     teamPruneIntervalMs = 0,
     teamPruneRunCount = 0,
@@ -572,7 +573,9 @@ local function _MaybePrintTeamBlackboardSmoke()
         and _chapter8.totalSupportResponses > 0
         and _chapter8.totalSharedMoves > 0
         and TeamBlackboard:GetCppFactCount() > 0
+        and TeamBlackboard:GetCppTypedFactCount() > 0
         and _chapter8.cppFactApplyCount > 0
+        and _chapter8.cppFocusFactApplyCount > 0
         and _chapter8.sightScanRunCount > 0
         and _chapter8.sightScanSkipCount > 0
         and _chapter8.teamApplyRunCount > 0
@@ -590,6 +593,9 @@ local function _MaybePrintTeamBlackboardSmoke()
             "agentChecks=", _chapter8.teamApplyAgentChecks,
             "cppFacts=", TeamBlackboard:GetCppFactCount(),
             "cppReports=", TeamBlackboard:GetCppReportCount(),
+            "cppTypedFacts=", TeamBlackboard:GetCppTypedFactCount(),
+            "cppTypedReports=", TeamBlackboard:GetCppTypedReportCount(),
+            "cppFocusApplies=", _chapter8.cppFocusFactApplyCount,
             "cppApplies=", _chapter8.cppFactApplyCount)
     end
 end
@@ -624,6 +630,9 @@ local function _ApplyTeamMemoryToAgent(agent)
 
     if TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, "team.cpp", false) then
         _chapter8.cppFactApplyCount = _chapter8.cppFactApplyCount + 1
+    end
+    if TeamBlackboard:WriteBestCppFactToBlackboard(agent, TeamBlackboard.EventTypes.FocusTarget, "team.focus.cpp", true) then
+        _chapter8.cppFocusFactApplyCount = _chapter8.cppFocusFactApplyCount + 1
     end
 
     local sighting = _SelectTeamMemoryForAgent(agent)
@@ -994,6 +1003,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.teamApplySkipCount = 0
     _chapter8.teamApplyAgentChecks = 0
     _chapter8.cppFactApplyCount = 0
+    _chapter8.cppFocusFactApplyCount = 0
     _chapter8.teamPruneElapsedMs = 0
     _chapter8.teamPruneIntervalMs = tonumber(config.teamPruneIntervalMs) or 250
     _chapter8.teamPruneRunCount = 0

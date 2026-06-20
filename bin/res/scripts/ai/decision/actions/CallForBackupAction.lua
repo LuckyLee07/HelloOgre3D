@@ -24,7 +24,7 @@ function OnInitialize(owner, bb)
         targetPos = targetPos,
         timeMs = bb:GetInt("team.requestTimeMs", 0),
     }
-    TeamBlackboard:SetValue(owner:GetTeamId(), "backupRequest", request)
+    TeamBlackboard:RememberSupportRequest(owner:GetTeamId(), request)
     bb:SetBool("team.shouldCallForBackup", false)
     bb:SetInt("team.backupCallCount", bb:GetInt("team.backupCallCount", 0) + 1)
     bb:SetObjectId("team.lastBackupCallTargetId", targetId)

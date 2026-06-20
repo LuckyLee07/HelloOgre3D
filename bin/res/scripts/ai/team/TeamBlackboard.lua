@@ -5,7 +5,11 @@ local TeamBlackboard = {}
 
 TeamBlackboard.EventTypes = {
 	EnemySighted = "EnemySighted",
+	SupportRequested = "SupportRequested",
 	SupportResponded = "SupportResponded",
+	FocusTarget = "FocusTarget",
+	RetreatPoint = "RetreatPoint",
+	FormationSlot = "FormationSlot",
 }
 
 local _teams = {}
@@ -45,14 +49,51 @@ local function _RememberCppEnemyFact(sighting)
 		tonumber(sighting.confidence) or 1.0)
 end
 
+local function _RememberCppTeamFact(factType, teamId, sourceAgentId, targetAgentId, position, timeMs, confidence, priority, ttlMs, key)
+	local service = _CppService()
+	if service == nil or service.rememberTeamFact == nil or factType == nil then
+		return false
+	end
+	return service:rememberTeamFact(
+		tostring(factType),
+		tonumber(teamId) or 0,
+		tonumber(sourceAgentId) or -1,
+		tonumber(targetAgentId) or -1,
+		position or Vector3(0, 0, 0),
+		tonumber(timeMs) or 0,
+		tonumber(confidence) or 1.0,
+		tonumber(priority) or 0,
+		tonumber(ttlMs) or 0,
+		key ~= nil and tostring(key) or "")
+end
+
 local function _NewTeamState(teamId)
 	return {
 		teamId = tonumber(teamId) or 0,
 		visibleEnemies = {},
 		supportResponses = {},
+		supportRequest = nil,
+		focusTarget = nil,
+		retreatPoints = {},
 		lastEvent = nil,
-		values = {},
 	}
+end
+
+local function _IsRetreatKey(key)
+	return type(key) == "string" and string.sub(key, 1, 8) == "retreat:"
+end
+
+local function _GetTypedLegacyValue(team, key)
+	if key == "backupRequest" then
+		return team.supportRequest
+	end
+	if key == "focusTarget" then
+		return team.focusTarget
+	end
+	if _IsRetreatKey(key) then
+		return team.retreatPoints[key]
+	end
+	return nil
 end
 
 function TeamBlackboard:Reset()
@@ -89,6 +130,14 @@ function TeamBlackboard:RememberVisibleEnemy(teamId, sighting)
 	}
 	team.visibleEnemies[sighting.targetId] = stored
 	_RememberCppEnemyFact(stored)
+	self:RememberFocusTarget(stored.teamId, {
+		sourceAgentId = stored.spotterId,
+		targetId = stored.targetId,
+		targetPos = stored.targetPos,
+		timeMs = stored.lastSeenMs,
+		confidence = stored.confidence,
+		key = "visibleEnemy:" .. tostring(stored.targetId),
+	})
 	return stored, existing == nil
 end
 
@@ -161,6 +210,132 @@ function TeamBlackboard:BuildCppDebugSummary()
 	return "[TeamBlackboardService] unavailable"
 end
 
+function TeamBlackboard:GetCppEnemyFactCount()
+	local service = _CppService()
+	if service ~= nil and service.getTeamBlackboardEnemyFactCount ~= nil then
+		return service:getTeamBlackboardEnemyFactCount()
+	end
+	return 0
+end
+
+function TeamBlackboard:GetCppTypedFactCount()
+	local service = _CppService()
+	if service ~= nil and service.getTeamBlackboardTypedFactCount ~= nil then
+		return service:getTeamBlackboardTypedFactCount()
+	end
+	return 0
+end
+
+function TeamBlackboard:GetCppTypedReportCount()
+	local service = _CppService()
+	if service ~= nil and service.getTeamBlackboardTypedReportCount ~= nil then
+		return service:getTeamBlackboardTypedReportCount()
+	end
+	return 0
+end
+
+function TeamBlackboard:WriteBestCppFactToBlackboard(agent, factType, keyPrefix, allowOwnReport)
+	local service = _CppService()
+	if service == nil or service.writeBestTeamFactToBlackboard == nil or agent == nil then
+		return false
+	end
+	return service:writeBestTeamFactToBlackboard(agent, tostring(factType or ""), keyPrefix or "team.fact", allowOwnReport ~= false)
+end
+
+function TeamBlackboard:RememberSupportRequest(teamId, request)
+	if request == nil or request.requesterId == nil then
+		return nil, false
+	end
+
+	local team = self:GetTeam(teamId)
+	local existing = team.supportRequest
+	local stored = {
+		eventType = TeamBlackboard.EventTypes.SupportRequested,
+		teamId = tonumber(request.teamId) or tonumber(teamId) or 0,
+		requesterId = request.requesterId,
+		targetId = request.targetId,
+		targetPos = _CloneVec3(request.targetPos),
+		timeMs = tonumber(request.timeMs) or 0,
+	}
+	team.supportRequest = stored
+	_RememberCppTeamFact(
+		TeamBlackboard.EventTypes.SupportRequested,
+		stored.teamId,
+		stored.requesterId,
+		stored.targetId,
+		stored.targetPos,
+		stored.timeMs,
+		1.0,
+		0,
+		0,
+		"backupRequest")
+	return stored, existing == nil or existing.targetId ~= stored.targetId
+end
+
+function TeamBlackboard:RememberFocusTarget(teamId, focus)
+	if focus == nil or focus.targetPos == nil then
+		return nil, false
+	end
+
+	local team = self:GetTeam(teamId)
+	local existing = team.focusTarget
+	local stored = {
+		eventType = TeamBlackboard.EventTypes.FocusTarget,
+		teamId = tonumber(focus.teamId) or tonumber(teamId) or 0,
+		sourceAgentId = tonumber(focus.sourceAgentId) or tonumber(focus.spotterId) or -1,
+		targetId = tonumber(focus.targetId) or -1,
+		targetPos = _CloneVec3(focus.targetPos),
+		timeMs = tonumber(focus.timeMs) or 0,
+		confidence = tonumber(focus.confidence) or 1.0,
+	}
+	team.focusTarget = stored
+	_RememberCppTeamFact(
+		TeamBlackboard.EventTypes.FocusTarget,
+		stored.teamId,
+		stored.sourceAgentId,
+		stored.targetId,
+		stored.targetPos,
+		stored.timeMs,
+		stored.confidence,
+		tonumber(focus.priority) or 0,
+		tonumber(focus.ttlMs) or 0,
+		focus.key or "focusTarget")
+	return stored, existing == nil or existing.targetId ~= stored.targetId
+end
+
+function TeamBlackboard:RememberRetreatPoint(teamId, retreat)
+	if retreat == nil or retreat.retreatPos == nil then
+		return nil, false
+	end
+
+	local team = self:GetTeam(teamId)
+	local key = retreat.key ~= nil and tostring(retreat.key) or ("retreat:" .. tostring(retreat.agentId or retreat.sourceAgentId or "team"))
+	local existing = team.retreatPoints[key]
+	local stored = {
+		eventType = TeamBlackboard.EventTypes.RetreatPoint,
+		teamId = tonumber(retreat.teamId) or tonumber(teamId) or 0,
+		agentId = tonumber(retreat.agentId) or tonumber(retreat.sourceAgentId) or -1,
+		threatId = tonumber(retreat.threatId) or tonumber(retreat.targetId) or -1,
+		threatPos = _CloneVec3(retreat.threatPos),
+		retreatPos = _CloneVec3(retreat.retreatPos),
+		timeMs = tonumber(retreat.timeMs) or 0,
+		confidence = tonumber(retreat.confidence) or 1.0,
+	}
+	team.retreatPoints[key] = stored
+	_RememberCppTeamFact(
+		TeamBlackboard.EventTypes.RetreatPoint,
+		stored.teamId,
+		stored.agentId,
+		stored.threatId,
+		stored.retreatPos,
+		stored.timeMs,
+		stored.confidence,
+		tonumber(retreat.priority) or 0,
+		tonumber(retreat.ttlMs) or 0,
+		key)
+	return stored, existing == nil or existing.threatId ~= stored.threatId
+end
+
 function TeamBlackboard:RememberSupportResponse(teamId, response)
 	if response == nil or response.responderId == nil then
 		return nil, false
@@ -179,7 +354,35 @@ function TeamBlackboard:RememberSupportResponse(teamId, response)
 		timeMs = tonumber(response.timeMs) or 0,
 	}
 	team.supportResponses[response.responderId] = stored
+	_RememberCppTeamFact(
+		TeamBlackboard.EventTypes.SupportResponded,
+		stored.teamId,
+		stored.responderId,
+		stored.targetId,
+		stored.supportPos or stored.targetPos,
+		stored.timeMs,
+		1.0,
+		0,
+		0,
+		"responder:" .. tostring(stored.responderId))
 	return stored, existing == nil or existing.targetId ~= stored.targetId
+end
+
+function TeamBlackboard:RememberFormationSlot(teamId, slot)
+	if slot == nil or slot.agentId == nil or slot.slotPos == nil then
+		return false
+	end
+	return _RememberCppTeamFact(
+		TeamBlackboard.EventTypes.FormationSlot,
+		tonumber(slot.teamId) or tonumber(teamId) or 0,
+		tonumber(slot.agentId) or -1,
+		tonumber(slot.focusTargetId) or -1,
+		slot.slotPos,
+		tonumber(slot.timeMs) or 0,
+		tonumber(slot.confidence) or 1.0,
+		tonumber(slot.priority) or 0,
+		tonumber(slot.ttlMs) or 0,
+		"slot:" .. tostring(slot.agentId))
 end
 
 function TeamBlackboard:GetSupportResponses(teamId)
@@ -220,16 +423,31 @@ end
 
 function TeamBlackboard:SetValue(teamId, key, value)
 	if key == nil then
-		return
+		return false
 	end
-	self:GetTeam(teamId).values[key] = value
+	if key == "backupRequest" and type(value) == "table" then
+		self:RememberSupportRequest(teamId, value)
+		return true
+	end
+	if key == "focusTarget" and type(value) == "table" then
+		self:RememberFocusTarget(teamId, value)
+		return true
+	end
+	if _IsRetreatKey(key) and type(value) == "table" then
+		if value.key == nil then
+			value.key = key
+		end
+		self:RememberRetreatPoint(teamId, value)
+		return true
+	end
+	return false
 end
 
 function TeamBlackboard:GetValue(teamId, key, defaultValue)
 	if key == nil then
 		return defaultValue
 	end
-	local value = self:GetTeam(teamId).values[key]
+	local value = _GetTypedLegacyValue(self:GetTeam(teamId), key)
 	if value == nil then
 		return defaultValue
 	end
