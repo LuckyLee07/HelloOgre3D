@@ -1,6 +1,6 @@
 /*
 ** Lua binding: SandboxToLua
-** Generated automatically by tolua++-1.0.92 on Sat Jun 20 17:10:51 2026.
+** Generated automatically by tolua++-1.0.92 on Sat Jun 20 21:58:38 2026.
 */
 
 #ifndef __cplusplus
@@ -42,6 +42,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "../components/ai/AIController.h"
 #include "../systems/service/ObjectFactory.h"
 #include "../ai/common/AIScheduler.h"
+#include "../ai/perception/AgentPerceptionSystem.h"
 #include "../ai/team/TeamBlackboardService.h"
 #include "../ai/tactics/TacticalService.h"
 #include "../systems/manager/ObjectManager.h"
@@ -125,6 +126,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"Ogre::Vector2");
  tolua_usertype(tolua_S,"LuaDecisionAction");
  tolua_usertype(tolua_S,"RaycastService");
+ tolua_usertype(tolua_S,"AgentPerceptionSystem");
  tolua_usertype(tolua_S,"IDecisionDriver");
  tolua_usertype(tolua_S,"BaseObject");
  tolua_usertype(tolua_S,"CameraService");
@@ -8218,6 +8220,484 @@ static int tolua_SandboxToLua_AIScheduler_buildAiSchedulerDebugSummary00(lua_Sta
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: configureHearingDangerSense of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_configureHearingDangerSense00
+static int tolua_SandboxToLua_AgentPerceptionSystem_configureHearingDangerSense00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,9,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentPerceptionSystem* self = (AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+  int scanIntervalMs = ((int)  tolua_tonumber(tolua_S,3,0));
+  int agentsPerTick = ((int)  tolua_tonumber(tolua_S,4,0));
+  int responseCooldownMs = ((int)  tolua_tonumber(tolua_S,5,0));
+  int dangerCooldownMs = ((int)  tolua_tonumber(tolua_S,6,0));
+  float investigateStopDistance = ((float)  tolua_tonumber(tolua_S,7,0));
+  float escapeDistance = ((float)  tolua_tonumber(tolua_S,8,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureHearingDangerSense'", NULL);
+#endif
+  {
+   self->configureHearingDangerSense(enabled,scanIntervalMs,agentsPerTick,responseCooldownMs,dangerCooldownMs,investigateStopDistance,escapeDistance);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureHearingDangerSense'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: clearHearingDangerSense of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_clearHearingDangerSense00
+static int tolua_SandboxToLua_AgentPerceptionSystem_clearHearingDangerSense00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentPerceptionSystem* self = (AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'clearHearingDangerSense'", NULL);
+#endif
+  {
+   self->clearHearingDangerSense();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'clearHearingDangerSense'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: publishHearingDangerEvent of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_publishHearingDangerEvent00
+static int tolua_SandboxToLua_AgentPerceptionSystem_publishHearingDangerEvent00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,5,&tolua_err) || !tolua_isusertype(tolua_S,5,"const Ogre::Vector3",0,&tolua_err)) ||
+     (tolua_isvaluenil(tolua_S,6,&tolua_err) || !tolua_isusertype(tolua_S,6,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,9,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,10,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,11,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  AgentPerceptionSystem* self = (AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+  int sourceId = ((int)  tolua_tonumber(tolua_S,2,0));
+  int sourceTeamId = ((int)  tolua_tonumber(tolua_S,3,0));
+  int targetId = ((int)  tolua_tonumber(tolua_S,4,0));
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,5,0));
+  const Ogre::Vector3* impactPosition = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,6,0));
+  int timeMs = ((int)  tolua_tonumber(tolua_S,7,0));
+  int ttlMs = ((int)  tolua_tonumber(tolua_S,8,0));
+  float hearingRadius = ((float)  tolua_tonumber(tolua_S,9,0));
+  float dangerRadius = ((float)  tolua_tonumber(tolua_S,10,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'publishHearingDangerEvent'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->publishHearingDangerEvent(sourceId,sourceTeamId,targetId,*position,*impactPosition,timeMs,ttlMs,hearingRadius,dangerRadius);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'publishHearingDangerEvent'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerEventCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerEventCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerEventCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerEventCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerEventCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerEventCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerPublishedEventCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPublishedEventCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPublishedEventCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerPublishedEventCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerPublishedEventCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerPublishedEventCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerPrunedEventCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPrunedEventCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPrunedEventCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerPrunedEventCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerPrunedEventCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerPrunedEventCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerRunCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRunCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRunCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerRunCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerRunCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerRunCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerSkipCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerSkipCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerSkipCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerSkipCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerSkipCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerSkipCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerAgentCheckCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerAgentCheckCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerAgentCheckCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerAgentCheckCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerAgentCheckCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerAgentCheckCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerHeardResponseCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerHeardResponseCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerHeardResponseCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerHeardResponseCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerHeardResponseCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerHeardResponseCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerDangerResponseCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerDangerResponseCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerDangerResponseCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerDangerResponseCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerDangerResponseCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerDangerResponseCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerInvestigationCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerInvestigationCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerInvestigationCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerInvestigationCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerInvestigationCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerInvestigationCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getHearingDangerRetreatFactApplyCount of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRetreatFactApplyCount00
+static int tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRetreatFactApplyCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getHearingDangerRetreatFactApplyCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getHearingDangerRetreatFactApplyCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getHearingDangerRetreatFactApplyCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildPerceptionDebugSummary of class  AgentPerceptionSystem */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentPerceptionSystem_buildPerceptionDebugSummary00
+static int tolua_SandboxToLua_AgentPerceptionSystem_buildPerceptionDebugSummary00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const AgentPerceptionSystem",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const AgentPerceptionSystem* self = (const AgentPerceptionSystem*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildPerceptionDebugSummary'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildPerceptionDebugSummary();
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildPerceptionDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: clearTeamBlackboardFacts of class  TeamBlackboardService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_clearTeamBlackboardFacts00
 static int tolua_SandboxToLua_TeamBlackboardService_clearTeamBlackboardFacts00(lua_State* tolua_S)
@@ -8326,6 +8806,60 @@ static int tolua_SandboxToLua_TeamBlackboardService_rememberTeamEnemyFact00(lua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: rememberTeamFact of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_rememberTeamFact00
+static int tolua_SandboxToLua_TeamBlackboardService_rememberTeamFact00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TeamBlackboardService",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,6,&tolua_err) || !tolua_isusertype(tolua_S,6,"const Ogre::Vector3",0,&tolua_err)) ||
+     !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,9,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,10,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,11,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,12,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TeamBlackboardService* self = (TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+  const std::string factType = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int teamId = ((int)  tolua_tonumber(tolua_S,3,0));
+  int sourceAgentId = ((int)  tolua_tonumber(tolua_S,4,0));
+  int targetAgentId = ((int)  tolua_tonumber(tolua_S,5,0));
+  const Ogre::Vector3* position = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,6,0));
+  int timeMs = ((int)  tolua_tonumber(tolua_S,7,0));
+  float confidence = ((float)  tolua_tonumber(tolua_S,8,0));
+  int priority = ((int)  tolua_tonumber(tolua_S,9,0));
+  int ttlMs = ((int)  tolua_tonumber(tolua_S,10,0));
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,11,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'rememberTeamFact'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->rememberTeamFact(factType,teamId,sourceAgentId,targetAgentId,*position,timeMs,confidence,priority,ttlMs,key);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)factType);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 3;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'rememberTeamFact'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: writeBestTeamEnemyFactToBlackboard of class  TeamBlackboardService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_writeBestTeamEnemyFactToBlackboard00
 static int tolua_SandboxToLua_TeamBlackboardService_writeBestTeamEnemyFactToBlackboard00(lua_State* tolua_S)
@@ -8360,6 +8894,48 @@ static int tolua_SandboxToLua_TeamBlackboardService_writeBestTeamEnemyFactToBlac
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'writeBestTeamEnemyFactToBlackboard'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: writeBestTeamFactToBlackboard of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_writeBestTeamFactToBlackboard00
+static int tolua_SandboxToLua_TeamBlackboardService_writeBestTeamFactToBlackboard00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"AgentObject",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,4,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,5,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TeamBlackboardService* self = (TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+  AgentObject* agent = ((AgentObject*)  tolua_tousertype(tolua_S,2,0));
+  const std::string factType = ((const std::string)  tolua_tocppstring(tolua_S,3,0));
+  const std::string keyPrefix = ((const std::string)  tolua_tocppstring(tolua_S,4,0));
+  bool allowOwnReport = ((bool)  tolua_toboolean(tolua_S,5,true));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'writeBestTeamFactToBlackboard'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->writeBestTeamFactToBlackboard(agent,factType,keyPrefix,allowOwnReport);
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)factType);
+   tolua_pushcppstring(tolua_S,(const char*)keyPrefix);
+  }
+ }
+ return 3;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'writeBestTeamFactToBlackboard'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8424,6 +9000,102 @@ static int tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardReportCount
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardReportCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTeamBlackboardEnemyFactCount of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardEnemyFactCount00
+static int tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardEnemyFactCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const TeamBlackboardService* self = (const TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTeamBlackboardEnemyFactCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTeamBlackboardEnemyFactCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardEnemyFactCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTeamBlackboardTypedFactCount of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedFactCount00
+static int tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedFactCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const TeamBlackboardService* self = (const TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTeamBlackboardTypedFactCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTeamBlackboardTypedFactCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardTypedFactCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTeamBlackboardTypedReportCount of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedReportCount00
+static int tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedReportCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const TeamBlackboardService* self = (const TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTeamBlackboardTypedReportCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTeamBlackboardTypedReportCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTeamBlackboardTypedReportCount'.",&tolua_err);
  return 0;
 #endif
 }
@@ -8570,6 +9242,143 @@ static int tolua_SandboxToLua_TacticalService_configureTacticalInfluenceFromNavM
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'configureTacticalInfluenceFromNavMesh'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: configureTacticalInfluenceLayerUpdate of class  TacticalService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_configureTacticalInfluenceLayerUpdate00
+static int tolua_SandboxToLua_TacticalService_configureTacticalInfluenceLayerUpdate00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TacticalService",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TacticalService* self = (TacticalService*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int intervalMs = ((int)  tolua_tonumber(tolua_S,3,0));
+  bool dirtyOnly = ((bool)  tolua_toboolean(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTacticalInfluenceLayerUpdate'", NULL);
+#endif
+  {
+   self->configureTacticalInfluenceLayerUpdate(layerName,intervalMs,dirtyOnly);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTacticalInfluenceLayerUpdate'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: markTacticalInfluenceLayerDirty of class  TacticalService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_markTacticalInfluenceLayerDirty00
+static int tolua_SandboxToLua_TacticalService_markTacticalInfluenceLayerDirty00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TacticalService",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TacticalService* self = (TacticalService*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'markTacticalInfluenceLayerDirty'", NULL);
+#endif
+  {
+   self->markTacticalInfluenceLayerDirty(layerName);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'markTacticalInfluenceLayerDirty'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: configureTacticalQueryCandidateLimit of class  TacticalService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_configureTacticalQueryCandidateLimit00
+static int tolua_SandboxToLua_TacticalService_configureTacticalQueryCandidateLimit00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TacticalService",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TacticalService* self = (TacticalService*)  tolua_tousertype(tolua_S,1,0);
+  int maxCandidates = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTacticalQueryCandidateLimit'", NULL);
+#endif
+  {
+   self->configureTacticalQueryCandidateLimit(maxCandidates);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTacticalQueryCandidateLimit'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: getTacticalQueryCandidateLimit of class  TacticalService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_getTacticalQueryCandidateLimit00
+static int tolua_SandboxToLua_TacticalService_getTacticalQueryCandidateLimit00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const TacticalService",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const TacticalService* self = (const TacticalService*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'getTacticalQueryCandidateLimit'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->getTacticalQueryCandidateLimit();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'getTacticalQueryCandidateLimit'.",&tolua_err);
  return 0;
 #endif
 }
@@ -10061,6 +10870,42 @@ static int tolua_SandboxToLua_TacticalService_rebuildTacticalInfluenceLayerDebug
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: setTacticalInfluenceLayerDebugOrder of class  TacticalService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_setTacticalInfluenceLayerDebugOrder00
+static int tolua_SandboxToLua_TacticalService_setTacticalInfluenceLayerDebugOrder00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TacticalService",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TacticalService* self = (TacticalService*)  tolua_tousertype(tolua_S,1,0);
+  const std::string layerName = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  int drawOrder = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setTacticalInfluenceLayerDebugOrder'", NULL);
+#endif
+  {
+   self->setTacticalInfluenceLayerDebugOrder(layerName,drawOrder);
+   tolua_pushcppstring(tolua_S,(const char*)layerName);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setTacticalInfluenceLayerDebugOrder'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: setTacticalInfluenceDebugVisible of class  TacticalService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_TacticalService_setTacticalInfluenceDebugVisible00
 static int tolua_SandboxToLua_TacticalService_setTacticalInfluenceDebugVisible00(lua_State* tolua_S)
@@ -10526,6 +11371,42 @@ static int tolua_SandboxToLua_ObjectManager_buildAiRuntimeDebugSummary00(lua_Sta
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: buildAiRuntimeDebugSummaryForAgent of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiRuntimeDebugSummaryForAgent00
+static int tolua_SandboxToLua_ObjectManager_buildAiRuntimeDebugSummaryForAgent00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int maxAgents = ((int)  tolua_tonumber(tolua_S,2,0));
+  int focusAgentId = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildAiRuntimeDebugSummaryForAgent'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildAiRuntimeDebugSummaryForAgent(maxAgents,focusAgentId);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildAiRuntimeDebugSummaryForAgent'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: buildAiDebugSummary of class  ObjectManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00
 static int tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00(lua_State* tolua_S)
@@ -10555,6 +11436,42 @@ static int tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00(lua_State* tol
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'buildAiDebugSummary'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: buildAiDebugSummaryForAgent of class  ObjectManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectManager_buildAiDebugSummaryForAgent00
+static int tolua_SandboxToLua_ObjectManager_buildAiDebugSummaryForAgent00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectManager* self = (ObjectManager*)  tolua_tousertype(tolua_S,1,0);
+  int maxAgents = ((int)  tolua_tonumber(tolua_S,2,0));
+  int focusAgentId = ((int)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'buildAiDebugSummaryForAgent'", NULL);
+#endif
+  {
+   std::string tolua_ret = (std::string)  self->buildAiDebugSummaryForAgent(maxAgents,focusAgentId);
+   tolua_pushcppstring(tolua_S,(const char*)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'buildAiDebugSummaryForAgent'.",&tolua_err);
  return 0;
 #endif
 }
@@ -12403,6 +13320,73 @@ static int tolua_SandboxToLua_Blackboard_Clear00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetRevision of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetRevision00
+static int tolua_SandboxToLua_Blackboard_GetRevision00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRevision'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetRevision();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetRevision'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetKeyRevision of class  Blackboard */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_Blackboard_GetKeyRevision00
+static int tolua_SandboxToLua_Blackboard_GetKeyRevision00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const Blackboard",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const Blackboard* self = (const Blackboard*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetKeyRevision'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetKeyRevision(key);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetKeyRevision'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetName of class  DecisionAction */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_DecisionAction_GetName00
 static int tolua_SandboxToLua_DecisionAction_GetName00(lua_State* tolua_S)
@@ -13189,6 +14173,297 @@ static int tolua_SandboxToLua_LuaBehaviorAction_GetAgentOwner00(lua_State* tolua
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetResultCacheEnabled of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_SetResultCacheEnabled00
+static int tolua_SandboxToLua_LuaCondition_SetResultCacheEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"LuaCondition",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  LuaCondition* self = (LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetResultCacheEnabled'", NULL);
+#endif
+  {
+   self->SetResultCacheEnabled(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetResultCacheEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsResultCacheEnabled of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_IsResultCacheEnabled00
+static int tolua_SandboxToLua_LuaCondition_IsResultCacheEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const LuaCondition* self = (const LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsResultCacheEnabled'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsResultCacheEnabled();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsResultCacheEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetResultCacheTtlMs of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_SetResultCacheTtlMs00
+static int tolua_SandboxToLua_LuaCondition_SetResultCacheTtlMs00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"LuaCondition",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  LuaCondition* self = (LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+  float ttlMs = ((float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetResultCacheTtlMs'", NULL);
+#endif
+  {
+   self->SetResultCacheTtlMs(ttlMs);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetResultCacheTtlMs'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetResultCacheTtlMs of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_GetResultCacheTtlMs00
+static int tolua_SandboxToLua_LuaCondition_GetResultCacheTtlMs00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const LuaCondition* self = (const LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetResultCacheTtlMs'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetResultCacheTtlMs();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetResultCacheTtlMs'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: AddResultCacheDependencyKey of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_AddResultCacheDependencyKey00
+static int tolua_SandboxToLua_LuaCondition_AddResultCacheDependencyKey00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"LuaCondition",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  LuaCondition* self = (LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+  const std::string key = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'AddResultCacheDependencyKey'", NULL);
+#endif
+  {
+   self->AddResultCacheDependencyKey(key);
+   tolua_pushcppstring(tolua_S,(const char*)key);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'AddResultCacheDependencyKey'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClearResultCacheDependencyKeys of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_ClearResultCacheDependencyKeys00
+static int tolua_SandboxToLua_LuaCondition_ClearResultCacheDependencyKeys00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  LuaCondition* self = (LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClearResultCacheDependencyKeys'", NULL);
+#endif
+  {
+   self->ClearResultCacheDependencyKeys();
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClearResultCacheDependencyKeys'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetResultCacheDependencyCount of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_GetResultCacheDependencyCount00
+static int tolua_SandboxToLua_LuaCondition_GetResultCacheDependencyCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const LuaCondition* self = (const LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetResultCacheDependencyCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetResultCacheDependencyCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetResultCacheDependencyCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetResultCacheHitCount of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_GetResultCacheHitCount00
+static int tolua_SandboxToLua_LuaCondition_GetResultCacheHitCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const LuaCondition* self = (const LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetResultCacheHitCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetResultCacheHitCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetResultCacheHitCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetResultCacheInvalidatedCount of class  LuaCondition */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_GetResultCacheInvalidatedCount00
+static int tolua_SandboxToLua_LuaCondition_GetResultCacheInvalidatedCount00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const LuaCondition",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const LuaCondition* self = (const LuaCondition*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetResultCacheInvalidatedCount'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetResultCacheInvalidatedCount();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetResultCacheInvalidatedCount'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetAgentOwner of class  BehaviorTreeDriver */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetAgentOwner00
 static int tolua_SandboxToLua_BehaviorTreeDriver_GetAgentOwner00(lua_State* tolua_S)
@@ -13884,6 +15159,201 @@ static int tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceSampleInterval00(l
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetRuntimeTickIntervalMs of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickIntervalMs00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickIntervalMs00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  float intervalMs = ((float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRuntimeTickIntervalMs'", NULL);
+#endif
+  {
+   self->SetRuntimeTickIntervalMs(intervalMs);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRuntimeTickIntervalMs'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetRuntimeTickIntervalMs of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeTickIntervalMs00
+static int tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeTickIntervalMs00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRuntimeTickIntervalMs'", NULL);
+#endif
+  {
+   float tolua_ret = (float)  self->GetRuntimeTickIntervalMs();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetRuntimeTickIntervalMs'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRuntimeTickStaggerEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickStaggerEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickStaggerEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRuntimeTickStaggerEnabled'", NULL);
+#endif
+  {
+   self->SetRuntimeTickStaggerEnabled(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRuntimeTickStaggerEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: IsRuntimeTickStaggerEnabled of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_IsRuntimeTickStaggerEnabled00
+static int tolua_SandboxToLua_BehaviorTreeDriver_IsRuntimeTickStaggerEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'IsRuntimeTickStaggerEnabled'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->IsRuntimeTickStaggerEnabled();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'IsRuntimeTickStaggerEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: SetRuntimeMaxTreeTicksPerFrame of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeMaxTreeTicksPerFrame00
+static int tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeMaxTreeTicksPerFrame00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BehaviorTreeDriver* self = (BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+  int maxTicksPerFrame = ((int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetRuntimeMaxTreeTicksPerFrame'", NULL);
+#endif
+  {
+   self->SetRuntimeMaxTreeTicksPerFrame(maxTicksPerFrame);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetRuntimeMaxTreeTicksPerFrame'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetRuntimeMaxTreeTicksPerFrame of class  BehaviorTreeDriver */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeMaxTreeTicksPerFrame00
+static int tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeMaxTreeTicksPerFrame00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const BehaviorTreeDriver",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const BehaviorTreeDriver* self = (const BehaviorTreeDriver*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetRuntimeMaxTreeTicksPerFrame'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetRuntimeMaxTreeTicksPerFrame();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetRuntimeMaxTreeTicksPerFrame'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetLastDebugTrace of class  BehaviorTreeDriver */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00
 static int tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00(lua_State* tolua_S)
@@ -14393,14 +15863,36 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"configureAiScheduler",tolua_SandboxToLua_AIScheduler_configureAiScheduler00);
    tolua_function(tolua_S,"buildAiSchedulerDebugSummary",tolua_SandboxToLua_AIScheduler_buildAiSchedulerDebugSummary00);
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"AgentPerceptionSystem","AgentPerceptionSystem","",NULL);
+  tolua_beginmodule(tolua_S,"AgentPerceptionSystem");
+   tolua_function(tolua_S,"configureHearingDangerSense",tolua_SandboxToLua_AgentPerceptionSystem_configureHearingDangerSense00);
+   tolua_function(tolua_S,"clearHearingDangerSense",tolua_SandboxToLua_AgentPerceptionSystem_clearHearingDangerSense00);
+   tolua_function(tolua_S,"publishHearingDangerEvent",tolua_SandboxToLua_AgentPerceptionSystem_publishHearingDangerEvent00);
+   tolua_function(tolua_S,"getHearingDangerEventCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerEventCount00);
+   tolua_function(tolua_S,"getHearingDangerPublishedEventCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPublishedEventCount00);
+   tolua_function(tolua_S,"getHearingDangerPrunedEventCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerPrunedEventCount00);
+   tolua_function(tolua_S,"getHearingDangerRunCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRunCount00);
+   tolua_function(tolua_S,"getHearingDangerSkipCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerSkipCount00);
+   tolua_function(tolua_S,"getHearingDangerAgentCheckCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerAgentCheckCount00);
+   tolua_function(tolua_S,"getHearingDangerHeardResponseCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerHeardResponseCount00);
+   tolua_function(tolua_S,"getHearingDangerDangerResponseCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerDangerResponseCount00);
+   tolua_function(tolua_S,"getHearingDangerInvestigationCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerInvestigationCount00);
+   tolua_function(tolua_S,"getHearingDangerRetreatFactApplyCount",tolua_SandboxToLua_AgentPerceptionSystem_getHearingDangerRetreatFactApplyCount00);
+   tolua_function(tolua_S,"buildPerceptionDebugSummary",tolua_SandboxToLua_AgentPerceptionSystem_buildPerceptionDebugSummary00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"TeamBlackboardService","TeamBlackboardService","",NULL);
   tolua_beginmodule(tolua_S,"TeamBlackboardService");
    tolua_function(tolua_S,"clearTeamBlackboardFacts",tolua_SandboxToLua_TeamBlackboardService_clearTeamBlackboardFacts00);
    tolua_function(tolua_S,"configureTeamBlackboard",tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboard00);
    tolua_function(tolua_S,"rememberTeamEnemyFact",tolua_SandboxToLua_TeamBlackboardService_rememberTeamEnemyFact00);
+   tolua_function(tolua_S,"rememberTeamFact",tolua_SandboxToLua_TeamBlackboardService_rememberTeamFact00);
    tolua_function(tolua_S,"writeBestTeamEnemyFactToBlackboard",tolua_SandboxToLua_TeamBlackboardService_writeBestTeamEnemyFactToBlackboard00);
+   tolua_function(tolua_S,"writeBestTeamFactToBlackboard",tolua_SandboxToLua_TeamBlackboardService_writeBestTeamFactToBlackboard00);
    tolua_function(tolua_S,"getTeamBlackboardFactCount",tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardFactCount00);
    tolua_function(tolua_S,"getTeamBlackboardReportCount",tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardReportCount00);
+   tolua_function(tolua_S,"getTeamBlackboardEnemyFactCount",tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardEnemyFactCount00);
+   tolua_function(tolua_S,"getTeamBlackboardTypedFactCount",tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedFactCount00);
+   tolua_function(tolua_S,"getTeamBlackboardTypedReportCount",tolua_SandboxToLua_TeamBlackboardService_getTeamBlackboardTypedReportCount00);
    tolua_function(tolua_S,"buildTeamBlackboardDebugSummary",tolua_SandboxToLua_TeamBlackboardService_buildTeamBlackboardDebugSummary00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"TacticalService","TacticalService","",NULL);
@@ -14408,6 +15900,10 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"clearTacticalInfluence",tolua_SandboxToLua_TacticalService_clearTacticalInfluence00);
    tolua_function(tolua_S,"configureTacticalInfluence",tolua_SandboxToLua_TacticalService_configureTacticalInfluence00);
    tolua_function(tolua_S,"configureTacticalInfluenceFromNavMesh",tolua_SandboxToLua_TacticalService_configureTacticalInfluenceFromNavMesh00);
+   tolua_function(tolua_S,"configureTacticalInfluenceLayerUpdate",tolua_SandboxToLua_TacticalService_configureTacticalInfluenceLayerUpdate00);
+   tolua_function(tolua_S,"markTacticalInfluenceLayerDirty",tolua_SandboxToLua_TacticalService_markTacticalInfluenceLayerDirty00);
+   tolua_function(tolua_S,"configureTacticalQueryCandidateLimit",tolua_SandboxToLua_TacticalService_configureTacticalQueryCandidateLimit00);
+   tolua_function(tolua_S,"getTacticalQueryCandidateLimit",tolua_SandboxToLua_TacticalService_getTacticalQueryCandidateLimit00);
    tolua_function(tolua_S,"clearTacticalInfluenceLayer",tolua_SandboxToLua_TacticalService_clearTacticalInfluenceLayer00);
    tolua_function(tolua_S,"setTacticalInfluenceLayerOptions",tolua_SandboxToLua_TacticalService_setTacticalInfluenceLayerOptions00);
    tolua_function(tolua_S,"addTacticalInfluenceSource",tolua_SandboxToLua_TacticalService_addTacticalInfluenceSource00);
@@ -14445,6 +15941,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getTacticalInfluenceLayerDebugCellValue",tolua_SandboxToLua_TacticalService_getTacticalInfluenceLayerDebugCellValue00);
    tolua_function(tolua_S,"drawTacticalInfluenceLayer",tolua_SandboxToLua_TacticalService_drawTacticalInfluenceLayer00);
    tolua_function(tolua_S,"rebuildTacticalInfluenceLayerDebugVisual",tolua_SandboxToLua_TacticalService_rebuildTacticalInfluenceLayerDebugVisual00);
+   tolua_function(tolua_S,"setTacticalInfluenceLayerDebugOrder",tolua_SandboxToLua_TacticalService_setTacticalInfluenceLayerDebugOrder00);
    tolua_function(tolua_S,"setTacticalInfluenceDebugVisible",tolua_SandboxToLua_TacticalService_setTacticalInfluenceDebugVisible00);
    tolua_function(tolua_S,"clearTacticalInfluenceDebugVisuals",tolua_SandboxToLua_TacticalService_clearTacticalInfluenceDebugVisuals00);
    tolua_function(tolua_S,"getTacticalInfluenceActiveCellCount",tolua_SandboxToLua_TacticalService_getTacticalInfluenceActiveCellCount00);
@@ -14466,7 +15963,9 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"getAiAgentCount",tolua_SandboxToLua_ObjectManager_getAiAgentCount00);
    tolua_function(tolua_S,"getAiSoldierCount",tolua_SandboxToLua_ObjectManager_getAiSoldierCount00);
    tolua_function(tolua_S,"buildAiRuntimeDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiRuntimeDebugSummary00);
+   tolua_function(tolua_S,"buildAiRuntimeDebugSummaryForAgent",tolua_SandboxToLua_ObjectManager_buildAiRuntimeDebugSummaryForAgent00);
    tolua_function(tolua_S,"buildAiDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiDebugSummary00);
+   tolua_function(tolua_S,"buildAiDebugSummaryForAgent",tolua_SandboxToLua_ObjectManager_buildAiDebugSummaryForAgent00);
    tolua_function(tolua_S,"buildAiEventDebugSummary",tolua_SandboxToLua_ObjectManager_buildAiEventDebugSummary00);
    tolua_function(tolua_S,"runAiEventScopeSelfTest",tolua_SandboxToLua_ObjectManager_runAiEventScopeSelfTest00);
    tolua_function(tolua_S,"buildObjectDebugSummary",tolua_SandboxToLua_ObjectManager_buildObjectDebugSummary00);
@@ -14524,6 +16023,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"Has",tolua_SandboxToLua_Blackboard_Has00);
    tolua_function(tolua_S,"Remove",tolua_SandboxToLua_Blackboard_Remove00);
    tolua_function(tolua_S,"Clear",tolua_SandboxToLua_Blackboard_Clear00);
+   tolua_function(tolua_S,"GetRevision",tolua_SandboxToLua_Blackboard_GetRevision00);
+   tolua_function(tolua_S,"GetKeyRevision",tolua_SandboxToLua_Blackboard_GetKeyRevision00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"DecisionNode","DecisionNode","",NULL);
   tolua_beginmodule(tolua_S,"DecisionNode");
@@ -14596,6 +16097,15 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"LuaCondition","LuaCondition","BehaviorNode",NULL);
   tolua_beginmodule(tolua_S,"LuaCondition");
+   tolua_function(tolua_S,"SetResultCacheEnabled",tolua_SandboxToLua_LuaCondition_SetResultCacheEnabled00);
+   tolua_function(tolua_S,"IsResultCacheEnabled",tolua_SandboxToLua_LuaCondition_IsResultCacheEnabled00);
+   tolua_function(tolua_S,"SetResultCacheTtlMs",tolua_SandboxToLua_LuaCondition_SetResultCacheTtlMs00);
+   tolua_function(tolua_S,"GetResultCacheTtlMs",tolua_SandboxToLua_LuaCondition_GetResultCacheTtlMs00);
+   tolua_function(tolua_S,"AddResultCacheDependencyKey",tolua_SandboxToLua_LuaCondition_AddResultCacheDependencyKey00);
+   tolua_function(tolua_S,"ClearResultCacheDependencyKeys",tolua_SandboxToLua_LuaCondition_ClearResultCacheDependencyKeys00);
+   tolua_function(tolua_S,"GetResultCacheDependencyCount",tolua_SandboxToLua_LuaCondition_GetResultCacheDependencyCount00);
+   tolua_function(tolua_S,"GetResultCacheHitCount",tolua_SandboxToLua_LuaCondition_GetResultCacheHitCount00);
+   tolua_function(tolua_S,"GetResultCacheInvalidatedCount",tolua_SandboxToLua_LuaCondition_GetResultCacheInvalidatedCount00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"BehaviorTreeDriver","BehaviorTreeDriver","IDecisionDriver",NULL);
   tolua_beginmodule(tolua_S,"BehaviorTreeDriver");
@@ -14620,6 +16130,12 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"IsDebugTracePrintEnabled",tolua_SandboxToLua_BehaviorTreeDriver_IsDebugTracePrintEnabled00);
    tolua_function(tolua_S,"SetDebugTraceSampleInterval",tolua_SandboxToLua_BehaviorTreeDriver_SetDebugTraceSampleInterval00);
    tolua_function(tolua_S,"GetDebugTraceSampleInterval",tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceSampleInterval00);
+   tolua_function(tolua_S,"SetRuntimeTickIntervalMs",tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickIntervalMs00);
+   tolua_function(tolua_S,"GetRuntimeTickIntervalMs",tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeTickIntervalMs00);
+   tolua_function(tolua_S,"SetRuntimeTickStaggerEnabled",tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeTickStaggerEnabled00);
+   tolua_function(tolua_S,"IsRuntimeTickStaggerEnabled",tolua_SandboxToLua_BehaviorTreeDriver_IsRuntimeTickStaggerEnabled00);
+   tolua_function(tolua_S,"SetRuntimeMaxTreeTicksPerFrame",tolua_SandboxToLua_BehaviorTreeDriver_SetRuntimeMaxTreeTicksPerFrame00);
+   tolua_function(tolua_S,"GetRuntimeMaxTreeTicksPerFrame",tolua_SandboxToLua_BehaviorTreeDriver_GetRuntimeMaxTreeTicksPerFrame00);
    tolua_function(tolua_S,"GetLastDebugTrace",tolua_SandboxToLua_BehaviorTreeDriver_GetLastDebugTrace00);
    tolua_function(tolua_S,"GetDebugTraceFrame",tolua_SandboxToLua_BehaviorTreeDriver_GetDebugTraceFrame00);
    tolua_function(tolua_S,"SetNodeDebugName",tolua_SandboxToLua_BehaviorTreeDriver_SetNodeDebugName00);
