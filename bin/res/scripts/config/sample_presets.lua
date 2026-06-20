@@ -420,14 +420,14 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 	teamInfluenceRadius = 11.0,
 	drawThreshold = 0.08,
 	drawInSmoke = false,
-	maxDrawCellsPerLayer = 0,
+	maxDrawCellsPerLayer = 1500,
 	drawDangerLayer = false,
 	drawTeamLayer = true,
 	-- team 层网格绘制高度偏移（相对 navmesh 表面）。0.0 = 画在 navmesh 表面（对齐 chapter-9：网格在
 	-- navmesh 上、比 block 顶面略高 ~0.05、不共面所以不闪）。负值会把网格压到和 block 共面而 z-fighting，
 	-- 想真正零间隙贴地需要给材质加 depth_bias（见对话说明），那是比 chapter-9 更进一步的做法。
 	teamDrawYOffset = -0.03,
-	drawNeutralCells = true,
+	drawNeutralCells = false,
 	-- 贴合地形：把每个格子投影到 navmesh 表面，使网格贴在 block 上（对齐 chapter-9 表现）。
 	-- 逐格 navMesh:FindClosestPoint 结果由 C++ 端 m_tacticalInfluenceDrawProjectionCache 缓存
 	-- （key=navmesh+网格尺寸+格坐标，整 sample 不变），只在首次重建逐格算一次，之后全走缓存，

@@ -796,11 +796,21 @@ _GetCppDrawCellLimit = function(config)
 	return math.max(1, limit)
 end
 
+local function _ReadLayerDrawNeutral(config, layerName, defaultValue)
+	if config ~= nil and config[layerName .. "DrawNeutralCells"] ~= nil then
+		return _ReadBool(config, layerName .. "DrawNeutralCells", defaultValue)
+	end
+	if config ~= nil and config.drawNeutralCells ~= nil then
+		return _ReadBool(config, "drawNeutralCells", defaultValue)
+	end
+	return defaultValue
+end
+
 local function _BuildInfluenceLayerDrawCache(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	local config = _GetConfig()
 	local map = _EnsureInfluenceMap()
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+	local drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault)
 	local maxCells = _GetDrawCellLimit(config, map)
 	local cells = {}
 
@@ -834,7 +844,7 @@ local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, dra
 		local config = _GetConfig()
 		local map = _EnsureInfluenceMap()
 		local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-		local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
+		local drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault)
 		local zeroSpec = _influencePalette.zero
 		if _ShouldForceGridCoverageRed(config) then
 			positiveSpec = _gridCoverageRedSpec
