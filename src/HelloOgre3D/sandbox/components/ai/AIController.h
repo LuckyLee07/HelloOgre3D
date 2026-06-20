@@ -50,7 +50,7 @@ public:
 	virtual void update(int deltaMs) override;
 
 	//tolua_begin
-	SoldierObject* GetOwner() const;
+	AgentObject* GetAgentOwner() const;
 	Blackboard* GetBlackboard() const;
 
 	AgentObject* GetEnemy() const;
@@ -68,6 +68,7 @@ public:
 	BehaviorTreeDriver* GetBehaviorTreeDriver() const;
 	//tolua_end
 
+	SoldierObject* GetOwner() const;
 	AgentStateController* GetFsmController() const;
 	std::string BuildSensorDebugString() const;
 	std::string BuildMemoryDebugString() const;
@@ -85,7 +86,6 @@ public:
 	bool IsPerceptionTickInAiTickEnabled() const { return m_perceptionTickInAiTickEnabled; }
 
 private:
-	AgentObject* GetAgentOwner() const;
 	SoldierObject* GetSoldierOwner() const;
 	void InitDefaultDriver();
 	void SetDriverByNormalizedType(const std::string& key);

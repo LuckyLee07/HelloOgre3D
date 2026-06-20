@@ -32,7 +32,7 @@ function Chapter7Conditions.CanShootEnemy(agent, bb)
 end
 
 function Chapter7Conditions.HasMovePosition(agent, bb)
-	return agent:HasMovePosition(1.5)
+	return AgentComponents.HasMovePosition(agent, 1.5)
 end
 
 function Chapter7Conditions.RandomChance(agent, bb, cfg)

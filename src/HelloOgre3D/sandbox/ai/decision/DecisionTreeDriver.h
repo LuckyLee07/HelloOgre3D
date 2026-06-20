@@ -9,7 +9,6 @@
 #include "script/LuaClassNameTraits.h"
 
 class AgentObject;
-class SoldierObject;
 class DecisionTree;
 class DecisionBranch;
 class LuaDecisionAction;
@@ -30,7 +29,7 @@ public:
 	virtual ~DecisionTreeDriver();
 
 	//tolua_begin
-	SoldierObject* GetOwner() const;
+	AgentObject* GetAgentOwner() const { return m_owner; }
 	Blackboard*    GetBlackboard() { return m_blackboard; }
 
 	// Factories — driver retains ownership of every returned pointer.
@@ -45,7 +44,6 @@ public:
 	// IDecisionDriver impl
 	virtual void Init() override;
 	virtual void Tick(float deltaMs) override;
-	AgentObject* GetAgentOwner() const { return m_owner; }
 
 private:
 	AgentObject*                 m_owner;

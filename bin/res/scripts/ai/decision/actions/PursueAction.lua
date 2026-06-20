@@ -6,6 +6,7 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _PURSUE_REACH    = 2.0    -- 接近到 2m 内停止追击；与 Sandbox6 PursueState.cpp kPursueReachDistance 对齐
 local _REPATH_INTERVAL = 500    -- ms（越小越准但越闪）
@@ -33,13 +34,13 @@ function OnInitialize(owner, bb)
     if _acc == nil then _acc = Vector3(0, 0, 0) end
     if not owner then return end
 
-    owner:EnterMoveAnim()
+    AgentComponents.EnterMoveAnim(owner)
 
     local enemy = bb:GetAgent("enemy")
     if enemy then
         local enemyPos = enemy:GetPosition()
         if MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), enemyPos) then
-            owner:SetMovePosition(enemyPos)
+            AgentComponents.SetMovePosition(owner, enemyPos)
             _lastEnemyPos = enemyPos
         end
         ActionIntent.Record(owner, bb, {
@@ -112,7 +113,7 @@ function OnUpdate(deltaMs, owner, bb)
             or (_repathDeltaSq <= 0)
             or ((enemyPos - _lastEnemyPos):squaredLength() > _repathDeltaSq)
         if needRepath and MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), enemyPos) then
-            owner:SetMovePosition(enemyPos)
+            AgentComponents.SetMovePosition(owner, enemyPos)
             _lastEnemyPos = enemyPos
             repathReason = "repath"
         end

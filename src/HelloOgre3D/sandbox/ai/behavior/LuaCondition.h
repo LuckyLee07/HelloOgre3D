@@ -5,7 +5,7 @@
 #include "script/LuaClassNameTraits.h"
 
 // 无状态布尔条件叶。复用 DecisionBranch.SetEvaluator 的 luaL_ref 闭包模式：
-//   driver:NewCondition():SetEvaluator(function() return agent:HasEnemy() end)
+//   driver:NewCondition():SetEvaluator(function() return AgentComponents.HasEnemy(agent) end)
 // Tick：调用闭包，true → SUCCESS，false → FAILURE。永不 RUNNING。
 //
 // 闭包可以有副作用（例如 HasEnemy 顺手把 enemy 写到 blackboard）。

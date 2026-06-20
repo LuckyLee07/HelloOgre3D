@@ -5,6 +5,7 @@
 #include "SandboxMacros.h"
 #include "ai/fsm/AgentStateController.h"
 #include "ai/fsm/states/AgentState.h"
+#include "components/anim/IAnimController.h"
 #include "components/anim/IAnimContextProvider.h"
 #include "event/SandboxContext.h"
 #include "object/BaseObject.h"
@@ -172,6 +173,52 @@ bool AnimComponent::IsAnimReadyForShoot() const
 
 	const std::string shootStateName = SoldierAnimProfile::GetStateNameById(ConvertAnimID(SSTATE_FIRE, context->GetAnimStanceType()));
 	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
+}
+
+bool AnimComponent::EnterIdleIntent()
+{
+	IAnimController* controller = GetController();
+	if (controller == nullptr) return false;
+
+	controller->ClearAllActions();
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	return true;
+}
+
+bool AnimComponent::EnterMoveIntent()
+{
+	IAnimController* controller = GetController();
+	if (controller == nullptr) return false;
+
+	controller->ClearAllActions();
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Move);
+	return true;
+}
+
+bool AnimComponent::EnterShootIntent()
+{
+	IAnimController* controller = GetController();
+	if (controller == nullptr) return false;
+
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	return controller->RequestAction(SoldierActionIntent::Shoot, true);
+}
+
+bool AnimComponent::EnterReloadIntent()
+{
+	IAnimController* controller = GetController();
+	if (controller == nullptr) return false;
+
+	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
+	return controller->RequestAction(SoldierActionIntent::Reload, true);
+}
+
+bool AnimComponent::EnterDeathIntent()
+{
+	IAnimController* controller = GetController();
+	if (controller == nullptr) return false;
+
+	return controller->RequestAction(SoldierActionIntent::Death, true);
 }
 
 void AnimComponent::EnsureController()

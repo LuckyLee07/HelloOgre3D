@@ -4,6 +4,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _maxAttempts = 10
 
@@ -12,7 +13,7 @@ function OnInitialize(owner, bb)
     if bb ~= nil and bb:Has("knowledge.bestFleePosition") then
         local fleePos = bb:GetVec3("knowledge.bestFleePosition")
         bb:SetVec3("movePos", fleePos)
-        owner:SetMovePosition(fleePos)
+        AgentComponents.SetMovePosition(owner, fleePos)
         ActionIntent.Record(owner, bb, {
             action = "flee",
             phase = "initialize",
@@ -37,7 +38,7 @@ function OnInitialize(owner, bb)
         end
         if fleePos == nil then fleePos = SandboxNav:RandomPoint("default") end
         bb:SetVec3("movePos", fleePos)
-        owner:SetMovePosition(fleePos)
+        AgentComponents.SetMovePosition(owner, fleePos)
         ActionIntent.Record(owner, bb, {
             action = "flee",
             phase = "initialize",
@@ -50,7 +51,7 @@ function OnInitialize(owner, bb)
     else
         local p = SandboxNav:RandomPoint("default")
         bb:SetVec3("movePos", p)
-        owner:SetMovePosition(p)
+        AgentComponents.SetMovePosition(owner, p)
         ActionIntent.Record(owner, bb, {
             action = "flee",
             phase = "initialize",

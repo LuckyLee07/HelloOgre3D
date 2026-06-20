@@ -10,7 +10,6 @@
 #include "script/LuaClassNameTraits.h"
 
 class AgentObject;
-class SoldierObject;
 class BehaviorTree;
 class BehaviorNode;
 class BehaviorSequence;
@@ -33,7 +32,7 @@ public:
 	virtual ~BehaviorTreeDriver();
 
 	//tolua_begin
-	SoldierObject* GetOwner() const;
+	AgentObject* GetAgentOwner() const { return m_owner; }
 	Blackboard*    GetBlackboard() { return m_blackboard; }
 
 	// 节点工厂 —— driver 保留所有权。
@@ -64,7 +63,6 @@ public:
 	// IDecisionDriver impl
 	virtual void Init() override;
 	virtual void Tick(float deltaMs) override;
-	AgentObject* GetAgentOwner() const { return m_owner; }
 
 private:
 	AgentObject*                 m_owner;

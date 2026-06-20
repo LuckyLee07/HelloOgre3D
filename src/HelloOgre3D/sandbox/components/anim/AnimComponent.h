@@ -42,6 +42,11 @@ public:
 	bool HasNextAnim() const;
 	bool IsAnimReadyForMove() const;
 	bool IsAnimReadyForShoot() const;
+	bool EnterIdleIntent();
+	bool EnterMoveIntent();
+	bool EnterShootIntent();
+	bool EnterReloadIntent();
+	bool EnterDeathIntent();
 	//tolua_end
 
 private:

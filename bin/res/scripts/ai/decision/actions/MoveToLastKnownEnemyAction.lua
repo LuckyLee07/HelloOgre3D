@@ -3,6 +3,7 @@
 
 require("res.scripts.ai.behavior.BehaviorStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _REACH_DISTANCE = 1.5
 local _SEGMENT_MS = 3500
@@ -49,7 +50,7 @@ end
 
 local function _ClearMove(owner, bb)
     if owner then
-        owner:ClearMovePosition()
+        AgentComponents.ClearMovePosition(owner)
         owner:SetVelocity(Vector3(0, 0, 0))
     end
     if bb then
@@ -69,8 +70,8 @@ function OnInitialize(owner, bb)
     end
 
     _WriteDebugSearchTarget(bb)
-    owner:EnterMoveAnim()
-    owner:SetMovePosition(_target)
+    AgentComponents.EnterMoveAnim(owner)
+    AgentComponents.SetMovePosition(owner, _target)
     if bb then bb:SetVec3("movePos", _target) end
 
     _started = MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), _target)
@@ -90,7 +91,7 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     MoveHelpers.DrawPath(owner, _target, UtilColors.Yellow, Vector3(0, 0.15, 0), _REACH_DISTANCE)
 
-    if owner:IsTargetReached(_REACH_DISTANCE) or _elapsedMs >= _SEGMENT_MS then
+    if AgentComponents.IsTargetReached(owner, _REACH_DISTANCE) or _elapsedMs >= _SEGMENT_MS then
         _completed = true
         _MarkSearchCompleted(bb)
         _ClearMove(owner, bb)

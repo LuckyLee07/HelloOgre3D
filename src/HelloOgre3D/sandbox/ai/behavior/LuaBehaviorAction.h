@@ -24,7 +24,7 @@ public:
 
 	//tolua_begin
 	bool BindToScript(const std::string& filepath);
-	SoldierObject* GetOwner() const;
+	AgentObject* GetAgentOwner() const { return m_owner; }
 	//tolua_end
 
 protected:

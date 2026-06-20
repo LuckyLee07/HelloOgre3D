@@ -27,11 +27,6 @@ bool LuaBehaviorAction::BindToScript(const std::string& filepath)
 	return LuaPluginMgr::BindLuaPluginByFile(this, filepath);
 }
 
-SoldierObject* LuaBehaviorAction::GetOwner() const
-{
-	return dynamic_cast<SoldierObject*>(m_owner);
-}
-
 Blackboard* LuaBehaviorAction::ResolveBlackboard() const
 {
 	if (m_blackboard != nullptr)
@@ -68,11 +63,7 @@ void LuaBehaviorAction::OnInitialize()
 		bb->SetString("__bt.currentAction", GetName());
 		bb->SetString("__bt.currentActionStatus", "ENTER");
 	}
-	SoldierObject* soldier = GetOwner();
-	if (soldier != nullptr)
-		callFunction("OnInitialize", "u[SoldierObject]u[Blackboard]", soldier, bb);
-	else
-		callFunction("OnInitialize", "u[AgentObject]u[Blackboard]", m_owner, bb);
+	callFunction("OnInitialize", "u[AgentObject]u[Blackboard]", m_owner, bb);
 }
 
 BehaviorAction::Status LuaBehaviorAction::OnUpdate(float deltaMs)
@@ -82,11 +73,7 @@ BehaviorAction::Status LuaBehaviorAction::OnUpdate(float deltaMs)
 	// 返回值: 1=RUNNING, 2=SUCCESS, 3=FAILURE
 	Blackboard* bb = ResolveBlackboard();
 	int statusOut = (int)STATUS_FAILURE;
-	SoldierObject* soldier = GetOwner();
-	if (soldier != nullptr)
-		callFunction("OnUpdate", "iu[SoldierObject]u[Blackboard]>i", (int)deltaMs, soldier, bb, &statusOut);
-	else
-		callFunction("OnUpdate", "iu[AgentObject]u[Blackboard]>i", (int)deltaMs, m_owner, bb, &statusOut);
+	callFunction("OnUpdate", "iu[AgentObject]u[Blackboard]>i", (int)deltaMs, m_owner, bb, &statusOut);
 
 	Status status = STATUS_FAILURE;
 	if (statusOut == (int)STATUS_RUNNING)
@@ -110,9 +97,5 @@ void LuaBehaviorAction::OnCleanUp()
 		bb->SetString("__bt.currentAction", GetName());
 		bb->SetString("__bt.currentActionStatus", "CLEANUP");
 	}
-	SoldierObject* soldier = GetOwner();
-	if (soldier != nullptr)
-		callFunction("OnCleanUp", "u[SoldierObject]u[Blackboard]", soldier, bb);
-	else
-		callFunction("OnCleanUp", "u[AgentObject]u[Blackboard]", m_owner, bb);
+	callFunction("OnCleanUp", "u[AgentObject]u[Blackboard]", m_owner, bb);
 }

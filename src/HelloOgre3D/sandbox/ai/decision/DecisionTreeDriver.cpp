@@ -4,7 +4,6 @@
 #include "DecisionBranch.h"
 #include "LuaDecisionAction.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
 
 DecisionTreeDriver::DecisionTreeDriver(AgentObject* owner, Blackboard* blackboard)
@@ -22,11 +21,6 @@ DecisionTreeDriver::~DecisionTreeDriver()
 	m_ownedNodes.clear();
 	for (DecisionTree* tree : m_ownedTrees) delete tree;
 	m_ownedTrees.clear();
-}
-
-SoldierObject* DecisionTreeDriver::GetOwner() const
-{
-	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 DecisionTree* DecisionTreeDriver::NewTree()

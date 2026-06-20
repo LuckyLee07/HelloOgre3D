@@ -3,6 +3,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _acc = nil
 local _elapsedMs = 0
@@ -23,8 +24,8 @@ function OnInitialize(owner, bb)
     local target = _GetSlotPos(bb)
     if target == nil then return end
 
-    owner:EnterMoveAnim()
-    owner:SetMovePosition(target)
+    AgentComponents.EnterMoveAnim(owner)
+    AgentComponents.SetMovePosition(owner, target)
     if _lastTarget == nil or ((target - _lastTarget):squaredLength() > 0.25) then
         if MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), target) then
             _lastTarget = target
@@ -46,7 +47,7 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     MoveHelpers.DrawPath(owner, target, ColourValue(0.75, 0.45, 1.0), Vector3(0, 0.2, 0), 1.0)
 
-    if owner:IsTargetReached(1.2) then
+    if AgentComponents.IsTargetReached(owner, 1.2) then
         if bb ~= nil then
             bb:SetBool("formation.inSlot", true)
         end

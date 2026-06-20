@@ -3,6 +3,7 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _acc = nil
 local _elapsedMs = 0
@@ -23,8 +24,8 @@ function OnInitialize(owner, bb)
     local target = _GetEscapePos(bb)
     if target == nil then return end
 
-    owner:EnterMoveAnim()
-    owner:SetMovePosition(target)
+    AgentComponents.EnterMoveAnim(owner)
+    AgentComponents.SetMovePosition(owner, target)
     if _lastTarget == nil or ((target - _lastTarget):squaredLength() > 0.25) then
         if MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), target) then
             _lastTarget = target
@@ -46,7 +47,7 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     MoveHelpers.DrawPath(owner, target, UtilColors.Blue, Vector3(0, 0.18, 0), 1.4)
 
-    if owner:IsTargetReached(1.8) or _elapsedMs >= 2200 then
+    if AgentComponents.IsTargetReached(owner, 1.8) or _elapsedMs >= 2200 then
         return ActionStatus.TERMINATED
     end
     return ActionStatus.RUNNING

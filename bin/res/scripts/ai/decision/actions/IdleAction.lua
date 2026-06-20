@@ -4,6 +4,7 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.agent.AgentUtils.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _elapsedMs = 0
 local _durationMs = 2000
@@ -11,7 +12,7 @@ local _durationMs = 2000
 function OnInitialize(owner, bb)
     _elapsedMs = 0
     if owner then
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "idle",
             phase = "initialize",

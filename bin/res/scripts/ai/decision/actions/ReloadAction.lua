@@ -12,7 +12,7 @@ local _durationMs = 1500
 function OnInitialize(owner, bb)
     _elapsedMs = 0
     if owner then
-        owner:EnterReloadAnim()
+        AgentComponents.EnterReloadAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "reload",
             phase = "initialize",
@@ -48,7 +48,7 @@ function OnUpdate(deltaMs, owner, bb)
 
     if _elapsedMs >= _durationMs then
         AgentComponents.RestoreAmmo(owner)
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "reload",
             phase = "terminate",
@@ -74,7 +74,7 @@ end
 
 function OnCleanUp(owner, bb)
     if owner and owner:GetHealth() > 0 then
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
     end
     ActionIntent.Record(owner, bb, {
         action = "reload",

@@ -13,11 +13,7 @@ local _hasFired = false
 local _idleRequested = false
 
 local function _IsShootBodyStateCurrent(owner)
-    if owner == nil or owner.GetObjectASM == nil then
-        return false
-    end
-
-    local asm = owner:GetObjectASM()
+    local asm = AgentComponents.GetBodyAsm(owner)
     if asm == nil then
         return false
     end
@@ -35,7 +31,7 @@ function OnInitialize(owner, bb)
     _hasFired = false
     _idleRequested = false
     if owner then
-        owner:EnterShootAnim()
+        AgentComponents.EnterShootAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "shoot",
             phase = "initialize",
@@ -85,7 +81,7 @@ function OnUpdate(deltaMs, owner, bb)
         _hasFired = true
         if AgentComponents.HasAmmo(owner) then
             AgentComponents.ConsumeAmmo(owner, 1)
-            owner:ShootBullet()
+            AgentComponents.ShootBullet(owner)
         end
     end
 
@@ -105,7 +101,7 @@ function OnUpdate(deltaMs, owner, bb)
 
     if _hasFired and _IsShootBodyStateCurrent(owner) then
         _idleRequested = true
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "shoot",
             phase = "update",
@@ -121,7 +117,7 @@ function OnUpdate(deltaMs, owner, bb)
 
     if _elapsedMs >= _durationMs then
         _idleRequested = true
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "shoot",
             phase = "terminate",
@@ -149,7 +145,7 @@ end
 
 function OnCleanUp(owner, bb)
     if owner and owner:GetHealth() > 0 then
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
     end
     ActionIntent.Record(owner, bb, {
         action = "shoot",

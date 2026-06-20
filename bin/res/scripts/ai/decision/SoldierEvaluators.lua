@@ -11,10 +11,9 @@ local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 SoldierEvaluators = {}
 
 local function _GetClosestEnemy(agent)
-    -- 直接调用 SoldierObject::GetEnemy() / HasEnemy()，这俩是 C++ 侧已经维护好的最近敌人查找。
-    -- 这样比 chapter_6 在 Lua 里遍历 GetAgents 高效得多。
-    if not agent:HasEnemy("default") then return nil end
-    return agent:GetEnemy()
+    -- 通过 AIController 查询最近敌人；避免 DT 继续依赖 SoldierObject 兼容转发。
+    if not AgentComponents.HasEnemy(agent, "default") then return nil end
+    return AgentComponents.GetEnemy(agent)
 end
 
 -- ============= 二选一分支求值器（返回 1 或 2） =============
@@ -32,7 +31,7 @@ function SoldierEvaluators.HasCriticalHealthBranch(agent, bb)
 end
 
 function SoldierEvaluators.HasMovePositionBranch(agent, bb)
-    if agent:HasMovePosition(1.5) then return 1 end
+    if AgentComponents.HasMovePosition(agent, 1.5) then return 1 end
     return 2
 end
 
@@ -52,7 +51,7 @@ function SoldierEvaluators.HasAmmoBranch(agent, bb)
 end
 
 function SoldierEvaluators.CanShootEnemyBranch(agent, bb)
-    if agent:CanShootEnemy("default", 3.0) then return 1 end
+    if AgentComponents.CanShootEnemy(agent, "default", 3.0) then return 1 end
     return 2
 end
 

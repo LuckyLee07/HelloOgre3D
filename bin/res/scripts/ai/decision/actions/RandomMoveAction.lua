@@ -4,12 +4,13 @@
 
 require("res.scripts.ai.decision.ActionStatus.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 function OnInitialize(owner, bb)
     if not owner then return end
     local p = SandboxNav:RandomPoint("default")
     bb:SetVec3("movePos", p)
-    owner:SetMovePosition(p)
+    AgentComponents.SetMovePosition(owner, p)
     ActionIntent.Record(owner, bb, {
         action = "randomMove",
         phase = "initialize",

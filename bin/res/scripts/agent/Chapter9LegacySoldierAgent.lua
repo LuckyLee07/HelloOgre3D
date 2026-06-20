@@ -249,9 +249,7 @@ local function _IsBlockedByLevel(startPos, endPos)
 end
 
 local function _ClearPath(agent)
-	if agent.ClearMovePosition ~= nil then
-		agent:ClearMovePosition()
-	end
+	AgentComponents.ClearMovePosition(agent)
 	local empty = std.vector_Ogre__Vector3_()
 	agent:SetPath(empty, false)
 end
@@ -265,9 +263,7 @@ local function _BuildAndSetPath(agent, target)
 	Agent_SetPath(agent, path, false)
 	agent:SetTarget(target)
 	agent:SetTargetRadius(1.0)
-	if agent.SetMovePosition ~= nil then
-		agent:SetMovePosition(target)
-	end
+	AgentComponents.SetMovePosition(agent, target)
 	return true
 end
 
@@ -377,7 +373,7 @@ local function _GetEyePosition(agent)
 end
 
 local function _CanSeeAgent(agent, candidate)
-	local raycastApi = SandboxRaycast or Sandbox
+	local raycastApi = SandboxRaycast
 	if raycastApi == nil or raycastApi.RayCastObjectId == nil then
 		return true
 	end
@@ -663,14 +659,14 @@ end
 local function _BeginIdle(agent, state)
 	state.action = "idle"
 	state.elapsedMs = 0
-	agent:EnterIdleAnim()
+	AgentComponents.EnterIdleAnim(agent)
 end
 
 local function _BeginMove(agent, state)
 	state.action = "move"
 	state.elapsedMs = 0
 	state.moveSource = "movePosition"
-	agent:EnterMoveAnim()
+	AgentComponents.EnterMoveAnim(agent)
 end
 
 local function _BeginMotionProbeMove(agent, state, probe, target)
@@ -682,7 +678,7 @@ local function _BeginMotionProbeMove(agent, state, probe, target)
 	state.motionProbeTarget = target
 
 	if target ~= nil and _BuildAndSetPath(agent, target) then
-		agent:EnterMoveAnim()
+		AgentComponents.EnterMoveAnim(agent)
 		_RecordIntent(agent, state, "begin", "move", "run_forward", "motionProbe", _ReadProbeNumber(probe, "durationMs", 4000), target)
 		return true
 	end
@@ -690,7 +686,7 @@ local function _BeginMotionProbeMove(agent, state, probe, target)
 	state.action = "motionProbeFailed"
 	state.motionProbeComplete = true
 	state.motionProbeFailure = "path"
-	agent:EnterIdleAnim()
+	AgentComponents.EnterIdleAnim(agent)
 	_RecordIntent(agent, state, "failed", "idle", "idle_aim", "motionProbe.path", 0, target)
 	return false
 end
@@ -713,7 +709,7 @@ local function _UpdateMotionProbe(agent, state, deltaMs)
 		state.elapsedMs = state.timeMs
 		state.moveSource = "motionProbe"
 		state.motionProbeTarget = target
-		agent:EnterIdleAnim()
+		AgentComponents.EnterIdleAnim(agent)
 		_SlowMovement(agent, 1.0)
 		_RecordIntent(agent, state, "wait", "idle", "idle_aim", "motionProbe", startDelayMs, target)
 		if state.timeMs < startDelayMs then
@@ -725,14 +721,14 @@ local function _UpdateMotionProbe(agent, state, deltaMs)
 	if state.action == "motionProbeMove" then
 		state.elapsedMs = state.elapsedMs + (deltaMs or 0)
 		state.motionProbeTarget = target
-		agent:EnterMoveAnim()
+		AgentComponents.EnterMoveAnim(agent)
 		_ApplyMove(agent, state, deltaMs or 0)
 		_RecordIntent(agent, state, "update", "move", "run_forward", "motionProbe", durationMs, target)
 		if state.elapsedMs >= durationMs or (stopOnReach and _Distance(agent:GetPosition(), agent:GetTarget()) < reachDistance) then
 			_ClearPath(agent)
 			state.action = "motionProbeDone"
 			state.motionProbeComplete = true
-			agent:EnterIdleAnim()
+			AgentComponents.EnterIdleAnim(agent)
 			_RecordIntent(agent, state, "done", "idle", "idle_aim", "motionProbe", durationMs, target)
 		end
 		return true
@@ -751,7 +747,7 @@ local function _BeginPursue(agent, state, enemy)
 		local target = enemy:GetPosition()
 		if _BuildAndSetPath(agent, target) then
 			state.moveSource = "pursue"
-			agent:EnterMoveAnim()
+			AgentComponents.EnterMoveAnim(agent)
 			_SendLegacyTeamMessage(agent, "EnemySelection", {
 				agent = agent,
 				position = agent:GetPosition(),
@@ -795,18 +791,14 @@ local function _BeginShoot(agent, state, enemy)
 	-- EnterShootAnim fires the current weapon through an ASM callback. Legacy
 	-- parity keeps shoot as decision timing only so modern bullets do not skew
 	-- the old Chapter9 trace.
-	agent:EnterIdleAnim()
+	AgentComponents.EnterIdleAnim(agent)
 	_Face(agent, enemy ~= nil and enemy:GetPosition() or nil)
 end
 
 local function _BeginReload(agent, state)
 	state.action = "reload"
 	state.elapsedMs = 0
-	if agent.EnterReloadAnim ~= nil then
-		agent:EnterReloadAnim()
-	else
-		agent:EnterIdleAnim()
-	end
+	AgentComponents.EnterReloadAnim(agent)
 end
 
 local function _BeginDeath(agent, state)
@@ -815,9 +807,7 @@ local function _BeginDeath(agent, state)
 	state.elapsedMs = 0
 	_ClearPath(agent)
 	agent:SetVelocity(Vector3(0, 0, 0))
-	if agent.EnterDeathAnim ~= nil then
-		agent:EnterDeathAnim()
-	end
+	AgentComponents.EnterDeathAnim(agent)
 end
 
 local function _BeginEnemyResponse(agent, state, enemy)
@@ -864,7 +854,7 @@ local function _UpdateAction(agent, state, deltaMs)
 		end
 		return true
 	elseif action == "move" then
-		agent:EnterMoveAnim()
+		AgentComponents.EnterMoveAnim(agent)
 		_ApplyMove(agent, state, deltaMs)
 		if state.elapsedMs >= _MOVE_SEGMENT_MS then
 			_QueueActionCleanup(state, action)
@@ -887,7 +877,7 @@ local function _UpdateAction(agent, state, deltaMs)
 		local target = enemy:GetPosition()
 		if _BuildAndSetPath(agent, target) then
 			state.moveSource = "pursue"
-			agent:EnterMoveAnim()
+			AgentComponents.EnterMoveAnim(agent)
 		end
 		_ApplyMove(agent, state, deltaMs)
 		if _Distance(agent:GetPosition(), target) < _SHOOT_REACH then
@@ -1053,7 +1043,7 @@ function Agent_Initialize(agent)
 	state.motionProbeStarted = false
 	state.motionProbeComplete = false
 	state.motionProbeTarget = _ProbeTarget(_GetMotionProbe(config))
-	agent:EnterIdleAnim()
+	AgentComponents.EnterIdleAnim(agent)
 	_WriteDebugState(agent, state)
 end
 

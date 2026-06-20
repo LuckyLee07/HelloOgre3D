@@ -2,6 +2,7 @@
 -- Hold briefly until enough squad members reach their formation slots.
 
 require("res.scripts.ai.decision.ActionStatus.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _elapsedMs = 0
 
@@ -9,7 +10,7 @@ function OnInitialize(owner, bb)
     _elapsedMs = 0
     if owner ~= nil then
         owner:SetVelocity(Vector3(0, 0, 0))
-        owner:EnterIdleAnim()
+        AgentComponents.EnterIdleAnim(owner)
     end
 end
 

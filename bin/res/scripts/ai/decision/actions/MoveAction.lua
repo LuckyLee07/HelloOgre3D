@@ -6,6 +6,7 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 require("res.scripts.ai.decision.MoveHelpers.lua")
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _SAME_TARGET_SQ = 0.25  -- 上次 movePos 与本次差距 < 0.5m 就不重建 path
 
@@ -21,10 +22,10 @@ function OnInitialize(owner, bb)
     if _acc == nil then _acc = Vector3(0, 0, 0) end
     if not owner then return end
 
-    owner:EnterMoveAnim()
+    AgentComponents.EnterMoveAnim(owner)
 
     local target = bb:GetVec3("movePos")
-    owner:SetMovePosition(target)
+    AgentComponents.SetMovePosition(owner, target)
 
     local needRebuild = (_lastTarget == nil)
         or ((target - _lastTarget):squaredLength() > _SAME_TARGET_SQ)
@@ -64,7 +65,7 @@ function OnUpdate(deltaMs, owner, bb)
     -- target 来自 RandomPoint，本就在 navmesh 上，可直接当圆心。
     MoveHelpers.DrawPath(owner, owner:GetTarget(), UtilColors.Orange, Vector3(0, 0.05, 0), 1.5)
 
-    if owner:IsTargetReached(1.5) then
+    if AgentComponents.IsTargetReached(owner, 1.5) then
         ActionIntent.Record(owner, bb, {
             action = "move",
             phase = "terminate",

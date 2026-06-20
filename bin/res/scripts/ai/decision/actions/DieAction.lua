@@ -5,13 +5,14 @@
 require("res.scripts.ai.decision.ActionStatus.lua")
 
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _played = false
 
 function OnInitialize(owner, bb)
     if owner and not _played then
         owner:SetVelocity(Vector3(0, 0, 0))
-        owner:EnterDeathAnim()
+        AgentComponents.EnterDeathAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "die",
             phase = "initialize",

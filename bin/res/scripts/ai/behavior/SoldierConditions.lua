@@ -17,8 +17,8 @@ local function _IsValidEnemy(agent, enemy)
 end
 
 local function _GetClosestEnemy(agent)
-    if not agent:HasEnemy("default") then return nil end
-    return agent:GetEnemy()
+    if not AgentComponents.HasEnemy(agent, "default") then return nil end
+    return AgentComponents.GetEnemy(agent)
 end
 
 function SoldierConditions.IsAlive(agent, bb)
@@ -30,7 +30,7 @@ function SoldierConditions.IsCriticalHealth(agent, bb)
 end
 
 function SoldierConditions.HasMovePosition(agent, bb)
-    return agent:HasMovePosition(1.5)
+    return AgentComponents.HasMovePosition(agent, 1.5)
 end
 
 function SoldierConditions.HasDangerThreat(agent, bb, cfg)
@@ -155,7 +155,7 @@ local function _CanShootEnemy(agent, bb, maxDistanceSq)
         toEnemy.y = 0
         return toEnemy:squaredLength() < maxDistanceSq
     end
-    return agent:CanShootEnemy("default", math.sqrt(maxDistanceSq))
+    return AgentComponents.CanShootEnemy(agent, "default", math.sqrt(maxDistanceSq))
 end
 
 function SoldierConditions.CanShootEnemy(agentOrMaxDistanceSq, bb)

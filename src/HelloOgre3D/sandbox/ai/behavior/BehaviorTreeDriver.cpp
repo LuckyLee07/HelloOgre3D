@@ -9,7 +9,6 @@
 #include "LuaBehaviorAction.h"
 #include "LuaCondition.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
 
 BehaviorTreeDriver::BehaviorTreeDriver(AgentObject* owner, Blackboard* blackboard)
@@ -30,11 +29,6 @@ BehaviorTreeDriver::~BehaviorTreeDriver()
 	m_ownedNodes.clear();
 	for (BehaviorTree* tree : m_ownedTrees) delete tree;
 	m_ownedTrees.clear();
-}
-
-SoldierObject* BehaviorTreeDriver::GetOwner() const
-{
-	return dynamic_cast<SoldierObject*>(m_owner);
 }
 
 BehaviorTree* BehaviorTreeDriver::NewTree()
