@@ -77,7 +77,7 @@ function Sandbox_Initialize(ctype)
     SandboxUtilities_CreateLevel()
 
     -- 使用C++端FSM驱动（状态逻辑由Lua脚本实现）
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 end
 
 

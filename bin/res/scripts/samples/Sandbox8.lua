@@ -49,7 +49,7 @@ function Sandbox_Initialize()
     GUI_CreateSandboxText(infoText, textSize)
 
     -- 同 Sandbox7：BT 接管决策，C++ FSM flag 仍要保 SoldierAnimController tick。
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(-30, 18, -17));

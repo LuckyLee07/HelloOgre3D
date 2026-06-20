@@ -465,9 +465,7 @@ local function _ClearAgentDemoOrders(agent)
     if agent == nil then return end
     agent:SetVelocity(Vector3(0, 0, 0))
     agent:SetTarget(agent:GetPosition())
-    if agent.ClearMovePosition ~= nil then
-        agent:ClearMovePosition()
-    end
+    AgentComponents.ClearMovePosition(agent)
 
     local bb = _GetBlackboard(agent)
     if bb ~= nil then
@@ -1283,7 +1281,7 @@ local function _ApplyTeamMemoryToAgent(agent)
     bb:SetInt("chapter8.sharedFromAgentId", sighting.spotterId)
     bb:SetInt("chapter8.sharedSeenAtMs", sighting.lastSeenMs)
     bb:SetVec3("movePos", supportPos)
-    agent:SetMovePosition(supportPos)
+    AgentComponents.SetMovePosition(agent, supportPos)
     local _, isNewSupport = _MarkSupportResponse(agent, sighting, supportPos)
     if tactical ~= nil and isNewSupport then
         _chapter8.totalTacticalMoves = _chapter8.totalTacticalMoves + 1
@@ -1884,7 +1882,7 @@ function Sandbox_Initialize()
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
 
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     _ApplyChapter8Camera()
 

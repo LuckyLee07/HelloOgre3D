@@ -197,7 +197,7 @@ function Sandbox_Initialize()
 	GUI_CreateSandboxText(infoText, textSize)
 	_CreatePanel()
 
-	Sandbox:SetUseCppFsmFlag(false)
+	SandboxAgentConfig:SetUseCppFsmFlag(false)
 
 	local camera = SandboxCamera:GetCamera()
 	camera:setPosition(Vector3(0, 120, 120))

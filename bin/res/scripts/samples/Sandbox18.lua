@@ -203,17 +203,17 @@ local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
 end
 
 local function _HasCppTactics()
-	return ObjectManager ~= nil
-		and ObjectManager.configureTacticalInfluence ~= nil
-		and ObjectManager.publishTacticalEvent ~= nil
-		and ObjectManager.rebuildTacticalDangerLayer ~= nil
-		and ObjectManager.findBestTacticalQueryPosition ~= nil
+	return SandboxTactics ~= nil
+		and SandboxTactics.configureTacticalInfluence ~= nil
+		and SandboxTactics.publishTacticalEvent ~= nil
+		and SandboxTactics.rebuildTacticalDangerLayer ~= nil
+		and SandboxTactics.findBestTacticalQueryPosition ~= nil
 end
 
 local function _HasCppInfluenceVisual()
 	return _HasCppTactics()
-		and ObjectManager.rebuildTacticalInfluenceLayerDebugVisual ~= nil
-		and ObjectManager.setTacticalInfluenceDebugVisible ~= nil
+		and SandboxTactics.rebuildTacticalInfluenceLayerDebugVisual ~= nil
+		and SandboxTactics.setTacticalInfluenceDebugVisible ~= nil
 end
 
 local function _ShouldRunObjectiveAndQuery(config)
@@ -239,11 +239,11 @@ local function _ConfigureCppTactics()
 
 	local config = _GetConfig()
 	local mapConfig = config.influenceMap or {}
-	ObjectManager:clearTacticalInfluence()
-	ObjectManager:clearTacticalEvents()
-	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
+	SandboxTactics:clearTacticalInfluence()
+	SandboxTactics:clearTacticalEvents()
+	SandboxTactics:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
 	-- 3D 影响图：从 navmesh 几何体素化建图，cell 自动贴在可走面上（对齐 chapter-9）。
-	ObjectManager:configureTacticalInfluenceFromNavMesh(
+	SandboxTactics:configureTacticalInfluenceFromNavMesh(
 		"default",
 		_ReadNumber(mapConfig, "cellSize", 2.0),
 		_ReadNumber(mapConfig, "cellHeight", 1.0),
@@ -251,9 +251,9 @@ local function _ConfigureCppTactics()
 		Vector3(0.0, 0.0, 0.0))
 	local falloff = _ReadNumber(config, "influenceFalloff", 0.2)
 	local inertia = _ReadNumber(config, "influenceInertia", 0.5)
-	ObjectManager:setTacticalInfluenceLayerOptions("danger", falloff, inertia)
-	ObjectManager:setTacticalInfluenceLayerOptions("team", falloff, inertia)
-	ObjectManager:setTacticalInfluenceLayerOptions("objective", falloff, inertia)
+	SandboxTactics:setTacticalInfluenceLayerOptions("danger", falloff, inertia)
+	SandboxTactics:setTacticalInfluenceLayerOptions("team", falloff, inertia)
+	SandboxTactics:setTacticalInfluenceLayerOptions("objective", falloff, inertia)
 end
 
 local function _CreatePanel()
@@ -270,8 +270,8 @@ local function _RefreshPanel()
 	end
 
 	local summary = ""
-	if ObjectManager ~= nil and ObjectManager.buildTacticalInfluenceDebugSummary ~= nil then
-		summary = ObjectManager:buildTacticalInfluenceDebugSummary()
+	if SandboxTactics ~= nil and SandboxTactics.buildTacticalInfluenceDebugSummary ~= nil then
+		summary = SandboxTactics:buildTacticalInfluenceDebugSummary()
 	end
 	local text = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 		"Chapter9 C++ Tactics: events=" .. tostring(_tactics.eventCount) ..
@@ -324,8 +324,8 @@ local function _PublishTacticEvent(eventType, event)
 			if eventType == "DeadFriendlySighted" and event.agent ~= nil then
 				teamId = event.agent:GetTeamId()
 			end
-			ObjectManager:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
-			_tactics.cppEventCount = ObjectManager:getTacticalEventCount()
+			SandboxTactics:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
+			_tactics.cppEventCount = SandboxTactics:getTacticalEventCount()
 		end
 	end
 end
@@ -359,7 +359,7 @@ local function _PublishScriptedBurst(force)
 	if scriptedEnabled ~= true then
 		return
 	end
-	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true and _HasCppTactics() and ObjectManager:getTacticalEventCount() > 0 then
+	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true and _HasCppTactics() and SandboxTactics:getTacticalEventCount() > 0 then
 		return
 	end
 
@@ -400,7 +400,7 @@ local function _AddSource(layerName, position, strength, radius)
 	if position == nil or not _HasCppTactics() then
 		return 0
 	end
-	return ObjectManager:addTacticalInfluenceSource(layerName, _ProjectToNav(position), strength, radius)
+	return SandboxTactics:addTacticalInfluenceSource(layerName, _ProjectToNav(position), strength, radius)
 end
 
 local function _UpdateDangerousAreas(deltaTimeInMillis)
@@ -427,7 +427,7 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local impactRadius = _ReadNumber(config, "bulletImpactRadius", 8.0)
 	local corpseRadius = _ReadNumber(config, "deadFriendlyRadius", 12.0)
 	local sightingRadius = _ReadNumber(config, "enemySightingRadius", 14.0)
-	local writes = ObjectManager:rebuildTacticalDangerLayer(
+	local writes = SandboxTactics:rebuildTacticalDangerLayer(
 		perspectiveTeamId,
 		dangerStrength,
 		shotRadius,
@@ -436,9 +436,9 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 		sightingRadius,
 		_ReadNumber(config, "influenceSpreadPasses", 2))
 
-	_tactics.dangerCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("danger")
+	_tactics.dangerCells = SandboxTactics:getTacticalInfluenceLayerActiveCellCount("danger")
 	_tactics.lastCellWrites = writes
-	_tactics.cppEventCount = ObjectManager:getTacticalEventCount()
+	_tactics.cppEventCount = SandboxTactics:getTacticalEventCount()
 	if _ReadBool(config, "drawDangerLayer", false) then
 		_RebuildCppInfluenceLayerVisual("danger", 0.12, _influencePalette.positive, _influencePalette.negative, false)
 	end
@@ -462,13 +462,13 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	local positiveTeamId = _tacticalDriver.teamId >= 0 and _tacticalDriver.teamId or _GetTacticalDriverTeamId(config)
 	local teamRadius = _ReadNumber(config, "teamInfluenceRadius", 11.0)
 	local teamStrength = _ReadNumber(config, "teamStrength", 1.0)
-	local writes = ObjectManager:rebuildTacticalTeamLayer(
+	local writes = SandboxTactics:rebuildTacticalTeamLayer(
 		positiveTeamId,
 		teamStrength,
 		teamRadius,
 		_ReadNumber(config, "influenceSpreadPasses", 2))
 
-	_tactics.teamCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("team")
+	_tactics.teamCells = SandboxTactics:getTacticalInfluenceLayerActiveCellCount("team")
 	_tactics.lastCellWrites = _tactics.lastCellWrites + writes
 	if _ReadBool(config, "drawTeamLayer", true) then
 		_RebuildCppInfluenceLayerVisual("team", 0.22, _influencePalette.positive, _influencePalette.negative, true)
@@ -478,7 +478,7 @@ end
 local function _FindObjectiveCenter()
 	if _HasCppTactics() then
 		local fallback = _agents[1] ~= nil and _agents[1]:GetPosition() or Vector3(0, 0, 0)
-		return ObjectManager:getLastTacticalEventPosition("EnemySighted", fallback)
+		return SandboxTactics:getLastTacticalEventPosition("EnemySighted", fallback)
 	end
 	for _, event in pairs(_tactics.seenEnemies) do
 		if event.seenAt ~= nil then
@@ -507,22 +507,22 @@ local function _UpdateObjectiveAndQuery(deltaTimeInMillis)
 	end
 	_tactics.objectiveElapsedMs = 0
 	local center = _ProjectToNav(_FindObjectiveCenter())
-	_tactics.lastCellWrites = _tactics.lastCellWrites + ObjectManager:rebuildTacticalObjectiveLayer(
+	_tactics.lastCellWrites = _tactics.lastCellWrites + SandboxTactics:rebuildTacticalObjectiveLayer(
 		center,
 		_ReadNumber(config, "objectiveStrength", 1.0),
 		_ReadNumber(config, "objectiveRadius", 16.0),
 		_ReadNumber(config, "influenceSpreadPasses", 2))
-	_tactics.objectiveCells = ObjectManager:getTacticalInfluenceLayerActiveCellCount("objective")
+	_tactics.objectiveCells = SandboxTactics:getTacticalInfluenceLayerActiveCellCount("objective")
 
-	_tactics.bestPosition = ObjectManager:findBestTacticalQueryPosition(
+	_tactics.bestPosition = SandboxTactics:findBestTacticalQueryPosition(
 		_ReadString(config, "tacticalQueryType", "support"),
 		center,
 		_ReadNumber(config, "tacticalQueryRadius", 24.0),
 		_ReadNumber(config, "tacticalQueryStep", 4.0))
-	_tactics.bestScore = ObjectManager:scoreTacticalQueryPosition(
+	_tactics.bestScore = SandboxTactics:scoreTacticalQueryPosition(
 		_ReadString(config, "tacticalQueryType", "support"),
 		_tactics.bestPosition)
-	_tactics.queryCount = ObjectManager:getTacticalInfluenceQueryCount()
+	_tactics.queryCount = SandboxTactics:getTacticalInfluenceQueryCount()
 	if _ReadBool(config, "drawObjectiveLayer", false) then
 		_RebuildCppInfluenceLayerVisual("objective", 0.32, _influencePalette.objective, _influencePalette.negative, false)
 	end
@@ -598,7 +598,7 @@ _RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeS
 	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
-	ObjectManager:rebuildTacticalInfluenceLayerDebugVisual(
+	SandboxTactics:rebuildTacticalInfluenceLayerDebugVisual(
 		layerName,
 		y,
 		_ColorFromSpec(positiveSpec),
@@ -628,8 +628,8 @@ local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, 
 	local drawNeutral = _ReadBool(config, layerName .. "DrawNeutralCells", drawNeutralDefault)
 	local queryThreshold = drawNeutral and 0.0 or threshold
 	local maxCells = _GetDrawCellLimit(config)
-	if ObjectManager.drawTacticalInfluenceLayer ~= nil then
-		ObjectManager:drawTacticalInfluenceLayer(
+	if SandboxTactics.drawTacticalInfluenceLayer ~= nil then
+		SandboxTactics:drawTacticalInfluenceLayer(
 			layerName,
 			y,
 			_ColorFromSpec(positiveSpec),
@@ -644,10 +644,10 @@ local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, 
 			"default")
 		return
 	end
-	local count = ObjectManager:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, maxCells)
+	local count = SandboxTactics:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, maxCells)
 	for index = 1, count do
-		local pos = ObjectManager:getTacticalInfluenceLayerDebugCellPosition(layerName, index, queryThreshold)
-		local value = ObjectManager:getTacticalInfluenceLayerDebugCellValue(layerName, index, queryThreshold)
+		local pos = SandboxTactics:getTacticalInfluenceLayerDebugCellPosition(layerName, index, queryThreshold)
+		local value = SandboxTactics:getTacticalInfluenceLayerDebugCellValue(layerName, index, queryThreshold)
 		_DrawCell(pos, _InfluenceColor(value, positiveSpec, negativeSpec), y, cellSize)
 	end
 end
@@ -659,7 +659,7 @@ local function _DrawCppInfluenceMap()
 		visible = false
 	end
 	if _HasCppInfluenceVisual() then
-		ObjectManager:setTacticalInfluenceDebugVisible(visible)
+		SandboxTactics:setTacticalInfluenceDebugVisible(visible)
 		return
 	end
 	if _ReadBool(config, "drawDangerLayer", false) then
@@ -761,8 +761,8 @@ local function _BuildParitySnapshot(state)
 		if ObjectManager ~= nil and ObjectManager.buildAiDebugSummary ~= nil then
 			payload.aiSummary = ParityTrace.SplitLines(ObjectManager:buildAiDebugSummary(maxAgents), summaryMaxLines, summaryMaxLineLength)
 		end
-		if ObjectManager ~= nil and ObjectManager.buildTacticalInfluenceDebugSummary ~= nil then
-			payload.tacticalSummary = ParityTrace.SplitLines(ObjectManager:buildTacticalInfluenceDebugSummary(), summaryMaxLines, summaryMaxLineLength)
+		if SandboxTactics ~= nil and SandboxTactics.buildTacticalInfluenceDebugSummary ~= nil then
+			payload.tacticalSummary = ParityTrace.SplitLines(SandboxTactics:buildTacticalInfluenceDebugSummary(), summaryMaxLines, summaryMaxLineLength)
 		end
 	end
 	return payload
@@ -798,7 +798,7 @@ local function _MaybePrintSmoke()
 			"moves=", _tacticalDriver.moveCount,
 			"driverTeam=", _tacticalDriver.teamId,
 			"bestScore=", string.format("%.2f", _tactics.bestScore),
-			"summary=", ObjectManager:buildTacticalInfluenceDebugSummary())
+			"summary=", SandboxTactics:buildTacticalInfluenceDebugSummary())
 		_tactics.smokeComplete = true
 		if _tacticalDriver.agent ~= nil then
 			_tacticalDriver.agent:SetMaxSpeed(0)
@@ -920,7 +920,7 @@ function Sandbox_Initialize()
 		_CreatePanel()
 	end
 
-	Sandbox:SetUseCppFsmFlag(true)
+	SandboxAgentConfig:SetUseCppFsmFlag(true)
 
 	local camera = SandboxCamera:GetCamera()
 	camera:setPosition(Vector3(-30, 18, -17))

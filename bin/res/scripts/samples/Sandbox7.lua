@@ -49,7 +49,7 @@ function Sandbox_Initialize()
     GUI_CreateSandboxText(infoText, textSize)
 
     -- 保留 C++ FSM flag = true：DT 驱动接管决策，但 SoldierAnimController 仍然需要这个 flag 来 tick。
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(-30, 18, -17));

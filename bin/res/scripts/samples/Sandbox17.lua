@@ -385,23 +385,23 @@ local function _ResolveInfluenceDrawPosition(pos, yOffset, cellSize)
 end
 
 local function _HasCppTacticalEvents()
-	return ObjectManager ~= nil
-		and ObjectManager.configureTacticalEvents ~= nil
-		and ObjectManager.getTacticalEventDebugRecordCount ~= nil
-		and ObjectManager.getTacticalEventDebugType ~= nil
-		and ObjectManager.getTacticalEventDebugPosition ~= nil
+	return SandboxTactics ~= nil
+		and SandboxTactics.configureTacticalEvents ~= nil
+		and SandboxTactics.getTacticalEventDebugRecordCount ~= nil
+		and SandboxTactics.getTacticalEventDebugType ~= nil
+		and SandboxTactics.getTacticalEventDebugPosition ~= nil
 end
 
 local function _HasCppInfluenceDraw()
-	return ObjectManager ~= nil
-		and ObjectManager.configureTacticalInfluence ~= nil
-		and ObjectManager.clearTacticalInfluenceLayer ~= nil
-		and ObjectManager.addTacticalInfluenceSource ~= nil
-		and ObjectManager.addTacticalInfluencePoint ~= nil
-		and ObjectManager.spreadTacticalInfluenceLayer ~= nil
-		and ObjectManager.setTacticalInfluenceLayerOptions ~= nil
-		and ObjectManager.rebuildTacticalInfluenceLayerDebugVisual ~= nil
-		and ObjectManager.setTacticalInfluenceDebugVisible ~= nil
+	return SandboxTactics ~= nil
+		and SandboxTactics.configureTacticalInfluence ~= nil
+		and SandboxTactics.clearTacticalInfluenceLayer ~= nil
+		and SandboxTactics.addTacticalInfluenceSource ~= nil
+		and SandboxTactics.addTacticalInfluencePoint ~= nil
+		and SandboxTactics.spreadTacticalInfluenceLayer ~= nil
+		and SandboxTactics.setTacticalInfluenceLayerOptions ~= nil
+		and SandboxTactics.rebuildTacticalInfluenceLayerDebugVisual ~= nil
+		and SandboxTactics.setTacticalInfluenceDebugVisible ~= nil
 end
 
 local function _ConfigureCppTacticalEvents()
@@ -409,8 +409,8 @@ local function _ConfigureCppTacticalEvents()
 		return
 	end
 	local config = _GetConfig()
-	ObjectManager:clearTacticalEvents()
-	ObjectManager:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
+	SandboxTactics:clearTacticalEvents()
+	SandboxTactics:configureTacticalEvents(_ReadNumber(config, "eventTtlMs", 1800))
 end
 
 local function _ConfigureCppInfluenceDraw()
@@ -419,37 +419,37 @@ local function _ConfigureCppInfluenceDraw()
 	end
 	local config = _GetConfig()
 	local mapConfig = config.influenceMap or {}
-	ObjectManager:clearTacticalInfluence()
+	SandboxTactics:clearTacticalInfluence()
 	-- 3D 影响图：从 navmesh 几何体素化建图，cell 自动贴在可走面上（对齐 chapter-9）。
-	ObjectManager:configureTacticalInfluenceFromNavMesh(
+	SandboxTactics:configureTacticalInfluenceFromNavMesh(
 		"default",
 		_ReadNumber(mapConfig, "cellSize", 2.0),
 		_ReadNumber(mapConfig, "cellHeight", 1.0),
 		_ReadVector3(mapConfig, "boundaryMinOffset", Vector3(0.0, 0.0, 0.0)),
 		_ReadVector3(mapConfig, "boundaryMaxOffset", Vector3(0.0, 0.0, 0.0)))
-	ObjectManager:setTacticalInfluenceLayerOptions("danger", _ReadNumber(config, "dangerFalloff", 0.2), _ReadNumber(config, "dangerInertia", 0.5))
-	ObjectManager:setTacticalInfluenceLayerOptions("team", _ReadNumber(config, "teamFalloff", 0.2), _ReadNumber(config, "teamInertia", 0.5))
+	SandboxTactics:setTacticalInfluenceLayerOptions("danger", _ReadNumber(config, "dangerFalloff", 0.2), _ReadNumber(config, "dangerInertia", 0.5))
+	SandboxTactics:setTacticalInfluenceLayerOptions("team", _ReadNumber(config, "teamFalloff", 0.2), _ReadNumber(config, "teamInertia", 0.5))
 end
 
 local function _AddCppInfluenceSource(layerName, position, strength, radius)
 	if position == nil or not _HasCppInfluenceDraw() then
 		return 0
 	end
-	return ObjectManager:addTacticalInfluenceSource(layerName, position, strength, radius)
+	return SandboxTactics:addTacticalInfluenceSource(layerName, position, strength, radius)
 end
 
 local function _AddCppInfluencePoint(layerName, position, strength)
 	if position == nil or not _HasCppInfluenceDraw() then
 		return 0
 	end
-	return ObjectManager:addTacticalInfluencePoint(layerName, position, strength)
+	return SandboxTactics:addTacticalInfluencePoint(layerName, position, strength)
 end
 
 local function _SpreadCppInfluenceLayer(layerName, passCount)
 	if not _HasCppInfluenceDraw() then
 		return 0
 	end
-	return ObjectManager:spreadTacticalInfluenceLayer(layerName, passCount)
+	return SandboxTactics:spreadTacticalInfluenceLayer(layerName, passCount)
 end
 
 local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
@@ -466,7 +466,7 @@ local function _RebuildCppInfluenceLayerVisual(layerName, y, positiveSpec, negat
 		negativeSpec = _gridCoverageRedSpec
 		zeroSpec = _gridCoverageRedSpec
 	end
-	ObjectManager:rebuildTacticalInfluenceLayerDebugVisual(
+	SandboxTactics:rebuildTacticalInfluenceLayerDebugVisual(
 		layerName,
 		y,
 		_ColorFromSpec(positiveSpec),
@@ -488,7 +488,7 @@ local function _GetCppTacticalEventCount()
 	if not _HasCppTacticalEvents() then
 		return 0
 	end
-	return ObjectManager:getTacticalEventDebugRecordCount()
+	return SandboxTactics:getTacticalEventDebugRecordCount()
 end
 
 local function _UseCppEventSource(config)
@@ -556,7 +556,7 @@ local function _PublishTacticEvent(eventType, event)
 		end
 		if position ~= nil then
 			local _, senderId, targetId, teamId, targetTeamId = _GetEventTraceInfo(eventType, event)
-			ObjectManager:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
+			SandboxTactics:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
 		end
 	end
 end
@@ -652,7 +652,7 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	local map = _EnsureInfluenceMap()
 	map:ClearLayer("danger")
 	if _HasCppInfluenceDraw() then
-		ObjectManager:clearTacticalInfluenceLayer("danger")
+		SandboxTactics:clearTacticalInfluenceLayer("danger")
 	end
 
 	_tactics.bulletImpacts = _PruneTimedEvents(_tactics.bulletImpacts, intervalMs)
@@ -674,18 +674,18 @@ local function _UpdateDangerousAreas(deltaTimeInMillis)
 	if _UseCppEventSource(config) then
 		local count = _GetCppTacticalEventCount()
 		for index = 1, count do
-			local eventType = ObjectManager:getTacticalEventDebugType(index)
-			local position = ObjectManager:getTacticalEventDebugPosition(index)
+			local eventType = SandboxTactics:getTacticalEventDebugType(index)
+			local position = SandboxTactics:getTacticalEventDebugPosition(index)
 			if eventType == "BulletImpact" then
 				addDangerSource(position, impactRadius)
 			elseif eventType == "BulletShot" then
 				addDangerSource(position, shotRadius)
 			elseif eventType == "DeadFriendlySighted" then
-				if ObjectManager:getTacticalEventDebugTeamId(index) == perspectiveTeamId then
+				if SandboxTactics:getTacticalEventDebugTeamId(index) == perspectiveTeamId then
 					addDangerSource(position, corpseRadius)
 				end
 			elseif eventType == "EnemySighted" then
-				local targetTeamId = ObjectManager:getTacticalEventDebugTargetTeamId(index)
+				local targetTeamId = SandboxTactics:getTacticalEventDebugTargetTeamId(index)
 				if targetTeamId < 0 then
 					targetTeamId = perspectiveTeamId == 0 and 1 or 0
 				end
@@ -736,7 +736,7 @@ local function _UpdateTeamAreas(deltaTimeInMillis)
 	local map = _EnsureInfluenceMap()
 	map:ClearLayer("team")
 	if _HasCppInfluenceDraw() then
-		ObjectManager:clearTacticalInfluenceLayer("team")
+		SandboxTactics:clearTacticalInfluenceLayer("team")
 	end
 
 	local positiveTeamId = _ReadNumber(config, "teamPositiveTeamId", 0)
@@ -841,7 +841,7 @@ local function _DrawInfluenceLayer(layerName, y, positiveSpec, negativeSpec, dra
 			negativeSpec = _gridCoverageRedSpec
 			zeroSpec = _gridCoverageRedSpec
 		end
-		ObjectManager:drawTacticalInfluenceLayer(
+		SandboxTactics:drawTacticalInfluenceLayer(
 			layerName,
 			y,
 			_ColorFromSpec(positiveSpec),
@@ -873,7 +873,7 @@ local function _DrawInfluenceMap()
 		visible = false
 	end
 	if _HasCppInfluenceDraw() then
-		ObjectManager:setTacticalInfluenceDebugVisible(visible)
+		SandboxTactics:setTacticalInfluenceDebugVisible(visible)
 		return
 	end
 	if not visible then
@@ -1202,7 +1202,7 @@ function Sandbox_Initialize()
 		end
 	end
 
-	Sandbox:SetUseCppFsmFlag(true)
+	SandboxAgentConfig:SetUseCppFsmFlag(true)
 
 	_ApplyCameraPreset(config)
 

@@ -62,7 +62,7 @@ function Sandbox_Initialize()
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
 
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     -- Initialize the camera position to focus on the soldier.
     local camera = SandboxCamera:GetCamera();

@@ -324,7 +324,7 @@ function Sandbox_Initialize()
     GUI_CreateSandboxText(infoText, textSize)
     _CreateDemoPanel()
 
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     local camera = SandboxCamera:GetCamera();
     camera:setPosition(Vector3(-30, 18, -17));

@@ -142,7 +142,7 @@ function Sandbox_Initialize(ctype)
     camera:setOrientation(GetForward(Vector3(0, 0, -1)));
 
     -- 使用lua端的update驱动
-    Sandbox:SetUseCppFsmFlag(false)
+    SandboxAgentConfig:SetUseCppFsmFlag(false)
     
     local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
     local soldierAgent = SandboxObjects:CreateSoldier(soldierPath)
@@ -160,88 +160,6 @@ function Sandbox_Initialize(ctype)
 
     local soldier = soldierAgent:getBody()
     _G.soldierAsm = soldier:GetObjectASM();
-    
-    --[[
-    local soldierPath = "models/futuristic_soldier/futuristic_soldier_dark_anim.mesh"
-    local soldier = Sandbox:CreateEntityObject(soldierPath);
-    soldier:setPosition(Vector3(0, 0, 0))
-    soldier:setRotation(Vector3(0, -90, 0))
-
-    local weaponPath = "models/futuristic_soldier/soldier_weapon.mesh"
-    local weapon = Sandbox:CreateEntityObject(weaponPath);
-    
-    -- Create an animation state machine to handle weapon animations.
-    _G.weaponAsm = weapon:GetObjectASM();
-
-    -- Retrieve and store the weapon animations before attaching the weapon to
-    -- the soldier.
-    local sniper_idle = weapon:GetAnimation("sniper_idle")
-    local smg_idle = weapon:GetAnimation("smg_idle")
-
-    weaponAsm:AddState("smg_idle", smg_idle, true);
-    weaponAsm:AddState("sniper_idle", sniper_idle, true);
-    weaponAsm:AddState("smg_transform", weapon:GetAnimation("smg_transform"));
-    weaponAsm:AddState("sniper_reload", weapon:GetAnimation("sniper_reload"));
-    weaponAsm:AddState("sniper_transform", weapon:GetAnimation("sniper_transform"));
-
-    weaponAsm:AddTransition("sniper_idle", "sniper_reload", sniper_idle:GetLength(), 0.2);
-    weaponAsm:AddTransition("sniper_idle", "sniper_transform", sniper_idle:GetLength(), 0.2);
-    weaponAsm:AddTransition("sniper_reload", "sniper_idle", 0.2, 0.2);
-    weaponAsm:AddTransition("sniper_transform", "sniper_idle", 0.2, 0.2);
-    weaponAsm:AddTransition("smg_idle", "smg_transform", smg_idle:GetLength(), 0.2);
-    weaponAsm:AddTransition("smg_transform", "smg_idle", 0.2, 0.2);
-
-    -- Request a default looping animation to play.
-    weaponAsm:RequestState("sniper_idle");
-
-    local idle_anim = soldier:GetAnimation("stand_idle_aim");
-    local idleAnimLength = idle_anim:GetLength();
-
-    -- Create an animation state machine to handle soldier animations.
-    _G.soldierAsm = soldier:GetObjectASM();
-
-    soldierAsm:AddState("idle_aim", idle_anim, true);
-    soldierAsm:AddState("dead", soldier:GetAnimation("stand_dead_2"));
-    soldierAsm:AddState("dead_headshot", soldier:GetAnimation("stand_dead_headshot"));
-    soldierAsm:AddState("fire", soldier:GetAnimation("stand_fire_one_shot"), true);
-    soldierAsm:AddState("melee", soldier:GetAnimation("stand_melee_1_with_weapon"));
-    soldierAsm:AddState("reload", soldier:GetAnimation("stand_reload"));
-    soldierAsm:AddState("run_backward", soldier:GetAnimation("stand_run_backward_aim"), true);
-    soldierAsm:AddState("run_forward", soldier:GetAnimation("stand_run_forward_aim"), true);
-    soldierAsm:AddState("smg_transform", soldier:GetAnimation("stand_smg_transform"));
-    soldierAsm:AddState("sniper_transform", soldier:GetAnimation("stand_sniper_transform"));
-
-    -- Idle Transitions
-    -- All transitions from idle can happen at any time in the idle animation.
-    soldierAsm:AddTransition("idle_aim", "dead", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "dead_headshot", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "fire", idleAnimLength, 0.1);
-    soldierAsm:AddTransition("idle_aim", "melee", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "reload", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "run_backward", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "run_forward", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "smg_transform", idleAnimLength, 0.2);
-    soldierAsm:AddTransition("idle_aim", "sniper_transform", idleAnimLength, 0.2);
-
-    -- Fire Transitions
-    soldierAsm:AddTransition("fire", "idle_aim", 0.1, 0.1);
-    -- Melee Transitions
-    soldierAsm:AddTransition("melee", "idle_aim", 0.2, 0.2);
-    -- Reload Transitions
-    soldierAsm:AddTransition("reload", "idle_aim", 0.2, 0.2);
-    -- Run Backward Transitions
-    soldierAsm:AddTransition("run_backward", "idle_aim", 0.2, 0.2);
-    -- Run Forward Transitions
-    soldierAsm:AddTransition("run_forward", "idle_aim", 0.2, 0.2);
-    -- SMG Transitions
-    soldierAsm:AddTransition("smg_transform", "idle_aim", 0.2, 0.2);
-    -- Sniper Transitions
-    soldierAsm:AddTransition("sniper_transform", "idle_aim", 0.2, 0.2);
-
-    soldierAsm:RequestState("idle_aim")
-
-    soldier:AttachToBone("b_RightHand", weapon, Vector3(0.04, 0.05, -0.01), Vector3(98.0, 97.0, 0))
-    --]]
 
     _ch3Compare = _IsTruthy(os.getenv("HELLO_CH3_COMPARE"))
     if _ch3Compare then

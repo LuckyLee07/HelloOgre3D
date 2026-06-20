@@ -286,9 +286,7 @@ local function _ClearAgentDemoOrders(agent)
     if agent == nil then return end
     agent:SetVelocity(Vector3(0, 0, 0))
     agent:SetTarget(agent:GetPosition())
-    if agent.ClearMovePosition ~= nil then
-        agent:ClearMovePosition()
-    end
+    AgentComponents.ClearMovePosition(agent)
 
     local bb = _GetBlackboard(agent)
     if bb ~= nil then
@@ -809,7 +807,7 @@ function Sandbox_Initialize()
     GUI_CreateCameraAndProfileInfo()
     GUI_CreateSandboxText(infoText, textSize)
 
-    Sandbox:SetUseCppFsmFlag(true)
+    SandboxAgentConfig:SetUseCppFsmFlag(true)
 
     _ApplyChapter8Camera()
 
