@@ -61,16 +61,16 @@
    - Lua `TeamBlackboard.lua` 保留薄 facade。
 
 4. `InfluenceMapSystem` 二期
-   - dirty region / interval 更新。
-   - cover / crowd / support schema。
-   - layer debug draw、draw height、projection mode、draw order 变成显式配置。
+   - layer interval / dirty-only 与 cell/region dirty bounds 第一切片已落地，后续补更细粒度增量 rebuild。
+   - support / cover / crowd schema 第一切片已落地，后续补真实 cover 来源和更细 crowd 模型。
+   - layer debug draw、draw height、projection mode、draw order 的 per-layer config 第一切片已落地，后续补更完整配置面。
 
 5. BehaviorTree runtime 生产化
-   - instance pool。
-   - node result cache。
-   - blackboard dirty key 与节点依赖表。
-   - tick bucket / distance LOD / per-frame budget。
-   - trace sampling，关闭 trace 时没有明显额外开销。
+	 - instance pool。
+	 - node result cache。
+	 - blackboard dirty key 与节点依赖表。
+	 - tick bucket / per-frame budget 第一版已落地；后续补 distance LOD。
+	 - trace sampling，关闭 trace 时没有明显额外开销。
 
 验收标准：
 

@@ -14,7 +14,7 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `Blackboard.{h,cpp}` | 知识库 | 7 类标量(Agent/Float/Int/Bool/String/Vec3/ObjectId)+4 类数组；entry 带 confidence/ttl/source/decay；无脏标记每帧全量 |
+| `Blackboard.{h,cpp}` | 知识库 | 7 类标量(Agent/Float/Int/Bool/String/Vec3/ObjectId)+4 类数组；entry 带 confidence/ttl/source/decay；维护全局 revision 和 key revision 供 BT 条件缓存失效 |
 | `AIScheduler.{h,cpp}` | 调度 | `Configure(enabled,tickIntervalMs,maxTicksPerFrame)`；`ShouldTick(agentId)` 错峰预算；ticked/skipped 统计 + Tracy；Lua 全局 `SandboxAIScheduler` 直接配置/诊断 |
 | `AIUpdateSystem.{h,cpp}` | AI 帧编排 | 无状态 helper；统一执行 scheduler begin/tick、spatial rebuild、批量 perception、TeamBlackboard sync 与 AI perf stats 写回 |
 | `AICommand.h` | 指令 | 11 类（Idle/Move/Attack/MoveTo/RequestState/UseSkill/...）静态工厂 |
@@ -22,11 +22,11 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 
 ## 4. 公开能力要点
 
-- Blackboard 类型化读写（tolua 导出）；AIScheduler interval/budget/round-robin，已导出为 `SandboxAIScheduler`；AICommand 动作通道。
+- Blackboard 类型化读写（tolua 导出），并导出 `GetRevision()` / `GetKeyRevision(key)` 供 Lua/BT 诊断和缓存依赖；AIScheduler interval/budget/round-robin，已导出为 `SandboxAIScheduler`；AICommand 动作通道。
 
 ## 5. 约束与红线
 
-- Blackboard 无脏标记、条件每帧全量求值（性能项 G7 未做）。
+- Blackboard revision 只记录事实变化；`__bt.*` 诊断 key 不推进 revision，避免 RuntimeDiag 写回反复打穿 BT 条件缓存。
 - 缺 Object(by id)/Timer/嵌套数组类型（G6）。
 - AICommand 种类固定在枚举，新增需改 enum + KindToString。
 
@@ -40,4 +40,4 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 
 ## 8. 已知 gap / 相关文档
 
-- 待：G6 黑板类型扩展、G7 条件缓存/脏标记。`docs/design/behavior-tree-gap-analysis.md`、`docs/planning/ai-technical-iteration-plan.md`。
+- 待：G6 黑板类型扩展；G7 已有条件缓存/脏 key 与 BT frame budget 第一切片，后续补更通用的节点缓存和 distance LOD。`docs/design/behavior-tree-gap-analysis.md`、`docs/planning/ai-technical-iteration-plan.md`。

@@ -21,7 +21,7 @@ ObjectManager（update 阶段总编排与战术兼容 facade）、ObjectRegistry
 
 ## 4. 公开能力要点
 
-- 对象枚举/过滤/计数、AI 调度配置、战术/团队/影响图 Lua facade、各 `build*DebugSummary`；`buildAiRuntimeDebugSummary(maxAgents)` 是 RuntimeDiag 的聚合入口，会把 perception/spatial、memory/blackboard、team facts、tactical influence 与 scheduler stats 放进同一个 `[AIRuntimeDiag]` block。
+- 对象枚举/过滤/计数、AI 调度配置、战术/团队/影响图 Lua facade、各 `build*DebugSummary`；`buildAiRuntimeDebugSummary(maxAgents)` 是 RuntimeDiag 的聚合入口，会把 perception/spatial、memory/blackboard、team facts、tactical influence 与 scheduler stats 放进同一个 `[AIRuntimeDiag]` block；`buildAiRuntimeDebugSummaryForAgent(maxAgents, focusAgentId)` 支持按 agent id 聚焦输出。
 
 ## 5. 约束与红线
 

@@ -14,7 +14,7 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,TeamBlackboard,FairyGuiService}Stats` + 帧时序结构；Tracy 关闭时是 no-op |
+| `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,HearingDangerSense,TeamBlackboard,FairyGuiService}Stats` + 帧时序结构；Tracy 关闭时是 no-op |
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL |

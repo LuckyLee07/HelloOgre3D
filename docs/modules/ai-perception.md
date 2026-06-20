@@ -14,7 +14,8 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `AgentPerceptionSystem.{h,cpp}` | 系统 | 每帧批量驱动各 agent `AIController::TickPerception`，输出 scans/visible/spatial 统计 |
+| `AgentPerceptionSystem.{h,cpp}` | 系统 | 每帧批量驱动各 agent `AIController::TickPerception`，输出 scans/visible/spatial 统计；作为 `SandboxPerception` facade 汇总 Hearing/Danger 统计 |
+| `HearingDangerSense.{h,cpp}` | 传感器 | 枪声/危险事件队列、interval + agentsPerTick 预算扫描、cooldown、blackboard 写回和 `RetreatPoint` typed fact 写回 |
 | `AgentSpatialIndexSystem.{h,cpp}` | 系统 | uniform grid 邻域查询，team/alive/includeSelf/maxResults 过滤 + 命中/拒绝统计；maxResults 保留近邻候选而非首批命中 |
 | `AgentSpatialQuery.h` | 接口 | `IAgentSpatialQuery::QueryAgentsInRange`；默认实现仍 `getAllAgents()` 线性（下沉一层，未做分区淘汰） |
 | `VisionSensor.h` | 传感器 | 单 agent 定时扫描，`scanIntervalMs`/`initialDelayMs`/lastResult |
@@ -28,25 +29,27 @@
 - VisionSensor 已支持 `scanIntervalMs` 门控（ai_perf pressure 故意设 1 压测）。
 - AIController 会从 blackboard 读取 `perception.maxSpatialResults`，并透传到 spatial query；`ai_perception_pressure` / `ai_perf_*` 默认限制为 16 个近邻候选，用于避免 500/1000 agent pressure 下继续把所有过滤后候选交给每个 agent 二次筛选。
 - `PerceptionResultCache`（4a 落地）：感知结果单一事实来源；`AIController::HasEnemy` 已改读它（4b，等价），`CanShootEnemy` 成功路径会同步 cache 但保留短距离/无寻路重查语义。
+- Hearing/Danger 第一段：Lua sample 只发布枪声/危险源并负责 debug 绘制；`HearingDangerSense` 负责 interval + agentsPerTick 预算扫描、cooldown、`chapter8.sensoryIntent` / `sense.heard*` / `sense.danger*` 写回，并把危险响应写为 `RetreatPoint` typed team fact；`RuntimeProfileCounters` 已提供 `HearingDangerSense*` 专用图表。
 
 ## 5. 约束与红线
 
 - 空间查询线性扫描只是下沉到 `ObjectManagerAgentSpatialQuery` 一层；maxResults 现在会保留近邻候选，但仍不是完整 AOI / visibility set 淘汰。
 - `PerceptionResultCache` 须在 `TickPerception` 内填充（driver 之前），勿被 Lua 旁路重扫。
 - MemoryStore 必须保持 `kMemorySnapshot*` key 兼容（BT/Lua 在读）。
-- hearing / danger 的 C++ sense 入口**未做**（仍 Lua）。
+- Hearing/Danger C++ sense 已从 `AgentPerceptionSystem` 拆出为独立 `HearingDangerSense`；后续新增非视觉输入时继续按 sense 类隔离，不回填到 system facade。
 
 ## 6. 数据流 / 与其他模块关系
 
-`AgentPerceptionSystem.Update → AIController::TickPerception → VisionSensor.Tick(走 AgentSpatialQuery) → WritePerceptionResult(写 Blackboard) + MemoryStore + UpdatePerceptionCache`。结果被 [[ai-controller]]、[[ai-behavior]]、[[ai-team]] 消费。
+`AgentPerceptionSystem.Update → AIController::TickPerception → VisionSensor.Tick(走 AgentSpatialQuery) → WritePerceptionResult(写 Blackboard) + MemoryStore + UpdatePerceptionCache`；`Sandbox14/Sandbox13 Lua → SandboxPerception.publishHearingDangerEvent → HearingDangerSense.Update → Blackboard + TeamBlackboardService.RetreatPoint`。结果被 [[ai-controller]]、[[ai-behavior]]、[[ai-team]] 消费。
 
 ## 7. 验证策略
 
 - 回归 sample：`Sandbox10`（感知/lastKnown）、`Sandbox16`（压力）。开 `-RuntimeDiag` 看 per-agent。
+- Hearing/Danger：`run_sandbox_smoke.ps1 -Preset hearing_danger` 必须看到 `[HearingDangerSmoke] PASS cppSense=true ... cppRetreatApplies>0`。
 - 压力/性能：`ai_perf_1000`（看 `[FramePerf] perceptionSystem`，**非 cpuFrame**）。
 - 行为对齐：`run_chapter9_parity_gate.ps1`。
 
 ## 8. 已知 gap / 相关文档
 
-- 待：hearing/danger C++ sense、空间查询上限调参 / Release + scheduler 对照，以及更完整的 AOI / visibility set 淘汰。
+- 待：更多非视觉 sense 输入、空间查询上限调参 / Release + scheduler 对照，以及更完整的 AOI / visibility set 淘汰。
 - `docs/planning/ai-technical-iteration-plan.md` §3/§4、`docs/perf/ai-perf-release-baseline-20260612.md`、`docs/design/architecture-improvement-plan.md` P7（已解决-感知抽象）。
