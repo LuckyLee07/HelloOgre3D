@@ -55,16 +55,22 @@ public:
 	bool IsDebugTraceEnabled() const { return m_debugTraceEnabled; }
 	void SetDebugTracePrintEnabled(bool enabled);
 	bool IsDebugTracePrintEnabled() const { return m_debugTracePrintEnabled; }
+	void SetDebugTraceSampleInterval(int interval);
+	int GetDebugTraceSampleInterval() const { return m_debugTraceSampleInterval; }
 	const std::string& GetLastDebugTrace() const { return m_lastDebugTrace; }
 	int GetDebugTraceFrame() const { return m_debugTraceFrameIndex; }
 	void SetNodeDebugName(BehaviorNode* node, const std::string& name);
 	//tolua_end
+
+	std::string BuildRuntimeDebugSummary() const;
 
 	// IDecisionDriver impl
 	virtual void Init() override;
 	virtual void Tick(float deltaMs) override;
 
 private:
+	void WriteRuntimeStatsToBlackboard();
+
 	AgentObject*                 m_owner;
 	Blackboard                   m_fallbackBlackboard;
 	Blackboard*                  m_blackboard;
@@ -73,7 +79,14 @@ private:
 	std::vector<BehaviorTree*>   m_ownedTrees;
 	bool                         m_debugTraceEnabled;
 	bool                         m_debugTracePrintEnabled;
+	int                          m_debugTraceSampleInterval;
+	int                          m_debugTraceTickCounter;
 	int                          m_debugTraceFrameIndex;
+	int                          m_totalTickCount;
+	int                          m_traceSampleCount;
+	int                          m_traceSkippedCount;
+	int                          m_cacheHitCount;
+	int                          m_cacheInvalidatedCount;
 	std::string                  m_lastDebugTrace;
 	BehaviorTraceFrame           m_traceFrame;
 }; //tolua_exports

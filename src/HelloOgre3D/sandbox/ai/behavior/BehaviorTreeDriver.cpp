@@ -1,6 +1,9 @@
 ﻿#include "BehaviorTreeDriver.h"
 
+#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
+#include <sstream>
 
 #include "BehaviorTree.h"
 #include "BehaviorComposite.h"
@@ -11,6 +14,17 @@
 #include "objects/AgentObject.h"
 #include "profiling/Profile.h"
 
+namespace
+{
+	int ResolveTraceSampleInterval()
+	{
+		const char* value = std::getenv("HELLO_BT_TRACE_SAMPLE_INTERVAL");
+		if (value == nullptr || value[0] == '\0')
+			return 1;
+		return std::max(1, std::atoi(value));
+	}
+}
+
 BehaviorTreeDriver::BehaviorTreeDriver(AgentObject* owner, Blackboard* blackboard)
 	: m_owner(owner)
 	, m_fallbackBlackboard(owner)
@@ -18,7 +32,14 @@ BehaviorTreeDriver::BehaviorTreeDriver(AgentObject* owner, Blackboard* blackboar
 	, m_tree(nullptr)
 	, m_debugTraceEnabled(false)
 	, m_debugTracePrintEnabled(false)
+	, m_debugTraceSampleInterval(ResolveTraceSampleInterval())
+	, m_debugTraceTickCounter(0)
 	, m_debugTraceFrameIndex(0)
+	, m_totalTickCount(0)
+	, m_traceSampleCount(0)
+	, m_traceSkippedCount(0)
+	, m_cacheHitCount(0)
+	, m_cacheInvalidatedCount(0)
 {
 }
 
@@ -122,6 +143,12 @@ void BehaviorTreeDriver::SetDebugTraceEnabled(bool enabled)
 		m_blackboard->Remove("__bt.trace");
 		m_blackboard->Remove("__bt.traceFrame");
 		m_blackboard->Remove("__bt.traceEventCount");
+		m_blackboard->Remove("__bt.tickCount");
+		m_blackboard->Remove("__bt.traceSampleCount");
+		m_blackboard->Remove("__bt.traceSkippedCount");
+		m_blackboard->Remove("__bt.traceSampleInterval");
+		m_blackboard->Remove("__bt.cacheHitCount");
+		m_blackboard->Remove("__bt.cacheInvalidatedCount");
 	}
 }
 
@@ -130,9 +157,41 @@ void BehaviorTreeDriver::SetDebugTracePrintEnabled(bool enabled)
 	m_debugTracePrintEnabled = enabled;
 }
 
+void BehaviorTreeDriver::SetDebugTraceSampleInterval(int interval)
+{
+	m_debugTraceSampleInterval = std::max(1, interval);
+}
+
 void BehaviorTreeDriver::SetNodeDebugName(BehaviorNode* node, const std::string& name)
 {
 	if (node) node->SetDebugName(name);
+}
+
+std::string BehaviorTreeDriver::BuildRuntimeDebugSummary() const
+{
+	std::ostringstream stream;
+	stream << "[BTStats] ticks=" << m_totalTickCount
+		<< " traceSamples=" << m_traceSampleCount
+		<< " traceSkipped=" << m_traceSkippedCount
+		<< " sampleEvery=" << m_debugTraceSampleInterval
+		<< " cacheHits=" << m_cacheHitCount
+		<< " invalidated=" << m_cacheInvalidatedCount
+		<< " lastTraceFrame=" << m_debugTraceFrameIndex
+		<< " lastTraceEvents=" << m_traceFrame.GetEventCount();
+	return stream.str();
+}
+
+void BehaviorTreeDriver::WriteRuntimeStatsToBlackboard()
+{
+	if (m_blackboard == nullptr)
+		return;
+
+	m_blackboard->SetInt("__bt.tickCount", m_totalTickCount);
+	m_blackboard->SetInt("__bt.traceSampleCount", m_traceSampleCount);
+	m_blackboard->SetInt("__bt.traceSkippedCount", m_traceSkippedCount);
+	m_blackboard->SetInt("__bt.traceSampleInterval", m_debugTraceSampleInterval);
+	m_blackboard->SetInt("__bt.cacheHitCount", m_cacheHitCount);
+	m_blackboard->SetInt("__bt.cacheInvalidatedCount", m_cacheInvalidatedCount);
 }
 
 void BehaviorTreeDriver::Init()
@@ -143,9 +202,21 @@ void BehaviorTreeDriver::Tick(float deltaMs)
 {
 	H3D_PROFILE_SCOPE("BehaviorTreeDriver::Tick");
 	if (!m_tree) return;
+	++m_totalTickCount;
 	if (!m_debugTraceEnabled)
 	{
 		m_tree->Tick(deltaMs);
+		return;
+	}
+
+	const int sampleInterval = std::max(1, m_debugTraceSampleInterval);
+	const bool shouldTrace = sampleInterval <= 1 || (m_debugTraceTickCounter % sampleInterval) == 0;
+	++m_debugTraceTickCounter;
+	if (!shouldTrace)
+	{
+		++m_traceSkippedCount;
+		m_tree->Tick(deltaMs);
+		WriteRuntimeStatsToBlackboard();
 		return;
 	}
 
@@ -157,9 +228,11 @@ void BehaviorTreeDriver::Tick(float deltaMs)
 	BehaviorTrace::SetCurrentFrame(prevFrame);
 
 	m_lastDebugTrace = m_traceFrame.Format();
+	++m_traceSampleCount;
 	m_blackboard->SetString("__bt.trace", m_lastDebugTrace);
 	m_blackboard->SetInt("__bt.traceFrame", m_debugTraceFrameIndex);
 	m_blackboard->SetInt("__bt.traceEventCount", m_traceFrame.GetEventCount());
+	WriteRuntimeStatsToBlackboard();
 
 	if (m_debugTracePrintEnabled)
 	{
