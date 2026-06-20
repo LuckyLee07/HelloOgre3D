@@ -30,7 +30,7 @@
 ## 5. 约束与红线
 
 - 节点所有权全归 driver；Lua 只经工厂拿指针，勿自管生命周期。
-- 缺 instance pool / node result cache / blackboard dirty 依赖 / 距离 LOD（性能项）。
+- 性能项：`BehaviorTreeDriver` 已支持 trace sampling（`HELLO_BT_TRACE_SAMPLE_INTERVAL` / `SetDebugTraceSampleInterval`）并在 RuntimeDiag 输出 `[BTStats]`；仍缺 instance pool / node result cache / blackboard dirty 依赖 / 距离 LOD。
 - 开放：G2 事件节点（依赖统一事件总线）、G3 参数运行时求值、G5 子树复用。
 
 ## 6. 数据流 / 与其他模块关系

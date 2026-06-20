@@ -27,6 +27,7 @@
 ## 5. 约束与红线
 
 - `SoldierAnimController` 通过 `IAnimContextProvider` 读取 stance、body/weapon ASM 与 presentation hooks，不再持 `SoldierObject* owner` 或直接调用 `SoldierObject`（P5 动画侧已收口）。
+- 普通 `AgentObject` 也会由 `AgentFactory` 默认挂载 `AnimComponent` 并初始化 body ASM；非 Soldier 路径不启用 Soldier 动画事件，由 RuntimeDiag 覆盖 `anim`/`bodyAsm` 可用性。
 - **C4 已解决**：AnimComponent 通过 `getUpdateOrder()` 排在 Render 后、Weapon 前；`SoldierObject::Update` 不再手写 anim/render/weapon 次序。
 - AnimComponent 持非拥有 `Ogre::Entity*`（由 RenderComponent 拥有），重 init 先置空。
 - **SMG 无 reload 动画资源**，非 sniper 武器兜底 sniper_idle。
@@ -41,4 +42,4 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 待：补 SMG reload 动画；AI driver / Blackboard / Lua action 的 Soldier 专属接口继续收口。`docs/design/architecture-improvement-plan.md` P5、`docs/design/cpp-object-model-refactor-roadmap.md`。
+- 待：补 SMG reload 动画；更复杂非 Soldier 动画行为样例；AI driver / Blackboard / Lua action 的 Soldier 专属接口继续收口。`docs/design/architecture-improvement-plan.md` P5、`docs/design/cpp-object-model-refactor-roadmap.md`。

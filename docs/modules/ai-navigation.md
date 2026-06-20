@@ -17,7 +17,7 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 |---|---|---|
 | `NavigationMesh.{h,cpp}` | 包装 | dtNavMesh/dtNavMeshQuery 托管；`FindPath`/`FindClosestPoint`/`RandomPoint`/`GetWalkableTriangles`/debug visual |
 | `NavBuilder.{h,cpp}` | 编译 | Recast heightfield→poly mesh→detour navmesh；`Build`/`BuildDetour*` |
-| `NavigationService.{h,cpp}` | 门面 / owner | 默认 Recast config、agent 设置覆盖、navmesh 构建，按 name 持有 navmesh map，以及查询 `RandomPoint`/`FindClosestPoint`/`FindPath`；Lua 全局 `SandboxNav` |
+| `NavigationService.{h,cpp}` | 门面 / owner | 默认 Recast config、agent 设置覆盖、navmesh 构建，按 name 以 `unique_ptr` 持有 navmesh map，以及查询 `RandomPoint`/`FindClosestPoint`/`FindPath`；Lua 全局 `SandboxNav` |
 | `ObjectManager`（兼容） | fixed blocks 来源 | `NavigationService.CreateNavigationMesh` 通过 `ObjectManager.getFixedObjects()` 读取构建输入；`ObjectManager.getNavigationMesh/addNavigationMesh` 仅保留 C++ 兼容转发 |
 
 ## 4. 公开能力要点
@@ -31,6 +31,7 @@ Recast/Detour 寻路：从场景几何构建导航网格，提供路径查询、
 - 影响图 3D 体素化只用单个 navmesh；多层地形未支持。
 - debug visual 涉及 ManualObject 增删，仅在 navmesh 变更时重建，勿每帧；场景访问走 SceneFactory，不再 include ClientManager。
 - Lua 和 AI/FSM 代码应通过 `SandboxNav` / `SandboxServices.navigation` 访问导航查询，不再把新导航 API 挂回 `SandboxMgr`。
+- `AddNavigationMesh(name, rawPtr)` 是历史兼容入口；返回 true 后 rawPtr 所有权立即转入 `NavigationService::m_navMeshes` 的 `unique_ptr`。
 
 ## 6. 数据流 / 与其他模块关系
 
