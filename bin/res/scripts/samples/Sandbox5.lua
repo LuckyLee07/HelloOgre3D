@@ -2,6 +2,8 @@
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierAgent.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local textSize = {w = 300, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
@@ -33,16 +35,17 @@ local function _DrawPaths()
     for index, agent in pairs(_agents) do
         -- Draw the agent's cyclic path, offset slightly above the level
         -- geometry.
-        DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
-        DebugDrawer:drawSquare(agent:GetTarget(), 0.1, UtilColors.Red, true);
+        DebugDrawer:drawPath(AgentComponents.GetPath(agent), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
+        DebugDrawer:drawSquare(AgentComponents.GetTarget(agent), 0.1, UtilColors.Red, true);
     end
 end
 
 local function _UpdatePaths()
     for index, agent in pairs(_agents) do
         local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition());
-        local targetRadiusSquared = agent:GetTargetRadius() * agent:GetTargetRadius();
-        local distanceSquared = DistanceSquared(navPosition, agent:GetTarget());
+        local targetRadius = AgentComponents.GetTargetRadius(agent);
+        local targetRadiusSquared = targetRadius * targetRadius;
+        local distanceSquared = DistanceSquared(navPosition, AgentComponents.GetTarget(agent));
         -- Determine if the agent is within the target radius to their
         -- target position.
         if (distanceSquared < targetRadiusSquared) then
@@ -57,8 +60,8 @@ local function _UpdatePaths()
             end
             -- Assign a new path and target position.
             Agent_SetPath(agent, path)
-            --agent:SetPath(path, false)
-            agent:SetTarget(endPoint);
+            -- AgentComponents.SetPath(agent, path, false)
+            AgentComponents.SetTarget(agent, endPoint);
         end
     end
 end
@@ -135,11 +138,11 @@ function Sandbox_Initialize()
         
         -- Use the Agent's closest point to the navmesh as their target position.
         local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition());
-        agent:SetTarget(navPosition);
+        AgentComponents.SetTarget(agent, navPosition);
 
         -- Increase the target radius to prevent agents from slowing to reach
         -- their target position.
-        agent:SetTargetRadius(1);
+        AgentComponents.SetTargetRadius(agent, 1);
     end
 end
 

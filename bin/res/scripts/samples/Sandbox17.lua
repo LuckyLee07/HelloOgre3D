@@ -943,7 +943,7 @@ local function _DrawFootRing(agent, radius, yOffset)
 	end
 	local position = agent:GetPosition()
 	if position ~= nil then
-		position.y = position.y - agent:GetHeight() * 0.5 + yOffset
+		position.y = position.y - AgentComponents.GetHeight(agent) * 0.5 + yOffset
 		DebugDrawer:drawCircle(position, radius, 28, _colors.targetRadius, false)
 	end
 end
@@ -999,7 +999,7 @@ local function _DrawTargetRadius()
 	end
 	for _, agent in ipairs(_agents) do
 		if _IsAlive(agent) then
-			local target = agent:GetTarget()
+			local target = AgentComponents.GetTarget(agent)
 			if target ~= nil and ringRadius > 0.0 then
 				DebugDrawer:drawCircle(target + Vector3(0, 0.12, 0), ringRadius, 28, _colors.targetRadius, false)
 			end
@@ -1142,11 +1142,11 @@ local function _PlaceAgentLikeChapter9(agent, preset, config, index)
 		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
 	end
 
-	position.y = position.y + agent:GetHeight() * 0.5
+	position.y = position.y + AgentComponents.GetHeight(agent) * 0.5
 	agent:setPosition(position)
 	local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition()) or position
-	agent:SetTarget(navPosition)
-	agent:SetTargetRadius(preset.targetRadius or 1)
+	AgentComponents.SetTarget(agent, navPosition)
+	AgentComponents.SetTargetRadius(agent, preset.targetRadius or 1)
 	return position
 end
 

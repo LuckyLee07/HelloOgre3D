@@ -141,7 +141,7 @@ local function _InitializePerceptionDemo(sampleName)
     local targetIndex = tonumber(config.targetIndex) or 2
     local target = _agents[targetIndex]
     if target ~= nil and config.freezeTarget == true then
-        target:SetMaxSpeed(0)
+        AgentComponents.SetMaxSpeed(target, 0)
         target:SetVelocity(Vector3(0, 0, 0))
     end
     _SetPhase("see_chase")
@@ -157,12 +157,12 @@ local function _RelocatePerceptionTarget()
 
     _perceptionDemo.lastKnownPos = target:GetPosition()
     local position = SandboxNav:FindClosestPoint("default", relocateTo)
-    position.y = position.y + target:GetHeight() * 0.5
+    position.y = position.y + AgentComponents.GetHeight(target) * 0.5
     target:setPosition(position)
-    target:SetTarget(position)
+    AgentComponents.SetTarget(target, position)
     target:SetVelocity(Vector3(0, 0, 0))
     if config.freezeTarget == true then
-        target:SetMaxSpeed(0)
+        AgentComponents.SetMaxSpeed(target, 0)
     end
 
     _perceptionDemo.relocated = true

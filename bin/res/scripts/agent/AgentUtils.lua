@@ -1,18 +1,20 @@
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 -- 设置路径 朝向预校正
 function Agent_SetPath(agent, path, cyclic)
     if cyclic == nil then cyclic = false end
-    agent:SetPath(path, cyclic)
+    AgentComponents.SetPath(agent, path, cyclic)
 
-    local nearest = agent:GetNearestPointOnPath(agent:GetPosition());
-    local distance = agent:GetDistanceAlongPath(nearest);
-    local pointOnPath = agent:GetPointOnPath(distance + 2);
+    local nearest = AgentComponents.GetNearestPointOnPath(agent, agent:GetPosition());
+    local distance = AgentComponents.GetDistanceAlongPath(agent, nearest);
+    local pointOnPath = AgentComponents.GetPointOnPath(agent, distance + 2);
 
     local forward = pointOnPath - agent:GetPosition();
     forward.y = 0
 
     if forward:dotProduct(agent:GetForward()) < 0 then
-        agent:SetVelocity(forward * agent:GetSpeed());
+        agent:SetVelocity(forward * AgentComponents.GetSpeed(agent));
         agent:SetForward(forward);
     end
 end
@@ -27,7 +29,7 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
     end
     
     -- Agents with 0 mass are immovable.
-    if (agent:GetMass() <= 0) then
+    if (AgentComponents.GetMass(agent) <= 0) then
         return;
     end
 
@@ -35,13 +37,13 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
     steeringForce.y = 0;
 
     -- Maximize the steering force, essentially forces the agent to max acceleration.
-    steeringForce = Vector.Normalize(steeringForce) * agent:GetMaxForce();
+    steeringForce = Vector.Normalize(steeringForce) * AgentComponents.GetMaxForce(agent);
 
     -- Apply force to the physics representation.
-    agent:ApplyForce(steeringForce);
+    AgentComponents.ApplyForce(agent, steeringForce);
 
     -- Newtons(kg*m/s^2) divided by mass(kg) results in acceleration(m/s^2).
-    local acceleration = steeringForce / agent:GetMass();
+    local acceleration = steeringForce / AgentComponents.GetMass(agent);
     
     -- Velocity is measured in meters per second(m/s).
     local currentVelocity = agent:GetVelocity();
@@ -70,7 +72,7 @@ function AgentUtilities_ApplySteeringForce2(
     end
     
     -- Agents with 0 mass are immovable.
-    if (agent:GetMass() <= 0) then
+    if (AgentComponents.GetMass(agent) <= 0) then
         return;
     end
 
@@ -79,10 +81,10 @@ function AgentUtilities_ApplySteeringForce2(
     
     -- Maximize the steering force, essentially forces the agent to max
     -- acceleration.
-    steeringForce = Vector.Normalize(steeringForce) * agent:GetMaxForce();
+    steeringForce = Vector.Normalize(steeringForce) * AgentComponents.GetMaxForce(agent);
     
     -- Newtons(kg*m/s^2) divided by mass(kg) results in acceleration(m/s^2).
-    local acceleration = steeringForce / agent:GetMass();
+    local acceleration = steeringForce / AgentComponents.GetMass(agent);
     
     -- Interpolate to the new acceleration to dampen jitter in velocity and
     -- forward direction.
@@ -121,7 +123,7 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
     -- themselves.
     velocity.y = 0;
 
-    local maxSpeed = agent:GetMaxSpeed();
+    local maxSpeed = AgentComponents.GetMaxSpeed(agent);
     local squaredSpeed = maxSpeed * maxSpeed;
 
     -- Using squared values avoids the cost of using the square
@@ -150,18 +152,18 @@ function Soldier_SlowMovement(agent, deltaTimeInMillis, rate)
 end
 
 function Soldier_CalculateSteering(agent, deltaTimeInSeconds)
-    local avoidForce = agent:ForceToAvoidAgents(0.5);
-    local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
-    local followForce = agent:ForceToFollowPath(0.5);
-    local stayForce = agent:ForceToStayOnPath(0.5);
+    local avoidForce = AgentComponents.ForceToAvoidAgents(agent, 0.5);
+    local avoidObjectForce = AgentComponents.ForceToAvoidObjects(agent, 0.5);
+    local followForce = AgentComponents.ForceToFollowPath(agent, 0.5);
+    local stayForce = AgentComponents.ForceToStayOnPath(agent, 0.5);
     
     local totalForces = followForce * 1.5 + stayForce * 0.4 + avoidForce * 1 + avoidObjectForce * 2;
     totalForces.y = 0;
 
-    local targetSpeed = agent:GetMaxSpeed();
+    local targetSpeed = AgentComponents.GetMaxSpeed(agent);
 
-    if (agent:GetSpeed() < targetSpeed) then
-        local speedForce = agent:ForceToTargetSpeed(targetSpeed);
+    if (AgentComponents.GetSpeed(agent) < targetSpeed) then
+        local speedForce = AgentComponents.ForceToTargetSpeed(agent, targetSpeed);
         totalForces = totalForces + speedForce * 7;
     end
     
@@ -169,19 +171,19 @@ function Soldier_CalculateSteering(agent, deltaTimeInSeconds)
 end
 
 function Soldier_CalculateSlowSteering(agent, deltaTimeInSeconds)
-    local avoidForce = agent:ForceToAvoidAgents(0.5);
-    local avoidObjectForce = agent:ForceToAvoidObjects(0.5);
-    local followForce = agent:ForceToFollowPath(0.5);
-    local stayForce = agent:ForceToStayOnPath(0.5);
+    local avoidForce = AgentComponents.ForceToAvoidAgents(agent, 0.5);
+    local avoidObjectForce = AgentComponents.ForceToAvoidObjects(agent, 0.5);
+    local followForce = AgentComponents.ForceToFollowPath(agent, 0.5);
+    local stayForce = AgentComponents.ForceToStayOnPath(agent, 0.5);
     
     local totalForces = Vector.Normalize(followForce) +
         Vector.Normalize(stayForce) * 0.2 +
         avoidForce * 1 +
         avoidObjectForce * 1;
 
-    local targetSpeed = agent:GetMaxSpeed();
-    if (agent:GetSpeed() < targetSpeed) then
-        local speedForce = agent:ForceToTargetSpeed(targetSpeed);
+    local targetSpeed = AgentComponents.GetMaxSpeed(agent);
+    if (AgentComponents.GetSpeed(agent) < targetSpeed) then
+        local speedForce = AgentComponents.ForceToTargetSpeed(agent, targetSpeed);
         totalForces = totalForces + speedForce * 5;
     end
     

@@ -1,9 +1,11 @@
 --PursuingAgent.lua--
 require("res.scripts..agent.AgentUtils")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local enemy;
 function Agent_Initialize(agent)
-    agent:SetTargetRadius(1.0);
+    AgentComponents.SetTargetRadius(agent, 1.0);
 
     local randPosx = math.random(-50, 50)
     local randPosz = math.random(-50, 50)
@@ -11,17 +13,17 @@ function Agent_Initialize(agent)
 
     seekings = ObjectManager:getSpecifyAgents(AGENT_OBJ_SEEKING)
     if seekings:size() > 0 then enemy = seekings[0] end
-    agent:SetTarget(enemy:GetPosition());
-    agent:SetMaxSpeed(enemy:GetMaxSpeed() * 0.8)
+    AgentComponents.SetTarget(agent, enemy:GetPosition());
+    AgentComponents.SetMaxSpeed(agent, AgentComponents.GetMaxSpeed(enemy) * 0.8)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
-    agent:SetTarget(enemy:PredictFuturePosition(1))
+    AgentComponents.SetTarget(agent, enemy:PredictFuturePosition(1))
 
-    local destination = agent:GetTarget()
+    local destination = AgentComponents.GetTarget(agent)
     local deltaTimeInSeconds = deltaTimeInMillis / 1000;
-    local seekForce = agent:ForceToPosition(destination);
-    local targetRadius = agent:GetTargetRadius();
+    local seekForce = AgentComponents.ForceToPosition(agent, destination);
+    local targetRadius = AgentComponents.GetTargetRadius(agent);
     local position = agent:GetPosition();
 
     AgentUtilities_ApplyPhysicsSteeringForce(

@@ -260,7 +260,7 @@ function ParityTrace.AgentIntentSnapshot(agent)
 end
 
 function ParityTrace.AgentSnapshot(agent, index, extra)
-	local bodyAsm = _SafeCall(agent, "GetObjectASM", nil)
+	local bodyAsm = AgentComponents.GetBodyAsm(agent)
 	local snapshot = {
 		index = index,
 		id = _SafeCall(agent, "GetObjId", -1),
@@ -284,7 +284,7 @@ function ParityTrace.AgentSnapshot(agent, index, extra)
 end
 
 -- 采集单个 C++ ObjectASM 的动画度量（chapter3 原地动画对比用）。
--- asm 来自 soldier:GetObjectASM()。extra 可附 deltaTimeMs/role 等。
+-- asm 来自 AnimComponent:GetBodyAsm()。extra 可附 deltaTimeMs/role 等。
 function ParityTrace.AnimSnapshot(asm, index, extra)
 	local snapshot = {
 		index = index,

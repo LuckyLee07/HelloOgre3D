@@ -1,19 +1,21 @@
 --SeekingAgent.lua--
 require("res.scripts..agent.AgentUtils")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 function Agent_Initialize(agent)
-    agent:SetTarget(Vector3(50.0, 0.0, 0.0))
-    agent:SetTargetRadius(1.5)
+    AgentComponents.SetTarget(agent, Vector3(50.0, 0.0, 0.0))
+    AgentComponents.SetTargetRadius(agent, 1.5)
 end
 
 function Agent_Update(agent, deltaTimeInMillis)
-    local destination = agent:GetTarget();
+    local destination = AgentComponents.GetTarget(agent);
     local deltaTimeInSeconds = deltaTimeInMillis / 1000;
-    local avoidAgentForce = agent:ForceToAvoidAgents(1.5);
-    local avoidObjectForce = agent:ForceToAvoidObjects(1.5);
-    local seekForce = agent:ForceToPosition(destination);
-    local targetRadius = agent:GetTargetRadius();
-    local radius = agent:GetRadius();
+    local avoidAgentForce = AgentComponents.ForceToAvoidAgents(agent, 1.5);
+    local avoidObjectForce = AgentComponents.ForceToAvoidObjects(agent, 1.5);
+    local seekForce = AgentComponents.ForceToPosition(agent, destination);
+    local targetRadius = AgentComponents.GetTargetRadius(agent);
+    local radius = AgentComponents.GetRadius(agent);
     local position = agent:GetPosition();
     local avoidanceMultiplier = 3;
     
@@ -30,18 +32,18 @@ function Agent_Update(agent, deltaTimeInMillis)
     local targetRadiusSquared = (targetRadius + radius) * (targetRadius + radius);
     
     -- Calculate the position where the Agent touches the ground.
-    local adjustedPosition = agent:GetPosition() - Vector3(0, agent:GetHeight()/2, 0);
+    local adjustedPosition = agent:GetPosition() - Vector3(0, AgentComponents.GetHeight(agent)/2, 0);
 
     -- If the agent is within the target radius pick a new
     -- random position to move to.
     if (DistanceSquared(adjustedPosition, destination) < targetRadiusSquared) then
 
         -- New target is within the 100 meter squared movement space.
-        local targetPos = agent:GetTarget();
+        local targetPos = AgentComponents.GetTarget(agent);
         targetPos.x = math.random(-50, 50);
         targetPos.z = math.random(-50, 50);
         
-        agent:SetTarget(targetPos);
+        AgentComponents.SetTarget(agent, targetPos);
     end
 
     -- Draw debug information for target and target radius.

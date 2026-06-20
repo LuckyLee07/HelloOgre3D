@@ -7,7 +7,7 @@ local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 function Agent_Initialize(agent)
 	if agent == nil then return end
 
-	agent:SetMaxSpeed(0)
+	AgentComponents.SetMaxSpeed(agent, 0)
 	agent:SetVelocity(Vector3(0, 0, 0))
 
 	local ai = AgentComponents.GetAI(agent)

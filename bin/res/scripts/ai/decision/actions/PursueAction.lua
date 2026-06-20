@@ -131,7 +131,7 @@ function OnUpdate(deltaMs, owner, bb)
         phase = "update",
         movement = "pursue",
         animation = "move",
-        target = owner:GetTarget(),
+        target = AgentComponents.GetTarget(owner),
         enemy = enemy,
         distance = toEnemy:length(),
         reason = repathReason,

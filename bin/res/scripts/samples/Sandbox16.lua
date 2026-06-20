@@ -4,6 +4,8 @@
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.PerceptionPressureAgent.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local _sampleName = "Sandbox16"
 local _agents = {}
 local _panel = nil
@@ -118,13 +120,13 @@ local function _PlaceAgent(agent, index, count, config)
 	local rows = math.ceil(count / columns)
 	local originZ = -((rows - 1) * spacing) * 0.5
 	local position = Vector3(originX + column * spacing, 0, originZ + row * spacing)
-	position.y = position.y + agent:GetHeight() * 0.5
+	position.y = position.y + AgentComponents.GetHeight(agent) * 0.5
 
 	agent:setPosition(position)
-	agent:SetTarget(position)
-	agent:SetTargetRadius(1)
+	AgentComponents.SetTarget(agent, position)
+	AgentComponents.SetTargetRadius(agent, 1)
 	agent:SetVelocity(Vector3(0, 0, 0))
-	agent:SetMaxSpeed(0)
+	AgentComponents.SetMaxSpeed(agent, 0)
 	return position
 end
 

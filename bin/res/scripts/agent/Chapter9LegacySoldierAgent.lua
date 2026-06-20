@@ -251,7 +251,7 @@ end
 local function _ClearPath(agent)
 	AgentComponents.ClearMovePosition(agent)
 	local empty = std.vector_Ogre__Vector3_()
-	agent:SetPath(empty, false)
+	AgentComponents.SetPath(agent, empty, false)
 end
 
 local function _BuildAndSetPath(agent, target)
@@ -261,8 +261,8 @@ local function _BuildAndSetPath(agent, target)
 	end
 
 	Agent_SetPath(agent, path, false)
-	agent:SetTarget(target)
-	agent:SetTargetRadius(1.0)
+	AgentComponents.SetTarget(agent, target)
+	AgentComponents.SetTargetRadius(agent, 1.0)
 	AgentComponents.SetMovePosition(agent, target)
 	return true
 end
@@ -355,7 +355,7 @@ local function _GetFallbackEyePosition(agent)
 		forward = forward:normalisedCopy()
 	end
 
-	local height = agent.GetHeight ~= nil and agent:GetHeight() or 1.6
+	local height = AgentComponents.GetHeight(agent, 1.6)
 	return agent:GetPosition() + Vector3(0, height * _EYE_HEIGHT_RATIO, 0) + forward * _EYE_FORWARD_OFFSET, forward
 end
 
@@ -523,21 +523,21 @@ local function _RecordIntent(agent, state, phase, movement, animation, reason, d
 		reason = reason or "",
 		elapsedMs = state.elapsedMs or 0,
 		durationMs = durationMs or 0,
-		target = target or agent:GetTarget(),
+		target = target or AgentComponents.GetTarget(agent),
 	})
 end
 
 local function _HasMovePosition(agent)
-	local target = agent:GetTarget()
+	local target = AgentComponents.GetTarget(agent)
 	return target ~= nil and _Distance(agent:GetPosition(), target) > _MOVE_REACH
 end
 
 local function _CalculateProfiledSteering(agent, profile)
 	local predictionTime = _ReadProfileNumber(profile, "predictionTime", 0.5)
-	local avoidForce = agent:ForceToAvoidAgents(_ReadProfileNumber(profile, "avoidPredictionTime", predictionTime))
-	local avoidObjectForce = agent:ForceToAvoidObjects(_ReadProfileNumber(profile, "avoidObjectPredictionTime", predictionTime))
-	local followForce = agent:ForceToFollowPath(_ReadProfileNumber(profile, "followPredictionTime", predictionTime))
-	local stayForce = agent:ForceToStayOnPath(_ReadProfileNumber(profile, "stayPredictionTime", predictionTime))
+	local avoidForce = AgentComponents.ForceToAvoidAgents(agent, _ReadProfileNumber(profile, "avoidPredictionTime", predictionTime))
+	local avoidObjectForce = AgentComponents.ForceToAvoidObjects(agent, _ReadProfileNumber(profile, "avoidObjectPredictionTime", predictionTime))
+	local followForce = AgentComponents.ForceToFollowPath(agent, _ReadProfileNumber(profile, "followPredictionTime", predictionTime))
+	local stayForce = AgentComponents.ForceToStayOnPath(agent, _ReadProfileNumber(profile, "stayPredictionTime", predictionTime))
 
 	local totalForces = followForce * _ReadProfileNumber(profile, "followWeight", 1.5)
 		+ stayForce * _ReadProfileNumber(profile, "stayWeight", 0.4)
@@ -545,9 +545,9 @@ local function _CalculateProfiledSteering(agent, profile)
 		+ avoidObjectForce * _ReadProfileNumber(profile, "avoidObjectWeight", 2.0)
 	totalForces.y = 0
 
-	local targetSpeed = _ReadProfileNumber(profile, "targetSpeed", agent:GetMaxSpeed())
-	if agent:GetSpeed() < targetSpeed then
-		local speedForce = agent:ForceToTargetSpeed(targetSpeed)
+	local targetSpeed = _ReadProfileNumber(profile, "targetSpeed", AgentComponents.GetMaxSpeed(agent))
+	if AgentComponents.GetSpeed(agent) < targetSpeed then
+		local speedForce = AgentComponents.ForceToTargetSpeed(agent, targetSpeed)
 		totalForces = totalForces + speedForce * _ReadProfileNumber(profile, "speedWeight", 7.0)
 	end
 
@@ -558,14 +558,14 @@ local function _ApplyProfiledSteering(agent, steeringForce, accelerationAccumula
 	if Vector.LengthSquared(steeringForce) < _ReadProfileNumber(profile, "minSteeringLengthSq", 0.1) then
 		return
 	end
-	if agent:GetMass() <= 0 then
+	if AgentComponents.GetMass(agent) <= 0 then
 		return
 	end
 
 	steeringForce.y = 0
-	steeringForce = Vector.Normalize(steeringForce) * agent:GetMaxForce() * _ReadProfileNumber(profile, "forceScale", 1.0)
+	steeringForce = Vector.Normalize(steeringForce) * AgentComponents.GetMaxForce(agent) * _ReadProfileNumber(profile, "forceScale", 1.0)
 
-	local acceleration = steeringForce / agent:GetMass()
+	local acceleration = steeringForce / AgentComponents.GetMass(agent)
 	local blend = _ReadProfileNumber(profile, "accelerationBlend", 0.4)
 	acceleration = accelerationAccumulator + (acceleration - accelerationAccumulator) * blend
 
@@ -589,7 +589,7 @@ local function _ClampHorizontalSpeedWithProfile(agent, profile)
 	local downwardVelocity = velocity.y
 	velocity.y = 0
 
-	local maxSpeed = _ReadProfileNumber(profile, "maxSpeed", agent:GetMaxSpeed())
+	local maxSpeed = _ReadProfileNumber(profile, "maxSpeed", AgentComponents.GetMaxSpeed(agent))
 	local squaredSpeed = maxSpeed * maxSpeed
 	if Vector.LengthSquared(velocity) > squaredSpeed then
 		local newVelocity = Vector.Normalize(velocity) * maxSpeed
@@ -724,7 +724,7 @@ local function _UpdateMotionProbe(agent, state, deltaMs)
 		AgentComponents.EnterMoveAnim(agent)
 		_ApplyMove(agent, state, deltaMs or 0)
 		_RecordIntent(agent, state, "update", "move", "run_forward", "motionProbe", durationMs, target)
-		if state.elapsedMs >= durationMs or (stopOnReach and _Distance(agent:GetPosition(), agent:GetTarget()) < reachDistance) then
+		if state.elapsedMs >= durationMs or (stopOnReach and _Distance(agent:GetPosition(), AgentComponents.GetTarget(agent)) < reachDistance) then
 			_ClearPath(agent)
 			state.action = "motionProbeDone"
 			state.motionProbeComplete = true
@@ -858,7 +858,7 @@ local function _UpdateAction(agent, state, deltaMs)
 		_ApplyMove(agent, state, deltaMs)
 		if state.elapsedMs >= _MOVE_SEGMENT_MS then
 			_QueueActionCleanup(state, action)
-		elseif _Distance(agent:GetPosition(), agent:GetTarget()) < _MOVE_REACH then
+		elseif _Distance(agent:GetPosition(), AgentComponents.GetTarget(agent)) < _MOVE_REACH then
 			_ClearPath(agent)
 			_QueueActionCleanup(state, action)
 		end
@@ -999,12 +999,12 @@ function Agent_Initialize(agent)
 	end
 
 	local movementProfile = _GetMovementProfile(config)
-	agent:SetMaxSpeed(_ReadProfileNumber(movementProfile, "maxSpeed", SOLDIER_STAND_SPEED or 3.0))
-	if movementProfile ~= nil and agent.SetMaxForce ~= nil then
-		agent:SetMaxForce(_ReadProfileNumber(movementProfile, "maxForce", agent:GetMaxForce()))
+	AgentComponents.SetMaxSpeed(agent, _ReadProfileNumber(movementProfile, "maxSpeed", SOLDIER_STAND_SPEED or 3.0))
+	if movementProfile ~= nil then
+		AgentComponents.SetMaxForce(agent, _ReadProfileNumber(movementProfile, "maxForce", AgentComponents.GetMaxForce(agent)))
 	end
-	if movementProfile ~= nil and agent.SetMass ~= nil then
-		agent:SetMass(_ReadProfileNumber(movementProfile, "mass", agent:GetMass()))
+	if movementProfile ~= nil then
+		AgentComponents.SetMass(agent, _ReadProfileNumber(movementProfile, "mass", AgentComponents.GetMass(agent)))
 	end
 	AgentComponents.SetMaxAmmo(agent, 10)
 	AgentComponents.SetAmmo(agent, 10)

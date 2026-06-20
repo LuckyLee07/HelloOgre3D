@@ -3,9 +3,7 @@ local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 function Agent_Initialize(agent)
 	if agent == nil then return end
 
-	if agent.SetMaxSpeed ~= nil then
-		agent:SetMaxSpeed(0)
-	end
+	AgentComponents.SetMaxSpeed(agent, 0)
 
 	local attrib = AgentComponents.GetAttrib(agent)
 	if attrib ~= nil then

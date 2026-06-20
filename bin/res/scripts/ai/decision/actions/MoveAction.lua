@@ -63,7 +63,8 @@ function OnUpdate(deltaMs, owner, bb)
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     -- 仿 Sandbox6 C++ MoveState：橙色折线 + 末端圆圈，仅 Move 期间画。
     -- target 来自 RandomPoint，本就在 navmesh 上，可直接当圆心。
-    MoveHelpers.DrawPath(owner, owner:GetTarget(), UtilColors.Orange, Vector3(0, 0.05, 0), 1.5)
+    local currentTarget = AgentComponents.GetTarget(owner)
+    MoveHelpers.DrawPath(owner, currentTarget, UtilColors.Orange, Vector3(0, 0.05, 0), 1.5)
 
     if AgentComponents.IsTargetReached(owner, 1.5) then
         ActionIntent.Record(owner, bb, {
@@ -71,7 +72,7 @@ function OnUpdate(deltaMs, owner, bb)
             phase = "terminate",
             movement = "pathFollow",
             animation = "move",
-            target = owner:GetTarget(),
+            target = currentTarget,
             elapsedMs = _elapsedMs,
             durationMs = _segmentMs,
             reason = "targetReached",
@@ -84,7 +85,7 @@ function OnUpdate(deltaMs, owner, bb)
             phase = "terminate",
             movement = "pathFollow",
             animation = "move",
-            target = owner:GetTarget(),
+            target = currentTarget,
             elapsedMs = _elapsedMs,
             durationMs = _segmentMs,
             reason = "segmentExpired",
@@ -96,7 +97,7 @@ function OnUpdate(deltaMs, owner, bb)
         phase = "update",
         movement = "pathFollow",
         animation = "move",
-        target = owner:GetTarget(),
+        target = currentTarget,
         elapsedMs = _elapsedMs,
         durationMs = _segmentMs,
         reason = "running",

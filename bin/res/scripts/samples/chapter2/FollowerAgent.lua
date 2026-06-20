@@ -1,6 +1,8 @@
 --FollowerAgent.lua--
 require("res.scripts.agent.AgentUtils.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local leaders;
 function Agent_Initialize(agent)
     local randPosx = math.random(-50, 50)
@@ -13,12 +15,12 @@ end
 function Agent_Update(agent, deltaTimeInMillis)
     local deltaTimeInSeconds = deltaTimeInMillis / 1000;
 
-    local forceToCombine = agent:ForceToCombine(leaders, 100, 180);
+    local forceToCombine = AgentComponents.ForceToCombine(agent, leaders, 100, 180);
 
     local agents = ObjectManager:getAllAgents()
-    local forceToSeparate = agent:ForceToSeparate(agents, 2, 180);
+    local forceToSeparate = AgentComponents.ForceToSeparate(agent, agents, 2, 180);
     
-    local forceToAlign = agent:ForceToSeparate(leaders, 5, 45);
+    local forceToAlign = AgentComponents.ForceToSeparate(agent, leaders, 5, 45);
 
     local totalForces = forceToCombine + forceToSeparate * 1.15 + forceToAlign;
 
@@ -29,7 +31,7 @@ function Agent_Update(agent, deltaTimeInMillis)
 
     local position = agent:GetPosition();
     local destination = leaders[0]:GetPosition();
-    local targetRadius = agent:GetTargetRadius();
+    local targetRadius = AgentComponents.GetTargetRadius(agent);
 
     DebugDrawer:drawCircle(position, 1, 10, UtilColors.Yellow);
     DebugDrawer:drawCircle(destination, targetRadius, 10, UtilColors.White);

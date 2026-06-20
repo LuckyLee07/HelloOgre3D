@@ -1,5 +1,7 @@
 Soldier = {}
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 Soldier.SoldierStates = {
     CROUCH_DEAD =               "crouch_dead",
     CROUCH_FIRE =               "crouch_fire",
@@ -52,38 +54,36 @@ Soldier.AppearanceTypes = {
 }
 
 function Soldier_InitSoldierAsm(agent)
-    local soldier = agent:getBody()
-
     -- Create an animation state machine to handle soldier animations.
-    local soldierAsm = soldier:GetObjectASM();
+    local soldierAsm = AgentComponents.GetBodyAsm(agent);
 
-    local crouchIdleAnim = soldier:GetAnimation("crouch_idle_aim");
+    local crouchIdleAnim = AgentComponents.GetBodyAnimation(agent, "crouch_idle_aim");
     local crouchIdleAnimLength = crouchIdleAnim:GetLength();
-    local crouchForward = soldier:GetAnimation("crouch_forward_aim");
+    local crouchForward = AgentComponents.GetBodyAnimation(agent, "crouch_forward_aim");
     local crouchForwardLength = crouchForward:GetLength();
-    local idleAnim = soldier:GetAnimation("stand_idle_aim");
+    local idleAnim = AgentComponents.GetBodyAnimation(agent, "stand_idle_aim");
     local idleAnimLength = idleAnim:GetLength();
-    local runforward = soldier:GetAnimation("stand_run_forward_aim");
+    local runforward = AgentComponents.GetBodyAnimation(agent, "stand_run_forward_aim");
     local runForwardLength = runforward:GetLength();
 
-    soldierAsm:AddState("idle_aim", soldier:GetAnimation("stand_idle_aim"), true);
-    soldierAsm:AddState("crouch_idle_aim", soldier:GetAnimation("crouch_idle_aim"), true);
-    soldierAsm:AddState("crouch_dead", soldier:GetAnimation("stand_dead_2"), nil, 0.8);
-    soldierAsm:AddState("crouch_fire", soldier:GetAnimation("crouch_fire_one_shot"), true);
-    soldierAsm:AddState("crouch_forward", soldier:GetAnimation("crouch_forward_aim"), true);
-    soldierAsm:AddState("dead", soldier:GetAnimation("stand_dead_2"));
-    soldierAsm:AddState("dead_headshot", soldier:GetAnimation("stand_dead_headshot"));
-    soldierAsm:AddState("fall_dead", soldier:GetAnimation("stand_dead_2"));
-    soldierAsm:AddState("fall_idle", soldier:GetAnimation("stand_idle_aim"), true);
-    soldierAsm:AddState("fire", soldier:GetAnimation("stand_fire_one_shot"), true);
-    soldierAsm:AddState("jump_land", soldier:GetAnimation("stand_jump_land"));
-    soldierAsm:AddState("jump_up", soldier:GetAnimation("stand_jump_up"));
-    soldierAsm:AddState("melee", soldier:GetAnimation("stand_melee_1_with_weapon"));
-    soldierAsm:AddState("reload", soldier:GetAnimation("stand_reload"));
-    soldierAsm:AddState("run_backward", soldier:GetAnimation("stand_run_backward_aim"), true);
-    soldierAsm:AddState("run_forward", soldier:GetAnimation("stand_run_forward_aim"), true);
-    soldierAsm:AddState("smg_transform", soldier:GetAnimation("stand_smg_transform"));
-    soldierAsm:AddState("sniper_transform", soldier:GetAnimation("stand_sniper_transform"));
+    soldierAsm:AddState("idle_aim", AgentComponents.GetBodyAnimation(agent, "stand_idle_aim"), true);
+    soldierAsm:AddState("crouch_idle_aim", AgentComponents.GetBodyAnimation(agent, "crouch_idle_aim"), true);
+    soldierAsm:AddState("crouch_dead", AgentComponents.GetBodyAnimation(agent, "stand_dead_2"), nil, 0.8);
+    soldierAsm:AddState("crouch_fire", AgentComponents.GetBodyAnimation(agent, "crouch_fire_one_shot"), true);
+    soldierAsm:AddState("crouch_forward", AgentComponents.GetBodyAnimation(agent, "crouch_forward_aim"), true);
+    soldierAsm:AddState("dead", AgentComponents.GetBodyAnimation(agent, "stand_dead_2"));
+    soldierAsm:AddState("dead_headshot", AgentComponents.GetBodyAnimation(agent, "stand_dead_headshot"));
+    soldierAsm:AddState("fall_dead", AgentComponents.GetBodyAnimation(agent, "stand_dead_2"));
+    soldierAsm:AddState("fall_idle", AgentComponents.GetBodyAnimation(agent, "stand_idle_aim"), true);
+    soldierAsm:AddState("fire", AgentComponents.GetBodyAnimation(agent, "stand_fire_one_shot"), true);
+    soldierAsm:AddState("jump_land", AgentComponents.GetBodyAnimation(agent, "stand_jump_land"));
+    soldierAsm:AddState("jump_up", AgentComponents.GetBodyAnimation(agent, "stand_jump_up"));
+    soldierAsm:AddState("melee", AgentComponents.GetBodyAnimation(agent, "stand_melee_1_with_weapon"));
+    soldierAsm:AddState("reload", AgentComponents.GetBodyAnimation(agent, "stand_reload"));
+    soldierAsm:AddState("run_backward", AgentComponents.GetBodyAnimation(agent, "stand_run_backward_aim"), true);
+    soldierAsm:AddState("run_forward", AgentComponents.GetBodyAnimation(agent, "stand_run_forward_aim"), true);
+    soldierAsm:AddState("smg_transform", AgentComponents.GetBodyAnimation(agent, "stand_smg_transform"));
+    soldierAsm:AddState("sniper_transform", AgentComponents.GetBodyAnimation(agent, "stand_sniper_transform"));
 
     soldierAsm:AddTransition("idle_aim", "crouch_idle_aim", idleAnimLength, 0.3);
     soldierAsm:AddTransition("idle_aim", "dead", idleAnimLength, 0.1);

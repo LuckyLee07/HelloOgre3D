@@ -2,6 +2,8 @@
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.IndirectSoldierAgent.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local textSize = {w = 300, h = 260}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
         "W/A/S/D: to move" .. GUI.MarkupNewline ..
@@ -33,8 +35,8 @@ local function _DrawPaths()
     for index, agent in pairs(_agents) do
         -- Draw the agent's cyclic path, offset slightly above the level
         -- geometry.
-        DebugDrawer:drawPath(agent:GetPath(), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
-        DebugDrawer:drawSquare(agent:GetTarget(), 0.1, UtilColors.Red, true);
+        DebugDrawer:drawPath(AgentComponents.GetPath(agent), UtilColors.Red, false, Vector3(0.0, 0.02, 0.0))
+        DebugDrawer:drawSquare(AgentComponents.GetTarget(agent), 0.1, UtilColors.Red, true);
     end
 end
 

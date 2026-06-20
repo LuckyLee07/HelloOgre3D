@@ -4,6 +4,7 @@
 -- 让 action 文件自身只负责终止条件与状态机请求，不管细节。
 
 require("res.scripts.agent.AgentUtils.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 MoveHelpers = {}
 
@@ -17,8 +18,8 @@ function MoveHelpers.BuildAndSetPath(agent, fromPos, toPos)
         return false
     end
     Agent_SetPath(agent, path, false)
-    agent:SetTarget(toPos)
-    agent:SetTargetRadius(1.0)
+    AgentComponents.SetTarget(agent, toPos)
+    AgentComponents.SetTargetRadius(agent, 1.0)
     return true
 end
 
@@ -37,12 +38,12 @@ end
 -- 仅在 action 处于 RUNNING 时调用，agent idle/shoot/reload 期间不画。
 -- 仿 Sandbox6 C++ MoveState/PursueState 的路径可视化：折线 + 末端圆圈。
 -- 圆心由 caller 传入：要确保 Y 在地面（navmesh 上），不然圆飘在空中很怪。
--- - MoveAction 直接用 agent:GetTarget()（来自 SandboxNav:RandomPoint，已贴地）
+-- - MoveAction 直接用 AgentComponents.GetTarget（来自 SandboxNav:RandomPoint，已贴地）
 -- - PursueAction 必须把敌人 GetPosition() 投影到 navmesh，再传进来
 function MoveHelpers.DrawPath(agent, circleCenter, color, offset, radius)
     if _G.HELLO_SUPPRESS_AI_PATH_DRAW == true then return end
     if not agent then return end
-    local path = agent:GetPath()
+    local path = AgentComponents.GetPath(agent)
     if path == nil or path:size() == 0 then return end
     DebugDrawer:drawPath(path, color, false, offset)
     if circleCenter then

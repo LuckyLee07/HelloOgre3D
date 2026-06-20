@@ -1,4 +1,6 @@
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local textSize = {w = 300, h = 180}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
             "W/A/S/D: to move" .. GUI.MarkupNewline ..
@@ -63,14 +65,15 @@ function Sandbox_Initialize(ctype)
     --]]
     for index = 1, 20 do
         local agent = SandboxObjects:CreateAgent(AGENT_OBJ_PATHING, GetFilePath("PathingAgent.lua"));
-        agent:SetPath(points, true);
+        AgentComponents.SetPath(agent, points, true);
 
         -- Randomly vary speeds to allow agents to pass one another.
+        local maxSpeed = AgentComponents.GetMaxSpeed(agent);
         local randomSpeed = math.random(
-            agent:GetMaxSpeed() * 0.85,
-            agent:GetMaxSpeed() * 1.15);
+            maxSpeed * 0.85,
+            maxSpeed * 1.15);
 
-        agent:SetMaxSpeed(randomSpeed);
+        AgentComponents.SetMaxSpeed(agent, randomSpeed);
     end
 
     for index = 1, 5 do

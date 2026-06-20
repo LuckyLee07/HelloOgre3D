@@ -89,7 +89,7 @@ end
 function Agent_Initialize(agent)
     if agent == nil then return end
 
-    agent:SetMaxSpeed(SOLDIER_STAND_SPEED)
+    AgentComponents.SetMaxSpeed(agent, SOLDIER_STAND_SPEED)
 
     local ai = AgentComponents.GetAI(agent)
     if ai == nil then

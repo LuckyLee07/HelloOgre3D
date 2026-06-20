@@ -148,11 +148,9 @@ local function _IsBlockedByLevel(startPos, endPos)
 end
 
 local function _GetAgentHeight(agent)
-    if agent ~= nil and agent.GetHeight ~= nil then
-        local height = tonumber(agent:GetHeight()) or 0.0
-        if height > 0.0 then
-            return height
-        end
+    local height = AgentComponents.GetHeight(agent, 0.0)
+    if height > 0.0 then
+        return height
     end
     return 1.6
 end
@@ -333,7 +331,7 @@ end
 local function _ClearAgentDemoOrders(agent)
     if agent == nil then return end
     agent:SetVelocity(Vector3(0, 0, 0))
-    agent:SetTarget(agent:GetPosition())
+    AgentComponents.SetTarget(agent, agent:GetPosition())
     AgentComponents.ClearMovePosition(agent)
 
     local bb = _GetBlackboard(agent)
@@ -1049,10 +1047,10 @@ local function _PlaceChapter8Agent(agent, sampleName, index, config)
         local position = _FindOriginalChapter8Spawn(config)
         if position ~= nil then
             table.insert(_spawnNavPositions, Vector3(position.x, position.y, position.z))
-            position.y = position.y + agent:GetHeight() * 0.5
+            position.y = position.y + AgentComponents.GetHeight(agent) * 0.5
             agent:setPosition(position)
-            agent:SetTarget(position)
-            agent:SetTargetRadius(1)
+            AgentComponents.SetTarget(agent, position)
+            AgentComponents.SetTargetRadius(agent, 1)
             return position
         end
         _Chapter8DebugLog("[Chapter8Comms] warning random spawn fallback", "index=", index)
@@ -1060,7 +1058,7 @@ local function _PlaceChapter8Agent(agent, sampleName, index, config)
 
     local position = ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, index, "default")
     if position ~= nil then
-        table.insert(_spawnNavPositions, Vector3(position.x, position.y - agent:GetHeight() * 0.5, position.z))
+        table.insert(_spawnNavPositions, Vector3(position.x, position.y - AgentComponents.GetHeight(agent) * 0.5, position.z))
     end
     return position
 end
@@ -1146,7 +1144,7 @@ function Sandbox_Initialize()
         local agentType = teamId == 0 and Soldier.AppearanceTypes.DARK or Soldier.AppearanceTypes.LIGHT
         local agent = Create_Soldier(agentLuafile, agentType, teamId)
         if chapter8Config.agentMaxSpeed ~= nil then
-            agent:SetMaxSpeed(tonumber(chapter8Config.agentMaxSpeed) or SOLDIER_STAND_SPEED)
+            AgentComponents.SetMaxSpeed(agent, tonumber(chapter8Config.agentMaxSpeed) or SOLDIER_STAND_SPEED)
         end
         local spawnPoint = _PlaceChapter8Agent(agent, sampleName, i, chapter8Config)
         table.insert(_agents, agent)

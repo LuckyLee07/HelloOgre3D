@@ -1,4 +1,5 @@
 require("res.scripts.agent.SoldierAgent.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 local ParityTrace = require("res.scripts.samples.parity_trace")
 
 local _parityTrace = nil
@@ -158,8 +159,7 @@ function Sandbox_Initialize(ctype)
     local weapon = soldierAgent:GetWeaponComponent()
     _G.weaponAsm = weapon:GetObjectASM();
 
-    local soldier = soldierAgent:getBody()
-    _G.soldierAsm = soldier:GetObjectASM();
+    _G.soldierAsm = AgentComponents.GetBodyAsm(soldierAgent);
 
     _ch3Compare = _IsTruthy(os.getenv("HELLO_CH3_COMPARE"))
     if _ch3Compare then

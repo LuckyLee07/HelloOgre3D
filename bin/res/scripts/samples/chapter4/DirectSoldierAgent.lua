@@ -2,6 +2,8 @@ require("res.scripts.agent.AgentUtils.lua")
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.samples.chapter4.DirectSoldierState.lua")
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local _soldierStates = {
     DEATH = "DEATH",
     FALLING = "FALLING",
@@ -26,12 +28,12 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
 end
 
 function Agent_Initialize(agent)
-    local height = agent:GetHeight()
+    local height = AgentComponents.GetHeight(agent)
     local posoffset = Vector3(0, height/2, 10)
     local position = agent:GetPosition()
     local randomVec = Vector3(math.random(-5, 5), 0, math.random(-5, 5))
     agent:setPosition(position + posoffset + randomVec)
-    agent:SetMaxSpeed(agent:GetMaxSpeed() * 0.5);
+    AgentComponents.SetMaxSpeed(agent, AgentComponents.GetMaxSpeed(agent) * 0.5);
 
     Agent_SetPath(agent, SandboxUtilities_GetLevelPath(), true)
 

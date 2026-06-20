@@ -8,6 +8,7 @@ require("res.scripts.agent.AgentUtils.lua")
 
 local ParityTrace = require("res.scripts.samples.parity_trace")
 local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _sampleName = "Sandbox18"
 local _agents = {}
@@ -688,12 +689,12 @@ local function _BuildAndSetTacticalPath(agent, target)
 	local ok = SandboxNav:FindPath("default", agent:GetPosition(), target, path)
 	if ok and path:size() > 0 then
 		Agent_SetPath(agent, path, false)
-		agent:SetTarget(target)
-		agent:SetTargetRadius(1.0)
+		AgentComponents.SetTarget(agent, target)
+		AgentComponents.SetTargetRadius(agent, 1.0)
 		return true
 	end
-	agent:SetTarget(target)
-	agent:SetTargetRadius(1.0)
+	AgentComponents.SetTarget(agent, target)
+	AgentComponents.SetTargetRadius(agent, 1.0)
 	return false
 end
 
@@ -711,7 +712,7 @@ local function _UpdateTacticalAgent(deltaTimeInMillis)
 		return
 	end
 
-	agent:SetMaxSpeed(_ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
+	AgentComponents.SetMaxSpeed(agent, _ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
 	local rebuildSq = _ReadNumber(config, "tacticalAgentRepathDistance", 1.0)
 	rebuildSq = rebuildSq * rebuildSq
 	if _tacticalDriver.lastTarget == nil or (target - _tacticalDriver.lastTarget):squaredLength() > rebuildSq then
@@ -724,7 +725,7 @@ local function _UpdateTacticalAgent(deltaTimeInMillis)
 	if dtSec <= 0 then
 		return
 	end
-	local force = agent:HasPath() and Soldier_CalculateSteering(agent, dtSec) or agent:ForceToPosition(target)
+	local force = AgentComponents.HasPath(agent) and Soldier_CalculateSteering(agent, dtSec) or AgentComponents.ForceToPosition(agent, target)
 	AgentUtilities_ApplySteeringForce2(agent, force, _tacticalDriver.acc, dtSec)
 	AgentUtilities_ClampHorizontalSpeed(agent)
 end
@@ -811,9 +812,9 @@ local function _MaybePrintSmoke()
 			"summary=", SandboxTactics:buildTacticalInfluenceDebugSummary())
 		_tactics.smokeComplete = true
 		if _tacticalDriver.agent ~= nil then
-			_tacticalDriver.agent:SetMaxSpeed(0)
+			AgentComponents.SetMaxSpeed(_tacticalDriver.agent, 0)
 			_tacticalDriver.agent:SetVelocity(Vector3(0, 0, 0))
-			_tacticalDriver.agent:SetTarget(_tacticalDriver.agent:GetPosition())
+			AgentComponents.SetTarget(_tacticalDriver.agent, _tacticalDriver.agent:GetPosition())
 		end
 	end
 end
@@ -862,11 +863,11 @@ local function _PlaceAgentLikeChapter9(agent, preset, config, index)
 		return ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, index, "default")
 	end
 
-	position.y = position.y + agent:GetHeight() * 0.5
+	position.y = position.y + AgentComponents.GetHeight(agent) * 0.5
 	agent:setPosition(position)
 	local navPosition = SandboxNav:FindClosestPoint("default", agent:GetPosition()) or position
-	agent:SetTarget(navPosition)
-	agent:SetTargetRadius(preset.targetRadius or 1)
+	AgentComponents.SetTarget(agent, navPosition)
+	AgentComponents.SetTargetRadius(agent, preset.targetRadius or 1)
 	return position
 end
 
@@ -891,7 +892,7 @@ local function _CreateAgents()
 		_tacticalDriver.teamId = _tacticalDriver.agent:GetTeamId()
 	end
 	if _tacticalDriver.agent ~= nil and _ShouldRunTacticalAgent(config) then
-		_tacticalDriver.agent:SetMaxSpeed(_ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
+		AgentComponents.SetMaxSpeed(_tacticalDriver.agent, _ReadNumber(config, "tacticalAgentMaxSpeed", 2.4))
 	end
 end
 

@@ -28,7 +28,7 @@ function Soldier_ApplySteering(agent, steeringForces, deltaTimeInSeconds)
 end
 
 function Agent_Initialize(agent)
-    agent:SetMaxSpeed(SOLDIER_STAND_SPEED);
+    AgentComponents.SetMaxSpeed(agent, SOLDIER_STAND_SPEED);
     local ai = AgentComponents.GetAI(agent)
     local bb = ai ~= nil and ai:GetBlackboard() or nil
     local sampleName = _G.HELLO_SANDBOX_SAMPLE_NAME or "Sandbox6"

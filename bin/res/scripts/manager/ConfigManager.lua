@@ -1,5 +1,7 @@
 local ConfigManager = {}
 
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
 local function getAiSchedulerService()
 	if SandboxAIScheduler ~= nil and SandboxAIScheduler.configureAiScheduler ~= nil then
 		return SandboxAIScheduler
@@ -207,13 +209,13 @@ function ConfigManager:PlaceAgentOnPresetSpawn(agent, sampleName, index, navMesh
 		spawnPoint = SandboxNav:FindClosestPoint(navMeshName or "default", spawnPoint)
 	end
 
-	local height = agent:GetHeight()
+	local height = AgentComponents.GetHeight(agent, 1.6)
 	spawnPoint.y = spawnPoint.y + height * 0.5
 	agent:setPosition(spawnPoint)
 
 	local navPosition = SandboxNav:FindClosestPoint(navMeshName or "default", agent:GetPosition())
-	agent:SetTarget(navPosition)
-	agent:SetTargetRadius(preset.targetRadius or 1)
+	AgentComponents.SetTarget(agent, navPosition)
+	AgentComponents.SetTargetRadius(agent, preset.targetRadius or 1)
 	return spawnPoint
 end
 
