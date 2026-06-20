@@ -228,8 +228,9 @@ function RuntimeDiagnostics.RunSelfTest()
 	local maxObjects = getDiagnosticLimit("maxObjects", "HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS", 8)
 	local maxResources = getDiagnosticLimit("maxResources", "HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES", 6)
 	local maxEvents = getDiagnosticLimit("maxEvents", "HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS", 6)
+	local focusAgentId = getDiagnosticLimit("focusAgentId", "HELLO_RUNTIME_DIAGNOSTIC_FOCUS_AGENT_ID", 0)
 
-	print("[RuntimeDiag] self test begin", "sample=", tostring(_G.HELLO_SANDBOX_SAMPLE_NAME), "maxObjects=", maxObjects, "maxResources=", maxResources, "maxEvents=", maxEvents)
+	print("[RuntimeDiag] self test begin", "sample=", tostring(_G.HELLO_SANDBOX_SAMPLE_NAME), "maxObjects=", maxObjects, "maxResources=", maxResources, "maxEvents=", maxEvents, "focusAgentId=", focusAgentId)
 	if ConfigManager == nil or ConfigManager.BuildDebugSummary == nil then
 		print("[RuntimeDiag] config manager unavailable")
 		ok = false
@@ -245,7 +246,17 @@ function RuntimeDiagnostics.RunSelfTest()
 	end
 
 	local usedUnifiedAiRuntimeSummary = false
-	if ObjectManager ~= nil and ObjectManager.buildAiRuntimeDebugSummary ~= nil then
+	if ObjectManager ~= nil and ObjectManager.buildAiRuntimeDebugSummaryForAgent ~= nil and focusAgentId > 0 then
+		local aiRuntimeSummary = tostring(ObjectManager:buildAiRuntimeDebugSummaryForAgent(maxObjects, focusAgentId))
+		printLines(aiRuntimeSummary)
+		usedUnifiedAiRuntimeSummary = true
+		if string.find(aiRuntimeSummary, "focusFound=true", 1, true) == nil then
+			ok = false
+		end
+		if isTruthy(getEnvValue("HELLO_AI_BLACKBOARD_SELF_TEST")) and string.find(aiRuntimeSummary, "[BlackboardSelfTest] result=true", 1, true) == nil then
+			ok = false
+		end
+	elseif ObjectManager ~= nil and ObjectManager.buildAiRuntimeDebugSummary ~= nil then
 		local aiRuntimeSummary = tostring(ObjectManager:buildAiRuntimeDebugSummary(maxObjects))
 		printLines(aiRuntimeSummary)
 		usedUnifiedAiRuntimeSummary = true
@@ -256,7 +267,15 @@ function RuntimeDiagnostics.RunSelfTest()
 		print("[RuntimeDiag] AI debug summary unavailable")
 		ok = false
 	else
-		local aiSummary = tostring(ObjectManager:buildAiDebugSummary(maxObjects))
+		local aiSummary = nil
+		if ObjectManager.buildAiDebugSummaryForAgent ~= nil and focusAgentId > 0 then
+			aiSummary = tostring(ObjectManager:buildAiDebugSummaryForAgent(maxObjects, focusAgentId))
+			if string.find(aiSummary, "focusFound=true", 1, true) == nil then
+				ok = false
+			end
+		else
+			aiSummary = tostring(ObjectManager:buildAiDebugSummary(maxObjects))
+		end
 		printLines(aiSummary)
 		if isTruthy(getEnvValue("HELLO_AI_BLACKBOARD_SELF_TEST")) and string.find(aiSummary, "[BlackboardSelfTest] result=true", 1, true) == nil then
 			ok = false

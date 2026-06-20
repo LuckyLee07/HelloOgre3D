@@ -147,6 +147,28 @@ SamplePresets.chapter8_perception = {
 
 SamplePresets.ai_lastknown_demo = SamplePresets.chapter8_perception
 
+SamplePresets.bt_runtime_lod = cloneTable(SamplePresets.chapter8_perception)
+SamplePresets.bt_runtime_lod.behaviorTree.tickIntervalMs = 250
+SamplePresets.bt_runtime_lod.behaviorTree.tickStagger = true
+SamplePresets.bt_runtime_lod.behaviorTree.traceSampleInterval = 2
+SamplePresets.bt_runtime_lod.diagnostics = {
+	maxObjects = 8,
+	maxResources = 6,
+	maxEvents = 8,
+}
+
+SamplePresets.bt_runtime_budget = cloneTable(SamplePresets.chapter8_perception)
+SamplePresets.bt_runtime_budget.aiScheduler.maxPerFrame = 2
+SamplePresets.bt_runtime_budget.behaviorTree.tickIntervalMs = 250
+SamplePresets.bt_runtime_budget.behaviorTree.tickStagger = false
+SamplePresets.bt_runtime_budget.behaviorTree.traceSampleInterval = 2
+SamplePresets.bt_runtime_budget.behaviorTree.maxTreeTicksPerFrame = 1
+SamplePresets.bt_runtime_budget.diagnostics = {
+	maxObjects = 8,
+	maxResources = 6,
+	maxEvents = 8,
+}
+
 SamplePresets.Sandbox6 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox7 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox8 = cloneTable(chapter6To8AiConfig)
@@ -409,6 +431,9 @@ SamplePresets.chapter9_tactics_lua.chapter9Tactics = {
 	deadFriendlyDelayMs = 2600,
 	dangerUpdateIntervalMs = 500,
 	teamUpdateIntervalMs = 500,
+	dangerUpdateDirtyOnly = true,
+	teamUpdateDirtyOnly = false,
+	objectiveUpdateDirtyOnly = true,
 	dangerPerspectiveTeamId = 0,
 	teamPositiveTeamId = 0,
 	dangerStrength = -1.0,
@@ -643,16 +668,36 @@ SamplePresets.chapter9_tactics_cpp.chapter9Tactics.influenceSpreadPasses = 2
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveEnabled = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryEnabled = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawObjectiveLayer = true
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.dangerDrawOrder = 12
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.teamDrawOrder = 22
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveDrawOrder = 32
 -- 性能：错峰 objective 层重建，避免 team(500ms)与 objective 在同一帧重建影响图可视。
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.objectiveUpdateIntervalMs = 650
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.drawBestPosition = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryType = "support"
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryRadius = 24.0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryStep = 4.0
+SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalQueryMaxCandidates = 0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalDriverTeamId = 0
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentEnabled = true
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentMaxSpeed = 2.4
 SamplePresets.chapter9_tactics_cpp.chapter9Tactics.tacticalAgentRepathDistance = 1.5
+
+SamplePresets.chapter9_tactics_cpp_pressure = cloneTable(SamplePresets.chapter9_tactics_cpp)
+SamplePresets.chapter9_tactics_cpp_pressure.seed = 20260620
+SamplePresets.chapter9_tactics_cpp_pressure.agentCount = 16
+SamplePresets.chapter9_tactics_cpp_pressure.lightTeamCount = 8
+SamplePresets.chapter9_tactics_cpp_pressure.chapter9Tactics.minSpawnDistanceSq = 225.0
+SamplePresets.chapter9_tactics_cpp_pressure.chapter9Tactics.maxSpawnAttempts = 8192
+SamplePresets.chapter9_tactics_cpp_pressure.chapter9Tactics.tacticalQueryRadius = 48.0
+SamplePresets.chapter9_tactics_cpp_pressure.chapter9Tactics.tacticalQueryStep = 2.0
+SamplePresets.chapter9_tactics_cpp_pressure.chapter9Tactics.tacticalQueryMaxCandidates = 64
+SamplePresets.chapter9_tactics_cpp_pressure.diagnostics = {
+	maxObjects = 24,
+	maxResources = 6,
+	maxEvents = 8,
+}
+
 SamplePresets.Sandbox18 = SamplePresets.chapter9_tactics_cpp
 
 SamplePresets.ai_perception_pressure = cloneTable(SamplePresets.default)

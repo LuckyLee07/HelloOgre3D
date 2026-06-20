@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <utility>
 #include <vector>
 
 namespace
@@ -646,13 +647,37 @@ static std::string BuildBlackboardSelfTestSummary()
 
 std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 {
+	return buildAiDebugSummaryForAgent(maxAgents, 0);
+}
+
+std::string ObjectManager::buildAiDebugSummaryForAgent(int maxAgents, int focusAgentId)
+{
 	if (maxAgents < 0)
 		maxAgents = 0;
 	if (maxAgents > 32)
 		maxAgents = 32;
 
 	const int aiControllerCount = getAiSoldierCount();
-	const int showingCount = maxAgents < static_cast<int>(m_registry->Agents().size()) ? maxAgents : static_cast<int>(m_registry->Agents().size());
+	std::vector<std::pair<int, AgentObject*> > shownAgents;
+	if (focusAgentId > 0)
+	{
+		const unsigned int focusObjectId = static_cast<unsigned int>(focusAgentId);
+		for (int index = 0; index < static_cast<int>(m_registry->Agents().size()); ++index)
+		{
+			AgentObject* agent = m_registry->Agents()[index];
+			if (agent != nullptr && agent->GetObjId() == focusObjectId)
+			{
+				shownAgents.push_back(std::make_pair(index, agent));
+				break;
+			}
+		}
+	}
+	else
+	{
+		const int showingCount = maxAgents < static_cast<int>(m_registry->Agents().size()) ? maxAgents : static_cast<int>(m_registry->Agents().size());
+		for (int index = 0; index < showingCount; ++index)
+			shownAgents.push_back(std::make_pair(index, m_registry->Agents()[index]));
+	}
 	int visibleTargetCount = 0;
 	int memoryTargetCount = 0;
 	int blackboardEntryCount = 0;
@@ -675,10 +700,15 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 	std::ostringstream stream;
 	stream << "AI agents=" << m_registry->Agents().size()
 		<< " controllers=" << aiControllerCount
-		<< " showing=" << showingCount
+		<< " showing=" << shownAgents.size()
 		<< " visibleTargets=" << visibleTargetCount
 		<< " memoryTargets=" << memoryTargetCount
 		<< " bbEntries=" << blackboardEntryCount;
+	if (focusAgentId > 0)
+	{
+		stream << " focusAgentId=" << focusAgentId
+			<< " focusFound=" << (!shownAgents.empty() ? "true" : "false");
+	}
 	if (m_agentSpatialIndex != nullptr)
 		stream << "\n" << m_agentSpatialIndex->BuildDebugSummary();
 	if (m_agentPerceptionSystem != nullptr)
@@ -688,9 +718,10 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 	if (m_tacticalQueryService != nullptr)
 		stream << "\n" << m_tacticalQueryService->BuildDebugSummary();
 
-	for (int index = 0; index < showingCount; ++index)
+	for (std::vector<std::pair<int, AgentObject*> >::const_iterator shownIter = shownAgents.begin(); shownIter != shownAgents.end(); ++shownIter)
 	{
-		AgentObject* agent = m_registry->Agents()[index];
+		const int index = shownIter->first;
+		AgentObject* agent = shownIter->second;
 		if (agent == nullptr)
 			continue;
 
@@ -766,11 +797,18 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 
 std::string ObjectManager::buildAiRuntimeDebugSummary(int maxAgents)
 {
+	return buildAiRuntimeDebugSummaryForAgent(maxAgents, 0);
+}
+
+std::string ObjectManager::buildAiRuntimeDebugSummaryForAgent(int maxAgents, int focusAgentId)
+{
 	const int safeMaxAgents = maxAgents < 0 ? 0 : (maxAgents > 32 ? 32 : maxAgents);
 	std::ostringstream stream;
 	stream << "[AIRuntimeDiag] unified=true"
 		<< " maxAgents=" << safeMaxAgents;
-	stream << "\n" << buildAiDebugSummary(safeMaxAgents);
+	if (focusAgentId > 0)
+		stream << " focusAgentId=" << focusAgentId;
+	stream << "\n" << buildAiDebugSummaryForAgent(safeMaxAgents, focusAgentId);
 	if (m_aiScheduler != nullptr)
 		stream << "\n" << m_aiScheduler->BuildDebugSummary();
 	return stream.str();

@@ -34,6 +34,7 @@ param(
 	[int]$DiagMaxObjects = 8,
 	[int]$DiagMaxResources = 6,
 	[int]$DiagMaxEvents = 6,
+	[int]$DiagFocusAgentId = 0,
 	[string]$Preset = "",
 	[int]$Seed = 0,
 	[int]$AgentCount = 0,
@@ -58,6 +59,8 @@ param(
 	[switch]$PerfStallLog,
 	[int]$PerfStallThresholdMs = 40,
 	[int]$PerfSummaryIntervalMs = 3000,
+	[int]$BtTickIntervalMs = 0,
+	[switch]$BtTickStagger,
 	[switch]$DryRun
 )
 
@@ -83,7 +86,17 @@ $AiPerfPresetNames = @(
 	"ai_perf_500",
 	"ai_perf_1000"
 )
+$Chapter9TacticsCppPresetNames = @(
+	"chapter9_tactics_cpp",
+	"chapter9_tactics_cpp_pressure"
+)
 if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox10"
+}
+if ($Preset -eq "bt_runtime_lod" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox10"
+}
+if ($Preset -eq "bt_runtime_budget" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox10"
 }
 if ($Preset -eq "chapter8_comms" -and -not $PSBoundParameters.ContainsKey("Sample")) {
@@ -110,13 +123,17 @@ if ($Preset -eq "chapter9_tactics_legacy_parity" -and -not $PSBoundParameters.Co
 if ($Preset -eq "chapter9_tactics_agent_motion_probe" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox17"
 }
-if ($Preset -eq "chapter9_tactics_cpp" -and -not $PSBoundParameters.ContainsKey("Sample")) {
+if (($Chapter9TacticsCppPresetNames -contains $Preset) -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox18"
 }
 if (($AiPerfPresetNames -contains $Preset) -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox16"
 }
-$RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent
+$BtRuntimeDiagPresetNames = @(
+	"bt_runtime_lod",
+	"bt_runtime_budget"
+)
+$RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent -or ($BtRuntimeDiagPresetNames -contains $Preset)
 
 $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_TEST",
@@ -128,6 +145,7 @@ $KnownEnvNames = @(
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES",
 	"HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS",
+	"HELLO_RUNTIME_DIAGNOSTIC_FOCUS_AGENT_ID",
 	"HELLO_SAMPLE_PRESET",
 	"HELLO_SAMPLE_SEED",
 	"HELLO_SAMPLE_AGENT_COUNT",
@@ -157,7 +175,10 @@ $KnownEnvNames = @(
 	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE",
 	"HELLO_PERF_STALL_LOG",
 	"HELLO_PERF_STALL_THRESHOLD_MS",
-	"HELLO_PERF_SUMMARY_INTERVAL_MS"
+	"HELLO_PERF_SUMMARY_INTERVAL_MS",
+	"HELLO_BT_TICK_INTERVAL_MS",
+	"HELLO_BT_TICK_STAGGER",
+	"HELLO_BT_MAX_TREE_TICKS_PER_FRAME"
 )
 
 $RunId = "{0:yyyyMMddHHmmssfff}-{1}" -f (Get-Date), $PID
@@ -174,6 +195,9 @@ if ($RuntimeDiagEnabled) {
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_OBJECTS"] = [string]$DiagMaxObjects
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_RESOURCES"] = [string]$DiagMaxResources
 	$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_MAX_EVENTS"] = [string]$DiagMaxEvents
+	if ($DiagFocusAgentId -gt 0) {
+		$SelectedEnv["HELLO_RUNTIME_DIAGNOSTIC_FOCUS_AGENT_ID"] = [string]$DiagFocusAgentId
+	}
 }
 if ($BlackboardSelfTest) {
 	$SelectedEnv["HELLO_AI_BLACKBOARD_SELF_TEST"] = "1"
@@ -229,6 +253,12 @@ if ($PerfStallLog -or ($AiPerfPresetNames -contains $Preset)) {
 	$SelectedEnv["HELLO_PERF_STALL_THRESHOLD_MS"] = [string]$PerfStallThresholdMs
 	$SelectedEnv["HELLO_PERF_SUMMARY_INTERVAL_MS"] = [string]$PerfSummaryIntervalMs
 }
+if ($BtTickIntervalMs -gt 0) {
+	$SelectedEnv["HELLO_BT_TICK_INTERVAL_MS"] = [string]$BtTickIntervalMs
+}
+if ($BtTickStagger) {
+	$SelectedEnv["HELLO_BT_TICK_STAGGER"] = "1"
+}
 if ($Preset -eq "ai_perf_smoke" -and $Seconds -lt 120) {
 	$Seconds = 120
 }
@@ -242,6 +272,9 @@ elseif (($Preset -like "ai_perf_*") -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and $Seconds -lt 70) {
+	$Seconds = 70
+}
+if ($Preset -eq "bt_runtime_lod" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
 if ($Preset -eq "chapter8_comms" -and $Seconds -lt 70) {
@@ -268,11 +301,11 @@ if ($Preset -eq "chapter9_tactics_legacy_parity" -and $Seconds -lt 35) {
 if ($Preset -eq "chapter9_tactics_agent_motion_probe" -and $Seconds -lt 12) {
 	$Seconds = 12
 }
-if ($Preset -eq "chapter9_tactics_cpp" -and $Seconds -lt 35) {
+if (($Chapter9TacticsCppPresetNames -contains $Preset) -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) parityTrace=$($ParityTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) parityTrace=$($ParityTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) btTickIntervalMs=$BtTickIntervalMs btTickStagger=$($BtTickStagger.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -423,6 +456,12 @@ try {
 			if ($diagMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm runtime diagnostic selftest success."
 			}
+			if ($DiagFocusAgentId -gt 0) {
+				$focusMatches = @($LogLinesForChecks | Select-String -Pattern "focusAgentId=$DiagFocusAgentId.*focusFound=true")
+				if ($focusMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm focused AI runtime diagnostics for agent $DiagFocusAgentId."
+				}
+			}
 			if ($AiEventSelfTest) {
 				$eventSelfTestMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIEventSelfTest\]\s+result=true")
 				if ($eventSelfTestMatches.Count -eq 0) {
@@ -433,6 +472,35 @@ try {
 				$presetMatches = @($LogLinesForChecks | Select-String -Pattern "\[ConfigManager\].*preset=.*$([regex]::Escape($Preset))")
 				if ($presetMatches.Count -eq 0) {
 					throw "Sandbox smoke log did not confirm sample preset: $Preset"
+				}
+			}
+			$expectedBtTickIntervalMs = 0
+			if ($BtTickIntervalMs -gt 0) {
+				$expectedBtTickIntervalMs = $BtTickIntervalMs
+			} elseif ($Preset -eq "bt_runtime_lod" -or $Preset -eq "bt_runtime_budget") {
+				$expectedBtTickIntervalMs = 250
+			}
+			if ($expectedBtTickIntervalMs -gt 0) {
+				$btIntervalPattern = "\[BTStats\].*tickIntervalMs=$expectedBtTickIntervalMs(\.0+)?"
+				$btIntervalMatches = @($LogLinesForChecks | Select-String -Pattern $btIntervalPattern)
+				if ($btIntervalMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm BehaviorTree runtime tick interval $expectedBtTickIntervalMs ms."
+				}
+				$btSkippedMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*tickSkipped=[1-9][0-9]*")
+				if ($btSkippedMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm BehaviorTree runtime tick skipping."
+				}
+				if ($Preset -eq "bt_runtime_lod") {
+					$btCacheMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*cacheHits=[1-9][0-9]*")
+					if ($btCacheMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree condition result cache hits."
+					}
+				}
+				if ($Preset -eq "bt_runtime_budget") {
+					$btBudgetMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*budgetSkipped=[1-9][0-9]*.*budgetMax=1")
+					if ($btBudgetMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree frame budget skipping."
+					}
 				}
 			}
 		}
@@ -464,6 +532,14 @@ try {
 			if ($teamBlackboardScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats."
 			}
+			$teamBlackboardTypedMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppTypedFacts=\s*[1-9][0-9]*")
+			if ($teamBlackboardTypedMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard typed C++ facts."
+			}
+			$teamBlackboardFocusMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppFocusApplies=\s*[1-9][0-9]*")
+			if ($teamBlackboardFocusMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard C++ FocusTarget apply."
+			}
 		}
 
 		if ($Preset -eq "influence_map") {
@@ -483,6 +559,14 @@ try {
 			if ($teamBlackboardScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats for InfluenceMap preset."
 			}
+			$teamBlackboardTypedMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppTypedFacts=\s*[1-9][0-9]*")
+			if ($teamBlackboardTypedMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard typed C++ facts for InfluenceMap preset."
+			}
+			$teamBlackboardFocusMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppFocusApplies=\s*[1-9][0-9]*")
+			if ($teamBlackboardFocusMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard C++ FocusTarget apply for InfluenceMap preset."
+			}
 		}
 
 		if ($Preset -eq "hearing_danger") {
@@ -497,6 +581,14 @@ try {
 			$hearingScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[HearingDangerSmoke\].*runs=.*skips=.*agentChecks=")
 			if ($hearingScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Hearing/Danger scheduled scan stats."
+			}
+			$hearingRetreatMatches = @($LogLinesForChecks | Select-String -Pattern "\[HearingDangerSmoke\].*cppRetreatApplies=\s*[1-9][0-9]*")
+			if ($hearingRetreatMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Hearing/Danger C++ RetreatPoint apply."
+			}
+			$hearingCppSenseMatches = @($LogLinesForChecks | Select-String -Pattern "\[HearingDangerSmoke\].*cppSense=\s*true")
+			if ($hearingCppSenseMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Hearing/Danger C++ perception sense."
 			}
 		}
 
@@ -513,6 +605,14 @@ try {
 			if ($formationScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Formation scheduled update stats."
 			}
+			$formationTypedMatches = @($LogLinesForChecks | Select-String -Pattern "\[FormationSmoke\].*cppTypedFacts=\s*[1-9][0-9]*")
+			if ($formationTypedMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Formation typed C++ facts."
+			}
+			$formationFocusMatches = @($LogLinesForChecks | Select-String -Pattern "\[FormationSmoke\].*cppFocusApplies=\s*[1-9][0-9]*")
+			if ($formationFocusMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Formation C++ FocusTarget apply."
+			}
 		}
 
 		if ($Preset -eq "chapter9_tactics_lua") {
@@ -526,7 +626,7 @@ try {
 			}
 		}
 
-		if ($Preset -eq "chapter9_tactics_cpp") {
+		if ($Chapter9TacticsCppPresetNames -contains $Preset) {
 			$tacticsMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\]\s+PASS")
 			if ($tacticsMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Chapter 9 C++ tactics behavior."
@@ -534,6 +634,40 @@ try {
 			$tacticsScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\].*dangerCells=.*teamCells=.*writes=.*queries=")
 			if ($tacticsScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Chapter 9 C++ tactics influence stats."
+			}
+			$dirtyRegionMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDirtyRegionSmoke\]\s+PASS")
+			if ($dirtyRegionMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm tactical dirty region stats."
+			}
+			$dirtySummaryMatches = @($LogLinesForChecks | Select-String -Pattern "dirtyRegions=[1-9][0-9]*.*dirtyCells=[1-9][0-9]*.*spreadRegionCells=[1-9][0-9]*.*spreadLimited=true")
+			if ($dirtySummaryMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm bounded tactical dirty region spread summary."
+			}
+			$schemaMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalLayerSchemaSmoke\]\s+PASS")
+			if ($schemaMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm tactical support/cover/crowd schema."
+			}
+			$schemaSummaryMatches = @($LogLinesForChecks | Select-String -Pattern "schema=support/cover/crowd.*supportCells=[1-9][0-9]*.*coverCells=[1-9][0-9]*.*crowdCells=[1-9][0-9]*")
+			if ($schemaSummaryMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm active tactical support/cover/crowd layers."
+			}
+			$debugConfigMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDebugConfigSmoke\]\s+PASS")
+			if ($debugConfigMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm tactical layer debug config."
+			}
+			$debugSummaryMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDebugDraw\].*configs=[1-9][0-9]*.*order=.*projectToNav=")
+			if ($debugSummaryMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm explicit tactical debug draw layer config summary."
+			}
+			if ($Preset -eq "chapter9_tactics_cpp_pressure") {
+				$candidateLimitMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalCandidateLimitSmoke\]\s+PASS")
+				if ($candidateLimitMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm tactical query candidate limit."
+				}
+				$candidateSummaryMatches = @($LogLinesForChecks | Select-String -Pattern "candidateLimit=64.*capped=true")
+				if ($candidateSummaryMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm capped tactical query summary."
+				}
 			}
 		}
 

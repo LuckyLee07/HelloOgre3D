@@ -71,7 +71,9 @@ public:
 	int getAiAgentCount() const;
 	int getAiSoldierCount() const;
 	std::string buildAiRuntimeDebugSummary(int maxAgents);
+	std::string buildAiRuntimeDebugSummaryForAgent(int maxAgents, int focusAgentId);
 	std::string buildAiDebugSummary(int maxAgents);
+	std::string buildAiDebugSummaryForAgent(int maxAgents, int focusAgentId);
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string runAiEventScopeSelfTest();
 	std::string buildObjectDebugSummary(int maxObjects);
