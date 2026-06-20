@@ -142,7 +142,7 @@ private:
 #endif
 	static const char* SafeString(const char* value);
 
-	FairyGuiSystem* m_system;
+	FairyGuiSystem* m_system; // non-owning; owned by GameManager/FairyGuiRuntime
 	std::string m_lastPackageName;
 	std::string m_lastStencilBackend;
 	std::string m_lastStencilBackendDetail;

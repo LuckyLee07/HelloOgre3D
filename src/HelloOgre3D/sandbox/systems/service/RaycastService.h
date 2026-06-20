@@ -18,7 +18,7 @@ public:
 	//tolua_end
 
 private:
-	PhysicsWorld* m_physicsWorld = nullptr;
+	PhysicsWorld* m_physicsWorld = nullptr; // non-owning; injected by GameManager/ObjectManager wiring
 }; //tolua_exports
 
 #endif // __RAYCAST_SERVICE_H__

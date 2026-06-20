@@ -1,6 +1,7 @@
 #ifndef __NAVIGATION_SERVICE_H__
 #define __NAVIGATION_SERVICE_H__
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include "OgreString.h"
@@ -18,6 +19,7 @@ public:
 
 	void SetObjectManager(ObjectManager* objectManager);
 	NavigationMesh* GetNavigationMesh(const Ogre::String& navMeshName) const;
+	// Takes ownership of navMesh when returning true.
 	bool AddNavigationMesh(const Ogre::String& navMeshName, NavigationMesh* navMesh);
 	int GetNavigationMeshCount() const;
 
@@ -32,8 +34,8 @@ public:
 	//tolua_end
 
 private:
-	ObjectManager* m_objectManager = nullptr;
-	std::unordered_map<Ogre::String, NavigationMesh*> m_navMeshes;
+	ObjectManager* m_objectManager = nullptr; // non-owning; injected by GameManager/ObjectManager wiring
+	std::unordered_map<Ogre::String, std::unique_ptr<NavigationMesh>> m_navMeshes;
 }; //tolua_exports
 
 #endif // __NAVIGATION_SERVICE_H__

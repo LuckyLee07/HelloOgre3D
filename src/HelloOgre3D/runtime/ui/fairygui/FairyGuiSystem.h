@@ -160,7 +160,7 @@ private:
 	FairyGuiSystem(const FairyGuiSystem&);
 	FairyGuiSystem& operator=(const FairyGuiSystem&);
 
-	FairyGuiSystemImpl* m_impl;
+	FairyGuiSystemImpl* m_impl; // owning pimpl; created/destroyed by FairyGuiSystem
 };
 
 #endif // __HELLO_FAIRY_GUI_SYSTEM_H__

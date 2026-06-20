@@ -1,8 +1,8 @@
 #include "NavigationService.h"
 
 #include <math.h>
+#include <utility>
 
-#include "SandboxMacros.h"
 #include "ai/navigation/NavigationMesh.h"
 #include "ai/tactics/TacticalService.h"
 #include "components/agent/AgentLocomotion.h"
@@ -23,10 +23,6 @@ NavigationService::NavigationService(ObjectManager* objectManager)
 
 NavigationService::~NavigationService()
 {
-	for (std::unordered_map<Ogre::String, NavigationMesh*>::iterator iter = m_navMeshes.begin(); iter != m_navMeshes.end(); ++iter)
-	{
-		SAFE_DELETE(iter->second);
-	}
 	m_navMeshes.clear();
 	m_objectManager = nullptr;
 }
@@ -38,8 +34,8 @@ void NavigationService::SetObjectManager(ObjectManager* objectManager)
 
 NavigationMesh* NavigationService::GetNavigationMesh(const Ogre::String& navMeshName) const
 {
-	std::unordered_map<Ogre::String, NavigationMesh*>::const_iterator found = m_navMeshes.find(navMeshName);
-	return found != m_navMeshes.end() ? found->second : nullptr;
+	std::unordered_map<Ogre::String, std::unique_ptr<NavigationMesh>>::const_iterator found = m_navMeshes.find(navMeshName);
+	return found != m_navMeshes.end() ? found->second.get() : nullptr;
 }
 
 bool NavigationService::AddNavigationMesh(const Ogre::String& navMeshName, NavigationMesh* navMesh)
@@ -47,15 +43,15 @@ bool NavigationService::AddNavigationMesh(const Ogre::String& navMeshName, Navig
 	if (navMesh == nullptr)
 		return false;
 
-	std::unordered_map<Ogre::String, NavigationMesh*>::iterator found = m_navMeshes.find(navMeshName);
+	std::unique_ptr<NavigationMesh> ownedNavMesh(navMesh);
+	std::unordered_map<Ogre::String, std::unique_ptr<NavigationMesh>>::iterator found = m_navMeshes.find(navMeshName);
 	if (found != m_navMeshes.end())
 	{
-		SAFE_DELETE(found->second);
-		found->second = navMesh;
+		found->second = std::move(ownedNavMesh);
 	}
 	else
 	{
-		m_navMeshes[navMeshName] = navMesh;
+		m_navMeshes.insert(std::make_pair(navMeshName, std::move(ownedNavMesh)));
 	}
 
 	TacticalService* tactics = m_objectManager != nullptr ? m_objectManager->GetTacticalService() : nullptr;
@@ -76,22 +72,21 @@ NavigationMesh* NavigationService::CreateNavigationMesh(const rcConfig& config, 
 	if (objectManager == nullptr) return nullptr;
 
 	const std::vector<BlockObject*> objects = objectManager->getFixedObjects();
-	NavigationMesh* pNavMesh = new NavigationMesh(config, objects);
+	std::unique_ptr<NavigationMesh> pNavMesh(new NavigationMesh(config, objects));
 
 	if (!pNavMesh->IsValid())
 	{
-		SAFE_DELETE(pNavMesh);
 		return nullptr;
 	}
 
-	bool result = AddNavigationMesh(navMeshName, pNavMesh);
+	NavigationMesh* rawNavMesh = pNavMesh.get();
+	bool result = AddNavigationMesh(navMeshName, pNavMesh.release());
 	if (!result)
 	{
-		SAFE_DELETE(pNavMesh);
 		return nullptr;
 	}
 
-	return pNavMesh;
+	return rawNavMesh;
 }
 
 void NavigationService::DefaultConfig(rcConfig& config)

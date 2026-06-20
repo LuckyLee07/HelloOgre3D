@@ -21,6 +21,9 @@
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
 #include "components/ai/AIController.h"
+#include "components/agent/AgentLocomotion.h"
+#include "components/agent/AgentAttrib.h"
+#include "components/combat/WeaponComponent.h"
 #include "components/physics/PhysicsComponent.h"
 #include "ai/navigation/NavigationMesh.h"
 #include "event/SandboxEventDispatcherManager.h"
@@ -256,16 +259,18 @@ namespace
 
 
 ObjectManager::ObjectManager(PhysicsWorld* pPhysicsWorld)
-	: m_registry(new ObjectRegistry()), m_pPhysicsWorld(pPhysicsWorld), m_currentTimeMs(0)
+	: m_registry(new ObjectRegistry())
+	, m_pPhysicsWorld(pPhysicsWorld)
+	, m_aiScheduler(new AIScheduler())
+	, m_agentSpatialIndex(new AgentSpatialIndexSystem())
+	, m_agentPerceptionSystem(new AgentPerceptionSystem())
+	, m_teamBlackboardService(new TeamBlackboardService())
+	, m_tacticalQueryService(new TacticalQueryService())
+	, m_tacticalDebugDrawService(new TacticalDebugDrawService())
+	, m_tacticalService(new TacticalService(this, m_tacticalQueryService.get(), m_tacticalDebugDrawService.get()))
+	, m_currentTimeMs(0)
 {
 	m_pScriptVM = GetScriptLuaVM();
-	m_aiScheduler = new AIScheduler();
-	m_agentSpatialIndex = new AgentSpatialIndexSystem();
-	m_agentPerceptionSystem = new AgentPerceptionSystem();
-	m_teamBlackboardService = new TeamBlackboardService();
-	m_tacticalQueryService = new TacticalQueryService();
-	m_tacticalDebugDrawService = new TacticalDebugDrawService();
-	m_tacticalService = new TacticalService(this, m_tacticalQueryService, m_tacticalDebugDrawService);
 	m_tacticalQueryService->Initialize();
 	if (IsFalseEnvValue(std::getenv("HELLO_AI_SPATIAL_INDEX_ENABLE")))
 		m_agentSpatialIndex->SetEnabled(false);
@@ -291,14 +296,6 @@ ObjectManager::~ObjectManager()
 	if (m_tacticalDebugDrawService != nullptr)
 		m_tacticalDebugDrawService->ClearVisuals();
 	this->clearAllObjects(MGR_OBJ_ALLS);
-	SAFE_DELETE(m_registry);
-	SAFE_DELETE(m_aiScheduler);
-	SAFE_DELETE(m_agentSpatialIndex);
-	SAFE_DELETE(m_agentPerceptionSystem);
-	SAFE_DELETE(m_teamBlackboardService);
-	SAFE_DELETE(m_tacticalService);
-	SAFE_DELETE(m_tacticalQueryService);
-	SAFE_DELETE(m_tacticalDebugDrawService);
 }
 
 void ObjectManager::SetCurrentTimeMs(long long currentTimeMs)
@@ -321,10 +318,10 @@ void ObjectManager::Update(int deltaMilliseconds)
 	AIUpdateSystem::FrameContext aiFrameContext;
 	aiFrameContext.agents = &m_registry->Agents();
 	aiFrameContext.objectManager = this;
-	aiFrameContext.scheduler = m_aiScheduler;
-	aiFrameContext.spatialIndex = m_agentSpatialIndex;
-	aiFrameContext.perceptionSystem = m_agentPerceptionSystem;
-	aiFrameContext.teamBlackboard = m_teamBlackboardService;
+	aiFrameContext.scheduler = m_aiScheduler.get();
+	aiFrameContext.spatialIndex = m_agentSpatialIndex.get();
+	aiFrameContext.perceptionSystem = m_agentPerceptionSystem.get();
+	aiFrameContext.teamBlackboard = m_teamBlackboardService.get();
 	aiFrameContext.aiControllerCount = aiControllerCount;
 	aiFrameContext.perfEnabled = perfEnabled;
 	aiFrameContext.timing = &perfTiming;
@@ -343,7 +340,7 @@ void ObjectManager::Update(int deltaMilliseconds)
 	lifecycleContext.removedSceneNodes = &m_remSceneNodes;
 	lifecycleContext.objectManager = this;
 	lifecycleContext.aiUpdateSystem = &m_aiUpdateSystem;
-	lifecycleContext.scheduler = m_aiScheduler;
+	lifecycleContext.scheduler = m_aiScheduler.get();
 	lifecycleContext.useAiScheduler = useAiScheduler;
 	lifecycleContext.perfEnabled = perfEnabled;
 	lifecycleContext.timing = &perfTiming;
@@ -699,6 +696,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 
 		SoldierObject* soldier = dynamic_cast<SoldierObject*>(agent);
 		AIController* ai = agent->FindComponent<AIController>();
+		const AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
 		stream << "\n#" << index
 			<< " id=" << agent->GetObjId()
 			<< " team=" << agent->GetTeamId()
@@ -708,7 +706,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 			<< " pos=" << FormatVec3Precise(agent->GetPosition())
 			<< " vel=" << FormatVec3Precise(agent->GetVelocity())
 			<< " speed=" << FormatReal(agent->GetSpeed())
-			<< " target=" << FormatVec3Precise(agent->GetTarget());
+			<< " target=" << FormatVec3Precise(locomotion != nullptr ? locomotion->GetTarget() : Ogre::Vector3::ZERO);
 
 		if (ai == nullptr)
 		{
@@ -718,8 +716,13 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 
 		if (soldier != nullptr)
 		{
-			stream << "/" << static_cast<int>(soldier->GetMaxHealth())
-				<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo();
+			const AgentAttrib* attrib = agent->FindComponent<AgentAttrib>();
+			const WeaponComponent* weapon = agent->FindComponent<WeaponComponent>();
+			const Ogre::Real maxHealth = attrib != nullptr ? attrib->GetMaxHealth() : std::max<Ogre::Real>(agent->GetHealth(), 1.0f);
+			const int ammo = weapon != nullptr ? weapon->GetAmmo() : 0;
+			const int maxAmmo = weapon != nullptr ? weapon->GetMaxAmmo() : 0;
+			stream << "/" << static_cast<int>(maxHealth)
+				<< " ammo=" << ammo << "/" << maxAmmo;
 		}
 
 		BehaviorTreeDriver* behaviorDriver = ai->GetBehaviorTreeDriver();
@@ -730,6 +733,7 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 				behaviorDriver->SetDebugTraceEnabled(true);
 			stream << " driver=BT traceFrame=" << behaviorDriver->GetDebugTraceFrame();
 			AppendBlackboardBrief(stream, behaviorDriver->GetBlackboard());
+			stream << " " << behaviorDriver->BuildRuntimeDebugSummary();
 			const std::string trace = behaviorDriver->GetLastDebugTrace();
 			if (!trace.empty())
 				stream << " trace=" << TrimDebugText(trace, 96);
@@ -757,6 +761,18 @@ std::string ObjectManager::buildAiDebugSummary(int maxAgents)
 	{
 		stream << "\n" << BuildBlackboardSelfTestSummary();
 	}
+	return stream.str();
+}
+
+std::string ObjectManager::buildAiRuntimeDebugSummary(int maxAgents)
+{
+	const int safeMaxAgents = maxAgents < 0 ? 0 : (maxAgents > 32 ? 32 : maxAgents);
+	std::ostringstream stream;
+	stream << "[AIRuntimeDiag] unified=true"
+		<< " maxAgents=" << safeMaxAgents;
+	stream << "\n" << buildAiDebugSummary(safeMaxAgents);
+	if (m_aiScheduler != nullptr)
+		stream << "\n" << m_aiScheduler->BuildDebugSummary();
 	return stream.str();
 }
 
@@ -800,12 +816,13 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 
 		if (AgentObject* agent = dynamic_cast<AgentObject*>(object))
 		{
+			const AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
 			stream << " pos=" << FormatVec3(agent->GetPosition())
 				<< " vel=" << FormatVec3(agent->GetVelocity())
 				<< " hp=" << static_cast<int>(agent->GetHealth())
 				<< " speed=" << static_cast<int>(agent->GetSpeed())
-				<< " target=" << FormatVec3(agent->GetTarget())
-				<< " hasPath=" << (agent->HasPath() ? "true" : "false")
+				<< " target=" << FormatVec3(locomotion != nullptr ? locomotion->GetTarget() : Ogre::Vector3::ZERO)
+				<< " hasPath=" << (locomotion != nullptr && locomotion->HasPath() ? "true" : "false")
 				<< " agentType=" << agent->getAgentType()
 				<< " state=" << agent->GetCurStateName() << "(" << agent->GetCurStateId() << ")";
 		}
@@ -821,7 +838,7 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 
 		if (SoldierObject* soldier = dynamic_cast<SoldierObject*>(object))
 		{
-			AIController* ai = soldier->GetAIController();
+			AIController* ai = soldier->FindComponent<AIController>();
 			const char* driverName = "None";
 			if (ai != nullptr && ai->GetBehaviorTreeDriver() != nullptr)
 				driverName = "BT";
@@ -830,8 +847,13 @@ std::string ObjectManager::buildObjectDebugSummary(int maxObjects)
 			else if (ai != nullptr && ai->GetFsmController() != nullptr)
 				driverName = "FSM";
 
-			stream << " soldierHpMax=" << static_cast<int>(soldier->GetMaxHealth())
-				<< " ammo=" << soldier->GetAmmo() << "/" << soldier->GetMaxAmmo()
+			const AgentAttrib* attrib = soldier->FindComponent<AgentAttrib>();
+			const WeaponComponent* weapon = soldier->FindComponent<WeaponComponent>();
+			const Ogre::Real maxHealth = attrib != nullptr ? attrib->GetMaxHealth() : std::max<Ogre::Real>(soldier->GetHealth(), 1.0f);
+			const int ammo = weapon != nullptr ? weapon->GetAmmo() : 0;
+			const int maxAmmo = weapon != nullptr ? weapon->GetMaxAmmo() : 0;
+			stream << " soldierHpMax=" << static_cast<int>(maxHealth)
+				<< " ammo=" << ammo << "/" << maxAmmo
 				<< " driver=" << driverName;
 		}
 	}

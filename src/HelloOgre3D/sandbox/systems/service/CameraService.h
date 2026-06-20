@@ -49,8 +49,8 @@ public:
 private:
 	long long GetProfileTime(ProfileTimeKind kind) const;
 
-	Ogre::Camera* m_camera;
-	Ogre::SceneManager* m_sceneManager;
+	Ogre::Camera* m_camera; // non-owning; injected by GameManager
+	Ogre::SceneManager* m_sceneManager; // non-owning; injected by GameManager
 	ProfileTimeGetter m_profileTimeGetter;
 }; //tolua_exports
 

@@ -2,6 +2,7 @@
 #define __OBJECT_MANAGER_H__
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -69,6 +70,7 @@ public:
 	int getObjectCount() const;
 	int getAiAgentCount() const;
 	int getAiSoldierCount() const;
+	std::string buildAiRuntimeDebugSummary(int maxAgents);
 	std::string buildAiDebugSummary(int maxAgents);
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string runAiEventScopeSelfTest();
@@ -86,18 +88,18 @@ public:
 
 	NavigationMesh* getNavigationMesh(const Ogre::String& navName);
 	bool addNavigationMesh(const Ogre::String& navName, NavigationMesh* pNavMesh);
-	const AIScheduler* GetAIScheduler() const { return m_aiScheduler; }
-	AIScheduler* GetAIScheduler() { return m_aiScheduler; }
-	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex; }
-	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex; }
-	const AgentPerceptionSystem* GetAgentPerceptionSystem() const { return m_agentPerceptionSystem; }
-	AgentPerceptionSystem* GetAgentPerceptionSystem() { return m_agentPerceptionSystem; }
-	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService; }
-	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
-	const TacticalQueryService* GetTacticalQueryService() const { return m_tacticalQueryService; }
-	TacticalQueryService* GetTacticalQueryService() { return m_tacticalQueryService; }
-	const TacticalService* GetTacticalService() const { return m_tacticalService; }
-	TacticalService* GetTacticalService() { return m_tacticalService; }
+	const AIScheduler* GetAIScheduler() const { return m_aiScheduler.get(); }
+	AIScheduler* GetAIScheduler() { return m_aiScheduler.get(); }
+	const AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() const { return m_agentSpatialIndex.get(); }
+	AgentSpatialIndexSystem* GetAgentSpatialIndexSystem() { return m_agentSpatialIndex.get(); }
+	const AgentPerceptionSystem* GetAgentPerceptionSystem() const { return m_agentPerceptionSystem.get(); }
+	AgentPerceptionSystem* GetAgentPerceptionSystem() { return m_agentPerceptionSystem.get(); }
+	const TeamBlackboardService* GetTeamBlackboardService() const { return m_teamBlackboardService.get(); }
+	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService.get(); }
+	const TacticalQueryService* GetTacticalQueryService() const { return m_tacticalQueryService.get(); }
+	TacticalQueryService* GetTacticalQueryService() { return m_tacticalQueryService.get(); }
+	const TacticalService* GetTacticalService() const { return m_tacticalService.get(); }
+	TacticalService* GetTacticalService() { return m_tacticalService.get(); }
 
 private:
 	friend class ObjectLifecycleSystem;
@@ -105,22 +107,22 @@ private:
 	void realAddObject(BaseObject* pObject);
 	bool realRemoveObject(BaseObject* pObject);
 
-	ObjectRegistry* m_registry;
+	std::unique_ptr<ObjectRegistry> m_registry;
 	AIUpdateSystem m_aiUpdateSystem;
 	ObjectLifecycleSystem m_objectLifecycleSystem;
 
 	// 存储需要定时删除的RootScene下的Node
 	std::unordered_map<Ogre::SceneNode*, int> m_remSceneNodes;
 
-	ScriptLuaVM* m_pScriptVM;
-	PhysicsWorld* m_pPhysicsWorld;
-	AIScheduler* m_aiScheduler;
-	AgentSpatialIndexSystem* m_agentSpatialIndex;
-	AgentPerceptionSystem* m_agentPerceptionSystem;
-	TeamBlackboardService* m_teamBlackboardService;
-	TacticalQueryService* m_tacticalQueryService;
-	TacticalDebugDrawService* m_tacticalDebugDrawService;
-	TacticalService* m_tacticalService;
+	ScriptLuaVM* m_pScriptVM; // non-owning global Lua VM
+	PhysicsWorld* m_pPhysicsWorld; // non-owning; owned by GameManager
+	std::unique_ptr<AIScheduler> m_aiScheduler;
+	std::unique_ptr<AgentSpatialIndexSystem> m_agentSpatialIndex;
+	std::unique_ptr<AgentPerceptionSystem> m_agentPerceptionSystem;
+	std::unique_ptr<TeamBlackboardService> m_teamBlackboardService;
+	std::unique_ptr<TacticalQueryService> m_tacticalQueryService;
+	std::unique_ptr<TacticalDebugDrawService> m_tacticalDebugDrawService;
+	std::unique_ptr<TacticalService> m_tacticalService;
 	long long m_currentTimeMs;
 	SandboxServices m_services;
 }; //tolua_exports

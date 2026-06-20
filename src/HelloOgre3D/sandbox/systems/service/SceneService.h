@@ -37,8 +37,8 @@ public:
 private:
 	Ogre::Camera* GetSceneGraphCamera() const;
 
-	Ogre::SceneManager* m_sceneManager = nullptr;
-	CameraService* m_cameraService = nullptr;
+	Ogre::SceneManager* m_sceneManager = nullptr; // non-owning; injected by GameManager
+	CameraService* m_cameraService = nullptr; // non-owning; injected service facade
 }; //tolua_exports
 
 #endif // __SCENE_SERVICE_H__

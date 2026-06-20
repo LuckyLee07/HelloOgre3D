@@ -18,7 +18,7 @@ public:
 	//tolua_end
 
 private:
-	ScriptLuaVM* m_scriptVM = nullptr;
+	ScriptLuaVM* m_scriptVM = nullptr; // non-owning; injected by GameManager
 }; //tolua_exports
 
 #endif // __SCRIPT_SERVICE_H__
