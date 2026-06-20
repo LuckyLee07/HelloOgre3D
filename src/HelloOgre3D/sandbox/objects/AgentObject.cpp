@@ -4,9 +4,10 @@
 #include "btBulletDynamicsCommon.h"
 #include "BlockObject.h"
 #include "ai/common/AICommand.h"
+#include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
+#include "systems/service/AgentConfigService.h"
 #include "systems/physics/PhysicsWorld.h"
-#include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "animation/AgentAnimStateMachine.h"
 #include "components/agent/AgentAttrib.h"
@@ -386,9 +387,10 @@ void AgentObject::SetHealth(Ogre::Real health)
 	{
 		const SandboxServices* services = GetSandboxServices();
 		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
-		if (objectManager != nullptr)
+		TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+		if (tactics != nullptr)
 		{
-			objectManager->publishTacticalEvent(
+			tactics->publishTacticalEvent(
 				SandboxEventTypes::DeadFriendlySighted(),
 				static_cast<int>(GetObjId()),
 				static_cast<int>(GetObjId()),
@@ -684,10 +686,11 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	const SandboxServices* services = GetSandboxServices();
 	BlockObject::SpawnBulletImpact(collision, services);
 	ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
-	if (objectManager != nullptr)
+	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+	if (tactics != nullptr)
 	{
 		BaseObject* bulletOwner = pBullet->GetOwner();
-		objectManager->publishTacticalEvent(
+		tactics->publishTacticalEvent(
 			SandboxEventTypes::BulletImpact(),
 			bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
 			static_cast<int>(GetObjId()),
@@ -783,6 +786,6 @@ bool AgentObject::GetUseCppFSM()
 #endif // USE_CPP_FSM
 	*/
 	const SandboxServices* services = GetSandboxServices();
-	SandboxMgr* sandbox = services != nullptr ? services->sandbox : nullptr;
-	return sandbox != nullptr ? sandbox->GetUseCppFsmFlag() : true;
+	AgentConfigService* agentConfig = services != nullptr ? services->agentConfig : nullptr;
+	return agentConfig != nullptr ? agentConfig->GetUseCppFsmFlag() : true;
 }

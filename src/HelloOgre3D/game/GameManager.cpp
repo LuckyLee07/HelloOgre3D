@@ -17,15 +17,16 @@
 #include "ui/fairygui/FairyGuiSystem.h"
 #endif
 #include "systems/ui/UIManager.h"
-#include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/service/ObjectFactory.h"
+#include "systems/service/AgentConfigService.h"
 #include "systems/service/CameraService.h"
 #include "systems/service/NavigationService.h"
 #include "systems/service/RaycastService.h"
 #include "systems/service/SceneService.h"
 #include "systems/service/ScriptService.h"
 #include "ai/common/AIScheduler.h"
+#include "ai/tactics/TacticalService.h"
 #include "ai/team/TeamBlackboardService.h"
 #include "debug/DebugDrawer.h"
 #include "systems/physics/PhysicsWorld.h"
@@ -63,8 +64,8 @@ FairyGuiSystem* ResolveFairyGuiSystem(ClientManager* clientManager)
 }
 
 GameManager::GameManager(ClientManager* pClientMgr)
-	: m_pClientManager(pClientMgr), m_pScriptVM(nullptr), m_pSandboxMgr(nullptr), m_pPhysicsWorld(nullptr),
-	m_pCameraService(nullptr), m_pNavigationService(nullptr), m_pRaycastService(nullptr), m_pSceneService(nullptr), m_pScriptService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
+	: m_pClientManager(pClientMgr), m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr),
+	m_pCameraService(nullptr), m_pAgentConfigService(nullptr), m_pNavigationService(nullptr), m_pRaycastService(nullptr), m_pSceneService(nullptr), m_pScriptService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
 	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr)))
 {
 	
@@ -74,9 +75,9 @@ GameManager::~GameManager()
 {
 	SceneFactory::SetRootSceneNode(nullptr);
 
-	SAFE_DELETE(m_pSandboxMgr);
 	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pObjectFactory);
+	SAFE_DELETE(m_pAgentConfigService);
 	SAFE_DELETE(m_pNavigationService);
 	SAFE_DELETE(m_pRaycastService);
 	SAFE_DELETE(m_pSceneService);
@@ -107,6 +108,7 @@ void GameManager::Initialize()
 
 	m_pObjectManager = new ObjectManager(m_pPhysicsWorld);
 	m_pObjectFactory = new ObjectFactory(m_pObjectManager);
+	m_pAgentConfigService = new AgentConfigService();
 	m_pNavigationService = new NavigationService(m_pObjectManager);
 	m_pRaycastService = new RaycastService(m_pPhysicsWorld);
 	m_pScriptService = new ScriptService(m_pScriptVM);
@@ -133,15 +135,14 @@ void GameManager::Initialize()
 	});
 	m_pSceneService = new SceneService(pSceneManager, m_pCameraService);
 	SceneFactory::SetRootSceneNode(pSceneManager != nullptr ? pSceneManager->getRootSceneNode() : nullptr);
-	m_pSandboxMgr = new SandboxMgr(m_pSceneService, m_pScriptService, m_pRaycastService);
 
 	SandboxServices services;
 	services.objects = m_pObjectManager;
 	services.physics = m_pPhysicsWorld;
 	services.input = m_pClientManager != nullptr ? m_pClientManager->getInputManager() : nullptr;
-	services.sandbox = m_pSandboxMgr;
 	services.script = m_pScriptVM;
 	services.objectFactory = m_pObjectFactory;
+	services.agentConfig = m_pAgentConfigService;
 	services.navigation = m_pNavigationService;
 	services.raycast = m_pRaycastService;
 	services.scene = m_pSceneService;
@@ -160,7 +161,7 @@ void GameManager::InitLuaEnv()
 	tolua_SandboxToLua_Manual(m_pScriptVM->getLuaState());
 
 	// 设置lua可用的c++对象 
-	m_pScriptVM->setUserTypePointer("Sandbox", "SandboxMgr", m_pSandboxMgr);
+	m_pScriptVM->setUserTypePointer("SandboxAgentConfig", "AgentConfigService", m_pAgentConfigService);
 	m_pScriptVM->setUserTypePointer("SandboxCamera", "CameraService", m_pCameraService);
 	m_pScriptVM->setUserTypePointer("SandboxNav", "NavigationService", m_pNavigationService);
 	m_pScriptVM->setUserTypePointer("SandboxRaycast", "RaycastService", m_pRaycastService);
@@ -168,6 +169,7 @@ void GameManager::InitLuaEnv()
 	m_pScriptVM->setUserTypePointer("SandboxScript", "ScriptService", m_pScriptService);
 	m_pScriptVM->setUserTypePointer("SandboxAIScheduler", "AIScheduler", m_pObjectManager->GetAIScheduler());
 	m_pScriptVM->setUserTypePointer("SandboxTeam", "TeamBlackboardService", m_pObjectManager->GetTeamBlackboardService());
+	m_pScriptVM->setUserTypePointer("SandboxTactics", "TacticalService", m_pObjectManager->GetTacticalService());
 	m_pScriptVM->setUserTypePointer("SandboxUI", "UIManager", m_pUIManager);
 	m_pScriptVM->setUserTypePointer("SandboxObjects", "ObjectFactory", m_pObjectFactory);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);

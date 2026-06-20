@@ -5,8 +5,8 @@
 #include "btBulletDynamicsCommon.h"
 #include "GameDefine.h"
 #include "GameFunction.h"
+#include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
-#include "systems/manager/SandboxMgr.h"
 #include "systems/physics/PhysicsWorld.h"
 #include "systems/manager/ObjectManager.h"
 #include "OgreParticleSystemManager.h"
@@ -202,10 +202,11 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 		BlockObject* bullet = dynamic_cast<BlockObject*>(pCollideObj);
 		const SandboxServices* services = GetSandboxServices();
 		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
-		if (bullet != nullptr && objectManager != nullptr)
+		TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+		if (bullet != nullptr && tactics != nullptr)
 		{
 			BaseObject* bulletOwner = bullet->GetOwner();
-			objectManager->publishTacticalEvent(
+			tactics->publishTacticalEvent(
 				SandboxEventTypes::BulletImpact(),
 				bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
 				static_cast<int>(GetObjId()),

@@ -30,6 +30,7 @@ class AgentPerceptionSystem;
 class AgentSpatialIndexSystem;
 class TacticalDebugDrawService;
 class TacticalQueryService;
+class TacticalService;
 class TeamBlackboardService;
 class ObjectRegistry;
 struct RuntimeObjectUpdateTiming;
@@ -51,7 +52,7 @@ public:
 	~ObjectManager();
 
 	void Update(int deltaMilliseconds);
-	void SetCurrentTimeMs(long long currentTimeMs) { m_currentTimeMs = currentTimeMs; }
+	void SetCurrentTimeMs(long long currentTimeMs);
 	
 	void HandleKeyEvent(OIS::KeyCode keycode, unsigned int key);
 	void SetSandboxServices(const SandboxServices& services);
@@ -69,61 +70,6 @@ public:
 	int getAiAgentCount() const;
 	int getAiSoldierCount() const;
 	std::string buildAiDebugSummary(int maxAgents);
-	void configureAiScheduler(bool enabled, int tickIntervalMs, int maxTicksPerFrame);
-	std::string buildAiSchedulerDebugSummary() const;
-	void clearTeamBlackboardFacts();
-	void configureTeamBlackboard(int ttlMs);
-	bool rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence);
-	bool writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport = false);
-	int getTeamBlackboardFactCount() const;
-	int getTeamBlackboardReportCount() const;
-	std::string buildTeamBlackboardDebugSummary() const;
-	void clearTacticalInfluence();
-	void configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
-	void configureTacticalInfluenceFromNavMesh(const std::string& navMeshName, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset);
-	void clearTacticalInfluenceLayer(const std::string& layerName);
-	void setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia);
-	int addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
-	int addTacticalInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength);
-	int spreadTacticalInfluenceLayer(const std::string& layerName, int passCount);
-	float sampleTacticalInfluence(const std::string& layerName, const Ogre::Vector3& position) const;
-	float scoreTacticalPosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
-	Ogre::Vector3 findBestTacticalPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
-	float scoreTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& position) const;
-	Ogre::Vector3 findBestTacticalQueryPosition(const std::string& queryType, const Ogre::Vector3& center, float radius, float step);
-	Ogre::Vector3 findBestSupportPosition(const Ogre::Vector3& center, float radius, float step);
-	Ogre::Vector3 findLowThreatPosition(const Ogre::Vector3& center, float radius, float step);
-	void configureTacticalEvents(int eventTtlMs);
-	void clearTacticalEvents();
-	void publishTacticalEvent(const std::string& eventType, int senderId, int targetId, int teamId, int targetTeamId, const Ogre::Vector3& position, int timeMs, const std::string& scopeName, bool queueEvent);
-	int getTacticalEventCount() const;
-	int getTacticalEventTypeCount(const std::string& eventType) const;
-	Ogre::Vector3 getLastTacticalEventPosition(const std::string& eventType, const Ogre::Vector3& fallback) const;
-	int getTacticalEventDebugRecordCount() const;
-	std::string getTacticalEventDebugType(int luaIndex) const;
-	int getTacticalEventDebugSenderId(int luaIndex) const;
-	int getTacticalEventDebugTargetId(int luaIndex) const;
-	int getTacticalEventDebugTeamId(int luaIndex) const;
-	int getTacticalEventDebugTargetTeamId(int luaIndex) const;
-	Ogre::Vector3 getTacticalEventDebugPosition(int luaIndex) const;
-	int getTacticalEventDebugTimeMs(int luaIndex) const;
-	int getTacticalEventDebugRemainingTtlMs(int luaIndex) const;
-	int rebuildTacticalDangerLayer(int perspectiveTeamId, float dangerStrength, float bulletShotRadius, float bulletImpactRadius, float deadFriendlyRadius, float enemySightingRadius, int spreadPasses);
-	int rebuildTacticalTeamLayer(int positiveTeamId, float teamStrength, float radius, int spreadPasses);
-	int rebuildTacticalObjectiveLayer(const Ogre::Vector3& center, float strength, float radius, int spreadPasses);
-	int getTacticalInfluenceLayerActiveCellCount(const std::string& layerName) const;
-	int getTacticalInfluenceLayerCellWriteCount(const std::string& layerName) const;
-	int getTacticalInfluenceLayerDebugCellCount(const std::string& layerName, float threshold, int maxCells) const;
-	Ogre::Vector3 getTacticalInfluenceLayerDebugCellPosition(const std::string& layerName, int luaIndex, float threshold) const;
-	float getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
-	int drawTacticalInfluenceLayer(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
-	int rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
-	void setTacticalInfluenceDebugVisible(bool visible);
-	void clearTacticalInfluenceDebugVisuals();
-	int getTacticalInfluenceActiveCellCount() const;
-	int getTacticalInfluenceCellWriteCount() const;
-	int getTacticalInfluenceQueryCount() const;
-	std::string buildTacticalInfluenceDebugSummary() const;
 	std::string buildAiEventDebugSummary(int maxAgents, int maxEvents);
 	std::string runAiEventScopeSelfTest();
 	std::string buildObjectDebugSummary(int maxObjects);
@@ -150,6 +96,8 @@ public:
 	TeamBlackboardService* GetTeamBlackboardService() { return m_teamBlackboardService; }
 	const TacticalQueryService* GetTacticalQueryService() const { return m_tacticalQueryService; }
 	TacticalQueryService* GetTacticalQueryService() { return m_tacticalQueryService; }
+	const TacticalService* GetTacticalService() const { return m_tacticalService; }
+	TacticalService* GetTacticalService() { return m_tacticalService; }
 
 private:
 	friend class ObjectLifecycleSystem;
@@ -172,6 +120,7 @@ private:
 	TeamBlackboardService* m_teamBlackboardService;
 	TacticalQueryService* m_tacticalQueryService;
 	TacticalDebugDrawService* m_tacticalDebugDrawService;
+	TacticalService* m_tacticalService;
 	long long m_currentTimeMs;
 	SandboxServices m_services;
 }; //tolua_exports

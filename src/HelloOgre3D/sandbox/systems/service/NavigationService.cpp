@@ -4,6 +4,7 @@
 
 #include "SandboxMacros.h"
 #include "ai/navigation/NavigationMesh.h"
+#include "ai/tactics/TacticalService.h"
 #include "components/agent/AgentLocomotion.h"
 #include "objects/BlockObject.h"
 #include "recast/include/Recast.h"
@@ -57,8 +58,9 @@ bool NavigationService::AddNavigationMesh(const Ogre::String& navMeshName, Navig
 		m_navMeshes[navMeshName] = navMesh;
 	}
 
-	if (m_objectManager != nullptr)
-		m_objectManager->clearTacticalInfluenceDebugVisuals();
+	TacticalService* tactics = m_objectManager != nullptr ? m_objectManager->GetTacticalService() : nullptr;
+	if (tactics != nullptr)
+		tactics->clearTacticalInfluenceDebugVisuals();
 
 	return true;
 }

@@ -5,6 +5,7 @@
 #include "GameFunction.h"
 #include "SandboxMacros.h"
 #include "OgreSceneNode.h"
+#include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
 #include "core/object/BaseObject.h"
 #include "objects/BlockObject.h"
@@ -271,9 +272,10 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	}
 
 	ObjectManager* objectManager = ResolveObjectManager(this);
-	if (objectManager != nullptr)
+	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+	if (tactics != nullptr)
 	{
-		objectManager->publishTacticalEvent(
+		tactics->publishTacticalEvent(
 			SandboxEventTypes::BulletShot(),
 			static_cast<int>(owner->GetObjId()),
 			-1,

@@ -7,7 +7,6 @@
 #include "OgrePrerequisites.h"
 #include "systems/input/IInputHandler.h"
 
-class SandboxMgr;
 class ScriptLuaVM;
 class PhysicsWorld;
 class UIManager;
@@ -16,6 +15,7 @@ class ObjectManager;
 class ObjectFactory;
 class ClientManager;
 class FairyGuiLuaApi;
+class AgentConfigService;
 class CameraService;
 class NavigationService;
 class RaycastService;
@@ -67,10 +67,10 @@ private:
 	ClientManager* m_pClientManager;
 
 	ScriptLuaVM* m_pScriptVM;
-	SandboxMgr* m_pSandboxMgr;
 	PhysicsWorld* m_pPhysicsWorld;
 
 	CameraService* m_pCameraService;
+	AgentConfigService* m_pAgentConfigService;
 	NavigationService* m_pNavigationService;
 	RaycastService* m_pRaycastService;
 	SceneService* m_pSceneService;

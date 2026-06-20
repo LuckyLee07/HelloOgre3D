@@ -12,7 +12,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <unordered_set>
-#include "systems/manager/SandboxMgr.h"
 #include "profiling/Profile.h"
 
 namespace

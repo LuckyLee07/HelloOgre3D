@@ -16,6 +16,7 @@
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/fsm/AgentStateController.h"
 #include "ai/perception/AgentPerceptionQuery.h"
+#include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
 #include "event/SandboxEventPayload.h"
 #include "objects/AgentObject.h"
@@ -481,9 +482,10 @@ void AIController::WritePerceptionResult(const AgentPerceptionResult& result)
 
 	ObjectManager* objectManager = ResolveObjectManager(this);
 	AgentObject* owner = GetAgentOwner();
-	if (objectManager != nullptr && owner != nullptr)
+	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+	if (tactics != nullptr && owner != nullptr)
 	{
-		objectManager->publishTacticalEvent(
+		tactics->publishTacticalEvent(
 			SandboxEventTypes::EnemySighted(),
 			static_cast<int>(owner->GetObjId()),
 			result.targetId,
