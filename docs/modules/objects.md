@@ -27,8 +27,8 @@
 ## 5. 约束与红线
 
 - **位置真源**（AGENTS.md）：有有效刚体 → PhysicsComponent 权威、RenderComponent 同步；无刚体 → RenderComponent 权威。对象层只触发同步，不手写 Bullet→SceneNode；视觉偏移用 `SetVisualOffset`。
-- **P2**：150+ forwarder 样板主体仍保留；新增对象类型勿复制，新代码勿加单组件转发。RuntimeDiag `ComponentProbeAgent` 已验证非 Soldier `AgentObject` 能复用 AI/Attrib 等组件并通过 typed getter 访问；agent 入口、`Sandbox10`-`Sandbox13`、`Sandbox17` 与 `parity_trace.lua` 已通过 `AgentComponentAccess.lua` 走组件优先。
-- **P2 收窄（2026-06-19）**：`SoldierObject` Lua 导出已撤下 `getWeapon`、`GetAI/GetAIController`、`SetMaxHealth/GetMaxHealth`、`SetAmmo/GetAmmo/SetMaxAmmo/GetMaxAmmo/HasAmmo/ConsumeAmmo/RestoreAmmo` 这批纯组件转发；Lua 的 AI/Attrib/Weapon 访问走 `BaseObject` typed component getter 或 `AgentComponentAccess.lua`。`GetHealth/SetHealth`、`HasEnemy/CanShootEnemy`、移动/动画意图等仍作为行为语义入口保留。
+- **P2**：150+ forwarder 样板主体仍保留；新增对象类型勿复制，新代码勿加单组件转发。RuntimeDiag `ComponentProbeAgent` 已验证非 Soldier `AgentObject` 能复用 AI/Attrib 等组件并通过 typed getter 访问；agent 入口、`Sandbox3`、`Sandbox10`-`Sandbox13`、`Sandbox17`、DT/BT 条件与 `parity_trace.lua` 已通过 `AgentComponentAccess.lua` 走组件优先。
+- **P2 收窄（2026-06-19）**：`SoldierObject` Lua 导出已撤下 `getWeapon`、`GetAI/GetAIController`、`SetMaxHealth/GetMaxHealth`、`SetAmmo/GetAmmo/SetMaxAmmo/GetMaxAmmo/HasAmmo/ConsumeAmmo/RestoreAmmo`、`HasEnemy/CanShootEnemy/GetEnemy` 这批纯组件转发；Lua 的 AI/Attrib/Weapon/敌人查询访问走 `BaseObject` typed component getter 或 `AgentComponentAccess.lua`。`GetHealth/SetHealth`、移动/动画意图等仍作为行为语义入口保留。
 - **C4 完成 / P2 部分缓解**：SoldierObject 已不再手写 AI/Render/Anim/Weapon update block，组件顺序由 `IComponent::getUpdateOrder()` + `BaseObject::Update()` 驱动。
 - **P1**：AgentObject / BlockObject 的战术事件、碰撞粒子清理和 FSM flag 读取只走 `SandboxServices`；SoldierObject 通过 `SandboxServices.input` 获取输入；这些对象文件不再直接 include `GameManager.h` 或回退 `g_*`。
 - **P4（核心完成）**：BaseObject 组件容器已 `unique_ptr` 化，组件 lifecycle 断言/dump 已落地；BlockObject 与 AgentObject 的缓存组件裸成员、OpenSteerAdapter owner 已标注 non-owning，并在生命周期尾部清空以避免误判为拥有关系；SoldierObject input 指针标注为自身 owning。

@@ -20,15 +20,15 @@ AI 控制面板组件：聚合 Blackboard + driver + VisionSensor + MemoryStore 
 
 ## 4. 公开能力要点
 
-- `SetDriverByType("fsm"/"dt"/"bt")`、`GetBlackboard`、`HasEnemy`/`CanShootEnemy`/`GetEnemy`、`SetMovePosition`/`IsTargetReached`、`TickPerception`/`TickAI`。
+- `SetDriverByType("fsm"/"dt"/"bt")`、`GetAgentOwner`、`GetBlackboard`、`HasEnemy`/`CanShootEnemy`/`GetEnemy`、`SetMovePosition`/`IsTargetReached`、`TickPerception`/`TickAI`。
 
 ## 5. 约束与红线
 
 - `SetDriverByType` 仅做字符串归一化，实际创建走 driver factory/registry；新增 driver 类型应注册 factory，不再扩散 inline `new`。
-- 对象查询、寻路和战术事件发布只通过 `SandboxServices.objects` / `SandboxServices.sandbox` 获取服务；缺服务时走空指针降级，不再回退全局 `g_*`。
+- 对象查询、寻路、raycast、agent 配置和战术事件发布只通过 `SandboxServices.objects` / `navigation` / `raycast` / `agentConfig` / tactical service 获取服务；缺服务时走空指针降级，不再回退全局 `g_*`。
 - `HasEnemy` 已改读 PerceptionResultCache（4b，等价）；`CanShootEnemy` 仍保留 shootDistance/requirePath=false 的重查语义并 re-publish EnemySighted，成功路径会同步 PerceptionResultCache。
 - TickPerception 在 driver/Agent_Update 之前跑（保证缓存先填充）。
-- DT/BT driver 创建已只依赖 `AgentObject* + Blackboard*`；`GetSoldierOwner` / `GetOwner` 保留为旧 Lua/Soldier 脚本兼容桥（与 [[components]] P5 同源）。
+- DT/BT driver 创建已只依赖 `AgentObject* + Blackboard*`；Lua 侧 owner 入口用 `GetAgentOwner()`，`GetSoldierOwner` / C++ `GetOwner()` 仅作内部兼容桥（与 [[components]] P5 同源）。
 - FSM 通用条件通过 `AgentActionContext` 读取 AIController/Weapon/Attrib，不再让 evaluator 或 Move/Shoot/Pursue/Reload state 直接 cast `SoldierObject`。
 
 ## 6. 数据流 / 与其他模块关系
@@ -41,4 +41,4 @@ AI 控制面板组件：聚合 Blackboard + driver + VisionSensor + MemoryStore 
 
 ## 8. 已知 gap / 相关文档
 
-- 待：Blackboard Lua owner 兼容面、DeathState 与 Soldier 动画表现桥继续从 SoldierObject 适配中拆出。`docs/planning/ai-technical-iteration-plan.md`、`docs/design/architecture-improvement-plan.md` P5/P7。
+- 待：旧 driver/action 的 `u[SoldierObject]` Lua 签名兼容桥继续随 sample 迁移收窄。`docs/planning/ai-technical-iteration-plan.md`、`docs/design/architecture-improvement-plan.md` P5/P7。

@@ -15,13 +15,13 @@
 | 文件 | 角色 | 说明 |
 |---|---|---|
 | `TeamBlackboardService.{h,cpp}` | 服务 | EnemySighting fact（teamId/targetId/reporterId/pos/confidence/priority/lastSeenMs）；`RememberEnemySighting`/`GetBestEnemyFact(teamId[,ignoredReporter])`/`SyncFromAgents`；TTL 自动清理；Lua 全局 `SandboxTeam` 直接访问 |
-| `bin/res/scripts/ai/team/TeamBlackboard.lua` | Lua facade | 优先走 `SandboxTeam`，旧 `ObjectManager` 入口只作兼容兜底；仍承担 SupportResponse/泛型值 |
+| `bin/res/scripts/ai/team/TeamBlackboard.lua` | Lua facade | 只走 `SandboxTeam`；仍承担 SupportResponse/泛型值 |
 | `ObjectManager.cpp`（compat） | 转发 | `configureTeamBlackboard`/`rememberTeamEnemyFact`/`writeBestTeamEnemyFactToBlackboard`/`getTeamBlackboard*Count` 仅薄转发到 service |
 
 ## 4. 公开能力要点
 
 - 第一版只 `EnemySighted`：记录/查询团队最佳敌情、写回 agent blackboard、stats（factCount/reportCount/expired）。
-- `TeamBlackboardService` 已导出为 Lua 全局 `SandboxTeam`；Lua `TeamBlackboard.lua` 优先使用它，避免团队 AI 主路径继续挂在 `ObjectManager` facade 上。
+- `TeamBlackboardService` 已导出为 Lua 全局 `SandboxTeam`；Lua `TeamBlackboard.lua` 只使用它，避免团队 AI 主路径继续挂在 `ObjectManager` facade 上。
 - 优先级 = f(confidence, reportCount, ageMs)。
 
 ## 5. 约束与红线

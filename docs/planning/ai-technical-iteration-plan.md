@@ -194,7 +194,7 @@ score = objective + support + cover - threat - crowd
 - 新增 C++ `InfluenceMapSystem`，支持 configurable grid、string layer、radial source、nearest-cell sample、组合评分、best position 查询和 debug summary。
 - 新增 C++ `TacticalQueryService`（`sandbox/ai/tactics/TacticalQueryService.h`）：持有 `InfluenceMapSystem`，封装事件订阅/TTL/发布、influence config/layer/source/sample/score 包装、`Rebuild{Danger,Team,Objective}Layer` 与查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
 - 新增 C++ `TacticalDebugDrawService`（`sandbox/ai/tactics/TacticalDebugDrawService.h`）：承接 `DebugDrawer` 临时绘制与 Ogre `ManualObject` 持久 debug visual 生命周期。
-- `ObjectManager` 暴露 Lua facade：clear / configure / clearLayer / addSource / sample / score / findBest / stats / debug draw，当前已薄转发到 `TacticalQueryService` / `TacticalDebugDrawService`。
+- `SandboxTactics` / `TacticalService` 暴露 Lua facade：clear / configure / clearLayer / addSource / sample / score / findBest / stats / debug draw，内部转发到 `TacticalQueryService` / `TacticalDebugDrawService`；`ObjectManager` tactical 旧 Lua facade 已删除。
 - `Sandbox18` 复用 Chapter 9 的 BulletShot / BulletImpact / EnemySighted / DeadFriendlySighted 事件语义，Lua 只负责喂事件和读取 C++ 查询结果。
 
 ### 验收
@@ -328,7 +328,7 @@ score = objective + support + cover - threat - crowd
 - [x] 设计 C++ `InfluenceMapSystem` layer schema，并在第一切片中落地 danger / team / objective 三层。
 - [x] 用 `Sandbox18` 固化 Chapter 9 Tactics C++ 第二版第一切片：Lua 喂事件，C++ 写入 influence layer、执行 tactical score / best position query，并输出 `[Chapter9TacticsCppSmoke] PASS`。
 - [x] 抽出独立 `TacticalQueryService`：`sandbox/ai/tactics/TacticalQueryService.h` 已落地，持有 `InfluenceMapSystem`、跑事件订阅/TTL、`Rebuild{Danger,Team,Objective}Layer` 和查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
-- [x] `TacticalQueryService` / `TacticalDebugDrawService` 收口：service 已是查询/层实现事实来源，`ObjectManager` 的 clear/configure/layer/source/sample/score/findBest/stats 入口已薄转发到 service，`configureTacticalInfluenceFromNavMesh` 的三角提取与建图编排已下沉；`rebuildTacticalInfluenceLayerDebugVisual` / Ogre ManualObject 生命周期已下沉到 `TacticalDebugDrawService`。
+- [x] `TacticalQueryService` / `TacticalDebugDrawService` / `TacticalService` 收口：service 已是查询/层实现事实来源，`SandboxTactics` 的 clear/configure/layer/source/sample/score/findBest/stats 入口已转发到 service，`configureTacticalInfluenceFromNavMesh` 的三角提取与建图编排已下沉；`rebuildTacticalInfluenceLayerDebugVisual` / Ogre ManualObject 生命周期已下沉到 `TacticalDebugDrawService`；`ObjectManager` tactical 旧 Lua facade 已删除。
 - [ ] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema、layer debug 显式配置和 pressure preset。
 
 ## 11. 成功标准

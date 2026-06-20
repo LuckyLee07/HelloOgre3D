@@ -27,7 +27,7 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 
 - **改导出 API：优先手术式改 `SandboxToLua.cpp` 对应绑定函数 + 头文件签名；禁 `tolua.bat` 全量重生成**——曾致 Sandbox18 崩溃（0xC0000409 栈溢出）。
 - 改绑定必须跑用到它的 sample（影响图绑定改动跑 `Sandbox17` **和** `Sandbox18`；DT/BT 回调跑 `Sandbox7/8`）。
-- **P2 导出收窄（2026-06-19）**：`SoldierObject` 不再向 Lua 导出 `getWeapon`/AI/maxHealth/ammo 纯组件转发，脚本改走 `GetAIComponent()` / `GetAttribComponent()` / `GetWeaponComponent()` 或 `AgentComponentAccess.lua`，避免新脚本继续依赖对象层样板。
+- **P2/P5 导出收窄（2026-06-19）**：`SoldierObject` 不再向 Lua 导出 `getWeapon`/AI/maxHealth/ammo/敌人查询/移动目标/射击/Enter*Anim 纯组件转发；`AIController`、`DecisionTreeDriver`、`BehaviorTreeDriver`、`LuaDecisionAction`、`LuaBehaviorAction` 向 Lua 暴露泛化 `GetAgentOwner()` 而非 Soldier `GetOwner()`；DT/BT Lua action 生命周期回调已统一传 `u[AgentObject]`；脚本改走 `GetAIComponent()` / `GetAttribComponent()` / `GetWeaponComponent()` / `GetAnimComponent()` 或 `AgentComponentAccess.lua`，避免新脚本继续依赖对象层样板。
 - Lua function ref（evaluator/condition）须在对象销毁/reload 前清理，防悬空。
 
 ## 6. 数据流 / 与其他模块关系

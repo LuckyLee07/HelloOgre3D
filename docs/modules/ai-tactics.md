@@ -16,8 +16,8 @@
 |---|---|---|
 | `InfluenceMapSystem.{h,cpp}` | 系统 | 2D flat（`Configure`）与 navmesh 体素化 3D（`BuildFromNavMesh`）；layer/source/spread/sample/score；`CollectDebugCells` 2D 拍平到 `m_minY` |
 | `TacticalQueryService.{h,cpp}` | 服务 | 持 InfluenceMapSystem；事件订阅/TTL/Publish；influence config/layer/source/sample/score 包装；`Rebuild{Danger,Team,Objective}Layer`；查询 API `FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition` |
-| `TacticalDebugDrawService.{h,cpp}` | 调试可视化 | 承接 `DebugDrawer` 临时绘制与 Ogre `ManualObject` 持久 debug visual 生命周期；ObjectManager 只保留 Lua 兼容入口 |
-| `ObjectManager.cpp`（facade） | 转发 | Lua 兼容入口；influence config/layer/query 薄转发到 `TacticalQueryService`，debug draw / debug visual 薄转发到 `TacticalDebugDrawService` |
+| `TacticalDebugDrawService.{h,cpp}` | 调试可视化 | 承接 `DebugDrawer` 临时绘制与 Ogre `ManualObject` 持久 debug visual 生命周期 |
+| `TacticalService.{h,cpp}` | Lua facade | Lua 全局 `SandboxTactics`；保留现有 tactics Lua 方法名，内部转发到 `TacticalQueryService` / `TacticalDebugDrawService`，并通过 ObjectManager 读取 agent 列表与 navmesh |
 
 ## 4. 公开能力要点
 
@@ -26,14 +26,14 @@
 
 ## 5. 约束与红线
 
-- **TacticalQueryService 已是查询/层事实来源**，`configureTacticalInfluenceFromNavMesh` 的三角提取与 `BuildFromNavMesh` 编排已下沉到 service；`TacticalDebugDrawService` 已承接 `rebuildTacticalInfluenceLayerDebugVisual` 的 Ogre 绘制生命周期，ObjectManager 只留 Lua 兼容薄转发。
+- **TacticalQueryService 已是查询/层事实来源**，`configureTacticalInfluenceFromNavMesh` 的三角提取与 `BuildFromNavMesh` 编排已下沉到 service；`TacticalDebugDrawService` 已承接 `rebuildTacticalInfluenceLayerDebugVisual` 的 Ogre 绘制生命周期；Lua 主入口是 `SandboxTactics` / `TacticalService`，不再通过 ObjectManager tactical 旧 facade。
 - 缺 dirty region / interval 更新、cover/crowd 层和显式 layer debug 配置；Lua 绑定签名中 `projectToNav/maxProjectionDistance/navMeshName` 仍是兼容保留的死参数。
 - tolua 绑定**手术式**改、勿全量重生成（Sandbox18 教训）。
 - 影响图 3D 来自 navmesh，受 [[ai-navigation]] 固定 2001×2001 影响。
 
 ## 6. 数据流 / 与其他模块关系
 
-`Lua ObjectManager facade → TacticalQueryService → InfluenceMapSystem`；`Lua/事件 → TacticalQueryService.PublishEvent → Rebuild*Layer → InfluenceMapSystem`；`AIController/BT → FindBest* → Vector3`；`ObjectManager.draw* → TacticalDebugDrawService → CollectDebugCells → DebugDrawer/ManualObject`。
+`Lua SandboxTactics → TacticalService → TacticalQueryService → InfluenceMapSystem`；`Lua/事件 → TacticalService.PublishEvent → TacticalQueryService.PublishEvent → Rebuild*Layer → InfluenceMapSystem`；`AIController/BT → FindBest* → Vector3`；`SandboxTactics.draw* → TacticalService → TacticalDebugDrawService → CollectDebugCells → DebugDrawer/ManualObject`。
 
 ## 7. 验证策略
 
