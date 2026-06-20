@@ -1,6 +1,7 @@
 #include "ai/tactics/TacticalQueryService.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -72,6 +73,11 @@ TacticalQueryService::Stats::Stats()
 	, lastDangerSpreadWrites(0)
 	, lastTeamSpreadWrites(0)
 	, lastObjectiveSpreadWrites(0)
+	, layerPolicyCount(0)
+	, dirtyLayerCount(0)
+	, skippedBuildCount(0)
+	, intervalSkippedBuildCount(0)
+	, dirtySkippedBuildCount(0)
 {
 }
 
@@ -89,6 +95,27 @@ TacticalQueryService::EventRecord::EventRecord()
 TacticalQueryService::Subscription::Subscription()
 	: scope(kScopeLocal)
 	, token(0)
+{
+}
+
+TacticalQueryService::LayerUpdatePolicy::LayerUpdatePolicy()
+	: intervalMs(0)
+	, elapsedMs(0)
+	, dirtyOnly(false)
+	, dirty(true)
+	, skippedBuildCount(0)
+	, intervalSkippedBuildCount(0)
+	, dirtySkippedBuildCount(0)
+{
+}
+
+TacticalQueryService::QueryWeights::QueryWeights()
+	: danger(1.0f)
+	, team(1.0f)
+	, objective(1.0f)
+	, support(0.0f)
+	, cover(0.0f)
+	, crowd(0.0f)
 {
 }
 
@@ -127,17 +154,20 @@ void TacticalQueryService::Clear()
 {
 	m_influenceMap.Clear();
 	ClearEvents();
+	MarkAllLayerPoliciesDirty();
 }
 
 void TacticalQueryService::ClearEvents()
 {
 	m_events.clear();
 	m_stats.currentEventCount = 0;
+	MarkDefaultTacticalLayerPoliciesDirty();
 }
 
 void TacticalQueryService::Update(int deltaMs)
 {
 	const int elapsedMs = std::max(0, deltaMs);
+	AdvanceLayerPolicies(elapsedMs);
 	if (elapsedMs <= 0 || m_events.empty())
 	{
 		m_stats.currentEventCount = static_cast<int>(m_events.size());
@@ -146,6 +176,7 @@ void TacticalQueryService::Update(int deltaMs)
 
 	std::vector<EventRecord> validEvents;
 	validEvents.reserve(m_events.size());
+	bool expiredDangerEvent = false;
 	for (std::vector<EventRecord>::iterator iter = m_events.begin(); iter != m_events.end(); ++iter)
 	{
 		EventRecord event = *iter;
@@ -155,6 +186,8 @@ void TacticalQueryService::Update(int deltaMs)
 			if (event.remainingTtlMs <= 0)
 			{
 				++m_stats.expiredEventCount;
+				if (IsBulletEvent(event.eventType))
+					expiredDangerEvent = true;
 				continue;
 			}
 		}
@@ -162,6 +195,8 @@ void TacticalQueryService::Update(int deltaMs)
 	}
 	m_events.swap(validEvents);
 	m_stats.currentEventCount = static_cast<int>(m_events.size());
+	if (expiredDangerEvent)
+		MarkTrackedLayerDirty("danger");
 }
 
 void TacticalQueryService::SetEventTtlMs(int ttlMs)
@@ -169,14 +204,43 @@ void TacticalQueryService::SetEventTtlMs(int ttlMs)
 	m_eventTtlMs = std::max(1, ttlMs);
 }
 
+void TacticalQueryService::ConfigureLayerUpdatePolicy(const std::string& layerName, int intervalMs, bool dirtyOnly)
+{
+	LayerUpdatePolicy& policy = GetLayerPolicy(layerName);
+	policy.intervalMs = std::max(0, intervalMs);
+	policy.elapsedMs = policy.intervalMs;
+	policy.dirtyOnly = dirtyOnly;
+	policy.dirty = true;
+	RefreshPolicyStats();
+}
+
+void TacticalQueryService::MarkLayerDirty(const std::string& layerName)
+{
+	LayerUpdatePolicy& policy = GetLayerPolicy(layerName);
+	policy.dirty = true;
+	RefreshPolicyStats();
+}
+
+void TacticalQueryService::SetQueryCandidateLimit(int maxCandidates)
+{
+	m_influenceMap.SetMaxQueryCandidates(maxCandidates);
+}
+
+int TacticalQueryService::GetQueryCandidateLimit() const
+{
+	return m_influenceMap.GetMaxQueryCandidates();
+}
+
 void TacticalQueryService::ClearInfluence()
 {
 	m_influenceMap.Clear();
+	MarkAllLayerPoliciesDirty();
 }
 
 void TacticalQueryService::ConfigureInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize)
 {
 	m_influenceMap.Configure(minX, maxX, minZ, maxZ, cellSize);
+	MarkDefaultTacticalLayerPoliciesDirty();
 }
 
 bool TacticalQueryService::ConfigureInfluenceFromNavMesh(const NavigationMesh* navMesh, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset)
@@ -190,32 +254,44 @@ bool TacticalQueryService::ConfigureInfluenceFromNavMesh(const NavigationMesh* n
 		return false;
 
 	m_influenceMap.BuildFromNavMesh(verts, indices, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
+	MarkDefaultTacticalLayerPoliciesDirty();
 	return true;
 }
 
 void TacticalQueryService::ClearInfluenceLayer(const std::string& layerName)
 {
 	m_influenceMap.ClearLayer(layerName);
+	MarkTrackedLayerDirty(layerName);
 }
 
 void TacticalQueryService::SetInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia)
 {
 	m_influenceMap.SetLayerOptions(layerName, falloff, inertia);
+	MarkTrackedLayerDirty(layerName);
 }
 
 int TacticalQueryService::AddInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius)
 {
-	return m_influenceMap.AddRadialSource(layerName, center, strength, radius);
+	const int writes = m_influenceMap.AddRadialSource(layerName, center, strength, radius);
+	if (writes > 0)
+		MarkTrackedLayerDirty(layerName);
+	return writes;
 }
 
 int TacticalQueryService::AddInfluencePoint(const std::string& layerName, const Ogre::Vector3& center, float strength)
 {
-	return m_influenceMap.AddPointSource(layerName, center, strength);
+	const int writes = m_influenceMap.AddPointSource(layerName, center, strength);
+	if (writes > 0)
+		MarkTrackedLayerDirty(layerName);
+	return writes;
 }
 
 int TacticalQueryService::SpreadInfluenceLayer(const std::string& layerName, int passCount)
 {
-	return m_influenceMap.SpreadLayer(layerName, passCount);
+	const int writes = m_influenceMap.SpreadLayer(layerName, passCount);
+	if (writes > 0)
+		MarkTrackedLayerDirty(layerName);
+	return writes;
 }
 
 float TacticalQueryService::SampleInfluenceLayer(const std::string& layerName, const Ogre::Vector3& position) const
@@ -376,6 +452,13 @@ int TacticalQueryService::GetEventDebugRemainingTtlMs(int luaIndex) const
 
 int TacticalQueryService::RebuildDangerLayer(int perspectiveTeamId, float dangerStrength, float bulletShotRadius, float bulletImpactRadius, float deadFriendlyRadius, float enemySightingRadius, int spreadPasses)
 {
+	if (!ShouldRebuildLayer("danger"))
+	{
+		m_stats.lastDangerWrites = 0;
+		m_stats.lastDangerSpreadWrites = 0;
+		return 0;
+	}
+
 	m_influenceMap.ClearLayer("danger");
 	int writes = 0;
 	for (std::vector<EventRecord>::const_iterator iter = m_events.begin(); iter != m_events.end(); ++iter)
@@ -405,56 +488,83 @@ int TacticalQueryService::RebuildDangerLayer(int perspectiveTeamId, float danger
 	m_stats.lastDangerWrites = writes;
 	m_stats.lastDangerSpreadWrites = spreadWrites;
 	++m_stats.dangerBuildCount;
+	CompleteLayerRebuild("danger");
 	return writes + spreadWrites;
 }
 
 int TacticalQueryService::RebuildTeamLayer(const std::vector<AgentObject*>& agents, int positiveTeamId, float teamStrength, float radius, int spreadPasses)
 {
+	if (!ShouldRebuildLayer("team"))
+	{
+		m_stats.lastTeamWrites = 0;
+		m_stats.lastTeamSpreadWrites = 0;
+		return 0;
+	}
+
 	m_influenceMap.ClearLayer("team");
+	m_influenceMap.ClearLayer("support");
+	m_influenceMap.ClearLayer("cover");
+	m_influenceMap.ClearLayer("crowd");
 	int writes = 0;
 	for (std::vector<AgentObject*>::const_iterator iter = agents.begin(); iter != agents.end(); ++iter)
 	{
 		AgentObject* agent = *iter;
 		if (agent == nullptr || agent->GetHealth() <= 0.0f)
 			continue;
+		const bool friendly = static_cast<int>(agent->GetTeamId()) == positiveTeamId;
+		const float absStrength = std::fabs(teamStrength);
 		const float value = static_cast<int>(agent->GetTeamId()) == positiveTeamId ? teamStrength : -teamStrength;
 		writes += m_influenceMap.AddRadialSource("team", agent->GetPosition(), value, radius);
+		if (friendly)
+		{
+			writes += m_influenceMap.AddRadialSource("support", agent->GetPosition(), absStrength, radius);
+			writes += m_influenceMap.AddRadialSource("cover", agent->GetPosition(), absStrength * 0.35f, radius * 0.75f);
+		}
+		writes += m_influenceMap.AddRadialSource("crowd", agent->GetPosition(), -absStrength * 0.35f, radius * 0.75f);
 	}
 
 	const int spreadWrites = m_influenceMap.SpreadLayer("team", spreadPasses);
+	const int supportSpreadWrites = m_influenceMap.SpreadLayer("support", spreadPasses);
+	const int coverSpreadWrites = m_influenceMap.SpreadLayer("cover", spreadPasses);
+	const int crowdSpreadWrites = m_influenceMap.SpreadLayer("crowd", spreadPasses);
 	m_stats.lastTeamWrites = writes;
-	m_stats.lastTeamSpreadWrites = spreadWrites;
+	m_stats.lastTeamSpreadWrites = spreadWrites + supportSpreadWrites + coverSpreadWrites + crowdSpreadWrites;
 	++m_stats.teamBuildCount;
-	return writes + spreadWrites;
+	CompleteLayerRebuild("team");
+	return writes + m_stats.lastTeamSpreadWrites;
 }
 
 int TacticalQueryService::RebuildObjectiveLayer(const Ogre::Vector3& center, float strength, float radius, int spreadPasses)
 {
+	if (!ShouldRebuildLayer("objective"))
+	{
+		m_stats.lastObjectiveWrites = 0;
+		m_stats.lastObjectiveSpreadWrites = 0;
+		return 0;
+	}
+
 	m_influenceMap.ClearLayer("objective");
 	const int writes = m_influenceMap.AddRadialSource("objective", center, strength, radius);
 	const int spreadWrites = m_influenceMap.SpreadLayer("objective", spreadPasses);
 	m_stats.lastObjectiveWrites = writes;
 	m_stats.lastObjectiveSpreadWrites = spreadWrites;
 	++m_stats.objectiveBuildCount;
+	CompleteLayerRebuild("objective");
 	return writes + spreadWrites;
 }
 
 float TacticalQueryService::ScoreQueryPosition(const std::string& queryType, const Ogre::Vector3& position) const
 {
-	float dangerWeight = 1.0f;
-	float teamWeight = 1.0f;
-	float objectiveWeight = 1.0f;
-	ResolveQueryWeights(queryType, dangerWeight, teamWeight, objectiveWeight);
-	return m_influenceMap.ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
+	QueryWeights weights;
+	ResolveQueryWeights(queryType, weights);
+	return m_influenceMap.ScorePositionLayers(position, weights.danger, weights.team, weights.objective, weights.support, weights.cover, weights.crowd);
 }
 
 Ogre::Vector3 TacticalQueryService::FindBestQueryPosition(const std::string& queryType, const Ogre::Vector3& center, float radius, float step)
 {
-	float dangerWeight = 1.0f;
-	float teamWeight = 1.0f;
-	float objectiveWeight = 1.0f;
-	ResolveQueryWeights(queryType, dangerWeight, teamWeight, objectiveWeight);
-	return m_influenceMap.FindBestPosition(center, radius, step, dangerWeight, teamWeight, objectiveWeight);
+	QueryWeights weights;
+	ResolveQueryWeights(queryType, weights);
+	return m_influenceMap.FindBestPositionLayers(center, radius, step, weights.danger, weights.team, weights.objective, weights.support, weights.cover, weights.crowd);
 }
 
 Ogre::Vector3 TacticalQueryService::FindBestSupportPosition(const Ogre::Vector3& center, float radius, float step)
@@ -478,8 +588,160 @@ std::string TacticalQueryService::BuildDebugSummary() const
 		<< " objectiveBuilds=" << m_stats.objectiveBuildCount
 		<< " writes=" << (m_stats.lastDangerWrites + m_stats.lastTeamWrites + m_stats.lastObjectiveWrites)
 		<< " spreadWrites=" << (m_stats.lastDangerSpreadWrites + m_stats.lastTeamSpreadWrites + m_stats.lastObjectiveSpreadWrites)
+		<< " policies=" << static_cast<int>(m_layerPolicies.size())
+		<< " dirtyLayers=" << CountDirtyLayerPolicies()
+		<< " skippedBuilds=" << m_stats.skippedBuildCount
+		<< " intervalSkips=" << m_stats.intervalSkippedBuildCount
+		<< " dirtySkips=" << m_stats.dirtySkippedBuildCount
+		<< " schema=support/cover/crowd"
+		<< " supportCells=" << m_influenceMap.GetLayerActiveCellCount("support")
+		<< " coverCells=" << m_influenceMap.GetLayerActiveCellCount("cover")
+		<< " crowdCells=" << m_influenceMap.GetLayerActiveCellCount("crowd")
 		<< "\n" << m_influenceMap.BuildDebugSummary();
+	if (!m_layerPolicies.empty())
+	{
+		stream << "\n[TacticalLayerPolicies]";
+		for (std::unordered_map<std::string, LayerUpdatePolicy>::const_iterator iter = m_layerPolicies.begin(); iter != m_layerPolicies.end(); ++iter)
+		{
+			const LayerUpdatePolicy& policy = iter->second;
+			stream << " " << iter->first
+				<< "(intervalMs=" << policy.intervalMs
+				<< ",elapsedMs=" << policy.elapsedMs
+				<< ",dirtyOnly=" << (policy.dirtyOnly ? "true" : "false")
+				<< ",dirty=" << (policy.dirty ? "true" : "false")
+				<< ",skips=" << policy.skippedBuildCount
+				<< ")";
+		}
+	}
 	return stream.str();
+}
+
+std::string TacticalQueryService::NormalizeLayerName(const std::string& layerName) const
+{
+	return layerName.empty() ? "default" : layerName;
+}
+
+TacticalQueryService::LayerUpdatePolicy* TacticalQueryService::FindLayerPolicy(const std::string& layerName)
+{
+	std::unordered_map<std::string, LayerUpdatePolicy>::iterator found = m_layerPolicies.find(NormalizeLayerName(layerName));
+	return found != m_layerPolicies.end() ? &found->second : nullptr;
+}
+
+const TacticalQueryService::LayerUpdatePolicy* TacticalQueryService::FindLayerPolicy(const std::string& layerName) const
+{
+	std::unordered_map<std::string, LayerUpdatePolicy>::const_iterator found = m_layerPolicies.find(NormalizeLayerName(layerName));
+	return found != m_layerPolicies.end() ? &found->second : nullptr;
+}
+
+TacticalQueryService::LayerUpdatePolicy& TacticalQueryService::GetLayerPolicy(const std::string& layerName)
+{
+	return m_layerPolicies[NormalizeLayerName(layerName)];
+}
+
+void TacticalQueryService::AdvanceLayerPolicies(int elapsedMs)
+{
+	if (elapsedMs <= 0)
+		return;
+
+	for (std::unordered_map<std::string, LayerUpdatePolicy>::iterator iter = m_layerPolicies.begin(); iter != m_layerPolicies.end(); ++iter)
+	{
+		LayerUpdatePolicy& policy = iter->second;
+		if (policy.intervalMs > 0)
+			policy.elapsedMs = std::min(policy.intervalMs, policy.elapsedMs + elapsedMs);
+		else
+			policy.elapsedMs += elapsedMs;
+	}
+}
+
+bool TacticalQueryService::ShouldRebuildLayer(const std::string& layerName)
+{
+	LayerUpdatePolicy* policy = FindLayerPolicy(layerName);
+	if (policy == nullptr)
+		return true;
+
+	const bool intervalBlocked = policy->intervalMs > 0 && policy->elapsedMs < policy->intervalMs;
+	const bool dirtyBlocked = policy->dirtyOnly && !policy->dirty;
+	if (!intervalBlocked && !dirtyBlocked)
+		return true;
+
+	++policy->skippedBuildCount;
+	++m_stats.skippedBuildCount;
+	if (intervalBlocked)
+	{
+		++policy->intervalSkippedBuildCount;
+		++m_stats.intervalSkippedBuildCount;
+	}
+	if (dirtyBlocked)
+	{
+		++policy->dirtySkippedBuildCount;
+		++m_stats.dirtySkippedBuildCount;
+	}
+	RefreshPolicyStats();
+	return false;
+}
+
+void TacticalQueryService::CompleteLayerRebuild(const std::string& layerName)
+{
+	LayerUpdatePolicy* policy = FindLayerPolicy(layerName);
+	if (policy == nullptr)
+		return;
+
+	policy->elapsedMs = 0;
+	policy->dirty = false;
+	RefreshPolicyStats();
+}
+
+void TacticalQueryService::MarkTrackedLayerDirty(const std::string& layerName)
+{
+	LayerUpdatePolicy* policy = FindLayerPolicy(layerName);
+	if (policy == nullptr)
+		return;
+
+	policy->dirty = true;
+	RefreshPolicyStats();
+}
+
+void TacticalQueryService::MarkAllLayerPoliciesDirty()
+{
+	for (std::unordered_map<std::string, LayerUpdatePolicy>::iterator iter = m_layerPolicies.begin(); iter != m_layerPolicies.end(); ++iter)
+		iter->second.dirty = true;
+	RefreshPolicyStats();
+}
+
+void TacticalQueryService::MarkDefaultTacticalLayerPoliciesDirty()
+{
+	MarkTrackedLayerDirty("danger");
+	MarkTrackedLayerDirty("team");
+	MarkTrackedLayerDirty("objective");
+}
+
+void TacticalQueryService::MarkLayerPoliciesDirtyForEvent(const std::string& eventType)
+{
+	if (eventType == SandboxEventTypes::EnemySighted())
+	{
+		MarkTrackedLayerDirty("danger");
+		MarkTrackedLayerDirty("objective");
+		return;
+	}
+	if (eventType == SandboxEventTypes::DeadFriendlySighted() || IsBulletEvent(eventType))
+		MarkTrackedLayerDirty("danger");
+}
+
+int TacticalQueryService::CountDirtyLayerPolicies() const
+{
+	int count = 0;
+	for (std::unordered_map<std::string, LayerUpdatePolicy>::const_iterator iter = m_layerPolicies.begin(); iter != m_layerPolicies.end(); ++iter)
+	{
+		if (iter->second.dirty)
+			++count;
+	}
+	return count;
+}
+
+void TacticalQueryService::RefreshPolicyStats()
+{
+	m_stats.layerPolicyCount = static_cast<int>(m_layerPolicies.size());
+	m_stats.dirtyLayerCount = CountDirtyLayerPolicies();
 }
 
 void TacticalQueryService::SubscribeEvents()
@@ -542,12 +804,14 @@ void TacticalQueryService::AddOrUpdateEvent(const EventRecord& event)
 				m_events.erase(iter);
 				m_events.push_back(event);
 				m_stats.currentEventCount = static_cast<int>(m_events.size());
+				MarkLayerPoliciesDirtyForEvent(event.eventType);
 				return;
 			}
 		}
 	}
 	m_events.push_back(event);
 	m_stats.currentEventCount = static_cast<int>(m_events.size());
+	MarkLayerPoliciesDirtyForEvent(event.eventType);
 }
 
 const TacticalQueryService::EventRecord* TacticalQueryService::GetEventRecordByLuaIndex(int luaIndex) const
@@ -558,24 +822,33 @@ const TacticalQueryService::EventRecord* TacticalQueryService::GetEventRecordByL
 	return index < m_events.size() ? &m_events[index] : nullptr;
 }
 
-void TacticalQueryService::ResolveQueryWeights(const std::string& queryType, float& dangerWeight, float& teamWeight, float& objectiveWeight) const
+void TacticalQueryService::ResolveQueryWeights(const std::string& queryType, QueryWeights& weights) const
 {
 	if (queryType == "lowThreat" || queryType == "LowThreat")
 	{
-		dangerWeight = 1.0f;
-		teamWeight = 0.2f;
-		objectiveWeight = 0.0f;
+		weights.danger = 1.0f;
+		weights.team = 0.2f;
+		weights.objective = 0.0f;
+		weights.support = 0.2f;
+		weights.cover = 0.45f;
+		weights.crowd = 0.8f;
 		return;
 	}
 	if (queryType == "advance" || queryType == "Advance")
 	{
-		dangerWeight = 0.8f;
-		teamWeight = 0.35f;
-		objectiveWeight = 1.3f;
+		weights.danger = 0.8f;
+		weights.team = 0.35f;
+		weights.objective = 1.3f;
+		weights.support = 0.45f;
+		weights.cover = 0.3f;
+		weights.crowd = 0.7f;
 		return;
 	}
 
-	dangerWeight = 1.0f;
-	teamWeight = 1.0f;
-	objectiveWeight = 1.0f;
+	weights.danger = 1.0f;
+	weights.team = 1.0f;
+	weights.objective = 1.0f;
+	weights.support = 0.6f;
+	weights.cover = 0.35f;
+	weights.crowd = 0.7f;
 }

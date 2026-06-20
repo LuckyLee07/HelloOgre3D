@@ -2,6 +2,7 @@
 #define __TACTICAL_QUERY_SERVICE_H__
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "OgreVector3.h"
@@ -30,6 +31,11 @@ public:
 		int lastDangerSpreadWrites;
 		int lastTeamSpreadWrites;
 		int lastObjectiveSpreadWrites;
+		int layerPolicyCount;
+		int dirtyLayerCount;
+		int skippedBuildCount;
+		int intervalSkippedBuildCount;
+		int dirtySkippedBuildCount;
 	};
 
 	TacticalQueryService();
@@ -41,6 +47,10 @@ public:
 	void ClearEvents();
 	void Update(int deltaMs);
 	void SetEventTtlMs(int ttlMs);
+	void ConfigureLayerUpdatePolicy(const std::string& layerName, int intervalMs, bool dirtyOnly);
+	void MarkLayerDirty(const std::string& layerName);
+	void SetQueryCandidateLimit(int maxCandidates);
+	int GetQueryCandidateLimit() const;
 
 	InfluenceMapSystem* GetInfluenceMapSystem() { return &m_influenceMap; }
 	const InfluenceMapSystem* GetInfluenceMapSystem() const { return &m_influenceMap; }
@@ -114,15 +124,54 @@ private:
 		int token;
 	};
 
+	struct LayerUpdatePolicy
+	{
+		LayerUpdatePolicy();
+
+		int intervalMs;
+		int elapsedMs;
+		bool dirtyOnly;
+		bool dirty;
+		int skippedBuildCount;
+		int intervalSkippedBuildCount;
+		int dirtySkippedBuildCount;
+	};
+
+	struct QueryWeights
+	{
+		QueryWeights();
+
+		float danger;
+		float team;
+		float objective;
+		float support;
+		float cover;
+		float crowd;
+	};
+
 	void SubscribeEvents();
 	void HandleEvent(const SandboxContext& context);
 	void AddOrUpdateEvent(const EventRecord& event);
 	const EventRecord* GetEventRecordByLuaIndex(int luaIndex) const;
-	void ResolveQueryWeights(const std::string& queryType, float& dangerWeight, float& teamWeight, float& objectiveWeight) const;
+	void ResolveQueryWeights(const std::string& queryType, QueryWeights& weights) const;
+	std::string NormalizeLayerName(const std::string& layerName) const;
+	LayerUpdatePolicy* FindLayerPolicy(const std::string& layerName);
+	const LayerUpdatePolicy* FindLayerPolicy(const std::string& layerName) const;
+	LayerUpdatePolicy& GetLayerPolicy(const std::string& layerName);
+	void AdvanceLayerPolicies(int elapsedMs);
+	bool ShouldRebuildLayer(const std::string& layerName);
+	void CompleteLayerRebuild(const std::string& layerName);
+	void MarkTrackedLayerDirty(const std::string& layerName);
+	void MarkAllLayerPoliciesDirty();
+	void MarkDefaultTacticalLayerPoliciesDirty();
+	void MarkLayerPoliciesDirtyForEvent(const std::string& eventType);
+	int CountDirtyLayerPolicies() const;
+	void RefreshPolicyStats();
 
 	InfluenceMapSystem m_influenceMap;
 	std::vector<EventRecord> m_events;
 	std::vector<Subscription> m_subscriptions;
+	std::unordered_map<std::string, LayerUpdatePolicy> m_layerPolicies;
 	Stats m_stats;
 	int m_eventTtlMs;
 	bool m_subscribed;

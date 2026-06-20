@@ -32,7 +32,14 @@ public:
 		int cellWriteCount;
 		int queryCount;
 		int spreadPassCount;
+		int dirtyRegionCount;
+		int dirtyCellCount;
+		int lastSpreadRegionCellCount;
+		bool spreadLimitedByDirtyRegion;
 		int lastQueryCandidateCount;
+		int maxQueryCandidates;
+		int lastQueryCandidateLimit;
+		bool lastQueryCapped;
 		float lastBestScore;
 		Ogre::Vector3 lastBestPosition;
 	};
@@ -58,9 +65,13 @@ public:
 	int AddPointSource(const std::string& layerName, const Ogre::Vector3& center, float strength);
 	int AddRadialSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
 	int SpreadLayer(const std::string& layerName, int passCount);
+	void SetMaxQueryCandidates(int maxCandidates);
+	int GetMaxQueryCandidates() const { return m_maxQueryCandidates; }
 	float SampleLayer(const std::string& layerName, const Ogre::Vector3& position) const;
 	float ScorePosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const;
 	Ogre::Vector3 FindBestPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight);
+	float ScorePositionLayers(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight, float supportWeight, float coverWeight, float crowdWeight) const;
+	Ogre::Vector3 FindBestPositionLayers(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight, float supportWeight, float coverWeight, float crowdWeight);
 
 	const Stats& GetStats() const { return m_stats; }
 	int GetWidth() const { return m_width; }       // X 方向 cell 数
@@ -92,6 +103,19 @@ public:
 	std::string BuildDebugSummary() const;
 
 private:
+	struct CellRegion
+	{
+		CellRegion();
+
+		bool valid;
+		int minX;
+		int maxX;
+		int minY;
+		int maxY;
+		int minZ;
+		int maxZ;
+	};
+
 	struct Layer
 	{
 		Layer();
@@ -102,6 +126,9 @@ private:
 		int spreadPassCount;
 		float falloff;
 		float inertia;
+		CellRegion dirtyRegion;
+		int lastSpreadRegionCellCount;
+		bool lastSpreadLimitedByDirtyRegion;
 	};
 
 	Layer& GetOrCreateLayer(const std::string& layerName);
@@ -115,6 +142,9 @@ private:
 	// 在 (x,z) 列中找出离 targetY 最近的 used cell 的 y 层；2D flat 时恒为 0。
 	bool FindSurfaceCellY(int x, int z, float targetY, int& outY) const;
 	float ReadCell(const Layer& layer, int x, int y, int z) const;
+	void MarkDirtyCell(Layer& layer, int x, int y, int z);
+	CellRegion ExpandRegion(const CellRegion& region, int radius) const;
+	int CountUsedCellsInRegion(const CellRegion& region) const;
 	void RecalculateStats();
 
 	float m_minX;
@@ -128,6 +158,7 @@ private:
 	int m_width;         // X
 	int m_height;        // Z
 	int m_yCount;        // Y
+	int m_maxQueryCandidates;
 	std::vector<unsigned char> m_used; // 每 cell 一个标记，1=贴在可走面
 	std::unordered_map<std::string, Layer> m_layers;
 	Stats m_stats;

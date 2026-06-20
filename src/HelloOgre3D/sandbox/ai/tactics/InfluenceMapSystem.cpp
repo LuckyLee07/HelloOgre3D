@@ -157,9 +157,27 @@ InfluenceMapSystem::Stats::Stats()
 	, cellWriteCount(0)
 	, queryCount(0)
 	, spreadPassCount(0)
+	, dirtyRegionCount(0)
+	, dirtyCellCount(0)
+	, lastSpreadRegionCellCount(0)
+	, spreadLimitedByDirtyRegion(false)
 	, lastQueryCandidateCount(0)
+	, maxQueryCandidates(0)
+	, lastQueryCandidateLimit(0)
+	, lastQueryCapped(false)
 	, lastBestScore(0.0f)
 	, lastBestPosition(Ogre::Vector3::ZERO)
+{
+}
+
+InfluenceMapSystem::CellRegion::CellRegion()
+	: valid(false)
+	, minX(0)
+	, maxX(0)
+	, minY(0)
+	, maxY(0)
+	, minZ(0)
+	, maxZ(0)
 {
 }
 
@@ -169,6 +187,9 @@ InfluenceMapSystem::Layer::Layer()
 	, spreadPassCount(0)
 	, falloff(kDefaultFalloff)
 	, inertia(kDefaultInertia)
+	, dirtyRegion()
+	, lastSpreadRegionCellCount(0)
+	, lastSpreadLimitedByDirtyRegion(false)
 {
 }
 
@@ -184,6 +205,7 @@ InfluenceMapSystem::InfluenceMapSystem()
 	, m_width(0)
 	, m_height(0)
 	, m_yCount(1)
+	, m_maxQueryCandidates(0)
 {
 	Configure(m_minX, m_maxX, m_minZ, m_maxZ, m_cellSize);
 }
@@ -353,6 +375,9 @@ void InfluenceMapSystem::ClearLayer(const std::string& layerName)
 	layer.sourceCount = 0;
 	layer.cellWriteCount = 0;
 	layer.spreadPassCount = 0;
+	layer.dirtyRegion = CellRegion();
+	layer.lastSpreadRegionCellCount = 0;
+	layer.lastSpreadLimitedByDirtyRegion = false;
 	RecalculateStats();
 }
 
@@ -379,6 +404,7 @@ int InfluenceMapSystem::AddPointSource(const std::string& layerName, const Ogre:
 		return 0;
 
 	layer.values[GetCellIndex(x, sy, z)] = ClampFloat(strength, -1.0f, 1.0f);
+	MarkDirtyCell(layer, x, sy, z);
 	++layer.sourceCount;
 	++layer.cellWriteCount;
 	RecalculateStats();
@@ -422,6 +448,7 @@ int InfluenceMapSystem::AddRadialSource(const std::string& layerName, const Ogre
 				continue;
 
 			layer.values[GetCellIndex(x, sy, z)] += contribution;
+			MarkDirtyCell(layer, x, sy, z);
 			++written;
 		}
 	}
@@ -450,15 +477,33 @@ int InfluenceMapSystem::SpreadLayer(const std::string& layerName, int passCount)
 	const float falloff = ClampFloat(layer->falloff, 0.0f, 1.0f);
 	const float inertia = ClampFloat(layer->inertia, 0.0f, 1.0f);
 	const float propagationBase = 1.0f - falloff;
+	CellRegion spreadRegion;
+	const bool limitedByDirtyRegion = layer->dirtyRegion.valid;
+	if (limitedByDirtyRegion)
+	{
+		spreadRegion = ExpandRegion(layer->dirtyRegion, passes);
+	}
+	else
+	{
+		spreadRegion.valid = true;
+		spreadRegion.minX = 0;
+		spreadRegion.maxX = m_width - 1;
+		spreadRegion.minY = 0;
+		spreadRegion.maxY = m_yCount - 1;
+		spreadRegion.minZ = 0;
+		spreadRegion.maxZ = m_height - 1;
+	}
+	layer->lastSpreadRegionCellCount = CountUsedCellsInRegion(spreadRegion);
+	layer->lastSpreadLimitedByDirtyRegion = limitedByDirtyRegion;
 	for (int pass = 0; pass < passes; ++pass)
 	{
 		const std::vector<float> previous = layer->values;
 		std::vector<float> next = previous;
-		for (int z = 0; z < m_height; ++z)
+		for (int z = spreadRegion.minZ; z <= spreadRegion.maxZ; ++z)
 		{
-			for (int y = 0; y < m_yCount; ++y)
+			for (int y = spreadRegion.minY; y <= spreadRegion.maxY; ++y)
 			{
-				for (int x = 0; x < m_width; ++x)
+				for (int x = spreadRegion.minX; x <= spreadRegion.maxX; ++x)
 				{
 					if (!IsUsed(x, y, z))
 						continue;
@@ -500,13 +545,22 @@ int InfluenceMapSystem::SpreadLayer(const std::string& layerName, int passCount)
 		layer->values.swap(next);
 	}
 
+	if (spreadRegion.valid && (changedCells > 0 || layer->dirtyRegion.valid))
+		layer->dirtyRegion = spreadRegion;
+
 	if (changedCells > 0)
 	{
 		layer->cellWriteCount += changedCells;
 		layer->spreadPassCount += passes;
-		RecalculateStats();
 	}
+	RecalculateStats();
 	return changedCells;
+}
+
+void InfluenceMapSystem::SetMaxQueryCandidates(int maxCandidates)
+{
+	m_maxQueryCandidates = std::max(0, maxCandidates);
+	m_stats.maxQueryCandidates = m_maxQueryCandidates;
 }
 
 float InfluenceMapSystem::SampleLayer(const std::string& layerName, const Ogre::Vector3& position) const
@@ -526,13 +580,31 @@ float InfluenceMapSystem::SampleLayer(const std::string& layerName, const Ogre::
 
 float InfluenceMapSystem::ScorePosition(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight) const
 {
-	const float danger = SampleLayer("danger", position);
-	const float team = SampleLayer("team", position);
-	const float objective = SampleLayer("objective", position);
-	return danger * dangerWeight + team * teamWeight + objective * objectiveWeight;
+	return ScorePositionLayers(position, dangerWeight, teamWeight, objectiveWeight, 0.0f, 0.0f, 0.0f);
 }
 
 Ogre::Vector3 InfluenceMapSystem::FindBestPosition(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight)
+{
+	return FindBestPositionLayers(center, radius, step, dangerWeight, teamWeight, objectiveWeight, 0.0f, 0.0f, 0.0f);
+}
+
+float InfluenceMapSystem::ScorePositionLayers(const Ogre::Vector3& position, float dangerWeight, float teamWeight, float objectiveWeight, float supportWeight, float coverWeight, float crowdWeight) const
+{
+	const float danger = SampleLayer("danger", position);
+	const float team = SampleLayer("team", position);
+	const float objective = SampleLayer("objective", position);
+	const float support = SampleLayer("support", position);
+	const float cover = SampleLayer("cover", position);
+	const float crowd = SampleLayer("crowd", position);
+	return danger * dangerWeight
+		+ team * teamWeight
+		+ objective * objectiveWeight
+		+ support * supportWeight
+		+ cover * coverWeight
+		+ crowd * crowdWeight;
+}
+
+Ogre::Vector3 InfluenceMapSystem::FindBestPositionLayers(const Ogre::Vector3& center, float radius, float step, float dangerWeight, float teamWeight, float objectiveWeight, float supportWeight, float coverWeight, float crowdWeight)
 {
 	EnsureConfigured();
 	const float queryRadius = radius > 0.01f ? radius : m_cellSize;
@@ -546,29 +618,75 @@ Ogre::Vector3 InfluenceMapSystem::FindBestPosition(const Ogre::Vector3& center, 
 	float bestScore = -std::numeric_limits<float>::max();
 	Ogre::Vector3 bestPosition = center;
 	int candidates = 0;
+	bool capped = false;
 
-	for (float z = minZ; z <= maxZ + 0.001f; z += queryStep)
+	if (m_maxQueryCandidates > 0)
 	{
-		for (float x = minX; x <= maxX + 0.001f; x += queryStep)
+		const int maxRing = std::max(0, static_cast<int>(std::ceil(queryRadius / queryStep)));
+		for (int ring = 0; ring <= maxRing && !capped; ++ring)
 		{
-			const float dx = x - center.x;
-			const float dz = z - center.z;
-			if (dx * dx + dz * dz > radiusSq)
-				continue;
-
-			const Ogre::Vector3 position(x, center.y, z);
-			const float score = ScorePosition(position, dangerWeight, teamWeight, objectiveWeight);
-			++candidates;
-			if (score > bestScore)
+			for (int zOffset = -ring; zOffset <= ring && !capped; ++zOffset)
 			{
-				bestScore = score;
-				bestPosition = position;
+				for (int xOffset = -ring; xOffset <= ring; ++xOffset)
+				{
+					if (ring > 0 && xOffset != -ring && xOffset != ring && zOffset != -ring && zOffset != ring)
+						continue;
+
+					const float x = center.x + static_cast<float>(xOffset) * queryStep;
+					const float z = center.z + static_cast<float>(zOffset) * queryStep;
+					if (x < minX - 0.001f || x > maxX + 0.001f || z < minZ - 0.001f || z > maxZ + 0.001f)
+						continue;
+
+					const float dx = x - center.x;
+					const float dz = z - center.z;
+					if (dx * dx + dz * dz > radiusSq)
+						continue;
+
+					const Ogre::Vector3 position(x, center.y, z);
+					const float score = ScorePositionLayers(position, dangerWeight, teamWeight, objectiveWeight, supportWeight, coverWeight, crowdWeight);
+					++candidates;
+					if (score > bestScore)
+					{
+						bestScore = score;
+						bestPosition = position;
+					}
+					if (candidates >= m_maxQueryCandidates)
+					{
+						capped = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		for (float z = minZ; z <= maxZ + 0.001f; z += queryStep)
+		{
+			for (float x = minX; x <= maxX + 0.001f; x += queryStep)
+			{
+				const float dx = x - center.x;
+				const float dz = z - center.z;
+				if (dx * dx + dz * dz > radiusSq)
+					continue;
+
+				const Ogre::Vector3 position(x, center.y, z);
+				const float score = ScorePositionLayers(position, dangerWeight, teamWeight, objectiveWeight, supportWeight, coverWeight, crowdWeight);
+				++candidates;
+				if (score > bestScore)
+				{
+					bestScore = score;
+					bestPosition = position;
+				}
 			}
 		}
 	}
 
 	++m_stats.queryCount;
 	m_stats.lastQueryCandidateCount = candidates;
+	m_stats.maxQueryCandidates = m_maxQueryCandidates;
+	m_stats.lastQueryCandidateLimit = m_maxQueryCandidates;
+	m_stats.lastQueryCapped = capped;
 	m_stats.lastBestScore = candidates > 0 ? bestScore : 0.0f;
 	m_stats.lastBestPosition = bestPosition;
 	return bestPosition;
@@ -731,8 +849,14 @@ std::string InfluenceMapSystem::BuildDebugSummary() const
 		<< " sources=" << m_stats.sourceCount
 		<< " writes=" << m_stats.cellWriteCount
 		<< " spreadPasses=" << m_stats.spreadPassCount
+		<< " dirtyRegions=" << m_stats.dirtyRegionCount
+		<< " dirtyCells=" << m_stats.dirtyCellCount
+		<< " spreadRegionCells=" << m_stats.lastSpreadRegionCellCount
+		<< " spreadLimited=" << (m_stats.spreadLimitedByDirtyRegion ? "true" : "false")
 		<< " queries=" << m_stats.queryCount
 		<< " candidates=" << m_stats.lastQueryCandidateCount
+		<< " candidateLimit=" << m_stats.lastQueryCandidateLimit
+		<< " capped=" << (m_stats.lastQueryCapped ? "true" : "false")
 		<< " best=" << FormatVec3(m_stats.lastBestPosition)
 		<< " bestScore=" << std::fixed << std::setprecision(2) << m_stats.lastBestScore;
 	return stream.str();
@@ -771,7 +895,12 @@ void InfluenceMapSystem::ResizeLayer(Layer& layer)
 {
 	const int totalCells = std::max(1, m_width * m_yCount * m_height);
 	if (static_cast<int>(layer.values.size()) != totalCells)
+	{
 		layer.values.assign(totalCells, 0.0f);
+		layer.dirtyRegion = CellRegion();
+		layer.lastSpreadRegionCellCount = 0;
+		layer.lastSpreadLimitedByDirtyRegion = false;
+	}
 }
 
 bool InfluenceMapSystem::WorldToCell(const Ogre::Vector3& position, int& outX, int& outY, int& outZ) const
@@ -847,18 +976,91 @@ float InfluenceMapSystem::ReadCell(const Layer& layer, int x, int y, int z) cons
 	return layer.values[GetCellIndex(x, y, z)];
 }
 
+void InfluenceMapSystem::MarkDirtyCell(Layer& layer, int x, int y, int z)
+{
+	if (x < 0 || x >= m_width || y < 0 || y >= m_yCount || z < 0 || z >= m_height)
+		return;
+
+	if (!layer.dirtyRegion.valid)
+	{
+		layer.dirtyRegion.valid = true;
+		layer.dirtyRegion.minX = x;
+		layer.dirtyRegion.maxX = x;
+		layer.dirtyRegion.minY = y;
+		layer.dirtyRegion.maxY = y;
+		layer.dirtyRegion.minZ = z;
+		layer.dirtyRegion.maxZ = z;
+		return;
+	}
+
+	layer.dirtyRegion.minX = std::min(layer.dirtyRegion.minX, x);
+	layer.dirtyRegion.maxX = std::max(layer.dirtyRegion.maxX, x);
+	layer.dirtyRegion.minY = std::min(layer.dirtyRegion.minY, y);
+	layer.dirtyRegion.maxY = std::max(layer.dirtyRegion.maxY, y);
+	layer.dirtyRegion.minZ = std::min(layer.dirtyRegion.minZ, z);
+	layer.dirtyRegion.maxZ = std::max(layer.dirtyRegion.maxZ, z);
+}
+
+InfluenceMapSystem::CellRegion InfluenceMapSystem::ExpandRegion(const CellRegion& region, int radius) const
+{
+	CellRegion expanded;
+	if (!region.valid)
+		return expanded;
+
+	const int safeRadius = std::max(0, radius);
+	expanded.valid = true;
+	expanded.minX = ClampInt(region.minX - safeRadius, 0, m_width - 1);
+	expanded.maxX = ClampInt(region.maxX + safeRadius, 0, m_width - 1);
+	expanded.minY = ClampInt(region.minY - safeRadius, 0, m_yCount - 1);
+	expanded.maxY = ClampInt(region.maxY + safeRadius, 0, m_yCount - 1);
+	expanded.minZ = ClampInt(region.minZ - safeRadius, 0, m_height - 1);
+	expanded.maxZ = ClampInt(region.maxZ + safeRadius, 0, m_height - 1);
+	return expanded;
+}
+
+int InfluenceMapSystem::CountUsedCellsInRegion(const CellRegion& region) const
+{
+	if (!region.valid)
+		return 0;
+
+	int count = 0;
+	for (int z = region.minZ; z <= region.maxZ; ++z)
+	{
+		for (int y = region.minY; y <= region.maxY; ++y)
+		{
+			for (int x = region.minX; x <= region.maxX; ++x)
+			{
+				if (IsUsed(x, y, z))
+					++count;
+			}
+		}
+	}
+	return count;
+}
+
 void InfluenceMapSystem::RecalculateStats()
 {
 	int activeCells = 0;
 	int sourceCount = 0;
 	int cellWriteCount = 0;
 	int spreadPassCount = 0;
+	int dirtyRegionCount = 0;
+	int dirtyCellCount = 0;
+	int lastSpreadRegionCellCount = 0;
+	bool spreadLimitedByDirtyRegion = false;
 	for (std::unordered_map<std::string, Layer>::const_iterator layerIter = m_layers.begin(); layerIter != m_layers.end(); ++layerIter)
 	{
 		const Layer& layer = layerIter->second;
 		sourceCount += layer.sourceCount;
 		cellWriteCount += layer.cellWriteCount;
 		spreadPassCount += layer.spreadPassCount;
+		if (layer.dirtyRegion.valid)
+		{
+			++dirtyRegionCount;
+			dirtyCellCount += CountUsedCellsInRegion(layer.dirtyRegion);
+		}
+		lastSpreadRegionCellCount += layer.lastSpreadRegionCellCount;
+		spreadLimitedByDirtyRegion = spreadLimitedByDirtyRegion || layer.lastSpreadLimitedByDirtyRegion;
 		for (std::vector<float>::const_iterator valueIter = layer.values.begin(); valueIter != layer.values.end(); ++valueIter)
 		{
 			if (std::fabs(*valueIter) >= kActiveCellThreshold)
@@ -884,4 +1086,9 @@ void InfluenceMapSystem::RecalculateStats()
 	m_stats.sourceCount = sourceCount;
 	m_stats.cellWriteCount = cellWriteCount;
 	m_stats.spreadPassCount = spreadPassCount;
+	m_stats.dirtyRegionCount = dirtyRegionCount;
+	m_stats.dirtyCellCount = dirtyCellCount;
+	m_stats.lastSpreadRegionCellCount = lastSpreadRegionCellCount;
+	m_stats.spreadLimitedByDirtyRegion = spreadLimitedByDirtyRegion;
+	m_stats.maxQueryCandidates = m_maxQueryCandidates;
 }
