@@ -255,6 +255,17 @@ local function _ConfigureCppTactics()
 	SandboxTactics:setTacticalInfluenceLayerOptions("danger", falloff, inertia)
 	SandboxTactics:setTacticalInfluenceLayerOptions("team", falloff, inertia)
 	SandboxTactics:setTacticalInfluenceLayerOptions("objective", falloff, inertia)
+	if SandboxTactics.configureTacticalInfluenceLayerUpdate ~= nil then
+		local dangerIntervalMs = _ReadNumber(config, "dangerUpdateIntervalMs", 500)
+		local teamIntervalMs = _ReadNumber(config, "teamUpdateIntervalMs", 500)
+		local objectiveIntervalMs = _ReadNumber(config, "objectiveUpdateIntervalMs", teamIntervalMs)
+		SandboxTactics:configureTacticalInfluenceLayerUpdate("danger", dangerIntervalMs, _ReadBool(config, "dangerUpdateDirtyOnly", true))
+		SandboxTactics:configureTacticalInfluenceLayerUpdate("team", teamIntervalMs, _ReadBool(config, "teamUpdateDirtyOnly", false))
+		SandboxTactics:configureTacticalInfluenceLayerUpdate("objective", objectiveIntervalMs, _ReadBool(config, "objectiveUpdateDirtyOnly", true))
+	end
+	if SandboxTactics.configureTacticalQueryCandidateLimit ~= nil then
+		SandboxTactics:configureTacticalQueryCandidateLimit(_ReadNumber(config, "tacticalQueryMaxCandidates", 0))
+	end
 end
 
 local function _CreatePanel()
@@ -600,6 +611,13 @@ local function _ReadLayerDrawNeutral(config, layerName, defaultValue)
 	return defaultValue
 end
 
+local function _ReadLayerDrawOrder(config, layerName, defaultValue)
+	if config ~= nil and config[layerName .. "DrawOrder"] ~= nil then
+		return _ReadNumber(config, layerName .. "DrawOrder", defaultValue)
+	end
+	return defaultValue
+end
+
 _RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	if not _HasCppInfluenceVisual() then
 		return false
@@ -609,6 +627,10 @@ _RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeS
 	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
 	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
 	local drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault)
+	if SandboxTactics.setTacticalInfluenceLayerDebugOrder ~= nil then
+		local defaultOrder = math.max(0, math.floor((tonumber(y) or 0) * 100))
+		SandboxTactics:setTacticalInfluenceLayerDebugOrder(layerName, _ReadLayerDrawOrder(config, layerName, defaultOrder))
+	end
 	SandboxTactics:rebuildTacticalInfluenceLayerDebugVisual(
 		layerName,
 		y,
@@ -798,6 +820,61 @@ local function _MaybePrintSmoke()
 		and _tacticalDriver.agent ~= nil
 		and _tacticalDriver.agent:GetTeamId() == _tacticalDriver.teamId
 		and _tactics.eventCount >= 3 then
+		if SandboxTactics.configureTacticalInfluenceLayerUpdate ~= nil then
+			local config = _GetConfig()
+			local policyWrites = SandboxTactics:rebuildTacticalDangerLayer(
+				_ReadNumber(config, "dangerPerspectiveTeamId", 0),
+				_ReadNumber(config, "dangerStrength", -1.0),
+				_ReadNumber(config, "bulletShotRadius", 10.0),
+				_ReadNumber(config, "bulletImpactRadius", 8.0),
+				_ReadNumber(config, "deadFriendlyRadius", 12.0),
+				_ReadNumber(config, "enemySightingRadius", 14.0),
+				_ReadNumber(config, "influenceSpreadPasses", 2))
+			local policySummary = SandboxTactics:buildTacticalInfluenceDebugSummary()
+			local policyPassed = policyWrites == 0
+				and string.find(policySummary, "skippedBuilds=", 1, true) ~= nil
+				and string.find(policySummary, "dirtySkips=", 1, true) ~= nil
+			print("[TacticalLayerPolicySmoke]", policyPassed and "PASS" or "FAIL", "writes=", policyWrites, "summary=", policySummary)
+			if not policyPassed then
+				return
+			end
+		end
+		local config = _GetConfig()
+		local candidateLimit = _ReadNumber(config, "tacticalQueryMaxCandidates", 0)
+		if candidateLimit > 0 then
+			local candidateSummary = SandboxTactics:buildTacticalInfluenceDebugSummary()
+			local candidatePassed = string.find(candidateSummary, "candidateLimit=" .. tostring(candidateLimit), 1, true) ~= nil
+				and string.find(candidateSummary, "capped=true", 1, true) ~= nil
+			print("[TacticalCandidateLimitSmoke]", candidatePassed and "PASS" or "FAIL", "limit=", candidateLimit, "summary=", candidateSummary)
+			if not candidatePassed then
+				return
+			end
+		end
+		local dirtySummary = SandboxTactics:buildTacticalInfluenceDebugSummary()
+		local dirtyPassed = string.find(dirtySummary, "dirtyRegions=", 1, true) ~= nil
+			and string.find(dirtySummary, "dirtyCells=", 1, true) ~= nil
+			and string.find(dirtySummary, "spreadRegionCells=", 1, true) ~= nil
+			and string.find(dirtySummary, "spreadLimited=true", 1, true) ~= nil
+		print("[TacticalDirtyRegionSmoke]", dirtyPassed and "PASS" or "FAIL", "summary=", dirtySummary)
+		if not dirtyPassed then
+			return
+		end
+		local schemaPassed = string.find(dirtySummary, "schema=support/cover/crowd", 1, true) ~= nil
+			and string.find(dirtySummary, "supportCells=", 1, true) ~= nil
+			and string.find(dirtySummary, "coverCells=", 1, true) ~= nil
+			and string.find(dirtySummary, "crowdCells=", 1, true) ~= nil
+		print("[TacticalLayerSchemaSmoke]", schemaPassed and "PASS" or "FAIL", "summary=", dirtySummary)
+		if not schemaPassed then
+			return
+		end
+		local debugConfigPassed = string.find(dirtySummary, "[TacticalDebugDraw]", 1, true) ~= nil
+			and string.find(dirtySummary, "configs=", 1, true) ~= nil
+			and string.find(dirtySummary, "order=", 1, true) ~= nil
+			and string.find(dirtySummary, "projectToNav=", 1, true) ~= nil
+		print("[TacticalDebugConfigSmoke]", debugConfigPassed and "PASS" or "FAIL", "summary=", dirtySummary)
+		if not debugConfigPassed then
+			return
+		end
 		_tactics.smokePrinted = true
 		print("[Chapter9TacticsCppSmoke] PASS",
 			"events=", _tactics.eventCount,

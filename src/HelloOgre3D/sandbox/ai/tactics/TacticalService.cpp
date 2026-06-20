@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <sstream>
 
 TacticalService::TacticalService(ObjectManager* objectManager, TacticalQueryService* queryService, TacticalDebugDrawService* debugDrawService)
 	: m_objectManager(objectManager)
@@ -64,6 +65,29 @@ void TacticalService::configureTacticalInfluenceFromNavMesh(const std::string& n
 	NavigationMesh* navMesh = ResolveNavigationMesh(navMeshName);
 	m_queryService->ConfigureInfluenceFromNavMesh(navMesh, cellWidth, cellHeight, boundaryMinOffset, boundaryMaxOffset);
 	clearTacticalInfluenceDebugVisuals();
+}
+
+void TacticalService::configureTacticalInfluenceLayerUpdate(const std::string& layerName, int intervalMs, bool dirtyOnly)
+{
+	if (m_queryService != nullptr)
+		m_queryService->ConfigureLayerUpdatePolicy(layerName, intervalMs, dirtyOnly);
+}
+
+void TacticalService::markTacticalInfluenceLayerDirty(const std::string& layerName)
+{
+	if (m_queryService != nullptr)
+		m_queryService->MarkLayerDirty(layerName);
+}
+
+void TacticalService::configureTacticalQueryCandidateLimit(int maxCandidates)
+{
+	if (m_queryService != nullptr)
+		m_queryService->SetQueryCandidateLimit(maxCandidates);
+}
+
+int TacticalService::getTacticalQueryCandidateLimit() const
+{
+	return m_queryService != nullptr ? m_queryService->GetQueryCandidateLimit() : 0;
 }
 
 void TacticalService::clearTacticalInfluenceLayer(const std::string& layerName)
@@ -291,6 +315,12 @@ int TacticalService::rebuildTacticalInfluenceLayerDebugVisual(const std::string&
 	return m_debugDrawService->RebuildLayerDebugVisual(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 }
 
+void TacticalService::setTacticalInfluenceLayerDebugOrder(const std::string& layerName, int drawOrder)
+{
+	if (m_debugDrawService != nullptr)
+		m_debugDrawService->SetLayerDrawOrder(layerName, drawOrder);
+}
+
 void TacticalService::setTacticalInfluenceDebugVisible(bool visible)
 {
 	if (m_debugDrawService != nullptr)
@@ -322,5 +352,11 @@ std::string TacticalService::buildTacticalInfluenceDebugSummary() const
 {
 	if (m_queryService == nullptr)
 		return "[TacticalQueryService] unavailable";
-	return m_queryService->BuildDebugSummary();
+	if (m_debugDrawService == nullptr)
+		return m_queryService->BuildDebugSummary();
+
+	std::ostringstream stream;
+	stream << m_queryService->BuildDebugSummary()
+		<< "\n" << m_debugDrawService->BuildDebugSummary();
+	return stream.str();
 }

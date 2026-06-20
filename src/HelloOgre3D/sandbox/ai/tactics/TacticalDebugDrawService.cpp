@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <sstream>
 #include <vector>
 
 namespace
@@ -61,6 +62,29 @@ namespace
 		manualObject.colour(Ogre::ColourValue::ZERO);
 		manualObject.index(0);
 	}
+
+	unsigned short ToRenderQueuePriority(int drawOrder)
+	{
+		const int priority = std::max(0, std::min(1000, drawOrder));
+		return static_cast<unsigned short>(110 + priority);
+	}
+}
+
+TacticalDebugDrawService::DebugLayerConfig::DebugLayerConfig()
+	: configured(false)
+	, yOffset(0.0f)
+	, positiveValue(Ogre::ColourValue::White)
+	, zeroValue(Ogre::ColourValue::Black)
+	, negativeValue(Ogre::ColourValue::Red)
+	, gridColor(Ogre::ColourValue::White)
+	, threshold(0.0f)
+	, maxCells(0)
+	, drawNeutralCells(false)
+	, projectToNav(false)
+	, maxProjectionDistance(0.0f)
+	, navMeshName("default")
+	, drawOrder(0)
+{
 }
 
 TacticalDebugDrawService::TacticalDebugDrawService()
@@ -82,6 +106,7 @@ int TacticalDebugDrawService::DrawLayer(const InfluenceMapSystem* influenceMap, 
 	if (debugDrawer == nullptr)
 		return 0;
 
+	StoreLayerConfig(layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 	(void)projectToNav;
 	(void)maxProjectionDistance;
 	(void)navMeshName;
@@ -121,6 +146,7 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 		Ogre::ColourValue color;
 	};
 
+	const DebugLayerConfig config = StoreLayerConfig(layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 	(void)projectToNav;
 	(void)maxProjectionDistance;
 	(void)navMeshName;
@@ -147,12 +173,12 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 		visual.node = sceneManager->getRootSceneNode()->createChildSceneNode();
 		visual.manualObject = sceneManager->createManualObject();
 		visual.manualObject->setDynamic(true);
-		visual.manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, 110);
 		visual.manualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		visual.node->attachObject(visual.manualObject);
 	}
 
 	Ogre::ManualObject* manualObject = visual.manualObject;
+	manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, ToRenderQueuePriority(config.drawOrder));
 	manualObject->clear();
 
 	manualObject->begin("debug_overlay_draw", Ogre::RenderOperation::OT_TRIANGLE_LIST);
@@ -218,6 +244,15 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 	return static_cast<int>(cells.size());
 }
 
+void TacticalDebugDrawService::SetLayerDrawOrder(const std::string& layerName, int drawOrder)
+{
+	DebugLayerConfig& config = GetOrCreateLayerConfig(layerName);
+	config.drawOrder = drawOrder;
+	std::unordered_map<std::string, DebugVisual>::iterator visual = m_visuals.find(layerName);
+	if (visual != m_visuals.end() && visual->second.manualObject != nullptr)
+		visual->second.manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, ToRenderQueuePriority(config.drawOrder));
+}
+
 void TacticalDebugDrawService::SetVisible(bool visible)
 {
 	m_visible = visible;
@@ -246,4 +281,51 @@ void TacticalDebugDrawService::ClearVisuals()
 			sceneManager->destroySceneNode(visual.node);
 	}
 	m_visuals.clear();
+}
+
+std::string TacticalDebugDrawService::BuildDebugSummary() const
+{
+	std::ostringstream stream;
+	stream << "[TacticalDebugDraw] configs=" << static_cast<int>(m_layerConfigs.size())
+		<< " visuals=" << static_cast<int>(m_visuals.size())
+		<< " visible=" << (m_visible ? "true" : "false");
+	for (std::unordered_map<std::string, DebugLayerConfig>::const_iterator iter = m_layerConfigs.begin(); iter != m_layerConfigs.end(); ++iter)
+	{
+		const DebugLayerConfig& config = iter->second;
+		stream << " " << iter->first
+			<< "(configured=" << (config.configured ? "true" : "false")
+			<< ",order=" << config.drawOrder
+			<< ",y=" << config.yOffset
+			<< ",threshold=" << config.threshold
+			<< ",maxCells=" << config.maxCells
+			<< ",neutral=" << (config.drawNeutralCells ? "true" : "false")
+			<< ",projectToNav=" << (config.projectToNav ? "true" : "false")
+			<< ",nav=" << config.navMeshName
+			<< ")";
+	}
+	return stream.str();
+}
+
+TacticalDebugDrawService::DebugLayerConfig& TacticalDebugDrawService::GetOrCreateLayerConfig(const std::string& layerName)
+{
+	const std::string safeName = layerName.empty() ? "default" : layerName;
+	return m_layerConfigs[safeName];
+}
+
+TacticalDebugDrawService::DebugLayerConfig TacticalDebugDrawService::StoreLayerConfig(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
+{
+	DebugLayerConfig& config = GetOrCreateLayerConfig(layerName);
+	config.configured = true;
+	config.yOffset = yOffset;
+	config.positiveValue = positiveValue;
+	config.zeroValue = zeroValue;
+	config.negativeValue = negativeValue;
+	config.gridColor = gridColor;
+	config.threshold = threshold;
+	config.maxCells = maxCells;
+	config.drawNeutralCells = drawNeutralCells;
+	config.projectToNav = projectToNav;
+	config.maxProjectionDistance = maxProjectionDistance;
+	config.navMeshName = navMeshName;
+	return config;
 }

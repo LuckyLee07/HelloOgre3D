@@ -24,10 +24,31 @@ public:
 
 	int DrawLayer(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
 	int RebuildLayerDebugVisual(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+	void SetLayerDrawOrder(const std::string& layerName, int drawOrder);
 	void SetVisible(bool visible);
 	void ClearVisuals();
+	std::string BuildDebugSummary() const;
 
 private:
+	struct DebugLayerConfig
+	{
+		DebugLayerConfig();
+
+		bool configured;
+		float yOffset;
+		Ogre::ColourValue positiveValue;
+		Ogre::ColourValue zeroValue;
+		Ogre::ColourValue negativeValue;
+		Ogre::ColourValue gridColor;
+		float threshold;
+		int maxCells;
+		bool drawNeutralCells;
+		bool projectToNav;
+		float maxProjectionDistance;
+		Ogre::String navMeshName;
+		int drawOrder;
+	};
+
 	struct DebugVisual
 	{
 		DebugVisual()
@@ -40,6 +61,10 @@ private:
 		Ogre::ManualObject* manualObject;
 	};
 
+	DebugLayerConfig& GetOrCreateLayerConfig(const std::string& layerName);
+	DebugLayerConfig StoreLayerConfig(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+
+	std::unordered_map<std::string, DebugLayerConfig> m_layerConfigs;
 	std::unordered_map<std::string, DebugVisual> m_visuals;
 	bool m_visible;
 };

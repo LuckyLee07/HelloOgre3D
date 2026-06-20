@@ -25,6 +25,10 @@ public:
 	void clearTacticalInfluence();
 	void configureTacticalInfluence(float minX, float maxX, float minZ, float maxZ, float cellSize);
 	void configureTacticalInfluenceFromNavMesh(const std::string& navMeshName, float cellWidth, float cellHeight, const Ogre::Vector3& boundaryMinOffset, const Ogre::Vector3& boundaryMaxOffset);
+	void configureTacticalInfluenceLayerUpdate(const std::string& layerName, int intervalMs, bool dirtyOnly);
+	void markTacticalInfluenceLayerDirty(const std::string& layerName);
+	void configureTacticalQueryCandidateLimit(int maxCandidates);
+	int getTacticalQueryCandidateLimit() const;
 	void clearTacticalInfluenceLayer(const std::string& layerName);
 	void setTacticalInfluenceLayerOptions(const std::string& layerName, float falloff, float inertia);
 	int addTacticalInfluenceSource(const std::string& layerName, const Ogre::Vector3& center, float strength, float radius);
@@ -62,6 +66,7 @@ public:
 	float getTacticalInfluenceLayerDebugCellValue(const std::string& layerName, int luaIndex, float threshold) const;
 	int drawTacticalInfluenceLayer(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
 	int rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+	void setTacticalInfluenceLayerDebugOrder(const std::string& layerName, int drawOrder);
 	void setTacticalInfluenceDebugVisible(bool visible);
 	void clearTacticalInfluenceDebugVisuals();
 	int getTacticalInfluenceActiveCellCount() const;
