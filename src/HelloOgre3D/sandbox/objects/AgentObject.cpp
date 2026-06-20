@@ -18,7 +18,6 @@
 #include "components/render/RenderComponent.h"
 #include "components/script/LuaScriptComponent.h"
 #include "event/SandboxEventPayload.h"
-#include "objects/steer/AgentPath.h"
 #include "systems/physics/Collision.h"
 #include "LogSystem.h"
 #include <algorithm>
@@ -130,11 +129,13 @@ void AgentObject::ApplyCommand(const AICommand& command)
 	case AICommand::COMMAND_NONE:
 		break;
 	case AICommand::COMMAND_MOVE_TO:
-		SetTarget(command.targetPosition);
+		if (AgentLocomotion* locomotion = FindComponent<AgentLocomotion>())
+			locomotion->SetTarget(command.targetPosition);
 		break;
 	case AICommand::COMMAND_STOP:
 		SetVelocity(Ogre::Vector3::ZERO);
-		SetTarget(GetPosition());
+		if (AgentLocomotion* locomotion = FindComponent<AgentLocomotion>())
+			locomotion->SetTarget(GetPosition());
 		break;
 	default:
 		CCLOG_INFO("AgentObject::ApplyCommand unsupported command: %s", AICommand::KindToString(command.kind));
@@ -278,26 +279,6 @@ void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
 	SetSpeed(Ogre::Vector3(velocity.x, 0, velocity.z).length());
 }
 
-void AgentObject::SetTarget(const Ogre::Vector3& targetPos)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetTarget(targetPos);
-}
-
-void AgentObject::SetTargetRadius(Ogre::Real radius)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetTargetRadius(radius);
-}
-
-Ogre::Vector3 AgentObject::GetTarget() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetTarget() : Ogre::Vector3::ZERO;
-}
-
 Ogre::Vector3 AgentObject::GetVelocity() const
 {
 	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
@@ -310,7 +291,7 @@ Ogre::Vector3 AgentObject::GetVelocity() const
 void AgentObject::SetMass(const Ogre::Real mass)
 {
 	const Ogre::Real massValue = std::max(Ogre::Real(0), mass);
-	AgentLocomotion* locomotion = GetLocomotion();
+	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
 	if (locomotion != nullptr)
 		locomotion->SetMass(massValue);
 
@@ -322,14 +303,14 @@ void AgentObject::SetMass(const Ogre::Real mass)
 void AgentObject::SetHeight(Ogre::Real height)
 {
 	const Ogre::Real heightValue = std::max(Ogre::Real(0), height);
-	AgentLocomotion* locomotion = GetLocomotion();
+	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
 	if (locomotion != nullptr)
 		locomotion->SetHeight(heightValue);
 
 	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
 	if (physicsComp != nullptr)
 	{
-		Ogre::Real radius = this->GetRadius();
+		const Ogre::Real radius = locomotion != nullptr ? locomotion->GetRadius() : AgentLocomotion::DEFAULT_AGENT_RADIUS;
 		physicsComp->RebuildCapsule(heightValue, radius);
 	}
 }
@@ -337,21 +318,21 @@ void AgentObject::SetHeight(Ogre::Real height)
 void AgentObject::SetRadius(Ogre::Real radius)
 {
 	const Ogre::Real radiusValue = std::max(Ogre::Real(0), radius);
-	AgentLocomotion* locomotion = GetLocomotion();
+	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
 	if (locomotion != nullptr)
 		locomotion->SetRadius(radiusValue);
 
 	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
 	if (physicsComp != nullptr)
 	{
-		Ogre::Real height = this->GetHeight();
+		const Ogre::Real height = locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
 		physicsComp->RebuildCapsule(height, radiusValue);
 	}
 }
 
 void AgentObject::SetSpeed(Ogre::Real speed)
 {
-	AgentLocomotion* locomotion = GetLocomotion();
+	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
 	if (locomotion != nullptr)
 		locomotion->SetSpeed(speed);
 }
@@ -404,12 +385,6 @@ void AgentObject::SetHealth(Ogre::Real health)
 	}
 }
 
-Ogre::Real AgentObject::GetMass() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetMass() : AgentLocomotion::DEFAULT_AGENT_MASS;
-}
-
 Ogre::Real AgentObject::GetSpeed() const
 {
 	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
@@ -419,20 +394,8 @@ Ogre::Real AgentObject::GetSpeed() const
 		return Ogre::Vector3(velocity.x, 0, velocity.z).length();
 	}
 
-	const AgentLocomotion* locomotion = GetLocomotion();
+	const AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
 	return locomotion != nullptr ? locomotion->GetSpeed() : AgentLocomotion::DEFAULT_AGENT_SPEED;
-}
-
-Ogre::Real AgentObject::GetHeight() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
-}
-
-Ogre::Real AgentObject::GetRadius() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetRadius() : AgentLocomotion::DEFAULT_AGENT_RADIUS;
 }
 
 Ogre::Real AgentObject::GetHealth() const
@@ -441,141 +404,10 @@ Ogre::Real AgentObject::GetHealth() const
 	return attrib != nullptr ? attrib->GetHealth() : DEFAULT_AGENT_HEALTH;
 }
 
-void AgentObject::SetMaxForce(Ogre::Real maxForce)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetMaxForce(maxForce);
-}
-
-void AgentObject::SetMaxSpeed(Ogre::Real maxSpeed)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetMaxSpeed(maxSpeed);
-}
-
-Ogre::Real AgentObject::GetMaxForce() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetMaxForce() : 0.0f;
-}
-
-Ogre::Real AgentObject::GetMaxSpeed() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetMaxSpeed() : 0.0f;
-}
-
-Ogre::Real AgentObject::GetTargetRadius() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetTargetRadius() : 0.0f;
-}
-
 Ogre::Vector3 AgentObject::PredictFuturePosition(Ogre::Real predictionTime) const
 {
 	Ogre::Real upredictionTime = std::max(Ogre::Real(0), predictionTime);
 	return GetPosition() + GetVelocity() * upredictionTime;
-}
-
-Ogre::Vector3 AgentObject::ForceToPosition(const Ogre::Vector3& position)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToPosition(position) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToFollowPath(Ogre::Real predictionTime)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToFollowPath(predictionTime) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToStayOnPath(Ogre::Real predictionTime)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToStayOnPath(predictionTime) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToWander(Ogre::Real deltaMilliSeconds)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToWander(deltaMilliSeconds) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToTargetSpeed(Ogre::Real targetSpeed)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToTargetSpeed(targetSpeed) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToAvoidAgents(Ogre::Real predictionTime)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToAvoidAgents(predictionTime) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToAvoidObjects(Ogre::Real predictionTime)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToAvoidObjects(predictionTime) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToCombine(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToCombine(agents, distance, angle) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::ForceToSeparate(const std::vector<AgentObject*>& agents, Ogre::Real distance, Ogre::Real angle)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->ForceToSeparate(agents, distance, angle) : Ogre::Vector3::ZERO;
-}
-
-void AgentObject::ApplyForce(const Ogre::Vector3& force)
-{
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
-	if (physicsComp != nullptr)
-		physicsComp->ApplyForce(force);
-}
-
-void AgentObject::SetPath(const std::vector<Ogre::Vector3>& points, bool cyclic)
-{
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetPath(points, cyclic);
-}
-
-const std::vector<Ogre::Vector3>& AgentObject::GetPath()
-{
-	static const std::vector<Ogre::Vector3> kEmpty;
-	AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetPath() : kEmpty;
-}
-
-bool AgentObject::HasPath() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->HasPath() : false;
-}
-
-Ogre::Real AgentObject::GetDistanceAlongPath(const Ogre::Vector3& position) const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetDistanceAlongPath(position) : 0.0f;
-}
-
-Ogre::Vector3 AgentObject::GetNearestPointOnPath(const Ogre::Vector3& position) const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetNearestPointOnPath(position) : Ogre::Vector3::ZERO;
-}
-
-Ogre::Vector3 AgentObject::GetPointOnPath(const Ogre::Real distance) const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetPointOnPath(distance) : Ogre::Vector3::ZERO;
 }
 
 void AgentObject::Update(int deltaMilisec)
@@ -738,27 +570,6 @@ void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 		m_renderComp->SetOrientation(quaternion);
 }
 
-void AgentObject::SetPath(const AgentPath& agentPath)
-{
-	std::vector<Ogre::Vector3> points;
-	agentPath.GetPathPoints(points);
-
-	const bool cyclic = false;
-	AgentLocomotion* locomotion = GetLocomotion();
-	if (locomotion != nullptr)
-		locomotion->SetPath(points, cyclic);
-}
-
-AgentLocomotion* AgentObject::GetLocomotion()
-{
-	return FindComponent<AgentLocomotion>();
-}
-
-const AgentLocomotion* AgentObject::GetLocomotion() const
-{
-	return FindComponent<AgentLocomotion>();
-}
-
 LuaScriptComponent* AgentObject::GetLuaScript()
 {
 	return FindComponent<LuaScriptComponent>();
@@ -767,12 +578,6 @@ LuaScriptComponent* AgentObject::GetLuaScript()
 const LuaScriptComponent* AgentObject::GetLuaScript() const
 {
 	return FindComponent<LuaScriptComponent>();
-}
-
-OpenSteerAdapter* AgentObject::GetAdapter() const
-{
-	const AgentLocomotion* locomotion = GetLocomotion();
-	return locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 }
 
 #define USE_CPP_FSM 1

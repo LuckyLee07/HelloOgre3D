@@ -9,6 +9,7 @@
 #include "objects/BlockObject.h"
 #include "objects/steer/AgentPath.h"
 #include "objects/steer/OpenSteerAdapter.h"
+#include "components/physics/PhysicsComponent.h"
 #include "systems/manager/ObjectManager.h"
 
 namespace
@@ -299,7 +300,8 @@ Ogre::Vector3 AgentLocomotion::ForceToAvoidAgents(Ogre::Real predictionTime)
 	{
 		if (!a || a == owner) continue; // 排除自己
 		if (a->GetHealth() <= 0) continue;
-		auto* veh = a->GetAdapter();
+		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (veh) group.push_back(veh);
 	}
 
@@ -338,7 +340,8 @@ Ogre::Vector3 AgentLocomotion::ForceToCombine(const std::vector<AgentObject*>& a
 	{
 		if (a == nullptr || a == owner) // 排除自己
 			continue;
-		auto* veh = a->GetAdapter();
+		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (veh) group.push_back(veh);
 	}
 
@@ -358,7 +361,8 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 	{
 		if (a == nullptr || a == owner) // 排除自己
 			continue;
-		auto* veh = a->GetAdapter();
+		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (!veh) continue;
 		group.push_back(veh);
 	}
@@ -371,6 +375,7 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 void AgentLocomotion::ApplyForce(const Ogre::Vector3& force)
 {
 	AgentObject* owner = GetAgentOwner();
-	if (owner != nullptr)
-		owner->ApplyForce(force);
+	PhysicsComponent* physics = owner != nullptr ? owner->FindComponent<PhysicsComponent>() : nullptr;
+	if (physics != nullptr)
+		physics->ApplyForce(force);
 }

@@ -3,6 +3,7 @@
 #include "GameDefine.h"
 #include "ai/fsm/AgentActionContext.h"
 #include "ai/fsm/AgentStateController.h"
+#include "components/agent/AgentLocomotion.h"
 #include "objects/AgentObject.h"
 
 namespace
@@ -104,7 +105,8 @@ std::string PursueState::OnUpdate(float dt)
 		m_stuckRepathMs = 0.0f;
 	}
 
-	if (!m_pAgent->HasPath() && !actions->HasPendingAnimation())
+	const AgentLocomotion* locomotion = m_pAgent->FindComponent<AgentLocomotion>();
+	if ((locomotion == nullptr || !locomotion->HasPath()) && !actions->HasPendingAnimation())
 	{
 		SetTerminated(true);
 		return "";

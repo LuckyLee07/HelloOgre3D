@@ -7,8 +7,6 @@
 class IPlayerInput;
 class SoldierAnimController;
 class AnimComponent;
-class AIController;
-class WeaponComponent;
 class AgentStateController;
 struct AICommand;
 class SoldierObject : public AgentObject, public IAnimContextProvider //tolua_exports
@@ -25,15 +23,12 @@ public:
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
 	//tolua_end
-	WeaponComponent* getWeapon();
 	//tolua_begin
 	virtual void SetRenderVisible(bool visible) override;
 
 	void changeStanceType(int stanceType);
 	int getStanceType() const;
 	//tolua_end
-
-	void ShootBullet();
 
 	//tolua_begin
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
@@ -45,46 +40,11 @@ public:
 	SoldierAnimController* GetAnimController() const;
 	//tolua_end
 
-	AIController* GetAIController() const;
-	AIController* GetAI() const;
-
-	// Legacy C++ compatibility forwards. Lua scripts should use BaseObject typed
-	// component getters or AgentComponentAccess helpers instead.
-	void SetMaxHealth(Ogre::Real maxHealth);
-	Ogre::Real GetMaxHealth() const;
-
-	void SetAmmo(int ammo);
-	int GetAmmo() const;
-	void SetMaxAmmo(int maxAmmo);
-	int GetMaxAmmo() const;
-	bool HasAmmo() const;
-	void ConsumeAmmo(int amount);
-	void RestoreAmmo();
-
-	bool HasEnemy(const Ogre::String& navMeshName = "default");
-	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
-	AgentObject* GetEnemy() const;
-
 	//tolua_begin
 	Ogre::Vector3 GetBonePosition(const Ogre::String& boneName) const;
 	Ogre::Vector3 GetBoneForward(const Ogre::String& boneName) const;
 	//tolua_end
 
-	bool HasMovePosition(float reachDistance = 1.5f) const;
-	void SetMovePosition(const Ogre::Vector3& movePos);
-	void ClearMovePosition();
-	bool IsTargetReached(float threshold) const;
-
-	// High-level anim intents for Lua actions. SoldierAnimController re-evaluates
-	// intent each frame, so using these (rather than RequestState(SSTATE_*)) is
-	// what actually makes run/idle/fire/reload/death animations stick.
-	void EnterIdleAnim();
-	void EnterMoveAnim();
-	void EnterShootAnim();
-	void EnterReloadAnim();
-	void EnterDeathAnim();
-
-	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 	AnimComponent* GetAnimComponent() const;
 	virtual void ApplyCommand(const AICommand& command) override;
 

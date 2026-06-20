@@ -16,6 +16,7 @@
 #include "animation/SoldierAnimProfile.h"
 #include "components/anim/AnimComponent.h"
 #include "components/anim/IAnimController.h"
+#include "components/agent/AgentLocomotion.h"
 #include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
@@ -33,6 +34,22 @@ namespace
 	bool IsCrouchAnimState(int stateId)
 	{
 		return stateId >= CROUCH_SSTATE_DEAD && stateId <= CROUCH_SSTATE_FORWARD;
+	}
+
+	AgentLocomotion* GetLocomotion(AgentObject* agent)
+	{
+		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+	}
+
+	const AgentLocomotion* GetLocomotion(const AgentObject* agent)
+	{
+		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+	}
+
+	Ogre::Real GetLocomotionHeight(const AgentObject* agent)
+	{
+		const AgentLocomotion* locomotion = GetLocomotion(agent);
+		return locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
 	}
 }
 
@@ -59,16 +76,6 @@ void SoldierObject::Init()
 	{
 		m_inputInfo = new PlayerInput(inputMgr);
 	}
-}
-
-AIController* SoldierObject::GetAIController() const
-{
-	return const_cast<AIController*>(FindComponent<AIController>());
-}
-
-AIController* SoldierObject::GetAI() const
-{
-	return GetAIController();
 }
 
 AnimComponent* SoldierObject::GetAnimComponent() const
@@ -122,22 +129,17 @@ void SoldierObject::ApplyCommand(const AICommand& command)
 
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
 {
-	WeaponComponent* weaponComp = getWeapon();
+	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	if (weaponComp != nullptr)
 	{
 		weaponComp->Init(meshFile);
 	}
 }
 
-WeaponComponent* SoldierObject::getWeapon()
-{
-	return FindComponent<WeaponComponent>();
-}
-
 void SoldierObject::SetRenderVisible(bool visible)
 {
 	AgentObject::SetRenderVisible(visible);
-	WeaponComponent* weaponComp = getWeapon();
+	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	if (weaponComp != nullptr)
 	{
 		weaponComp->SetRenderVisible(visible);
@@ -162,110 +164,23 @@ void SoldierObject::Update(int deltaMilisec)
 
 void SoldierObject::TickAi(int deltaMilisec)
 {
-	AIController* ai = GetAIController();
+	AIController* ai = FindComponent<AIController>();
 	if (ai != nullptr)
 		ai->TickAI(deltaMilisec);
 }
 
 void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
 {
-	AIController* ai = GetAIController();
+	AIController* ai = FindComponent<AIController>();
 	if (ai != nullptr)
 		ai->SetTickInOwnerUpdateEnabled(enabled);
 }
 
 void SoldierObject::SyncWeaponToHandBone()
 {
-	WeaponComponent* weaponComp = getWeapon();
+	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	if (weaponComp != nullptr)
 		weaponComp->SyncToHandBone();
-}
-
-void SoldierObject::ShootBullet()
-{
-	ApplyCommand(AICommand::FireWeapon());
-}
-
-void SoldierObject::DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation)
-{
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp != nullptr)
-		weaponComp->DoShootBullet(position, orientation);
-}
-
-void SoldierObject::SetMaxHealth(Ogre::Real maxHealth)
-{
-	AgentAttrib* attrib = FindComponent<AgentAttrib>();
-	if (attrib != nullptr)
-	{
-		attrib->SetMaxHealth(maxHealth);
-	}
-}
-
-Ogre::Real SoldierObject::GetMaxHealth() const
-{
-	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
-	return attrib != nullptr ? attrib->GetMaxHealth() : std::max<Ogre::Real>(GetHealth(), 1.0f);
-}
-
-void SoldierObject::SetAmmo(int ammo)
-{
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp != nullptr)
-	{
-		weaponComp->SetAmmo(ammo);
-	}
-}
-
-int SoldierObject::GetAmmo() const
-{
-	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
-	return weaponComp != nullptr ? weaponComp->GetAmmo() : 0;
-}
-
-void SoldierObject::SetMaxAmmo(int maxAmmo)
-{
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp != nullptr)
-	{
-		weaponComp->SetMaxAmmo(maxAmmo);
-	}
-}
-
-int SoldierObject::GetMaxAmmo() const
-{
-	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
-	return weaponComp != nullptr ? weaponComp->GetMaxAmmo() : 0;
-}
-
-bool SoldierObject::HasAmmo() const
-{
-	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
-	return weaponComp != nullptr && weaponComp->HasAmmo();
-}
-
-void SoldierObject::ConsumeAmmo(int amount)
-{
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp != nullptr)
-	{
-		weaponComp->ConsumeAmmo(amount);
-	}
-}
-
-void SoldierObject::RestoreAmmo()
-{
-	WeaponComponent* weaponComp = getWeapon();
-	if (weaponComp != nullptr)
-	{
-		weaponComp->RestoreAmmo();
-	}
-}
-
-AgentObject* SoldierObject::GetEnemy() const
-{
-	AIController* ai = GetAIController();
-	return ai != nullptr ? ai->GetEnemy() : nullptr;
 }
 
 Ogre::Vector3 SoldierObject::GetBonePosition(const Ogre::String& boneName) const
@@ -278,7 +193,7 @@ Ogre::Vector3 SoldierObject::GetBonePosition(const Ogre::String& boneName) const
 			return position;
 	}
 
-	return GetPosition() + Ogre::Vector3(0.0f, GetHeight() * 0.5f, 0.0f);
+	return GetPosition() + Ogre::Vector3(0.0f, GetLocomotionHeight(this) * 0.5f, 0.0f);
 }
 
 Ogre::Vector3 SoldierObject::GetBoneForward(const Ogre::String& boneName) const
@@ -307,42 +222,6 @@ Ogre::Vector3 SoldierObject::GetBoneForward(const Ogre::String& boneName) const
 	return forward;
 }
 
-bool SoldierObject::HasEnemy(const Ogre::String& navMeshName)
-{
-	AIController* ai = GetAIController();
-	return ai != nullptr && ai->HasEnemy(navMeshName);
-}
-
-bool SoldierObject::CanShootEnemy(const Ogre::String& navMeshName, float shootDistance)
-{
-	AIController* ai = GetAIController();
-	return ai != nullptr && ai->CanShootEnemy(navMeshName, shootDistance);
-}
-bool SoldierObject::HasMovePosition(float reachDistance) const
-{
-	AIController* ai = GetAIController();
-	return ai != nullptr && ai->HasMovePosition(reachDistance);
-}
-
-void SoldierObject::SetMovePosition(const Ogre::Vector3& movePos)
-{
-	AIController* ai = GetAIController();
-	if (ai != nullptr)
-		ai->SetMovePosition(movePos);
-}
-
-void SoldierObject::ClearMovePosition()
-{
-	AIController* ai = GetAIController();
-	if (ai != nullptr)
-		ai->ClearMovePosition();
-}
-
-bool SoldierObject::IsTargetReached(float threshold) const
-{
-	AIController* ai = GetAIController();
-	return ai != nullptr && ai->IsTargetReached(threshold);
-}
 void SoldierObject::changeStanceType(int stanceType)
 {
 	AgentAttrib* attrib = FindComponent<AgentAttrib>();
@@ -402,11 +281,13 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 	if (m_renderComp != nullptr)
 		m_renderComp->SetVisualOffset(Ogre::Vector3(0, -soldier_height / 2, 0));
 
-	Ogre::Real newPosY = (this->GetHeight() - soldier_height) / 2;
+	Ogre::Real newPosY = (GetLocomotionHeight(this) - soldier_height) / 2;
 	this->setPosition((GetPosition() - Ogre::Vector3(0, newPosY, 0)));
 
 	this->SetHeight(soldier_height);
-	this->SetMaxSpeed(soldier_speed);
+	AgentLocomotion* locomotion = GetLocomotion(this);
+	if (locomotion != nullptr)
+		locomotion->SetMaxSpeed(soldier_speed);
 	this->updateWorldTransform();
 }
 
@@ -508,7 +389,7 @@ SoldierAnimController* SoldierObject::GetAnimController() const
 
 AgentStateController* SoldierObject::GetFsmController() const
 {
-	AIController* ai = GetAIController();
+	AIController* ai = const_cast<SoldierObject*>(this)->FindComponent<AIController>();
 	return ai != nullptr ? ai->GetFsmController() : nullptr;
 }
 
@@ -540,17 +421,12 @@ bool SoldierObject::IsCppAnimControllerEnabled() const
 
 void SoldierObject::ExecuteAnimShoot()
 {
-	ShootBullet();
+	const_cast<SoldierObject*>(this)->ApplyFireWeaponCommand();
 }
 
 AgentStateController* SoldierObject::GetAnimFsmController() const
 {
 	return GetFsmController();
-}
-
-void SoldierObject::EnterIdleAnim()
-{
-	ApplyCommand(AICommand::Idle());
 }
 
 void SoldierObject::ApplyIdleCommand()
@@ -562,11 +438,6 @@ void SoldierObject::ApplyIdleCommand()
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 }
 
-void SoldierObject::EnterMoveAnim()
-{
-	ApplyCommand(AICommand::Move());
-}
-
 void SoldierObject::ApplyMoveCommand()
 {
 	AnimComponent* animComp = GetAnimComponent();
@@ -574,11 +445,6 @@ void SoldierObject::ApplyMoveCommand()
 	if (!controller) return;
 	controller->ClearAllActions();
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Move);
-}
-
-void SoldierObject::EnterShootAnim()
-{
-	ApplyCommand(AICommand::Attack());
 }
 
 void SoldierObject::ApplyAttackCommand()
@@ -590,11 +456,6 @@ void SoldierObject::ApplyAttackCommand()
 	controller->RequestAction(SoldierActionIntent::Shoot, true);
 }
 
-void SoldierObject::EnterReloadAnim()
-{
-	ApplyCommand(AICommand::Reload());
-}
-
 void SoldierObject::ApplyReloadCommand()
 {
 	AnimComponent* animComp = GetAnimComponent();
@@ -602,11 +463,6 @@ void SoldierObject::ApplyReloadCommand()
 	if (!controller) return;
 	controller->SetLocomotionIntent(SoldierLocomotionIntent::Idle);
 	controller->RequestAction(SoldierActionIntent::Reload, true);
-}
-
-void SoldierObject::EnterDeathAnim()
-{
-	ApplyCommand(AICommand::Die());
 }
 
 void SoldierObject::ApplyDeathCommand()
@@ -619,14 +475,14 @@ void SoldierObject::ApplyDeathCommand()
 
 void SoldierObject::ApplyFireWeaponCommand()
 {
-	WeaponComponent* weaponComp = getWeapon();
+	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
 	if (weaponComp != nullptr)
 		weaponComp->ShootBullet();
 }
 
 void SoldierObject::ApplyMoveToCommand(const Ogre::Vector3& targetPosition)
 {
-	AIController* ai = GetAIController();
+	AIController* ai = FindComponent<AIController>();
 	if (ai != nullptr)
 	{
 		ai->SetMovePosition(targetPosition);
@@ -640,14 +496,18 @@ void SoldierObject::ApplyMoveToCommand(const Ogre::Vector3& targetPosition)
 	if (fsm != nullptr)
 		plannedPath = fsm->PlanPathTo(targetPosition, false);
 	if (!plannedPath)
-		SetTarget(targetPosition);
+	{
+		AgentLocomotion* locomotion = GetLocomotion(this);
+		if (locomotion != nullptr)
+			locomotion->SetTarget(targetPosition);
+	}
 
 	ApplyMoveCommand();
 }
 
 void SoldierObject::ApplyStopCommand()
 {
-	AIController* ai = GetAIController();
+	AIController* ai = FindComponent<AIController>();
 	if (ai != nullptr)
 	{
 		ai->ClearMovePosition();
@@ -656,10 +516,14 @@ void SoldierObject::ApplyStopCommand()
 			blackboard->Remove("movePos");
 	}
 
-	std::vector<Ogre::Vector3> emptyPath;
-	SetPath(emptyPath, false);
+	AgentLocomotion* locomotion = GetLocomotion(this);
+	if (locomotion != nullptr)
+	{
+		std::vector<Ogre::Vector3> emptyPath;
+		locomotion->SetPath(emptyPath, false);
+		locomotion->SetTarget(GetPosition());
+	}
 	SetVelocity(Ogre::Vector3::ZERO);
-	SetTarget(GetPosition());
 	ApplyIdleCommand();
 }
 

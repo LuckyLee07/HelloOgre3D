@@ -1,9 +1,11 @@
 #include "AgentActionContext.h"
 
 #include <algorithm>
+#include <vector>
 
 #include "AgentStateController.h"
 #include "GameDefine.h"
+#include "components/agent/AgentLocomotion.h"
 #include "components/agent/AgentAttrib.h"
 #include "components/ai/AIController.h"
 #include "components/anim/AnimComponent.h"
@@ -228,7 +230,9 @@ void AgentActionContext::DrawPath(const Ogre::ColourValue& color, const Ogre::Ve
 		return;
 	}
 
-	const std::vector<Ogre::Vector3>& path = agent->GetPath();
+	static const std::vector<Ogre::Vector3> kEmptyPath;
+	AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
+	const std::vector<Ogre::Vector3>& path = locomotion != nullptr ? locomotion->GetPath() : kEmptyPath;
 	if (path.empty())
 	{
 		return;

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AgentActionContext.h"
+#include "components/agent/AgentLocomotion.h"
 #include "components/ai/AIController.h"
 #include "core/SandboxServices.h"
 #include "objects/AgentObject.h"
@@ -38,14 +39,25 @@ namespace
 		return agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
 	}
 
+	AgentLocomotion* GetLocomotion(AgentObject* agent)
+	{
+		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+	}
+
+	const AgentLocomotion* GetLocomotion(const AgentObject* agent)
+	{
+		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+	}
+
 	void AlignAgentToPath(AgentObject* agent)
 	{
-		if (!agent || !agent->HasPath())
+		const AgentLocomotion* locomotion = GetLocomotion(agent);
+		if (!agent || locomotion == nullptr || !locomotion->HasPath())
 			return;
 
-		const Ogre::Vector3 nearest = agent->GetNearestPointOnPath(agent->GetPosition());
-		const Ogre::Real distance = agent->GetDistanceAlongPath(nearest);
-		Ogre::Vector3 pointOnPath = agent->GetPointOnPath(distance + 2.0f);
+		const Ogre::Vector3 nearest = locomotion->GetNearestPointOnPath(agent->GetPosition());
+		const Ogre::Real distance = locomotion->GetDistanceAlongPath(nearest);
+		Ogre::Vector3 pointOnPath = locomotion->GetPointOnPath(distance + 2.0f);
 		Ogre::Vector3 forward = pointOnPath - agent->GetPosition();
 		forward.y = 0.0f;
 
@@ -178,8 +190,12 @@ bool AgentStateController::PlanPathTo(const Ogre::Vector3& target, bool updateMo
 	if (!navigation->FindPath(m_navMeshName, m_agent->GetPosition(), target, path) || path.empty())
 		return false;
 
-	m_agent->SetPath(path, false);
-	m_agent->SetTarget(target);
+	AgentLocomotion* locomotion = GetLocomotion(m_agent);
+	if (locomotion == nullptr)
+		return false;
+
+	locomotion->SetPath(path, false);
+	locomotion->SetTarget(target);
 	AlignAgentToPath(m_agent); // �л�Ŀ��ʱֱ��ת��
 
 	if (updateMovePos)
@@ -224,15 +240,19 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 	if (!m_agent || deltaTimeInSeconds <= 0.0f)
 		return;
 
-	Ogre::Vector3 avoidForce = m_agent->ForceToAvoidAgents(0.5f);
-	Ogre::Vector3 avoidObjectForce = m_agent->ForceToAvoidObjects(0.5f);
-	Ogre::Vector3 followForce = m_agent->ForceToFollowPath(0.5f);
-	Ogre::Vector3 stayForce = m_agent->ForceToStayOnPath(0.5f);
+	AgentLocomotion* locomotion = GetLocomotion(m_agent);
+	if (locomotion == nullptr)
+		return;
+
+	Ogre::Vector3 avoidForce = locomotion->ForceToAvoidAgents(0.5f);
+	Ogre::Vector3 avoidObjectForce = locomotion->ForceToAvoidObjects(0.5f);
+	Ogre::Vector3 followForce = locomotion->ForceToFollowPath(0.5f);
+	Ogre::Vector3 stayForce = locomotion->ForceToStayOnPath(0.5f);
 	Ogre::Vector3 separationForce = Ogre::Vector3::ZERO;
 	ObjectManager* objectManager = ResolveObjectManager(m_agent);
 	if (objectManager != nullptr)
 	{
-		separationForce = m_agent->ForceToSeparate(objectManager->getAllAgents(), 1.25f, 180.0f);
+		separationForce = locomotion->ForceToSeparate(objectManager->getAllAgents(), 1.25f, 180.0f);
 	}
 
 	Ogre::Vector3 totalForces =
@@ -242,16 +262,16 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 		separationForce * 1.25f +
 		avoidObjectForce * 2.0f;
 
-	const Ogre::Real targetSpeed = m_agent->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
+	const Ogre::Real targetSpeed = locomotion->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
 	if (m_agent->GetSpeed() < targetSpeed)
 	{
-		const Ogre::Vector3 speedForce = m_agent->ForceToTargetSpeed(targetSpeed);
+		const Ogre::Vector3 speedForce = locomotion->ForceToTargetSpeed(targetSpeed);
 		totalForces += speedForce * (slowMode ? 5.0f : 7.0f);
 	}
 
 	if (totalForces.squaredLength() < 0.1f)
 		return;
-	if (m_agent->GetMass() <= 0.0f)
+	if (locomotion->GetMass() <= 0.0f)
 		return;
 
 	totalForces.y = 0.0f;
@@ -259,11 +279,11 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 		return;
 
 	totalForces.normalise();
-	totalForces *= m_agent->GetMaxForce();
+	totalForces *= locomotion->GetMaxForce();
 
-	m_agent->ApplyForce(totalForces);
+	locomotion->ApplyForce(totalForces);
 
-	const Ogre::Vector3 acceleration = totalForces / m_agent->GetMass();
+	const Ogre::Vector3 acceleration = totalForces / locomotion->GetMass();
 	const Ogre::Vector3 currentVelocity = m_agent->GetVelocity();
 	Ogre::Vector3 velocity = currentVelocity + (acceleration * deltaTimeInSeconds);
 	m_agent->SetVelocity(velocity);
@@ -275,7 +295,7 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 		m_agent->SetForward(horizontalVelocity);
 	}
 
-	const Ogre::Real maxSpeed = m_agent->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
+	const Ogre::Real maxSpeed = locomotion->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);
 	if (!horizontalVelocity.isZeroLength() && horizontalVelocity.squaredLength() > (maxSpeed * maxSpeed))
 	{
 		Ogre::Vector3 clampedHorizontal = horizontalVelocity.normalisedCopy() * maxSpeed;

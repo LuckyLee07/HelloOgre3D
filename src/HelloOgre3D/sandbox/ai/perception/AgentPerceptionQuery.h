@@ -13,6 +13,7 @@
 #include "OgreString.h"
 #include "OgreVector3.h"
 #include "ai/perception/AgentSpatialQuery.h"
+#include "components/agent/AgentLocomotion.h"
 #include "objects/AgentObject.h"
 #include "objects/BlockObject.h"
 #include "systems/service/NavigationService.h"
@@ -263,7 +264,9 @@ private:
 		if (agent == nullptr)
 			return Ogre::Vector3::ZERO;
 
-		return agent->GetPosition() + Ogre::Vector3(0.0f, agent->GetHeight() * 0.5f, 0.0f);
+		const AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
+		const Ogre::Real height = locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
+		return agent->GetPosition() + Ogre::Vector3(0.0f, height * 0.5f, 0.0f);
 	}
 
 	static Ogre::Vector3 GetSightTarget(const AgentObject* agent)

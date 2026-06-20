@@ -8,8 +8,8 @@
 class AgentObject;
 class OpenSteerAdapter;
 
-class AgentLocomotion : public IComponent
-{
+class AgentLocomotion : public IComponent //tolua_exports
+{ //tolua_exports
 public:
 	AgentLocomotion();
 	virtual ~AgentLocomotion();
@@ -17,6 +17,7 @@ public:
 	virtual void onAttach(BaseObject* owner);
 	virtual void onDetach();
 
+	//tolua_begin
 	// 位置设置
 	void SetPosition(const Ogre::Vector3& position);
 	Ogre::Vector3 GetPosition() const;
@@ -78,6 +79,7 @@ public:
 
 	// 力之应用
 	void ApplyForce(const Ogre::Vector3& force);
+	//tolua_end
 
 	OpenSteerAdapter* GetAdapter() const { return m_adapter; }
 
@@ -108,6 +110,6 @@ private:
 	Ogre::Vector3 m_targetPos = Ogre::Vector3::ZERO;
 
 	OpenSteerAdapter* m_adapter = nullptr; // owned OpenSteer adapter
-};
+}; //tolua_exports
 
 #endif // __AGENT_LOCOMOTION_H__

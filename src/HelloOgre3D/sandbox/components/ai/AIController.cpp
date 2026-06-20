@@ -19,6 +19,7 @@
 #include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
 #include "event/SandboxEventPayload.h"
+#include "components/agent/AgentLocomotion.h"
 #include "objects/AgentObject.h"
 #include "objects/SoldierObject.h"
 #include "profiling/Profile.h"
@@ -636,12 +637,13 @@ bool AIController::HasMovePosition(float reachDistance) const
 		return owner->GetPosition().squaredDistance(m_movePos) > reachSquared;
 	}
 
-	if (!owner->HasPath())
+	const AgentLocomotion* locomotion = owner->FindComponent<AgentLocomotion>();
+	if (locomotion == nullptr || !locomotion->HasPath())
 	{
 		return false;
 	}
 
-	const Ogre::Vector3 target = owner->GetTarget();
+	const Ogre::Vector3 target = locomotion->GetTarget();
 	return owner->GetPosition().squaredDistance(target) > reachSquared;
 }
 
@@ -673,12 +675,13 @@ bool AIController::IsTargetReached(float threshold) const
 		return owner->GetPosition().squaredDistance(m_movePos) < thresholdSquared;
 	}
 
-	if (!owner->HasPath())
+	const AgentLocomotion* locomotion = owner->FindComponent<AgentLocomotion>();
+	if (locomotion == nullptr || !locomotion->HasPath())
 	{
 		return false;
 	}
 
-	const Ogre::Vector3 target = owner->GetTarget();
+	const Ogre::Vector3 target = locomotion->GetTarget();
 	return owner->GetPosition().squaredDistance(target) < thresholdSquared;
 }
 

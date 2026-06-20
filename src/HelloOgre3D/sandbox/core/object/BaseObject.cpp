@@ -1,6 +1,7 @@
 #include "BaseObject.h"
 #include "SandboxMacros.h"
 #include "components/agent/AgentAttrib.h"
+#include "components/agent/AgentLocomotion.h"
 #include "components/ai/AIController.h"
 #include "components/anim/AnimComponent.h"
 #include "components/combat/WeaponComponent.h"
@@ -251,6 +252,11 @@ AnimComponent* BaseObject::GetAnimComponent()
 AgentAttrib* BaseObject::GetAttribComponent()
 {
 	return FindComponent<AgentAttrib>();
+}
+
+AgentLocomotion* BaseObject::GetLocomotionComponent()
+{
+	return FindComponent<AgentLocomotion>();
 }
 
 int BaseObject::GetComponentCount() const

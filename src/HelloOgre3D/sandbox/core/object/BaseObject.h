@@ -13,6 +13,7 @@
 struct Collision;
 struct SandboxServices;
 class AgentAttrib;
+class AgentLocomotion;
 class AIController;
 class AnimComponent;
 class WeaponComponent;
@@ -54,6 +55,7 @@ public:
 	WeaponComponent* GetWeaponComponent();
 	AnimComponent* GetAnimComponent();
 	AgentAttrib* GetAttribComponent();
+	AgentLocomotion* GetLocomotionComponent();
 	//tolua_end
 
 	void SetObjId(unsigned int objId);
