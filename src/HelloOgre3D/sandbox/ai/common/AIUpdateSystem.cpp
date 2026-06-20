@@ -1,6 +1,7 @@
 #include "ai/common/AIUpdateSystem.h"
 
 #include "ai/common/AIScheduler.h"
+#include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/perception/AgentPerceptionSystem.h"
 #include "ai/perception/AgentSpatialIndexSystem.h"
 #include "ai/team/TeamBlackboardService.h"
@@ -25,6 +26,7 @@ bool AIUpdateSystem::BeginFrame(int deltaMilliseconds, const FrameContext& conte
 	RuntimeObjectUpdateTiming* timing = ResolveTiming(context);
 	long long stageStartMicros = 0;
 	const bool useAiScheduler = context.scheduler != nullptr && context.scheduler->IsEnabled();
+	BehaviorTreeDriver::BeginRuntimeFrame();
 
 	if (context.scheduler != nullptr)
 	{

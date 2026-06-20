@@ -170,13 +170,38 @@ function ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
 
 	local preset = self:GetSamplePreset(sampleName)
 	local config = preset.behaviorTree or {}
+	local configured = next(config) ~= nil
 	if config.debugTrace ~= nil and driver.SetDebugTraceEnabled ~= nil then
 		driver:SetDebugTraceEnabled(isTruthy(config.debugTrace))
 	end
 	if config.debugTracePrint ~= nil and driver.SetDebugTracePrintEnabled ~= nil then
 		driver:SetDebugTracePrintEnabled(isTruthy(config.debugTracePrint))
 	end
-	return next(config) ~= nil
+	local traceSampleInterval = getEnvNumber("HELLO_BT_TRACE_SAMPLE_INTERVAL", tonumber(config.traceSampleInterval) or 0)
+	if traceSampleInterval > 0 and driver.SetDebugTraceSampleInterval ~= nil then
+		driver:SetDebugTraceSampleInterval(traceSampleInterval)
+		configured = true
+	end
+	local tickIntervalMs = getEnvNumber("HELLO_BT_TICK_INTERVAL_MS", tonumber(config.tickIntervalMs) or 0)
+	if driver.SetRuntimeTickIntervalMs ~= nil then
+		driver:SetRuntimeTickIntervalMs(tickIntervalMs)
+		configured = configured or tickIntervalMs > 0
+	end
+	local tickStagger = config.tickStagger == true
+	local tickStaggerEnv = getEnvValue("HELLO_BT_TICK_STAGGER")
+	if tickStaggerEnv ~= nil and tickStaggerEnv ~= "" then
+		tickStagger = isTruthy(tickStaggerEnv)
+		configured = true
+	end
+	if driver.SetRuntimeTickStaggerEnabled ~= nil then
+		driver:SetRuntimeTickStaggerEnabled(tickStagger)
+	end
+	local maxTreeTicksPerFrame = getEnvNumber("HELLO_BT_MAX_TREE_TICKS_PER_FRAME", tonumber(config.maxTreeTicksPerFrame) or 0)
+	if driver.SetRuntimeMaxTreeTicksPerFrame ~= nil then
+		driver:SetRuntimeMaxTreeTicksPerFrame(maxTreeTicksPerFrame)
+		configured = configured or maxTreeTicksPerFrame > 0
+	end
+	return configured
 end
 
 function ConfigManager:GetAgentTeamId(sampleName, index)

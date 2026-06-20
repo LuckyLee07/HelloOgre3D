@@ -57,11 +57,18 @@ public:
 	bool IsDebugTracePrintEnabled() const { return m_debugTracePrintEnabled; }
 	void SetDebugTraceSampleInterval(int interval);
 	int GetDebugTraceSampleInterval() const { return m_debugTraceSampleInterval; }
+	void SetRuntimeTickIntervalMs(float intervalMs);
+	float GetRuntimeTickIntervalMs() const { return m_runtimeTickIntervalMs; }
+	void SetRuntimeTickStaggerEnabled(bool enabled);
+	bool IsRuntimeTickStaggerEnabled() const { return m_runtimeTickStaggerEnabled; }
+	void SetRuntimeMaxTreeTicksPerFrame(int maxTicksPerFrame);
+	int GetRuntimeMaxTreeTicksPerFrame() const;
 	const std::string& GetLastDebugTrace() const { return m_lastDebugTrace; }
 	int GetDebugTraceFrame() const { return m_debugTraceFrameIndex; }
 	void SetNodeDebugName(BehaviorNode* node, const std::string& name);
 	//tolua_end
 
+	static void BeginRuntimeFrame();
 	std::string BuildRuntimeDebugSummary() const;
 
 	// IDecisionDriver impl
@@ -70,6 +77,12 @@ public:
 
 private:
 	void WriteRuntimeStatsToBlackboard();
+	void RefreshRuntimeCacheStats();
+	float ComputeRuntimeTickPhaseMs() const;
+	void ResetRuntimeTickAccumulator();
+	bool ResolveRuntimeTick(float deltaMs, float& outDeltaMs);
+	void ConsumeResolvedRuntimeTick();
+	bool TryConsumeRuntimeFrameBudget();
 
 	AgentObject*                 m_owner;
 	Blackboard                   m_fallbackBlackboard;
@@ -83,6 +96,12 @@ private:
 	int                          m_debugTraceTickCounter;
 	int                          m_debugTraceFrameIndex;
 	int                          m_totalTickCount;
+	int                          m_runtimeTreeTickCount;
+	int                          m_runtimeTickSkippedCount;
+	int                          m_runtimeBudgetSkippedCount;
+	float                        m_runtimeTickIntervalMs;
+	float                        m_runtimeTickElapsedMs;
+	bool                         m_runtimeTickStaggerEnabled;
 	int                          m_traceSampleCount;
 	int                          m_traceSkippedCount;
 	int                          m_cacheHitCount;

@@ -117,15 +117,21 @@ Blackboard::EntryDecay::EntryDecay(EntryDecayPolicy decayPolicy, float decayRate
 {
 }
 
-Blackboard::Blackboard() : m_owner(nullptr)
+Blackboard::Blackboard()
+	: m_owner(nullptr)
+	, m_revision(0)
 {
 }
 
-Blackboard::Blackboard(SoldierObject* owner) : m_owner(owner)
+Blackboard::Blackboard(SoldierObject* owner)
+	: m_owner(owner)
+	, m_revision(0)
 {
 }
 
-Blackboard::Blackboard(AgentObject* owner) : m_owner(owner)
+Blackboard::Blackboard(AgentObject* owner)
+	: m_owner(owner)
+	, m_revision(0)
 {
 }
 
@@ -151,6 +157,9 @@ SoldierObject* Blackboard::GetOwner() const
 
 void Blackboard::SetAgent(const std::string& key, AgentObject* value)
 {
+	std::unordered_map<std::string, AgentObject*>::const_iterator iter = m_agents.find(key);
+	if (iter == m_agents.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_agents[key] = value;
 }
@@ -164,6 +173,9 @@ AgentObject* Blackboard::GetAgent(const std::string& key) const
 
 void Blackboard::SetFloat(const std::string& key, float value)
 {
+	std::unordered_map<std::string, float>::const_iterator iter = m_floats.find(key);
+	if (iter == m_floats.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_floats[key] = value;
 }
@@ -177,6 +189,9 @@ float Blackboard::GetFloat(const std::string& key, float defaultValue) const
 
 void Blackboard::SetInt(const std::string& key, int value)
 {
+	std::unordered_map<std::string, int>::const_iterator iter = m_ints.find(key);
+	if (iter == m_ints.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_ints[key] = value;
 }
@@ -190,6 +205,9 @@ int Blackboard::GetInt(const std::string& key, int defaultValue) const
 
 void Blackboard::SetObjectId(const std::string& key, int value)
 {
+	std::unordered_map<std::string, int>::const_iterator iter = m_objectIds.find(key);
+	if (iter == m_objectIds.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_objectIds[key] = value;
 }
@@ -203,6 +221,9 @@ int Blackboard::GetObjectId(const std::string& key, int defaultValue) const
 
 void Blackboard::SetBool(const std::string& key, bool value)
 {
+	std::unordered_map<std::string, bool>::const_iterator iter = m_bools.find(key);
+	if (iter == m_bools.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_bools[key] = value;
 }
@@ -216,6 +237,9 @@ bool Blackboard::GetBool(const std::string& key, bool defaultValue) const
 
 void Blackboard::SetString(const std::string& key, const std::string& value)
 {
+	std::unordered_map<std::string, std::string>::const_iterator iter = m_strings.find(key);
+	if (iter == m_strings.end() || iter->second != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_strings[key] = value;
 }
@@ -229,6 +253,9 @@ std::string Blackboard::GetString(const std::string& key) const
 
 void Blackboard::SetVec3(const std::string& key, const Ogre::Vector3& value)
 {
+	std::unordered_map<std::string, Ogre::Vector3>::const_iterator iter = m_vec3s.find(key);
+	if (iter == m_vec3s.end() || iter->second.x != value.x || iter->second.y != value.y || iter->second.z != value.z)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_vec3s[key] = value;
 }
@@ -242,12 +269,15 @@ Ogre::Vector3 Blackboard::GetVec3(const std::string& key) const
 
 void Blackboard::ClearIntArray(const std::string& key)
 {
+	if (m_intArrays.count(key) > 0)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_intArrays.erase(key);
 }
 
 void Blackboard::AddIntToArray(const std::string& key, int value)
 {
+	MarkChanged(key);
 	RemoveEntryValue(key);
 	m_intArrays[key].push_back(value);
 }
@@ -255,6 +285,9 @@ void Blackboard::AddIntToArray(const std::string& key, int value)
 void Blackboard::SetIntArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
+	std::unordered_map<std::string, std::vector<int>>::const_iterator iter = m_intArrays.find(key);
+	if (iter == m_intArrays.end() || static_cast<int>(iter->second.size()) < luaIndex || iter->second[luaIndex - 1] != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	std::vector<int>& values = m_intArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0);
@@ -284,12 +317,15 @@ bool Blackboard::ContainsIntInArray(const std::string& key, int value) const
 
 void Blackboard::ClearFloatArray(const std::string& key)
 {
+	if (m_floatArrays.count(key) > 0)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_floatArrays.erase(key);
 }
 
 void Blackboard::AddFloatToArray(const std::string& key, float value)
 {
+	MarkChanged(key);
 	RemoveEntryValue(key);
 	m_floatArrays[key].push_back(value);
 }
@@ -297,6 +333,9 @@ void Blackboard::AddFloatToArray(const std::string& key, float value)
 void Blackboard::SetFloatArrayValue(const std::string& key, int luaIndex, float value)
 {
 	if (luaIndex <= 0) return;
+	std::unordered_map<std::string, std::vector<float>>::const_iterator iter = m_floatArrays.find(key);
+	if (iter == m_floatArrays.end() || static_cast<int>(iter->second.size()) < luaIndex || iter->second[luaIndex - 1] != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	std::vector<float>& values = m_floatArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, 0.0f);
@@ -319,12 +358,15 @@ int Blackboard::GetFloatArrayCount(const std::string& key) const
 
 void Blackboard::ClearStringArray(const std::string& key)
 {
+	if (m_stringArrays.count(key) > 0)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_stringArrays.erase(key);
 }
 
 void Blackboard::AddStringToArray(const std::string& key, const std::string& value)
 {
+	MarkChanged(key);
 	RemoveEntryValue(key);
 	m_stringArrays[key].push_back(value);
 }
@@ -332,6 +374,9 @@ void Blackboard::AddStringToArray(const std::string& key, const std::string& val
 void Blackboard::SetStringArrayValue(const std::string& key, int luaIndex, const std::string& value)
 {
 	if (luaIndex <= 0) return;
+	std::unordered_map<std::string, std::vector<std::string>>::const_iterator iter = m_stringArrays.find(key);
+	if (iter == m_stringArrays.end() || static_cast<int>(iter->second.size()) < luaIndex || iter->second[luaIndex - 1] != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	std::vector<std::string>& values = m_stringArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex);
@@ -361,12 +406,15 @@ bool Blackboard::ContainsStringInArray(const std::string& key, const std::string
 
 void Blackboard::ClearObjectIdArray(const std::string& key)
 {
+	if (m_objectIdArrays.count(key) > 0)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	m_objectIdArrays.erase(key);
 }
 
 void Blackboard::AddObjectIdToArray(const std::string& key, int value)
 {
+	MarkChanged(key);
 	RemoveEntryValue(key);
 	m_objectIdArrays[key].push_back(value);
 }
@@ -374,6 +422,9 @@ void Blackboard::AddObjectIdToArray(const std::string& key, int value)
 void Blackboard::SetObjectIdArrayValue(const std::string& key, int luaIndex, int value)
 {
 	if (luaIndex <= 0) return;
+	std::unordered_map<std::string, std::vector<int>>::const_iterator iter = m_objectIdArrays.find(key);
+	if (iter == m_objectIdArrays.end() || static_cast<int>(iter->second.size()) < luaIndex || iter->second[luaIndex - 1] != value)
+		MarkChanged(key);
 	RemoveEntryValue(key);
 	std::vector<int>& values = m_objectIdArrays[key];
 	if ((int)values.size() < luaIndex) values.resize(luaIndex, -1);
@@ -417,14 +468,29 @@ bool Blackboard::Has(const std::string& key) const
 		|| m_entries.count(key) > 0;
 }
 
+int Blackboard::GetKeyRevision(const std::string& key) const
+{
+	std::unordered_map<std::string, int>::const_iterator iter = m_keyRevisions.find(key);
+	return iter != m_keyRevisions.end() ? iter->second : 0;
+}
+
 void Blackboard::Remove(const std::string& key)
 {
+	if (Has(key) || m_entryDecays.count(key) > 0)
+		MarkChanged(key);
 	RemoveTypedValue(key);
 	RemoveEntryValue(key);
 }
 
 void Blackboard::Clear()
 {
+	if (!m_agents.empty() || !m_floats.empty() || !m_ints.empty() || !m_objectIds.empty()
+		|| !m_bools.empty() || !m_strings.empty() || !m_vec3s.empty()
+		|| !m_intArrays.empty() || !m_floatArrays.empty() || !m_stringArrays.empty()
+		|| !m_objectIdArrays.empty() || !m_entries.empty() || !m_entryDecays.empty())
+	{
+		MarkChanged("*");
+	}
 	m_agents.clear();
 	m_floats.clear();
 	m_ints.clear();
@@ -438,6 +504,7 @@ void Blackboard::Clear()
 	m_objectIdArrays.clear();
 	m_entries.clear();
 	m_entryDecays.clear();
+	m_keyRevisions.clear();
 }
 
 void Blackboard::SetEntry(const std::string& key, const Entry& entry)
@@ -445,6 +512,24 @@ void Blackboard::SetEntry(const std::string& key, const Entry& entry)
 	RemoveTypedValue(key);
 	Entry storedEntry = entry;
 	storedEntry.confidence = ClampConfidence(storedEntry.confidence);
+	std::unordered_map<std::string, Entry>::const_iterator iter = m_entries.find(key);
+	if (iter == m_entries.end()
+		|| iter->second.value.type != storedEntry.value.type
+		|| iter->second.value.objectId != storedEntry.value.objectId
+		|| iter->second.value.floatValue != storedEntry.value.floatValue
+		|| iter->second.value.intValue != storedEntry.value.intValue
+		|| iter->second.value.boolValue != storedEntry.value.boolValue
+		|| iter->second.value.stringValue != storedEntry.value.stringValue
+		|| iter->second.value.vec3Value.x != storedEntry.value.vec3Value.x
+		|| iter->second.value.vec3Value.y != storedEntry.value.vec3Value.y
+		|| iter->second.value.vec3Value.z != storedEntry.value.vec3Value.z
+		|| iter->second.confidence != storedEntry.confidence
+		|| iter->second.timestampMs != storedEntry.timestampMs
+		|| iter->second.ttlMs != storedEntry.ttlMs
+		|| iter->second.source != storedEntry.source)
+	{
+		MarkChanged(key);
+	}
 	m_entries[key] = storedEntry;
 }
 
@@ -614,6 +699,7 @@ int Blackboard::PruneExpiredEntries(long long currentTimeMs)
 	{
 		if (IsEntryExpired(iter->second, currentTimeMs))
 		{
+			MarkChanged(iter->first);
 			m_entryDecays.erase(iter->first);
 			iter = m_entries.erase(iter);
 			++removed;
@@ -630,14 +716,21 @@ void Blackboard::SetEntryDecayPolicy(const std::string& key, EntryDecayPolicy po
 {
 	if (policy == ENTRY_DECAY_NONE || rate <= 0.0f)
 	{
+		if (m_entryDecays.count(key) > 0)
+			MarkChanged(key);
 		m_entryDecays.erase(key);
 		return;
 	}
+	std::unordered_map<std::string, EntryDecay>::const_iterator iter = m_entryDecays.find(key);
+	if (iter == m_entryDecays.end() || iter->second.policy != policy || iter->second.rate != rate)
+		MarkChanged(key);
 	m_entryDecays[key] = EntryDecay(policy, rate);
 }
 
 void Blackboard::ClearEntryDecayPolicy(const std::string& key)
 {
+	if (m_entryDecays.count(key) > 0)
+		MarkChanged(key);
 	m_entryDecays.erase(key);
 }
 
@@ -659,6 +752,7 @@ int Blackboard::UpdateEntries(long long currentTimeMs, int deltaMs)
 		Entry& entry = iter->second;
 		if (IsEntryExpired(entry, currentTimeMs))
 		{
+			MarkChanged(key);
 			m_entryDecays.erase(key);
 			iter = m_entries.erase(iter);
 			++removed;
@@ -671,16 +765,23 @@ int Blackboard::UpdateEntries(long long currentTimeMs, int deltaMs)
 			const EntryDecay& decay = decayIter->second;
 			if (decay.policy == ENTRY_DECAY_LINEAR)
 			{
+				const float oldConfidence = entry.confidence;
 				entry.confidence = ClampConfidence(entry.confidence - decay.rate * static_cast<float>(elapsedMs));
+				if (entry.confidence != oldConfidence)
+					MarkChanged(key);
 			}
 			else if (decay.policy == ENTRY_DECAY_EXPONENTIAL)
 			{
+				const float oldConfidence = entry.confidence;
 				entry.confidence = ClampConfidence(entry.confidence * static_cast<float>(std::pow(decay.rate, static_cast<float>(elapsedMs) / 1000.0f)));
+				if (entry.confidence != oldConfidence)
+					MarkChanged(key);
 			}
 		}
 
 		if (entry.confidence <= 0.0f)
 		{
+			MarkChanged(key);
 			m_entryDecays.erase(key);
 			iter = m_entries.erase(iter);
 			++removed;
@@ -738,6 +839,19 @@ std::string Blackboard::BuildDebugSummary(int maxEntries, long long currentTimeM
 		stream << "\n  " << BuildEntryDebugString(keys[i], currentTimeMs);
 	}
 	return stream.str();
+}
+
+void Blackboard::MarkChanged(const std::string& key)
+{
+	if (!ShouldTrackRevision(key))
+		return;
+	++m_revision;
+	++m_keyRevisions[key];
+}
+
+bool Blackboard::ShouldTrackRevision(const std::string& key)
+{
+	return key.empty() || key.compare(0, 5, "__bt.") != 0;
 }
 
 void Blackboard::RemoveTypedValue(const std::string& key)

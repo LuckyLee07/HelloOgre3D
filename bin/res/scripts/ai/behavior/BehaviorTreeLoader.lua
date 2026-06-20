@@ -13,6 +13,9 @@
 -- Runtime params:
 --   params = { { blackboard = "key", type = "float", default = 0 } } reads from Blackboard per tick.
 --   type supports scalar values plus object-id / int-array / float-array / string-array / object-id-array.
+-- Condition cache:
+--   cache=true or cacheMs/resultCacheMs enables LuaCondition result cache.
+--   cacheKeys/dependsOn/dirtyKeys narrows invalidation to Blackboard key revisions.
 -- Optional config flags:
 --   reactive / reevaluateMs -> Sequence/Selector can restart from first child to interrupt RUNNING branch
 --   debugTrace      -> driver:SetDebugTraceEnabled(bool)
@@ -272,7 +275,7 @@ local function _PolicyToInt(value, defaultValue, context, cfg, path, field, fall
 end
 
 local function _GetReevaluateMs(cfg, context, path)
-    local value = cfg.reevaluateMs or cfg.recheckMs or cfg.reactiveMs
+	local value = cfg.reevaluateMs or cfg.recheckMs or cfg.reactiveMs
     if value == nil and cfg.reevaluateSeconds ~= nil then
         value = cfg.reevaluateSeconds * 1000.0
     end
@@ -297,7 +300,66 @@ local function _GetReevaluateMs(cfg, context, path)
         _IssueWarning(context, cfg, path, "reevaluateMs", "invalid reevaluate value '" .. tostring(value) .. "'", "reactive reevaluation disabled")
         return -1.0
     end
-    return numericValue
+	return numericValue
+end
+
+local function _AddConditionCacheKey(node, key)
+    if key == nil or node.AddResultCacheDependencyKey == nil then return false end
+    local text = tostring(key)
+    if text == "" then return false end
+    node:AddResultCacheDependencyKey(text)
+    return true
+end
+
+local function _ConfigureConditionCache(node, cfg, context, path)
+    if node == nil or node.SetResultCacheEnabled == nil then return end
+
+    local cacheMs = cfg.cacheMs or cfg.resultCacheMs or cfg.cacheTtlMs
+    if cacheMs == nil and cfg.cacheSeconds ~= nil then
+        cacheMs = cfg.cacheSeconds * 1000.0
+    end
+    if cacheMs ~= nil and node.SetResultCacheTtlMs ~= nil then
+        local resolvedCacheMs = _ResolveValue(cacheMs, context)
+        local numericCacheMs = tonumber(resolvedCacheMs)
+        if numericCacheMs == nil then
+            _IssueWarning(context, cfg, path, "cacheMs", "invalid cache duration '" .. tostring(resolvedCacheMs) .. "'", "condition result cache uses default ttl")
+        else
+            node:SetResultCacheTtlMs(numericCacheMs)
+        end
+    end
+
+    local cacheKeys = cfg.cacheKeys or cfg.dependsOn or cfg.dirtyKeys or cfg.dependencyKeys
+    if cacheKeys ~= nil and node.AddResultCacheDependencyKey ~= nil then
+        if node.ClearResultCacheDependencyKeys ~= nil then
+            node:ClearResultCacheDependencyKeys()
+        end
+        if type(cacheKeys) == "table" then
+            local added = 0
+            for _, key in ipairs(cacheKeys) do
+                if _AddConditionCacheKey(node, key) then
+                    added = added + 1
+                end
+            end
+            if added == 0 then
+                for key, enabled in pairs(cacheKeys) do
+                    if enabled == true then
+                        _AddConditionCacheKey(node, key)
+                    end
+                end
+            end
+        else
+            _AddConditionCacheKey(node, cacheKeys)
+        end
+    end
+
+    local cacheEnabled = cfg.cache == true
+        or cfg.resultCache == true
+        or cacheMs ~= nil
+        or cacheKeys ~= nil
+    if cfg.cache == false or cfg.resultCache == false then
+        cacheEnabled = false
+    end
+    node:SetResultCacheEnabled(cacheEnabled and true or false)
 end
 
 local function _SetDebugName(node, cfg, context, nodeType)
@@ -425,6 +487,7 @@ local function _CreateCondition(cfg, context, path)
 
     local node = context.driver:NewCondition()
     node:SetEvaluator(evaluator)
+    _ConfigureConditionCache(node, cfg, context, path)
     _SetDebugName(node, cfg, context, "Condition")
     return node
 end

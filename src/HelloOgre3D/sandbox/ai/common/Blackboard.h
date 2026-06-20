@@ -132,6 +132,8 @@ public:
 	bool Has(const std::string& key) const;
 	void Remove(const std::string& key);
 	void Clear();
+	int GetRevision() const { return m_revision; }
+	int GetKeyRevision(const std::string& key) const;
 	//tolua_end
 
 	void SetEntry(const std::string& key, const Entry& entry);
@@ -164,6 +166,8 @@ public:
 	std::string BuildDebugSummary(int maxEntries = 8, long long currentTimeMs = -1) const;
 
 private:
+	void MarkChanged(const std::string& key);
+	static bool ShouldTrackRevision(const std::string& key);
 	void RemoveTypedValue(const std::string& key);
 	void RemoveEntryValue(const std::string& key);
 
@@ -182,6 +186,8 @@ private:
 	std::unordered_map<std::string, std::vector<int>>         m_objectIdArrays;
 	std::unordered_map<std::string, Entry>                   m_entries;
 	std::unordered_map<std::string, EntryDecay>              m_entryDecays;
+	std::unordered_map<std::string, int>                     m_keyRevisions;
+	int m_revision;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(Blackboard);
