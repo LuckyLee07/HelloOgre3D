@@ -4,11 +4,14 @@
 #include <string>
 #include <vector>
 
+#include "OgreVector3.h"
+#include "ai/perception/HearingDangerSense.h"
+
 class AgentObject;
 class ObjectManager;
 
-class AgentPerceptionSystem
-{
+class AgentPerceptionSystem //tolua_exports
+{ //tolua_exports
 public:
 	struct Stats
 	{
@@ -30,6 +33,17 @@ public:
 			, spatialQueryCostMs(0.0)
 			, memoryMs(0.0)
 			, visionMs(0.0)
+			, hearingDangerEnabled(0)
+			, hearingDangerEventCount(0)
+			, hearingDangerPublishedEventCount(0)
+			, hearingDangerPrunedEventCount(0)
+			, hearingDangerRunCount(0)
+			, hearingDangerSkipCount(0)
+			, hearingDangerAgentCheckCount(0)
+			, hearingDangerHeardResponseCount(0)
+			, hearingDangerDangerResponseCount(0)
+			, hearingDangerInvestigationCount(0)
+			, hearingDangerRetreatFactApplyCount(0)
 		{
 		}
 
@@ -50,6 +64,17 @@ public:
 		double spatialQueryCostMs;
 		double memoryMs;
 		double visionMs;
+		int hearingDangerEnabled;
+		int hearingDangerEventCount;
+		int hearingDangerPublishedEventCount;
+		int hearingDangerPrunedEventCount;
+		int hearingDangerRunCount;
+		int hearingDangerSkipCount;
+		int hearingDangerAgentCheckCount;
+		int hearingDangerHeardResponseCount;
+		int hearingDangerDangerResponseCount;
+		int hearingDangerInvestigationCount;
+		int hearingDangerRetreatFactApplyCount;
 	};
 
 	AgentPerceptionSystem();
@@ -63,10 +88,31 @@ public:
 	std::string BuildDebugSummary() const;
 	void PublishTracyCounters() const;
 
+	//tolua_begin
+	void configureHearingDangerSense(bool enabled, int scanIntervalMs, int agentsPerTick, int responseCooldownMs, int dangerCooldownMs, float investigateStopDistance, float escapeDistance);
+	void clearHearingDangerSense();
+	bool publishHearingDangerEvent(int sourceId, int sourceTeamId, int targetId, const Ogre::Vector3& position, const Ogre::Vector3& impactPosition, int timeMs, int ttlMs, float hearingRadius, float dangerRadius);
+	int getHearingDangerEventCount() const;
+	int getHearingDangerPublishedEventCount() const;
+	int getHearingDangerPrunedEventCount() const;
+	int getHearingDangerRunCount() const;
+	int getHearingDangerSkipCount() const;
+	int getHearingDangerAgentCheckCount() const;
+	int getHearingDangerHeardResponseCount() const;
+	int getHearingDangerDangerResponseCount() const;
+	int getHearingDangerInvestigationCount() const;
+	int getHearingDangerRetreatFactApplyCount() const;
+	std::string buildPerceptionDebugSummary() const;
+	//tolua_end
+
 private:
+	void CopyHearingDangerStats(Stats& stats) const;
+
 	bool m_enabled;
 	int m_updateCount;
 	Stats m_stats;
-};
+
+	HearingDangerSense m_hearingDangerSense;
+}; //tolua_exports
 
 #endif // __AGENT_PERCEPTION_SYSTEM_H__

@@ -27,6 +27,7 @@ void AgentPerceptionSystem::Clear()
 	m_updateCount = 0;
 	m_stats = Stats();
 	m_stats.enabled = m_enabled ? 1 : 0;
+	clearHearingDangerSense();
 }
 
 void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int deltaMs, ObjectManager* objectManager)
@@ -50,6 +51,7 @@ void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int 
 			if (ai != nullptr)
 				ai->SetPerceptionTickInAiTickEnabled(true);
 		}
+		CopyHearingDangerStats(stats);
 		m_stats = stats;
 		return;
 	}
@@ -71,6 +73,9 @@ void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int 
 		stats.memoryMs += tickStats.memoryMs;
 		stats.visionMs += tickStats.visionMs;
 	}
+
+	m_hearingDangerSense.Update(agents, deltaMs, objectManager);
+	CopyHearingDangerStats(stats);
 
 	if (spatialIndex != nullptr)
 	{
@@ -121,7 +126,18 @@ std::string AgentPerceptionSystem::BuildDebugSummary() const
 		<< " rejectType=" << m_stats.spatialRejectedTypeCount
 		<< " queryMs=" << std::fixed << std::setprecision(2) << m_stats.spatialQueryCostMs
 		<< " memoryMs=" << std::fixed << std::setprecision(2) << m_stats.memoryMs
-		<< " visionMs=" << std::fixed << std::setprecision(2) << m_stats.visionMs;
+		<< " visionMs=" << std::fixed << std::setprecision(2) << m_stats.visionMs
+		<< " hearingEnabled=" << (m_stats.hearingDangerEnabled != 0 ? "true" : "false")
+		<< " hearingEvents=" << m_stats.hearingDangerEventCount
+		<< " hearingPublished=" << m_stats.hearingDangerPublishedEventCount
+		<< " hearingPruned=" << m_stats.hearingDangerPrunedEventCount
+		<< " hearingRuns=" << m_stats.hearingDangerRunCount
+		<< " hearingSkips=" << m_stats.hearingDangerSkipCount
+		<< " hearingChecks=" << m_stats.hearingDangerAgentCheckCount
+		<< " heard=" << m_stats.hearingDangerHeardResponseCount
+		<< " danger=" << m_stats.hearingDangerDangerResponseCount
+		<< " investigations=" << m_stats.hearingDangerInvestigationCount
+		<< " retreatFacts=" << m_stats.hearingDangerRetreatFactApplyCount;
 	return stream.str();
 }
 
@@ -136,4 +152,106 @@ void AgentPerceptionSystem::PublishTracyCounters() const
 		m_stats.spatialCandidateCount,
 		m_stats.spatialFilteredCandidateCount,
 		m_stats.spatialResultCount);
+	RuntimeProfileCounters::PlotHearingDangerSenseStats(
+		m_stats.hearingDangerEnabled,
+		m_stats.hearingDangerEventCount,
+		m_stats.hearingDangerPublishedEventCount,
+		m_stats.hearingDangerPrunedEventCount,
+		m_stats.hearingDangerRunCount,
+		m_stats.hearingDangerSkipCount,
+		m_stats.hearingDangerAgentCheckCount,
+		m_stats.hearingDangerHeardResponseCount,
+		m_stats.hearingDangerDangerResponseCount,
+		m_stats.hearingDangerInvestigationCount,
+		m_stats.hearingDangerRetreatFactApplyCount);
+}
+
+void AgentPerceptionSystem::configureHearingDangerSense(bool enabled, int scanIntervalMs, int agentsPerTick, int responseCooldownMs, int dangerCooldownMs, float investigateStopDistance, float escapeDistance)
+{
+	m_hearingDangerSense.Configure(enabled, scanIntervalMs, agentsPerTick, responseCooldownMs, dangerCooldownMs, investigateStopDistance, escapeDistance);
+	CopyHearingDangerStats(m_stats);
+}
+
+void AgentPerceptionSystem::clearHearingDangerSense()
+{
+	m_hearingDangerSense.Clear();
+	CopyHearingDangerStats(m_stats);
+}
+
+bool AgentPerceptionSystem::publishHearingDangerEvent(int sourceId, int sourceTeamId, int targetId, const Ogre::Vector3& position, const Ogre::Vector3& impactPosition, int timeMs, int ttlMs, float hearingRadius, float dangerRadius)
+{
+	const bool published = m_hearingDangerSense.PublishEvent(sourceId, sourceTeamId, targetId, position, impactPosition, timeMs, ttlMs, hearingRadius, dangerRadius);
+	CopyHearingDangerStats(m_stats);
+	return published;
+}
+
+int AgentPerceptionSystem::getHearingDangerEventCount() const
+{
+	return m_hearingDangerSense.GetStats().eventCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerPublishedEventCount() const
+{
+	return m_hearingDangerSense.GetStats().publishedEventCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerPrunedEventCount() const
+{
+	return m_hearingDangerSense.GetStats().prunedEventCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerRunCount() const
+{
+	return m_hearingDangerSense.GetStats().runCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerSkipCount() const
+{
+	return m_hearingDangerSense.GetStats().skipCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerAgentCheckCount() const
+{
+	return m_hearingDangerSense.GetStats().agentCheckCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerHeardResponseCount() const
+{
+	return m_hearingDangerSense.GetStats().heardResponseCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerDangerResponseCount() const
+{
+	return m_hearingDangerSense.GetStats().dangerResponseCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerInvestigationCount() const
+{
+	return m_hearingDangerSense.GetStats().investigationCount;
+}
+
+int AgentPerceptionSystem::getHearingDangerRetreatFactApplyCount() const
+{
+	return m_hearingDangerSense.GetStats().retreatFactApplyCount;
+}
+
+std::string AgentPerceptionSystem::buildPerceptionDebugSummary() const
+{
+	return BuildDebugSummary();
+}
+
+void AgentPerceptionSystem::CopyHearingDangerStats(Stats& stats) const
+{
+	const HearingDangerSense::Stats& senseStats = m_hearingDangerSense.GetStats();
+	stats.hearingDangerEnabled = senseStats.enabled;
+	stats.hearingDangerEventCount = senseStats.eventCount;
+	stats.hearingDangerPublishedEventCount = senseStats.publishedEventCount;
+	stats.hearingDangerPrunedEventCount = senseStats.prunedEventCount;
+	stats.hearingDangerRunCount = senseStats.runCount;
+	stats.hearingDangerSkipCount = senseStats.skipCount;
+	stats.hearingDangerAgentCheckCount = senseStats.agentCheckCount;
+	stats.hearingDangerHeardResponseCount = senseStats.heardResponseCount;
+	stats.hearingDangerDangerResponseCount = senseStats.dangerResponseCount;
+	stats.hearingDangerInvestigationCount = senseStats.investigationCount;
+	stats.hearingDangerRetreatFactApplyCount = senseStats.retreatFactApplyCount;
 }

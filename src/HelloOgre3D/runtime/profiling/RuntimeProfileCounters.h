@@ -7,6 +7,7 @@ public:
 	static void PlotFairyGuiServiceStats(int serviceOpenTotal, int serviceKindCount, int toastQueueCount, int loadingRefTotal, int serviceCreatedTotal, int serviceClosedTotal, int serviceFailedTotal, int servicePeakOpen);
 	static void PlotAiSchedulerStats(int enabled, int agentCount, int tickedCount, int skippedCount, int pendingCount, int tickIntervalMs, int maxTicksPerFrame);
 	static void PlotAgentPerceptionStats(int enabled, int controllerCount, int scanCount, int visibleCount, int spatialQueryCount, int spatialCandidateCount, int spatialFilteredCandidateCount, int spatialResultCount);
+	static void PlotHearingDangerSenseStats(int enabled, int eventCount, int publishedEventCount, int prunedEventCount, int runCount, int skipCount, int agentCheckCount, int heardResponseCount, int dangerResponseCount, int investigationCount, int retreatFactApplyCount);
 	static void PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount);
 };
 

@@ -87,6 +87,8 @@ local _chapter8 = {
     teamApplyRunCount = 0,
     teamApplySkipCount = 0,
     teamApplyAgentChecks = 0,
+    cppFocusFactApplyCount = 0,
+    cppRetreatFactApplyCount = 0,
     teamPruneElapsedMs = 0,
     teamPruneIntervalMs = 0,
     teamPruneRunCount = 0,
@@ -105,6 +107,7 @@ local _chapter8 = {
     dangerEvents = {},
     lastHeardAt = {},
     lastDangerAt = {},
+    useCppHearingDanger = false,
     hearingElapsedMs = 0,
     hearingIntervalMs = 0,
     hearingRunCount = 0,
@@ -796,6 +799,9 @@ local function _MaybePrintTeamBlackboardSmoke()
     if _chapter8.totalBroadcasts > 0
         and _chapter8.totalSupportResponses > 0
         and _chapter8.totalSharedMoves > 0
+        and TeamBlackboard:GetCppFactCount() > 0
+        and TeamBlackboard:GetCppTypedFactCount() > 0
+        and _chapter8.cppFocusFactApplyCount > 0
         and _chapter8.sightScanRunCount > 0
         and _chapter8.sightScanSkipCount > 0
         and _chapter8.teamApplyRunCount > 0
@@ -810,7 +816,12 @@ local function _MaybePrintTeamBlackboardSmoke()
             "pairChecks=", _chapter8.sightPairChecks,
             "applyRuns=", _chapter8.teamApplyRunCount,
             "applySkips=", _chapter8.teamApplySkipCount,
-            "agentChecks=", _chapter8.teamApplyAgentChecks)
+            "agentChecks=", _chapter8.teamApplyAgentChecks,
+            "cppFacts=", TeamBlackboard:GetCppFactCount(),
+            "cppReports=", TeamBlackboard:GetCppReportCount(),
+            "cppTypedFacts=", TeamBlackboard:GetCppTypedFactCount(),
+            "cppTypedReports=", TeamBlackboard:GetCppTypedReportCount(),
+            "cppFocusApplies=", _chapter8.cppFocusFactApplyCount)
     end
 end
 
@@ -846,6 +857,54 @@ local function _IsHearingDangerEnabled()
     return _GetHearingDangerConfig().enabled == true
 end
 
+local function _CppPerception()
+    local service = rawget(_G, "SandboxPerception")
+    if service ~= nil and service.publishHearingDangerEvent ~= nil and service.getHearingDangerRunCount ~= nil then
+        return service
+    end
+    return nil
+end
+
+local function _ConfigureCppHearingDanger()
+    local service = _CppPerception()
+    if service == nil or service.configureHearingDangerSense == nil or service.clearHearingDangerSense == nil then
+        _chapter8.useCppHearingDanger = false
+        return false
+    end
+
+    local hearing = _GetHearingDangerConfig()
+    service:clearHearingDangerSense()
+    service:configureHearingDangerSense(
+        hearing.enabled == true,
+        math.max(1, tonumber(hearing.scanIntervalMs) or 100),
+        math.max(1, tonumber(hearing.agentsPerTick) or 3),
+        math.max(0, tonumber(hearing.responseCooldownMs) or 450),
+        math.max(0, tonumber(hearing.dangerCooldownMs) or 350),
+        tonumber(hearing.investigateStopDistance) or 5.0,
+        tonumber(hearing.escapeDistance) or 9.0)
+    _chapter8.useCppHearingDanger = hearing.enabled == true
+    return _chapter8.useCppHearingDanger
+end
+
+local function _SyncCppHearingDangerStats()
+    local service = _CppPerception()
+    if service == nil or _chapter8.useCppHearingDanger ~= true then
+        return false
+    end
+
+    if service.getHearingDangerPublishedEventCount ~= nil then
+        _chapter8.totalSoundEvents = math.max(_chapter8.totalSoundEvents, service:getHearingDangerPublishedEventCount())
+    end
+    _chapter8.hearingRunCount = service:getHearingDangerRunCount()
+    _chapter8.hearingSkipCount = service:getHearingDangerSkipCount()
+    _chapter8.hearingAgentChecks = service:getHearingDangerAgentCheckCount()
+    _chapter8.totalHeardResponses = service:getHearingDangerHeardResponseCount()
+    _chapter8.totalDangerResponses = service:getHearingDangerDangerResponseCount()
+    _chapter8.totalInvestigations = service:getHearingDangerInvestigationCount()
+    _chapter8.cppRetreatFactApplyCount = service:getHearingDangerRetreatFactApplyCount()
+    return true
+end
+
 local function _GetFormationConfig()
     local config = _chapter8.config or {}
     return config.chapter9Formation or {}
@@ -878,6 +937,10 @@ local function _PushSoundEvent(shooter, target)
     table.insert(_chapter8.soundEvents, event)
     table.insert(_chapter8.dangerEvents, event)
     _chapter8.totalSoundEvents = _chapter8.totalSoundEvents + 1
+    local perception = _CppPerception()
+    if perception ~= nil then
+        perception:publishHearingDangerEvent(event.sourceId, event.sourceTeamId, event.targetId, event.pos, event.impactPos, event.timeMs, event.ttlMs, event.radius, event.dangerRadius)
+    end
     _PushRecentEvent({
         eventType = "Gunshot",
         teamId = shooter:GetTeamId(),
@@ -998,6 +1061,19 @@ local function _ApplyHearingDangerToAgent(agent)
                     bb:SetVec3("sense.dangerPos", event.impactPos)
                     bb:SetVec3("sense.dangerEscapePos", escapePos)
                     bb:SetObjectId("sense.dangerSourceId", event.sourceId)
+                    TeamBlackboard:RememberRetreatPoint(agent:GetTeamId(), {
+                        teamId = agent:GetTeamId(),
+                        agentId = agentId,
+                        threatId = event.sourceId,
+                        threatPos = event.impactPos,
+                        retreatPos = escapePos,
+                        timeMs = _chapter8.elapsedMs,
+                        confidence = dangerLevel,
+                        ttlMs = event.ttlMs,
+                    })
+                    if TeamBlackboard:WriteBestCppFactToBlackboard(agent, TeamBlackboard.EventTypes.RetreatPoint, "team.retreat.cpp", true) then
+                        _chapter8.cppRetreatFactApplyCount = _chapter8.cppRetreatFactApplyCount + 1
+                    end
                     _chapter8.totalDangerResponses = _chapter8.totalDangerResponses + 1
                 end
             end
@@ -1015,6 +1091,10 @@ local function _UpdateHearingDanger(deltaTimeInMillis)
 
     _UpdateScriptedGunshot()
     _PruneSensoryEvents()
+
+    if _SyncCppHearingDangerStats() then
+        return
+    end
 
     local hearing = _GetHearingDangerConfig()
     local intervalMs = math.max(1, tonumber(hearing.scanIntervalMs) or 100)
@@ -1044,14 +1124,18 @@ local function _MaybePrintHearingDangerSmoke()
         and _chapter8.totalHeardResponses > 0
         and _chapter8.totalDangerResponses > 0
         and _chapter8.totalInvestigations > 0
+        and _chapter8.cppRetreatFactApplyCount > 0
+        and _chapter8.useCppHearingDanger == true
         and _chapter8.hearingRunCount > 0
         and _chapter8.hearingSkipCount > 0 then
         _chapter8.hearingSmokePrinted = true
         print("[HearingDangerSmoke] PASS",
+            "cppSense=", tostring(_chapter8.useCppHearingDanger),
             "sounds=", _chapter8.totalSoundEvents,
             "heard=", _chapter8.totalHeardResponses,
             "danger=", _chapter8.totalDangerResponses,
             "investigations=", _chapter8.totalInvestigations,
+            "cppRetreatApplies=", _chapter8.cppRetreatFactApplyCount,
             "runs=", _chapter8.hearingRunCount,
             "skips=", _chapter8.hearingSkipCount,
             "agentChecks=", _chapter8.hearingAgentChecks)
@@ -1111,6 +1195,20 @@ local function _ApplyFormationForTeam(teamId)
         end
     end
 
+    TeamBlackboard:RememberFocusTarget(teamId, {
+        teamId = teamId,
+        sourceAgentId = _GetAgentId(leader),
+        targetId = sighting ~= nil and sighting.targetId or -1,
+        targetPos = focusPos,
+        timeMs = _chapter8.elapsedMs,
+        confidence = sighting ~= nil and sighting.confidence or 0.6,
+        ttlMs = (tonumber(formation.updateIntervalMs) or 180) * 4,
+        key = "formationFocus",
+    })
+    if TeamBlackboard:WriteBestCppFactToBlackboard(leader, TeamBlackboard.EventTypes.FocusTarget, "formation.focus.cpp", true) then
+        _chapter8.cppFocusFactApplyCount = _chapter8.cppFocusFactApplyCount + 1
+    end
+
     local spacing = tonumber(formation.slotSpacing) or 5.0
     local anchorPos = leader:GetPosition()
     local forward = _Normalize2D(focusPos - anchorPos)
@@ -1145,6 +1243,14 @@ local function _ApplyFormationForTeam(teamId)
             bb:SetInt("formation.minReadyCount", minReady)
             bb:SetInt("formation.waitTimeoutMs", tonumber(formation.waitTimeoutMs) or 1600)
             bb:SetBool("formation.waitForSquadMate", index == 1 and readyCount < minReady)
+            TeamBlackboard:RememberFormationSlot(teamId, {
+                teamId = teamId,
+                agentId = _GetAgentId(agent),
+                focusTargetId = sighting ~= nil and sighting.targetId or -1,
+                slotPos = slotPos,
+                timeMs = _chapter8.elapsedMs,
+                ttlMs = (tonumber(formation.updateIntervalMs) or 180) * 4,
+            })
             _chapter8.formationSlotAssignments = _chapter8.formationSlotAssignments + 1
             if index == 1 and readyCount < minReady then
                 _chapter8.formationWaitAssignments = _chapter8.formationWaitAssignments + 1
@@ -1191,12 +1297,16 @@ local function _MaybePrintFormationSmoke()
     if _chapter8.formationSlotAssignments > 0
         and _chapter8.formationRunCount > 0
         and _chapter8.formationSkipCount > 0
-        and _chapter8.formationBackupCalls > 0 then
+        and _chapter8.formationBackupCalls > 0
+        and TeamBlackboard:GetCppTypedFactCount() > 0
+        and _chapter8.cppFocusFactApplyCount > 0 then
         _chapter8.formationSmokePrinted = true
         print("[FormationSmoke] PASS",
             "slots=", _chapter8.formationSlotAssignments,
             "ready=", _chapter8.formationReadyCount,
             "backupCalls=", _chapter8.formationBackupCalls,
+            "cppTypedFacts=", TeamBlackboard:GetCppTypedFactCount(),
+            "cppFocusApplies=", _chapter8.cppFocusFactApplyCount,
             "waitAssignments=", _chapter8.formationWaitAssignments,
             "runs=", _chapter8.formationRunCount,
             "skips=", _chapter8.formationSkipCount)
@@ -1265,6 +1375,10 @@ local function _ApplyTeamMemoryToAgent(agent)
     bb:SetVec3("team.supportTargetPos", supportPos)
     bb:SetInt("team.supportFromAgentId", sighting.spotterId)
     bb:SetInt("team.supportSeenAtMs", sighting.lastSeenMs)
+    TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, "team.cpp", false)
+    if TeamBlackboard:WriteBestCppFactToBlackboard(agent, TeamBlackboard.EventTypes.FocusTarget, "team.focus.cpp", true) then
+        _chapter8.cppFocusFactApplyCount = _chapter8.cppFocusFactApplyCount + 1
+    end
     if tactical ~= nil then
         bb:SetFloat("team.tacticalDanger", tactical.danger)
         bb:SetFloat("team.tacticalSupport", tactical.support)
@@ -1668,7 +1782,8 @@ local function _BuildDemoPanelText()
         "Team apply: " .. tostring(_chapter8.teamApplyIntervalMs) .. "ms" ..
             " runs=" .. tostring(_chapter8.teamApplyRunCount) ..
             " skips=" .. tostring(_chapter8.teamApplySkipCount) ..
-            " agents=" .. tostring(_chapter8.teamApplyAgentChecks) .. GUI.MarkupNewline ..
+            " agents=" .. tostring(_chapter8.teamApplyAgentChecks) ..
+            " focusCpp=" .. tostring(_chapter8.cppFocusFactApplyCount) .. GUI.MarkupNewline ..
         "Influence cells: " .. tostring(_chapter8.activeInfluenceCells) ..
             "  tactical moves: " .. tostring(_chapter8.totalTacticalMoves) .. GUI.MarkupNewline ..
         "Influence update: " .. tostring(_chapter8.influenceIntervalMs) .. "ms" ..
@@ -1678,6 +1793,8 @@ local function _BuildDemoPanelText()
         "Hearing/Danger: sounds=" .. tostring(_chapter8.totalSoundEvents) ..
             " heard=" .. tostring(_chapter8.totalHeardResponses) ..
             " danger=" .. tostring(_chapter8.totalDangerResponses) ..
+            " cppSense=" .. tostring(_chapter8.useCppHearingDanger) ..
+            " retreatCpp=" .. tostring(_chapter8.cppRetreatFactApplyCount) ..
             " runs=" .. tostring(_chapter8.hearingRunCount) ..
             " skips=" .. tostring(_chapter8.hearingSkipCount) .. GUI.MarkupNewline ..
         "Formation: slots=" .. tostring(_chapter8.formationSlotAssignments) ..
@@ -1739,6 +1856,8 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.teamApplyRunCount = 0
     _chapter8.teamApplySkipCount = 0
     _chapter8.teamApplyAgentChecks = 0
+    _chapter8.cppFocusFactApplyCount = 0
+    _chapter8.cppRetreatFactApplyCount = 0
     _chapter8.teamPruneElapsedMs = 0
     _chapter8.teamPruneIntervalMs = tonumber(config.teamPruneIntervalMs) or 250
     _chapter8.teamPruneRunCount = 0
@@ -1757,6 +1876,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.dangerEvents = {}
     _chapter8.lastHeardAt = {}
     _chapter8.lastDangerAt = {}
+    _chapter8.useCppHearingDanger = false
     _chapter8.hearingElapsedMs = 0
     _chapter8.hearingIntervalMs = tonumber((config.hearingDanger or {}).scanIntervalMs) or 100
     _chapter8.hearingRunCount = 0
@@ -1768,6 +1888,7 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.totalInvestigations = 0
     _chapter8.scriptedGunshotNextMs = 0
     _chapter8.hearingSmokePrinted = false
+    _ConfigureCppHearingDanger()
     _chapter8.formationElapsedMs = 0
     _chapter8.formationIntervalMs = tonumber((config.chapter9Formation or {}).updateIntervalMs) or 180
     _chapter8.formationRunCount = 0

@@ -168,6 +168,7 @@ void GameManager::InitLuaEnv()
 	m_pScriptVM->setUserTypePointer("SandboxScene", "SceneService", m_pSceneService);
 	m_pScriptVM->setUserTypePointer("SandboxScript", "ScriptService", m_pScriptService);
 	m_pScriptVM->setUserTypePointer("SandboxAIScheduler", "AIScheduler", m_pObjectManager->GetAIScheduler());
+	m_pScriptVM->setUserTypePointer("SandboxPerception", "AgentPerceptionSystem", m_pObjectManager->GetAgentPerceptionSystem());
 	m_pScriptVM->setUserTypePointer("SandboxTeam", "TeamBlackboardService", m_pObjectManager->GetTeamBlackboardService());
 	m_pScriptVM->setUserTypePointer("SandboxTactics", "TacticalService", m_pObjectManager->GetTacticalService());
 	m_pScriptVM->setUserTypePointer("SandboxUI", "UIManager", m_pUIManager);

@@ -281,6 +281,33 @@ void RuntimeProfileCounters::PlotAgentPerceptionStats(int enabled, int controlle
 	H3D_PROFILE_PLOT("AgentPerceptionSpatialResults", static_cast<double>(spatialResultCount));
 }
 
+void RuntimeProfileCounters::PlotHearingDangerSenseStats(int enabled, int eventCount, int publishedEventCount, int prunedEventCount, int runCount, int skipCount, int agentCheckCount, int heardResponseCount, int dangerResponseCount, int investigationCount, int retreatFactApplyCount)
+{
+	(void)enabled;
+	(void)eventCount;
+	(void)publishedEventCount;
+	(void)prunedEventCount;
+	(void)runCount;
+	(void)skipCount;
+	(void)agentCheckCount;
+	(void)heardResponseCount;
+	(void)dangerResponseCount;
+	(void)investigationCount;
+	(void)retreatFactApplyCount;
+
+	H3D_PROFILE_PLOT("HearingDangerSenseEnabled", static_cast<double>(enabled));
+	H3D_PROFILE_PLOT("HearingDangerSenseEvents", static_cast<double>(eventCount));
+	H3D_PROFILE_PLOT("HearingDangerSensePublished", static_cast<double>(publishedEventCount));
+	H3D_PROFILE_PLOT("HearingDangerSensePruned", static_cast<double>(prunedEventCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseRuns", static_cast<double>(runCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseSkips", static_cast<double>(skipCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseAgentChecks", static_cast<double>(agentCheckCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseHeardResponses", static_cast<double>(heardResponseCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseDangerResponses", static_cast<double>(dangerResponseCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseInvestigations", static_cast<double>(investigationCount));
+	H3D_PROFILE_PLOT("HearingDangerSenseRetreatFacts", static_cast<double>(retreatFactApplyCount));
+}
+
 void RuntimeProfileCounters::PlotTeamBlackboardStats(int teamCount, int factCount, int reportCount, int writerCount, int expiredCount)
 {
 	(void)teamCount;
