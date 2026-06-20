@@ -39,7 +39,13 @@ local function runComponentAccessSelfTest()
 	end
 
 	local agentType = _G.AGENT_OBJ_NONE or 0
-	local agent = SandboxObjects:CreateAgent(agentType, "res/scripts/agent/ComponentProbeAgent.lua")
+	local usedAssemblyProfile = SandboxObjects.CreateAgentWithProfile ~= nil
+	local agent = nil
+	if usedAssemblyProfile then
+		agent = SandboxObjects:CreateAgentWithProfile(agentType, "component_probe", "res/scripts/agent/ComponentProbeAgent.lua")
+	else
+		agent = SandboxObjects:CreateAgent(agentType, "res/scripts/agent/ComponentProbeAgent.lua")
+	end
 	if agent == nil then
 		print("[ComponentAccessSelfTest] failed to create non-soldier agent")
 		return false
@@ -51,8 +57,15 @@ local function runComponentAccessSelfTest()
 	local componentCount = agent.GetComponentCount ~= nil and agent:GetComponentCount() or 0
 	local hasAi = agent.HasComponent ~= nil and agent:HasComponent("ai") or false
 	local hasAttrib = agent.HasComponent ~= nil and agent:HasComponent("attrib") or false
+	local hasWeapon = agent.HasComponent ~= nil and agent:HasComponent("weapon") or false
+	local hasAnim = agent.HasComponent ~= nil and agent:HasComponent("anim") or false
+	local hasLocomotion = agent.HasComponent ~= nil and agent:HasComponent("locomotion") or false
 	local ai = AgentComponents.GetAI(agent)
 	local attrib = AgentComponents.GetAttrib(agent)
+	local weapon = AgentComponents.GetWeapon(agent)
+	local anim = AgentComponents.GetAnim(agent)
+	local locomotion = AgentComponents.GetLocomotion(agent)
+	local bodyAsm = AgentComponents.GetBodyAsm(agent)
 	local debugString = agent.BuildComponentDebugString ~= nil and agent:BuildComponentDebugString() or ""
 	local blackboardOwnerMatches = false
 
@@ -67,6 +80,18 @@ local function runComponentAccessSelfTest()
 	if not hasAttrib or attrib == nil then
 		ok = false
 		table.insert(detail, "attribMissing")
+	end
+	if not hasWeapon or weapon == nil then
+		ok = false
+		table.insert(detail, "weaponMissing")
+	end
+	if not hasAnim or anim == nil or bodyAsm == nil then
+		ok = false
+		table.insert(detail, "animMissing")
+	end
+	if not hasLocomotion or locomotion == nil then
+		ok = false
+		table.insert(detail, "locomotionMissing")
 	end
 	if ai ~= nil and ai.GetBlackboard ~= nil then
 		local blackboard = ai:GetBlackboard()
@@ -89,12 +114,111 @@ local function runComponentAccessSelfTest()
 		end
 	end
 
+	if weapon ~= nil then
+		weapon:SetMaxAmmo(3)
+		weapon:SetAmmo(2)
+		if AgentComponents.GetAmmo(agent, -1) ~= 2 or not AgentComponents.HasAmmo(agent) then
+			ok = false
+			table.insert(detail, "weaponAmmoRoundTrip")
+		end
+		AgentComponents.ShootBullet(agent)
+	end
+
+	if locomotion ~= nil then
+		AgentComponents.SetMaxSpeed(agent, 1.25)
+		AgentComponents.SetTargetRadius(agent, 2.5)
+		AgentComponents.SetTarget(agent, Vector3(1, 0, 2))
+		local target = AgentComponents.GetTarget(agent)
+		if AgentComponents.GetMaxSpeed(agent, -1) ~= 1.25 then
+			ok = false
+			table.insert(detail, "locomotionMaxSpeedRoundTrip")
+		end
+		if AgentComponents.GetTargetRadius(agent, -1) ~= 2.5 then
+			ok = false
+			table.insert(detail, "locomotionTargetRadiusRoundTrip")
+		end
+		if target == nil or target.x ~= 1 or target.z ~= 2 then
+			ok = false
+			table.insert(detail, "locomotionTargetRoundTrip")
+		end
+	end
+
 	print("[ComponentAccessSelfTest] result=" .. tostring(ok),
 		"componentCount=" .. tostring(componentCount),
 		"hasAi=" .. tostring(hasAi),
 		"hasAttrib=" .. tostring(hasAttrib),
+		"hasWeapon=" .. tostring(hasWeapon),
+		"hasAnim=" .. tostring(hasAnim),
+		"hasLocomotion=" .. tostring(hasLocomotion),
+		"hasBodyAsm=" .. tostring(bodyAsm ~= nil),
+		"assemblyProfile=" .. tostring(usedAssemblyProfile),
 		"blackboardOwner=" .. tostring(blackboardOwnerMatches),
 		"debug=" .. tostring(debugString),
+		"detail=" .. table.concat(detail, ","))
+	return ok
+end
+
+local function runNonSoldierAnimationProfileSelfTest()
+	if SandboxObjects == nil or SandboxObjects.CreateAgentWithProfile == nil then
+		print("[NonSoldierAnimProfileSelfTest] CreateAgentWithProfile unavailable")
+		return false
+	end
+
+	local ok = true
+	local detail = {}
+	local agentType = _G.AGENT_OBJ_NONE or 0
+	local agent = SandboxObjects:CreateAgentWithProfile(agentType, "animated_probe", "res/scripts/agent/NonSoldierAnimProbeAgent.lua")
+	if agent == nil then
+		print("[NonSoldierAnimProfileSelfTest] failed to create animated probe agent")
+		return false
+	end
+	if agent.SetRenderVisible ~= nil then
+		agent:SetRenderVisible(false)
+	end
+
+	local anim = AgentComponents.GetAnim(agent)
+	local bodyAsm = AgentComponents.GetBodyAsm(agent)
+	local idleAnim = AgentComponents.GetBodyAnimation(agent, "stand_idle_aim")
+	local moveAnim = AgentComponents.GetBodyAnimation(agent, "stand_run_forward_aim")
+	if anim == nil then
+		ok = false
+		table.insert(detail, "animMissing")
+	end
+	if bodyAsm == nil then
+		ok = false
+		table.insert(detail, "bodyAsmMissing")
+	end
+	if idleAnim == nil or moveAnim == nil then
+		ok = false
+		table.insert(detail, "animationClipMissing")
+	end
+
+	local currentState = ""
+	local nextState = ""
+	local desiredState = ""
+	local requestMove = false
+	if bodyAsm ~= nil then
+		currentState = tostring(bodyAsm:GetCurrStateName())
+		requestMove = bodyAsm:RequestState("probe_move") == true
+		nextState = tostring(bodyAsm:GetNextStateName())
+		desiredState = tostring(bodyAsm:GetDesiredStateName())
+	end
+	if currentState ~= "probe_idle" then
+		ok = false
+		table.insert(detail, "initialState")
+	end
+	if not requestMove or (nextState ~= "probe_move" and desiredState ~= "probe_move") then
+		ok = false
+		table.insert(detail, "requestMove")
+	end
+
+	print("[NonSoldierAnimProfileSelfTest] result=" .. tostring(ok),
+		"profile=animated_probe",
+		"current=" .. tostring(currentState),
+		"next=" .. tostring(nextState),
+		"desired=" .. tostring(desiredState),
+		"hasIdleClip=" .. tostring(idleAnim ~= nil),
+		"hasMoveClip=" .. tostring(moveAnim ~= nil),
 		"detail=" .. table.concat(detail, ","))
 	return ok
 end
@@ -120,7 +244,15 @@ function RuntimeDiagnostics.RunSelfTest()
 		printLines(ObjectManager:buildObjectDebugSummary(maxObjects))
 	end
 
-	if ObjectManager == nil or ObjectManager.buildAiDebugSummary == nil then
+	local usedUnifiedAiRuntimeSummary = false
+	if ObjectManager ~= nil and ObjectManager.buildAiRuntimeDebugSummary ~= nil then
+		local aiRuntimeSummary = tostring(ObjectManager:buildAiRuntimeDebugSummary(maxObjects))
+		printLines(aiRuntimeSummary)
+		usedUnifiedAiRuntimeSummary = true
+		if isTruthy(getEnvValue("HELLO_AI_BLACKBOARD_SELF_TEST")) and string.find(aiRuntimeSummary, "[BlackboardSelfTest] result=true", 1, true) == nil then
+			ok = false
+		end
+	elseif ObjectManager == nil or ObjectManager.buildAiDebugSummary == nil then
 		print("[RuntimeDiag] AI debug summary unavailable")
 		ok = false
 	else
@@ -131,15 +263,17 @@ function RuntimeDiagnostics.RunSelfTest()
 		end
 	end
 
-	local schedulerService = SandboxAIScheduler
-	if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
-		schedulerService = ObjectManager
-	end
-	if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
-		print("[RuntimeDiag] AI scheduler diagnostics unavailable")
-		ok = false
-	else
-		printLines(schedulerService:buildAiSchedulerDebugSummary())
+	if not usedUnifiedAiRuntimeSummary then
+		local schedulerService = SandboxAIScheduler
+		if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
+			schedulerService = ObjectManager
+		end
+		if schedulerService == nil or schedulerService.buildAiSchedulerDebugSummary == nil then
+			print("[RuntimeDiag] AI scheduler diagnostics unavailable")
+			ok = false
+		else
+			printLines(schedulerService:buildAiSchedulerDebugSummary())
+		end
 	end
 
 	if ObjectManager == nil or ObjectManager.buildAiEventDebugSummary == nil then
@@ -170,6 +304,9 @@ function RuntimeDiagnostics.RunSelfTest()
 	end
 
 	if not runComponentAccessSelfTest() then
+		ok = false
+	end
+	if not runNonSoldierAnimationProfileSelfTest() then
 		ok = false
 	end
 

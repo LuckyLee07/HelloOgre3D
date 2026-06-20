@@ -81,6 +81,11 @@ AgentObject* ObjectFactory::CreateAgent(AGENT_OBJ_TYPE agentType, const char* fi
 	return AgentFactory::CreateAgent(m_objectManager, agentType, filepath);
 }
 
+AgentObject* ObjectFactory::CreateAgentWithProfile(AGENT_OBJ_TYPE agentType, const char* profileName, const char* filepath)
+{
+	return AgentFactory::CreateAgentWithProfile(m_objectManager, agentType, profileName, filepath);
+}
+
 SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const char* filepath)
 {
 	return SoldierFactory::CreateSoldier(m_objectManager, meshFile, filepath);

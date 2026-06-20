@@ -12,11 +12,11 @@ class AgentFactory
 {
 public:
 	static AgentObject* CreateAgent(ObjectManager* objectManager, AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
+	static AgentObject* CreateAgentWithProfile(ObjectManager* objectManager, AGENT_OBJ_TYPE agentType, const char* profileName, const char* filepath = nullptr);
 
 private:
 	static RenderComponent* CreateAgentRender();
 	static btRigidBody* CreateAgentRigidBody();
-	static void AttachAgentComponents(AgentObject* agent);
 };
 
 #endif // __AGENT_FACTORY_H__

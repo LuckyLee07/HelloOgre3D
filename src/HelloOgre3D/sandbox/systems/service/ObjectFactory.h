@@ -22,13 +22,14 @@ public:
 	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);
 
 	AgentObject* CreateAgent(AGENT_OBJ_TYPE agentType, const char* filepath = nullptr);
+	AgentObject* CreateAgentWithProfile(AGENT_OBJ_TYPE agentType, const char* profileName, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 	//tolua_end
 
 	ObjectManager* GetObjectManager() const { return m_objectManager; }
 
 private:
-	ObjectManager* m_objectManager;
+	ObjectManager* m_objectManager; // non-owning; injected by ObjectManager/GameManager wiring
 }; //tolua_exports
 
 #endif // __OBJECT_FACTORY_H__
