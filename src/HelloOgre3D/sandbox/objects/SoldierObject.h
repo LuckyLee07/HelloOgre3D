@@ -31,9 +31,11 @@ public:
 
 	void changeStanceType(int stanceType);
 	int getStanceType() const;
+	//tolua_end
 
 	void ShootBullet();
 
+	//tolua_begin
 	virtual IPlayerInput* GetInput() { return m_inputInfo; }
 	virtual void RequestState(int soldierState, bool forceUpdate = false);
 
@@ -59,12 +61,14 @@ public:
 	void ConsumeAmmo(int amount);
 	void RestoreAmmo();
 
-	//tolua_begin
 	bool HasEnemy(const Ogre::String& navMeshName = "default");
 	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
 	AgentObject* GetEnemy() const;
+
+	//tolua_begin
 	Ogre::Vector3 GetBonePosition(const Ogre::String& boneName) const;
 	Ogre::Vector3 GetBoneForward(const Ogre::String& boneName) const;
+	//tolua_end
 
 	bool HasMovePosition(float reachDistance = 1.5f) const;
 	void SetMovePosition(const Ogre::Vector3& movePos);
@@ -79,7 +83,6 @@ public:
 	void EnterShootAnim();
 	void EnterReloadAnim();
 	void EnterDeathAnim();
-	//tolua_end
 
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 	AnimComponent* GetAnimComponent() const;

@@ -210,8 +210,6 @@ function GUI_HandleKeyEvent(keycode, pressed)
     elseif (keycode == OIS.KC_F6) then
         local isShow = cameraInfoPanel:isVisible()
         cameraInfoPanel:setVisible(not isShow)
-    elseif (keycode == OIS.KC_F7) then
-        --Sandbox:SetDrawPhysicsWorld(drawDebug)
     end
 end
 

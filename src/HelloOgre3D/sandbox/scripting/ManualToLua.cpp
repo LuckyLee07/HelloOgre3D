@@ -182,7 +182,7 @@ tolua_lerror:
 
 /* method: SetEvaluator of class LuaCondition
  * 同 DecisionBranch.SetEvaluator：捕获 Lua 闭包到 registry，存 ref。
- * Usage: cond:SetEvaluator(function() return agent:HasEnemy() end)
+ * Usage: cond:SetEvaluator(function() return AgentComponents.HasEnemy(agent) end)
  */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_LuaCondition_SetEvaluator00
 static int tolua_SandboxToLua_LuaCondition_SetEvaluator00(lua_State* tolua_S)

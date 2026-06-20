@@ -1,14 +1,8 @@
 local ConfigManager = {}
 
-local function getAiSchedulerService(objectManager)
+local function getAiSchedulerService()
 	if SandboxAIScheduler ~= nil and SandboxAIScheduler.configureAiScheduler ~= nil then
 		return SandboxAIScheduler
-	end
-	if objectManager ~= nil and objectManager.configureAiScheduler ~= nil then
-		return objectManager
-	end
-	if ObjectManager ~= nil and ObjectManager.configureAiScheduler ~= nil then
-		return ObjectManager
 	end
 	return nil
 end
@@ -112,7 +106,7 @@ function ConfigManager:ApplyStartupSeed(sampleName)
 end
 
 function ConfigManager:ConfigureAiScheduler(objectManager, sampleName)
-	local schedulerService = getAiSchedulerService(objectManager)
+	local schedulerService = getAiSchedulerService()
 	if schedulerService == nil then
 		return false
 	end

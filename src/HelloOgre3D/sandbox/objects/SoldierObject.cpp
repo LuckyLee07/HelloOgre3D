@@ -1,6 +1,5 @@
 #include "SoldierObject.h"
 #include "core/SandboxServices.h"
-#include "systems/manager/SandboxMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "OgreMath.h"
 #include "animation/AgentAnimStateMachine.h"

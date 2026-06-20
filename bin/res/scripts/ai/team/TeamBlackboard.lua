@@ -28,11 +28,6 @@ _CppService = function()
 		and SandboxTeam.writeBestTeamEnemyFactToBlackboard ~= nil then
 		return SandboxTeam
 	end
-	if ObjectManager ~= nil
-		and ObjectManager.rememberTeamEnemyFact ~= nil
-		and ObjectManager.writeBestTeamEnemyFactToBlackboard ~= nil then
-		return ObjectManager
-	end
 	return nil
 end
 
