@@ -21,3 +21,4 @@
 - [自己跑自己读日志](run-and-diagnose.md) — 改完自己跑 exe 读 stderr/Sandbox_d.log 定位，别甩给用户
 - [别假设 greenfield 事件设施](no-greenfield-event-infra.md) — 已有 typed Blackboard + SandboxEventPayload/Dispatcher，勿提 std::variant/新建事件系统
 - [近期进度快照](recent-progress-snapshot.md) — 截至 2026-06-12 的主线弧：方向回正→AI 地基→sample→热点 C++ 化→Chapter9 parity
+- [Tracy profiler 采样方式](tracy-profiler-no-cli-capture.md) — 仓库自带 tracy-profiler.exe 只有打开/连接 GUI，没有无界面 capture CLI

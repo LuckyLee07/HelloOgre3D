@@ -22,11 +22,11 @@
 当前主要技术缺口：
 
 - `AgentSpatialIndexSystem` 已接入 uniform grid 和查询 options；grid / linear fallback 均支持 owner/includeSelf、alive、team include/exclude、objectType 过滤，并输出 filtered / reject / queryMs 统计。`maxResults` 现在保留近邻候选，`perception.maxSpatialResults` 可从 blackboard 控制，pressure preset 默认 16；仍需继续做 Release / scheduler 调参与更完整 AOI 淘汰。
-- `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；typed fact schema 已支持 `SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot`，并接到 TeamBlackboard / InfluenceMap / Hearing-Danger / Formation 的 smoke 证据；Lua 任意 key/value 泛型桶已收口为 support/focus/retreat typed 兼容缓存，Hearing/Danger 已拆成独立 `HearingDangerSense` 并接入专用 profile counter。
-- Lua `InfluenceMap` 仍适合作为教学对照；`Sandbox18` 已把 Chapter 9 DangerousAreas / TeamAreas 的事件输入迁到 C++ `InfluenceMapSystem` + `TacticalQueryService`，debug draw 生命周期也已下沉到 `TacticalDebugDrawService`；layer 级 interval / dirty-only 更新策略、query candidate 上限与 `chapter9_tactics_cpp_pressure` 已落地，cell/region dirty bounds 第一切片已接入 source/spread/debug summary，support/cover/crowd schema 第一切片已接入 query 评分，per-layer debug config 第一切片已记录 y/threshold/projection/order；仍缺更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型和更完整的 layer debug 配置面。
-- `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；`PerceptionResultCache` 已作为显式快照接入 HasEnemy / TickPerception，CanShootEnemy 成功路径同步 cache；Hearing/Danger 第一段已由 `SandboxPerception` 发布事件并由独立 `HearingDangerSense` 执行预算扫描、cooldown、blackboard 和 `RetreatPoint` 写回，并有专用 profile counter；后续仍缺更多非视觉感知源。
-- BT runtime 已有教学级扩展、trace sampling、第一版 runtime tick interval / stagger LOD、每帧树 tick budget，以及 LuaCondition result cache + Blackboard dirty key 第一切片；仍缺 instance pool、距离 LOD 和更通用的节点缓存。
-- 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，当前压力入口仍是 `Sandbox16`；后续仍需补 scheduler on/off、Release x64 和必要 Tracy capture。
+- `TeamBlackboardService` 第一版已接入，可同步 `EnemySighted` 并写回最佳团队敌情；typed fact schema 已支持 `SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot`，并接到 TeamBlackboard / InfluenceMap / Hearing-Danger / Formation 的 smoke 证据；Lua 任意 key/value 泛型桶已收口为 support/focus/retreat typed 兼容缓存，Lua `GetBestCppFact(...)` 已可直接读取 C++ 最佳 typed fact 第一段，Hearing/Danger 已拆成独立 `HearingDangerSense` 并接入专用 profile counter。
+- Lua `InfluenceMap` 仍适合作为教学对照；`Sandbox18` 已把 Chapter 9 DangerousAreas / TeamAreas 的事件输入迁到 C++ `InfluenceMapSystem` + `TacticalQueryService`，debug draw 生命周期也已下沉到 `TacticalDebugDrawService`；layer 级 interval / dirty-only 更新策略、query candidate 上限与 `chapter9_tactics_cpp_pressure` 已落地，cell/region dirty bounds 第一切片已接入 source/spread/debug summary，support/cover/crowd schema 第一切片已接入 query 评分，per-layer debug config 已支持显式配置 yOffset/threshold/maxCells/drawNeutral/projectToNav/navMeshName/drawOrder；仍缺更细粒度增量 rebuild、真实 cover 来源和更细 crowd 模型。
+- `AgentPerceptionSystem` 第一阶段已接入，可每帧批量驱动 `AIController::TickPerception` 并输出 scans / visible / spatial query / memory / vision 统计；`PerceptionResultCache` 已作为显式快照接入 HasEnemy / TickPerception，CanShootEnemy 成功路径同步 cache，并支持 `HELLO_AI_PERCEPTION_CACHE_ENABLE=0` / smoke `-DisablePerceptionCache` 做 cache on/off 回测；`Chapter7Knowledge` 已改读 `AIController` perception/cache 结果，不再 `getAllAgents()` 扫描；Hearing/Danger 第一段已由 `SandboxPerception` 发布事件并由独立 `HearingDangerSense` 执行预算扫描、cooldown、blackboard 和 `RetreatPoint` 写回，并有专用 profile counter；后续仍缺更多非视觉感知源。
+- BT runtime 已有教学级扩展、`BehaviorTreeLoader` subtree 配置第一段、显式 hot reload 第一段、trace sampling、runtime tick interval / stagger LOD、基于 perception / sense / knowledge / memory / move target 距离的 distance LOD、每帧树 tick budget、LuaCondition result cache + Blackboard dirty key 第一切片，以及 driver-local rebuild storage pool；仍缺文件 watcher / live edit 状态迁移和跨 agent/template 级节点缓存。
+- 已有 `ai_perf_100` / `ai_perf_500` / `ai_perf_1000` preset 入口；Debug x64 的 spatial on/off、perception system on/off 基线已沉淀到 `docs/perf/ai-perception-baseline-20260602.md`，Release x64 基线已沉淀到 `docs/perf/ai-perf-release-baseline-20260612.md`，`-AiScheduler` 与 `-DisablePerceptionCache` 已提供 scheduler/cache A/B smoke 对照，FramePerf / smoke 已固化 Lua callback count，当前压力入口仍是 `Sandbox16`；后续仍需补必要 Tracy capture。
 
 ## 2. 迭代主线
 
@@ -55,7 +55,7 @@ AgentSpatialIndexSystem
 - 所有邻域查询必须走 C++ spatial / AOI facade，并且有 `maxResults`、近邻保留 / 候选访问上限和统计输出。
 - Lua 行为节点只读 C++ 产出的 perception / team / tactical result，不新增全局对象遍历。
 - 热路径优先优化数据布局和缓存，而不是先引入完整第三方 ECS；必要时再把可批处理系统 job 化。
-- `ai_perf_1000` 的验收要同时看 Debug / Release、spatial on/off、scheduler on/off、perception cache on/off 和 Lua callback 数量。
+- `ai_perf_1000` 的验收要同时看 Debug / Release、spatial on/off、scheduler on/off、perception cache on/off（`-DisablePerceptionCache`）和 Lua callback 数量。
 
 ## 3. Phase 1：Agent Spatial / AOI 底座
 
@@ -158,6 +158,8 @@ AgentSpatialIndexSystem
 - `EnemySighted` fact 第一版：teamId / targetId / reporterId / pos / confidence / priority / lastSeenMs，支持 TTL、report count、best enemy 写回 blackboard。
 - typed fact schema 第一段：`factType/teamId/sourceAgentId/targetAgentId/position/confidence/priority/ttl/key`，Lua 可通过 `SandboxTeam:rememberTeamFact(...)` 写入，`writeBestTeamFactToBlackboard(...)` 可按 factType 写回 blackboard。
 - `TeamBlackboard.lua` 已把 `SupportRequested`、`SupportResponded`、`FocusTarget`、`RetreatPoint` 和 `FormationSlot` 同步为 C++ typed facts；Lua 任意 key/value 桶已移除，只保留 `backupRequest` / `focusTarget` / `retreat:*` typed legacy 读路径。
+- C++ typed fact getter 第一段：`TeamBlackboardService` 暴露 `hasBestTeamFact(...)` 与 `getBestTeamFact*` 字段级 getter，Lua `TeamBlackboard:GetBestCppFact(...)` 可直接读取最佳 typed fact；`team_blackboard` smoke 检查 `cppGetter=true`。
+- 生命周期 reset 第一段：`TeamBlackboardLifecycleSelfTest` 在 `team_blackboard` smoke 中写入 synthetic `FocusTarget`，确认 reset 前 C++ getter 可读，reset 后 C++ service 与 Lua typed legacy cache 都清空。
 - `HearingDangerSmoke` 会额外检查 `cppSense=true`，确认 `RetreatPoint` 来自 C++ perception sense；`TeamBlackboardSmoke` / `FormationSmoke` 会检查 `cppTypedFacts`、`cppFocusApplies` 或 `cppRetreatApplies`。
 
 ### 验收
@@ -165,13 +167,14 @@ AgentSpatialIndexSystem
 - `Sandbox12` 继续展示“一个 agent 发现敌人，队友响应”。
 - `Sandbox15` 继续展示 formation slot、等待队友、移动到队形点。
 - Team fact 可 TTL 过期，不依赖 Lua 全局 reset。
+- TeamBlackboard reset 可清理 C++ service 与 Lua legacy cache，不依赖单个 agent 生命周期。
 - 日志或 RuntimeDiag 可输出 team count、fact count、expired count、active focus target。
 
 ## 6. Phase 4：InfluenceMapSystem / TacticalQueryService
 
 ### 目标
 
-把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、查询预算、统计和 debug draw。`Sandbox17` 已作为 Lua-first 版本对齐 HelloOgre3DX Chapter 9 的 DangerousAreas / TeamAreas 语义；`Sandbox18` 已承接 C++ 版 `InfluenceMapSystem` 第一切片，`TacticalQueryService` 和 `TacticalDebugDrawService` 已拆出，后续继续补更细粒度 dirty rebuild、真实 cover/crowd 模型和更完整 layer debug 配置面。
+把 Lua 教学版 InfluenceMap 升级为 C++ 战术评分系统，支持多层、限频、查询预算、统计和 debug draw。`Sandbox17` 已作为 Lua-first 版本对齐 HelloOgre3DX Chapter 9 的 DangerousAreas / TeamAreas 语义；`Sandbox18` 已承接 C++ 版 `InfluenceMapSystem` 第一切片，`TacticalQueryService` 和 `TacticalDebugDrawService` 已拆出，后续继续补更细粒度 dirty rebuild、真实 cover/crowd 模型。
 
 ### 建议实现
 
@@ -207,7 +210,7 @@ score = objective + support + cover - threat - crowd
 - tactical query candidate limit 已接入 `InfluenceMapSystem` / `TacticalQueryService` / `SandboxTactics`，`chapter9_tactics_cpp_pressure` 固定大半径查询预算并用 `[TacticalCandidateLimitSmoke] PASS` 验收 `candidateLimit/capped`。
 - cell/region dirty bounds 第一切片已接入 `InfluenceMapSystem`：source 写入记录 dirty bounds，`SpreadLayer` 按 dirty bounds 外扩 passCount 限域扫描，summary 输出 `dirtyRegions/dirtyCells/spreadRegionCells/spreadLimited`，`Sandbox18` 用 `[TacticalDirtyRegionSmoke] PASS` 验收。
 - support/cover/crowd schema 第一切片已接入 `TacticalQueryService`：`team` rebuild 继续维护旧 `team` 层，同时派生 `support`、软 `cover` 和 `crowd` 层；queryType 评分扩展为 danger/team/objective/support/cover/crowd 六层，`Sandbox18` 用 `[TacticalLayerSchemaSmoke] PASS` 验收 active schema layers。
-- per-layer debug config 第一切片已接入 `TacticalDebugDrawService`：现有 draw/rebuild 调用会记录 yOffset、threshold、maxCells、drawNeutral、projectToNav、navMeshName 和 drawOrder，`Sandbox18` 可通过 `setTacticalInfluenceLayerDebugOrder` 指定排序，并用 `[TacticalDebugConfigSmoke] PASS` 验收。
+- per-layer debug config 已接入 `TacticalDebugDrawService`：`SandboxTactics:configureTacticalInfluenceLayerDebug(...)` 可显式配置 yOffset、threshold、maxCells、drawNeutral、projectToNav、navMeshName 和 drawOrder，`setTacticalInfluenceLayerDebugOrder` 继续作为兼容排序入口；`chapter9_tactics_cpp_pressure` 固定 danger 层参数并用 `[TacticalDebugConfigSmoke] PASS` 验收。
 
 ### 验收
 
@@ -220,7 +223,7 @@ score = objective + support + cover - threat - crowd
 - 候选点数量有上限，战术查询不会随 agent 数量失控增长。
 - dirty region summary 能证明 spread 使用 bounded region，而不是每次无条件全图扫描。
 - support/cover/crowd schema summary 能证明 C++ query 已消费六层评分，后续再替换真实 cover 来源和更细 crowd 模型。
-- debug config summary 能证明 layer y/projection/order 等配置已进入 C++ service 状态，后续再补完整配置面板或配置文件入口。
+- debug config summary 能证明 layer y/projection/order 等配置已进入 C++ service 状态，后续若要操作性更强再补可视化配置面板。
 
 ## 7. Phase 5：BehaviorTree Runtime 生产化补强
 
@@ -230,7 +233,7 @@ score = objective + support + cover - threat - crowd
 
 ### 建议实现
 
-- `BehaviorTreeInstancePool`。
+- `BehaviorTreeInstancePool` / driver-local rebuild storage pool（第一版已落地，后续扩展到跨 agent/template 级缓存）。
 - `BehaviorNodeResultCache`。
 - Blackboard dirty key 与节点依赖表。
 - `tickStep` / `bucket` / `distanceLOD`。
@@ -242,14 +245,18 @@ score = objective + support + cover - threat - crowd
 
 - `BehaviorTreeDriver` 支持 `HELLO_BT_TRACE_SAMPLE_INTERVAL` / `SetDebugTraceSampleInterval(...)` 控制 trace 采样。
 - `BehaviorTreeDriver` 支持 `HELLO_BT_TICK_INTERVAL_MS` / `HELLO_BT_TICK_STAGGER`，也可由 preset `behaviorTree.tickIntervalMs` / `tickStagger` 配置 runtime tick interval / stagger LOD。
+- `BehaviorTreeDriver` 支持 `HELLO_BT_DISTANCE_LOD_NEAR` / `HELLO_BT_DISTANCE_LOD_FAR` / `HELLO_BT_DISTANCE_LOD_MAX_MULTIPLIER`，也可由 preset `behaviorTree.distanceLodNear` / `distanceLodFar` / `distanceLodMaxMultiplier` 配置距离 LOD；距离输入优先读 `perception.targetDistance`，缺失时从 sense / knowledge / memory / last-known / move target 兜底，避免目标暂时不可见时失去降频。
 - `BehaviorTreeDriver` 支持 `HELLO_BT_MAX_TREE_TICKS_PER_FRAME` / `SetRuntimeMaxTreeTicksPerFrame(...)`，也可由 preset `behaviorTree.maxTreeTicksPerFrame` 配置每帧树 tick budget；被 budget 跳过的 driver 保留已累计 delta，下帧继续补偿。
 - Blackboard 维护 global/key revision，`LuaCondition` 可按 `cacheMs` / `cacheKeys` 做 result cache；`BehaviorTreeLoader` 负责配置，`SoldierBT` 只给 Hearing/Danger、Team、Memory、Formation 等纯 Blackboard 条件启用缓存。
-- RuntimeDiag `[BTStats]` 输出 `ticks/treeTicks/tickSkipped/budgetSkipped/tickIntervalMs/tickStagger/budgetMax/cacheHits/invalidated`，`bt_runtime_lod` preset 用 `Sandbox10` 验证 tick skip 与 condition cache hit 统计，`bt_runtime_budget` 验证 frame budget skip。
+- `BehaviorTreeLoader` 支持 `subtrees` + `Subtree` 引用节点；`SoldierBT` 的通用 combat branch 已抽成 subtree，`bt_runtime_lod` smoke 覆盖主树可正常构建和运行。
+- `BehaviorTreeDriver` 支持 driver-local rebuild storage pool：同一 driver 重建树时复用可 reset 的 C++ composite/decorator/utility 节点与 `BehaviorTree` 容器；`LuaBehaviorAction` / `LuaCondition` 因 Lua env/ref 生命周期延迟到下一次 C++ tick 释放并按 build 重建。
+- `BehaviorTreeLoader` 支持 `BuildFromModule` / `ReloadModule` 显式模块热重载：reload 时清理 Lua module cache、重建整棵树并替换 driver tree，保留 Blackboard 与 driver runtime 配置；文件 watcher、运行中节点状态迁移与跨 agent/template cache 留待后续。
+- RuntimeDiag `[BTStats]` 输出 `ticks/treeTicks/tickSkipped/budgetSkipped/tickIntervalMs/tickStagger/effectiveTickIntervalMs/distanceLodMultiplier/distanceLodSkipped/budgetMax/cacheHits/invalidated/storageResets/nodeReuses/treeReuses/retiredLuaActions/retiredLuaConditions`，`bt_runtime_lod` preset 用 `Sandbox10` 验证 tick skip、distance LOD 与 condition cache hit 统计，`bt_runtime_budget` 验证 frame budget skip，`bt_runtime_rebuild` 验证 rebuild storage pool 复用，`bt_hot_reload` 验证显式 reload 成功和 tree/storage 统计。
 
 ### 验收
 
-- 100+ agent 场景中，BT tick 可按 interval / stagger LOD 和 frame budget 分散；后续再补距离 LOD。
-- RuntimeDiag 输出 BT ticked / skipped / budgetSkipped / cached / invalidated；当前 tick skip、frame budget 与条件 result cache 已有真实统计，后续补更通用的 node cache 和实例池。
+- 100+ agent 场景中，BT tick 可按 interval / stagger LOD、distance LOD 和 frame budget 分散；同一 driver 的树重建不再每次全量分配可 reset 节点；配置可通过 subtree 复用通用分支，且可显式 reload Lua config；后续再补文件 watcher、运行中状态迁移和跨 agent/template 缓存。
+- RuntimeDiag 输出 BT ticked / skipped / distanceLodSkipped / budgetSkipped / cached / invalidated / storage reset / node reuse；当前 tick skip、distance LOD、frame budget、条件 result cache 与 rebuild storage pool 已有真实统计，后续补更通用的 node cache。
 - Debug trace 关闭时不保留明显额外开销。
 - `Sandbox8` / `Sandbox10` / `Sandbox15` 行为不退化。
 
@@ -283,7 +290,7 @@ score = objective + support + cover - threat - crowd
 
 逐步建设 AI debug panel 或 RuntimeDiag 输出：
 
-- 指定 agent 的 perception snapshot（RuntimeDiag 已支持 `HELLO_RUNTIME_DIAGNOSTIC_FOCUS_AGENT_ID` 聚焦输出；文本面板选中筛选仍待做）。
+- 指定 agent 的 perception snapshot（RuntimeDiag 已支持 `HELLO_RUNTIME_DIAGNOSTIC_FOCUS_AGENT_ID` 聚焦输出；FGUI `AiDebugPanel` 已支持 `focusAgentId` / `filterText` 参数化筛选）。
 - MemoryStore lastKnown。
 - Team facts。
 - Influence score。
@@ -331,30 +338,30 @@ score = objective + support + cover - threat - crowd
 - [x] 提供线性查询与 grid 查询成本对照入口：`-DisableSpatialIndex`。
 - [x] 实际记录 100 / 500 / 1000 在 spatial on/off、perception system on/off 下的 Debug x64 基线结果：见 `docs/perf/ai-perception-baseline-20260602.md`。
 - [x] pressure preset 接入 `perception.maxSpatialResults=16`，spatial maxResults 保留近邻候选而不是首批命中。
-- [ ] 补 scheduler on/off、Release x64、perception cache on/off、Lua callback 数量和必要 Tracy capture 对照。
+- [~] 补 scheduler on/off、Release x64、perception cache on/off、Lua callback 数量和必要 Tracy capture 对照：Release x64 基线、perception cache on/off smoke 入口、scheduler on/off tick/skip smoke 与 Lua callback count 已补；必要 Tracy capture 待补。
 
 ### 近期三：Perception System
 
 - [x] 将 `VisionSensor` 接入 spatial query。
 - [x] 建立 `AgentPerceptionSystem` 第一阶段：保持每帧全量更新，把 per-agent perception tick 集中到 system 级执行和统计。
-- [x] 建立独立 `PerceptionResultCache`，`HasEnemy` 读 cache，`CanShootEnemy` 成功路径同步 cache。
+- [x] 建立独立 `PerceptionResultCache`，`HasEnemy` 读 cache，`CanShootEnemy` 成功路径同步 cache，并提供 `HELLO_AI_PERCEPTION_CACHE_ENABLE=0` / smoke `-DisablePerceptionCache` 回测入口。
 - [x] 在感知 query 层提前过滤 teamId / alive / includeSelf，避免无效候选进入 memory / vision 热路径。
 - [x] 将 hearing / danger sample 的结果入口收口到 C++ sense 第一段：Lua 发布事件，C++ 执行预算扫描、cooldown、blackboard 写回和 `RetreatPoint` typed fact。
-- [ ] Lua BT 只读结果，不做对象扫描。
+- [x] Lua BT 只读结果，不做对象扫描：`Chapter7Knowledge` 已改读 `AIController` perception/cache 结果，Chapter7 agent 明确设置 `perception.requirePath=true` 保留 pathable enemy 语义。
 
 ### 近期四：Team / Tactics 迁移准备
 
 - [x] 梳理 `TeamBlackboard.lua` 的现有 API：EnemySighted / SupportResponded / backupRequest / formation slot 是当前样例主路径，泛型值仍保留兼容。
 - [x] 设计 C++ `TeamBlackboardService` fact schema：typed fact 第一段已落地。
 - [x] 接入第一版 Lua facade：`TeamBlackboard.lua` 保持旧 API，同时把 `EnemySighted` 同步到 C++ service，并提供 C++ fact count / report count / best fact 写回 blackboard 的兼容入口。
-- [~] TeamBlackboard typed fact 迁移：`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已同步到 C++ service 并有 sample smoke 证据；Lua 泛型值已收口为 typed legacy cache，Hearing/Danger C++ sense 已拆为独立类并接入 perf counter，后续做更多非视觉输入和 C++ fact getter。
+- [~] TeamBlackboard typed fact 迁移：`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已同步到 C++ service 并有 sample smoke 证据；Lua 泛型值已收口为 typed legacy cache；C++ 最佳 typed fact getter 与 reset 生命周期验证已由 `team_blackboard` smoke 覆盖；Hearing/Danger C++ sense 已拆为独立类并接入 perf counter；后续做更多非视觉输入和更细的 key/role 查询。
 - [ ] 梳理 `InfluenceMap.lua` 的 sample 依赖和 debug 输出。
 - [x] 用 `Sandbox17` 固化 Chapter 9 Tactics Lua-first 对照面：DangerousAreas / TeamAreas、事件 TTL、layer 更新统计和 `[Chapter9TacticsSmoke] PASS`。
 - [x] 设计 C++ `InfluenceMapSystem` layer schema，并在第一切片中落地 danger / team / objective 三层。
 - [x] 用 `Sandbox18` 固化 Chapter 9 Tactics C++ 第二版第一切片：Lua 喂事件，C++ 写入 influence layer、执行 tactical score / best position query，并输出 `[Chapter9TacticsCppSmoke] PASS`。
 - [x] 抽出独立 `TacticalQueryService`：`sandbox/ai/tactics/TacticalQueryService.h` 已落地，持有 `InfluenceMapSystem`、跑事件订阅/TTL、`Rebuild{Danger,Team,Objective}Layer` 和查询 API（`FindBestSupportPosition`/`FindLowThreatPosition`/`ScoreQueryPosition`/`FindBestQueryPosition`）。
 - [x] `TacticalQueryService` / `TacticalDebugDrawService` / `TacticalService` 收口：service 已是查询/层实现事实来源，`SandboxTactics` 的 clear/configure/layer/source/sample/score/findBest/stats 入口已转发到 service，`configureTacticalInfluenceFromNavMesh` 的三角提取与建图编排已下沉；`rebuildTacticalInfluenceLayerDebugVisual` / Ogre ManualObject 生命周期已下沉到 `TacticalDebugDrawService`；`ObjectManager` tactical 旧 Lua facade 已删除。
-- [~] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema、layer debug 显式配置和 pressure preset：layer 级 interval / dirty-only policy、query candidate limit 与 `chapter9_tactics_cpp_pressure` 已完成第一段；cell/region dirty bounds + bounded spread 已完成第一切片；support/cover/crowd schema 已完成第一切片；per-layer debug config 第一切片已完成；更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型、更完整 layer debug 配置面和更多压力组合仍待做。
+- [~] 补 `InfluenceMapSystem` dirty region / interval 更新、cover / crowd / support schema、layer debug 显式配置和 pressure preset：layer 级 interval / dirty-only policy、query candidate limit 与 `chapter9_tactics_cpp_pressure` 已完成第一段；cell/region dirty bounds + bounded spread 已完成第一切片；support/cover/crowd schema 已完成第一切片；per-layer debug config 显式 API 已完成；更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型和更多压力组合仍待做。
 
 ## 11. 成功标准
 

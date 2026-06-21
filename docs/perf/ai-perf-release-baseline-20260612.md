@@ -45,8 +45,9 @@
 
 ## 待补（baseline 二期剩余）
 
-- scheduler on/off 对照（开 `AIScheduler` 错峰后 perceptionSystem 应明显下降）。
-- perception cache on/off 对照（`PerceptionResultCache` 落地后回测）。
+- scheduler on/off smoke 对照已接入：`run_sandbox_smoke.ps1 -Preset ai_perf_100 -RuntimeDiag -AiScheduler -StopExisting -NoTail` 会检查 `[AIScheduler] enabled=true` 且 `totalTicked/totalSkipped` 均大于 0。注意当前 scheduler 主要降低 per-agent AI tick/driver，批量 perception 仍由 `AgentPerceptionSystem` 每帧统一更新。
+- perception cache on/off smoke 对照已接入：`run_sandbox_smoke.ps1 -Preset ai_perf_100 -RuntimeDiag -DisablePerceptionCache -AgentCount 20 -StopExisting -NoTail` 会检查 `cache enabled=0`。
 - 非 VM / 真实 GPU 机器上的 `engineGap` 对照，隔离渲染环境因素。
-- 必要时 Tracy capture。
+- Lua callback count smoke 已接入：`ai_perf_*` preset 的 smoke 会检查 `[FramePerf] game ... luaCallbacks=... luaCallbackMs=...`，RuntimeProfileCounters 同时输出 `RuntimeLuaCallbackCount` / `RuntimeLuaCallbackMs`。
+- 必要 Tracy capture。
 - Sandbox17/18（6 agent）：AI 成本可忽略、帧时间 VM 渲染绑定，非性能基线重点，按需补。

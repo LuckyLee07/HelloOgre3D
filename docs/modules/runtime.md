@@ -14,7 +14,7 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,HearingDangerSense,TeamBlackboard,FairyGuiService}Stats` + 帧时序结构；Tracy 关闭时是 no-op |
+| `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,HearingDangerSense,TeamBlackboard,FairyGuiService}Stats` + 帧时序 / Lua callback 计数；Tracy 关闭时是 no-op |
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL |
@@ -23,7 +23,7 @@
 
 ## 4. 公开能力要点
 
-- 性能上报（AI/UI/帧分项）、资源快照、相机模式、FairyGUI 栈。
+- 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、相机模式、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
 
 ## 5. 约束与红线
 

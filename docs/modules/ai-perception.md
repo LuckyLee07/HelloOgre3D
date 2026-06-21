@@ -28,13 +28,13 @@
 - 批量感知调度（每帧全量，scheduler 可降频）；spatial grid 范围查询带过滤与统计。
 - VisionSensor 已支持 `scanIntervalMs` 门控（ai_perf pressure 故意设 1 压测）。
 - AIController 会从 blackboard 读取 `perception.maxSpatialResults`，并透传到 spatial query；`ai_perception_pressure` / `ai_perf_*` 默认限制为 16 个近邻候选，用于避免 500/1000 agent pressure 下继续把所有过滤后候选交给每个 agent 二次筛选。
-- `PerceptionResultCache`（4a 落地）：感知结果单一事实来源；`AIController::HasEnemy` 已改读它（4b，等价），`CanShootEnemy` 成功路径会同步 cache 但保留短距离/无寻路重查语义。
+- `PerceptionResultCache`（4a 落地）：感知结果单一事实来源；`AIController::HasEnemy` 已改读它（4b，等价），`CanShootEnemy` 成功路径会同步 cache 但保留短距离/无寻路重查语义；`HELLO_AI_PERCEPTION_CACHE_ENABLE=0` / smoke `-DisablePerceptionCache` 可禁用 `HasEnemy` cache 读路径做 A/B。
 - Hearing/Danger 第一段：Lua sample 只发布枪声/危险源并负责 debug 绘制；`HearingDangerSense` 负责 interval + agentsPerTick 预算扫描、cooldown、`chapter8.sensoryIntent` / `sense.heard*` / `sense.danger*` 写回，并把危险响应写为 `RetreatPoint` typed team fact；`RuntimeProfileCounters` 已提供 `HearingDangerSense*` 专用图表。
 
 ## 5. 约束与红线
 
 - 空间查询线性扫描只是下沉到 `ObjectManagerAgentSpatialQuery` 一层；maxResults 现在会保留近邻候选，但仍不是完整 AOI / visibility set 淘汰。
-- `PerceptionResultCache` 须在 `TickPerception` 内填充（driver 之前），勿被 Lua 旁路重扫。
+- `PerceptionResultCache` 须在 `TickPerception` 内填充（driver 之前），勿被 Lua 旁路重扫；需要回测时只通过 `HELLO_AI_PERCEPTION_CACHE_ENABLE=0` 切到直接 vision query 路径。
 - MemoryStore 必须保持 `kMemorySnapshot*` key 兼容（BT/Lua 在读）。
 - Hearing/Danger C++ sense 已从 `AgentPerceptionSystem` 拆出为独立 `HearingDangerSense`；后续新增非视觉输入时继续按 sense 类隔离，不回填到 system facade。
 

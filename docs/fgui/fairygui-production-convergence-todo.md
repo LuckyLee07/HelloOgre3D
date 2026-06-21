@@ -56,7 +56,7 @@
 - [x] 新 UI 默认走 Ctrl/View/Model/AutoGen；静态检查禁止 `bin/res/scripts/ui` 直接依赖 `FairyGuiNativeApi`、`NativeApi`、`FairyGuiRuntime`、`GameManager`。
 - [x] 静态检查禁止业务 views 直接散点调用 `FairyGuiManager:CreateObject` / `LoadPackage`。
 - [x] DebugPanel 输出 native backend、open UI、binding、package、render、resource、event、service、IME、stencil 的生产诊断摘要。
-- [x] FGUI DebugPanel 与 AI DebugPanel 共用 profiler/debug panel 风格，已提供 `BuildAiDebugPanelLines` / `ShowAiDebugPanel`。
+- [x] FGUI DebugPanel 与 AI DebugPanel 共用 profiler/debug panel 风格，已提供 `BuildAiDebugPanelLines` / `ShowAiDebugPanel`；AI 面板支持 `focusAgentId` 与 `filterText` 参数化筛选。
 
 ### P1：生产体验补齐
 

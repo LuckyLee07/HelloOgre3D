@@ -40,4 +40,4 @@ AI 子系统三大基础：Blackboard（黑板）、AIScheduler（tick 调度预
 
 ## 8. 已知 gap / 相关文档
 
-- 待：G6 黑板类型扩展；G7 已有条件缓存/脏 key 与 BT frame budget 第一切片，后续补更通用的节点缓存和 distance LOD。`docs/design/behavior-tree-gap-analysis.md`、`docs/planning/ai-technical-iteration-plan.md`。
+- 待：G6 黑板类型扩展；G7 已有条件缓存/脏 key、BT frame budget 与 distance LOD 第一切片，后续补更通用的节点缓存和实例池。`docs/design/behavior-tree-gap-analysis.md`、`docs/planning/ai-technical-iteration-plan.md`。

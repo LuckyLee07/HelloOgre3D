@@ -21,13 +21,13 @@
 
 ## 4. 公开能力要点
 
-- danger/team/objective 三层主线已落地；`TacticalQueryService` 已支持 layer 级 interval / dirty-only rebuild policy 与 tactical query candidate limit；`InfluenceMapSystem` 已支持 cell/region dirty bounds 第一切片；support/cover/crowd schema 第一切片已接入 query 评分，`team` rebuild 会派生 `support`、软 `cover` 和 `crowd` 层；`TacticalDebugDrawService` 已支持 per-layer debug config 第一切片；debug summary 输出 `policies/dirtyLayers/skippedBuilds/intervalSkips/dirtySkips/candidateLimit/capped/dirtyRegions/dirtyCells/spreadRegionCells/spreadLimited/schema/supportCells/coverCells/crowdCells` 和 `[TacticalDebugDraw] configs/order/projectToNav`。
+- danger/team/objective 三层主线已落地；`TacticalQueryService` 已支持 layer 级 interval / dirty-only rebuild policy 与 tactical query candidate limit；`InfluenceMapSystem` 已支持 cell/region dirty bounds 第一切片；support/cover/crowd schema 第一切片已接入 query 评分，`team` rebuild 会派生 `support`、软 `cover` 和 `crowd` 层；`TacticalDebugDrawService` 已支持 per-layer debug config（yOffset/threshold/maxCells/neutral/project/nav/order）并由 `configureTacticalInfluenceLayerDebug(...)` 显式配置；debug summary 输出 `policies/dirtyLayers/skippedBuilds/intervalSkips/dirtySkips/candidateLimit/capped/dirtyRegions/dirtyCells/spreadRegionCells/spreadLimited/schema/supportCells/coverCells/crowdCells` 和 `[TacticalDebugDraw] configs/order/projectToNav`。
 - 影响图绘制 2D 拍平贴地（每列取最低 used cell）。
 
 ## 5. 约束与红线
 
 - **TacticalQueryService 已是查询/层事实来源**，`configureTacticalInfluenceFromNavMesh` 的三角提取与 `BuildFromNavMesh` 编排已下沉到 service；`TacticalDebugDrawService` 已承接 `rebuildTacticalInfluenceLayerDebugVisual` 的 Ogre 绘制生命周期；Lua 主入口是 `SandboxTactics` / `TacticalService`，不再通过 ObjectManager tactical 旧 facade。
-- 已有 layer 级 interval / dirty-only 更新策略、cell/region dirty bounds 第一切片、support/cover/crowd schema 第一切片、per-layer debug config 第一切片和 query candidate 上限；仍缺更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型和更完整的 layer debug 配置面；Lua 绑定签名中 `projectToNav/maxProjectionDistance/navMeshName` 仍是兼容保留的死参数。
+- 已有 layer 级 interval / dirty-only 更新策略、cell/region dirty bounds 第一切片、support/cover/crowd schema 第一切片、per-layer debug config 显式 API 和 query candidate 上限；仍缺更细粒度增量 rebuild、真实 cover 来源和更细 crowd 模型。
 - tolua 绑定**手术式**改、勿全量重生成（Sandbox18 教训）。
 - 影响图 3D 来自 navmesh，受 [[ai-navigation]] 固定 2001×2001 影响。
 
@@ -42,5 +42,5 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 待：更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型、更完整的 layer debug 配置面。
+- 待：更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型。
 - `docs/planning/ai-technical-iteration-plan.md` §6、`docs/design/chapter9-parity-architecture-notes.md`、`docs/design/architecture-improvement-plan.md` C3。

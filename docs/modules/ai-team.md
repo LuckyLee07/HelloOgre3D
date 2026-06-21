@@ -14,15 +14,16 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `TeamBlackboardService.{h,cpp}` | 服务 | EnemySighting fact + typed team fact（factType/teamId/source/target/pos/confidence/priority/ttl）；`RememberEnemySighting`/`RememberFact`/`GetBestEnemyFact`/`GetBestFact`/`SyncFromAgents`；TTL 自动清理；Lua 全局 `SandboxTeam` 直接访问 |
-| `bin/res/scripts/ai/team/TeamBlackboard.lua` | Lua facade | 只走 `SandboxTeam`；`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已同步为 C++ typed facts；Lua 侧仅保留 support/focus/retreat 的 typed 兼容缓存，不再保存任意 key/value |
+| `TeamBlackboardService.{h,cpp}` | 服务 | EnemySighting fact + typed team fact（factType/teamId/source/target/pos/confidence/priority/ttl/key）；`RememberEnemySighting`/`RememberFact`/`GetBestEnemyFact`/`GetBestFact`/`SyncFromAgents`；typed fact 字段级 getter；TTL 自动清理；Lua 全局 `SandboxTeam` 直接访问 |
+| `bin/res/scripts/ai/team/TeamBlackboard.lua` | Lua facade | 只走 `SandboxTeam`；`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已同步为 C++ typed facts；`GetBestCppFact(...)` 可直接读取 C++ 最佳 typed fact；Lua 侧仅保留 support/focus/retreat 的 typed 兼容缓存，不再保存任意 key/value |
 
 ## 4. 公开能力要点
 
 - 第一版 `EnemySighted`：记录/查询团队最佳敌情、写回 agent blackboard、stats（factCount/reportCount/expired）。
-- 二期 typed fact：`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已通过 `rememberTeamFact(...)` 进入 C++ service，stats 输出 `enemyFacts/typedFacts/typedReports`，`writeBestTeamFactToBlackboard(...)` 可把指定 factType 写回 agent blackboard。
+- 二期 typed fact：`SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot` 已通过 `rememberTeamFact(...)` 进入 C++ service，stats 输出 `enemyFacts/typedFacts/typedReports`，`writeBestTeamFactToBlackboard(...)` 可把指定 factType 写回 agent blackboard，`GetBestCppFact(...)` 可从 Lua 直接读取最佳 typed fact 的 source/target/position/key/confidence/report/priority/time/age。
 - `FocusTarget` 已从可见敌人和 formation focus 写入，并由 TeamBlackboard / InfluenceMap / Formation sample 写回 blackboard；`RetreatPoint` 已由 `AgentPerceptionSystem` Hearing/Danger C++ sense 写入并写回 blackboard。
 - `TeamBlackboardService` 已导出为 Lua 全局 `SandboxTeam`；Lua `TeamBlackboard.lua` 只使用它，避免团队 AI 主路径继续挂在 `ObjectManager` facade 上。
+- `TeamBlackboard:Reset()` 会同时清 Lua typed legacy cache 与 C++ service；`TeamBlackboardLifecycleSelfTest` 在 smoke 下验证 reset 前可读 C++ typed fact，reset 后 C++ / Lua 都清空。
 - 优先级 = f(confidence, reportCount, ageMs)。
 
 ## 5. 约束与红线
@@ -34,14 +35,14 @@
 
 ## 6. 数据流 / 与其他模块关系
 
-`AIController.TickPerception → PerceptionResultCache → (Sync)TeamBlackboardService.RememberEnemySighting`；`BT/Lua → TeamBlackboard.lua → SandboxTeam → GetBestEnemyFact/writeBestTeamEnemyFactToBlackboard/writeBestTeamFactToBlackboard`；`AgentPerceptionSystem Hearing/Danger → TeamBlackboardService.RememberFact(RetreatPoint)`；支援、队形、焦点目标、危险撤退类事件同步为 typed fact。关联 [[ai-controller]] [[ai-perception]] [[ai-scripts]]。
+`AIController.TickPerception → PerceptionResultCache → (Sync)TeamBlackboardService.RememberEnemySighting`；`BT/Lua → TeamBlackboard.lua → SandboxTeam → GetBestEnemyFact/writeBestTeamEnemyFactToBlackboard/writeBestTeamFactToBlackboard/GetBestCppFact`；`AgentPerceptionSystem Hearing/Danger → TeamBlackboardService.RememberFact(RetreatPoint)`；支援、队形、焦点目标、危险撤退类事件同步为 typed fact。关联 [[ai-controller]] [[ai-perception]] [[ai-scripts]]。
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox12`（一人发现敌人队友响应，`TeamBlackboardSmoke` 覆盖 cppFacts/cppReports/cppTypedFacts/cppTypedReports/cppFocusApplies）；`Sandbox14` Hearing/Danger smoke 覆盖 C++ sense 的 `RetreatPoint` 写回；`Sandbox15` Formation smoke 覆盖 `FormationSlot` typed facts 与 formation `FocusTarget` 写回。
+- 回归 sample：`Sandbox12`（一人发现敌人队友响应，`TeamBlackboardLifecycleSelfTest` 覆盖 reset 生命周期，`TeamBlackboardSmoke` 覆盖 cppFacts/cppReports/cppTypedFacts/cppTypedReports/cppFocusApplies/cppGetter）；`Sandbox14` Hearing/Danger smoke 覆盖 C++ sense 的 `RetreatPoint` 写回；`Sandbox15` Formation smoke 覆盖 `FormationSlot` typed facts 与 formation `FocusTarget` 写回。
 - gate：`run_chapter9_parity_gate.ps1`。
 
 ## 8. 已知 gap / 相关文档
 
-- 待：更多团队 fact 查询接口可继续从 Lua 兼容缓存迁到 C++ getter；更多非视觉输入见 [[ai-perception]]。
+- 待：更多按 key / 按角色的团队 fact 专用查询接口可继续从 Lua 兼容缓存迁到 C++ getter；更多非视觉输入见 [[ai-perception]]。
 - `docs/planning/ai-technical-iteration-plan.md` §5、`docs/design/chapter9-parity-architecture-notes.md` §4。

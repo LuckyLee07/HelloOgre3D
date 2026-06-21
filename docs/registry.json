@@ -16,7 +16,7 @@
       "name": "AI 感知系统（视觉/空间索引/记忆/结果缓存）",
       "doc_path": "docs/modules/ai-perception.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/perception"],
-      "constraints_summary": "批量感知：AgentPerceptionSystem 每帧驱动 TickPerception，并已导出为 Lua 全局 SandboxPerception；AgentSpatialIndexSystem uniform grid 查询（含 team/alive/maxResults 过滤），maxResults 保留近邻候选并可由 blackboard perception.maxSpatialResults 控制，pressure preset 默认 16；PerceptionResultCache 为感知结果显式快照，HasEnemy 已读 cache，CanShootEnemy 成功路径会同步 cache 但保留短距离/无寻路重查语义；MemoryStore 保持 kMemorySnapshot* blackboard key 兼容；HearingDangerSense 已承接事件队列、预算扫描、cooldown、blackboard 写回和 RetreatPoint typed fact，并接入 RuntimeProfileCounters 专用图表；仍待更多非视觉 sense、Release/scheduler 调参与完整 AOI 淘汰",
+      "constraints_summary": "批量感知：AgentPerceptionSystem 每帧驱动 TickPerception，并已导出为 Lua 全局 SandboxPerception；AgentSpatialIndexSystem uniform grid 查询（含 team/alive/maxResults 过滤），maxResults 保留近邻候选并可由 blackboard perception.maxSpatialResults 控制，pressure preset 默认 16；PerceptionResultCache 为感知结果显式快照，HasEnemy 已读 cache，CanShootEnemy 成功路径会同步 cache 但保留短距离/无寻路重查语义，HELLO_AI_PERCEPTION_CACHE_ENABLE=0 / smoke -DisablePerceptionCache 可禁用 HasEnemy cache 读路径做 A/B；MemoryStore 保持 kMemorySnapshot* blackboard key 兼容；HearingDangerSense 已承接事件队列、预算扫描、cooldown、blackboard 写回和 RetreatPoint typed fact，并接入 RuntimeProfileCounters 专用图表；仍待更多非视觉 sense、scheduler 调参与完整 AOI 淘汰",
       "tags": ["ai", "perception", "vision", "memory", "spatial", "感知", "记忆", "视野"],
       "verify": { "sample": ["Sandbox10", "Sandbox16"], "gate": ["ai_perf", "parity_gate"] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/perf/ai-perception-baseline-20260602.md", "docs/perf/ai-perf-release-baseline-20260612.md", "docs/design/architecture-improvement-plan.md"]
@@ -25,7 +25,7 @@
       "name": "AI 战术层（影响图 / 战术查询）",
       "doc_path": "docs/modules/ai-tactics.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/tactics"],
-      "constraints_summary": "InfluenceMapSystem 支持 2D flat 与 navmesh 体素化 3D，source 写入记录 cell/region dirty bounds，SpreadLayer 按 dirty bounds 外扩 passCount 限域扫描，debug summary 输出 dirtyRegions/dirtyCells/spreadRegionCells/spreadLimited；CollectDebugCells 2D 拍平到 m_minY；TacticalQueryService 已含 query API(FindBestSupport/LowThreat/Score)，并包住 influence config/layer/source/sample/score/stats 与 navmesh 建图编排；已支持 layer 级 interval / dirty-only update policy 并在 debug summary 输出 policies/dirtyLayers/skippedBuilds/intervalSkips/dirtySkips；support/cover/crowd schema 第一切片已接入，team rebuild 派生 support、软 cover 和 crowd 层，queryType 评分消费 danger/team/objective/support/cover/crowd 六层，summary 输出 schema/supportCells/coverCells/crowdCells；TacticalDebugDrawService 已承接 DebugDrawer 临时绘制与 Ogre ManualObject 持久 debug visual 生命周期，并记录 per-layer yOffset/threshold/maxCells/drawNeutral/projectToNav/navMeshName/drawOrder config，summary 输出 TacticalDebugDraw configs/order/projectToNav；tactical query candidate limit 已接入 SandboxTactics，chapter9_tactics_cpp_pressure smoke 检查 candidateLimit/capped/dirty region/schema/debug config；TacticalService 已导出 Lua 全局 SandboxTactics，ObjectManager tactical 旧 Lua facade 已删除；仍缺更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型和更完整 layer debug 配置面；tolua 绑定手术式改勿全量重生成",
+      "constraints_summary": "InfluenceMapSystem 支持 2D flat 与 navmesh 体素化 3D，source 写入记录 cell/region dirty bounds，SpreadLayer 按 dirty bounds 外扩 passCount 限域扫描，debug summary 输出 dirtyRegions/dirtyCells/spreadRegionCells/spreadLimited；CollectDebugCells 2D 拍平到 m_minY；TacticalQueryService 已含 query API(FindBestSupport/LowThreat/Score)，并包住 influence config/layer/source/sample/score/stats 与 navmesh 建图编排；已支持 layer 级 interval / dirty-only update policy 并在 debug summary 输出 policies/dirtyLayers/skippedBuilds/intervalSkips/dirtySkips；support/cover/crowd schema 第一切片已接入，team rebuild 派生 support、软 cover 和 crowd 层，queryType 评分消费 danger/team/objective/support/cover/crowd 六层，summary 输出 schema/supportCells/coverCells/crowdCells；TacticalDebugDrawService 已承接 DebugDrawer 临时绘制与 Ogre ManualObject 持久 debug visual 生命周期，并通过 configureTacticalInfluenceLayerDebug 显式配置/记录 per-layer yOffset/threshold/maxCells/drawNeutral/projectToNav/navMeshName/drawOrder config，summary 输出 TacticalDebugDraw configs/order/projectToNav；tactical query candidate limit 已接入 SandboxTactics，chapter9_tactics_cpp_pressure smoke 检查 candidateLimit/capped/dirty region/schema/debug config；TacticalService 已导出 Lua 全局 SandboxTactics，ObjectManager tactical 旧 Lua facade 已删除；仍缺更细粒度增量 rebuild、真实 cover 来源和更细 crowd 模型；tolua 绑定手术式改勿全量重生成",
       "tags": ["ai", "tactics", "influence-map", "战术", "影响图", "chapter9"],
       "verify": { "sample": ["Sandbox13", "Sandbox17", "Sandbox18"], "gate": ["parity_gate", "visual_capture"] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/design/chapter9-parity-architecture-notes.md", "docs/design/architecture-improvement-plan.md"]
@@ -34,7 +34,7 @@
       "name": "AI 团队黑板服务",
       "doc_path": "docs/modules/ai-team.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/team"],
-      "constraints_summary": "TeamBlackboardService 已支持 EnemySighted fact（TTL/priority/confidence）和 typed team fact（factType/team/source/target/pos/confidence/priority/ttl/key），已 tolua 导出为 Lua 全局 SandboxTeam；Lua TeamBlackboard.lua 只走 SandboxTeam，不再兜底 ObjectManager，并已把 SupportRequested/SupportResponded/FocusTarget/RetreatPoint/FormationSlot 同步为 C++ typed facts；Lua 任意 key/value 泛型桶已收口为 support/focus/retreat typed legacy cache；TeamBlackboard/InfluenceMap/Formation smoke 检查 FocusTarget 写回，HearingDanger smoke 检查 C++ perception sense 的 RetreatPoint 写回；position 真源优先来自感知/agent/sample 已知点，不信任无来源坐标",
+      "constraints_summary": "TeamBlackboardService 已支持 EnemySighted fact（TTL/priority/confidence）和 typed team fact（factType/team/source/target/pos/confidence/priority/ttl/key），已 tolua 导出为 Lua 全局 SandboxTeam；Lua TeamBlackboard.lua 只走 SandboxTeam，不再兜底 ObjectManager，并已把 SupportRequested/SupportResponded/FocusTarget/RetreatPoint/FormationSlot 同步为 C++ typed facts；Lua 任意 key/value 泛型桶已收口为 support/focus/retreat typed legacy cache；C++ 最佳 typed fact 字段级 getter 已导出，Lua GetBestCppFact 可直接读取 source/target/position/key/confidence/report/priority/time/age；TeamBlackboard smoke 检查 reset 生命周期、FocusTarget 写回和 cppGetter，InfluenceMap/Formation smoke 检查 FocusTarget 写回，HearingDanger smoke 检查 C++ perception sense 的 RetreatPoint 写回；position 真源优先来自感知/agent/sample 已知点，不信任无来源坐标",
       "tags": ["ai", "team", "blackboard", "团队", "通信", "fact"],
       "verify": { "sample": ["Sandbox12", "Sandbox14", "Sandbox15"], "gate": ["parity_gate"] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/design/chapter9-parity-architecture-notes.md"]
@@ -52,9 +52,9 @@
       "name": "行为树执行引擎（BehaviorTree）",
       "doc_path": "docs/modules/ai-behavior.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/behavior"],
-      "constraints_summary": "节点：Sequence/Selector/Parallel/RandomSelector/Inverter/ForceSuccess/ForceFailure/Wait/LuaAction/Condition；G1 reevaluation 与 G4 Parallel/Random 已完成；BehaviorTreeDriver 持节点所有权、工厂创建（tolua 不暴露构造器）；trace sampling、runtime tick interval/stagger LOD、frame budget 与 LuaCondition result cache 已接 RuntimeDiag，condition cache 通过 Blackboard global/key revision 和 cacheKeys 失效，SoldierBT 只给纯 blackboard 条件启用；仍缺 instance pool、distance LOD 和更通用 node cache；开放 G2 事件节点/G3 GetValue/G5 子树",
+      "constraints_summary": "节点：Sequence/Selector/Parallel/RandomSelector/Inverter/ForceSuccess/ForceFailure/Wait/LuaAction/Condition；G1 reevaluation 与 G4 Parallel/Random 已完成；BehaviorTreeDriver 持节点所有权、工厂创建（tolua 不暴露构造器），并有 driver-local rebuild storage pool 复用可 reset 的 C++ structural 节点/BehaviorTree 容器（LuaAction/LuaCondition 因 env/ref 生命周期延迟释放并按 build 重建）；BehaviorTreeLoader 支持 subtrees/Subtree 配置复用和 BuildFromModule/ReloadModule 显式模块热重载，SoldierBT combat branch 已抽成 subtree；trace sampling、runtime tick interval/stagger LOD、基于 perception/sense/knowledge/memory/move target 距离的 distance LOD、frame budget、LuaCondition result cache、rebuild reuse stats 与 hot reload stats 已接 RuntimeDiag/smoke，condition cache 通过 Blackboard global/key revision 和 cacheKeys 失效，SoldierBT 只给纯 blackboard 条件启用；仍缺文件 watcher / live edit 状态迁移与跨 agent/template 级 node cache；开放 G2 事件节点/G3 GetValue",
       "tags": ["ai", "behavior-tree", "bt", "行为树", "决策"],
-      "verify": { "sample": ["Sandbox8"], "gate": [] },
+      "verify": { "sample": ["Sandbox8"], "gate": ["bt_runtime_lod", "bt_runtime_budget", "bt_runtime_rebuild", "bt_hot_reload"] },
       "related_docs": ["docs/design/behavior-tree-gap-analysis.md", "docs/planning/ai-technical-iteration-plan.md"]
     },
     "ai-decision": {
@@ -79,7 +79,7 @@
       "name": "AI 公共基础（Blackboard / AIScheduler / AICommand / 驱动接口）",
       "doc_path": "docs/modules/ai-common.md",
       "source_paths": ["src/HelloOgre3D/sandbox/ai/common"],
-      "constraints_summary": "Blackboard 7 类标量+4 类数组、entry 带 confidence/ttl/source/decay，维护 global/key revision（忽略 __bt.* 诊断 key）供 BT 条件缓存失效；AIScheduler interval/bucket/budget 错峰，已 tolua 导出为 Lua 全局 SandboxAIScheduler，ConfigManager 与 RuntimeDiag 走新入口且不再兜底 ObjectManager；AIUpdateSystem 承接 scheduler begin/tick、spatial rebuild、批量 perception、TeamBlackboard sync 与 AI perf stats 写回；AICommand 11 类指令工厂；IDecisionDriver 统一 BT/DT/FSM；缺 Object/Timer 类型(G6)，G7 条件缓存/脏 key 第一切片已落地",
+      "constraints_summary": "Blackboard 7 类标量+4 类数组、entry 带 confidence/ttl/source/decay，维护 global/key revision（忽略 __bt.* 诊断 key）供 BT 条件缓存失效；AIScheduler interval/bucket/budget 错峰，已 tolua 导出为 Lua 全局 SandboxAIScheduler，ConfigManager 与 RuntimeDiag 走新入口且不再兜底 ObjectManager；AIUpdateSystem 承接 scheduler begin/tick、spatial rebuild、批量 perception、TeamBlackboard sync 与 AI perf stats 写回；AICommand 11 类指令工厂；IDecisionDriver 统一 BT/DT/FSM；缺 Object/Timer 类型(G6)，G7 条件缓存/脏 key、BT frame budget 与 distance LOD 第一切片已落地",
       "tags": ["ai", "blackboard", "scheduler", "common", "黑板", "调度"],
       "verify": { "sample": ["Sandbox9", "Sandbox16"], "gate": ["ai_perf"] },
       "related_docs": ["docs/design/behavior-tree-gap-analysis.md", "docs/planning/ai-technical-iteration-plan.md"]
@@ -88,7 +88,7 @@
       "name": "AIController 组件（AI 控制面板）",
       "doc_path": "docs/modules/ai-controller.md",
       "source_paths": ["src/HelloOgre3D/sandbox/components/ai"],
-      "constraints_summary": "聚合 Blackboard+driver+VisionSensor+MemoryStore+PerceptionResultCache；SetDriverByType 仅做字符串归一化，driver 创建走 factory/registry 且 DT/BT owner 只需 AgentObject+Blackboard；Lua owner 入口为 GetAgentOwner，GetOwner 仅作 C++ 兼容桥；HasEnemy 已改读缓存(4b)，CanShootEnemy 仍重查+publish EnemySighted 但成功路径同步缓存；TickPerception 在 driver 前填缓存",
+      "constraints_summary": "聚合 Blackboard+driver+VisionSensor+MemoryStore+PerceptionResultCache；SetDriverByType 仅做字符串归一化，driver 创建走 factory/registry 且 DT/BT owner 只需 AgentObject+Blackboard；Lua owner 入口为 GetAgentOwner，GetOwner 仅作 C++ 兼容桥；HasEnemy 已改读缓存(4b)，HELLO_AI_PERCEPTION_CACHE_ENABLE=0 可禁用 cache 读路径做 A/B，CanShootEnemy 仍重查+publish EnemySighted 但成功路径同步缓存；TickPerception 在 driver 前填缓存",
       "tags": ["ai", "controller", "aicontroller", "driver", "感知驱动"],
       "verify": { "sample": ["Sandbox6", "Sandbox7", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/design/architecture-improvement-plan.md"]
@@ -160,7 +160,7 @@
       "name": "Lua 绑定（tolua++ / 手工钩子 / 插件管理）",
       "doc_path": "docs/modules/scripting-tolua.md",
       "source_paths": ["src/HelloOgre3D/sandbox/scripting"],
-      "constraints_summary": "SandboxToLua.cpp 是 tolua++ 生成物；ObjectFactory 已导出为 ObjectFactory usertype，并由 GameManager 注册 Lua 全局 SandboxObjects；SoldierObject getWeapon/AI/maxHealth/ammo/敌人查询/移动目标/射击/Enter*Anim 与 AgentObject:getBody/GetAnimation/GetObjectASM 纯组件转发已撤出 Lua 导出，Soldier 这批 C++ 兼容转发实现也已删除，AIController/DT/BT driver/action Lua owner 改为 GetAgentOwner，DT/BT Lua action 回调签名已统一为 u[AgentObject]，脚本走 typed component getter/AgentComponentAccess；BehaviorTreeDriver 已导出 trace sample 与 runtime tick interval/stagger LOD 配置，Blackboard revision 与 LuaCondition result cache API 已导出给 BehaviorTreeLoader；AgentPerceptionSystem 已导出为 SandboxPerception，提供 Hearing/Danger 配置、事件发布和统计 getter；TeamBlackboardService 已导出 typed fact 写入/查询计数/写回 blackboard API，Lua 已通过该 API 同步 SupportRequested/SupportResponded/FocusTarget/RetreatPoint/FormationSlot；TacticalService 已导出 configureTacticalInfluenceLayerUpdate/markTacticalInfluenceLayerDirty 供 Sandbox18 配置 tactics layer policy，setTacticalInfluenceLayerDebugOrder 供 Sandbox18 记录 per-layer debug order；改导出 API 优先手术式改 .cpp 绑定函数+头文件，禁 tolua.bat 全量重生成（曾致 Sandbox18 崩溃）；ManualToLua.cpp 是手工钩子(setPluginEnv/SetEvaluator/SetCondition 捕获 Lua function ref)；LuaPluginMgr 管对象级隔离 env；改绑定必须跑用到它的 sample(影响图改动跑 Sandbox17+18，DT/BT 回调跑 Sandbox7/8，SandboxPerception 跑 hearing_danger)",
+      "constraints_summary": "SandboxToLua.cpp 是 tolua++ 生成物；ObjectFactory 已导出为 ObjectFactory usertype，并由 GameManager 注册 Lua 全局 SandboxObjects；SoldierObject getWeapon/AI/maxHealth/ammo/敌人查询/移动目标/射击/Enter*Anim 与 AgentObject:getBody/GetAnimation/GetObjectASM 纯组件转发已撤出 Lua 导出，Soldier 这批 C++ 兼容转发实现也已删除，AIController/DT/BT driver/action Lua owner 改为 GetAgentOwner，DT/BT Lua action 回调签名已统一为 u[AgentObject]，脚本走 typed component getter/AgentComponentAccess；BehaviorTreeDriver 已导出 trace sample、runtime tick interval/stagger LOD 与 distance LOD 配置，Blackboard revision 与 LuaCondition result cache API 已导出给 BehaviorTreeLoader；AgentPerceptionSystem 已导出为 SandboxPerception，提供 Hearing/Danger 配置、事件发布和统计 getter；TeamBlackboardService 已导出 typed fact 写入/查询计数/写回 blackboard API 以及 hasBestTeamFact/getBestTeamFact* 字段级 getter，Lua 已通过该 API 同步 SupportRequested/SupportResponded/FocusTarget/RetreatPoint/FormationSlot 并可用 GetBestCppFact 直接读取最佳 typed fact；TacticalService 已导出 configureTacticalInfluenceLayerUpdate/markTacticalInfluenceLayerDirty 供 Sandbox18 配置 tactics layer policy，configureTacticalInfluenceLayerDebug/setTacticalInfluenceLayerDebugOrder 供 Sandbox18 记录 per-layer debug config/order；改导出 API 优先手术式改 .cpp 绑定函数+头文件，禁 tolua.bat 全量重生成（曾致 Sandbox18 崩溃）；ManualToLua.cpp 是手工钩子(setPluginEnv/SetEvaluator/SetCondition 捕获 Lua function ref)；LuaPluginMgr 管对象级隔离 env；改绑定必须跑用到它的 sample(影响图改动跑 Sandbox17+18，DT/BT 回调跑 Sandbox7/8，SandboxPerception 跑 hearing_danger，SandboxTeam typed getter 跑 team_blackboard)",
       "tags": ["scripting", "lua", "tolua", "binding", "绑定", "脚本"],
       "verify": { "sample": ["Sandbox7", "Sandbox8", "Sandbox17", "Sandbox18"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md", "AGENTS.md"]
@@ -169,7 +169,7 @@
       "name": "运行时切面（性能计数/诊断/相机/FairyGUI 系统）",
       "doc_path": "docs/modules/runtime.md",
       "source_paths": ["src/HelloOgre3D/runtime"],
-      "constraints_summary": "RuntimeProfileCounters 上报 AI/UI/帧时序(Tracy 关闭时是 no-op)，含 AgentPerception/HearingDangerSense/TeamBlackboard/AIScheduler/FGUI service 图表；OgreCameraController FREELOOK/ORBIT；FairyGuiSystem(cocoslite 内嵌) 核心，lua_bridge 手工 glue 非 tolua；引擎/中间件适配收口在 runtime；判断 AI 成本看 updateCall/perceptionSystem 非 cpuFrame(VM 渲染主导)",
+      "constraints_summary": "RuntimeProfileCounters 上报 AI/UI/帧时序(Tracy 关闭时是 no-op)，含 AgentPerception/HearingDangerSense/TeamBlackboard/AIScheduler/Lua callback/FGUI service 图表；OgreCameraController FREELOOK/ORBIT；FairyGuiSystem(cocoslite 内嵌) 核心，lua_bridge 手工 glue 非 tolua；FGUI AiDebugPanel 可读取统一 [AIRuntimeDiag] 并按 focusAgentId/filterText 参数化筛选；引擎/中间件适配收口在 runtime；判断 AI 成本看 updateCall/perceptionSystem 非 cpuFrame(VM 渲染主导)",
       "tags": ["runtime", "profiling", "fairygui", "camera", "diagnostics", "运行时", "性能"],
       "verify": { "sample": ["Sandbox16"], "gate": ["fgui_gate", "ai_perf"] },
       "related_docs": ["docs/planning/long-term-iteration-plan.md", "docs/perf/ai-perf-release-baseline-20260612.md"]
@@ -187,9 +187,9 @@
       "name": "AI 脚本库（DT/BT/FSM action+condition、知识源、Lua 影响图、agent 脚本）",
       "doc_path": "docs/modules/ai-scripts.md",
       "source_paths": ["bin/res/scripts/ai", "bin/res/scripts/agent"],
-      "constraints_summary": "Lua 侧 AI 行为库：decision/actions、behavior、knowledge、tactics/InfluenceMap.lua、team/TeamBlackboard.lua、agent/*Agent.lua；Lua 仍干重活(InfluenceMap 逐格扩散、Chapter7Knowledge getAllAgents 遍历)待下沉 C++；ActionIntent 已加 trace；DT(Sandbox7) 与 BT(Sandbox8) 行为应等价；Lua callback 生命周期在 reload/destroy 须清理",
+      "constraints_summary": "Lua 侧 AI 行为库：decision/actions、behavior、knowledge、events/AIEvents.lua、tactics/InfluenceMap.lua、team/TeamBlackboard.lua、agent/*Agent.lua；Lua 仍干重活(InfluenceMap 逐格扩散、Sandbox11 视线双重 for)待下沉 C++；Chapter7Knowledge 已改读 AIController perception/cache 结果，不再 getAllAgents 遍历；AIEvents 已规范 Chapter8/9 event table，接入 Sandbox11 comms、TeamBlackboard EnemySighted、Sandbox17/18 tactical publish，让 Chapter9 legacy message 队列存规范化 payload，且 Sandbox17 legacy callback bridge 带 sample/owner guard，chapter9_tactics_legacy_parity smoke 会验证 stale sample/owner callback 不发布事件；ActionIntent 已加 trace；DT(Sandbox7) 与 BT(Sandbox8) 行为应等价；Lua callback 生命周期在 reload/destroy 须清理",
       "tags": ["ai-scripts", "lua", "action", "behavior", "agent", "knowledge", "脚本"],
-      "verify": { "sample": ["Sandbox7", "Sandbox8", "Sandbox9", "Sandbox13"], "gate": ["parity_gate"] },
+      "verify": { "sample": ["Sandbox7", "Sandbox8", "Sandbox9", "Sandbox13", "Sandbox17"], "gate": ["parity_gate", "chapter9_tactics_legacy_parity"] },
       "related_docs": ["docs/planning/ai-technical-iteration-plan.md", "docs/design/chapter9-parity-architecture-notes.md"]
     },
     "fgui": {

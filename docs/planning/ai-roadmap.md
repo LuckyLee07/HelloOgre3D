@@ -97,9 +97,9 @@
 
 ### 完成标准
 
-- [ ] `AgentCommunications` 不再直接依赖临时 table 约定，核心字段有明确规范。
+- [~] `AgentCommunications` 不再直接依赖临时 table 约定，核心字段有明确规范；`AIEvents.lua` 已规范 Chapter8/9 event table，Sandbox11 comms、TeamBlackboard EnemySighted、Sandbox17/18 tactical publish 与 Chapter9 legacy message 队列均已接入规范化 payload，Sandbox17 legacy callback bridge 已有 sample/owner guard，且 `chapter9_tactics_legacy_parity` smoke 会验证 stale sample/owner 回调不会发布事件；剩余是通用生命周期审计。
 - [x] Local / Team / Global 三类事件的派发路径清晰。
-- [ ] agent 销毁、sample 重载、UI 关闭后不会留下悬空 callback。
+- [~] agent 销毁、sample 重载、UI 关闭后不会留下悬空 callback；当前已覆盖 Sandbox17 legacy bridge 的 sample/owner stale guard，通用 agent destroy / UI close callback 审计仍待后续。
 - [x] 事件派发耗时接入 Tracy 或至少有统计 dump。
 
 当前进展（2026-05-31）：
@@ -109,7 +109,7 @@
 - [x] Dispatcher 已返回订阅 token，`AgentObject` / `SoldierObject` 在销毁链路中显式解绑 Local event callback。
 - [x] `SandboxEventTypes` 已补 `EnemySighted` / `BulletShot` / `BulletImpact` / `SupportRequested` / `SupportResponded`，作为后续 AI 事件命名收口点。
 - [x] `SandboxEventDispatcherManager` 已支持 Local / Team / Global scope 路由、eventName query params 过滤、`QueueEmit` / `FlushQueuedEvents` 延迟派发，并可用 `HELLO_AI_EVENT_SELF_TEST=1` 跑通 scope selftest。
-- [ ] Spatial 过滤、Lua 侧事件 facade、`AgentCommunications` 临时 table 约定收口仍待后续处理。
+- [~] Lua 侧事件 facade 第一段已落地，Sandbox11 comms 与 TeamBlackboard EnemySighted 已改用规范化 payload，Chapter9 legacy message 队列已改存规范化 payload 并保留 raw event 兼容，Sandbox17 legacy callback bridge 已有 sample/owner guard 并由 legacy parity smoke 验证 stale callback 不发布事件；Spatial 过滤与通用 `AgentCommunications` 生命周期收口仍待后续处理。
 
 ## 6. P0：AI 更新调度与性能观测
 
@@ -189,10 +189,10 @@
 ### 完成标准
 
 - [x] 同队 agent 可以共享发现的敌人位置。
-- [x] 队伍可以通过 TeamBlackboard 共享 focus target；优先级、锁定时间和 commander 选择后置。
+- [x] 队伍可以通过 TeamBlackboard 共享 focus target；C++ typed fact getter 第一段已支持 Lua 直接读取最佳 focus target，优先级、锁定时间和 commander 选择后置。
 - [x] 至少一个 sample 展示“一个 agent 发现敌人后，队友改变行为”。
 - [x] 至少一个 sample 展示 formation slot、请求支援、等待队友和协作移动。
-- [ ] TeamBlackboard 生命周期跟随 Sandbox 或队伍，不依赖单个 agent。
+- [x] TeamBlackboard 生命周期跟随 Sandbox reset，不依赖单个 agent；`team_blackboard` smoke 覆盖 `TeamBlackboardLifecycleSelfTest`，确认 C++ service 与 Lua typed legacy cache 都会清空。
 
 ## 9. P1：InfluenceMap 多层升级
 
@@ -231,7 +231,8 @@
 
 ### 建议能力
 
-- 行为树 config 支持 subtree。
+- 行为树 config 支持 subtree（第一段已落地：`BehaviorTreeLoader` 的 `subtrees` / `Subtree` 引用节点）。
+- 行为树 config 支持显式模块热重载（第一段已落地：`BuildFromModule` / `ReloadModule` 重建树并替换 driver tree；文件 watcher 与运行中状态迁移待后续）。
 - 标准节点库：
   - Sequence / Selector / Parallel
   - Inverter / ForceSuccess / ForceFailure
@@ -243,10 +244,10 @@
 
 ### 完成标准
 
-- [ ] 修改 Lua BT config 后可运行时重载。
+- [~] 修改 Lua BT config 后可运行时显式重载；`BehaviorTreeLoader.ReloadModule(...)` 已可清理 module cache、重建整棵树并替换 driver tree，自动文件监听 / live edit 触发待后续。
 - [x] 配置错误能定位到具体节点和字段。
-- [ ] 至少一个 sample 使用 subtree 复用通用战斗子树。
-- [ ] 热重载不会泄漏旧节点、Lua callback 或 C++ 对象。
+- [x] 至少一个 sample 使用 subtree 复用通用战斗子树。
+- [~] 热重载不会泄漏旧节点、Lua callback 或 C++ 对象；当前依赖 driver-local rebuild storage pool 与 LuaAction/LuaCondition 延迟释放策略，并由 `bt_hot_reload` smoke 检查 `treeBuilds/storageResets`。
 
 ## 11. P2：技能 timeline 与触发器
 
@@ -378,12 +379,11 @@
 - [x] Formation / 协作 BT 最小 sample。
 - [x] InfluenceMap 多 layer 与 debug 显示。
 - [x] InfluenceMap 结果接入战术移动选择。
-- [ ] BehaviorTree config subtree。
-- [ ] BehaviorTree hot reload。
+- [x] BehaviorTree config subtree。
+- [~] BehaviorTree hot reload 第一段。
 - [ ] 技能 timeline 第一版。
 - [ ] TriggerVolume 第一版。
 - [ ] AI 决策日志导出。
 - [x] 固定随机种子 sample preset。
 - [x] 至少一个团队协作 sample。
 - [x] 至少一个影响力地图寻路 sample。
-

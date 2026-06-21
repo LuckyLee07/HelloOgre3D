@@ -28,8 +28,8 @@
 
 - 固化 `Sandbox16` 作为 AI pressure / `ai_perf_*` 性能入口。
 - 固化 `Sandbox17` / `Sandbox18` 作为 Chapter9 Lua 对照面和 C++ 生产化实现面对照。
-- 补 Release x64 的 `ai_perf_100 / 500 / 1000` 基线。
-- 扩展 `ai_perf` 对照维度：spatial on/off、scheduler on/off、perception cache on/off、Lua callback count。
+- Release x64 的 `ai_perf_100 / 500 / 1000` 基线已补，继续维护为性能回归默认基线。
+- 扩展 `ai_perf` 对照维度：spatial on/off 已有，perception cache on/off 已有 `-DisablePerceptionCache`，scheduler on/off 已有 `-AiScheduler` tick/skip smoke，Lua callback count 已由 FramePerf / smoke 固化，后续补必要 Tracy capture。
 - 将 parity trace 正式化：位置、速度、目标点、当前 action、动画状态、physics/render 差值、influence draw 高度和投影来源。
 - 固定 sample profile：随机 seed、spawn、movement、perception、tactics、debug draw、smoke 期望。
 
@@ -63,13 +63,13 @@
 4. `InfluenceMapSystem` 二期
    - layer interval / dirty-only 与 cell/region dirty bounds 第一切片已落地，后续补更细粒度增量 rebuild。
    - support / cover / crowd schema 第一切片已落地，后续补真实 cover 来源和更细 crowd 模型。
-   - layer debug draw、draw height、projection mode、draw order 的 per-layer config 第一切片已落地，后续补更完整配置面。
+   - layer debug draw、draw height、threshold、maxCells、neutral、projection mode、navMeshName、draw order 的 per-layer debug config 显式 API 已落地。
 
 5. BehaviorTree runtime 生产化
 	 - instance pool。
 	 - node result cache。
 	 - blackboard dirty key 与节点依赖表。
-	 - tick bucket / per-frame budget 第一版已落地；后续补 distance LOD。
+	 - tick bucket / distance LOD / per-frame budget 第一版已落地；后续补实例池和更通用 node cache。
 	 - trace sampling，关闭 trace 时没有明显额外开销。
 
 验收标准：
