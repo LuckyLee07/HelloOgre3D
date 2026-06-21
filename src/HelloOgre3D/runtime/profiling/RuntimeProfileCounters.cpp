@@ -27,6 +27,9 @@ namespace
 			, drawMs(0.0)
 			, aiTickCount(0)
 			, aiTickMaxMs(0.0)
+			, luaCallbackCount(0)
+			, luaCallbackTotalMs(0.0)
+			, luaCallbackMaxMs(0.0)
 		{
 		}
 
@@ -46,6 +49,9 @@ namespace
 		RuntimeAiTickTiming ai;
 		int aiTickCount;
 		double aiTickMaxMs;
+		int luaCallbackCount;
+		double luaCallbackTotalMs;
+		double luaCallbackMaxMs;
 	};
 
 	RuntimeStallFrameState s_stallFrameState;
@@ -112,6 +118,8 @@ namespace
 		H3D_PROFILE_PLOT("RuntimeObjectManagerMs", s_stallFrameState.game.objectManagerMs);
 		H3D_PROFILE_PLOT("RuntimeAgentPerceptionSystemMs", s_stallFrameState.object.perceptionSystemMs);
 		H3D_PROFILE_PLOT("RuntimeAiTickMs", s_stallFrameState.ai.totalMs);
+		H3D_PROFILE_PLOT("RuntimeLuaCallbackCount", static_cast<double>(s_stallFrameState.luaCallbackCount));
+		H3D_PROFILE_PLOT("RuntimeLuaCallbackMs", s_stallFrameState.luaCallbackTotalMs);
 		H3D_PROFILE_PLOT("RuntimeLuaTickMs", s_stallFrameState.game.luaTickMs);
 		H3D_PROFILE_PLOT("RuntimeSandboxLuaMs", s_stallFrameState.game.sandboxLuaMs);
 		H3D_PROFILE_PLOT("RuntimePhysicsMs", s_stallFrameState.game.physicsMs);
@@ -150,7 +158,10 @@ namespace
 		stream << "\n[FramePerf] game luaTick=" << s_stallFrameState.game.luaTickMs
 			<< " objects=" << s_stallFrameState.game.objectManagerMs
 			<< " physics=" << s_stallFrameState.game.physicsMs
-			<< " sandboxLua=" << s_stallFrameState.game.sandboxLuaMs;
+			<< " sandboxLua=" << s_stallFrameState.game.sandboxLuaMs
+			<< " luaCallbacks=" << s_stallFrameState.luaCallbackCount
+			<< " luaCallbackMs=" << s_stallFrameState.luaCallbackTotalMs
+			<< " luaCallbackMax=" << s_stallFrameState.luaCallbackMaxMs;
 
 		stream << "\n[FramePerf] objects count=" << s_stallFrameState.object.objectCount
 			<< " agents=" << s_stallFrameState.object.agentCount
@@ -496,6 +507,17 @@ void RuntimeStallProfiler::AddAiTickTiming(const RuntimeAiTickTiming& timing)
 	s_stallFrameState.ai.luaMs += std::max(0.0, timing.luaMs);
 	s_stallFrameState.ai.driverMs += std::max(0.0, timing.driverMs);
 	s_stallFrameState.aiTickMaxMs = std::max(s_stallFrameState.aiTickMaxMs, timing.totalMs);
+}
+
+void RuntimeStallProfiler::AddLuaCallbackTiming(double elapsedMs)
+{
+	if (!IsEnabled() || !s_stallFrameState.frameStarted)
+		return;
+
+	const double safeElapsedMs = std::max(0.0, elapsedMs);
+	++s_stallFrameState.luaCallbackCount;
+	s_stallFrameState.luaCallbackTotalMs += safeElapsedMs;
+	s_stallFrameState.luaCallbackMaxMs = std::max(s_stallFrameState.luaCallbackMaxMs, safeElapsedMs);
 }
 
 void RuntimeStallProfiler::FinishFrame(const RuntimeClientFrameTiming& timing)

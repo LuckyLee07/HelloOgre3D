@@ -200,7 +200,10 @@ void GameManager::Update(int deltaMilliseconds)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pScriptVM->callFunction("__tick__", "i", deltaMilliseconds);
 		if (perfEnabled)
+		{
 			perfTiming.luaTickMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			RuntimeStallProfiler::AddLuaCallbackTiming(perfTiming.luaTickMs);
+		}
 	}
 
 	m_SimulationTime += deltaMilliseconds;
@@ -230,7 +233,10 @@ void GameManager::Update(int deltaMilliseconds)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
 		m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
 		if (perfEnabled)
+		{
 			perfTiming.sandboxLuaMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+			RuntimeStallProfiler::AddLuaCallbackTiming(perfTiming.sandboxLuaMs);
+		}
 	}
 	if (perfEnabled)
 		RuntimeStallProfiler::SetGameUpdateTiming(perfTiming);

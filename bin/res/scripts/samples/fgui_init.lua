@@ -1071,16 +1071,20 @@ function FGUI_RunAiDebugPanelSelfTest()
 		autoRefresh = false,
 		lineCount = 10,
 		maxAgents = 8,
+		filterText = "AI agents",
 	})
 	local refreshOk = debugHandle ~= nil and FairyGuiManager:RefreshAiDebugPanel("__AiDebugPanelSelfTest") == true
-	local snapshot = FairyGuiManager:GetAiDebugSnapshot({ maxAgents = 8 })
-	local lines = FairyGuiManager:BuildAiDebugPanelLines({ lineCount = 10, maxAgents = 8 })
+	local snapshot = FairyGuiManager:GetAiDebugSnapshot({ maxAgents = 8, filterText = "AI agents" })
+	local lines = FairyGuiManager:BuildAiDebugPanelLines({ lineCount = 10, maxAgents = 8, filterText = "AI agents" })
 	local hasSnapshot = snapshot ~= nil and type(snapshot.lines) == "table" and #snapshot.lines >= 1
 	local hasHeader = false
+	local hasFilterLine = false
 	for _, line in ipairs(lines or {}) do
 		if string.find(line, "AI agents=", 1, true) ~= nil then
 			hasHeader = true
-			break
+		end
+		if string.find(line, "filter=AI agents", 1, true) ~= nil then
+			hasFilterLine = true
 		end
 	end
 	FairyGuiManager:HideAiDebugPanel("__AiDebugPanelSelfTest")
@@ -1092,10 +1096,13 @@ function FGUI_RunAiDebugPanelSelfTest()
 		"snapshot=", hasSnapshot,
 		"lines=", type(lines) == "table" and #lines or 0,
 		"header=", hasHeader,
+		"filter=", hasFilterLine,
+		"filtered=", snapshot and snapshot.filteredCount or nil,
+		"totalLines=", snapshot and snapshot.totalLineCount or nil,
 		"closed=", closed,
 		"agents=", snapshot and snapshot.agentCount or nil,
 		"soldiers=", snapshot and snapshot.soldierCount or nil)
-	return debugHandle ~= nil and refreshOk == true and hasSnapshot == true and hasHeader == true and closed == true
+	return debugHandle ~= nil and refreshOk == true and hasSnapshot == true and hasHeader == true and hasFilterLine == true and closed == true
 end
 
 function FGUI_ShowToast(text, duration)

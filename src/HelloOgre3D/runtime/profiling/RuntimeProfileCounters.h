@@ -124,6 +124,7 @@ public:
 	static void SetGameUpdateTiming(const RuntimeGameUpdateTiming& timing);
 	static void SetObjectUpdateTiming(const RuntimeObjectUpdateTiming& timing);
 	static void AddAiTickTiming(const RuntimeAiTickTiming& timing);
+	static void AddLuaCallbackTiming(double elapsedMs);
 	static void FinishFrame(const RuntimeClientFrameTiming& timing);
 };
 

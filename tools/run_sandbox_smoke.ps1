@@ -55,6 +55,7 @@ param(
 	[int]$ParityTraceMaxAgents = 8,
 	[switch]$DisableSpatialIndex,
 	[switch]$DisablePerceptionSystem,
+	[switch]$DisablePerceptionCache,
 	[int]$SpatialCellSize = 0,
 	[switch]$PerfStallLog,
 	[int]$PerfStallThresholdMs = 40,
@@ -99,6 +100,9 @@ if ($Preset -eq "bt_runtime_lod" -and -not $PSBoundParameters.ContainsKey("Sampl
 if ($Preset -eq "bt_runtime_budget" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox10"
 }
+if (($Preset -eq "bt_runtime_rebuild" -or $Preset -eq "bt_hot_reload") -and -not $PSBoundParameters.ContainsKey("Sample")) {
+	$SelectedSample = "Sandbox10"
+}
 if ($Preset -eq "chapter8_comms" -and -not $PSBoundParameters.ContainsKey("Sample")) {
 	$SelectedSample = "Sandbox11"
 }
@@ -131,7 +135,9 @@ if (($AiPerfPresetNames -contains $Preset) -and -not $PSBoundParameters.Contains
 }
 $BtRuntimeDiagPresetNames = @(
 	"bt_runtime_lod",
-	"bt_runtime_budget"
+	"bt_runtime_budget",
+	"bt_runtime_rebuild",
+	"bt_hot_reload"
 )
 $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -or $AiEventSelfTest.IsPresent -or ($BtRuntimeDiagPresetNames -contains $Preset)
 
@@ -172,12 +178,16 @@ $KnownEnvNames = @(
 	"HELLO_PARITY_TRACE_AI_SUMMARY_MAX_LINE_LENGTH",
 	"HELLO_AI_SPATIAL_INDEX_ENABLE",
 	"HELLO_AI_PERCEPTION_SYSTEM_ENABLE",
+	"HELLO_AI_PERCEPTION_CACHE_ENABLE",
 	"HELLO_AI_SPATIAL_INDEX_CELL_SIZE",
 	"HELLO_PERF_STALL_LOG",
 	"HELLO_PERF_STALL_THRESHOLD_MS",
 	"HELLO_PERF_SUMMARY_INTERVAL_MS",
 	"HELLO_BT_TICK_INTERVAL_MS",
 	"HELLO_BT_TICK_STAGGER",
+	"HELLO_BT_DISTANCE_LOD_NEAR",
+	"HELLO_BT_DISTANCE_LOD_FAR",
+	"HELLO_BT_DISTANCE_LOD_MAX_MULTIPLIER",
 	"HELLO_BT_MAX_TREE_TICKS_PER_FRAME"
 )
 
@@ -245,6 +255,9 @@ if ($DisableSpatialIndex) {
 if ($DisablePerceptionSystem) {
 	$SelectedEnv["HELLO_AI_PERCEPTION_SYSTEM_ENABLE"] = "0"
 }
+if ($DisablePerceptionCache) {
+	$SelectedEnv["HELLO_AI_PERCEPTION_CACHE_ENABLE"] = "0"
+}
 if ($SpatialCellSize -gt 0) {
 	$SelectedEnv["HELLO_AI_SPATIAL_INDEX_CELL_SIZE"] = [string]$SpatialCellSize
 }
@@ -277,6 +290,9 @@ if (($Preset -eq "ai_lastknown_demo" -or $Preset -eq "chapter8_perception") -and
 if ($Preset -eq "bt_runtime_lod" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
+if ($Preset -eq "bt_hot_reload" -and $Seconds -lt 70) {
+	$Seconds = 70
+}
 if ($Preset -eq "chapter8_comms" -and $Seconds -lt 70) {
 	$Seconds = 70
 }
@@ -305,7 +321,7 @@ if (($Chapter9TacticsCppPresetNames -contains $Preset) -and $Seconds -lt 35) {
 	$Seconds = 35
 }
 
-Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) parityTrace=$($ParityTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) btTickIntervalMs=$BtTickIntervalMs btTickStagger=$($BtTickStagger.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
+Write-Host "[SMOKE] sample=$SelectedSample preset=$Preset runId=$RunId runtimeDiag=$RuntimeDiagEnabled blackboardSelfTest=$($BlackboardSelfTest.IsPresent) aiEventSelfTest=$($AiEventSelfTest.IsPresent) aiScheduler=$($AiScheduler.IsPresent) visualTrace=$($VisualTrace.IsPresent) parityTrace=$($ParityTrace.IsPresent) disableSpatialIndex=$($DisableSpatialIndex.IsPresent) disablePerceptionSystem=$($DisablePerceptionSystem.IsPresent) disablePerceptionCache=$($DisablePerceptionCache.IsPresent) perfStallLog=$($SelectedEnv.Contains('HELLO_PERF_STALL_LOG')) btTickIntervalMs=$BtTickIntervalMs btTickStagger=$($BtTickStagger.IsPresent) seconds=$Seconds visible=$($Visible.IsPresent) keepAlive=$($KeepAlive.IsPresent)"
 Write-Host "[SMOKE] exe=$ExePath"
 foreach ($item in $SelectedEnv.GetEnumerator()) {
 	Write-Host "[SMOKE] env $($item.Key)=$($item.Value)"
@@ -477,7 +493,7 @@ try {
 			$expectedBtTickIntervalMs = 0
 			if ($BtTickIntervalMs -gt 0) {
 				$expectedBtTickIntervalMs = $BtTickIntervalMs
-			} elseif ($Preset -eq "bt_runtime_lod" -or $Preset -eq "bt_runtime_budget") {
+			} elseif ($Preset -eq "bt_runtime_lod" -or $Preset -eq "bt_runtime_budget" -or $Preset -eq "bt_runtime_rebuild" -or $Preset -eq "bt_hot_reload") {
 				$expectedBtTickIntervalMs = 250
 			}
 			if ($expectedBtTickIntervalMs -gt 0) {
@@ -495,11 +511,31 @@ try {
 					if ($btCacheMatches.Count -eq 0) {
 						throw "Sandbox smoke log did not confirm BehaviorTree condition result cache hits."
 					}
+					$btDistanceLodMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*distanceLodMultiplier=[2-9]([\. ][0-9]*)?.*distanceLodSkipped=[1-9][0-9]*")
+					if ($btDistanceLodMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree distance LOD multiplier and skipping."
+					}
 				}
 				if ($Preset -eq "bt_runtime_budget") {
 					$btBudgetMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*budgetSkipped=[1-9][0-9]*.*budgetMax=1")
 					if ($btBudgetMatches.Count -eq 0) {
 						throw "Sandbox smoke log did not confirm BehaviorTree frame budget skipping."
+					}
+				}
+				if ($Preset -eq "bt_runtime_rebuild") {
+					$btRebuildMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*storageResets=[1-9][0-9]*.*nodeReuses=[1-9][0-9]*.*treeReuses=[1-9][0-9]*")
+					if ($btRebuildMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree rebuild storage reuse stats."
+					}
+				}
+				if ($Preset -eq "bt_hot_reload") {
+					$btHotReloadMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTHotReloadSelfTest\]\s+PASS")
+					if ($btHotReloadMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree hot reload self test."
+					}
+					$btHotReloadStatsMatches = @($LogLinesForChecks | Select-String -Pattern "\[BTStats\].*treeBuilds=[2-9][0-9]*.*storageResets=[1-9][0-9]*")
+					if ($btHotReloadStatsMatches.Count -eq 0) {
+						throw "Sandbox smoke log did not confirm BehaviorTree hot reload build/storage stats."
 					}
 				}
 			}
@@ -509,6 +545,19 @@ try {
 			$schedulerMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=.*true")
 			if ($schedulerMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm AI scheduler diagnostics."
+			}
+			if ($AiPerfPresetNames -contains $Preset) {
+				$schedulerStatsMatches = @($LogLinesForChecks | Select-String -Pattern "\[AIScheduler\].*enabled=true.*totalTicked=[1-9][0-9]*.*totalSkipped=[1-9][0-9]*")
+				if ($schedulerStatsMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm AI scheduler tick/skip stats for ai_perf preset."
+				}
+			}
+		}
+
+		if ($AiPerfPresetNames -contains $Preset) {
+			$luaCallbackMatches = @($LogLinesForChecks | Select-String -Pattern "\[FramePerf\] game .*luaCallbacks=[1-9][0-9]*.*luaCallbackMs=")
+			if ($luaCallbackMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm FramePerf Lua callback count for ai_perf preset."
 			}
 		}
 
@@ -528,6 +577,10 @@ try {
 			if ($teamBlackboardMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard shared target response."
 			}
+			$teamBlackboardLifecycleMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardLifecycleSelfTest\]\s+PASS")
+			if ($teamBlackboardLifecycleMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard lifecycle reset self test."
+			}
 			$teamBlackboardScheduleMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*scanRuns=.*scanSkips=.*applyRuns=.*applySkips=")
 			if ($teamBlackboardScheduleMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard scheduled scan/apply stats."
@@ -539,6 +592,10 @@ try {
 			$teamBlackboardFocusMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppFocusApplies=\s*[1-9][0-9]*")
 			if ($teamBlackboardFocusMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm TeamBlackboard C++ FocusTarget apply."
+			}
+			$teamBlackboardGetterMatches = @($LogLinesForChecks | Select-String -Pattern "\[TeamBlackboardSmoke\].*cppGetter=\s*true")
+			if ($teamBlackboardGetterMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm TeamBlackboard C++ typed fact getter."
 			}
 		}
 
@@ -626,6 +683,13 @@ try {
 			}
 		}
 
+		if ($Preset -eq "chapter9_tactics_legacy_parity") {
+			$legacyBridgeMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9LegacyEventBridgeSelfTest\]\s+PASS")
+			if ($legacyBridgeMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm Chapter 9 legacy event bridge lifecycle guard."
+			}
+		}
+
 		if ($Chapter9TacticsCppPresetNames -contains $Preset) {
 			$tacticsMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\]\s+PASS")
 			if ($tacticsMatches.Count -eq 0) {
@@ -659,6 +723,10 @@ try {
 			if ($debugSummaryMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm explicit tactical debug draw layer config summary."
 			}
+			$debugValueMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDebugDraw\].*danger\(configured=true,order=12,y=0\.18,threshold=0\.1,maxCells=96,neutral=false,projectToNav=true,nav=default\)")
+			if ($debugValueMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm explicit tactical danger debug config values."
+			}
 			if ($Preset -eq "chapter9_tactics_cpp_pressure") {
 				$candidateLimitMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalCandidateLimitSmoke\]\s+PASS")
 				if ($candidateLimitMatches.Count -eq 0) {
@@ -680,6 +748,12 @@ try {
 				$perceptionMatches = @($LogLinesForChecks | Select-String -Pattern "\[AgentPerceptionSystem\].*scans=")
 				if ($perceptionMatches.Count -eq 0) {
 					throw "Sandbox smoke log did not confirm AgentPerceptionSystem diagnostics."
+				}
+			}
+			if ($DisablePerceptionCache) {
+				$cacheDisabledMatches = @($LogLinesForChecks | Select-String -Pattern "cache enabled=0")
+				if ($cacheDisabledMatches.Count -eq 0) {
+					throw "Sandbox smoke log did not confirm disabled perception cache diagnostics."
 				}
 			}
 		}

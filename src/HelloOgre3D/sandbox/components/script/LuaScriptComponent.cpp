@@ -2,6 +2,7 @@
 #include "ScriptLuaVM.h"
 #include "LogSystem.h"
 #include "object/BaseObject.h"
+#include "profiling/RuntimeProfileCounters.h"
 #include "scripting/LuaPluginMgr.h"
 
 extern "C" {
@@ -85,7 +86,12 @@ bool LuaScriptComponent::callFunctionV(const char* funcname, const char* format,
 		return false;
 	}
 
-	return m_pScriptVM->callModuleFuncV(m_luaRef, funcname, format, vl);
+	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
+	const long long startMicros = perfEnabled ? RuntimeStallProfiler::NowMicroseconds() : 0;
+	const bool result = m_pScriptVM->callModuleFuncV(m_luaRef, funcname, format, vl);
+	if (perfEnabled)
+		RuntimeStallProfiler::AddLuaCallbackTiming(RuntimeStallProfiler::ElapsedMsSince(startMicros));
+	return result;
 }
 
 void LuaScriptComponent::ReleaseLuaRef()

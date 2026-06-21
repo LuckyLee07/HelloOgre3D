@@ -106,6 +106,26 @@ local function splitLines(text)
 	return lines
 end
 
+local function trimText(value)
+	return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+local function filterLines(lines, filterText)
+	filterText = trimText(filterText)
+	if filterText == "" then
+		return lines, #lines, false
+	end
+
+	local filtered = {}
+	local needle = string.lower(filterText)
+	for _, line in ipairs(lines or {}) do
+		if string.find(string.lower(tostring(line or "")), needle, 1, true) ~= nil then
+			table.insert(filtered, line)
+		end
+	end
+	return filtered, #filtered, true
+end
+
 local function pushLimited(values, value, maxCount)
 	if type(values) ~= "table" then
 		return
@@ -881,9 +901,12 @@ end
 function FairyGuiProfiler:GetAiDebugSnapshot(options)
 	options = options or {}
 	local maxAgents = tonumber(options.maxAgents) or 8
+	local focusAgentId = tonumber(options.focusAgentId or options.agentId or options.selectedAgentId) or 0
+	local filterText = trimText(options.filterText or options.lineFilter or options.searchText)
 	local agentCount = 0
 	local soldierCount = 0
 	local summary = ""
+	local usedUnifiedSummary = false
 
 	if ObjectManager ~= nil then
 		if ObjectManager.getAiAgentCount ~= nil then
@@ -902,7 +925,36 @@ function FairyGuiProfiler:GetAiDebugSnapshot(options)
 				soldierCount = tonumber(value) or 0
 			end
 		end
-		if ObjectManager.buildAiDebugSummary ~= nil then
+		if focusAgentId > 0 and ObjectManager.buildAiRuntimeDebugSummaryForAgent ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:buildAiRuntimeDebugSummaryForAgent(maxAgents, focusAgentId)
+			end)
+			if ok then
+				summary = tostring(value or "")
+				usedUnifiedSummary = true
+			else
+				summary = "AI runtime summary error: " .. tostring(value)
+			end
+		elseif ObjectManager.buildAiRuntimeDebugSummary ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:buildAiRuntimeDebugSummary(maxAgents)
+			end)
+			if ok then
+				summary = tostring(value or "")
+				usedUnifiedSummary = true
+			else
+				summary = "AI runtime summary error: " .. tostring(value)
+			end
+		elseif focusAgentId > 0 and ObjectManager.buildAiDebugSummaryForAgent ~= nil then
+			local ok, value = pcall(function()
+				return ObjectManager:buildAiDebugSummaryForAgent(maxAgents, focusAgentId)
+			end)
+			if ok then
+				summary = tostring(value or "")
+			else
+				summary = "AI summary error: " .. tostring(value)
+			end
+		elseif ObjectManager.buildAiDebugSummary ~= nil then
 			local ok, value = pcall(function()
 				return ObjectManager:buildAiDebugSummary(maxAgents)
 			end)
@@ -917,11 +969,20 @@ function FairyGuiProfiler:GetAiDebugSnapshot(options)
 	if isBlank(summary) then
 		summary = string.format("AI agents=%s soldiers=%s showing=0", tostring(agentCount), tostring(soldierCount))
 	end
+	local rawLines = splitLines(summary)
+	local filteredLines, filteredCount, filterActive = filterLines(rawLines, filterText)
 	return {
 		agentCount = agentCount,
 		soldierCount = soldierCount,
+		focusAgentId = focusAgentId,
+		filterText = filterText,
+		filterActive = filterActive,
+		filteredCount = filteredCount,
+		totalLineCount = #rawLines,
+		usedUnifiedSummary = usedUnifiedSummary,
 		summary = summary,
-		lines = splitLines(summary),
+		rawLines = rawLines,
+		lines = filteredLines,
 	}
 end
 
@@ -1035,11 +1096,23 @@ function FairyGuiProfiler:BuildAiDebugPanelLines(options)
 	options = options or {}
 	local snapshot = self:GetAiDebugSnapshot(options)
 	local lines = {}
+	if snapshot.filterActive == true or (snapshot.focusAgentId or 0) > 0 then
+		table.insert(lines, clampText(string.format("AI focus=%s filter=%s matched=%s/%s unified=%s",
+			tostring(snapshot.focusAgentId or 0),
+			snapshot.filterActive == true and tostring(snapshot.filterText or "") or "-",
+			tostring(snapshot.filteredCount or 0),
+			tostring(snapshot.totalLineCount or 0),
+			tostring(snapshot.usedUnifiedSummary == true and 1 or 0)), options.lineMaxLen or 112))
+	end
 	for _, line in ipairs(snapshot.lines or {}) do
 		table.insert(lines, clampText(line, options.lineMaxLen or 112))
 	end
 	if #lines <= 0 then
-		table.insert(lines, "AI agents=0 soldiers=0 showing=0")
+		if snapshot.filterActive == true then
+			table.insert(lines, "AI filter matched no lines")
+		else
+			table.insert(lines, "AI agents=0 soldiers=0 showing=0")
+		end
 	end
 
 	local lineCount = tonumber(options.lineCount)
@@ -1091,7 +1164,16 @@ function FairyGuiProfiler:RefreshAiDebugPanel(key)
 	end
 
 	if objectInfo.debugPanelTitleHandle ~= nil then
-		owner:SetText(objectInfo.debugPanelTitleHandle, nil, string.format("%s  %s", tostring(objectInfo.param.title or "AI Debug"), os.date and os.date("%H:%M:%S") or ""))
+		local title = tostring(objectInfo.param.title or "AI Debug")
+		local focusAgentId = tonumber(objectInfo.param.focusAgentId or objectInfo.param.agentId or objectInfo.param.selectedAgentId) or 0
+		local filterText = trimText(objectInfo.param.filterText or objectInfo.param.lineFilter or objectInfo.param.searchText)
+		if focusAgentId > 0 then
+			title = title .. " #" .. tostring(focusAgentId)
+		end
+		if filterText ~= "" then
+			title = title .. " [" .. filterText .. "]"
+		end
+		owner:SetText(objectInfo.debugPanelTitleHandle, nil, string.format("%s  %s", title, os.date and os.date("%H:%M:%S") or ""))
 	end
 
 	local lineHandles = objectInfo.debugPanelLineHandles or {}
@@ -1099,6 +1181,8 @@ function FairyGuiProfiler:RefreshAiDebugPanel(key)
 		lineCount = #lineHandles,
 		lineMaxLen = objectInfo.param.lineMaxLen or 112,
 		maxAgents = objectInfo.param.maxAgents or 8,
+		focusAgentId = objectInfo.param.focusAgentId or objectInfo.param.agentId or objectInfo.param.selectedAgentId,
+		filterText = objectInfo.param.filterText or objectInfo.param.lineFilter or objectInfo.param.searchText,
 	})
 	for index, handle in ipairs(lineHandles) do
 		owner:SetText(handle, nil, lines[index] or "")
@@ -1204,11 +1288,14 @@ function FairyGuiProfiler:ShowAiDebugPanel(param)
 	end
 
 	objectInfo.debugPanelBackgroundHandle = owner:AddServiceImage(objectInfo, "ai_debug_panel_bg", param.background or "res/assets/act_38/_imgs/board_task.png", 0, 0, param.width, param.height, param.alpha or 0.92)
-	objectInfo.debugPanelTitleHandle = owner:AddServiceText(objectInfo, "ai_debug_panel_title", param.title or "AI Debug", 18, 12, param.width - 88, 28, 20, 255, 236, 180)
+	objectInfo.debugPanelTitleHandle = owner:AddServiceText(objectInfo, "ai_debug_panel_title", param.title or "AI Debug", 18, 12, param.width - 142, 28, 20, 255, 236, 180)
 	objectInfo.debugPanelLineHandles = {}
 	for index = 1, param.lineCount do
 		objectInfo.debugPanelLineHandles[index] = owner:AddServiceText(objectInfo, "ai_debug_panel_line_" .. tostring(index), "", 18, 42 + (index - 1) * param.lineHeight, param.width - 36, param.lineHeight, 15, 210, 235, 255)
 	end
+	owner:AddServiceButton(objectInfo, "ai_debug_panel_refresh", "R", param.width - 104, 10, 34, 30, function()
+		self:RefreshAiDebugPanel(param.key)
+	end)
 	owner:AddServiceButton(objectInfo, "ai_debug_panel_close", "X", param.width - 60, 10, 42, 30, function()
 		self:HideAiDebugPanel(param.key)
 	end)
