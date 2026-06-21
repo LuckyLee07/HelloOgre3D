@@ -315,6 +315,12 @@ int TacticalService::rebuildTacticalInfluenceLayerDebugVisual(const std::string&
 	return m_debugDrawService->RebuildLayerDebugVisual(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
 }
 
+void TacticalService::configureTacticalInfluenceLayerDebug(const std::string& layerName, float yOffset, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName, int drawOrder)
+{
+	if (m_debugDrawService != nullptr)
+		m_debugDrawService->ConfigureLayer(layerName, yOffset, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName, drawOrder);
+}
+
 void TacticalService::setTacticalInfluenceLayerDebugOrder(const std::string& layerName, int drawOrder)
 {
 	if (m_debugDrawService != nullptr)

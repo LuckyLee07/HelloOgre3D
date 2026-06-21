@@ -9,6 +9,7 @@ require("res.scripts.agent.AgentUtils.lua")
 local ParityTrace = require("res.scripts.samples.parity_trace")
 local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
 
 local _sampleName = "Sandbox18"
 local _agents = {}
@@ -19,6 +20,8 @@ local _drawTactics = true
 local _elapsedMs = 0
 local _panelElapsedMs = 0
 local _RebuildCppInfluenceLayerVisual = nil
+local _BuildLayerDebugConfig = nil
+local _ConfigureLayerDebug = nil
 local _parityTrace = nil
 
 local _colors = {
@@ -266,6 +269,12 @@ local function _ConfigureCppTactics()
 	if SandboxTactics.configureTacticalQueryCandidateLimit ~= nil then
 		SandboxTactics:configureTacticalQueryCandidateLimit(_ReadNumber(config, "tacticalQueryMaxCandidates", 0))
 	end
+	if _BuildLayerDebugConfig ~= nil and _ConfigureLayerDebug ~= nil then
+		local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
+		_ConfigureLayerDebug("danger", _BuildLayerDebugConfig(config, "danger", 0.12, cellSize, false))
+		_ConfigureLayerDebug("team", _BuildLayerDebugConfig(config, "team", 0.22, cellSize, true))
+		_ConfigureLayerDebug("objective", _BuildLayerDebugConfig(config, "objective", 0.32, cellSize, false))
+	end
 end
 
 local function _CreatePanel()
@@ -320,23 +329,13 @@ local function _PublishTacticEvent(eventType, event)
 	end
 
 	if _HasCppTactics() then
-		local position = event.position or event.seenAt
-		if position == nil and event.agent ~= nil then
-			position = event.agent:GetPosition()
-		end
-		if position ~= nil then
-			local sender = event.sender or event.spotter or event.reporter
-			if sender == nil and eventType ~= "EnemySighted" and eventType ~= "DeadFriendlySighted" then
-				sender = event.agent
-			end
-			local senderId = _GetAgentId(sender)
-			local targetId = event.agent ~= nil and _GetAgentId(event.agent) or -1
-			local teamId = sender ~= nil and sender:GetTeamId() or -1
-			local targetTeamId = event.agent ~= nil and event.agent:GetTeamId() or -1
-			if eventType == "DeadFriendlySighted" and event.agent ~= nil then
-				teamId = event.agent:GetTeamId()
-			end
-			SandboxTactics:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
+		local published = AIEvents.PublishTacticalEvent(eventType, event, {
+			timeMs = _elapsedMs,
+			scope = AIEvents.Scope.Global,
+			queueEvent = false,
+			projectPosition = _ProjectToNav,
+		})
+		if published then
 			_tactics.cppEventCount = SandboxTactics:getTacticalEventCount()
 		end
 	end
@@ -618,6 +617,71 @@ local function _ReadLayerDrawOrder(config, layerName, defaultValue)
 	return defaultValue
 end
 
+local function _ReadLayerDebugNumber(config, layerName, layerSuffix, globalKey, defaultValue)
+	if config ~= nil and config[layerName .. layerSuffix] ~= nil then
+		return _ReadNumber(config, layerName .. layerSuffix, defaultValue)
+	end
+	if globalKey ~= nil then
+		return _ReadNumber(config, globalKey, defaultValue)
+	end
+	return defaultValue
+end
+
+local function _ReadLayerDebugBool(config, layerName, layerSuffix, globalKey, defaultValue)
+	if config ~= nil and config[layerName .. layerSuffix] ~= nil then
+		return _ReadBool(config, layerName .. layerSuffix, defaultValue)
+	end
+	if globalKey ~= nil then
+		return _ReadBool(config, globalKey, defaultValue)
+	end
+	return defaultValue
+end
+
+local function _ReadLayerDebugString(config, layerName, layerSuffix, globalKey, defaultValue)
+	if config ~= nil and config[layerName .. layerSuffix] ~= nil then
+		return _ReadString(config, layerName .. layerSuffix, defaultValue)
+	end
+	if globalKey ~= nil then
+		return _ReadString(config, globalKey, defaultValue)
+	end
+	return defaultValue
+end
+
+_BuildLayerDebugConfig = function(config, layerName, y, cellSize, drawNeutralDefault)
+	local defaultOrder = math.max(0, math.floor((tonumber(y) or 0) * 100))
+	local maxCells = _GetDrawCellLimit(config)
+	if config ~= nil and config[layerName .. "DrawMaxCells"] ~= nil then
+		maxCells = math.max(1, math.floor(_ReadNumber(config, layerName .. "DrawMaxCells", maxCells)))
+	end
+	return {
+		yOffset = _ReadLayerDebugNumber(config, layerName, "DrawYOffset", nil, y),
+		threshold = _ReadLayerDebugNumber(config, layerName, "DrawThreshold", "drawThreshold", 0.08),
+		maxCells = maxCells,
+		drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault),
+		projectToNav = _ReadLayerDebugBool(config, layerName, "ProjectToNav", "projectInfluenceToNav", true),
+		maxProjectionDistance = _ReadLayerDebugNumber(config, layerName, "DrawNavProjectionMaxDistance", "drawNavProjectionMaxDistance", cellSize * 0.9),
+		navMeshName = _ReadLayerDebugString(config, layerName, "DrawNavMeshName", "influenceDrawNavMeshName", "default"),
+		drawOrder = _ReadLayerDrawOrder(config, layerName, defaultOrder),
+	}
+end
+
+_ConfigureLayerDebug = function(layerName, debugConfig)
+	if SandboxTactics.configureTacticalInfluenceLayerDebug ~= nil then
+		SandboxTactics:configureTacticalInfluenceLayerDebug(
+			layerName,
+			debugConfig.yOffset,
+			debugConfig.threshold,
+			debugConfig.maxCells,
+			debugConfig.drawNeutral,
+			debugConfig.projectToNav,
+			debugConfig.maxProjectionDistance,
+			debugConfig.navMeshName,
+			debugConfig.drawOrder)
+	elseif SandboxTactics.setTacticalInfluenceLayerDebugOrder ~= nil then
+		SandboxTactics:setTacticalInfluenceLayerDebugOrder(layerName, debugConfig.drawOrder)
+	end
+end
+
 _RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeSpec, drawNeutralDefault)
 	if not _HasCppInfluenceVisual() then
 		return false
@@ -625,25 +689,21 @@ _RebuildCppInfluenceLayerVisual = function(layerName, y, positiveSpec, negativeS
 	local config = _GetConfig()
 	local mapConfig = config.influenceMap or {}
 	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
-	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-	local drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault)
-	if SandboxTactics.setTacticalInfluenceLayerDebugOrder ~= nil then
-		local defaultOrder = math.max(0, math.floor((tonumber(y) or 0) * 100))
-		SandboxTactics:setTacticalInfluenceLayerDebugOrder(layerName, _ReadLayerDrawOrder(config, layerName, defaultOrder))
-	end
+	local debugConfig = _BuildLayerDebugConfig(config, layerName, y, cellSize, drawNeutralDefault)
+	_ConfigureLayerDebug(layerName, debugConfig)
 	SandboxTactics:rebuildTacticalInfluenceLayerDebugVisual(
 		layerName,
-		y,
+		debugConfig.yOffset,
 		_ColorFromSpec(positiveSpec),
 		_ColorFromSpec(_influencePalette.zero),
 		_ColorFromSpec(negativeSpec),
 		_colors.grid,
-		threshold,
-		_GetDrawCellLimit(config),
-		drawNeutral,
-		_ReadBool(config, "projectInfluenceToNav", true),
-		_ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9),
-		"default")
+		debugConfig.threshold,
+		debugConfig.maxCells,
+		debugConfig.drawNeutral,
+		debugConfig.projectToNav,
+		debugConfig.maxProjectionDistance,
+		debugConfig.navMeshName)
 	return true
 end
 
@@ -657,31 +717,30 @@ local function _DrawCppInfluenceLayer(layerName, y, positiveSpec, negativeSpec, 
 	end
 	local mapConfig = config.influenceMap or {}
 	local cellSize = _ReadNumber(mapConfig, "cellSize", 4.0)
-	local threshold = _ReadNumber(config, "drawThreshold", 0.08)
-	local drawNeutral = _ReadLayerDrawNeutral(config, layerName, drawNeutralDefault)
-	local queryThreshold = drawNeutral and 0.0 or threshold
-	local maxCells = _GetDrawCellLimit(config)
+	local debugConfig = _BuildLayerDebugConfig(config, layerName, y, cellSize, drawNeutralDefault)
+	_ConfigureLayerDebug(layerName, debugConfig)
+	local queryThreshold = debugConfig.drawNeutral and 0.0 or debugConfig.threshold
 	if SandboxTactics.drawTacticalInfluenceLayer ~= nil then
 		SandboxTactics:drawTacticalInfluenceLayer(
 			layerName,
-			y,
+			debugConfig.yOffset,
 			_ColorFromSpec(positiveSpec),
 			_ColorFromSpec(_influencePalette.zero),
 			_ColorFromSpec(negativeSpec),
 			_colors.grid,
-			threshold,
-			maxCells,
-			drawNeutral,
-			_ReadBool(config, "projectInfluenceToNav", true),
-			_ReadNumber(config, "drawNavProjectionMaxDistance", cellSize * 0.9),
-			"default")
+			debugConfig.threshold,
+			debugConfig.maxCells,
+			debugConfig.drawNeutral,
+			debugConfig.projectToNav,
+			debugConfig.maxProjectionDistance,
+			debugConfig.navMeshName)
 		return
 	end
-	local count = SandboxTactics:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, maxCells)
+	local count = SandboxTactics:getTacticalInfluenceLayerDebugCellCount(layerName, queryThreshold, debugConfig.maxCells)
 	for index = 1, count do
 		local pos = SandboxTactics:getTacticalInfluenceLayerDebugCellPosition(layerName, index, queryThreshold)
 		local value = SandboxTactics:getTacticalInfluenceLayerDebugCellValue(layerName, index, queryThreshold)
-		_DrawCell(pos, _InfluenceColor(value, positiveSpec, negativeSpec), y, cellSize)
+		_DrawCell(pos, _InfluenceColor(value, positiveSpec, negativeSpec), debugConfig.yOffset, cellSize)
 	end
 end
 
@@ -871,6 +930,7 @@ local function _MaybePrintSmoke()
 			and string.find(dirtySummary, "configs=", 1, true) ~= nil
 			and string.find(dirtySummary, "order=", 1, true) ~= nil
 			and string.find(dirtySummary, "projectToNav=", 1, true) ~= nil
+			and string.find(dirtySummary, "danger(configured=true,order=12,y=0.18,threshold=0.1,maxCells=96,neutral=false,projectToNav=true,nav=default)", 1, true) ~= nil
 		print("[TacticalDebugConfigSmoke]", debugConfigPassed and "PASS" or "FAIL", "summary=", dirtySummary)
 		if not debugConfigPassed then
 			return

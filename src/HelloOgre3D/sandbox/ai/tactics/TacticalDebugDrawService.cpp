@@ -244,6 +244,23 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 	return static_cast<int>(cells.size());
 }
 
+void TacticalDebugDrawService::ConfigureLayer(const std::string& layerName, float yOffset, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName, int drawOrder)
+{
+	DebugLayerConfig& config = GetOrCreateLayerConfig(layerName);
+	config.configured = true;
+	config.yOffset = yOffset;
+	config.threshold = std::max(0.0f, threshold);
+	config.maxCells = std::max(0, maxCells);
+	config.drawNeutralCells = drawNeutralCells;
+	config.projectToNav = projectToNav;
+	config.maxProjectionDistance = std::max(0.0f, maxProjectionDistance);
+	config.navMeshName = navMeshName.empty() ? Ogre::String("default") : navMeshName;
+	config.drawOrder = drawOrder;
+	std::unordered_map<std::string, DebugVisual>::iterator visual = m_visuals.find(layerName);
+	if (visual != m_visuals.end() && visual->second.manualObject != nullptr)
+		visual->second.manualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_MAIN, ToRenderQueuePriority(config.drawOrder));
+}
+
 void TacticalDebugDrawService::SetLayerDrawOrder(const std::string& layerName, int drawOrder)
 {
 	DebugLayerConfig& config = GetOrCreateLayerConfig(layerName);
