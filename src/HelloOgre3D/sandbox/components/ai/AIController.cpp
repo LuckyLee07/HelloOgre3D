@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -49,6 +50,18 @@ namespace
 	const int kSenseEntryTtlMs = 750;
 	const int kMemoryEntryTtlMs = 8000;
 	const float kMemoryConfidenceDecayPerMs = 1.0f / static_cast<float>(kMemoryEntryTtlMs);
+
+	bool ReadPerceptionCacheEnabledFromEnv()
+	{
+		const char* value = std::getenv("HELLO_AI_PERCEPTION_CACHE_ENABLE");
+		if (value == nullptr || value[0] == '\0')
+			return true;
+		std::string text(value);
+		std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) {
+			return static_cast<char>(std::tolower(c));
+		});
+		return !(text == "0" || text == "false" || text == "off" || text == "no");
+	}
 
 	typedef bool (*DriverMatchFn)(IDecisionDriver*);
 	typedef IDecisionDriver* (*DriverCreateFn)(AgentObject*, Blackboard*);
@@ -148,6 +161,7 @@ AIController::AIController(BaseObject* owner)
 	, m_movePos(Ogre::Vector3::ZERO)
 	, m_tickInOwnerUpdateEnabled(true)
 	, m_perceptionTickInAiTickEnabled(true)
+	, m_perceptionCacheEnabled(ReadPerceptionCacheEnabledFromEnv())
 	, m_localTimeMs(0)
 	, m_memoryStore(&m_blackboard)
 {
@@ -165,6 +179,7 @@ void AIController::onAttach(BaseObject* owner)
 	m_memoryStore.SetBlackboard(&m_blackboard);
 	m_localTimeMs = 0;
 	m_perceptionTickInAiTickEnabled = true;
+	SetPerceptionResultCacheEnabled(ReadPerceptionCacheEnabledFromEnv());
 	m_visionSensor.Clear();
 	m_perceptionCache.Reset();
 	InitDefaultDriver();
@@ -514,6 +529,12 @@ void AIController::ClearPerceptionResult()
 
 void AIController::UpdatePerceptionCache(bool scannedThisTick, double scanCostMs)
 {
+	if (!m_perceptionCacheEnabled)
+	{
+		m_perceptionCache.Reset();
+		return;
+	}
+
 	PerceptionResultCache& cache = m_perceptionCache;
 
 	// 当前可见目标：读当帧 WritePerceptionResult 写入的 perception.* 键。
@@ -578,6 +599,15 @@ AgentObject* AIController::GetEnemy() const
 
 bool AIController::HasEnemy(const Ogre::String& navMeshName)
 {
+	if (!m_perceptionCacheEnabled)
+	{
+		bool scanned = false;
+		const bool hasEnemy = UpdateVisionSensor(0, navMeshName, true, true, &scanned);
+		if (scanned)
+			m_memoryStore.SyncSnapshot(m_localTimeMs);
+		return hasEnemy;
+	}
+
 	// 改读 PerceptionResultCache（4b）：感知系统 / TickPerception 每帧已在 driver/Agent_Update 之前
 	// 填充缓存，cache.hasCurrentTarget 与 m_visionSensor.HasVisibleTarget() 来自同一条扫描路径、恒等。
 	// 这里直接读缓存，避免每个 BT/DT 条件 tick 重复构造 AgentPerceptionQuery + 走一遍 Tick(0)。
@@ -706,7 +736,8 @@ std::string AIController::BuildSensorDebugString() const
 	stream << m_visionSensor.BuildDebugString();
 	// 感知结果缓存快照（便于核实缓存填充与一致性）。
 	const PerceptionResultCache& c = m_perceptionCache;
-	stream << " | cache cur=" << (c.hasCurrentTarget ? 1 : 0)
+	stream << " | cache enabled=" << (m_perceptionCacheEnabled ? 1 : 0)
+		<< " cur=" << (c.hasCurrentTarget ? 1 : 0)
 		<< " curId=" << c.currentTargetId
 		<< " curDist=" << std::fixed << std::setprecision(1) << c.currentDistance
 		<< " lastKnown=" << (c.hasLastKnown ? 1 : 0)
@@ -716,6 +747,13 @@ std::string AIController::BuildSensorDebugString() const
 		<< " scanned=" << (c.scannedThisTick ? 1 : 0)
 		<< " updates=" << c.updateCount;
 	return stream.str();
+}
+
+void AIController::SetPerceptionResultCacheEnabled(bool enabled)
+{
+	m_perceptionCacheEnabled = enabled;
+	if (!m_perceptionCacheEnabled)
+		m_perceptionCache.Reset();
 }
 
 std::string AIController::BuildMemoryDebugString() const

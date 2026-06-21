@@ -75,6 +75,8 @@ public:
 
 	// 感知结果缓存（单一事实来源）。第一切片：增量观测，由 TickPerception 在扫描后填充。
 	const PerceptionResultCache& GetPerceptionCache() const { return m_perceptionCache; }
+	void SetPerceptionResultCacheEnabled(bool enabled);
+	bool IsPerceptionResultCacheEnabled() const { return m_perceptionCacheEnabled; }
 
 	void IssueCommand(const AICommand& command);
 	unsigned int GetAgentId() const;
@@ -114,6 +116,7 @@ private:
 	Ogre::Vector3 m_movePos;
 	bool m_tickInOwnerUpdateEnabled;
 	bool m_perceptionTickInAiTickEnabled;
+	bool m_perceptionCacheEnabled;
 	long long m_localTimeMs;
 	VisionSensor m_visionSensor;
 	MemoryStore m_memoryStore;

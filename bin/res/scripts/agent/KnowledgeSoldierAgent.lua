@@ -30,6 +30,7 @@ function Agent_Initialize(agent)
 	local bb = driver:GetBlackboard()
 	bb:SetFloat("maxHealth", AgentComponents.GetMaxHealth(agent))
 	bb:SetString("chapter", "chapter7-knowledge")
+	bb:SetBool("perception.requirePath", true)
 
 	local knowledge = Chapter7Knowledge.CreateContext(agent, bb)
 	Chapter7Knowledge.InstallDefaultSources(knowledge)

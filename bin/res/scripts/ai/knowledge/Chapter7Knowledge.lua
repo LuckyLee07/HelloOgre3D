@@ -2,6 +2,7 @@
 -- 把原书 Chapter 7 的 KnowledgeSource 思想接到当前 C++ Blackboard。
 
 local KnowledgeSource = require("res.scripts.ai.knowledge.KnowledgeSource.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local Chapter7Knowledge = {}
 
@@ -11,48 +12,30 @@ local function _DistanceSq(left, right)
 	return delta:squaredLength()
 end
 
-local function _HasPath(fromPos, toPos)
-	local path = std.vector_Ogre__Vector3_()
-	return SandboxNav:FindPath("default", fromPos, toPos, path) and path:size() > 0
-end
-
 local function _EvaluateNearestEnemy(context)
 	local owner = context.owner
 	if owner == nil or owner:GetHealth() <= 0 then
 		return { evaluation = nil, confidence = 0.0 }
 	end
 
-	local agents = ObjectManager:getAllAgents()
 	local ownerPos = owner:GetPosition()
-	local ownerId = owner:GetObjId()
-	local bestEnemy = nil
-	local bestDistanceSq = nil
-
-	for i = 0, agents:size() - 1 do
-		local candidate = agents[i]
-		if candidate ~= nil
-			and candidate:GetObjId() ~= ownerId
-			and candidate:GetHealth() > 0 then
-			local candidatePos = candidate:GetPosition()
-			local distanceSq = _DistanceSq(ownerPos, candidatePos)
-			if (bestDistanceSq == nil or distanceSq < bestDistanceSq)
-				and _HasPath(ownerPos, candidatePos) then
-				bestEnemy = candidate
-				bestDistanceSq = distanceSq
-			end
-		end
+	if not AgentComponents.HasEnemy(owner, "default") then
+		return { evaluation = nil, confidence = 0.0 }
 	end
 
+	local bestEnemy = AgentComponents.GetEnemy(owner)
 	if bestEnemy == nil then
 		return { evaluation = nil, confidence = 0.0 }
 	end
 
+	local enemyPos = bestEnemy:GetPosition()
+	local bestDistanceSq = _DistanceSq(ownerPos, enemyPos)
 	local distance = math.sqrt(bestDistanceSq or 0)
 	return {
 		evaluation = {
 			agent = bestEnemy,
 			id = bestEnemy:GetObjId(),
-			position = bestEnemy:GetPosition(),
+			position = enemyPos,
 			distance = distance,
 		},
 		confidence = 1.0,
@@ -172,7 +155,7 @@ end
 
 function Chapter7Knowledge.InstallDefaultSources(context)
 	Chapter7Knowledge.AddSource(context, "enemy", KnowledgeSource.New(
-		"NearestPathableEnemy",
+		"PerceptionPathableEnemy",
 		_EvaluateNearestEnemy,
 		250))
 	Chapter7Knowledge.AddSource(context, "bestFleePosition", KnowledgeSource.New(
