@@ -405,6 +405,68 @@ bool TeamBlackboardService::writeBestTeamFactToBlackboard(AgentObject* agent, co
 	return true;
 }
 
+bool TeamBlackboardService::hasBestTeamFact(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact);
+}
+
+int TeamBlackboardService::getBestTeamFactSourceAgentId(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.sourceAgentId : -1;
+}
+
+int TeamBlackboardService::getBestTeamFactTargetId(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.targetAgentId : -1;
+}
+
+Ogre::Vector3 TeamBlackboardService::getBestTeamFactPosition(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.position : Ogre::Vector3::ZERO;
+}
+
+std::string TeamBlackboardService::getBestTeamFactKey(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.key : std::string();
+}
+
+float TeamBlackboardService::getBestTeamFactConfidence(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.confidence : 0.0f;
+}
+
+int TeamBlackboardService::getBestTeamFactReportCount(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.reportCount : 0;
+}
+
+int TeamBlackboardService::getBestTeamFactPriority(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? fact.priority : 0;
+}
+
+int TeamBlackboardService::getBestTeamFactTimeMs(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	return GetBestFact(teamId, factType, ignoredSourceAgentId, fact) ? static_cast<int>(fact.timeMs) : 0;
+}
+
+int TeamBlackboardService::getBestTeamFactAgeMs(int teamId, const std::string& factType, int ignoredSourceAgentId) const
+{
+	TeamFact fact;
+	if (!GetBestFact(teamId, factType, ignoredSourceAgentId, fact))
+		return 0;
+	return static_cast<int>(std::max<long long>(0, m_stats.currentTimeMs - fact.timeMs));
+}
+
 int TeamBlackboardService::getTeamBlackboardFactCount() const
 {
 	return GetStats().factCount;

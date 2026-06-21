@@ -84,6 +84,16 @@ public:
 	bool rememberTeamFact(const std::string& factType, int teamId, int sourceAgentId, int targetAgentId, const Ogre::Vector3& position, int timeMs, float confidence, int priority, int ttlMs, const std::string& key);
 	bool writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport = false);
 	bool writeBestTeamFactToBlackboard(AgentObject* agent, const std::string& factType, const std::string& keyPrefix, bool allowOwnReport = true);
+	bool hasBestTeamFact(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactSourceAgentId(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactTargetId(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	Ogre::Vector3 getBestTeamFactPosition(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	std::string getBestTeamFactKey(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	float getBestTeamFactConfidence(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactReportCount(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactPriority(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactTimeMs(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
+	int getBestTeamFactAgeMs(int teamId, const std::string& factType, int ignoredSourceAgentId = -1) const;
 	int getTeamBlackboardFactCount() const;
 	int getTeamBlackboardReportCount() const;
 	int getTeamBlackboardEnemyFactCount() const;

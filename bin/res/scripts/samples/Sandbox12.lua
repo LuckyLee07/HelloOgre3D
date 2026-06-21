@@ -565,15 +565,35 @@ local function _PublishScriptedOpeningSighting()
     print("[TeamBlackboardDemo] opening EnemySighted", "team=", spotter:GetTeamId(), "sender=", _GetAgentId(spotter), "target=", _GetAgentId(target))
 end
 
+local function _FindSmokeCppFocusFact()
+    for teamId, _ in pairs(_chapter8.teamMemory or {}) do
+        local fact = TeamBlackboard:GetBestCppFact(teamId, TeamBlackboard.EventTypes.FocusTarget)
+        if fact ~= nil and fact.targetId ~= nil and fact.targetId >= 0 and fact.position ~= nil then
+            return fact
+        end
+    end
+    for _, agent in ipairs(_agents) do
+        if agent ~= nil then
+            local fact = TeamBlackboard:GetBestCppFact(agent:GetTeamId(), TeamBlackboard.EventTypes.FocusTarget)
+            if fact ~= nil and fact.targetId ~= nil and fact.targetId >= 0 and fact.position ~= nil then
+                return fact
+            end
+        end
+    end
+    return nil
+end
+
 local function _MaybePrintTeamBlackboardSmoke()
     if _chapter8.supportSmokePrinted or _G.HELLO_SANDBOX_SMOKE_MODE ~= true then
         return
     end
+    local cppFocusFact = _FindSmokeCppFocusFact()
     if _chapter8.totalBroadcasts > 0
         and _chapter8.totalSupportResponses > 0
         and _chapter8.totalSharedMoves > 0
         and TeamBlackboard:GetCppFactCount() > 0
         and TeamBlackboard:GetCppTypedFactCount() > 0
+        and cppFocusFact ~= nil
         and _chapter8.cppFactApplyCount > 0
         and _chapter8.cppFocusFactApplyCount > 0
         and _chapter8.sightScanRunCount > 0
@@ -596,6 +616,9 @@ local function _MaybePrintTeamBlackboardSmoke()
             "cppTypedFacts=", TeamBlackboard:GetCppTypedFactCount(),
             "cppTypedReports=", TeamBlackboard:GetCppTypedReportCount(),
             "cppFocusApplies=", _chapter8.cppFocusFactApplyCount,
+            "cppGetter=", cppFocusFact ~= nil,
+            "cppGetterSource=", cppFocusFact.sourceAgentId or -1,
+            "cppGetterTarget=", cppFocusFact.targetId or -1,
             "cppApplies=", _chapter8.cppFactApplyCount)
     end
 end
@@ -975,6 +998,9 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.elapsedMs = 0
     _chapter8.directSightings = {}
     TeamBlackboard:Reset()
+    if _G.HELLO_SANDBOX_SMOKE_MODE == true then
+        TeamBlackboard:RunLifecycleSelfTest()
+    end
     TeamBlackboard:ConfigureCppService(tonumber(config.teamMemoryTtlMs) or 2500)
     _chapter8.teamMemory = {}
     _EnsureTeamMemory(0)

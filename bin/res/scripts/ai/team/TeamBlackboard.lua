@@ -1,12 +1,14 @@
 -- TeamBlackboard.lua
 -- Small shared-memory service for team-level AI samples.
 
+local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
+
 local TeamBlackboard = {}
 
 TeamBlackboard.EventTypes = {
-	EnemySighted = "EnemySighted",
-	SupportRequested = "SupportRequested",
-	SupportResponded = "SupportResponded",
+	EnemySighted = AIEvents.EventTypes.EnemySighted,
+	SupportRequested = AIEvents.EventTypes.SupportRequested,
+	SupportResponded = AIEvents.EventTypes.SupportResponded,
 	FocusTarget = "FocusTarget",
 	RetreatPoint = "RetreatPoint",
 	FormationSlot = "FormationSlot",
@@ -145,14 +147,14 @@ function TeamBlackboard:BuildEnemySightedEvent(sighting, timeMs)
 	if sighting == nil then
 		return nil
 	end
-	return {
-		eventType = TeamBlackboard.EventTypes.EnemySighted,
-		teamId = sighting.teamId,
-		senderId = sighting.spotterId,
-		targetId = sighting.targetId,
-		targetPos = _CloneVec3(sighting.targetPos),
-		timeMs = tonumber(timeMs) or 0,
-	}
+	local payload = AIEvents.Normalize(AIEvents.EventTypes.EnemySighted, sighting, {
+		scope = AIEvents.Scope.Team,
+		timeMs = timeMs,
+	})
+	if payload.position == nil then
+		return nil
+	end
+	return payload
 end
 
 function TeamBlackboard:ForgetVisibleEnemy(teamId, targetId)
@@ -240,6 +242,82 @@ function TeamBlackboard:WriteBestCppFactToBlackboard(agent, factType, keyPrefix,
 		return false
 	end
 	return service:writeBestTeamFactToBlackboard(agent, tostring(factType or ""), keyPrefix or "team.fact", allowOwnReport ~= false)
+end
+
+function TeamBlackboard:GetBestCppFact(teamId, factType, ignoredSourceAgentId)
+	local service = _CppService()
+	if service == nil or service.hasBestTeamFact == nil or service.getBestTeamFactPosition == nil then
+		return nil
+	end
+
+	local numericTeamId = tonumber(teamId) or 0
+	local factTypeText = tostring(factType or "")
+	local ignored = tonumber(ignoredSourceAgentId) or -1
+	if factTypeText == "" or not service:hasBestTeamFact(numericTeamId, factTypeText, ignored) then
+		return nil
+	end
+
+	local position = service:getBestTeamFactPosition(numericTeamId, factTypeText, ignored)
+	local sourceAgentId = service:getBestTeamFactSourceAgentId(numericTeamId, factTypeText, ignored)
+	local targetId = service:getBestTeamFactTargetId(numericTeamId, factTypeText, ignored)
+	return {
+		eventType = factTypeText,
+		factType = factTypeText,
+		teamId = numericTeamId,
+		sourceAgentId = sourceAgentId,
+		spotterId = sourceAgentId,
+		requesterId = sourceAgentId,
+		responderId = sourceAgentId,
+		agentId = sourceAgentId,
+		targetId = targetId,
+		targetAgentId = targetId,
+		targetPos = _CloneVec3(position),
+		position = _CloneVec3(position),
+		key = service:getBestTeamFactKey(numericTeamId, factTypeText, ignored),
+		confidence = service:getBestTeamFactConfidence(numericTeamId, factTypeText, ignored),
+		reportCount = service:getBestTeamFactReportCount(numericTeamId, factTypeText, ignored),
+		priority = service:getBestTeamFactPriority(numericTeamId, factTypeText, ignored),
+		timeMs = service:getBestTeamFactTimeMs(numericTeamId, factTypeText, ignored),
+		ageMs = service:getBestTeamFactAgeMs(numericTeamId, factTypeText, ignored),
+		cpp = true,
+	}
+end
+
+function TeamBlackboard:RunLifecycleSelfTest()
+	local service = _CppService()
+	if service == nil or service.clearTeamBlackboardFacts == nil or service.hasBestTeamFact == nil then
+		print("[TeamBlackboardLifecycleSelfTest] FAIL serviceUnavailable=true")
+		return false
+	end
+
+	local testTeamId = 9091
+	self:Reset()
+	local stored = self:RememberFocusTarget(testTeamId, {
+		sourceAgentId = 101,
+		targetId = 202,
+		targetPos = Vector3(1, 0, 2),
+		timeMs = 10,
+		confidence = 0.8,
+		key = "lifecycle:selftest",
+	})
+	local factBeforeReset = self:GetBestCppFact(testTeamId, TeamBlackboard.EventTypes.FocusTarget)
+	local countBeforeReset = self:GetCppFactCount()
+	self:Reset()
+	local factAfterReset = self:GetBestCppFact(testTeamId, TeamBlackboard.EventTypes.FocusTarget)
+	local countAfterReset = self:GetCppFactCount()
+	local luaAfterReset = self:GetValue(testTeamId, "focusTarget", nil)
+	local passed = stored ~= nil
+		and factBeforeReset ~= nil
+		and countBeforeReset > 0
+		and factAfterReset == nil
+		and countAfterReset == 0
+		and luaAfterReset == nil
+	print("[TeamBlackboardLifecycleSelfTest]", passed and "PASS" or "FAIL",
+		"beforeFacts=", countBeforeReset,
+		"afterFacts=", countAfterReset,
+		"cppCleared=", factAfterReset == nil,
+		"luaCleared=", luaAfterReset == nil)
+	return passed
 end
 
 function TeamBlackboard:RememberSupportRequest(teamId, request)
