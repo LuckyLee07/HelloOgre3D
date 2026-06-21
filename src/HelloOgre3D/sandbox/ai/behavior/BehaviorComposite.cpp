@@ -27,6 +27,14 @@ void BehaviorComposite::Reset()
 	m_reevaluateElapsedMs = 0.0f;
 }
 
+void BehaviorComposite::ResetForBuild(float reevaluateMs)
+{
+	m_runningIdx = -1;
+	m_children.clear();
+	ConfigureReevaluation(reevaluateMs);
+	ClearDebugName();
+}
+
 void BehaviorComposite::ConfigureReevaluation(float reevaluateMs)
 {
 	m_reevaluateMs = reevaluateMs;
@@ -223,6 +231,14 @@ void BehaviorParallel::Reset()
 	m_runningIdx = -1;
 }
 
+void BehaviorParallel::ResetForBuild(int successPolicy, int failurePolicy)
+{
+	BehaviorComposite::ResetForBuild(-1.0f);
+	m_childStatus.clear();
+	m_successPolicy = successPolicy == POLICY_ONE ? POLICY_ONE : POLICY_ALL;
+	m_failurePolicy = failurePolicy == POLICY_ALL ? POLICY_ALL : POLICY_ONE;
+}
+
 
 void BehaviorRandomSelector::BuildOrder()
 {
@@ -285,5 +301,11 @@ void BehaviorRandomSelector::Reset()
 		}
 	}
 	m_runningIdx = -1;
+	m_order.clear();
+}
+
+void BehaviorRandomSelector::ResetForBuild()
+{
+	BehaviorComposite::ResetForBuild(-1.0f);
 	m_order.clear();
 }

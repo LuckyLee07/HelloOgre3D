@@ -26,6 +26,7 @@ public:
 
 	// Reset：通知当前 RUNNING 子节点收尾，并清空游标。
 	virtual void Reset() override;
+	void ResetForBuild(float reevaluateMs);
 
 protected:
 	void ConfigureReevaluation(float reevaluateMs);
@@ -93,6 +94,7 @@ public:
 
 	virtual Status Tick(float deltaMs) override;
 	virtual void Reset() override;
+	void ResetForBuild(int successPolicy, int failurePolicy);
 	virtual const char* GetDebugType() const override { return "Parallel"; }
 
 private:
@@ -110,6 +112,7 @@ class BehaviorRandomSelector : public BehaviorComposite //tolua_exports
 public:
 	virtual Status Tick(float deltaMs) override;
 	virtual void Reset() override;
+	void ResetForBuild();
 	virtual const char* GetDebugType() const override { return "Random"; }
 
 private:

@@ -37,6 +37,7 @@ public:
 	//tolua_end
 
 	virtual Status Tick(float deltaMs) override;
+	void ResetForBuild(Blackboard* blackboard);
 	virtual const char* GetDebugType() const override { return "Condition"; }
 
 private:

@@ -11,6 +11,11 @@ void BehaviorNode::SetDebugName(const std::string& name)
 	m_debugName = name;
 }
 
+void BehaviorNode::ClearDebugName()
+{
+	m_debugName.clear();
+}
+
 std::string BehaviorNode::GetDebugLabel() const
 {
 	if (!m_debugName.empty()) return m_debugName;

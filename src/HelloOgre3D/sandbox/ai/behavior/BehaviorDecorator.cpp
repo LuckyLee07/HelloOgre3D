@@ -15,6 +15,12 @@ void BehaviorDecorator::Reset()
 	if (m_child) m_child->Reset();
 }
 
+void BehaviorDecorator::ResetForBuild(BehaviorNode* child)
+{
+	m_child = child;
+	ClearDebugName();
+}
+
 BehaviorInverter::BehaviorInverter(BehaviorNode* child)
 	: BehaviorDecorator(child)
 {

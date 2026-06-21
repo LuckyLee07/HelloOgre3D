@@ -10,6 +10,7 @@
 --   Action    -> driver:NewLuaAction(name) + BindToScript(script)
 --   Wait      -> driver:NewWait(waitMs). Use waitMs/ms for milliseconds, wait/seconds for seconds.
 --   Inverter / ForceSuccess / ForceFailure -> one-child decorators
+--   Subtree   -> expands a named config from config.subtrees
 -- Runtime params:
 --   params = { { blackboard = "key", type = "float", default = 0 } } reads from Blackboard per tick.
 --   type supports scalar values plus object-id / int-array / float-array / string-array / object-id-array.
@@ -97,6 +98,45 @@ local function _ListKeys(values)
         return "-"
     end
     return table.concat(keys, ",")
+end
+
+local function _ClearLoadedModule(moduleName)
+    if type(moduleName) ~= "string" or moduleName == "" then
+        return
+    end
+    package.loaded[moduleName] = nil
+    if moduleName:sub(-4) == ".lua" then
+        package.loaded[moduleName:sub(1, -5)] = nil
+    else
+        package.loaded[moduleName .. ".lua"] = nil
+    end
+end
+
+local function _BuildSubtree(cfg, context, path)
+    local key = cfg.subtree or cfg.ref or cfg.name
+    if key == nil then
+        _IssueError(context, cfg, path, "subtree", "Subtree node missing subtree/ref/name")
+        return nil
+    end
+    key = tostring(key)
+
+    local subtreeConfig = context.subtrees ~= nil and context.subtrees[key] or nil
+    if subtreeConfig == nil then
+        _IssueError(context, cfg, path, "subtree", "Subtree config not found '" .. key .. "'; known subtrees=" .. _ListKeys(context.subtrees))
+        return nil
+    end
+
+    context.subtreeStack = context.subtreeStack or {}
+    if context.subtreeStack[key] == true then
+        _IssueError(context, cfg, path, "subtree", "Subtree cycle detected at '" .. key .. "'")
+        return nil
+    end
+
+    context.subtreeStack[key] = true
+    context.subtreeBuildCount = (context.subtreeBuildCount or 0) + 1
+    local node = BehaviorTreeLoader.BuildNode(subtreeConfig, context, _FieldPath(path, "subtree[" .. key .. "]"))
+    context.subtreeStack[key] = nil
+    return node
 end
 
 local function _BuildDebugName(cfg, nodeType)
@@ -500,9 +540,16 @@ function BehaviorTreeLoader.BuildNode(cfg, context, path)
     end
 
     local nodeType = _GetNodeType(cfg)
+    if nodeType == nil and (cfg.subtree ~= nil or cfg.ref ~= nil) then
+        nodeType = "Subtree"
+    end
     if nodeType == nil then
         _IssueError(context, cfg, path, "node", "node type is missing")
         return nil
+    end
+
+    if nodeType == "Subtree" then
+        return _BuildSubtree(cfg, context, path)
     end
 
     if nodeType == "Sequence" then
@@ -582,14 +629,72 @@ function BehaviorTreeLoader.BuildNode(cfg, context, path)
     return nil
 end
 
+function BehaviorTreeLoader.LoadConfigModule(moduleName, globalName, options)
+    options = options or {}
+    local meta = {
+        moduleName = moduleName,
+        globalName = globalName,
+        reload = options.reload == true,
+    }
+
+    if type(moduleName) ~= "string" or moduleName == "" then
+        meta.error = "moduleName is empty"
+        print("BehaviorTreeLoader module load failed: moduleName is empty")
+        return nil, meta
+    end
+
+    local previousGlobal = nil
+    local shouldTrackGlobal = type(globalName) == "string" and globalName ~= ""
+    if shouldTrackGlobal then
+        previousGlobal = _G[globalName]
+        if meta.reload then
+            _G[globalName] = nil
+        end
+    end
+
+    if meta.reload then
+        _ClearLoadedModule(moduleName)
+    end
+
+    local ok, loaded = pcall(require, moduleName)
+    if not ok then
+        meta.error = tostring(loaded)
+        if shouldTrackGlobal and meta.reload then
+            _G[globalName] = previousGlobal
+            meta.restoredPreviousGlobal = true
+        end
+        print("BehaviorTreeLoader module load failed: module=" .. tostring(moduleName) .. " error=" .. tostring(loaded))
+        return nil, meta
+    end
+
+    meta.loadedReturnType = type(loaded)
+    local config = type(loaded) == "table" and loaded or nil
+    if config == nil and shouldTrackGlobal then
+        config = _G[globalName]
+        meta.usedGlobal = config ~= nil
+    end
+
+    if type(config) ~= "table" then
+        meta.error = "module did not return or assign a config table"
+        if shouldTrackGlobal and meta.reload then
+            _G[globalName] = previousGlobal
+            meta.restoredPreviousGlobal = true
+        end
+        print("BehaviorTreeLoader module load failed: module=" .. tostring(moduleName) .. " global=" .. tostring(globalName) .. " reason=" .. meta.error)
+        return nil, meta
+    end
+
+    return config, meta
+end
+
 function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
     if type(config) ~= "table" then
         _IssueError(nil, { node = "Tree" }, "root", "config", "tree config must be a table")
-        return nil
+        return nil, nil
     end
     if driver == nil then
         _IssueError(nil, { node = "Tree" }, "root", "driver", "driver is nil")
-        return nil
+        return nil, nil
     end
 
     local context = {
@@ -598,8 +703,11 @@ function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
         blackboard = blackboard,
         conditions = conditions or {},
         actions = config.actions or {},
+        subtrees = config.subtrees or {},
         actionDir = config.actionDir or _DEFAULT_ACTION_DIR,
         actionCache = {},
+        subtreeStack = {},
+        subtreeBuildCount = 0,
         errorCount = 0,
         warningCount = 0,
     }
@@ -618,7 +726,7 @@ function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
     local root = BehaviorTreeLoader.BuildNode(rootConfig, context, "root")
     if root == nil then
         print("BehaviorTreeLoader build failed: errors=" .. tostring(context.errorCount) .. " warnings=" .. tostring(context.warningCount))
-        return nil
+        return nil, context
     end
 
     local tree = driver:NewTree()
@@ -626,5 +734,45 @@ function BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
     if context.warningCount > 0 then
         print("BehaviorTreeLoader build completed with warnings: warnings=" .. tostring(context.warningCount))
     end
-    return tree
+    return tree, context
+end
+
+function BehaviorTreeLoader.BuildFromModule(moduleName, globalName, agent, driver, blackboard, conditions, options)
+    local config, meta = BehaviorTreeLoader.LoadConfigModule(moduleName, globalName, options)
+    if config == nil then
+        return nil, meta
+    end
+
+    local tree, context = BehaviorTreeLoader.Build(config, agent, driver, blackboard, conditions)
+    meta.context = context
+    return tree, meta
+end
+
+function BehaviorTreeLoader.ReloadModule(moduleName, globalName, agent, driver, blackboard, conditions, options)
+    local reloadOptions = {}
+    for key, value in pairs(options or {}) do
+        reloadOptions[key] = value
+    end
+    reloadOptions.reload = true
+
+    local tree, meta = BehaviorTreeLoader.BuildFromModule(moduleName, globalName, agent, driver, blackboard, conditions, reloadOptions)
+    if tree == nil then
+        local reason = meta ~= nil and meta.error or "build failed"
+        print("[BTHotReload] result=false module=" .. tostring(moduleName) .. " reason=" .. tostring(reason))
+        return false, meta
+    end
+    if driver == nil or driver.SetTree == nil then
+        if meta ~= nil then
+            meta.error = "driver SetTree unavailable"
+        end
+        print("[BTHotReload] result=false module=" .. tostring(moduleName) .. " reason=driver SetTree unavailable")
+        return false, meta
+    end
+
+    driver:SetTree(tree)
+    local context = meta ~= nil and meta.context or nil
+    print("[BTHotReload] result=true module=" .. tostring(moduleName) ..
+        " subtreeBuilds=" .. tostring(context ~= nil and context.subtreeBuildCount or 0) ..
+        " warnings=" .. tostring(context ~= nil and context.warningCount or 0))
+    return true, meta
 end

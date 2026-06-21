@@ -10,6 +10,7 @@ public:
 	virtual ~BehaviorDecorator();
 
 	virtual void Reset() override;
+	void ResetForBuild(BehaviorNode* child);
 
 protected:
 	BehaviorNode* m_child;  // non-owning; driver owns all nodes

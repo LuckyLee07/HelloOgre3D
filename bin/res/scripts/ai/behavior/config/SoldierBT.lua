@@ -37,6 +37,41 @@ SoldierBTConfig = {
         waitForSquadMate = "WaitForSquadMateAction.lua",
     },
 
+    subtrees = {
+        combat = {
+            node = "Sequence",
+            name = "combatBranch",
+            children = {
+                { node = "Condition", condition = "HasEnemy" },
+                {
+                    node = "Selector",
+                    children = {
+                        {
+                            node = "Sequence",
+                            children = {
+                                { node = "Condition", condition = "HasAmmo" },
+                                {
+                                    node = "Selector",
+                                    children = {
+                                        {
+                                            node = "Sequence",
+                                            children = {
+                                                { node = "Condition", condition = "CanShootEnemy" },
+                                                { node = "Action", action = "shoot" },
+                                            },
+                                        },
+                                        { node = "Action", action = "pursue" },
+                                    },
+                                },
+                            },
+                        },
+                        { node = "Action", action = "reload" },
+                    },
+                },
+            },
+        },
+    },
+
     tree = {
         node = "Selector",
         children = {
@@ -84,37 +119,7 @@ SoldierBTConfig = {
                                     { node = "Action", action = "callForBackup", reuse = false },
                                 },
                             },
-                            {
-                                node = "Sequence",
-                                children = {
-                                    { node = "Condition", condition = "HasEnemy" },
-                                    {
-                                        node = "Selector",
-                                        children = {
-                                            {
-                                                node = "Sequence",
-                                                children = {
-                                                    { node = "Condition", condition = "HasAmmo" },
-                                                    {
-                                                        node = "Selector",
-                                                        children = {
-                                                            {
-                                                                node = "Sequence",
-                                                                children = {
-                                                                    { node = "Condition", condition = "CanShootEnemy" },
-                                                                    { node = "Action", action = "shoot" },
-                                                                },
-                                                            },
-                                                            { node = "Action", action = "pursue" },
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                            { node = "Action", action = "reload" },
-                                        },
-                                    },
-                                },
-                            },
+                            { node = "Subtree", subtree = "combat" },
                             {
                                 node = "Sequence",
                                 name = "investigateSound",

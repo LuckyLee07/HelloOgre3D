@@ -34,6 +34,7 @@ public:
 	// 父节点决定放弃当前子树时调用，子树用来清理 RUNNING 状态（OnCleanUp、累积器等）。
 	// 默认空实现：纯条件叶不需要做任何事。
 	virtual void Reset() {}
+	void ClearDebugName();
 
 	virtual const char* GetDebugType() const { return "Node"; }
 	std::string GetDebugLabel() const;

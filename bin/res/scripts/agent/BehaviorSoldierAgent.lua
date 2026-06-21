@@ -8,11 +8,39 @@
 --   4. driver 持有所有节点的所有权，agent 销毁时统一释放
 --   5. C++ 每帧 tick driver，driver 走 tree:Tick → 各节点逐级 Tick → action lua 回调
 
+local _SOLDIER_BT_MODULE = "res.scripts.ai.behavior.config.SoldierBT.lua"
+local _SOLDIER_BT_GLOBAL = "SoldierBTConfig"
+
 require("res.scripts.ai.behavior.SoldierConditions.lua")
 require("res.scripts.ai.behavior.BehaviorTreeLoader.lua")
-require("res.scripts.ai.behavior.config.SoldierBT.lua")
+require(_SOLDIER_BT_MODULE)
 
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+
+local function _GetBehaviorTreePreset(sampleName)
+    if ConfigManager == nil or ConfigManager.GetSamplePreset == nil then
+        return nil
+    end
+    local preset = ConfigManager:GetSamplePreset(sampleName)
+    return preset ~= nil and preset.behaviorTree or nil
+end
+
+local function _ShouldRunBtRebuildSelfTest(sampleName)
+    local behaviorTree = _GetBehaviorTreePreset(sampleName)
+    return behaviorTree ~= nil and behaviorTree.rebuildSelfTest == true
+end
+
+local function _ShouldRunBtHotReloadSelfTest(sampleName)
+    local behaviorTree = _GetBehaviorTreePreset(sampleName)
+    return behaviorTree ~= nil and behaviorTree.hotReloadSelfTest == true
+end
+
+local function _GetAgentId(agent)
+    if agent == nil then return -1 end
+    if agent.GetObjId ~= nil then return agent:GetObjId() end
+    if agent.GetId ~= nil then return agent:GetId() end
+    return -1
+end
 
 function Agent_Initialize(agent)
     if agent == nil then return end
@@ -42,12 +70,34 @@ function Agent_Initialize(agent)
         ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
     end
 
-    local tree = BehaviorTreeLoader.Build(SoldierBTConfig, agent, driver, bb, SoldierConditions)
+    if _ShouldRunBtRebuildSelfTest(sampleName) then
+        local warmupTree = BehaviorTreeLoader.Build(SoldierBTConfig, agent, driver, bb, SoldierConditions)
+        if warmupTree ~= nil then
+            driver:SetTree(warmupTree)
+        end
+    end
+
+    local tree = BehaviorTreeLoader.BuildFromModule(_SOLDIER_BT_MODULE, _SOLDIER_BT_GLOBAL, agent, driver, bb, SoldierConditions)
     if tree == nil then
         print("Error: failed to build Soldier behavior tree from config")
         return
     end
     driver:SetTree(tree)
+
+    if _ShouldRunBtHotReloadSelfTest(sampleName) then
+        local ok, meta = BehaviorTreeLoader.ReloadModule(_SOLDIER_BT_MODULE, _SOLDIER_BT_GLOBAL, agent, driver, bb, SoldierConditions)
+        local context = meta ~= nil and meta.context or nil
+        if ok then
+            print("[BTHotReloadSelfTest] PASS agent=" .. tostring(_GetAgentId(agent)) ..
+                " module=" .. tostring(_SOLDIER_BT_MODULE) ..
+                " subtreeBuilds=" .. tostring(context ~= nil and context.subtreeBuildCount or 0) ..
+                " warnings=" .. tostring(context ~= nil and context.warningCount or 0))
+        else
+            print("[BTHotReloadSelfTest] FAIL agent=" .. tostring(_GetAgentId(agent)) ..
+                " module=" .. tostring(_SOLDIER_BT_MODULE) ..
+                " reason=" .. tostring(meta ~= nil and meta.error or "unknown"))
+        end
+    end
 end
 
 function Agent_Update(agent, deltaTimeInMillis)

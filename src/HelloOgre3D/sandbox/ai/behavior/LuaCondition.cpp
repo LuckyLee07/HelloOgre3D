@@ -80,6 +80,24 @@ int LuaCondition::GetResultCacheDependencyCount() const
 	return static_cast<int>(m_resultCacheDependencyKeys.size());
 }
 
+void LuaCondition::ResetForBuild(Blackboard* blackboard)
+{
+	if (m_evalLuaRef != LUA_NOREF)
+	{
+		lua_State* L = GetScriptLuaVM()->getLuaState();
+		if (L) luaL_unref(L, LUA_REGISTRYINDEX, m_evalLuaRef);
+	}
+	m_evalLuaRef = LUA_NOREF;
+	m_blackboard = blackboard;
+	m_resultCacheEnabled = false;
+	m_resultCacheTtlMs = 0.0f;
+	m_resultCacheDependencyKeys.clear();
+	m_resultCacheHitCount = 0;
+	m_resultCacheInvalidatedCount = 0;
+	InvalidateResultCache();
+	ClearDebugName();
+}
+
 BehaviorNode::Status LuaCondition::Tick(float deltaMs)
 {
 	if (m_evalLuaRef == LUA_NOREF) return TraceStatus(STATUS_FAILURE);

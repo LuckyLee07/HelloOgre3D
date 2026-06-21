@@ -196,6 +196,13 @@ function ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
 	if driver.SetRuntimeTickStaggerEnabled ~= nil then
 		driver:SetRuntimeTickStaggerEnabled(tickStagger)
 	end
+	local distanceLodNear = getEnvNumber("HELLO_BT_DISTANCE_LOD_NEAR", tonumber(config.distanceLodNear) or 0)
+	local distanceLodFar = getEnvNumber("HELLO_BT_DISTANCE_LOD_FAR", tonumber(config.distanceLodFar) or 0)
+	local distanceLodMaxMultiplier = getEnvNumber("HELLO_BT_DISTANCE_LOD_MAX_MULTIPLIER", tonumber(config.distanceLodMaxMultiplier) or 1)
+	if driver.SetRuntimeDistanceLod ~= nil then
+		driver:SetRuntimeDistanceLod(distanceLodNear, distanceLodFar, distanceLodMaxMultiplier)
+		configured = configured or (distanceLodFar > distanceLodNear and distanceLodMaxMultiplier > 1)
+	end
 	local maxTreeTicksPerFrame = getEnvNumber("HELLO_BT_MAX_TREE_TICKS_PER_FRAME", tonumber(config.maxTreeTicksPerFrame) or 0)
 	if driver.SetRuntimeMaxTreeTicksPerFrame ~= nil then
 		driver:SetRuntimeMaxTreeTicksPerFrame(maxTreeTicksPerFrame)

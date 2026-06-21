@@ -33,3 +33,10 @@ void BehaviorWait::Reset()
 	m_started = false;
 	m_elapsedMs = 0.0f;
 }
+
+void BehaviorWait::ResetForBuild(float waitMs)
+{
+	Reset();
+	m_waitMs = waitMs < 0.0f ? 0.0f : waitMs;
+	ClearDebugName();
+}
