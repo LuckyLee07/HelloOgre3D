@@ -6,6 +6,7 @@ require("res.scripts.agent.IndirectSoldierAgent.lua")
 require("res.scripts.agent.DecisionSoldierAgent.lua")
 
 local InfluenceMap = require("res.scripts.ai.tactics.InfluenceMap.lua")
+local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
 local ParityTrace = require("res.scripts.samples.parity_trace")
 local Chapter9Profile = require("res.scripts.config.chapter9_tactics_profile")
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
@@ -550,23 +551,65 @@ local function _PublishTacticEvent(eventType, event)
 	end
 
 	if _HasCppTacticalEvents() then
-		local position = event.position or event.seenAt
-		if position == nil and event.agent ~= nil then
-			position = event.agent:GetPosition()
-		end
-		if position ~= nil then
-			local _, senderId, targetId, teamId, targetTeamId = _GetEventTraceInfo(eventType, event)
-			SandboxTactics:publishTacticalEvent(eventType, senderId, targetId, teamId, targetTeamId, _ProjectToNav(position), math.floor(_elapsedMs), "global", false)
-		end
+		AIEvents.PublishTacticalEvent(eventType, event, {
+			timeMs = _elapsedMs,
+			scope = AIEvents.Scope.Global,
+			queueEvent = false,
+			projectPosition = _ProjectToNav,
+		})
 	end
 end
 
-_G.Chapter9Legacy_OnAgentTacticEvent = function(eventType, event)
-	local config = _GetConfig()
-	if _ReadBool(config, "useLegacyAgentEvents", false) ~= true then
+local function _InstallLegacyEventBridge()
+	_G.Chapter9Legacy_OnAgentTacticEventOwner = _sampleName
+	_G.Chapter9Legacy_OnAgentTacticEvent = function(eventType, event)
+		if _G.HELLO_SANDBOX_SAMPLE_NAME ~= _sampleName
+			or _G.Chapter9Legacy_OnAgentTacticEventOwner ~= _sampleName then
+			return
+		end
+		local config = _GetConfig()
+		if _ReadBool(config, "useLegacyAgentEvents", false) ~= true then
+			return
+		end
+		_PublishTacticEvent(eventType, event)
+	end
+end
+
+local function _RunLegacyEventBridgeSelfTest(config)
+	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true
+		or _ReadBool(config, "legacyEventBridgeSelfTest", false) ~= true
+		or _G.Chapter9Legacy_OnAgentTacticEvent == nil then
 		return
 	end
-	_PublishTacticEvent(eventType, event)
+
+	local beforeCount = _tactics.eventCount
+	local oldSampleName = _G.HELLO_SANDBOX_SAMPLE_NAME
+	local oldOwner = _G.Chapter9Legacy_OnAgentTacticEventOwner
+
+	_G.HELLO_SANDBOX_SAMPLE_NAME = "Sandbox18"
+	_G.Chapter9Legacy_OnAgentTacticEventOwner = _sampleName
+	pcall(_G.Chapter9Legacy_OnAgentTacticEvent, "BulletShot", {})
+	local sampleGuard = _tactics.eventCount == beforeCount
+
+	_G.HELLO_SANDBOX_SAMPLE_NAME = oldSampleName
+	_G.Chapter9Legacy_OnAgentTacticEventOwner = "stale-owner"
+	pcall(_G.Chapter9Legacy_OnAgentTacticEvent, "BulletImpact", {})
+	local ownerGuard = _tactics.eventCount == beforeCount
+
+	_G.HELLO_SANDBOX_SAMPLE_NAME = oldSampleName
+	_G.Chapter9Legacy_OnAgentTacticEventOwner = oldOwner
+
+	if sampleGuard and ownerGuard then
+		print("[Chapter9LegacyEventBridgeSelfTest] PASS",
+			"sampleGuard=", tostring(sampleGuard),
+			"ownerGuard=", tostring(ownerGuard),
+			"eventDelta=", tostring(_tactics.eventCount - beforeCount))
+	else
+		print("[Chapter9LegacyEventBridgeSelfTest] FAIL",
+			"sampleGuard=", tostring(sampleGuard),
+			"ownerGuard=", tostring(ownerGuard),
+			"eventDelta=", tostring(_tactics.eventCount - beforeCount))
+	end
 end
 
 local function _PruneTimedEvents(events, deltaTimeInMillis)
@@ -1202,6 +1245,8 @@ function Sandbox_Initialize()
 	local config = _GetConfig()
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = _ReadBool(config, "suppressPathDraw", true)
 	_uiEnabled = not _ShouldHideUi(config)
+	_InstallLegacyEventBridge()
+	_RunLegacyEventBridgeSelfTest(config)
 
 	if _uiEnabled then
 		GUI_CreateCameraAndProfileInfo()

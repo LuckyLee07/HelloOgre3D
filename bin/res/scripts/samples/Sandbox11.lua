@@ -4,6 +4,7 @@
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
 
 local textSize = {w = 300, h = 185}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -344,7 +345,7 @@ local function _ReadDirectSighting(agent)
     end
 
     return {
-        eventType = "EnemySighted",
+        eventType = AIEvents.EventTypes.EnemySighted,
         teamId = agent:GetTeamId(),
         spotter = agent,
         spotterId = _GetAgentId(agent),
@@ -366,7 +367,7 @@ local function _BuildOriginalSighting(agent, target, line)
 
     local toTarget = target:GetPosition() - agent:GetPosition()
     return {
-        eventType = "EnemySighted",
+        eventType = AIEvents.EventTypes.EnemySighted,
         teamId = agent:GetTeamId(),
         spotter = agent,
         spotterId = _GetAgentId(agent),
@@ -424,14 +425,10 @@ local function _PublishEnemySighted(sighting)
         return
     end
 
-    local event = {
-        eventType = "EnemySighted",
-        teamId = sighting.teamId,
-        senderId = sighting.spotterId,
-        targetId = sighting.targetId,
-        targetPos = sighting.targetPos,
+    local event = AIEvents.Normalize(AIEvents.EventTypes.EnemySighted, sighting, {
+        scope = AIEvents.Scope.Team,
         timeMs = _chapter8.elapsedMs,
-    }
+    })
     memory.lastEvent = event
     _chapter8.totalBroadcasts = _chapter8.totalBroadcasts + 1
     _PushRecentEvent(event)
@@ -508,7 +505,7 @@ local function _ApplyTeamMemoryToAgent(agent)
     end
 
     bb:SetAgent("enemy", target)
-    bb:SetString("chapter8.receivedEvent", "EnemySighted")
+    bb:SetString("chapter8.receivedEvent", AIEvents.EventTypes.EnemySighted)
     bb:SetObjectId("chapter8.sharedTargetId", sighting.targetId)
     bb:SetVec3("chapter8.sharedTargetPos", sighting.targetPos)
     bb:SetInt("chapter8.sharedFromAgentId", sighting.spotterId)

@@ -2,6 +2,7 @@ require("res.scripts.agent.AgentUtils.lua")
 
 local ActionIntent = require("res.scripts.ai.decision.ActionIntent.lua")
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
+local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
 
 local _MOVE_SEGMENT_MS = 500
 local _IDLE_MS = 2000
@@ -299,12 +300,16 @@ local function _ApplyTeamEnemySighting(agent, state, event)
 end
 
 local function _DispatchTeamEnemySighting(message)
-	if message == nil or message.senderTeam == nil or message.event == nil then
+	if message == nil or message.event == nil then
+		return
+	end
+	local teamId = message.teamId or message.senderTeam
+	if teamId == nil then
 		return
 	end
 	for _, state in pairs(_states) do
 		local agent = state.agent
-		if agent ~= nil and agent:GetTeamId() == message.senderTeam then
+		if agent ~= nil and agent:GetTeamId() == teamId then
 			_ApplyTeamEnemySighting(agent, state, message.event)
 		end
 	end
@@ -319,10 +324,11 @@ local function _DispatchLegacyMessages(timeMs)
 	local messages = _pendingLegacyMessages
 	_pendingLegacyMessages = {}
 	for _, message in ipairs(messages) do
+		local legacyEvent = message.event or message.raw
 		if _G.Chapter9Legacy_OnAgentTacticEvent ~= nil then
-			pcall(_G.Chapter9Legacy_OnAgentTacticEvent, message.eventType, message.event)
+			pcall(_G.Chapter9Legacy_OnAgentTacticEvent, message.eventType, legacyEvent)
 		end
-		if message.eventType == "EnemySighted" then
+		if message.eventType == AIEvents.EventTypes.EnemySighted then
 			_DispatchTeamEnemySighting(message)
 		end
 	end
@@ -334,16 +340,19 @@ local function _SendLegacyTeamMessage(agent, eventType, event)
 	end
 
 	event = event or {}
+	event.eventType = eventType
 	event.type = eventType
 	event.sender = event.sender or agent
 	event.teamId = agent:GetTeamId()
 	event.teamOnly = true
 
-	table.insert(_pendingLegacyMessages, {
-		eventType = eventType,
-		event = event,
-		senderTeam = agent:GetTeamId(),
+	local payload = AIEvents.Normalize(eventType, event, {
+		scope = AIEvents.Scope.Team,
+		timeMs = event.timeMs or event.lastSeen,
 	})
+	payload.event = event
+	payload.senderTeam = payload.teamId
+	table.insert(_pendingLegacyMessages, payload)
 end
 
 local function _GetFallbackEyePosition(agent)
@@ -652,6 +661,7 @@ local function _RunPendingCleanup(agent, state)
 		_SendLegacyTeamMessage(agent, "PositionUpdate", {
 			agent = agent,
 			position = agent:GetPosition(),
+			timeMs = state.timeMs,
 		})
 	end
 end
@@ -751,6 +761,7 @@ local function _BeginPursue(agent, state, enemy)
 			_SendLegacyTeamMessage(agent, "EnemySelection", {
 				agent = agent,
 				position = agent:GetPosition(),
+				timeMs = state.timeMs,
 			})
 		end
 	end
