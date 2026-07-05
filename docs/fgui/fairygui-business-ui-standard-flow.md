@@ -15,19 +15,19 @@
 
    ```powershell
    python -B tools\fgui_autogen\fairygui_generate_ui.py `
-   	--asset-dir bin\res\assets\act_38 `
-   	--package act_38_test `
-   	--component QingLuanActMain `
-   	--ui-name BusinessBenchmark `
-   	--manifest-output bin\res\assets\fairygui_manifests\business_benchmark.json `
-   	--registry-output bin\res\assets\fairygui_manifests\business_benchmark.registry.lua `
-   	--registry-aggregate-output bin\res\scripts\ui\GeneratedUIRegistry.lua `
-   	--layer Popup `
-   	--group Benchmark `
-   	--scene BusinessBenchmark `
-   	--cache false `
-   	--full-screen `
-   	--close-on-escape
+    --asset-dir bin\res\assets\act_38 `
+    --package act_38_test `
+    --component QingLuanActMain `
+    --ui-name BusinessBenchmark `
+    --manifest-output bin\res\assets\fairygui_manifests\business_benchmark.json `
+    --registry-output bin\res\assets\fairygui_manifests\business_benchmark.registry.lua `
+    --registry-aggregate-output bin\res\scripts\ui\GeneratedUIRegistry.lua `
+    --layer Popup `
+    --group Benchmark `
+    --scene BusinessBenchmark `
+    --cache false `
+    --full-screen `
+    --close-on-escape
    ```
 
 3. 填业务代码。
@@ -52,9 +52,9 @@
 
    ```lua
    local ctrl = FairyGuiManager:Open("BusinessBenchmark", {
-   	key = "BusinessBenchmarkPage",
-   	scene = "BusinessBenchmark",
-   	group = "BusinessBenchmark",
+    key = "BusinessBenchmarkPage",
+    scene = "BusinessBenchmark",
+    group = "BusinessBenchmark",
    })
    ```
 

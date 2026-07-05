@@ -9,6 +9,7 @@
 #include "OgreVector3.h"
 
 class InfluenceMapSystem;
+class NavigationMesh;
 
 namespace Ogre
 {
@@ -22,8 +23,8 @@ public:
 	TacticalDebugDrawService();
 	~TacticalDebugDrawService();
 
-	int DrawLayer(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
-	int RebuildLayerDebugVisual(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName);
+	int DrawLayer(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const NavigationMesh* navMesh, const Ogre::String& navMeshName);
+	int RebuildLayerDebugVisual(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const NavigationMesh* navMesh, const Ogre::String& navMeshName);
 	void ConfigureLayer(const std::string& layerName, float yOffset, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName, int drawOrder);
 	void SetLayerDrawOrder(const std::string& layerName, int drawOrder);
 	void SetVisible(bool visible);
@@ -48,6 +49,9 @@ private:
 		float maxProjectionDistance;
 		Ogre::String navMeshName;
 		int drawOrder;
+		int lastDrawnCells;
+		int lastProjectedCells;
+		int lastProjectionRejectedCells;
 	};
 
 	struct DebugVisual

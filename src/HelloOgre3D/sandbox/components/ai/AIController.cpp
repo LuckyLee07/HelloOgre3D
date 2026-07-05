@@ -182,7 +182,6 @@ void AIController::onAttach(BaseObject* owner)
 	SetPerceptionResultCacheEnabled(ReadPerceptionCacheEnabledFromEnv());
 	m_visionSensor.Clear();
 	m_perceptionCache.Reset();
-	InitDefaultDriver();
 }
 
 void AIController::onDetach()
@@ -193,6 +192,12 @@ void AIController::onDetach()
 	m_perceptionCache.Reset();
 	SetEnemy(nullptr);
 	IComponent::onDetach();
+}
+
+void AIController::onSandboxServicesChanged(const SandboxServices* services)
+{
+	(void)services;
+	InitDefaultDriver();
 }
 
 int AIController::getUpdateOrder() const
@@ -210,6 +215,12 @@ void AIController::InitDefaultDriver()
 {
 	AgentObject* owner = GetAgentOwner();
 	if (owner == nullptr || m_driver != nullptr)
+	{
+		return;
+	}
+
+	const SandboxServices* services = GetSandboxServices();
+	if (services == nullptr)
 	{
 		return;
 	}

@@ -1,5 +1,6 @@
 #include "ai/tactics/TacticalDebugDrawService.h"
 
+#include "ai/navigation/NavigationMesh.h"
 #include "ai/tactics/InfluenceMapSystem.h"
 #include "debug/DebugDrawer.h"
 #include "systems/service/SceneFactory.h"
@@ -68,6 +69,27 @@ namespace
 		const int priority = std::max(0, std::min(1000, drawOrder));
 		return static_cast<unsigned short>(110 + priority);
 	}
+
+	bool ResolveDebugCellPosition(const Ogre::Vector3& cellPosition, float yOffset, bool projectToNav, float maxProjectionDistance, const NavigationMesh* navMesh, Ogre::Vector3& outPosition, bool& outProjected)
+	{
+		outProjected = false;
+		if (projectToNav && navMesh != nullptr)
+		{
+			const Ogre::Vector3 navPosition = navMesh->FindClosestPoint(cellPosition);
+			const float dx = navPosition.x - cellPosition.x;
+			const float dz = navPosition.z - cellPosition.z;
+			const float maxDistance = std::max(0.0f, maxProjectionDistance);
+			if (maxDistance > 0.0f && dx * dx + dz * dz > maxDistance * maxDistance)
+				return false;
+
+			outPosition = Ogre::Vector3(navPosition.x, navPosition.y + yOffset, navPosition.z);
+			outProjected = true;
+			return true;
+		}
+
+		outPosition = Ogre::Vector3(cellPosition.x, cellPosition.y + yOffset, cellPosition.z);
+		return true;
+	}
 }
 
 TacticalDebugDrawService::DebugLayerConfig::DebugLayerConfig()
@@ -84,6 +106,9 @@ TacticalDebugDrawService::DebugLayerConfig::DebugLayerConfig()
 	, maxProjectionDistance(0.0f)
 	, navMeshName("default")
 	, drawOrder(0)
+	, lastDrawnCells(0)
+	, lastProjectedCells(0)
+	, lastProjectionRejectedCells(0)
 {
 }
 
@@ -97,7 +122,7 @@ TacticalDebugDrawService::~TacticalDebugDrawService()
 	ClearVisuals();
 }
 
-int TacticalDebugDrawService::DrawLayer(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
+int TacticalDebugDrawService::DrawLayer(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const NavigationMesh* navMesh, const Ogre::String& navMeshName)
 {
 	if (influenceMap == nullptr)
 		return 0;
@@ -107,31 +132,41 @@ int TacticalDebugDrawService::DrawLayer(const InfluenceMapSystem* influenceMap, 
 		return 0;
 
 	StoreLayerConfig(layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
-	(void)projectToNav;
-	(void)maxProjectionDistance;
-	(void)navMeshName;
 	const float cellSize = influenceMap->GetCellSize();
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
 	int drawn = 0;
+	int projected = 0;
+	int rejected = 0;
 
 	std::vector<Ogre::Vector3> cellPositions;
 	std::vector<float> cellValues;
 	influenceMap->CollectDebugCells(layerName, safeThreshold, limit, drawNeutralCells, cellPositions, cellValues);
 	for (size_t i = 0; i < cellPositions.size(); ++i)
 	{
-		Ogre::Vector3 drawPosition = cellPositions[i];
-		drawPosition.y += yOffset;
+		Ogre::Vector3 drawPosition = Ogre::Vector3::ZERO;
+		bool projectedCell = false;
+		if (!ResolveDebugCellPosition(cellPositions[i], yOffset, projectToNav, maxProjectionDistance, navMesh, drawPosition, projectedCell))
+		{
+			++rejected;
+			continue;
+		}
+		if (projectedCell)
+			++projected;
 		const Ogre::ColourValue color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
 		debugDrawer->drawSquare(drawPosition, cellSize, color, true);
 		drawPosition.y += -0.5f;
 		debugDrawer->drawSquare(drawPosition, cellSize, gridColor, false);
 		++drawn;
 	}
+	DebugLayerConfig& config = GetOrCreateLayerConfig(layerName);
+	config.lastDrawnCells = drawn;
+	config.lastProjectedCells = projected;
+	config.lastProjectionRejectedCells = rejected;
 	return drawn;
 }
 
-int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
+int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* influenceMap, const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const NavigationMesh* navMesh, const Ogre::String& navMeshName)
 {
 	if (influenceMap == nullptr)
 		return 0;
@@ -147,13 +182,12 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 	};
 
 	const DebugLayerConfig config = StoreLayerConfig(layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
-	(void)projectToNav;
-	(void)maxProjectionDistance;
-	(void)navMeshName;
 	const float cellSize = influenceMap->GetCellSize();
 	const float safeThreshold = std::max(0.0f, threshold);
 	const int limit = maxCells > 0 ? maxCells : std::numeric_limits<int>::max();
 	std::vector<DrawCell> cells;
+	int projected = 0;
+	int rejected = 0;
 
 	std::vector<Ogre::Vector3> positions;
 	std::vector<float> cellValues;
@@ -161,8 +195,17 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 	cells.reserve(positions.size());
 	for (size_t i = 0; i < positions.size(); ++i)
 	{
+		Ogre::Vector3 drawPosition = Ogre::Vector3::ZERO;
+		bool projectedCell = false;
+		if (!ResolveDebugCellPosition(positions[i], yOffset, projectToNav, maxProjectionDistance, navMesh, drawPosition, projectedCell))
+		{
+			++rejected;
+			continue;
+		}
+		if (projectedCell)
+			++projected;
 		DrawCell cell;
-		cell.position = Ogre::Vector3(positions[i].x, positions[i].y + yOffset, positions[i].z);
+		cell.position = drawPosition;
 		cell.color = BlendInfluenceColor(cellValues[i], positiveValue, zeroValue, negativeValue);
 		cells.push_back(cell);
 	}
@@ -241,6 +284,10 @@ int TacticalDebugDrawService::RebuildLayerDebugVisual(const InfluenceMapSystem* 
 	manualObject->end();
 	visual.node->setVisible(m_visible);
 	visual.node->_updateBounds();
+	DebugLayerConfig& statsConfig = GetOrCreateLayerConfig(layerName);
+	statsConfig.lastDrawnCells = static_cast<int>(cells.size());
+	statsConfig.lastProjectedCells = projected;
+	statsConfig.lastProjectionRejectedCells = rejected;
 	return static_cast<int>(cells.size());
 }
 
@@ -318,6 +365,10 @@ std::string TacticalDebugDrawService::BuildDebugSummary() const
 			<< ",neutral=" << (config.drawNeutralCells ? "true" : "false")
 			<< ",projectToNav=" << (config.projectToNav ? "true" : "false")
 			<< ",nav=" << config.navMeshName
+			<< ",maxProjectionDistance=" << config.maxProjectionDistance
+			<< ",drawn=" << config.lastDrawnCells
+			<< ",projected=" << config.lastProjectedCells
+			<< ",projectionRejected=" << config.lastProjectionRejectedCells
 			<< ")";
 	}
 	return stream.str();
@@ -344,5 +395,8 @@ TacticalDebugDrawService::DebugLayerConfig TacticalDebugDrawService::StoreLayerC
 	config.projectToNav = projectToNav;
 	config.maxProjectionDistance = maxProjectionDistance;
 	config.navMeshName = navMeshName;
+	config.lastDrawnCells = 0;
+	config.lastProjectedCells = 0;
+	config.lastProjectionRejectedCells = 0;
 	return config;
 }

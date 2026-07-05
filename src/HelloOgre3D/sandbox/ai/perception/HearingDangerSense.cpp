@@ -163,6 +163,7 @@ void HearingDangerSense::Update(const std::vector<AgentObject*>& agents, int del
 {
 	m_currentTimeMs += std::max(0, deltaMs);
 	m_prunedEventCount += PruneEvents();
+	PruneCooldowns();
 
 	if (!m_config.enabled)
 	{
@@ -287,6 +288,39 @@ int HearingDangerSense::PruneEvents()
 		if (m_currentTimeMs - iter->timeMs > iter->ttlMs)
 		{
 			iter = m_events.erase(iter);
+			++pruned;
+		}
+		else
+		{
+			++iter;
+		}
+	}
+	return pruned;
+}
+
+int HearingDangerSense::PruneCooldowns()
+{
+	int pruned = 0;
+	const long long heardCooldownMs = std::max(0, m_config.responseCooldownMs);
+	for (std::unordered_map<std::string, long long>::iterator iter = m_lastHeardAt.begin(); iter != m_lastHeardAt.end();)
+	{
+		if (m_currentTimeMs - iter->second > heardCooldownMs)
+		{
+			iter = m_lastHeardAt.erase(iter);
+			++pruned;
+		}
+		else
+		{
+			++iter;
+		}
+	}
+
+	const long long dangerCooldownMs = std::max(0, m_config.dangerCooldownMs);
+	for (std::unordered_map<std::string, long long>::iterator iter = m_lastDangerAt.begin(); iter != m_lastDangerAt.end();)
+	{
+		if (m_currentTimeMs - iter->second > dangerCooldownMs)
+		{
+			iter = m_lastDangerAt.erase(iter);
 			++pruned;
 		}
 		else

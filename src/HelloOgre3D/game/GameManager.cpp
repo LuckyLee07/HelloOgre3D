@@ -73,9 +73,9 @@ GameManager::GameManager(ClientManager* pClientMgr)
 
 GameManager::~GameManager()
 {
+	SAFE_DELETE(m_pObjectManager);
 	SceneFactory::SetRootSceneNode(nullptr);
 
-	SAFE_DELETE(m_pObjectManager);
 	SAFE_DELETE(m_pObjectFactory);
 	SAFE_DELETE(m_pAgentConfigService);
 	SAFE_DELETE(m_pNavigationService);

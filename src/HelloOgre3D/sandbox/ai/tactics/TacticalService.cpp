@@ -305,14 +305,16 @@ int TacticalService::drawTacticalInfluenceLayer(const std::string& layerName, fl
 {
 	if (m_queryService == nullptr || m_debugDrawService == nullptr)
 		return 0;
-	return m_debugDrawService->DrawLayer(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
+	const NavigationMesh* navMesh = projectToNav ? ResolveNavigationMesh(navMeshName) : nullptr;
+	return m_debugDrawService->DrawLayer(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMesh, navMeshName);
 }
 
 int TacticalService::rebuildTacticalInfluenceLayerDebugVisual(const std::string& layerName, float yOffset, const Ogre::ColourValue& positiveValue, const Ogre::ColourValue& zeroValue, const Ogre::ColourValue& negativeValue, const Ogre::ColourValue& gridColor, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName)
 {
 	if (m_queryService == nullptr || m_debugDrawService == nullptr)
 		return 0;
-	return m_debugDrawService->RebuildLayerDebugVisual(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName);
+	const NavigationMesh* navMesh = projectToNav ? ResolveNavigationMesh(navMeshName) : nullptr;
+	return m_debugDrawService->RebuildLayerDebugVisual(m_queryService->GetInfluenceMapSystem(), layerName, yOffset, positiveValue, zeroValue, negativeValue, gridColor, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMesh, navMeshName);
 }
 
 void TacticalService::configureTacticalInfluenceLayerDebug(const std::string& layerName, float yOffset, float threshold, int maxCells, bool drawNeutralCells, bool projectToNav, float maxProjectionDistance, const Ogre::String& navMeshName, int drawOrder)

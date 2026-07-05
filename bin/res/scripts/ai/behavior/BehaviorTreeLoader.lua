@@ -457,7 +457,9 @@ local function _CreateAction(cfg, context, path)
     end
 
     local reuse = cfg.reuse
-    if reuse == nil then reuse = true end
+    if reuse == nil then
+        reuse = cfg.stateless == true
+    end
 
     if reuse and context.actionCache[key] ~= nil then
         return context.actionCache[key]

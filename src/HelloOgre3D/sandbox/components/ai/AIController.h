@@ -46,6 +46,7 @@ public:
 
 	virtual void onAttach(BaseObject* owner) override;
 	virtual void onDetach() override;
+	virtual void onSandboxServicesChanged(const SandboxServices* services) override;
 	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaMs) override;
 

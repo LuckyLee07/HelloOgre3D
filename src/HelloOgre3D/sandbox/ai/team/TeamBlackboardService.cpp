@@ -539,12 +539,15 @@ void TeamBlackboardService::RememberTypedFact(const TeamFact& fact)
 	stored.teamId = fact.teamId;
 	stored.targetAgentId = fact.targetAgentId;
 	stored.ttlMs = fact.ttlMs;
-	stored.timeMs = std::max(stored.timeMs, fact.timeMs);
-	if (fact.confidence >= stored.confidence || fact.timeMs >= stored.timeMs)
+	const long long previousTimeMs = stored.timeMs;
+	const bool newerFact = fact.timeMs > previousTimeMs;
+	const bool sameTimeHigherConfidence = fact.timeMs == previousTimeMs && fact.confidence >= stored.confidence;
+	stored.timeMs = std::max(previousTimeMs, fact.timeMs);
+	if (newerFact || sameTimeHigherConfidence)
 	{
 		stored.sourceAgentId = fact.sourceAgentId;
 		stored.position = fact.position;
-		stored.confidence = std::max(stored.confidence, fact.confidence);
+		stored.confidence = fact.confidence;
 	}
 	stored.reportCount += 1;
 	const int ageMs = static_cast<int>(std::max<long long>(0, m_stats.currentTimeMs - stored.timeMs));

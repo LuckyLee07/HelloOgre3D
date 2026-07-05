@@ -70,6 +70,7 @@ public:
 private:
 	void ApplyToAgent(AgentObject* agent, ObjectManager* objectManager);
 	int PruneEvents();
+	int PruneCooldowns();
 	void RefreshStats();
 	Ogre::Vector3 ProjectToNavigation(ObjectManager* objectManager, const Ogre::Vector3& position) const;
 

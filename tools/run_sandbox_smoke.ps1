@@ -723,7 +723,7 @@ try {
 			if ($debugSummaryMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm explicit tactical debug draw layer config summary."
 			}
-			$debugValueMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDebugDraw\].*danger\(configured=true,order=12,y=0\.18,threshold=0\.1,maxCells=96,neutral=false,projectToNav=true,nav=default\)")
+			$debugValueMatches = @($LogLinesForChecks | Select-String -Pattern "\[TacticalDebugDraw\].*danger\(configured=true,order=12,y=0\.18,threshold=0\.1,maxCells=96,neutral=false,projectToNav=true,nav=default,maxProjectionDistance=[0-9.]+,drawn=[0-9]+,projected=[0-9]+,projectionRejected=[0-9]+\)")
 			if ($debugValueMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm explicit tactical danger debug config values."
 			}
