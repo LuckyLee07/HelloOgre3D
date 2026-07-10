@@ -199,6 +199,22 @@ SamplePresets.Sandbox7 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox8 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox10 = SamplePresets.chapter8_perception
 
+SamplePresets.Sandbox19 = cloneTable(chapter6To8AiConfig)
+SamplePresets.Sandbox19.seed = 20260710
+SamplePresets.Sandbox19.agentCount = 7
+SamplePresets.Sandbox19.lightTeamCount = 3
+SamplePresets.Sandbox19.spawnMode = "fixed"
+SamplePresets.Sandbox19.spawnPoints = {
+	{ -5, 0, 13 },
+	{ -10, 0, 18 },
+	{ -10, 0, 8 },
+	{ 15, 0, 21 },
+	{ 19, 0, 25 },
+	{ 24, 4, 36 },
+	{ 39, 3, 17 },
+}
+SamplePresets.Sandbox19.aiScheduler.maxPerFrame = 6
+
 SamplePresets.chapter8_comms = {
 	seed = 20260530,
 	agentCount = 6,

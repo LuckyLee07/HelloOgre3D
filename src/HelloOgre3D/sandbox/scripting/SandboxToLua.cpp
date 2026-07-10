@@ -8151,6 +8151,45 @@ static int tolua_SandboxToLua_ObjectFactory_CreateSoldier00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: CreateSoldierWithProfile of class  ObjectFactory */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectFactory_CreateSoldierWithProfile00
+static int tolua_SandboxToLua_ObjectFactory_CreateSoldierWithProfile00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"ObjectFactory",0,&tolua_err) ||
+     !tolua_iscppstring(tolua_S,2,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,3,0,&tolua_err) ||
+     !tolua_isstring(tolua_S,4,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  ObjectFactory* self = (ObjectFactory*)  tolua_tousertype(tolua_S,1,0);
+  const std::string meshFile = ((const std::string)  tolua_tocppstring(tolua_S,2,0));
+  const char* profileName = ((const char*)  tolua_tostring(tolua_S,3,0));
+  const char* filepath = ((const char*)  tolua_tostring(tolua_S,4,nullptr));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateSoldierWithProfile'", NULL);
+#endif
+  {
+   SoldierObject* tolua_ret = (SoldierObject*)  self->CreateSoldierWithProfile(meshFile,profileName,filepath);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"SoldierObject");
+   tolua_pushcppstring(tolua_S,(const char*)meshFile);
+  }
+ }
+ return 2;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'CreateSoldierWithProfile'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: configureAiScheduler of class  AIScheduler */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIScheduler_configureAiScheduler00
 static int tolua_SandboxToLua_AIScheduler_configureAiScheduler00(lua_State* tolua_S)
@@ -16473,6 +16512,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateAgent",tolua_SandboxToLua_ObjectFactory_CreateAgent00);
    tolua_function(tolua_S,"CreateAgentWithProfile",tolua_SandboxToLua_ObjectFactory_CreateAgentWithProfile00);
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_ObjectFactory_CreateSoldier00);
+   tolua_function(tolua_S,"CreateSoldierWithProfile",tolua_SandboxToLua_ObjectFactory_CreateSoldierWithProfile00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"AIScheduler","AIScheduler","",NULL);
   tolua_beginmodule(tolua_S,"AIScheduler");

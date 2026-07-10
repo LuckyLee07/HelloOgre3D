@@ -10,6 +10,7 @@
 #include "ai/perception/PerceptionResultCache.h"
 #include "ai/perception/VisionSensor.h"
 #include "component/IComponent.h"
+#include "components/control/IAgentController.h"
 #include "script/LuaClassNameTraits.h"
 
 class AgentObject;
@@ -38,7 +39,7 @@ struct AIPerceptionTickStats
 	double visionMs;
 };
 
-class AIController : public IComponent //tolua_exports
+class AIController : public IComponent, public IAgentController //tolua_exports
 { //tolua_exports
 public:
 	explicit AIController(BaseObject* owner = nullptr);
@@ -49,6 +50,8 @@ public:
 	virtual void onSandboxServicesChanged(const SandboxServices* services) override;
 	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaMs) override;
+	virtual AgentControllerKind GetControllerKind() const override { return AGENT_CONTROLLER_AI; }
+	virtual const char* GetControllerName() const override { return "AIController"; }
 
 	//tolua_begin
 	AgentObject* GetAgentOwner() const;

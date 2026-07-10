@@ -41,12 +41,15 @@ public:
 	void RestoreAmmo();
 	//tolua_end
 
+	void ShootBulletTowards(const Ogre::Vector3& direction);
 	void DoShootBullet(const Ogre::Vector3& position, const Ogre::Quaternion& orientation);
 
 	const Ogre::Vector3& GetHandOffsetPos() const { return m_handOffsetPos; }
 	const Ogre::Quaternion& GetHandOffsetOrientation() const { return m_handOffsetOrientation; }
 
 private:
+	bool ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation) const;
+
 	RenderComponent* m_weaponRender;
 	int m_ammo;
 	int m_maxAmmo;

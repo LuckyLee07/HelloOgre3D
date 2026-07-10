@@ -148,20 +148,43 @@ void WeaponComponent::SyncToHandBone()
 
 void WeaponComponent::ShootBullet()
 {
+	Ogre::Vector3 position;
+	Ogre::Quaternion orientation;
+	if (ResolveMuzzleTransform(position, orientation))
+		DoShootBullet(position, orientation);
+}
+
+void WeaponComponent::ShootBulletTowards(const Ogre::Vector3& direction)
+{
+	Ogre::Vector3 position;
+	Ogre::Quaternion orientation;
+	if (!ResolveMuzzleTransform(position, orientation))
+		return;
+
+	Ogre::Vector3 aimDirection = direction;
+	if (aimDirection.isNaN() || aimDirection.isZeroLength())
+		return;
+	aimDirection.normalise();
+	orientation = Ogre::Vector3::UNIT_X.getRotationTo(aimDirection, Ogre::Vector3::UNIT_Y);
+	DoShootBullet(position, orientation);
+}
+
+bool WeaponComponent::ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation) const
+{
 	RenderComponent* ownerRender = FindOwnerRender(this);
 	if (ownerRender == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	Ogre::SceneNode* soldierNode = ownerRender->GetSceneNode();
 	if (soldierNode == nullptr)
 	{
-		return;
+		return false;
 	}
 
-	Ogre::Vector3 position = soldierNode->_getDerivedPosition();
-	Ogre::Quaternion orientation = soldierNode->_getDerivedOrientation();
+	position = soldierNode->_getDerivedPosition();
+	orientation = soldierNode->_getDerivedOrientation();
 	bool hasPosition = false;
 	bool hasOrientation = false;
 
@@ -203,7 +226,7 @@ void WeaponComponent::ShootBullet()
 		hasOrientation = SceneFactory::GetBoneOrientation(*soldierNode, "b_RightHand", orientation);
 	}
 
-	DoShootBullet(position, orientation);
+	return true;
 }
 
 AgentAnim* WeaponComponent::GetAnimation(const char* animationName)

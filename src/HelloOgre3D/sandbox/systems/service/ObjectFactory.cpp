@@ -91,3 +91,8 @@ SoldierObject* ObjectFactory::CreateSoldier(const Ogre::String& meshFile, const 
 	return SoldierFactory::CreateSoldier(m_objectManager, meshFile, filepath);
 }
 
+SoldierObject* ObjectFactory::CreateSoldierWithProfile(const Ogre::String& meshFile, const char* profileName, const char* filepath)
+{
+	return SoldierFactory::CreateSoldierWithProfile(m_objectManager, meshFile, profileName, filepath);
+}
+

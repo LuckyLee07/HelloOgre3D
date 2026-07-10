@@ -21,6 +21,7 @@
 #include "components/ai/AIController.h"
 #include "components/combat/WeaponComponent.h"
 #include "components/ComponentKeys.h"
+#include "components/control/PlayerController.h"
 #include "components/render/RenderComponent.h"
 #include "LogSystem.h"
 #include "profiling/Profile.h"
@@ -421,6 +422,12 @@ bool SoldierObject::IsCppAnimControllerEnabled() const
 
 void SoldierObject::ExecuteAnimShoot()
 {
+	PlayerController* player = const_cast<SoldierObject*>(this)->FindComponent<PlayerController>();
+	if (player != nullptr)
+	{
+		player->ExecuteAnimShoot();
+		return;
+	}
 	const_cast<SoldierObject*>(this)->ApplyFireWeaponCommand();
 }
 
