@@ -166,11 +166,14 @@ AI 决策
 
 ## 8. 近期执行队列
 
-建议下一轮按以下顺序推进：
+建议下一轮按以下顺序推进（0 为“应用接地探路”，与后续无悔动作可并行）：
+
+> 任务 0 的细化执行清单见 `docs/planning/playable-vertical-slice-todolist.md`；当前先以“玩家操控一个单位”的可玩纵切片为唯一实现主线。
 
 | 顺序 | 任务 | 主要输出 | 验证 |
 |---|---|---|---|
-| 1 | Release x64 `ai_perf_1000` 基线 | Debug / Release 对照报告 | `run_sandbox_smoke.ps1` + FramePerf |
+| 0 | 应用接地纵切片：`Sandbox19` 以互斥的 `PlayerController` / `AIController` 控制同一个 `SoldierObject` 类型 | 可玩的玩家 + AI 遭遇战，先用手感判断往哪个品类走 | Release x64 + `Sandbox19` / `Sandbox8` smoke + 手动手感验收（待） |
+| 1 | Release x64 `ai_perf_100/500/1000` 干净基线刷新（先清 §9 P9 热点债务） | 刷新后的 Debug / Release 对照报告 | `run_sandbox_smoke.ps1` + FramePerf |
 | 2 | `PerceptionResultCache` | C++ cache + Lua/BT 只读结果 | `Sandbox10` / `Sandbox16` / `ai_perf_*` |
 | 3 | `TacticalQueryService` 第一版 | 独立 tactical query service | `Sandbox18` smoke |
 | 4 | `InfluenceMapSystem` 二期 | interval / dirty region / layer debug draw | `Sandbox13` / `Sandbox18` |

@@ -17,7 +17,7 @@
 | `object/BaseObject.{h,cpp}` | 对象根 | 组件容器 `std::map<string,unique_ptr<IComponent>>` + 组件生命周期断言/dump + objid/teamid + `SetSandboxServices` |
 | `object/SandboxObject.{h,cpp}` | 基类 | 虚 Update |
 | `component/IComponent.{h,cpp}` | 组件接口 | onAttach/onDetach/update + `GetSandboxServices()` + `onSandboxServicesChanged()` |
-| `SandboxServices.h` | 注入聚合 | `{objects, physics, input, script, objectFactory, agentConfig, navigation, raycast, scene, scriptService}`（P1 核心） |
+| `SandboxServices.h` | 注入聚合 | `{objects, physics, input, script, objectFactory, agentConfig, navigation, raycast, scene, scriptService, cameraController, camera}`（P1 核心） |
 | `event/SandboxEventDispatcher*.h` | 事件 | name→dispatcher / Subscribe/Emit/Token |
 | `event/SandboxContext.h` | payload | 事件上下文（勿与 SandboxServices 撞名） |
 | `SandboxMacros.h` | 宏 | SAFE_DELETE |

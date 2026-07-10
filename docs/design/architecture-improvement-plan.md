@@ -352,3 +352,105 @@
 - FGUI / GameManager 转发改动：对应 `HELLO_FGUI_*_SELF_TEST`，复杂改动跑 `HELLO_FGUI_SELF_TEST_ALL=1` 与 `tools/run_fgui_production_gate.ps1`。
 - Lua 绑定改动：同步检查 `.pkg`、生成 cpp、Lua 调用点。
 - 平台兼容：检查 Windows / macOS 分支条件编译。
+
+---
+
+## 9. 2026-07 代码复审补充（P8–P11）
+
+> 来源：2026-07-02 一次直接通读 `src/HelloOgre3D` C++ 代码的复审，记录 §2–§7 尚未覆盖或轻描淡写的结构性问题。方法同 §5 前言：给 file:line 证据、方案和验收，小步可回退。
+>
+> **方向前提（2026-07-02，经讨论修订）**：长期品类暂不锁定；核心方向是把这套 AI / 寻路 / 多 agent 技术接到一个“能上手玩”的最小应用上（先在现有战斗 sample 加“玩家操控一个单位”的纵切片探路），再定品类。详见 `docs/project-direction.md` 方向说明。**本节 P8–P11 属于“无悔动作”——不管最终做成中间件还是游戏都需要的地基清理，优先级不受品类决定影响**；尤其 P9 应在采集性能基线之前完成。
+>
+> 复审同时确认的**健康项**（无需再动）：sandbox/runtime 反向 include 与裸 `g_*` 实测均为 0（P1 门禁生效）；旧 `SandboxMgr` 类、全局实例与 Lua 导出已删除；`ComponentKeys` 常量化到位；`SandboxToLua.cpp` 的 14961 行是 tolua 生成物（源头是 46 行 pkg 清单 + 各头文件导出标记），非手工肥大化。
+
+### P8：分层破口——component 反向依赖 ObjectManager / 具体对象（🔴 新增）
+
+> 状态（2026-07-02）：**新发现，未处理**。P1 只堵住了对 `GameManager` / `ClientManager` 的反向依赖，没堵对 `ObjectManager`（上帝对象）和具体 `*Object` 的反向依赖。
+
+#### 现状证据
+
+- 多个组件 `.cpp` 直接 `#include "systems/manager/ObjectManager.h"`：`AIController.cpp`、`WeaponComponent.cpp`、`AgentLocomotion.cpp`。
+- [AIController.cpp:18-28](src/HelloOgre3D/sandbox/components/ai/AIController.cpp#L18-L28) 还额外 include 了 `objects/AgentObject.h` + `objects/SoldierObject.h` + behavior/decision/fsm/perception/tactics 全家桶——一个“组件”认识 systems 层的 `ObjectManager` 和具体对象类。
+- `AnimComponent.cpp` 反向 include AI 层 `ai/fsm/AgentStateController.h`、`ai/fsm/states/AgentState.h`。
+
+#### 问题
+
+运行时虽走 `SandboxServices`（非裸 `g_*`，故门禁不报），但编译期把 components 与 systems/objects/ai 三层焊死，形成 `component → ObjectManager → 各子系统` 的向上/环状依赖，违反 `runtime → sandbox → game` 的分层预期，也阻碍组件被单测/复用。
+
+#### 解决方案
+
+1. 组件只依赖 core / 接口；对 `ObjectManager` 的需求收口为 `SandboxServices` 上的**窄接口**（如 `IAgentQuery`），头文件前向声明 + 接口指针，不 include `ObjectManager.h`。
+2. `AIController` 对具体 `SoldierObject` 的依赖并入 P5 的 owner 泛化收尾。
+3. 门禁扩展：`tools/check_sandbox_architecture.ps1` 增加规则，禁止 `sandbox/components/**` 反向 include `systems/manager/ObjectManager.h` 与 `objects/*Object.h`。
+
+#### 验收
+
+- [ ] `components/**` 不再 include `ObjectManager.h` 与具体 `*Object.h`。
+- [ ] 门禁覆盖该规则，防回流。
+- [ ] `Sandbox6/7/8` 行为不变。
+
+### P9：死代码节流 + 热点组件访问（🔴 新增，性能基线前必清）
+
+> 状态（2026-07-02）：**新发现，未处理**。这两项应在采集 `ai_perf_1000` Release 基线**之前**清掉，否则基线是“债务込みの数字”，后续优化无法归因。
+
+#### 现状证据
+
+- 帧节流被 `|| true` 短路，`Agent_Update` 每帧都进 Lua（原意是每 1000ms 一次）：
+  - [AgentObject.cpp:421](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L421)：`if (true || totalMilisec > 1000)`
+  - [AIController.cpp:333-334](src/HelloOgre3D/sandbox/components/ai/AIController.cpp#L333-L334)：`bool forceUpdate = true; if (forceUpdate || totalMilisec > 1000)`
+  - 后果：进 Lua 次数随 agent 数线性上涨，直接冲击“1000 agent 性能曲线”目标。
+- 死宏残留：[AgentObject.cpp:583-591](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L583-L591) 的 `#define USE_CPP_FSM 1` + 一整块注释掉的 `#ifdef`，实际逻辑走 `SandboxServices.agentConfig → AgentConfigService` flag。
+- `FindComponent<T>()` 热点全表扫描：[BaseObject.h:96-105](src/HelloOgre3D/sandbox/core/object/BaseObject.h#L96-L105) 遍历整个组件 map 并逐个 `dynamic_cast`；而 `AgentObject::GetPosition/GetVelocity/GetForward/...`（每帧、每对象多次）全走 `FindComponent<PhysicsComponent>()`（[AgentObject.cpp:187-307](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L187-L307)）。对象只缓存了 `m_renderComp`。
+
+#### 解决方案
+
+1. 明确节流意图并修正：要么恢复“每 N ms 一次”，要么删掉无用的 `totalMilisec` 累加与 `|| true`，让代码与实际行为一致。删 `USE_CPP_FSM` 死宏块。
+2. 热点组件（physics/locomotion/ai）在对象 attach 时解析一次并缓存 non-owning 指针，getter 不再每帧 `FindComponent`。
+3. 明文化方针：**不引入完整 ECS，hot component 由对象侧缓存指针**（见 §暂缓清单，避免将来揺り戻し）。
+
+#### 验收
+
+- [ ] 两处 `|| true` 死节流与 `USE_CPP_FSM` 死宏清理，行为与注释一致。
+- [ ] 热点 getter 不再每帧全表扫描 + dynamic_cast。
+- [ ] 清理后再采集 `ai_perf_100/500/1000` 基线。
+
+### P10：BaseObject 被 typed getter 领域污染（🟡 新增）
+
+> 状态（2026-07-02）：**新发现**。是 P2“只藏不减”的另一种表现；长期品类尚未锁定时，更应保持 entity root 干净，避免把具体玩法组件固化到通用基类。
+
+#### 现状证据
+
+- [BaseObject.h:53-56](src/HelloOgre3D/sandbox/core/object/BaseObject.h#L53-L56) 把 `GetAIComponent()/GetWeaponComponent()/GetAnimComponent()/GetAttribComponent()` 直接 tolua 导出在通用实体根上，基类前向声明并返回 `AIController/WeaponComponent/AnimComponent/AgentAttrib` 这些具体玩法组件。
+
+#### 解决方案
+
+- Lua 侧 typed 访问改走 `GetComponent(key)` + 组件自身导出（`ComponentKeys` 已就绪），逐步把这 4 个 getter 标为 legacy 并随 sample 迁移撤下，让 `core/object` 不认识具体玩法组件。
+
+#### 验收
+
+- [ ] `BaseObject` 不再前向声明/返回具体玩法组件类型（保留兼容期标注）。
+- [ ] Lua/sample 通过组件直取，行为不变。
+
+### P11：event dispatcher 过度设计（🟡 新增）
+
+> 状态（2026-07-02）：**新发现**。呼应 `docs/memory/no-greenfield-event-infra.md`——不新建事件系统，但现有 `SandboxEventDispatcherManager` 值得内部收敛。Context/Dispatcher/Payload 三件套本身干净，问题集中在 Manager。
+
+#### 现状证据
+
+- [SandboxEventDispatcherManager.h](src/HelloOgre3D/sandbox/core/event/SandboxEventDispatcherManager.h)（491 行，全内联单例）把队列/限流/路由/字符串 DSL 事件名/数值匹配五种关注点聚在一处：
+  - 字符串 DSL 事件名 `name?key=val&k2=v2`，运行时手写解析 `?`/`&`/`=`（`:377-401`）。
+  - 数值匹配 string↔double 往复，用 `numeric_limits::max()` 当哨兵（`:429-444`）。
+
+#### 解决方案
+
+- 内部按“订阅路由 / 队列限流 / 参数匹配 / 调试统计”拆到独立实现文件；去掉字符串 DSL 事件名，改用显式 typed filter（保持现有订阅 API 兼容）。
+
+#### 验收
+
+- [ ] Manager 头文件不再承担全部实现；字符串 DSL 事件名下线。
+- [ ] `-AiEventSelfTest` 通过，事件路由行为不变。
+
+### 对既存条目的状态注记（2026-07-02 复审）
+
+- **P2（对象层转发本体）**：仍是主体债务，`AgentObject.cpp` 过半、`SoldierObject.cpp` 大量方法仍是“找组件→判空→转发”。建议配套决策：把 sample 分成「冻结兼容」与「跟随主线」两类，只对后者设一个真正删除 legacy forwarder 的截止点，终止“两份成本”的中途状态。
+- **C3（ObjectManager 减负）**：旧 tactical/team Lua facade 已删除，当前 `ObjectManager.h` 剩余公开面主要是对象/导航兼容 API、调度/AI 服务 getter 与少量 debug 入口（[ObjectManager.h:63-104](src/HelloOgre3D/sandbox/systems/manager/ObjectManager.h#L63-L104)）。后续重点不是再按“约 60 个 tactical/team 转发”批量删除，而是继续缩小对象/导航兼容面，并在需要时把 debug summary 收到 diagnostics service。
