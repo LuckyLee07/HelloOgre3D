@@ -54,6 +54,14 @@ Ogre::Quaternion CameraService::GetCameraOrientation()
 	return pCamera != nullptr ? pCamera->getDerivedOrientation() : Ogre::Quaternion::IDENTITY;
 }
 
+void CameraService::TranslateCameraWorld(const Ogre::Vector3& delta)
+{
+	Ogre::Camera* pCamera = GetCamera();
+	if (pCamera == nullptr || delta.isNaN())
+		return;
+	pCamera->setPosition(pCamera->getPosition() + delta);
+}
+
 long long CameraService::GetRenderTime()
 {
 	return GetProfileTime(PROFILE_RENDER_TIME);

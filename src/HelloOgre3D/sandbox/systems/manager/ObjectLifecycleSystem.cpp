@@ -44,7 +44,7 @@ void ObjectLifecycleSystem::UpdateObjects(int deltaMilliseconds, const UpdateCon
 		}
 		else
 		{
-			AIController* ai = pObject->FindComponent<AIController>();
+			AIController* ai = pObject->GetAIComponent();
 			if (context.aiUpdateSystem != nullptr)
 				context.aiUpdateSystem->TickAgent(ai, deltaMilliseconds, context.useAiScheduler, context.scheduler);
 

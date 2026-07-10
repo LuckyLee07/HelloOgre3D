@@ -140,7 +140,6 @@ void GameManager::Initialize()
 	services.objects = m_pObjectManager;
 	services.physics = m_pPhysicsWorld;
 	services.input = m_pClientManager != nullptr ? m_pClientManager->getInputManager() : nullptr;
-	services.cameraController = m_pClientManager != nullptr ? m_pClientManager->getCameraController() : nullptr;
 	services.camera = m_pCameraService;
 	services.script = m_pScriptVM;
 	services.objectFactory = m_pObjectFactory;

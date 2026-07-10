@@ -45,7 +45,7 @@ namespace
 	AnimComponent* FindOwnerAnim(const WeaponComponent* component)
 	{
 		BaseObject* owner = component != nullptr ? component->getOwner() : nullptr;
-		return owner != nullptr ? owner->FindComponent<AnimComponent>() : nullptr;
+		return owner != nullptr ? owner->GetAnimComponent() : nullptr;
 	}
 }
 

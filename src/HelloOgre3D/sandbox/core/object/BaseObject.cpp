@@ -5,6 +5,7 @@
 #include "components/ai/AIController.h"
 #include "components/anim/AnimComponent.h"
 #include "components/combat/WeaponComponent.h"
+#include "components/physics/PhysicsComponent.h"
 #include <algorithm>
 #include <cassert>
 #include <sstream>
@@ -165,6 +166,10 @@ bool BaseObject::AddComponent(const std::string& key, IComponent* comp)
 	ComponentMap::iterator inserted = m_components.insert(std::make_pair(key, ComponentPtr(comp))).first;
 	IComponent* component = inserted->second.get();
 	component->setComponentKey(key);
+	// Refresh before onAttach so the component is already visible via cached
+	// getters during its own attach/start, matching FindComponent<T>() (which
+	// sees a component as soon as it is in the map).
+	RefreshComponentCache();
 	component->setLifecycleState(IComponent::LIFECYCLE_ATTACHING);
 	component->onAttach(this);
 	assert(component->getOwner() == this);
@@ -173,6 +178,7 @@ bool BaseObject::AddComponent(const std::string& key, IComponent* comp)
 	{
 		DestroyComponent(inserted->second);
 		m_components.erase(inserted);
+		RefreshComponentCache();
 		return false;
 	}
 	if (m_services != nullptr)
@@ -194,6 +200,7 @@ bool BaseObject::RemoveComponent(const std::string& key)
 
 	DestroyComponent(iter->second);
 	m_components.erase(iter);
+	RefreshComponentCache();
 	return true;
 }
 
@@ -208,6 +215,7 @@ bool BaseObject::RemoveComponent(IComponent* comp)
 		{
 			DestroyComponent(iter->second);
 			m_components.erase(iter);
+			RefreshComponentCache();
 			return true;
 		}
 	}
@@ -234,29 +242,63 @@ const IComponent* BaseObject::GetComponent(const std::string& key) const
 	return nullptr;
 }
 
+void BaseObject::RefreshComponentCache()
+{
+	m_cachedAI = nullptr;
+	m_cachedWeapon = nullptr;
+	m_cachedAnim = nullptr;
+	m_cachedAttrib = nullptr;
+	m_cachedLocomotion = nullptr;
+	m_cachedPhysics = nullptr;
+
+	for (ComponentMap::iterator iter = m_components.begin(); iter != m_components.end(); ++iter)
+	{
+		IComponent* comp = iter->second.get();
+		if (comp == nullptr)
+			continue;
+
+		if (m_cachedAI == nullptr) { if (AIController* c = dynamic_cast<AIController*>(comp)) { m_cachedAI = c; continue; } }
+		if (m_cachedWeapon == nullptr) { if (WeaponComponent* c = dynamic_cast<WeaponComponent*>(comp)) { m_cachedWeapon = c; continue; } }
+		if (m_cachedAnim == nullptr) { if (AnimComponent* c = dynamic_cast<AnimComponent*>(comp)) { m_cachedAnim = c; continue; } }
+		if (m_cachedAttrib == nullptr) { if (AgentAttrib* c = dynamic_cast<AgentAttrib*>(comp)) { m_cachedAttrib = c; continue; } }
+		if (m_cachedLocomotion == nullptr) { if (AgentLocomotion* c = dynamic_cast<AgentLocomotion*>(comp)) { m_cachedLocomotion = c; continue; } }
+		if (m_cachedPhysics == nullptr) { if (PhysicsComponent* c = dynamic_cast<PhysicsComponent*>(comp)) { m_cachedPhysics = c; continue; } }
+	}
+}
+
 AIController* BaseObject::GetAIComponent()
 {
-	return FindComponent<AIController>();
+	return m_cachedAI;
 }
 
 WeaponComponent* BaseObject::GetWeaponComponent()
 {
-	return FindComponent<WeaponComponent>();
+	return m_cachedWeapon;
 }
 
 AnimComponent* BaseObject::GetAnimComponent()
 {
-	return FindComponent<AnimComponent>();
+	return m_cachedAnim;
 }
 
 AgentAttrib* BaseObject::GetAttribComponent()
 {
-	return FindComponent<AgentAttrib>();
+	return m_cachedAttrib;
 }
 
 AgentLocomotion* BaseObject::GetLocomotionComponent()
 {
-	return FindComponent<AgentLocomotion>();
+	return m_cachedLocomotion;
+}
+
+PhysicsComponent* BaseObject::GetPhysicsComponent()
+{
+	return m_cachedPhysics;
+}
+
+const AgentLocomotion* BaseObject::GetLocomotionComponent() const
+{
+	return m_cachedLocomotion;
 }
 
 int BaseObject::GetComponentCount() const

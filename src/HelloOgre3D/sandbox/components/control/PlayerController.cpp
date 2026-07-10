@@ -7,7 +7,6 @@
 #include "components/combat/WeaponComponent.h"
 #include "core/SandboxServices.h"
 #include "objects/SoldierObject.h"
-#include "ogre/OgreCameraController.h"
 #include "systems/input/InputManager.h"
 #include "systems/service/CameraService.h"
 
@@ -15,13 +14,51 @@ namespace
 {
 	const Ogre::Real kSprintMultiplier = 1.75f;
 	const Ogre::Real kDirectionEpsilon = 1e-6f;
+
+	bool NormalizeHorizontal(Ogre::Vector3& direction)
+	{
+		direction.y = 0.0f;
+		if (direction.isNaN() || direction.squaredLength() <= kDirectionEpsilon)
+			return false;
+		direction.normalise();
+		return true;
+	}
+
+	void ResolveCameraGroundBasis(CameraService* camera, const Ogre::Vector3& fallbackForward,
+		Ogre::Vector3& forward, Ogre::Vector3& right)
+	{
+		right = camera != nullptr ? -camera->GetCameraLeft() : Ogre::Vector3::ZERO;
+		const bool hasCameraRight = NormalizeHorizontal(right);
+
+		forward = camera != nullptr ? camera->GetCameraForward() : Ogre::Vector3::ZERO;
+		bool hasCameraForward = NormalizeHorizontal(forward);
+		if (!hasCameraForward && hasCameraRight)
+		{
+			forward = Ogre::Vector3::UNIT_Y.crossProduct(right);
+			hasCameraForward = NormalizeHorizontal(forward);
+		}
+		if (!hasCameraForward)
+		{
+			forward = fallbackForward;
+			if (!NormalizeHorizontal(forward))
+				forward = Ogre::Vector3::UNIT_Z;
+		}
+
+		if (!hasCameraRight)
+		{
+			right = forward.crossProduct(Ogre::Vector3::UNIT_Y);
+			if (!NormalizeHorizontal(right))
+				right = Ogre::Vector3::UNIT_X;
+		}
+	}
 }
 
 PlayerController::PlayerController(BaseObject* owner)
 	: m_registeredInput(nullptr)
-	, m_cameraController(nullptr)
 	, m_combatState(COMBAT_READY)
 	, m_aimDirection(Ogre::Vector3::UNIT_Z)
+	, m_lastFollowPosition(Ogre::Vector3::ZERO)
+	, m_hasFollowPosition(false)
 	, m_forwardPressed(false)
 	, m_backPressed(false)
 	, m_leftPressed(false)
@@ -45,25 +82,21 @@ void PlayerController::onAttach(BaseObject* owner)
 	m_combatState = COMBAT_READY;
 	m_deathIntentIssued = false;
 	ResetInputState();
+	ResetCameraFollow();
 }
 
 void PlayerController::onDetach()
 {
 	StopHorizontalMovement();
 	UnregisterInput();
-	if (m_cameraController != nullptr)
-		m_cameraController->clearFpsAnchor();
-	m_cameraController = nullptr;
 	ResetInputState();
+	ResetCameraFollow();
 	IComponent::onDetach();
 }
 
 void PlayerController::onSandboxServicesChanged(const SandboxServices* services)
 {
 	RegisterInput(services != nullptr ? services->input : nullptr);
-	m_cameraController = services != nullptr ? services->cameraController : nullptr;
-	if (m_cameraController != nullptr)
-		m_cameraController->setStyle(OgreCameraController::CS_FPS);
 }
 
 int PlayerController::getUpdateOrder() const
@@ -80,7 +113,7 @@ void PlayerController::update(int deltaMs)
 		return;
 	}
 
-	UpdateCameraAnchor();
+	UpdateCameraFollow();
 	UpdateAimDirection();
 	UpdateCombat();
 	UpdateMovement();
@@ -189,13 +222,13 @@ SoldierObject* PlayerController::GetSoldierOwner() const
 AnimComponent* PlayerController::GetAnimComponent() const
 {
 	SoldierObject* owner = GetSoldierOwner();
-	return owner != nullptr ? owner->FindComponent<AnimComponent>() : nullptr;
+	return owner != nullptr ? owner->GetAnimComponent() : nullptr;
 }
 
 WeaponComponent* PlayerController::GetWeaponComponent() const
 {
 	SoldierObject* owner = GetSoldierOwner();
-	return owner != nullptr ? owner->FindComponent<WeaponComponent>() : nullptr;
+	return owner != nullptr ? owner->GetWeaponComponent() : nullptr;
 }
 
 void PlayerController::RegisterInput(InputManager* inputManager)
@@ -226,35 +259,53 @@ void PlayerController::ResetInputState()
 	m_reloadRequested = false;
 }
 
-void PlayerController::UpdateCameraAnchor()
+void PlayerController::ResetCameraFollow()
+{
+	m_lastFollowPosition = Ogre::Vector3::ZERO;
+	m_hasFollowPosition = false;
+}
+
+void PlayerController::UpdateCameraFollow()
 {
 	SoldierObject* owner = GetSoldierOwner();
-	if (owner != nullptr && m_cameraController != nullptr)
-		m_cameraController->setFpsAnchorPosition(owner->GetPosition());
+	const SandboxServices* services = GetSandboxServices();
+	CameraService* camera = services != nullptr ? services->camera : nullptr;
+	if (owner == nullptr || camera == nullptr)
+	{
+		ResetCameraFollow();
+		return;
+	}
+
+	const Ogre::Vector3 ownerPosition = owner->GetPosition();
+	if (ownerPosition.isNaN())
+	{
+		ResetCameraFollow();
+		return;
+	}
+	if (!m_hasFollowPosition)
+	{
+		m_lastFollowPosition = ownerPosition;
+		m_hasFollowPosition = true;
+		return;
+	}
+
+	Ogre::Vector3 delta = ownerPosition - m_lastFollowPosition;
+	m_lastFollowPosition = ownerPosition;
+	delta.y = 0.0f;
+	if (delta.squaredLength() > kDirectionEpsilon)
+		camera->TranslateCameraWorld(delta);
 }
 
 void PlayerController::UpdateAimDirection()
 {
+	SoldierObject* owner = GetSoldierOwner();
 	const SandboxServices* services = GetSandboxServices();
 	CameraService* camera = services != nullptr ? services->camera : nullptr;
-	Ogre::Vector3 aimDirection = camera != nullptr ? camera->GetCameraForward() : Ogre::Vector3::ZERO;
-	if (aimDirection.isNaN() || aimDirection.squaredLength() <= kDirectionEpsilon)
-	{
-		SoldierObject* owner = GetSoldierOwner();
-		aimDirection = owner != nullptr ? owner->GetForward() : Ogre::Vector3::UNIT_Z;
-	}
-	aimDirection.normalise();
-	m_aimDirection = aimDirection;
-
-	Ogre::Vector3 horizontalAim = aimDirection;
-	horizontalAim.y = 0.0f;
-	if (horizontalAim.squaredLength() > kDirectionEpsilon)
-	{
-		horizontalAim.normalise();
-		SoldierObject* owner = GetSoldierOwner();
-		if (owner != nullptr)
-			owner->SetForward(horizontalAim);
-	}
+	const Ogre::Vector3 fallbackForward = owner != nullptr ? owner->GetForward() : Ogre::Vector3::UNIT_Z;
+	Ogre::Vector3 unusedRight;
+	ResolveCameraGroundBasis(camera, fallbackForward, m_aimDirection, unusedRight);
+	if (owner != nullptr)
+		owner->SetForward(m_aimDirection);
 }
 
 void PlayerController::UpdateMovement()
@@ -271,14 +322,9 @@ void PlayerController::UpdateMovement()
 
 	const SandboxServices* services = GetSandboxServices();
 	CameraService* camera = services != nullptr ? services->camera : nullptr;
-	Ogre::Vector3 forward = camera != nullptr ? camera->GetCameraForward() : m_aimDirection;
-	Ogre::Vector3 right = camera != nullptr ? -camera->GetCameraLeft() : Ogre::Vector3::UNIT_X;
-	forward.y = 0.0f;
-	right.y = 0.0f;
-	if (forward.squaredLength() > kDirectionEpsilon)
-		forward.normalise();
-	if (right.squaredLength() > kDirectionEpsilon)
-		right.normalise();
+	Ogre::Vector3 forward;
+	Ogre::Vector3 right;
+	ResolveCameraGroundBasis(camera, m_aimDirection, forward, right);
 
 	Ogre::Vector3 movement = Ogre::Vector3::ZERO;
 	if (m_forwardPressed) movement += forward;
@@ -296,7 +342,7 @@ void PlayerController::UpdateMovement()
 	}
 
 	movement.normalise();
-	AgentLocomotion* locomotion = owner->FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	const Ogre::Real baseSpeed = locomotion != nullptr ? locomotion->GetMaxSpeed() : static_cast<Ogre::Real>(SOLDIER_STAND_SPEED);
 	const Ogre::Real speed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);
 	Ogre::Vector3 velocity = owner->GetVelocity();
@@ -403,8 +449,6 @@ void PlayerController::EnterDeadState()
 	m_combatState = COMBAT_DEAD;
 	StopHorizontalMovement();
 	ResetInputState();
-	if (m_cameraController != nullptr)
-		m_cameraController->clearFpsAnchor();
 	AnimComponent* anim = GetAnimComponent();
 	if (anim != nullptr)
 		anim->EnterDeathIntent();

@@ -4,7 +4,6 @@
 class ObjectManager;
 class PhysicsWorld;
 class InputManager;
-class OgreCameraController;
 class ScriptLuaVM;
 class ObjectFactory;
 class AgentConfigService;
@@ -19,7 +18,6 @@ struct SandboxServices
 	ObjectManager* objects = nullptr;
 	PhysicsWorld* physics = nullptr;
 	InputManager* input = nullptr;
-	OgreCameraController* cameraController = nullptr;
 	CameraService* camera = nullptr;
 	ScriptLuaVM* script = nullptr;
 	ObjectFactory* objectFactory = nullptr;

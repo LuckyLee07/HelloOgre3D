@@ -90,7 +90,7 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 	if (AddComponent(ComponentKeys::Render, renderComp))
 	{
 		m_renderComp = renderComp;
-		AnimComponent* anim = FindComponent<AnimComponent>();
+		AnimComponent* anim = m_cachedAnim;
 		if (anim != nullptr)
 		{
 			anim->InitBodyAnimations(m_renderComp->GetEntity(), true);
@@ -104,13 +104,13 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 
 AgentAnim* AgentObject::GetAnimation(const char* animationName)
 {
-	AnimComponent* anim = FindComponent<AnimComponent>();
+	AnimComponent* anim = m_cachedAnim;
 	return anim != nullptr ? anim->GetBodyAnimation(animationName) : nullptr;
 }
 
 AgentAnimStateMachine* AgentObject::GetObjectASM() const
 {
-	const AnimComponent* anim = FindComponent<AnimComponent>();
+	const AnimComponent* anim = m_cachedAnim;
 	return anim != nullptr ? anim->GetBodyAsm() : nullptr;
 }
 
@@ -129,12 +129,12 @@ void AgentObject::ApplyCommand(const AICommand& command)
 	case AICommand::COMMAND_NONE:
 		break;
 	case AICommand::COMMAND_MOVE_TO:
-		if (AgentLocomotion* locomotion = FindComponent<AgentLocomotion>())
+		if (AgentLocomotion* locomotion = m_cachedLocomotion)
 			locomotion->SetTarget(command.targetPosition);
 		break;
 	case AICommand::COMMAND_STOP:
 		SetVelocity(Ogre::Vector3::ZERO);
-		if (AgentLocomotion* locomotion = FindComponent<AgentLocomotion>())
+		if (AgentLocomotion* locomotion = m_cachedLocomotion)
 			locomotion->SetTarget(GetPosition());
 		break;
 	default:
@@ -145,13 +145,13 @@ void AgentObject::ApplyCommand(const AICommand& command)
 
 btRigidBody* AgentObject::getRigidBody() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	return physicsComp != nullptr ? physicsComp->GetRigidBody() : nullptr;
 }
 
 void AgentObject::ResetRigidBody(btRigidBody* pRigidBody)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->ResetRigidBody(pRigidBody);
 }
@@ -188,7 +188,7 @@ void AgentObject::SetLuaScriptClassName(const char* className)
 
 Ogre::Vector3 AgentObject::GetPosition() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		return physicsComp->GetPosition();
@@ -203,7 +203,7 @@ Ogre::Vector3 AgentObject::GetPosition() const
 
 Ogre::Quaternion AgentObject::GetOrientation() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		return physicsComp->GetOrientation();
@@ -218,7 +218,7 @@ Ogre::Quaternion AgentObject::GetOrientation() const
 
 Ogre::Vector3 AgentObject::GetUp() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		return physicsComp->GetUp();
@@ -233,7 +233,7 @@ Ogre::Vector3 AgentObject::GetUp() const
 
 Ogre::Vector3 AgentObject::GetLeft() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		return physicsComp->GetLeft();
@@ -248,7 +248,7 @@ Ogre::Vector3 AgentObject::GetLeft() const
 
 Ogre::Vector3 AgentObject::GetForward() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		return physicsComp->GetForward();
@@ -263,7 +263,7 @@ Ogre::Vector3 AgentObject::GetForward() const
 
 void AgentObject::SetForward(const Ogre::Vector3& forward)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetForward(forward);
 
@@ -272,7 +272,7 @@ void AgentObject::SetForward(const Ogre::Vector3& forward)
 
 void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetVelocity(velocity);
 
@@ -281,7 +281,7 @@ void AgentObject::SetVelocity(const Ogre::Vector3& velocity)
 
 Ogre::Vector3 AgentObject::GetVelocity() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		return physicsComp->GetVelocity();
 
@@ -291,11 +291,11 @@ Ogre::Vector3 AgentObject::GetVelocity() const
 void AgentObject::SetMass(const Ogre::Real mass)
 {
 	const Ogre::Real massValue = std::max(Ogre::Real(0), mass);
-	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = m_cachedLocomotion;
 	if (locomotion != nullptr)
 		locomotion->SetMass(massValue);
 
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetMass(massValue);
 }
@@ -303,11 +303,11 @@ void AgentObject::SetMass(const Ogre::Real mass)
 void AgentObject::SetHeight(Ogre::Real height)
 {
 	const Ogre::Real heightValue = std::max(Ogre::Real(0), height);
-	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = m_cachedLocomotion;
 	if (locomotion != nullptr)
 		locomotion->SetHeight(heightValue);
 
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 	{
 		const Ogre::Real radius = locomotion != nullptr ? locomotion->GetRadius() : AgentLocomotion::DEFAULT_AGENT_RADIUS;
@@ -318,11 +318,11 @@ void AgentObject::SetHeight(Ogre::Real height)
 void AgentObject::SetRadius(Ogre::Real radius)
 {
 	const Ogre::Real radiusValue = std::max(Ogre::Real(0), radius);
-	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = m_cachedLocomotion;
 	if (locomotion != nullptr)
 		locomotion->SetRadius(radiusValue);
 
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 	{
 		const Ogre::Real height = locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
@@ -332,14 +332,14 @@ void AgentObject::SetRadius(Ogre::Real radius)
 
 void AgentObject::SetSpeed(Ogre::Real speed)
 {
-	AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = m_cachedLocomotion;
 	if (locomotion != nullptr)
 		locomotion->SetSpeed(speed);
 }
 
 void AgentObject::SetHealth(Ogre::Real health)
 {
-	AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	AgentAttrib* attrib = m_cachedAttrib;
 	const Ogre::Real currentHealth = GetHealth();
 	if (currentHealth == health || currentHealth <= 0.0f)
 		return;
@@ -387,20 +387,20 @@ void AgentObject::SetHealth(Ogre::Real health)
 
 Ogre::Real AgentObject::GetSpeed() const
 {
-	const PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr && physicsComp->GetRigidBody() != nullptr)
 	{
 		const Ogre::Vector3 velocity = physicsComp->GetVelocity();
 		return Ogre::Vector3(velocity.x, 0, velocity.z).length();
 	}
 
-	const AgentLocomotion* locomotion = FindComponent<AgentLocomotion>();
+	const AgentLocomotion* locomotion = m_cachedLocomotion;
 	return locomotion != nullptr ? locomotion->GetSpeed() : AgentLocomotion::DEFAULT_AGENT_SPEED;
 }
 
 Ogre::Real AgentObject::GetHealth() const
 {
-	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	const AgentAttrib* attrib = m_cachedAttrib;
 	return attrib != nullptr ? attrib->GetHealth() : DEFAULT_AGENT_HEALTH;
 }
 
@@ -416,13 +416,9 @@ void AgentObject::Update(int deltaMilisec)
 	// use the latest world transform in the current frame.
 	this->updateWorldTransform();
 
-	static int totalMilisec = 0;
-	totalMilisec += deltaMilisec;
-	if (true || totalMilisec > 1000)
-	{
-		totalMilisec = 0;
-		this->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
-	}
+	// Agent_Update is part of the object tick contract. Scheduling and tick-rate
+	// control belong to explicit runtime systems, not a shared static timer.
+	this->callFunction("Agent_Update", "u[AgentObject]i", this, deltaMilisec);
 
 	if (m_renderComp != nullptr)
 	{
@@ -539,7 +535,7 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 
 void AgentObject::setPosition(const Ogre::Vector3& position)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetPosition(position);
 
@@ -552,7 +548,7 @@ void AgentObject::setPosition(const Ogre::Vector3& position)
 
 void AgentObject::setRotation(const Ogre::Vector3& rotation)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetRotation(rotation);
 
@@ -561,7 +557,7 @@ void AgentObject::setRotation(const Ogre::Vector3& rotation)
 
 void AgentObject::setOrientation(const Ogre::Quaternion& quaternion)
 {
-	PhysicsComponent* physicsComp = FindComponent<PhysicsComponent>();
+	PhysicsComponent* physicsComp = m_cachedPhysics;
 	if (physicsComp != nullptr)
 		physicsComp->SetOrientation(quaternion);
 
@@ -580,16 +576,8 @@ const LuaScriptComponent* AgentObject::GetLuaScript() const
 	return FindComponent<LuaScriptComponent>();
 }
 
-#define USE_CPP_FSM 1
 bool AgentObject::GetUseCppFSM()
 {
-	/*
-#ifdef USE_CPP_FSM
-	return true;
-#else
-	return false;
-#endif // USE_CPP_FSM
-	*/
 	const SandboxServices* services = GetSandboxServices();
 	AgentConfigService* agentConfig = services != nullptr ? services->agentConfig : nullptr;
 	return agentConfig != nullptr ? agentConfig->GetUseCppFsmFlag() : true;

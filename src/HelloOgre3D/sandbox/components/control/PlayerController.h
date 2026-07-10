@@ -8,7 +8,6 @@
 
 class AnimComponent;
 class InputManager;
-class OgreCameraController;
 class SoldierObject;
 class WeaponComponent;
 
@@ -49,7 +48,8 @@ private:
 	void RegisterInput(InputManager* inputManager);
 	void UnregisterInput();
 	void ResetInputState();
-	void UpdateCameraAnchor();
+	void ResetCameraFollow();
+	void UpdateCameraFollow();
 	void UpdateAimDirection();
 	void UpdateMovement();
 	void UpdateCombat();
@@ -61,9 +61,10 @@ private:
 
 private:
 	InputManager* m_registeredInput;
-	OgreCameraController* m_cameraController;
 	CombatState m_combatState;
 	Ogre::Vector3 m_aimDirection;
+	Ogre::Vector3 m_lastFollowPosition;
+	bool m_hasFollowPosition;
 	bool m_forwardPressed;
 	bool m_backPressed;
 	bool m_leftPressed;

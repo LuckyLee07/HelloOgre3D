@@ -15,7 +15,7 @@ namespace
 
 	IAnimController* GetAnimController(AgentObject* agent)
 	{
-		AnimComponent* animComp = agent != nullptr ? agent->FindComponent<AnimComponent>() : nullptr;
+		AnimComponent* animComp = agent != nullptr ? agent->GetAnimComponent() : nullptr;
 		return animComp != nullptr ? animComp->GetController() : nullptr;
 	}
 }

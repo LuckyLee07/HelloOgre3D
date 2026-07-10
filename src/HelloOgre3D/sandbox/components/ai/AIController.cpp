@@ -327,13 +327,9 @@ void AIController::TickAI(int deltaMs)
 		perfTiming.memoryMs += perceptionStats.memoryMs;
 		perfTiming.visionMs += perceptionStats.visionMs;
 	}
-	static int totalMilisec = 0;
-	totalMilisec += deltaMs;
-
-	bool forceUpdate = true;
-	if (forceUpdate || totalMilisec > 1000)
+	// Agent_Update follows the explicit AI tick. AIScheduler and driver tick
+	// policies own throttling; a shared static timer would couple all agents.
 	{
-		totalMilisec = 0;
 		H3D_PROFILE_SCOPE("Lua::Agent_Update");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
@@ -678,7 +674,7 @@ bool AIController::HasMovePosition(float reachDistance) const
 		return owner->GetPosition().squaredDistance(m_movePos) > reachSquared;
 	}
 
-	const AgentLocomotion* locomotion = owner->FindComponent<AgentLocomotion>();
+	const AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	if (locomotion == nullptr || !locomotion->HasPath())
 	{
 		return false;
@@ -716,7 +712,7 @@ bool AIController::IsTargetReached(float threshold) const
 		return owner->GetPosition().squaredDistance(m_movePos) < thresholdSquared;
 	}
 
-	const AgentLocomotion* locomotion = owner->FindComponent<AgentLocomotion>();
+	const AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	if (locomotion == nullptr || !locomotion->HasPath())
 	{
 		return false;

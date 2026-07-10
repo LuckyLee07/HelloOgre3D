@@ -148,7 +148,7 @@ void TeamBlackboardService::SyncFromAgents(const std::vector<AgentObject*>& agen
 			continue;
 		++scannedAgents;
 
-		AIController* ai = agent->FindComponent<AIController>();
+		AIController* ai = agent->GetAIComponent();
 		Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
 		if (blackboard == nullptr || !blackboard->GetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, false))
 			continue;
@@ -344,7 +344,7 @@ bool TeamBlackboardService::writeBestTeamEnemyFactToBlackboard(AgentObject* agen
 	if (agent == nullptr)
 		return false;
 
-	AIController* ai = agent->FindComponent<AIController>();
+	AIController* ai = agent->GetAIComponent();
 	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
 	if (blackboard == nullptr)
 		return false;
@@ -376,7 +376,7 @@ bool TeamBlackboardService::writeBestTeamFactToBlackboard(AgentObject* agent, co
 	if (agent == nullptr)
 		return false;
 
-	AIController* ai = agent->FindComponent<AIController>();
+	AIController* ai = agent->GetAIComponent();
 	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
 	if (blackboard == nullptr)
 		return false;

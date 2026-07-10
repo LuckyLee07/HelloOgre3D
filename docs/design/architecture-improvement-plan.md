@@ -389,30 +389,27 @@
 - [ ] 门禁覆盖该规则，防回流。
 - [ ] `Sandbox6/7/8` 行为不变。
 
-### P9：死代码节流 + 热点组件访问（🔴 新增，性能基线前必清）
+### P9：死代码节流 + 热点组件访问（🟡 部分完成，性能基线前必清）
 
-> 状态（2026-07-02）：**新发现，未处理**。这两项应在采集 `ai_perf_1000` Release 基线**之前**清掉，否则基线是“债务込みの数字”，后续优化无法归因。
+> 状态（2026-07-10）：**P9 完成**——伪节流、`USE_CPP_FSM` 死宏与热点组件全表扫描已清理，Release 基线已刷新（`docs/perf/ai-perf-release-baseline-20260710.md`）。`Agent_Update` 明确保持每次对象/AI tick 调用；降频由 AIScheduler、BT tick interval 等显式策略负责，不恢复跨 agent 共享的静态计时器。热点 getter 已改读 `BaseObject` 侧缓存指针。
 
 #### 现状证据
 
-- 帧节流被 `|| true` 短路，`Agent_Update` 每帧都进 Lua（原意是每 1000ms 一次）：
-  - [AgentObject.cpp:421](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L421)：`if (true || totalMilisec > 1000)`
-  - [AIController.cpp:333-334](src/HelloOgre3D/sandbox/components/ai/AIController.cpp#L333-L334)：`bool forceUpdate = true; if (forceUpdate || totalMilisec > 1000)`
-  - 后果：进 Lua 次数随 agent 数线性上涨，直接冲击“1000 agent 性能曲线”目标。
-- 死宏残留：[AgentObject.cpp:583-591](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L583-L591) 的 `#define USE_CPP_FSM 1` + 一整块注释掉的 `#ifdef`，实际逻辑走 `SandboxServices.agentConfig → AgentConfigService` flag。
-- `FindComponent<T>()` 热点全表扫描：[BaseObject.h:96-105](src/HelloOgre3D/sandbox/core/object/BaseObject.h#L96-L105) 遍历整个组件 map 并逐个 `dynamic_cast`；而 `AgentObject::GetPosition/GetVelocity/GetForward/...`（每帧、每对象多次）全走 `FindComponent<PhysicsComponent>()`（[AgentObject.cpp:187-307](src/HelloOgre3D/sandbox/objects/AgentObject.cpp#L187-L307)）。对象只缓存了 `m_renderComp`。
+- ~~帧节流被 `|| true` / `forceUpdate=true` 短路~~（2026-07-10 已清理）：两处 `Agent_Update` 现在直接表达“随对象/AI tick 调用”的真实行为；原静态计时器跨所有 agent 共享，不能作为合法节流恢复。
+- ~~`USE_CPP_FSM` 死宏与注释 `#ifdef`~~（2026-07-10 已删除）：实际逻辑只走 `SandboxServices.agentConfig → AgentConfigService` flag。
+- ~~`FindComponent<T>()` 热点全表扫描~~（2026-07-10 已清理）：`BaseObject` 现持 6 个 non-owning 缓存指针（ai/weapon/anim/attrib/locomotion/physics），在 `AddComponent`/`RemoveComponent` 时 `RefreshComponentCache()` 重建一次（语义等价 `FindComponent<T>()` 的“map 顺序首个匹配”）；另加 C++-only `GetPhysicsComponent()` 与 `const GetLocomotionComponent()` 供跨组件 / const 热点读缓存。已把每帧 / 每 tick 热点全部从 `FindComponent<T>()` 改走缓存 getter：对象层 transform getter（AgentObject/SoldierObject）、对象更新循环 AIController tick（ObjectLifecycleSystem）、感知（AgentPerceptionSystem、AgentPerceptionQuery sight origin）、团队（TeamBlackboardService）、FSM（AgentStateController / PursueState / DeathState）、动作上下文（AgentActionContext）、DT/BT action（LuaDecisionAction / LuaBehaviorAction）、locomotion 邻居避让与 ApplyForce（AgentLocomotion）、render 同步（RenderComponent）、player（PlayerController）。仅保留非热点 `FindComponent`：`GetLuaScript`(LuaScript) 与未缓存类型（PlayerController / RenderComponent），以及 `ObjectManager` 的诊断 / 计数汇总（RuntimeDiag-only，非每帧）。
 
 #### 解决方案
 
-1. 明确节流意图并修正：要么恢复“每 N ms 一次”，要么删掉无用的 `totalMilisec` 累加与 `|| true`，让代码与实际行为一致。删 `USE_CPP_FSM` 死宏块。
+1. ~~明确节流意图并修正~~：已选择行为保持型清理，删除无用计时器、强制分支和 `USE_CPP_FSM` 死宏；降频只走显式 scheduler/driver policy。
 2. 热点组件（physics/locomotion/ai）在对象 attach 时解析一次并缓存 non-owning 指针，getter 不再每帧 `FindComponent`。
 3. 明文化方针：**不引入完整 ECS，hot component 由对象侧缓存指针**（见 §暂缓清单，避免将来揺り戻し）。
 
 #### 验收
 
-- [ ] 两处 `|| true` 死节流与 `USE_CPP_FSM` 死宏清理，行为与注释一致。
-- [ ] 热点 getter 不再每帧全表扫描 + dynamic_cast。
-- [ ] 清理后再采集 `ai_perf_100/500/1000` 基线。
+- [x] 两处伪节流与 `USE_CPP_FSM` 死宏清理，行为与注释一致；Release x64、`Sandbox2`、`Sandbox8`、`ai_perf_100` smoke 已通过。
+- [x] 热点 getter 不再每帧全表扫描 + dynamic_cast（`BaseObject` 缓存指针 + `AddComponent`/`RemoveComponent` 刷新），覆盖对象层与 AI tick 路径（感知 / 团队 / FSM / DT-BT action / locomotion / lifecycle / render 同步）；Release x64 rebuild、`Sandbox6/7/8/10/12/19`、`ai_perf_100` smoke 与 `check_sandbox_architecture` 已通过（2026-07-10）。
+- [x] 清理后再采集 `ai_perf_100/500/1000` 基线（`docs/perf/ai-perf-release-baseline-20260710.md`，2026-07-10）：candidates 与 20260612 逐值相同（确定性一致），AI 分项同量级或略优（perceptionSystem 1000 agent 23.67→21.8），无回归；P9 组件缓存的直接收益在聚合帧指标里低于噪声底，属累积刷新非受控 A/B。
 
 ### P10：BaseObject 被 typed getter 领域污染（🟡 新增）
 

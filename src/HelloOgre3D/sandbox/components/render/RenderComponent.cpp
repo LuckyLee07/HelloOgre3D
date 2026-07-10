@@ -203,7 +203,7 @@ void RenderComponent::SyncFromOwnerTransform()
 		return;
 	}
 
-	const PhysicsComponent* physics = owner->FindComponent<PhysicsComponent>();
+	const PhysicsComponent* physics = owner->GetPhysicsComponent();
 	if (physics == nullptr || physics->GetRigidBody() == nullptr)
 	{
 		return;

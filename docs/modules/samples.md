@@ -45,7 +45,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 ## 7. 验证策略
 
-- `tools/run_sandbox_smoke.ps1 -Sample SandboxX -StopExisting -NoTail`；Chapter9 跑 parity_gate；玩家纵切片跑 `Sandbox19` smoke 后再做手动输入/视角验收。
+- `tools/run_sandbox_smoke.ps1 -Sample SandboxX -StopExisting -NoTail`；Chapter9 跑 parity_gate；玩家纵切片跑 `Sandbox19` smoke 后，再做移动、观察方向、射击和重开的手动验收。
 
 ## 8. 已知 gap / 相关文档
 

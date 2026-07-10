@@ -36,17 +36,17 @@ namespace
 
 	AIController* GetAIController(AgentObject* agent)
 	{
-		return agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
+		return agent != nullptr ? agent->GetAIComponent() : nullptr;
 	}
 
 	AgentLocomotion* GetLocomotion(AgentObject* agent)
 	{
-		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+		return agent != nullptr ? agent->GetLocomotionComponent() : nullptr;
 	}
 
 	const AgentLocomotion* GetLocomotion(const AgentObject* agent)
 	{
-		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+		return agent != nullptr ? agent->GetLocomotionComponent() : nullptr;
 	}
 
 	void AlignAgentToPath(AgentObject* agent)

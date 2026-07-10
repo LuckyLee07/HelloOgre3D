@@ -27,26 +27,26 @@ AgentObject* AgentActionContext::GetAgent() const
 AIController* AgentActionContext::GetAIController() const
 {
 	AgentObject* agent = GetAgent();
-	return agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
+	return agent != nullptr ? agent->GetAIComponent() : nullptr;
 }
 
 IAnimController* AgentActionContext::GetAnimController() const
 {
 	AgentObject* agent = GetAgent();
-	AnimComponent* anim = agent != nullptr ? agent->FindComponent<AnimComponent>() : nullptr;
+	AnimComponent* anim = agent != nullptr ? agent->GetAnimComponent() : nullptr;
 	return anim != nullptr ? anim->GetController() : nullptr;
 }
 
 WeaponComponent* AgentActionContext::GetWeapon() const
 {
 	AgentObject* agent = GetAgent();
-	return agent != nullptr ? agent->FindComponent<WeaponComponent>() : nullptr;
+	return agent != nullptr ? agent->GetWeaponComponent() : nullptr;
 }
 
 AgentAttrib* AgentActionContext::GetAttrib() const
 {
 	AgentObject* agent = GetAgent();
-	return agent != nullptr ? agent->FindComponent<AgentAttrib>() : nullptr;
+	return agent != nullptr ? agent->GetAttribComponent() : nullptr;
 }
 
 const std::string& AgentActionContext::GetNavMeshName() const
@@ -231,7 +231,7 @@ void AgentActionContext::DrawPath(const Ogre::ColourValue& color, const Ogre::Ve
 	}
 
 	static const std::vector<Ogre::Vector3> kEmptyPath;
-	AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
+	AgentLocomotion* locomotion = agent->GetLocomotionComponent();
 	const std::vector<Ogre::Vector3>& path = locomotion != nullptr ? locomotion->GetPath() : kEmptyPath;
 	if (path.empty())
 	{

@@ -206,7 +206,7 @@ void HearingDangerSense::ApplyToAgent(AgentObject* agent, ObjectManager* objectM
 	if (agent == nullptr || agent->GetHealth() <= 0.0f)
 		return;
 
-	AIController* ai = agent->FindComponent<AIController>();
+	AIController* ai = agent->GetAIComponent();
 	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
 	if (blackboard == nullptr || blackboard->GetBool("perception.hasTarget", false))
 		return;

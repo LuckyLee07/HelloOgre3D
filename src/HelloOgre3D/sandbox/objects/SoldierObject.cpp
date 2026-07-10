@@ -39,12 +39,12 @@ namespace
 
 	AgentLocomotion* GetLocomotion(AgentObject* agent)
 	{
-		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+		return agent != nullptr ? agent->GetLocomotionComponent() : nullptr;
 	}
 
 	const AgentLocomotion* GetLocomotion(const AgentObject* agent)
 	{
-		return agent != nullptr ? agent->FindComponent<AgentLocomotion>() : nullptr;
+		return agent != nullptr ? agent->GetLocomotionComponent() : nullptr;
 	}
 
 	Ogre::Real GetLocomotionHeight(const AgentObject* agent)
@@ -81,7 +81,7 @@ void SoldierObject::Init()
 
 AnimComponent* SoldierObject::GetAnimComponent() const
 {
-	return const_cast<AnimComponent*>(FindComponent<AnimComponent>());
+	return m_cachedAnim;
 }
 
 void SoldierObject::ApplyCommand(const AICommand& command)
@@ -130,7 +130,7 @@ void SoldierObject::ApplyCommand(const AICommand& command)
 
 void SoldierObject::initWeapon(const Ogre::String& meshFile)
 {
-	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	WeaponComponent* weaponComp = m_cachedWeapon;
 	if (weaponComp != nullptr)
 	{
 		weaponComp->Init(meshFile);
@@ -140,7 +140,7 @@ void SoldierObject::initWeapon(const Ogre::String& meshFile)
 void SoldierObject::SetRenderVisible(bool visible)
 {
 	AgentObject::SetRenderVisible(visible);
-	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	WeaponComponent* weaponComp = m_cachedWeapon;
 	if (weaponComp != nullptr)
 	{
 		weaponComp->SetRenderVisible(visible);
@@ -149,7 +149,7 @@ void SoldierObject::SetRenderVisible(bool visible)
 
 int SoldierObject::getStanceType() const
 {
-	const AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	const AgentAttrib* attrib = m_cachedAttrib;
 	return attrib != nullptr ? attrib->GetStanceType() : SOLDIER_STAND;
 }
 
@@ -165,21 +165,21 @@ void SoldierObject::Update(int deltaMilisec)
 
 void SoldierObject::TickAi(int deltaMilisec)
 {
-	AIController* ai = FindComponent<AIController>();
+	AIController* ai = m_cachedAI;
 	if (ai != nullptr)
 		ai->TickAI(deltaMilisec);
 }
 
 void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
 {
-	AIController* ai = FindComponent<AIController>();
+	AIController* ai = m_cachedAI;
 	if (ai != nullptr)
 		ai->SetTickInOwnerUpdateEnabled(enabled);
 }
 
 void SoldierObject::SyncWeaponToHandBone()
 {
-	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	WeaponComponent* weaponComp = m_cachedWeapon;
 	if (weaponComp != nullptr)
 		weaponComp->SyncToHandBone();
 }
@@ -225,7 +225,7 @@ Ogre::Vector3 SoldierObject::GetBoneForward(const Ogre::String& boneName) const
 
 void SoldierObject::changeStanceType(int stanceType)
 {
-	AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	AgentAttrib* attrib = m_cachedAttrib;
 	if (attrib == nullptr)
 		return;
 
@@ -255,7 +255,7 @@ void SoldierObject::changeStanceType(int stanceType)
 
 void SoldierObject::ApplyStanceParams(int stanceType)
 {
-	AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	AgentAttrib* attrib = m_cachedAttrib;
 	float soldier_height = 0.0f;
 	float soldier_speed = 0.0f;
 	if (stanceType == SOLDIER_STAND)
@@ -294,7 +294,7 @@ void SoldierObject::ApplyStanceParams(int stanceType)
 
 void SoldierObject::TryApplyPendingStance()
 {
-	AgentAttrib* attrib = FindComponent<AgentAttrib>();
+	AgentAttrib* attrib = m_cachedAttrib;
 	if (attrib == nullptr)
 	{
 		return;
@@ -390,7 +390,7 @@ SoldierAnimController* SoldierObject::GetAnimController() const
 
 AgentStateController* SoldierObject::GetFsmController() const
 {
-	AIController* ai = const_cast<SoldierObject*>(this)->FindComponent<AIController>();
+	AIController* ai = m_cachedAI;
 	return ai != nullptr ? ai->GetFsmController() : nullptr;
 }
 
@@ -406,7 +406,7 @@ AgentAnimStateMachine* SoldierObject::GetBodyAnimStateMachine() const
 
 AgentAnimStateMachine* SoldierObject::GetWeaponAnimStateMachine() const
 {
-	const WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	const WeaponComponent* weaponComp = m_cachedWeapon;
 	return weaponComp != nullptr ? weaponComp->GetObjectASM() : nullptr;
 }
 
@@ -482,14 +482,14 @@ void SoldierObject::ApplyDeathCommand()
 
 void SoldierObject::ApplyFireWeaponCommand()
 {
-	WeaponComponent* weaponComp = FindComponent<WeaponComponent>();
+	WeaponComponent* weaponComp = m_cachedWeapon;
 	if (weaponComp != nullptr)
 		weaponComp->ShootBullet();
 }
 
 void SoldierObject::ApplyMoveToCommand(const Ogre::Vector3& targetPosition)
 {
-	AIController* ai = FindComponent<AIController>();
+	AIController* ai = m_cachedAI;
 	if (ai != nullptr)
 	{
 		ai->SetMovePosition(targetPosition);
@@ -514,7 +514,7 @@ void SoldierObject::ApplyMoveToCommand(const Ogre::Vector3& targetPosition)
 
 void SoldierObject::ApplyStopCommand()
 {
-	AIController* ai = FindComponent<AIController>();
+	AIController* ai = m_cachedAI;
 	if (ai != nullptr)
 	{
 		ai->ClearMovePosition();

@@ -32,7 +32,7 @@ Blackboard* LuaBehaviorAction::ResolveBlackboard() const
 	if (m_blackboard != nullptr)
 		return m_blackboard;
 	if (!m_owner) return nullptr;
-	AIController* ai = m_owner->FindComponent<AIController>();
+	AIController* ai = m_owner->GetAIComponent();
 	BehaviorTreeDriver* driver = ai ? ai->GetBehaviorTreeDriver() : nullptr;
 	return driver ? driver->GetBlackboard() : nullptr;
 }

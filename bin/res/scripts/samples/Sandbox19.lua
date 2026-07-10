@@ -16,10 +16,9 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 	"[Sandbox19 - Playable Encounter]" .. GUI.MarkupNewline ..
 	"W/A/S/D: move Soldier" .. GUI.MarkupNewline ..
 	"Shift: sprint" .. GUI.MarkupNewline ..
-	"Hold RMB: aim camera" .. GUI.MarkupNewline ..
+	"Hold RMB: rotate view / aim" .. GUI.MarkupNewline ..
 	"LMB: fire" .. GUI.MarkupNewline ..
 	"R: reload" .. GUI.MarkupNewline ..
-	"V: FPS / free camera" .. GUI.MarkupNewline ..
 	"Enter: restart encounter"
 
 local function _CreateHud()

@@ -300,7 +300,7 @@ Ogre::Vector3 AgentLocomotion::ForceToAvoidAgents(Ogre::Real predictionTime)
 	{
 		if (!a || a == owner) continue; // 排除自己
 		if (a->GetHealth() <= 0) continue;
-		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		AgentLocomotion* locomotion = a->GetLocomotionComponent();
 		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (veh) group.push_back(veh);
 	}
@@ -340,7 +340,7 @@ Ogre::Vector3 AgentLocomotion::ForceToCombine(const std::vector<AgentObject*>& a
 	{
 		if (a == nullptr || a == owner) // 排除自己
 			continue;
-		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		AgentLocomotion* locomotion = a->GetLocomotionComponent();
 		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (veh) group.push_back(veh);
 	}
@@ -361,7 +361,7 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 	{
 		if (a == nullptr || a == owner) // 排除自己
 			continue;
-		AgentLocomotion* locomotion = a->FindComponent<AgentLocomotion>();
+		AgentLocomotion* locomotion = a->GetLocomotionComponent();
 		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
 		if (!veh) continue;
 		group.push_back(veh);
@@ -375,7 +375,7 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 void AgentLocomotion::ApplyForce(const Ogre::Vector3& force)
 {
 	AgentObject* owner = GetAgentOwner();
-	PhysicsComponent* physics = owner != nullptr ? owner->FindComponent<PhysicsComponent>() : nullptr;
+	PhysicsComponent* physics = owner != nullptr ? owner->GetPhysicsComponent() : nullptr;
 	if (physics != nullptr)
 		physics->ApplyForce(force);
 }

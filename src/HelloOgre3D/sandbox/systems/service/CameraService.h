@@ -46,6 +46,8 @@ public:
 	long long GetTotalSimulateTime();
 	//tolua_end
 
+	void TranslateCameraWorld(const Ogre::Vector3& delta);
+
 private:
 	long long GetProfileTime(ProfileTimeKind kind) const;
 

@@ -21,7 +21,7 @@
 | `anim/AnimComponent.{h,cpp}` | 动画 | ASM 容器，见 [[objects-anim]] |
 | `combat/WeaponComponent.{h,cpp}` | 战斗 | 弹药/射击/挂接 |
 | `ai/AIController.{h,cpp}` | AI | 见 [[ai-controller]] |
-| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；玩家输入、FPS 锚点、射击/换弹意图 |
+| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；把输入转换为相机相对移动、朝向、射击与换弹意图，并让现有观察相机随玩家水平位移平移；不新增玩家对象类型或相机模式 |
 | `script/LuaScriptComponent.{h,cpp}` | 脚本 | Lua 绑定 |
 
 ## 4. 公开能力要点

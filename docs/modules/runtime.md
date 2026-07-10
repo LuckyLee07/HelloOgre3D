@@ -17,13 +17,13 @@
 | `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,HearingDangerSense,TeamBlackboard,FairyGuiService}Stats` + 帧时序 / Lua callback 计数；Tracy 关闭时是 no-op |
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
-| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FPS；FPS 支持玩家位置锚点、`HELLO_CAMERA_FPS` 启动开关与 `HELLO_FPS_WPN_*` 武器 view model 调参 |
+| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL 相机控制；当前不扩展 FPS 模式 |
 | `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
 
 ## 4. 公开能力要点
 
-- 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、相机模式（含由 `PlayerController` 更新锚点的 FPS 视角）、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
+- 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、既有相机模式、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
 
 ## 5. 约束与红线
 
@@ -37,7 +37,7 @@
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox16`(性能采样)、`Sandbox19`(FPS 玩家锚点)；gate：`run_fgui_production_gate.ps1`、`ai_perf_1000`。
+- 回归 sample：`Sandbox16`(性能采样)；gate：`run_fgui_production_gate.ps1`、`ai_perf_1000`。
 
 ## 8. 已知 gap / 相关文档
 

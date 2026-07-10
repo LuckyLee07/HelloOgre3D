@@ -156,15 +156,6 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 	if (!consumed && event.key == OIS::KC_ESCAPE && m_shutdownSetter)
 		m_shutdownSetter(true);
 
-	// V 键在第一人称(FPS) 与自由视角(FREELOOK) 之间切换。
-	if (!consumed && event.key == OIS::KC_V && m_cameraController != nullptr)
-	{
-		const OgreCameraController::CameraStyle style = m_cameraController->getStyle();
-		m_cameraController->setStyle(style == OgreCameraController::CS_FPS
-			? OgreCameraController::CS_FREELOOK : OgreCameraController::CS_FPS);
-		consumed = true;
-	}
-
 	if (!consumed && m_cameraController != nullptr)
 		m_cameraController->injectKeyDown(event);
 

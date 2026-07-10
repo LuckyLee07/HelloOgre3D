@@ -105,7 +105,7 @@ std::string PursueState::OnUpdate(float dt)
 		m_stuckRepathMs = 0.0f;
 	}
 
-	const AgentLocomotion* locomotion = m_pAgent->FindComponent<AgentLocomotion>();
+	const AgentLocomotion* locomotion = m_pAgent->GetLocomotionComponent();
 	if ((locomotion == nullptr || !locomotion->HasPath()) && !actions->HasPendingAnimation())
 	{
 		SetTerminated(true);

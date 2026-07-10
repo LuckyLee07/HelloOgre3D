@@ -16,6 +16,7 @@ class AgentAttrib;
 class AgentLocomotion;
 class AIController;
 class AnimComponent;
+class PhysicsComponent;
 class WeaponComponent;
 
 class BaseObject : public SandboxObject //tolua_exports
@@ -57,6 +58,13 @@ public:
 	AgentAttrib* GetAttribComponent();
 	AgentLocomotion* GetLocomotionComponent();
 	//tolua_end
+
+	// Non-tolua C++ accessors for cached hot components (kept off the Lua
+	// surface; Lua reads transforms through the object getters). The const
+	// GetLocomotionComponent lets const-context hot paths (e.g. perception
+	// sight origin) read the cache instead of scanning + dynamic_cast.
+	PhysicsComponent* GetPhysicsComponent();
+	const AgentLocomotion* GetLocomotionComponent() const;
 
 	void SetObjId(unsigned int objId);
 	void SetSandboxServices(const SandboxServices* services);
@@ -125,8 +133,23 @@ protected:
 	// BaseObject owns every component inserted through AddComponent.
 	ComponentMap m_components;
 
+	// Non-owning cached pointers to hot components, refreshed on every
+	// AddComponent/RemoveComponent. Per-frame getters read these directly
+	// instead of scanning the whole component map + dynamic_cast each call.
+	// Semantics match FindComponent<T>(): first component of that type in map
+	// iteration (key sort) order. Owned by m_components; never freed here.
+	AIController* m_cachedAI = nullptr;
+	WeaponComponent* m_cachedWeapon = nullptr;
+	AnimComponent* m_cachedAnim = nullptr;
+	AgentAttrib* m_cachedAttrib = nullptr;
+	AgentLocomotion* m_cachedLocomotion = nullptr;
+	PhysicsComponent* m_cachedPhysics = nullptr;
+
 private:
 	void DestroyComponent(ComponentPtr& component);
+	// Rebuild m_cached* from the current component map. Called whenever the
+	// component set changes so cached pointers never dangle or go stale.
+	void RefreshComponentCache();
 
 	const SandboxServices* m_services;
 	unsigned int m_objId;

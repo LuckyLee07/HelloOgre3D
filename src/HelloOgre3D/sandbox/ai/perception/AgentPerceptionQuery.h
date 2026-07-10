@@ -264,7 +264,7 @@ private:
 		if (agent == nullptr)
 			return Ogre::Vector3::ZERO;
 
-		const AgentLocomotion* locomotion = agent->FindComponent<AgentLocomotion>();
+		const AgentLocomotion* locomotion = agent->GetLocomotionComponent();
 		const Ogre::Real height = locomotion != nullptr ? locomotion->GetHeight() : AgentLocomotion::DEFAULT_AGENT_HEIGHT;
 		return agent->GetPosition() + Ogre::Vector3(0.0f, height * 0.5f, 0.0f);
 	}

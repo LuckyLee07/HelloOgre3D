@@ -47,7 +47,7 @@ void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int 
 	{
 		for (AgentObject* agent : agents)
 		{
-			AIController* ai = agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
+			AIController* ai = agent != nullptr ? agent->GetAIComponent() : nullptr;
 			if (ai != nullptr)
 				ai->SetPerceptionTickInAiTickEnabled(true);
 		}
@@ -58,7 +58,7 @@ void AgentPerceptionSystem::Update(const std::vector<AgentObject*>& agents, int 
 
 	for (AgentObject* agent : agents)
 	{
-		AIController* ai = agent != nullptr ? agent->FindComponent<AIController>() : nullptr;
+		AIController* ai = agent != nullptr ? agent->GetAIComponent() : nullptr;
 		if (ai == nullptr)
 			continue;
 
