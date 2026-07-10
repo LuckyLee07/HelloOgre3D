@@ -5,6 +5,7 @@ require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
 local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 local AIEvents = require("res.scripts.ai.events.AIEvents.lua")
+local ParityTrace = require("res.scripts.samples.parity_trace")
 
 local textSize = {w = 300, h = 185}
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
@@ -22,6 +23,7 @@ local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 
 local _agents = {}
 local _agentsById = {}
+local _parityTrace = nil
 local _safeSpawnById = {}
 local _spawnNavPositions = {}
 local _demoPanel = nil
@@ -858,6 +860,52 @@ function Sandbox_Initialize()
     end
 
     _InitializeChapter8Comms(sampleName)
+
+    _parityTrace = ParityTrace.Start({
+        sample = sampleName,
+        preset = preset.name or sampleName,
+        seed = preset.seed,
+        config = preset.parityTrace,
+    })
+end
+
+-- 决策诊断字段：让 parity trace 从"位置分叉"升级到"决策分叉"。
+-- 关键：agent:GetTarget() 在 Sandbox11 返回 nil，这里用 BT 的 movePos 覆盖 target
+-- 字段，使 compare 能对拍"当前要走到哪"，对齐 legacy 的 agent:GetTarget() 语义。
+-- action/hasTarget/enemyId/sharedEnemyId 不参与 compare 的 PASS/FAIL，仅供人肉定位。
+local function _BuildAgentParityExtra(agent)
+    local extra = { alive = _IsAlive(agent) }
+    local bb = _GetBlackboard(agent)
+    if bb ~= nil then
+        if bb:Has("__bt.currentAction") then
+            extra.action = bb:GetString("__bt.currentAction")
+        end
+        if bb:Has("movePos") then
+            extra.target = ParityTrace.Vector3(bb:GetVec3("movePos"))
+        end
+        extra.hasTarget = bb:GetBool("perception.hasTarget", false)
+        if bb:Has("perception.targetId") then
+            extra.enemyId = bb:GetObjectId("perception.targetId", -1)
+        end
+        if bb:Has("chapter8.sharedTargetId") then
+            extra.sharedEnemyId = bb:GetObjectId("chapter8.sharedTargetId", -1)
+        end
+    end
+    return extra
+end
+
+-- Structured逐帧快照，供 chapter-8 parity 对拍（compare_parity_trace.py 按 sample/agent index
+-- 比 pos/target/team/alive）。仅当 preset.parityTrace 或 HELLO_PARITY_TRACE 开启时才有 state。
+local function _BuildParitySnapshot(state)
+    local agents = {}
+    local maxAgents = state ~= nil and state.maxAgents or #_agents
+    for index, agent in ipairs(_agents) do
+        if index > maxAgents then
+            break
+        end
+        agents[#agents + 1] = ParityTrace.AgentSnapshot(agent, index, _BuildAgentParityExtra(agent))
+    end
+    return { agents = agents }
 end
 
 function Sandbox_Update(deltaTimeInMillis)
@@ -867,4 +915,5 @@ function Sandbox_Update(deltaTimeInMillis)
     _UpdateChapter8Comms(deltaTimeInMillis)
     _DrawDemoGuides()
     _UpdateDemoPanel()
+    ParityTrace.Tick(_parityTrace, deltaTimeInMillis, _BuildParitySnapshot)
 end

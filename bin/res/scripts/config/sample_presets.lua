@@ -288,6 +288,34 @@ SamplePresets.chapter8_comms = {
 
 SamplePresets.Sandbox11 = SamplePresets.chapter8_comms
 
+-- Chapter-8 parity 对拍变体：固定 spawn + 逐帧 parityTrace，供 compare_parity_trace.py 与
+-- legacy(chapter-8) trace 对齐。用法：run_sandbox_smoke.ps1 -Sample Sandbox11
+-- -Preset chapter8_perception_parity -ParityTrace。不改 Sandbox11(chapter8_comms) 基线。
+SamplePresets.chapter8_perception_parity = cloneTable(SamplePresets.chapter8_comms)
+SamplePresets.chapter8_perception_parity.seed = 20260812
+SamplePresets.chapter8_perception_parity.spawnMode = "fixed"
+SamplePresets.chapter8_perception_parity.aiBlackboard.strings["debug.demo"] = "chapter8_perception_parity"
+-- 固定 spawn：useOriginalRandomSpawn=false 让 Sandbox11 走 PlaceAgentOnPresetSpawn，
+-- 消除跨架构 PRNG 噪声。占位坐标先沿用 chapter8_comms 的 6 点；待 legacy(chapter-8) 侧
+-- 录出固定 spawn 后回填对齐（阶段一 TODO）。
+SamplePresets.chapter8_perception_parity.chapter8Comms.useOriginalRandomSpawn = false
+SamplePresets.chapter8_perception_parity.spawnPoints = {
+	{ -14.442, 0.080, 21.076 },
+	{ 19.732, 0.050, -7.443 },
+	{ 20.737, 0.050, 39.859 },
+	{ 28.901, 0.068, 66.047 },
+	{ -8.847, 0.050, -9.129 },
+	{ 30.546, 0.050, 15.425 },
+}
+SamplePresets.chapter8_perception_parity.parityTrace = {
+	enabled = true,
+	delayMs = 1000,
+	intervalMs = 500,
+	maxSamples = 16,
+	maxAgents = 6,
+	includeAiSummary = false,
+}
+
 SamplePresets.team_blackboard = cloneTable(SamplePresets.chapter8_comms)
 SamplePresets.team_blackboard.agentCount = 6
 SamplePresets.team_blackboard.lightTeamCount = 3
