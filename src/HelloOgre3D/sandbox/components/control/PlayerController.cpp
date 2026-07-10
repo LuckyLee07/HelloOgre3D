@@ -1,5 +1,6 @@
 ﻿#include "PlayerController.h"
 
+#include "OgreMath.h"
 #include "GameDefine.h"
 #include "components/agent/AgentLocomotion.h"
 #include "components/anim/AnimComponent.h"
@@ -14,51 +15,23 @@ namespace
 {
 	const Ogre::Real kSprintMultiplier = 1.75f;
 	const Ogre::Real kDirectionEpsilon = 1e-6f;
+	const Ogre::Real kYawSensitivity = 0.005f; // 弧度/像素（RMB 拖动）
 
-	bool NormalizeHorizontal(Ogre::Vector3& direction)
-	{
-		direction.y = 0.0f;
-		if (direction.isNaN() || direction.squaredLength() <= kDirectionEpsilon)
-			return false;
-		direction.normalise();
-		return true;
-	}
-
-	void ResolveCameraGroundBasis(CameraService* camera, const Ogre::Vector3& fallbackForward,
-		Ogre::Vector3& forward, Ogre::Vector3& right)
-	{
-		right = camera != nullptr ? -camera->GetCameraLeft() : Ogre::Vector3::ZERO;
-		const bool hasCameraRight = NormalizeHorizontal(right);
-
-		forward = camera != nullptr ? camera->GetCameraForward() : Ogre::Vector3::ZERO;
-		bool hasCameraForward = NormalizeHorizontal(forward);
-		if (!hasCameraForward && hasCameraRight)
-		{
-			forward = Ogre::Vector3::UNIT_Y.crossProduct(right);
-			hasCameraForward = NormalizeHorizontal(forward);
-		}
-		if (!hasCameraForward)
-		{
-			forward = fallbackForward;
-			if (!NormalizeHorizontal(forward))
-				forward = Ogre::Vector3::UNIT_Z;
-		}
-
-		if (!hasCameraRight)
-		{
-			right = forward.crossProduct(Ogre::Vector3::UNIT_Y);
-			if (!NormalizeHorizontal(right))
-				right = Ogre::Vector3::UNIT_X;
-		}
-	}
+	// 第三人称跟随相机参数（Sandbox19 尺度；SoldierObject ~人高）。
+	const float kFollowHorzDist = 8.0f;
+	const float kFollowVertDist = 4.0f;
+	const float kFollowTargetDist = 3.0f;
+	const float kFollowEyeHeight = 1.5f;
+	const float kFollowSpring = 64.0f;
 }
 
 PlayerController::PlayerController(BaseObject* owner)
 	: m_registeredInput(nullptr)
 	, m_combatState(COMBAT_READY)
 	, m_aimDirection(Ogre::Vector3::UNIT_Z)
-	, m_lastFollowPosition(Ogre::Vector3::ZERO)
-	, m_hasFollowPosition(false)
+	, m_yaw(0.0f)
+	, m_hasYaw(false)
+	, m_rmbHeld(false)
 	, m_forwardPressed(false)
 	, m_backPressed(false)
 	, m_leftPressed(false)
@@ -91,12 +64,20 @@ void PlayerController::onDetach()
 	UnregisterInput();
 	ResetInputState();
 	ResetCameraFollow();
+	// 退出前恢复相机为 FREELOOK，避免第三人称 FOLLOW 残留污染其它 sample。
+	const SandboxServices* services = GetSandboxServices();
+	CameraService* camera = services != nullptr ? services->camera : nullptr;
+	if (camera != nullptr)
+		camera->ExitFollowMode();
 	IComponent::onDetach();
 }
 
 void PlayerController::onSandboxServicesChanged(const SandboxServices* services)
 {
 	RegisterInput(services != nullptr ? services->input : nullptr);
+	CameraService* camera = services != nullptr ? services->camera : nullptr;
+	if (camera != nullptr)
+		camera->EnterFollowMode(kFollowHorzDist, kFollowVertDist, kFollowTargetDist, kFollowEyeHeight, kFollowSpring);
 }
 
 int PlayerController::getUpdateOrder() const
@@ -106,17 +87,17 @@ int PlayerController::getUpdateOrder() const
 
 void PlayerController::update(int deltaMs)
 {
-	(void)deltaMs;
 	if (!IsAlive())
 	{
 		EnterDeadState();
 		return;
 	}
 
-	UpdateCameraFollow();
+	// 先定朝向（含首帧从 owner 初始化 yaw），再战斗/移动，最后相机跟随用最新 pos/forward。
 	UpdateAimDirection();
 	UpdateCombat();
 	UpdateMovement();
+	UpdateCameraFollow(deltaMs);
 }
 
 bool PlayerController::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
@@ -186,9 +167,25 @@ bool PlayerController::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	return IsAlive();
 }
 
+bool PlayerController::OnMouseMoved(const OIS::MouseEvent& evt)
+{
+	// 仅 RMB 按住时转向；消费事件避免相机控制器再做 FREELOOK。松开返回 false 不拦截。
+	if (!IsAlive() || !m_rmbHeld)
+		return false;
+	m_yaw -= static_cast<Ogre::Real>(evt.state.X.rel) * kYawSensitivity;
+	m_hasYaw = true;
+	UpdateFacingForward();
+	return true;
+}
+
 bool PlayerController::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 	(void)evt;
+	if (btn == OIS::MB_Right)
+	{
+		m_rmbHeld = true;
+		return true;
+	}
 	if (btn != OIS::MB_Left || !IsAlive())
 		return false;
 	m_firePressed = true;
@@ -198,6 +195,11 @@ bool PlayerController::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButt
 bool PlayerController::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 	(void)evt;
+	if (btn == OIS::MB_Right)
+	{
+		m_rmbHeld = false;
+		return true;
+	}
 	if (btn != OIS::MB_Left)
 		return false;
 	m_firePressed = false;
@@ -261,51 +263,53 @@ void PlayerController::ResetInputState()
 
 void PlayerController::ResetCameraFollow()
 {
-	m_lastFollowPosition = Ogre::Vector3::ZERO;
-	m_hasFollowPosition = false;
+	m_rmbHeld = false;
+	m_hasYaw = false;
 }
 
-void PlayerController::UpdateCameraFollow()
+void PlayerController::UpdateCameraFollow(int deltaMs)
 {
 	SoldierObject* owner = GetSoldierOwner();
 	const SandboxServices* services = GetSandboxServices();
 	CameraService* camera = services != nullptr ? services->camera : nullptr;
 	if (owner == nullptr || camera == nullptr)
-	{
-		ResetCameraFollow();
 		return;
-	}
 
 	const Ogre::Vector3 ownerPosition = owner->GetPosition();
 	if (ownerPosition.isNaN())
-	{
-		ResetCameraFollow();
 		return;
-	}
-	if (!m_hasFollowPosition)
-	{
-		m_lastFollowPosition = ownerPosition;
-		m_hasFollowPosition = true;
-		return;
-	}
 
-	Ogre::Vector3 delta = ownerPosition - m_lastFollowPosition;
-	m_lastFollowPosition = ownerPosition;
-	delta.y = 0.0f;
-	if (delta.squaredLength() > kDirectionEpsilon)
-		camera->TranslateCameraWorld(delta);
+	camera->UpdateFollow(ownerPosition, m_aimDirection, static_cast<float>(deltaMs) / 1000.0f);
 }
 
 void PlayerController::UpdateAimDirection()
 {
 	SoldierObject* owner = GetSoldierOwner();
-	const SandboxServices* services = GetSandboxServices();
-	CameraService* camera = services != nullptr ? services->camera : nullptr;
-	const Ogre::Vector3 fallbackForward = owner != nullptr ? owner->GetForward() : Ogre::Vector3::UNIT_Z;
-	Ogre::Vector3 unusedRight;
-	ResolveCameraGroundBasis(camera, fallbackForward, m_aimDirection, unusedRight);
-	if (owner != nullptr)
-		owner->SetForward(m_aimDirection);
+	if (owner == nullptr)
+		return;
+
+	if (!m_hasYaw)
+	{
+		// 首帧从角色现有朝向初始化 yaw（atan2(x,z) 与 forward=(sin,0,cos) 互逆）。
+		Ogre::Vector3 forward = owner->GetForward();
+		forward.y = 0.0f;
+		if (forward.isZeroLength())
+			forward = Ogre::Vector3::UNIT_Z;
+		m_yaw = Ogre::Math::ATan2(forward.x, forward.z).valueRadians();
+		m_hasYaw = true;
+	}
+	UpdateFacingForward();
+}
+
+void PlayerController::UpdateFacingForward()
+{
+	SoldierObject* owner = GetSoldierOwner();
+	if (owner == nullptr)
+		return;
+	const Ogre::Vector3 forward(
+		Ogre::Math::Sin(Ogre::Radian(m_yaw)), 0.0f, Ogre::Math::Cos(Ogre::Radian(m_yaw)));
+	m_aimDirection = forward;
+	owner->SetForward(forward);
 }
 
 void PlayerController::UpdateMovement()
@@ -320,11 +324,16 @@ void PlayerController::UpdateMovement()
 		return;
 	}
 
-	const SandboxServices* services = GetSandboxServices();
-	CameraService* camera = services != nullptr ? services->camera : nullptr;
-	Ogre::Vector3 forward;
-	Ogre::Vector3 right;
-	ResolveCameraGroundBasis(camera, m_aimDirection, forward, right);
+	// 移动基向量相对角色朝向（不再相对相机）：forward=角色朝向水平化，right=UNIT_Y×forward。
+	Ogre::Vector3 forward = m_aimDirection;
+	forward.y = 0.0f;
+	if (forward.isZeroLength())
+		forward = Ogre::Vector3::UNIT_Z;
+	forward.normalise();
+	Ogre::Vector3 right = Ogre::Vector3::UNIT_Y.crossProduct(forward);
+	if (right.isZeroLength())
+		right = Ogre::Vector3::UNIT_X;
+	right.normalise();
 
 	Ogre::Vector3 movement = Ogre::Vector3::ZERO;
 	if (m_forwardPressed) movement += forward;

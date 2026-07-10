@@ -17,7 +17,7 @@
 | `profiling/RuntimeProfileCounters.{h,cpp}` | 性能 | `Plot{AiScheduler,AgentPerception,HearingDangerSense,TeamBlackboard,FairyGuiService}Stats` + 帧时序 / Lua callback 计数；Tracy 关闭时是 no-op |
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
-| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL 相机控制；当前不扩展 FPS 模式 |
+| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为 Sandbox19 第三人称弹簧跟随（照搬 code-master FollowCamera：后上方+看角色前方+弹簧阻尼，非 FPS），由 `CameraService`→`PlayerController` 每帧 `updateFollow` 驱动；仍不做 FPS 模式 |
 | `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
 

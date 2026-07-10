@@ -117,6 +117,7 @@ void GameManager::Initialize()
 	m_pCameraService = new CameraService(
 		m_pClientManager != nullptr ? m_pClientManager->getCamera() : nullptr,
 		pSceneManager,
+		m_pClientManager != nullptr ? m_pClientManager->getCameraController() : nullptr,
 		[this](CameraService::ProfileTimeKind kind) -> long long
 		{
 			if (m_pClientManager == nullptr)

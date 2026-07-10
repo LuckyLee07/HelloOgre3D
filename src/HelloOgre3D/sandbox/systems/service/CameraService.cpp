@@ -3,9 +3,10 @@
 #include "OgreSceneNode.h"
 #include "OgreCamera.h"
 #include "GameFunction.h"
+#include "ogre/OgreCameraController.h"
 
-CameraService::CameraService(Ogre::Camera* camera, Ogre::SceneManager* sceneManager, const ProfileTimeGetter& profileTimeGetter)
-	: m_camera(camera), m_sceneManager(sceneManager), m_profileTimeGetter(profileTimeGetter)
+CameraService::CameraService(Ogre::Camera* camera, Ogre::SceneManager* sceneManager, OgreCameraController* cameraController, const ProfileTimeGetter& profileTimeGetter)
+	: m_camera(camera), m_sceneManager(sceneManager), m_cameraController(cameraController), m_profileTimeGetter(profileTimeGetter)
 {
 }
 
@@ -60,6 +61,26 @@ void CameraService::TranslateCameraWorld(const Ogre::Vector3& delta)
 	if (pCamera == nullptr || delta.isNaN())
 		return;
 	pCamera->setPosition(pCamera->getPosition() + delta);
+}
+
+void CameraService::EnterFollowMode(float horz, float vert, float target, float eye, float spring)
+{
+	if (m_cameraController == nullptr)
+		return;
+	m_cameraController->setFollowParams(horz, vert, target, eye, spring);
+	m_cameraController->enterFollow();
+}
+
+void CameraService::ExitFollowMode()
+{
+	if (m_cameraController != nullptr)
+		m_cameraController->exitFollow();
+}
+
+void CameraService::UpdateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, float dtSec)
+{
+	if (m_cameraController != nullptr)
+		m_cameraController->updateFollow(targetPos, forwardXZ, dtSec);
 }
 
 long long CameraService::GetRenderTime()

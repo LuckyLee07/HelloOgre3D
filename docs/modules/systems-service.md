@@ -20,7 +20,7 @@
 | `PhysicsFactory.{h,cpp}` | 工厂 | 刚体/形状，见 [[systems-physics]] |
 | `SceneFactory.{h,cpp}` | 工厂 | Ogre SceneNode/ManualObject；root scene node 由 `GameManager::Initialize` 注入 |
 | `AgentConfigService.{h,cpp}` | 服务 | CppFSM flag；Lua 全局 `SandboxAgentConfig` 访问，`AgentObject` 通过 `SandboxServices.agentConfig` 读取 |
-| `CameraService.{h,cpp}` | 服务 | 相机/profile 查询 facade，并提供 C++ 侧世界位移平移入口供玩家观察相机跟随；camera / scene manager / profile time getter 由应用层注入，Lua 全局 `SandboxCamera` 访问 |
+| `CameraService.{h,cpp}` | 服务 | 相机/profile 查询 facade；提供 C++ 侧世界位移平移入口，并新增第三人称 FOLLOW 门面 `EnterFollowMode`/`ExitFollowMode`/`UpdateFollow`（**非 tolua**，转发到注入的 `OgreCameraController`，供 `PlayerController` 驱动 Sandbox19 弹簧跟随）；camera / scene manager / **OgreCameraController** / profile time getter 由 GameManager 注入（均 non-owning），Lua 全局 `SandboxCamera` 访问 |
 | `NavigationService.{h,cpp}` | 服务 | Recast config 默认值/agent 设置、navmesh 构建、按 name 以 `unique_ptr` 持有 navmesh map 与 `RandomPoint`/`FindClosestPoint`/`FindPath` 查询；ObjectManager 由应用层注入用于读取 fixed blocks，Lua 全局 `SandboxNav` 访问 |
 | `RaycastService.{h,cpp}` | 服务 | 物理 raycast facade；PhysicsWorld 由应用层注入，Lua 全局 `SandboxRaycast` 访问 |
 | `SceneService.{h,cpp}` | 服务 | skybox、ambient light、directional light、material 与 scene graph 更新 facade；SceneManager / CameraService 由应用层注入，Lua 全局 `SandboxScene` 访问 |

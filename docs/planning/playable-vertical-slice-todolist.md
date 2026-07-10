@@ -71,6 +71,17 @@
   - AI 单位仍能感知、攻击或执行原 sample 行为。
   - 右键旋转观察方向时，玩家移动、朝向和射击方向可解释，输入目标不会丢失。
 
+## 4.9 第三人称相机 + FairyGUI 雷达（2026-07-11 追加，经 /hello-develop-design）
+
+参照 code-master（Game Programming in C++）Chapter9 FollowCamera / Chapter12 HUD 雷达，经门禁流程立项实现。spec/plan：`docs/dev-design/specs/2026-07-10-sandbox19-thirdperson-radar-design.md`、`docs/dev-design/plans/2026-07-10-sandbox19-thirdperson-radar.md`。
+
+- [x] 相机：`OgreCameraController` 加 `CS_FOLLOW` 弹簧跟随；`CameraService` 注入 controller + `EnterFollowMode/ExitFollowMode/UpdateFollow`（非 tolua）；GameManager 接线。
+- [x] 控制：`PlayerController` 改第三人称射击——RMB 按住鼠标 X 驱动角色偏航、WASD 相对角色移动、LMB 沿朝向射击；`onSandboxServicesChanged` 进 FOLLOW、`onDetach` 退回 FREELOOK（防污染其它 sample）。
+- [x] 雷达：`Sandbox19.lua` 经全局 `FairyGuiRuntime` 程序化建矢量雷达（`CreateGraphRegularPolygon` 圆盘/blip/箭头，无美术资源、无 `.fui` 包），每帧投影+按玩家朝向旋转（player-up、箭头静止），reload `_DestroyBlips` 显式销毁。
+- [x] 验证：Release x64 编译 + `Sandbox19`/`Sandbox17` smoke（相机未污染）+ 雷达运行时确认（RadarDiag root=1）+ `run_fgui_production_gate -Mode Full` 全通过。
+- [ ] 手动手感验收（skip-manual，headless 跑不了手感）：真人跑 Sandbox19 验 RMB 转向 / 相对移动 / 射击方向 / 相机跟随 / 雷达 blip / 重开无残留；相机 horz/vert/target=8/4/3、yaw 灵敏度、雷达 range/radius 按手感调（含可能的转向 / 右向符号翻转）。
+- 方向：**FPS 相机仍暂缓**；第三人称 FOLLOW 是经确认的方向调整、限定 Sandbox19（§7 非目标的"不新增 FPS 相机 / 视角切换分支"仍成立，两者不同）。
+
 ## 5. P2 - 小地图与观察能力硬化
 
 这些任务只有在 P1 跑通后再做，避免观察功能变成新的主线。

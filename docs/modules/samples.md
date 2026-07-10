@@ -23,7 +23,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 | 7 | 决策树(DT) | | 16 | 感知压力(ai_perf) |
 | 8 | 行为树(BT) | | 17 | Chapter9 战术(Lua-first) |
 | 9 | Chapter7 知识源 | | 18 | Chapter9 战术(C++) |
-| 19 | 可玩遭遇战(PlayerController + BT AI) | | | |
+| 19 | 可玩遭遇战(PlayerController 第三人称相机 + BT AI + FairyGUI 雷达) | | | |
 
 入口：`game_init.lua`(选 HELLO_SANDBOX_SAMPLE，默认 Sandbox17)、`fgui_init.lua`、`parity_trace.lua`、`runtime_diagnostics.lua`。
 
@@ -37,6 +37,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 - sample 是回归面：改 AI/对象/组件/绑定必须回归对应 sample（smoke `status=PASS`）。
 - Sandbox17/18 是 Chapter9 对照面，受 `run_chapter9_parity_gate`/`visual_capture` 守。
 - Sandbox19 的 `player_soldier` / `ai_soldier` profile 必须保持 controller 互斥，启动脚本会直接断言该约束。
+- Sandbox19 第三人称相机由 `PlayerController` 在 `onSandboxServicesChanged` 进 FOLLOW、`onDetach` 退回 FREELOOK（防污染其它 sample）；FairyGUI 雷达经全局 `FairyGuiRuntime` 程序化建图（无 `.fui` 包），reload 前必须 `_DestroyBlips()` 显式 `RemoveObject`（FGUI 二次销毁会崩）。
 - sample reload 须清理上轮 agent/UI/debug draw。
 
 ## 6. 数据流 / 与其他模块关系

@@ -28,6 +28,7 @@ public:
 
 	virtual bool OnKeyPressed(OIS::KeyCode keycode, unsigned int key) override;
 	virtual bool OnKeyReleased(OIS::KeyCode keycode, unsigned int key) override;
+	virtual bool OnMouseMoved(const OIS::MouseEvent& evt) override;
 	virtual bool OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn) override;
 	virtual bool OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn) override;
 
@@ -49,8 +50,9 @@ private:
 	void UnregisterInput();
 	void ResetInputState();
 	void ResetCameraFollow();
-	void UpdateCameraFollow();
+	void UpdateCameraFollow(int deltaMs);
 	void UpdateAimDirection();
+	void UpdateFacingForward();
 	void UpdateMovement();
 	void UpdateCombat();
 	void StopHorizontalMovement();
@@ -63,8 +65,9 @@ private:
 	InputManager* m_registeredInput;
 	CombatState m_combatState;
 	Ogre::Vector3 m_aimDirection;
-	Ogre::Vector3 m_lastFollowPosition;
-	bool m_hasFollowPosition;
+	Ogre::Real m_yaw;         // 角色偏航（弧度），由 RMB 拖动鼠标 X 驱动
+	bool m_hasYaw;
+	bool m_rmbHeld;
 	bool m_forwardPressed;
 	bool m_backPressed;
 	bool m_leftPressed;
