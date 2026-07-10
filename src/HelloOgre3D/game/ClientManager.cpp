@@ -1,4 +1,4 @@
-#include "ClientManager.h"
+﻿#include "ClientManager.h"
 #include "AppConfig.h"
 #include "GameManager.h"
 #include "ObfuscatedZip.h"
@@ -76,6 +76,7 @@ ClientManager* GetClientMgr()
 ClientManager::ClientManager()
     : m_pRoot(nullptr), m_pCamera(nullptr), m_pSceneManager(nullptr),
     m_pRenderWindow(nullptr), m_pObfuscatedZipFactory(nullptr), m_pCameraController(nullptr),
+    m_pMinimapCamera(nullptr),
     m_pDebugDrawer(nullptr), m_pGameManager(nullptr),
 #if defined(HELLO_ENABLE_FGUI)
     m_pFairyGuiSystem(nullptr),
@@ -100,6 +101,7 @@ ClientManager::~ClientManager()
     g_GameManager = nullptr;
     SAFE_DELETE(m_pDebugDrawer);
     SAFE_DELETE(m_pInputManager);
+    SAFE_DELETE(m_pCameraController);
 
     Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
     if (pSilverback != nullptr) delete pSilverback;
@@ -325,6 +327,23 @@ void ClientManager::CreateCamera()
 
     m_pCameraController = new OgreCameraController(m_pCamera);
     m_pCameraController->setTopSpeed(5.0f);
+    // 第一人称视角(FPS) 可由 HELLO_CAMERA_FPS=1 启动即进入（供截图/验证）；
+    // 运行时也可用 V 键在 FPS / FREELOOK 间切换（见 InputManager）。
+    if (const char* fpsEnv = std::getenv("HELLO_CAMERA_FPS"))
+    {
+        if (fpsEnv[0] == '1')
+            m_pCameraController->setStyle(OgreCameraController::CS_FPS);
+    }
+
+    // 小地图俯视相机：正交投影，从战场上方垂直俯视，渲染到左上角 viewport（见 CreateViewports）。
+    m_pMinimapCamera = m_pSceneManager->createCamera("MinimapCamera");
+    m_pMinimapCamera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
+    m_pMinimapCamera->setOrthoWindowHeight(120.0f);
+    m_pMinimapCamera->setPosition(Ogre::Vector3(12.0f, 140.0f, 27.0f));
+    m_pMinimapCamera->lookAt(Ogre::Vector3(12.0f, 0.0f, 27.0f));
+    m_pMinimapCamera->setNearClipDistance(0.5f);
+    m_pMinimapCamera->setFarClipDistance(600.0f);
+    m_pMinimapCamera->setAutoAspectRatio(true);
 }
 
 void ClientManager::CreateViewports()
@@ -333,6 +352,15 @@ void ClientManager::CreateViewports()
     Ogre::Viewport* vp = m_pRenderWindow->addViewport(m_pCamera);
     vp->setDimensions(0.0f, 0.0f, 1.0f, 1.0f);
     vp->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.0f));
+
+    // 小地图 viewport：左上角，俯视相机，zOrder 高于主 viewport 以叠在上层。
+    if (m_pMinimapCamera != nullptr)
+    {
+        Ogre::Viewport* minimapVp = m_pRenderWindow->addViewport(m_pMinimapCamera, 1, 0.015f, 0.02f, 0.24f, 0.30f);
+        minimapVp->setBackgroundColour(Ogre::ColourValue(0.05f, 0.07f, 0.10f));
+        minimapVp->setClearEveryFrame(true);
+        minimapVp->setOverlaysEnabled(false);
+    }
 
     UpdateViewportLayout(true);
 }

@@ -3,6 +3,8 @@
 #include "OgreRenderWindow.h"
 #include "ogre/OgreCameraController.h"
 
+#include <algorithm>
+
 namespace
 {
 	int ClampMouseCoordinate(int value, int maxValue)
@@ -130,7 +132,8 @@ void InputManager::resizeMouseState(int width, int height)
 
 void InputManager::registerHandler(IInputHandler* handler)
 {
-	if (handler) m_inputHandlers.push_back(handler);
+	if (handler != nullptr && std::find(m_inputHandlers.begin(), m_inputHandlers.end(), handler) == m_inputHandlers.end())
+		m_inputHandlers.push_back(handler);
 }
 
 void InputManager::unregisterHandler(IInputHandler* handler)
@@ -142,10 +145,25 @@ bool InputManager::keyPressed(const OIS::KeyEvent& event)
 {
 	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		consumed = handler->OnKeyPressed(event.key, event.text) || consumed;
+	{
+		if (handler->OnKeyPressed(event.key, event.text))
+		{
+			consumed = true;
+			break;
+		}
+	}
 
 	if (!consumed && event.key == OIS::KC_ESCAPE && m_shutdownSetter)
 		m_shutdownSetter(true);
+
+	// V 键在第一人称(FPS) 与自由视角(FREELOOK) 之间切换。
+	if (!consumed && event.key == OIS::KC_V && m_cameraController != nullptr)
+	{
+		const OgreCameraController::CameraStyle style = m_cameraController->getStyle();
+		m_cameraController->setStyle(style == OgreCameraController::CS_FPS
+			? OgreCameraController::CS_FREELOOK : OgreCameraController::CS_FPS);
+		consumed = true;
+	}
 
 	if (!consumed && m_cameraController != nullptr)
 		m_cameraController->injectKeyDown(event);
@@ -175,7 +193,13 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 {
 	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		consumed = handler->OnMouseMoved(event) || consumed;
+	{
+		if (handler->OnMouseMoved(event))
+		{
+			consumed = true;
+			break;
+		}
+	}
 
 	if (!consumed && event.state.buttonDown(OIS::MB_Right) && m_cameraController != nullptr)
 		m_cameraController->injectMouseMove(event);
@@ -190,7 +214,13 @@ bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID
 {
 	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
-		consumed = handler->OnMousePressed(event, btnId) || consumed;
+	{
+		if (handler->OnMousePressed(event, btnId))
+		{
+			consumed = true;
+			break;
+		}
+	}
 
 	if (!consumed && m_cameraController != nullptr)
 		m_cameraController->injectMouseDown(event, btnId);

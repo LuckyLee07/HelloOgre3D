@@ -110,6 +110,7 @@ private:
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;
 	OgreCameraController* m_pCameraController;
+	Ogre::Camera* m_pMinimapCamera;
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* m_pFairyGuiSystem;
 #endif
