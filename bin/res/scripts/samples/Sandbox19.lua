@@ -45,6 +45,11 @@ local _dragNow = { x = 0, y = 0 }
 local _lastPickedEnemyId = 0
 local _commandHint = ""
 
+local SELECT_MARK_POOL = 4       -- Sandbox19 友方 AI 只有 2 个，留一倍余量
+local SELECT_MARK_SIZE = 18
+local _dragRect = nil
+local _selectMarks = {}
+
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 	"[Sandbox19 - Playable Encounter]" .. GUI.MarkupNewline ..
 	"W/S: move forward/back" .. GUI.MarkupNewline ..
@@ -68,6 +73,21 @@ local function _CreateHud()
 	_crosshair:setDimension(Vector2(32, 32))
 	_crosshair:setTextMargin(4, 8)
 	_crosshair:setText("+")
+
+	-- 指挥 UI：框选矩形 + 选中高亮池，都复用 UIFrame（setPosition/setDimension/
+	-- setBackgroundColor/setVisible），不新增 Gorilla 图元。
+	_dragRect = SandboxUI:CreateUIFrame()
+	_dragRect:setBackgroundColor(ColourValue(0.35, 0.75, 1.0, 0.18))
+	_dragRect:setVisible(false)
+
+	_selectMarks = {}
+	for i = 1, SELECT_MARK_POOL do
+		local m = SandboxUI:CreateUIFrame()
+		m:setDimension(Vector2(SELECT_MARK_SIZE, SELECT_MARK_SIZE))
+		m:setBackgroundColor(ColourValue(0.30, 1.0, 0.40, 0.55))
+		m:setVisible(false)
+		table.insert(_selectMarks, m)
+	end
 end
 
 local function _LayoutCrosshair(width, height)
@@ -410,6 +430,43 @@ local function _IssueFocus()
 	_IssueCommand("focus", targetId, nil)
 end
 
+-- 每帧刷新指挥 UI：框选矩形跟随拖拽，选中单位头顶投影处摆一个绿框。
+local function _UpdateCommandUi()
+	if _dragRect ~= nil then
+		if _dragging then
+			local x0 = math.min(_dragStart.x, _dragNow.x)
+			local y0 = math.min(_dragStart.y, _dragNow.y)
+			local w = math.abs(_dragNow.x - _dragStart.x)
+			local h = math.abs(_dragNow.y - _dragStart.y)
+			_dragRect:setPosition(Vector2(x0, y0))
+			_dragRect:setDimension(Vector2(math.max(w, 1), math.max(h, 1)))
+			_dragRect:setVisible(true)
+		else
+			_dragRect:setVisible(false)
+		end
+	end
+
+	local slot = 1
+	for objId in pairs(_selection) do
+		if slot > SELECT_MARK_POOL then break end
+		local agent = ObjectManager:getObjectById(objId)
+		if agent ~= nil and agent:GetHealth() > 0 then
+			local sp = _ScreenPosOf(agent)
+			if sp ~= nil then
+				local m = _selectMarks[slot]
+				m:setPosition(Vector2(sp.x - SELECT_MARK_SIZE * 0.5, sp.y - SELECT_MARK_SIZE * 0.5))
+				m:setVisible(true)
+				slot = slot + 1
+			end
+		end
+	end
+	for i = slot, SELECT_MARK_POOL do
+		if _selectMarks[i] ~= nil then
+			_selectMarks[i]:setVisible(false)
+		end
+	end
+end
+
 local function _ClearCommandState()
 	_ClearSelection()
 	_dragging = false
@@ -568,4 +625,5 @@ function Sandbox_Update(deltaTimeInMillis)
 
 	_UpdateHud()
 	_UpdateRadar()
+	_UpdateCommandUi()
 end
