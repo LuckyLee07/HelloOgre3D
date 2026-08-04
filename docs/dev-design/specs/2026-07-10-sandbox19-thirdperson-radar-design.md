@@ -2,7 +2,9 @@
 
 - **日期**：2026-07-10
 - **作者**：lizhibao
-- **状态**：已批准
+- **状态**：已批准（实现已修订，见文末 §10）
+
+> ⚠️ **实现已修订（2026-07-11）**：控制方案从「RMB 鼠标 X 驱动偏航」改为 code-master 式 **tank A/D 平滑转向**；雷达从「FairyGUI 程序化矢量图形」改为 **Gorilla `UIPolygon` 圆盘**（原 FairyGUI 程序化裸对象在本项目不渲染）。原设计正文（§3.2 / §4）保留作决策记录，实际交付见文末 §10。
 
 ## 1. 目的与背景
 
@@ -124,3 +126,21 @@
 1. FOLLOW 入口接线落点（§3.1，倾向 CameraService 注入 controller）。
 2. 相机参数初值（按 Sandbox19 尺度实测调优，impl 阶段定）。
 3. 雷达尺寸 / 位置 / range / 颜色具体数值（impl 阶段调）。
+
+## 10. 实现修订（2026-07-11）
+
+原设计（§4 控制、§3.2 雷达）在实现与手感验收后有两处偏离，正文保留作决策记录，以下为实际交付：
+
+### 10.1 控制：RMB 鼠标 X → tank A/D
+- **偏离**：§4「RMB 按住鼠标 X 驱动偏航 + A/D 横移」实测手感粗糙、左右相反、相机抖动。
+- **改为**：照搬 code-master Chapter9 tank 式——A/D 平滑角速转向（`kTurnRate`=2.5 rad/s）、W/S 沿角色朝向前后、无横移、无鼠标转向；`PlayerController` 去掉 `m_rmbHeld` / `OnMouseMoved`，改用 `m_yaw` + `UpdateTurning`。
+- **相机抗抖**：`updateFollow` 加 `dtSec` 钳制(≤0.05) + 被跟随点低通平滑，消除瞬时偏航跳变导致的抖动。
+
+### 10.2 雷达：FairyGUI → Gorilla `UIPolygon`
+- **偏离**：§3.2 假设 `FairyGuiRuntime` 程序化建图可渲染。实测本项目 FairyGUI **只渲染框架管理的 `.fui` 包视图**，程序化裸对象（`CreateContainer` / `CreateGraphRegularPolygon` / `CreateLoader`）drawCmds=0、渲染不出来。
+- **改为**：走 Gorilla（与 HP 面板同引擎路径，渲染可靠）。新增 `UIPolygon`（封装 `Gorilla::Polygon`：pos/radius/sides/angle/bgColor/border/visible）+ `UIManager::CreatePolygon` 工厂；`Sandbox19.lua` 用 `SandboxUI:CreatePolygon` 建浅蓝圆盘(48 边)+深色描边、中心三角箭头(静止朝上)、复用红/绿圆点 blip 池。投影数学（player-up、`rx,rz=-fz,fx`）不变。
+- **tolua 影响**：plan 原写「无 tolua 改动」已失效——`UIPolygon` / `CreatePolygon` 走**手术式手改 `SandboxToLua.cpp`**（照抄 UIFrame 绑定，禁 `tolua.bat` 全量重生）。
+- `bin/res/radar/*.png`（当初为贴图路线拷的 code-master 美术）矢量方案不再使用，保留备用。
+
+### 10.3 验证
+Release x64 编译 0 错 0 警 + `Sandbox19` / `Sandbox17` smoke `status=PASS` + 实机截图确认圆盘雷达渲染（浅蓝圆盘 / 三角箭头 / 红敌绿友圆点 / player-up）+ 用户手感验收通过。

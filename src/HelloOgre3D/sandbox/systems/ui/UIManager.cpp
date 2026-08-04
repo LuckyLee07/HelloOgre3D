@@ -1,5 +1,6 @@
 #include "UIManager.h"
 #include "UIFrame.h"
+#include "UIPolygon.h"
 #include "AppConfig.h"
 #include "OgreCamera.h"
 
@@ -11,6 +12,10 @@ UIManager::UIManager(Ogre::Camera* camera)
 
 UIManager::~UIManager()
 {
+	for (size_t i = 0; i < m_uipolygons.size(); i++)
+		delete m_uipolygons[i];
+	m_uipolygons.clear();
+
 	if (m_pUIScene == nullptr)
 		return;
 
@@ -87,6 +92,23 @@ UIFrame* UIManager::CreateUIFrame(unsigned int index)
 
 		m_uiframes.push_back(pFrame);
 		return pFrame;
+	}
+	return nullptr;
+}
+
+UIPolygon* UIManager::CreatePolygon(unsigned int index)
+{
+	if (index < UI_LAYER_COUNT)
+	{
+		Gorilla::Layer* layer = GetUILayer(index);
+		if (layer == nullptr)
+			return nullptr;
+
+		UIPolygon* pPolygon = new UIPolygon(layer);
+		pPolygon->Initialize();
+
+		m_uipolygons.push_back(pPolygon);
+		return pPolygon;
 	}
 	return nullptr;
 }

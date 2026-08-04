@@ -12,27 +12,28 @@ local _crosshair = nil
 local _matchState = "FIGHT"
 local _restartRequested = false
 
--- FairyGUI 矢量雷达（程序化多边形，无美术资源）。screen* 为屏幕左上（HUD 下方避开），
--- cx/cy/radius 为容器内像素，range 为覆盖世界半径。数值按 Sandbox19 尺度，可手感调。
-local _radar = { root = nil, blips = {}, ok = false }
+-- Gorilla 圆盘雷达（SandboxUI:CreatePolygon → UIPolygon，与 HP 面板同一 Gorilla 层，确保渲染）：
+-- 浅蓝圆盘（高边数≈圆，深色描边）+ 中心三角箭头（静止朝上，player-up）+ 复用圆点 blip 池
+-- （每帧按玩家朝向投影重定位/上色/显隐；敌红友绿）。对齐 code-master Chapter12 观感。
+-- cx/cy 为雷达圆心（屏幕像素，置于左上角），radius 为圆盘半径，range 为覆盖世界半径。
+local _radar = { disc = nil, arrow = nil, blips = {}, ok = false }
 local RADAR = {
-	screenX = 16, screenY = 152,
-	cx = 64, cy = 64, radius = 64,
-	range = 60, discSides = 40, blipSize = 8,
+	cx = 104, cy = 104, radius = 84, range = 60,
+	discSides = 48, blipSides = 14, arrowSides = 3,
+	blipRadius = 5, arrowRadius = 11, poolSize = 16,
 }
 
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 	"[Sandbox19 - Playable Encounter]" .. GUI.MarkupNewline ..
-	"W/A/S/D: move Soldier" .. GUI.MarkupNewline ..
+	"W/S: move forward/back" .. GUI.MarkupNewline ..
+	"A/D: turn left/right" .. GUI.MarkupNewline ..
 	"Shift: sprint" .. GUI.MarkupNewline ..
-	"Hold RMB: rotate view / aim" .. GUI.MarkupNewline ..
-	"LMB: fire" .. GUI.MarkupNewline ..
-	"R: reload" .. GUI.MarkupNewline ..
+	"LMB: fire    R: reload" .. GUI.MarkupNewline ..
 	"Enter: restart encounter"
 
 local function _CreateHud()
 	_hud = SandboxUI:CreateUIFrame()
-	_hud:setPosition(Vector2(20, 20))
+	_hud:setPosition(Vector2(20, 188))   -- 下移避开左上角雷达
 	_hud:setDimension(Vector2(330, 125))
 	_hud:setTextMargin(12, 10)
 	_hud:setGradientColor(Gorilla.Gradient_NorthSouth,
@@ -88,56 +89,32 @@ local function _UpdateHud()
 	_hud:setText(text)
 end
 
-local function _RadarAvailable()
-	return FairyGuiRuntime ~= nil and FairyGuiRuntime:IsAvailable()
-end
-
 local function _CreateRadar()
-	if not _RadarAvailable() then return end
-	local root = FairyGuiRuntime:CreateContainer("sandbox19_radar")
-	if root == 0 then return end
-	local d = RADAR.radius * 2
-	FairyGuiRuntime:SetObjectSize(root, d, d)
-	FairyGuiRuntime:AddObjectToRoot(root)
-	FairyGuiRuntime:SetObjectPosition(root, RADAR.screenX, RADAR.screenY)
-	-- 圆盘底（多边形近似圆）
-	local disc = FairyGuiRuntime:CreateGraphRegularPolygon(root, "disc", d, d, RADAR.discSides, 0.05, 0.08, 0.10, 0.72)
-	FairyGuiRuntime:SetObjectPosition(disc, 0, 0)
-	-- 玩家箭头（三角形，居中静止朝上；player-up 雷达，同 code-master）
-	local arrow = FairyGuiRuntime:CreateGraphRegularPolygon(root, "arrow", 14, 16, 3, 0.9, 0.9, 0.95, 1.0)
-	FairyGuiRuntime:SetObjectPosition(arrow, RADAR.cx - 7, RADAR.cy - 8)
-	_radar.root = root
+	if SandboxUI == nil then return end
+	-- 浅蓝圆盘（高边数≈圆）+ 深色描边，对齐 code-master Radar.png 观感
+	_radar.disc = SandboxUI:CreatePolygon()
+	_radar.disc:setSides(RADAR.discSides)
+	_radar.disc:setRadius(RADAR.radius)
+	_radar.disc:setPosition(Vector2(RADAR.cx, RADAR.cy))
+	_radar.disc:setBackgroundColor(ColourValue(0.60, 0.75, 0.88, 0.82))
+	_radar.disc:setBorder(3, ColourValue(0.08, 0.12, 0.18, 0.95))
+	-- 圆点 blip 池（复用；每帧按存活单位重定位/上色/显隐）。先建，位于箭头之下。
 	_radar.blips = {}
+	for i = 1, RADAR.poolSize do
+		local b = SandboxUI:CreatePolygon()
+		b:setSides(RADAR.blipSides)
+		b:setRadius(RADAR.blipRadius)
+		b:setVisible(false)
+		table.insert(_radar.blips, b)
+	end
+	-- 玩家箭头：蓝色三角，居中静止朝上（player-up）。最后建 → 叠在最上层。
+	_radar.arrow = SandboxUI:CreatePolygon()
+	_radar.arrow:setSides(RADAR.arrowSides)
+	_radar.arrow:setRadius(RADAR.arrowRadius)
+	_radar.arrow:setAngleDegrees(-90)   -- 首顶点朝屏幕上方，三角尖朝上
+	_radar.arrow:setPosition(Vector2(RADAR.cx, RADAR.cy))
+	_radar.arrow:setBackgroundColor(ColourValue(0.13, 0.34, 0.85, 1.0))
 	_radar.ok = true
-end
-
-local function _DestroyBlips()
-	if not _radar.ok then return end
-	for _, b in ipairs(_radar.blips) do
-		if b.handle ~= nil and b.handle ~= 0 then
-			FairyGuiRuntime:RemoveObject(b.handle)
-		end
-	end
-	_radar.blips = {}
-end
-
-local function _CreateBlips()
-	if not _radar.ok or _player == nil then return end
-	_DestroyBlips()
-	local agents = ObjectManager:getAllAgents()
-	for i = 0, agents:size() - 1 do
-		local agent = agents[i]
-		if agent ~= nil and agent ~= _player then
-			local enemy = agent:GetTeamId() ~= _player:GetTeamId()
-			local r = enemy and 0.95 or 0.20
-			local g = enemy and 0.20 or 0.90
-			local bl = enemy and 0.15 or 0.35
-			local h = FairyGuiRuntime:CreateGraphRegularPolygon(_radar.root, "blip", RADAR.blipSize, RADAR.blipSize, 12, r, g, bl, 1.0)
-			if h ~= 0 then
-				table.insert(_radar.blips, { handle = h, agent = agent })
-			end
-		end
-	end
 end
 
 local function _UpdateRadar()
@@ -147,23 +124,34 @@ local function _UpdateRadar()
 	local flen = math.sqrt(pf.x * pf.x + pf.z * pf.z)
 	if flen < 1e-4 then return end
 	local fx, fz = pf.x / flen, pf.z / flen   -- 角色前向(XZ)
-	local rx, rz = fz, -fx                     -- 右向 = UNIT_Y × forward
-	local scale = RADAR.radius / RADAR.range
-	local half = RADAR.blipSize * 0.5
-	for _, b in ipairs(_radar.blips) do
-		local agent = b.agent
-		local visible = false
-		if agent ~= nil and agent:GetHealth() > 0 then
+	local rx, rz = -fz, fx                     -- 屏幕右向（按已观察手性校正，敌在视觉右→雷达右）
+	-- UIPolygon:setPosition 设的是圆心，无需再减半宽
+	local scale = (RADAR.radius - RADAR.blipRadius) / RADAR.range
+	local slot = 1
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent ~= _player and agent:GetHealth() > 0 and slot <= RADAR.poolSize then
 			local ap = agent:GetPosition()
 			local dx, dz = ap.x - pp.x, ap.z - pp.z
 			local fwdC = dx * fx + dz * fz         -- 前向分量 → 屏幕上(-y)
 			local rgtC = dx * rx + dz * rz         -- 右向分量 → 屏幕右(+x)
 			if fwdC * fwdC + rgtC * rgtC <= RADAR.range * RADAR.range then
-				FairyGuiRuntime:SetObjectPosition(b.handle, RADAR.cx + rgtC * scale - half, RADAR.cy - fwdC * scale - half)
-				visible = true
+				local enemy = agent:GetTeamId() ~= _player:GetTeamId()
+				local b = _radar.blips[slot]
+				if enemy then
+					b:setBackgroundColor(ColourValue(0.92, 0.20, 0.15, 1.0))  -- 敌红
+				else
+					b:setBackgroundColor(ColourValue(0.20, 0.80, 0.30, 1.0))  -- 友绿
+				end
+				b:setPosition(Vector2(RADAR.cx + rgtC * scale, RADAR.cy - fwdC * scale))
+				b:setVisible(true)
+				slot = slot + 1
 			end
 		end
-		FairyGuiRuntime:SetObjectVisible(b.handle, visible)
+	end
+	for i = slot, RADAR.poolSize do
+		_radar.blips[i]:setVisible(false)
 	end
 end
 
@@ -195,13 +183,12 @@ local function _SpawnEncounter()
 
 	print("[Sandbox19] ready playerId=" .. tostring(_player:GetObjId()) ..
 		" components=" .. tostring(_player:BuildComponentDebugString()))
-	_CreateBlips()
+	-- blip 池在 _CreateRadar 已建好并复用；_UpdateRadar 每帧按存活单位重定位/隐藏，无需重建。
 end
 
 local function _RestartEncounter()
 	_player = nil
 	_agents = {}
-	_DestroyBlips()
 	ObjectManager:clearAllObjects(MGR_OBJ_AGENT)
 	_SpawnEncounter()
 end

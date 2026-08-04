@@ -91,9 +91,9 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 
 这条切片已经串起：
 
-- 玩家第三人称相机（鼠标 X 驱动角色偏航、弹簧跟随后上方，照搬 code-master FollowCamera）、相对角色移动、朝向、射击与换弹。
+- 玩家第三人称相机（A/D 平滑转向角色偏航、W/S 沿朝向前后、弹簧跟随后上方，照搬 code-master FollowCamera 数学 + tank 式控制）、朝向、射击与换弹。
 - AI 感知、BehaviorTree、团队关系和战斗组件。
-- 现有观察相机、HUD、胜负与重置。（小地图 viewport 已于 2026-07-10 移除，改为 FairyGUI 程序化矢量雷达：左上角圆盘、敌红友绿 blip、player-up、中心箭头。）
+- 现有观察相机、HUD、胜负与重置。（小地图 viewport 已于 2026-07-10 移除；2026-07-11 雷达改为 Gorilla 矢量雷达 `UIPolygon`：左上角浅蓝圆盘、敌红友绿圆点 blip、player-up、中心三角箭头。原 FairyGUI 程序化裸对象在本项目不渲染，已弃用。）
 - `player_soldier` / `ai_soldier` profile 的 controller 互斥断言。
 
 下一步先做手动手感验收和小范围硬化，再依据实际体验决定偏直接操控、战术指挥或继续保持 AI 实验场；**FPS 相机仍不作为当前优先项**（第三人称 FOLLOW 已作为经确认的方向调整加入、限定 Sandbox19，与 FPS 是两回事），也不在验收前铺开新的系统主线。

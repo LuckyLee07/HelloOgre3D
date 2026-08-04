@@ -289,17 +289,27 @@ public:
             return;
         }
 
-        mFollowTargetPos = targetPos;
+        // 钳制 dt：大帧/变帧会让弹簧发散抖动（code-master 也把 deltaTime 钳到 0.05）。
+        if (dtSec > 0.05f) dtSec = 0.05f;
+
         if (!forwardXZ.isZeroLength() && !forwardXZ.isNaN()) {
             mFollowForward = forwardXZ.normalisedCopy();
         }
 
-        const Ogre::Vector3 ideal = computeFollowIdeal();
         if (!mHasFollowState || dtSec <= 0.0f) {
-            mFollowActualPos = ideal;
+            // 初始化：被跟随点与相机都吸附理想位，零速度。
+            mFollowTargetPos = targetPos;
+            mFollowActualPos = computeFollowIdeal();
             mFollowVelocity = Ogre::Vector3::ZERO;
             mHasFollowState = true;
         } else {
+            // 低通平滑被跟随点，滤掉物理胶囊的高频微抖（尤其竖直方向）；player 走物理非运动学。
+            Ogre::Real ts = mFollowTargetSmooth * dtSec;
+            if (ts > 1.0f) ts = 1.0f;
+            mFollowTargetPos += (targetPos - mFollowTargetPos) * ts;
+
+            // 弹簧-阻尼平滑相机位逼近理想位。
+            const Ogre::Vector3 ideal = computeFollowIdeal();
             const Ogre::Real damp = 2.0f * Ogre::Math::Sqrt(mFollowSpring);
             const Ogre::Vector3 diff = mFollowActualPos - ideal;
             const Ogre::Vector3 accel = -mFollowSpring * diff - damp * mFollowVelocity;
@@ -355,6 +365,7 @@ protected:
     Ogre::Real mFollowTargetDist = 3.0f;
     Ogre::Real mFollowEyeHeight = 1.5f;
     Ogre::Real mFollowSpring = 64.0f;
+    Ogre::Real mFollowTargetSmooth = 20.0f; // 被跟随点低通速率（越大越贴、越小越顺）
     bool mHasFollowState = false;
 };
 

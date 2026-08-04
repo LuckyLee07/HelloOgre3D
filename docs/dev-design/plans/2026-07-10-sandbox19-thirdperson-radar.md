@@ -3,9 +3,11 @@
 **Goal:** 为 `Sandbox19` 加第三人称跟随相机（鼠标 X 驱动角色朝向、弹簧跟随后上方）与 FairyGUI 程序化矢量雷达（圆盘 + blip + 静止箭头，player-up）。
 **Architecture:** 相机模式落 runtime（`OgreCameraController` 加 `CS_FOLLOW`），服务门面落 sandbox（`CameraService` 薄入口 + 注入 controller），玩家控制落 sandbox 组件（`PlayerController` 鼠标偏航 + 驱动 follow），雷达落 Lua（`Sandbox19.lua` 经全局 `FairyGuiRuntime` 建图）。相机全 C++-internal、雷达用现成绑定，**无 tolua 改动**。
 **Spec:** [docs/dev-design/specs/2026-07-10-sandbox19-thirdperson-radar-design.md](../specs/2026-07-10-sandbox19-thirdperson-radar-design.md)
-**状态:** 已完成
+**状态:** 已完成（实现已修订，见下方修订注记）
 
 > ⚠️ **本次执行不做 git commit（用户要求）**：每 task 验证 = Release 编译 + 目标 sample smoke 不退化；改动留工作区，不 `git add`/`commit`。门禁状态用本文件「状态」字段追踪。
+>
+> ⚠️ **实现已修订（2026-07-11）**：Task 3 控制改 **tank A/D 平滑转向**（非 RMB 鼠标 X）+ 相机 dt 钳制/低通抗抖；Task 4 雷达改 **Gorilla `UIPolygon` 圆盘**（非 FairyGUI——FairyGUI 程序化裸对象本项目不渲染），并因此**新增 `UIPolygon` / `CreatePolygon` 的 tolua 绑定**（本 plan 原「无 tolua 改动」结论已失效，改为手术式手改 `SandboxToLua.cpp`）。详见 spec [§10 实现修订](../specs/2026-07-10-sandbox19-thirdperson-radar-design.md)。下方 Task 3/4 步骤保留原设计作记录。
 
 ---
 

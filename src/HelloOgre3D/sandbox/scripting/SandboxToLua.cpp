@@ -21,6 +21,7 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 #include "../GameDefine.h"
 #include "../GameFunction.h"
 #include "../systems/ui/UIFrame.h"
+#include "../systems/ui/UIPolygon.h"
 #include "../systems/ui/UIManager.h"
 #include "../systems/input/IPlayerInput.h"
 #include "../systems/service/AgentConfigService.h"
@@ -102,6 +103,7 @@ static void tolua_reg_types (lua_State* tolua_S)
  tolua_usertype(tolua_S,"AIScheduler");
  tolua_usertype(tolua_S,"BehaviorSequence");
  tolua_usertype(tolua_S,"UIFrame");
+ tolua_usertype(tolua_S,"UIPolygon");
  tolua_usertype(tolua_S,"btVector3");
  tolua_usertype(tolua_S,"AnimComponent");
  tolua_usertype(tolua_S,"AgentLocomotion");
@@ -841,6 +843,305 @@ static int tolua_SandboxToLua_UIManager_SetMarkupColor00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'SetMarkupColor'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setPosition of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setPosition00
+static int tolua_SandboxToLua_UIPolygon_setPosition00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::Vector2",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector2* position = ((const Ogre::Vector2*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setPosition'", NULL);
+#endif
+  {
+   self->setPosition(*position);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setPosition'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setRadius of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setRadius00
+static int tolua_SandboxToLua_UIPolygon_setRadius00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+   float radius = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setRadius'", NULL);
+#endif
+  {
+   self->setRadius(radius);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setSides of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setSides00
+static int tolua_SandboxToLua_UIPolygon_setSides00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+   int sides = ((  int)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setSides'", NULL);
+#endif
+  {
+   self->setSides(sides);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setSides'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setAngleDegrees of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setAngleDegrees00
+static int tolua_SandboxToLua_UIPolygon_setAngleDegrees00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+   float degrees = ((  float)  tolua_tonumber(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setAngleDegrees'", NULL);
+#endif
+  {
+   self->setAngleDegrees(degrees);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setAngleDegrees'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setBackgroundColor of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setBackgroundColor00
+static int tolua_SandboxToLua_UIPolygon_setBackgroundColor00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,2,&tolua_err) || !tolua_isusertype(tolua_S,2,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::ColourValue* colorValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setBackgroundColor'", NULL);
+#endif
+  {
+   self->setBackgroundColor(*colorValue);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setBackgroundColor'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setBorder of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setBorder00
+static int tolua_SandboxToLua_UIPolygon_setBorder00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     (tolua_isvaluenil(tolua_S,3,&tolua_err) || !tolua_isusertype(tolua_S,3,"const Ogre::ColourValue",0,&tolua_err)) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+   float width = ((  float)  tolua_tonumber(tolua_S,2,0));
+  const Ogre::ColourValue* colorValue = ((const Ogre::ColourValue*)  tolua_tousertype(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setBorder'", NULL);
+#endif
+  {
+   self->setBorder(width,*colorValue);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setBorder'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: setVisible of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_setVisible00
+static int tolua_SandboxToLua_UIPolygon_setVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+  bool visible = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'setVisible'", NULL);
+#endif
+  {
+   self->setVisible(visible);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'setVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isVisible of class  UIPolygon */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIPolygon_isVisible00
+static int tolua_SandboxToLua_UIPolygon_isVisible00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIPolygon",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIPolygon* self = (UIPolygon*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isVisible'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isVisible();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isVisible'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: CreatePolygon of class  UIManager */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIManager_CreatePolygon00
+static int tolua_SandboxToLua_UIManager_CreatePolygon00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"UIManager",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  UIManager* self = (UIManager*)  tolua_tousertype(tolua_S,1,0);
+  unsigned int index = ((unsigned int)  tolua_tonumber(tolua_S,2,1));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreatePolygon'", NULL);
+#endif
+  {
+   UIPolygon* tolua_ret = (UIPolygon*)  self->CreatePolygon(index);
+    tolua_pushusertype(tolua_S,(void*)tolua_ret,"UIPolygon");
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'CreatePolygon'.",&tolua_err);
  return 0;
 #endif
 }
@@ -16240,9 +16541,21 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"isVisible",tolua_SandboxToLua_UIFrame_isVisible00);
    tolua_function(tolua_S,"GetDimension",tolua_SandboxToLua_UIFrame_GetDimension00);
   tolua_endmodule(tolua_S);
+  tolua_cclass(tolua_S,"UIPolygon","UIPolygon","",NULL);
+  tolua_beginmodule(tolua_S,"UIPolygon");
+   tolua_function(tolua_S,"setPosition",tolua_SandboxToLua_UIPolygon_setPosition00);
+   tolua_function(tolua_S,"setRadius",tolua_SandboxToLua_UIPolygon_setRadius00);
+   tolua_function(tolua_S,"setSides",tolua_SandboxToLua_UIPolygon_setSides00);
+   tolua_function(tolua_S,"setAngleDegrees",tolua_SandboxToLua_UIPolygon_setAngleDegrees00);
+   tolua_function(tolua_S,"setBackgroundColor",tolua_SandboxToLua_UIPolygon_setBackgroundColor00);
+   tolua_function(tolua_S,"setBorder",tolua_SandboxToLua_UIPolygon_setBorder00);
+   tolua_function(tolua_S,"setVisible",tolua_SandboxToLua_UIPolygon_setVisible00);
+   tolua_function(tolua_S,"isVisible",tolua_SandboxToLua_UIPolygon_isVisible00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"UIManager","UIManager","",NULL);
   tolua_beginmodule(tolua_S,"UIManager");
    tolua_function(tolua_S,"CreateUIFrame",tolua_SandboxToLua_UIManager_CreateUIFrame00);
+   tolua_function(tolua_S,"CreatePolygon",tolua_SandboxToLua_UIManager_CreatePolygon00);
    tolua_function(tolua_S,"SetMarkupColor",tolua_SandboxToLua_UIManager_SetMarkupColor00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"IPlayerInput","IPlayerInput","",NULL);

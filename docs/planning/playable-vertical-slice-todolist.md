@@ -66,20 +66,20 @@
   - HUD 显示玩家 HP、弹药、存活友军/敌军和胜负状态，日志输出 player id 与组件清单。
 - [x] 自动验证。
   - Lua 语法、sandbox 架构门禁、Release x64 构建、`Sandbox19` smoke、`Sandbox8` AI 回归均通过。
-- [ ] 手动手感验收。
+- [x] 手动手感验收（2026-07-11 用户确认手感 OK）。
   - 手动运行目标 sample：能控制一个单位移动和射击。
   - AI 单位仍能感知、攻击或执行原 sample 行为。
-  - 右键旋转观察方向时，玩家移动、朝向和射击方向可解释，输入目标不会丢失。
+  - A/D 平滑转向 + W/S 沿朝向前后时，玩家移动、朝向和射击方向可解释，重开无残留输入目标。
 
-## 4.9 第三人称相机 + FairyGUI 雷达（2026-07-11 追加，经 /hello-develop-design）
+## 4.9 第三人称相机 + Gorilla 圆盘雷达（2026-07-11 追加，经 /hello-develop-design）
 
 参照 code-master（Game Programming in C++）Chapter9 FollowCamera / Chapter12 HUD 雷达，经门禁流程立项实现。spec/plan：`docs/dev-design/specs/2026-07-10-sandbox19-thirdperson-radar-design.md`、`docs/dev-design/plans/2026-07-10-sandbox19-thirdperson-radar.md`。
 
 - [x] 相机：`OgreCameraController` 加 `CS_FOLLOW` 弹簧跟随；`CameraService` 注入 controller + `EnterFollowMode/ExitFollowMode/UpdateFollow`（非 tolua）；GameManager 接线。
-- [x] 控制：`PlayerController` 改第三人称射击——RMB 按住鼠标 X 驱动角色偏航、WASD 相对角色移动、LMB 沿朝向射击；`onSandboxServicesChanged` 进 FOLLOW、`onDetach` 退回 FREELOOK（防污染其它 sample）。
-- [x] 雷达：`Sandbox19.lua` 经全局 `FairyGuiRuntime` 程序化建矢量雷达（`CreateGraphRegularPolygon` 圆盘/blip/箭头，无美术资源、无 `.fui` 包），每帧投影+按玩家朝向旋转（player-up、箭头静止），reload `_DestroyBlips` 显式销毁。
-- [x] 验证：Release x64 编译 + `Sandbox19`/`Sandbox17` smoke（相机未污染）+ 雷达运行时确认（RadarDiag root=1）+ `run_fgui_production_gate -Mode Full` 全通过。
-- [ ] 手动手感验收（skip-manual，headless 跑不了手感）：真人跑 Sandbox19 验 RMB 转向 / 相对移动 / 射击方向 / 相机跟随 / 雷达 blip / 重开无残留；相机 horz/vert/target=8/4/3、yaw 灵敏度、雷达 range/radius 按手感调（含可能的转向 / 右向符号翻转）。
+- [x] 控制（2026-07-11 修订为 tank 式）：`PlayerController` 第三人称——A/D 平滑转向角色偏航、W/S 沿朝向前后（无横移、无鼠标转向）、LMB 沿朝向射击、Shift 冲刺；`onSandboxServicesChanged` 进 FOLLOW、`onDetach` 退回 FREELOOK（防污染其它 sample）。相机加 dt 钳制 + 被跟随点低通抗抖（原 RMB 鼠标 X 转向手感粗糙、左右相反已弃用）。
+- [x] 雷达（2026-07-11 改用 Gorilla）：新增 `UIPolygon`（封装 `Gorilla::Polygon`）+ `UIManager::CreatePolygon` 工厂（手术式补 tolua 绑定）；`Sandbox19.lua` 经 `SandboxUI:CreatePolygon` 建浅蓝圆盘(48 边)+深色描边、中心三角箭头(静止朝上)、复用红/绿圆点 blip 池，每帧按玩家朝向投影（player-up）。原 FairyGUI 程序化裸对象在本项目不渲染（drawCmds=0，仅 `.fui` 包视图才渲染），已弃用。
+- [x] 验证：Release x64 编译（0 错 0 警）+ `Sandbox19`/`Sandbox17` smoke（`status=PASS`、相机未污染）+ 实机截图确认圆盘雷达渲染（浅蓝圆盘 / 三角箭头 / 红敌绿友圆点 / player-up）。
+- [x] 手动手感验收（2026-07-11 用户确认手感 OK）：真人跑 Sandbox19——A/D 转向 / W/S 前后 / 射击方向 / 相机跟随 / 圆盘雷达 blip / 重开无残留均正常；相机 horz/vert/target=8/4/3、`kTurnRate`=2.5、`kFollowSpring`=64、雷达 range=60 / radius=84 定稿。
 - 方向：**FPS 相机仍暂缓**；第三人称 FOLLOW 是经确认的方向调整、限定 Sandbox19（§7 非目标的"不新增 FPS 相机 / 视角切换分支"仍成立，两者不同）。
 
 ## 5. P2 - 小地图与观察能力硬化
@@ -101,7 +101,7 @@
 - [x] P9：缓存热点组件查询。
   - `BaseObject` 持 ai/weapon/anim/attrib/locomotion/physics 六个 non-owning 缓存指针，`AddComponent`/`RemoveComponent` 时 `RefreshComponentCache()` 重建；typed getter、`AgentObject`/`SoldierObject` 每帧热 getter 以及 AI tick 热点（感知 / 团队 / FSM / DT-BT action / locomotion / lifecycle / render 同步）改读缓存，去掉每帧全表 `FindComponent` + `dynamic_cast`；仅 `ObjectManager` 诊断汇总等冷路径保留。
   - 缓存刷新绑定 attach/detach 变更点，生命周期清楚；Release x64 rebuild + `Sandbox6/7/8/10/12/19` + `ai_perf_100` smoke + 架构门禁通过。
-- [ ] P9：删除或收口 `USE_CPP_FSM` 死宏。
+- [x] P9：删除或收口 `USE_CPP_FSM` 死宏。（已删除：src 全仓 grep 无残留，配置只走 `SandboxAgentConfig`。）
 - [ ] P8：处理 component 对 `ObjectManager` / 具体对象类型的反向依赖。
 - [ ] P10：收窄 `BaseObject` typed getter 继续扩散的问题。
 - [ ] P11：收口 event dispatcher manager 过度设计问题。

@@ -18,6 +18,7 @@ namespace Gorilla
 	class MarkupText;
 }
 class UIFrame;
+class UIPolygon;
 
 class UIManager //tolua_exports
 { //tolua_exports
@@ -32,6 +33,7 @@ public:
 
 	//tolua_begin
 	UIFrame* CreateUIFrame(unsigned int index = 1);
+	UIPolygon* CreatePolygon(unsigned int index = 1);
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
 	//tolua_end
 
@@ -47,6 +49,7 @@ private:
 private:
 	Ogre::Camera* m_pCamera;
 	std::vector<UIFrame*> m_uiframes;
+	std::vector<UIPolygon*> m_uipolygons;
 }; //tolua_exports
 
 #endif; // __UI_MANAGER_H__

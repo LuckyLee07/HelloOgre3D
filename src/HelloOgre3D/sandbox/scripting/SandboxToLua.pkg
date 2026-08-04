@@ -4,6 +4,7 @@ $cfile "../GameDefine.h"
 $cfile "../GameFunction.h"
 
 $cfile "../systems/ui/UIFrame.h"
+$cfile "../systems/ui/UIPolygon.h"
 $cfile "../systems/ui/UIManager.h"
 $cfile "../systems/input/IPlayerInput.h"
 $cfile "../systems/service/AgentConfigService.h"

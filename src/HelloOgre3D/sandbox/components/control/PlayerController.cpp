@@ -15,7 +15,7 @@ namespace
 {
 	const Ogre::Real kSprintMultiplier = 1.75f;
 	const Ogre::Real kDirectionEpsilon = 1e-6f;
-	const Ogre::Real kYawSensitivity = 0.005f; // 弧度/像素（RMB 拖动）
+	const Ogre::Real kTurnRate = 2.5f; // 弧度/秒（A/D 平滑转向速率，照搬 code-master 角速度思路）
 
 	// 第三人称跟随相机参数（Sandbox19 尺度；SoldierObject ~人高）。
 	const float kFollowHorzDist = 8.0f;
@@ -31,7 +31,6 @@ PlayerController::PlayerController(BaseObject* owner)
 	, m_aimDirection(Ogre::Vector3::UNIT_Z)
 	, m_yaw(0.0f)
 	, m_hasYaw(false)
-	, m_rmbHeld(false)
 	, m_forwardPressed(false)
 	, m_backPressed(false)
 	, m_leftPressed(false)
@@ -93,8 +92,8 @@ void PlayerController::update(int deltaMs)
 		return;
 	}
 
-	// 先定朝向（含首帧从 owner 初始化 yaw），再战斗/移动，最后相机跟随用最新 pos/forward。
-	UpdateAimDirection();
+	// A/D 平滑转向定朝向（含首帧从 owner 初始化 yaw），再战斗/前后移动，最后相机跟随。
+	UpdateTurning(deltaMs);
 	UpdateCombat();
 	UpdateMovement();
 	UpdateCameraFollow(deltaMs);
@@ -167,25 +166,9 @@ bool PlayerController::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	return IsAlive();
 }
 
-bool PlayerController::OnMouseMoved(const OIS::MouseEvent& evt)
-{
-	// 仅 RMB 按住时转向；消费事件避免相机控制器再做 FREELOOK。松开返回 false 不拦截。
-	if (!IsAlive() || !m_rmbHeld)
-		return false;
-	m_yaw -= static_cast<Ogre::Real>(evt.state.X.rel) * kYawSensitivity;
-	m_hasYaw = true;
-	UpdateFacingForward();
-	return true;
-}
-
 bool PlayerController::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 	(void)evt;
-	if (btn == OIS::MB_Right)
-	{
-		m_rmbHeld = true;
-		return true;
-	}
 	if (btn != OIS::MB_Left || !IsAlive())
 		return false;
 	m_firePressed = true;
@@ -195,11 +178,6 @@ bool PlayerController::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButt
 bool PlayerController::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
 	(void)evt;
-	if (btn == OIS::MB_Right)
-	{
-		m_rmbHeld = false;
-		return true;
-	}
 	if (btn != OIS::MB_Left)
 		return false;
 	m_firePressed = false;
@@ -263,7 +241,6 @@ void PlayerController::ResetInputState()
 
 void PlayerController::ResetCameraFollow()
 {
-	m_rmbHeld = false;
 	m_hasYaw = false;
 }
 
@@ -282,7 +259,7 @@ void PlayerController::UpdateCameraFollow(int deltaMs)
 	camera->UpdateFollow(ownerPosition, m_aimDirection, static_cast<float>(deltaMs) / 1000.0f);
 }
 
-void PlayerController::UpdateAimDirection()
+void PlayerController::UpdateTurning(int deltaMs)
 {
 	SoldierObject* owner = GetSoldierOwner();
 	if (owner == nullptr)
@@ -298,6 +275,14 @@ void PlayerController::UpdateAimDirection()
 		m_yaw = Ogre::Math::ATan2(forward.x, forward.z).valueRadians();
 		m_hasYaw = true;
 	}
+
+	// A/D 平滑角速度转向（非瞬时，故相机 look-at 不会跳变）；A=左、D=右（按当前手性）。
+	Ogre::Real angular = 0.0f;
+	if (m_leftPressed) angular += kTurnRate;
+	if (m_rightPressed) angular -= kTurnRate;
+	if (angular != 0.0f)
+		m_yaw += angular * (static_cast<Ogre::Real>(deltaMs) / 1000.0f);
+
 	UpdateFacingForward();
 }
 
@@ -324,22 +309,16 @@ void PlayerController::UpdateMovement()
 		return;
 	}
 
-	// 移动基向量相对角色朝向（不再相对相机）：forward=角色朝向水平化，right=UNIT_Y×forward。
+	// tank 手感：只沿角色朝向前/后（W/S），A/D 用于转向不参与位移，无横移（消除"左右移动相反"）。
 	Ogre::Vector3 forward = m_aimDirection;
 	forward.y = 0.0f;
 	if (forward.isZeroLength())
 		forward = Ogre::Vector3::UNIT_Z;
 	forward.normalise();
-	Ogre::Vector3 right = Ogre::Vector3::UNIT_Y.crossProduct(forward);
-	if (right.isZeroLength())
-		right = Ogre::Vector3::UNIT_X;
-	right.normalise();
 
 	Ogre::Vector3 movement = Ogre::Vector3::ZERO;
 	if (m_forwardPressed) movement += forward;
 	if (m_backPressed) movement -= forward;
-	if (m_rightPressed) movement += right;
-	if (m_leftPressed) movement -= right;
 
 	AnimComponent* anim = GetAnimComponent();
 	if (movement.squaredLength() <= kDirectionEpsilon)
