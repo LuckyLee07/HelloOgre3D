@@ -3,6 +3,9 @@
 
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
+-- 指令条件表必须在 agent 建树前进入 _G：BehaviorSoldierAgent 按 preset 的
+-- conditionsGlobal 名字查 _G，查不到会静默回落到 SoldierConditions。
+require("res.scripts.ai.behavior.Sandbox19CommandConditions.lua")
 
 local _sampleName = "Sandbox19"
 local _agents = {}

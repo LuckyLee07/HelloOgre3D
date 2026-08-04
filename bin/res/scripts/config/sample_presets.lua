@@ -214,6 +214,12 @@ SamplePresets.Sandbox19.spawnPoints = {
 	{ 39, 3, 17 },
 }
 SamplePresets.Sandbox19.aiScheduler.maxPerFrame = 6
+-- 指挥切片：AI 换用 Sandbox19 专用行为树（玩家指令分支 + 引用整棵 SoldierBT 兜底），
+-- 条件表换成继承 SoldierConditions 的 Sandbox19CommandConditions。共享 SoldierBT 不受影响。
+SamplePresets.Sandbox19.behaviorTree = SamplePresets.Sandbox19.behaviorTree or {}
+SamplePresets.Sandbox19.behaviorTree.module = "res.scripts.ai.behavior.config.Sandbox19CommandBT.lua"
+SamplePresets.Sandbox19.behaviorTree.global = "Sandbox19CommandBTConfig"
+SamplePresets.Sandbox19.behaviorTree.conditionsGlobal = "Sandbox19CommandConditions"
 
 SamplePresets.chapter8_comms = {
 	seed = 20260530,
