@@ -43,4 +43,4 @@ FairyGUI UI 完整栈：C++ 系统（init/render/input/对象管理）+ Lua brid
 
 ## 8. 已知 gap / 相关文档
 
-- 待：lua_bridge 自动生成、handle 池化、输入路由文档、element inspector。`docs/fgui/fairygui-production-gate.md`、`docs/fgui/fairygui-final-roadmap.md`、`docs/planning/long-term-iteration-plan.md` §5。
+- 待：lua_bridge 自动生成、handle 池化、输入路由文档、element inspector。`docs/fgui/fairygui-production-gate.md`、`docs/fgui/fairygui-final-roadmap.md`、`docs/archive/long-term-iteration-plan.md` §5。

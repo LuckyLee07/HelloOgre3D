@@ -1,8 +1,10 @@
 # AI 技术迭代规划
 
+> ⚠️ **已归档（2026-08-04）**：本文不再是施工或排期真源。唯一活 backlog 见 `../backlog.md`，当前周期见 `../cycle-01.md`，方向见 `../project-direction.md`。保留作历史脉络与证据参考。
+
 > 目标：把 `Sandbox9`-`Sandbox15`、`Sandbox17` 与 `Sandbox18` 已经跑通的 AI 学习 sample，从 Lua-first / sample-first 的实验形态，逐步收口成更高性能、可观测、可扩展的 C++ AI 底座；`Sandbox16` 作为 AI perception pressure / ai_perf 的性能压力入口保留，`Sandbox18` 承接 Chapter 9 C++ 第二版第一切片。
 >
-> 方向依据：`docs/project-direction.md`、`docs/planning/long-term-iteration-plan.md`、`docs/planning/ai-roadmap.md`、`docs/reference/minigame-ai-production-reference.md`。
+> 方向依据：`docs/project-direction.md`、`docs/archive/long-term-iteration-plan.md`、`docs/archive/ai-roadmap.md`、`docs/reference/minigame-ai-production-reference.md`。
 >
 > 一句话原则：**Lua 讲清楚行为，C++ 扛住规模，sample 验证概念，profiler 验证成本。**
 

@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-> ⚠️ 这是**点时快照，非进度真源**（截至 2026-06-12，未覆盖 2026-07 的 Sandbox19 可玩切片 / 第三人称相机 / 雷达）。当前进度真相以活来源为准：`git log`、`docs/project-direction.md`、`docs/planning/playable-vertical-slice-todolist.md`、`docs/design/architecture-improvement-plan.md` §7/§9。
+> ⚠️ 这是**点时快照，非进度真源**（截至 2026-06-12，未覆盖 2026-07 的 Sandbox19 可玩切片 / 第三人称相机 / 雷达）。当前进度真相以活来源为准：`git log`、`docs/project-direction.md`、`docs/archive/playable-vertical-slice-todolist.md`、`docs/design/architecture-improvement-plan.md` §7/§9。
 
 近期（2026-05-28 ~ 06-12，约 61 个提交）主线弧：
 1. **2026-05-28~29**：FGUI internal helper / Store 收口 + 文档路线整理 + `SandboxServices` 依赖注入地基。
@@ -18,4 +18,4 @@ metadata:
 
 **Why**：git log 只见单条提交、看不出方向拐点（5-30 回正）和系统化推进的整体弧；新会话需要先认知"现在在哪、往哪走"。
 
-**How to apply**：这是**点时快照**，会过期；进度真相以活来源为准——`git log --since=<date>`、`docs/project-direction.md`(北极星)、`docs/planning/long-term-iteration-plan.md`(排期)、`docs/planning/high-priority-todo.md`(backlog)、`docs/modules/<alias>.md`+`docs/registry.json`(模块现状)。
+**How to apply**：这是**点时快照**，会过期；进度真相以活来源为准——`git log --since=<date>`、`docs/project-direction.md`(北极星)、`docs/archive/long-term-iteration-plan.md`(排期)、`docs/archive/high-priority-todo.md`(backlog)、`docs/modules/<alias>.md`+`docs/registry.json`(模块现状)。

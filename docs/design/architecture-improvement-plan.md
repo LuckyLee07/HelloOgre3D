@@ -7,7 +7,7 @@
 > 边界：本文聚焦“当前代码已经存在的结构性问题”，给出具体证据（file:line）、解决方案和验收标准。它与现有路线图互补，不替代：
 > - 对象模型分阶段路线、术语定义见 `docs/design/cpp-object-model-refactor-roadmap.md`（本文是它的“证据 + 可执行”补充）。
 > - 非 AI 主线优先级见 `docs/archive/project-roadmap.md`。
-> - AI 能力路线见 `docs/planning/ai-roadmap.md`。
+> - AI 能力路线见 `docs/archive/ai-roadmap.md`。
 >
 > 执行约束（继承 `AGENTS.md`）：保持 sample 行为稳定；优先小步、可验证、可回退；迁移文件先留 forwarding，确认引用迁完再删；不为重构一次性改 Lua 调用名；C/C++ 源文件保持 Tab 缩进与 CRLF。
 

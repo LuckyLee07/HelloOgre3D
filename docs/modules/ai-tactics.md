@@ -43,4 +43,4 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型。
-- `docs/planning/ai-technical-iteration-plan.md` §6、`docs/design/chapter9-parity-architecture-notes.md`、`docs/design/architecture-improvement-plan.md` C3。
+- `docs/archive/ai-technical-iteration-plan.md` §6、`docs/design/chapter9-parity-architecture-notes.md`、`docs/design/architecture-improvement-plan.md` C3。

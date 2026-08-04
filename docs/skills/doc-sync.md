@@ -29,13 +29,13 @@ plan 全部 task 跑完后，把本次改动沉淀回项目文档，保持文档
 
 | 改动面 | 同步文档 |
 |---|---|
-| AI 感知/记忆/团队/战术/BT/DT/FSM | `docs/planning/ai-technical-iteration-plan.md`、`docs/planning/high-priority-todo.md`，必要时 `docs/planning/ai-roadmap.md` |
+| AI 感知/记忆/团队/战术/BT/DT/FSM | `docs/modules/<alias>.md` 现状与 gap 段；进度状态只写 `docs/backlog.md` |
 | 架构解耦 / 组件化 / 服务边界 | `docs/design/architecture-improvement-plan.md`（§7 跟踪清单）、`docs/design/cpp-object-model-refactor-roadmap.md` |
 | 行为树节点/能力 | `docs/design/behavior-tree-gap-analysis.md` |
 | 性能 | `docs/perf/` 下新建或更新基线报告 |
 | Chapter9 表现/对齐 | `docs/design/chapter9-parity-architecture-notes.md` |
 | FGUI | `docs/fgui/` 对应文档 |
-| 方向/优先级变化 | `docs/project-direction.md`、`docs/planning/long-term-iteration-plan.md` |
+| 方向/优先级变化 | `docs/project-direction.md`（方向）、`docs/backlog.md`（候选池）、`docs/cycle-01.md`（当前周期） |
 | 新增/废弃文档或状态翻转 | `docs/README.md` 索引 |
 
 ## 模块知识库维护（registry / docs/modules）

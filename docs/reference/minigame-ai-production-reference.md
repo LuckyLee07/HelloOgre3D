@@ -374,9 +374,9 @@ Lua 侧仍可提供：
 | 文档 | 关系 |
 |---|---|
 | `docs/project-direction.md` | 北极星。本文所有建议必须服务当前 AI 学习验证面，并能沉淀为长期生产级项目能力。 |
-| `docs/planning/ai-roadmap.md` | AI 长期路线。本文补充“生产级参考如何落地”。 |
+| `docs/archive/ai-roadmap.md` | AI 长期路线。本文补充“生产级参考如何落地”。 |
 | `docs/design/behavior-tree-gap-analysis.md` | BT runtime 补强时参考。 |
-| `docs/planning/high-priority-todo.md` | 如果把本文任务纳入当前迭代，需要同步拆到 TODO。 |
+| `docs/archive/high-priority-todo.md` | 如果把本文任务纳入当前迭代，需要同步拆到 TODO。 |
 | `docs/reference/reference-minigame-patterns.md` | MiniGame 通用沙盒参考，本文是 AI 专项补充。 |
 
 ## 7. 后续建议任务清单

@@ -44,4 +44,4 @@ Lua 侧 AI 行为库：DT/BT action+condition、知识源、Lua 影响图、团�
 
 ## 8. 已知 gap / 相关文档
 
-- 待：Lua 重活下沉 C++（PerceptionResultCache/TacticalQueryService/InfluenceMap 二期）、callback 生命周期治理。`docs/planning/ai-technical-iteration-plan.md`、`docs/design/chapter9-parity-architecture-notes.md`。
+- 待：Lua 重活下沉 C++（PerceptionResultCache/TacticalQueryService/InfluenceMap 二期）、callback 生命周期治理。`docs/archive/ai-technical-iteration-plan.md`、`docs/design/chapter9-parity-architecture-notes.md`。

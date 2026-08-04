@@ -50,4 +50,4 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 ## 8. 已知 gap / 相关文档
 
-- 待：Sandbox14/15 独立化、parity trace 正式化、smoke 入 CI。`docs/planning/long-term-iteration-plan.md` §1/§5。
+- 待：Sandbox14/15 独立化、parity trace 正式化、smoke 入 CI。`docs/archive/long-term-iteration-plan.md` §1/§5。

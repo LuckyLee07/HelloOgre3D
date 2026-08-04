@@ -1,8 +1,10 @@
 # HelloOgre3D 长期迭代规划
 
+> ⚠️ **已归档（2026-08-04）**：本文不再是施工或排期真源。唯一活 backlog 见 `../backlog.md`，当前周期见 `../cycle-01.md`，方向见 `../project-direction.md`。保留作历史脉络与证据参考。
+
 > 上位：`docs/project-direction.md` 是北极星；本文把北极星拆成可执行的长期阶段。若本文与北极星冲突，以北极星为准。
 >
-> 定位：本文是后续 6-12 个月的主规划入口，用来统一 AI、性能、Chapter9 parity、架构解耦、工具链和长期生产级目标。细节实施仍落到 `docs/planning/ai-technical-iteration-plan.md`、`docs/design/chapter9-parity-architecture-notes.md`、`docs/design/architecture-improvement-plan.md` 等专项文档。
+> 定位：本文是后续 6-12 个月的主规划入口，用来统一 AI、性能、Chapter9 parity、架构解耦、工具链和长期生产级目标。细节实施仍落到 `docs/archive/ai-technical-iteration-plan.md`、`docs/design/chapter9-parity-architecture-notes.md`、`docs/design/architecture-improvement-plan.md` 等专项文档。
 
 ## 1. 总体方向
 
@@ -168,7 +170,7 @@ AI 决策
 
 建议下一轮按以下顺序推进（0 为“应用接地探路”，与后续无悔动作可并行）：
 
-> 任务 0 的细化执行清单见 `docs/planning/playable-vertical-slice-todolist.md`；当前先以“玩家操控一个单位”的可玩纵切片为唯一实现主线。
+> 任务 0 的细化执行清单见 `docs/archive/playable-vertical-slice-todolist.md`；当前先以“玩家操控一个单位”的可玩纵切片为唯一实现主线。
 
 | 顺序 | 任务 | 主要输出 | 验证 |
 |---|---|---|---|

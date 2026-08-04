@@ -52,4 +52,4 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：更多非视觉 sense 输入、空间查询上限调参 / Release + scheduler 对照，以及更完整的 AOI / visibility set 淘汰。
-- `docs/planning/ai-technical-iteration-plan.md` §3/§4、`docs/perf/ai-perf-release-baseline-20260612.md`、`docs/design/architecture-improvement-plan.md` P7（已解决-感知抽象）。
+- `docs/archive/ai-technical-iteration-plan.md` §3/§4、`docs/perf/ai-perf-release-baseline-20260612.md`、`docs/design/architecture-improvement-plan.md` P7（已解决-感知抽象）。

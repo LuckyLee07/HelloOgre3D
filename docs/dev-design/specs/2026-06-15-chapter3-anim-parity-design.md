@@ -22,7 +22,7 @@
 
 ### 归属
 - 北极星 **P2「录制、回放、可复现测试」**。
-- `samples` 模块已知 gap「**parity trace 正式化**」（`docs/planning/long-term-iteration-plan.md` §1/§5）。
+- `samples` 模块已知 gap「**parity trace 正式化**」（`docs/archive/long-term-iteration-plan.md` §1/§5）。
 
 ### 非目标
 - 不在本任务修卡顿本身（本任务只建对比工具）。

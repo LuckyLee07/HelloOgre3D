@@ -45,4 +45,4 @@
 
 ## 8. 已知 gap / 相关文档
 
-- `docs/design/behavior-tree-gap-analysis.md`（G1/G4 已完成、G5/G7 第一切片已落地，G2/G3/G6/G8–G11 开放）、`docs/planning/ai-technical-iteration-plan.md`。
+- `docs/design/behavior-tree-gap-analysis.md`（G1/G4 已完成、G5/G7 第一切片已落地，G2/G3/G6/G8–G11 开放）、`docs/archive/ai-technical-iteration-plan.md`。

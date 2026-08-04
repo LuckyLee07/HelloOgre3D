@@ -41,4 +41,4 @@ AI 控制面板组件：聚合 Blackboard + driver + VisionSensor + MemoryStore 
 
 ## 8. 已知 gap / 相关文档
 
-- 待：旧 driver/action 的 `u[SoldierObject]` Lua 签名兼容桥继续随 sample 迁移收窄。`docs/planning/ai-technical-iteration-plan.md`、`docs/design/architecture-improvement-plan.md` P5/P7。
+- 待：旧 driver/action 的 `u[SoldierObject]` Lua 签名兼容桥继续随 sample 迁移收窄。`docs/archive/ai-technical-iteration-plan.md`、`docs/design/architecture-improvement-plan.md` P5/P7。

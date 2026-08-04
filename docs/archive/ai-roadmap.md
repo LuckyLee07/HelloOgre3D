@@ -1,6 +1,8 @@
 # AI Chapter 7-9 迁移后续扩展路线图
 
-> 文档状态：**AI 长期愿景 / 历史扩展路线**。当前阶段排期以 `docs/project-direction.md`、`docs/planning/long-term-iteration-plan.md` 和 `docs/planning/ai-technical-iteration-plan.md` 为准；本文保留 Chapter 7-9 概念、调试能力和中长期 AI 能力地图。
+> ⚠️ **已归档（2026-08-04）**：本文不再是施工或排期真源。唯一活 backlog 见 `../backlog.md`，当前周期见 `../cycle-01.md`，方向见 `../project-direction.md`。保留作历史脉络与证据参考。
+
+> 文档状态：**AI 长期愿景 / 历史扩展路线**。当前阶段排期以 `docs/project-direction.md`、`docs/archive/long-term-iteration-plan.md` 和 `docs/archive/ai-technical-iteration-plan.md` 为准；本文保留 Chapter 7-9 概念、调试能力和中长期 AI 能力地图。
 
 > 目标：在迁入 HelloOgre3DX chapter 7-9 的 Knowledge / Perception / Tactics 能力后，把 AI 系统继续推进到可调试、可观测、可复用、可扩展的状态。
 >

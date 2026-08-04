@@ -15,7 +15,7 @@
 - 地基模块盘点（已有 / 缺 / 故意不做 + 切片最小集）：`docs/archive/foundation-modules-inventory.md`
 - C++ 对象模型与组件化边界：`docs/design/cpp-object-model-refactor-roadmap.md`
 - Soldier / Agent 对象链路重构：`docs/archive/SoldierObjectRefactor.md`
-- AI 后续能力路线：`docs/planning/ai-roadmap.md`、`docs/reference/AIArchitectureBeyondBook.md`
+- AI 后续做什么：`docs/backlog.md`（当前周期 `docs/cycle-01.md`）；概念参考 `docs/reference/AIArchitectureBeyondBook.md`
 - FGUI 专项路线：`docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`
 - FGUI 阶段性生产验收：`docs/fgui/fairygui-production-gate.md`
 

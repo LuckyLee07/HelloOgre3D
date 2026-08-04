@@ -1,6 +1,8 @@
 # 可玩纵切片 TODOLIST
 
-> 上位：`docs/project-direction.md`、`docs/planning/long-term-iteration-plan.md`。
+> ⚠️ **已归档（2026-08-04）**：本文不再是施工或排期真源。唯一活 backlog 见 `../backlog.md`，当前周期见 `../cycle-01.md`，方向见 `../project-direction.md`。保留作历史脉络与证据参考。
+
+> 上位：`docs/project-direction.md`、`docs/archive/long-term-iteration-plan.md`。
 >
 > 当前唯一主线：**先完成“玩家操控一个单位”的最小可玩纵切片**。小地图 viewport 作为观察支撑保留；FPS 相机、weapon view model 和 V 键视角切换已因优先级不足移出当前切片；P8-P11 架构 review 归为后续债务。
 
@@ -28,7 +30,7 @@
 
 | 改动 | 归类 | 收口方式 |
 |---|---|---|
-| `docs/project-direction.md` / `docs/planning/long-term-iteration-plan.md` 改为“先做可玩纵切片” | 主线定义 | 保留，作为当前阶段方向 |
+| `docs/project-direction.md` / `docs/archive/long-term-iteration-plan.md` 改为“先做可玩纵切片” | 主线定义 | 保留，作为当前阶段方向 |
 | 小地图 viewport | ~~支撑能力~~ 已移除 | 2026-07-10 经用户决定彻底删除（`ClientManager` MinimapCamera + 左上角 viewport）——它对所有 sample 生效、在非 Sandbox19 场景只显示空黑框，干扰观察 |
 | `CS_FPS`、`HELLO_CAMERA_FPS`、V 键切换、weapon view model | 已移出当前范围 | 删除实现与验证入口；只有后续品类明确需要时再独立立项 |
 | `docs/design/architecture-improvement-plan.md` P8-P11 | 后续债务 | 不进入当前可玩切片的完成标准 |

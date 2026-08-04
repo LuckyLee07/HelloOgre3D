@@ -144,7 +144,7 @@
 ## 8. 关键证据索引
 
 **HelloOgre3D（本仓库）**：
-- `sandbox/...` 现有 Local 事件（`SandboxEventPayload` + dispatcher，覆盖 HEALTH_CHANGE/ASM_STATE_CHANGE/ASM_NOTIFY，返回 token 解绑）——见 `docs/planning/ai-roadmap.md` §5 当前进展记录。
+- `sandbox/...` 现有 Local 事件（`SandboxEventPayload` + dispatcher，覆盖 HEALTH_CHANGE/ASM_STATE_CHANGE/ASM_NOTIFY，返回 token 解绑）——见 `docs/archive/ai-roadmap.md` §5 当前进展记录。
 - 现状：有同步 dispatcher 骨架（`SandboxEventDispatcherManager`），但**无生产级跨对象事件总线**（缺缓冲/节流/上限/scope 路由/参数化事件名）/ 无 Team-Global 路由 / 无区域-碰撞-计时事件源 / 无 ECA / 无触发器对象库。
 
 **MiniGame（外部参考，见 `reference-minigame-patterns.md` §3）**：

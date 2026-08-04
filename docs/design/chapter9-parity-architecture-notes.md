@@ -4,7 +4,7 @@
 >
 > 范围：`src/HelloOgre3D` 与 `bin/res/scripts`。本文不是继续追 Sandbox17 / Sandbox18 的像素级调参，而是把这轮对齐 `HelloOgre3DX/src/chapter_9_tactics` 时暴露出的主要架构问题落档，方便后续按优先级优化。
 >
-> 相关背景文档：`docs/project-direction.md`、`docs/design/architecture-improvement-plan.md`、`docs/archive/SoldierObjectRefactor.md`、`docs/planning/ai-technical-iteration-plan.md`。
+> 相关背景文档：`docs/project-direction.md`、`docs/design/architecture-improvement-plan.md`、`docs/archive/SoldierObjectRefactor.md`、`docs/archive/ai-technical-iteration-plan.md`。
 
 ## 总体判断
 

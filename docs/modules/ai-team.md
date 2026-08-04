@@ -45,4 +45,4 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：更多按 key / 按角色的团队 fact 专用查询接口可继续从 Lua 兼容缓存迁到 C++ getter；更多非视觉输入见 [[ai-perception]]。
-- `docs/planning/ai-technical-iteration-plan.md` §5、`docs/design/chapter9-parity-architecture-notes.md` §4。
+- `docs/archive/ai-technical-iteration-plan.md` §5、`docs/design/chapter9-parity-architecture-notes.md` §4。

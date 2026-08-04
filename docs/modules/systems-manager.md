@@ -40,4 +40,4 @@ ObjectManager（update 阶段总编排与战术兼容 facade）、ObjectRegistry
 
 ## 8. 已知 gap / 相关文档
 
-- 待：ObjectManager 后续只保留阶段编排和对象聚合，新增 tactics API 继续放到 [[ai-tactics]] 的专属 service/global。`docs/design/architecture-improvement-plan.md` C3、`docs/planning/long-term-iteration-plan.md`。
+- 待：ObjectManager 后续只保留阶段编排和对象聚合，新增 tactics API 继续放到 [[ai-tactics]] 的专属 service/global。`docs/design/architecture-improvement-plan.md` C3、`docs/archive/long-term-iteration-plan.md`。

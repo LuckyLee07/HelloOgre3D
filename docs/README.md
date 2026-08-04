@@ -2,19 +2,25 @@
 
 > 目的：让阅读和施工先找对文档，避免被历史路线图带偏。
 >
-> 治理规则：方向取舍先看 `project-direction.md`；阶段排期看 `planning/long-term-iteration-plan.md`；具体实现看对应模块文档 `modules/<alias>.md` 或专项文档。历史文档（`archive/`）只看证据和具体条目，不看旧排期。
+> 治理规则：方向取舍先看 `project-direction.md`；当前在做什么看 `cycle-01.md`；想做什么看 `backlog.md`；具体实现看对应模块文档 `modules/<alias>.md` 或专项文档。历史文档（`archive/`）只看证据和具体条目，不看旧排期。
 >
-> 单一真源约定：**P1–C5 / P8–P11 架构重构进度**看 `design/architecture-improvement-plan.md` §7/§9（其它文档的 P/C 编号完成度只是叙述引用）；**当前性能基线**看 `perf/` 里日期最新的一份（见 §8）；**当前可玩切片进度**看 `planning/playable-vertical-slice-todolist.md`。
+> 单一真源约定：
+> - **进度状态**只在 `backlog.md`（唯一带 `[ ]`/`[x]` 的清单）与 `cycle-01.md`。其它文档不再记录进度。
+> - **P1–C5 / P8–P11 的证据与方案**看 `design/architecture-improvement-plan.md` §7/§9；backlog 只记"做不做"，不复制细节。
+> - **当前性能基线**看 `perf/` 里日期最新的一份（见 §8）。
+>
+> 2026-08-04 收敛：原 `planning/` 下 5 份规划文档（long-term-iteration-plan / ai-technical-iteration-plan / ai-roadmap / high-priority-todo / playable-vertical-slice-todolist）已全部归档到 `archive/`——其中 ai-roadmap 的 P0/P1 七项已全部完成、可玩切片已完成，长期排期对个人项目是负资产。改为「北极星 + 当前 cycle + 候选池」三份。
 
 ## 0. 目录结构
 
 ```
 docs/
 ├── README.md                  本索引
-├── project-direction.md       北极星（方向总纲）
+├── project-direction.md       北极星（方向总纲，不含状态）
+├── cycle-01.md                当前周期（4-6 周，三行定义 + 排期）
+├── backlog.md                 唯一活清单（候选池，只有这里有 [ ]/[x]）
 ├── registry.json              模块知识库注册表（/hello-develop-design 阶段0 + verify 用）
 ├── architecture.html          架构总览渲染图
-├── planning/    规划与排期（长期/AI/backlog）
 ├── design/      设计与架构分析（活跃改造参考）
 ├── reference/   外部参考（MiniGame / 设计概念）
 ├── archive/     历史 / 暂缓方向（只作证据参考）
@@ -25,15 +31,15 @@ docs/
 └── perf/        性能与实测证据
 ```
 
-## 1. 必读入口（根 + planning/）
+## 1. 必读入口（只有三份）
 
 | 文档 | 用途 |
 |---|---|
-| `project-direction.md` | 北极星。定义当前阶段是 AI 学习与实验沙盒，长期目标是生产级游戏项目 / 玩法运行时。 |
-| `planning/long-term-iteration-plan.md` | 长期迭代总规划。可比较/可复现、AI 热点 C++ 化、意图链路、运行时边界、工具门禁、编辑器/UGC 后置。 |
-| `planning/ai-technical-iteration-plan.md` | AI 技术执行计划。spatial、perception cache、TeamBlackboard、TacticalQuery、InfluenceMap、BT runtime、benchmark。 |
-| `planning/ai-roadmap.md` | AI 长期愿景和能力地图，排期以总规划为准。 |
-| `planning/high-priority-todo.md` | 执行记录 + 细粒度 backlog。不要当最高优先级入口。 |
+| `project-direction.md` | 北极星。方向定调，不含进度状态。 |
+| `cycle-01.md` | **当前在做什么**。一次只有一个 cycle，4–6 周，到期必须结束并写结论。 |
+| `backlog.md` | **想做什么**。唯一带 `[ ]`/`[x]` 的清单；候选池不排期，认领时才拉进 cycle。 |
+
+> 历史排期文档（`archive/long-term-iteration-plan.md`、`ai-technical-iteration-plan.md`、`ai-roadmap.md`、`high-priority-todo.md`、`playable-vertical-slice-todolist.md`）保留作脉络与证据，**不再作为入口**。
 
 ## 2. 设计与架构分析（design/，当前施工参考）
 
@@ -66,6 +72,11 @@ docs/
 
 | 文档 | 状态 |
 |---|---|
+| `archive/long-term-iteration-plan.md` | 2026-08-04 归档。长期迭代总规划（阶段一~六）。阶段一/二内容已基本兑现，排期口径已废。 |
+| `archive/ai-technical-iteration-plan.md` | 2026-08-04 归档。AI 技术执行计划，被各 `modules/*.md` 的现状描述取代。 |
+| `archive/ai-roadmap.md` | 2026-08-04 归档。P0/P1 七项（调试面板/事件规范化/更新调度/感知组件化/TeamBlackboard/InfluenceMap/BT 数据化）已全部完成，仅 P2 录制回放未做（已转入 `backlog.md`）。 |
+| `archive/high-priority-todo.md` | 2026-08-04 归档。主体是 5–6 月迭代记录，与 `git log` 重复。 |
+| `archive/playable-vertical-slice-todolist.md` | 2026-08-04 归档。可玩纵切片已于 2026-07-11 全部完成并通过手感验收。 |
 | `archive/project-roadmap.md` | 历史非 AI 主线整理。UI/runtime/调试/构建条目可参考，排序已失效。 |
 | `archive/foundation-modules-inventory.md` | 历史地基盘点。保留模块清单价值，数据驱动切片排期已失效。 |
 | `archive/trigger-system-gap-analysis.md` | 触发器方向暂缓。事件系统四件套可在服务 AI/生产级边界时小步引入。 |
@@ -102,9 +113,8 @@ docs/
 ## 9. 阅读路径
 
 - 判断项目方向：`project-direction.md`。
-- 安排后续阶段：`planning/long-term-iteration-plan.md`。
+- 知道现在该做什么：`cycle-01.md`（当前周期）；挑下一件事：`backlog.md`（候选池）。
 - 做某子系统：先看 `modules/<alias>.md`（约束 + 验证），再读对应 C++/Lua 实现。
-- 做 AI 热点系统：`planning/ai-technical-iteration-plan.md`。
 - 处理 Chapter9 视觉/行为差异：`design/chapter9-parity-architecture-notes.md`。
 - 做架构解耦：`design/architecture-improvement-plan.md`。
 - 新功能开发：`/hello-develop-design <功能描述>`（见 `skills/`）。

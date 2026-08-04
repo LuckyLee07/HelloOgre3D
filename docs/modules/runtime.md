@@ -41,4 +41,4 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 待：profiler UI、FairyGUI element inspector。`docs/planning/long-term-iteration-plan.md` §5、`docs/perf/ai-perf-release-baseline-20260612.md`。
+- 待：profiler UI、FairyGUI element inspector。`docs/archive/long-term-iteration-plan.md` §5、`docs/perf/ai-perf-release-baseline-20260612.md`。

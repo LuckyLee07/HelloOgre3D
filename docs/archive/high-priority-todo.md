@@ -1,6 +1,8 @@
 # 高优先级 TODO
 
-> 文档状态：**执行记录 + 细粒度 backlog**。当前方向与阶段排期先看 `docs/project-direction.md` 和 `docs/planning/long-term-iteration-plan.md`；AI 技术细节看 `docs/planning/ai-technical-iteration-plan.md`。本文保留已完成轨迹和待办细项，不再作为最高优先级入口。
+> ⚠️ **已归档（2026-08-04）**：本文不再是施工或排期真源。唯一活 backlog 见 `../backlog.md`，当前周期见 `../cycle-01.md`，方向见 `../project-direction.md`。保留作历史脉络与证据参考。
+
+> 文档状态：**执行记录 + 细粒度 backlog**。当前方向与阶段排期先看 `docs/project-direction.md` 和 `docs/archive/long-term-iteration-plan.md`；AI 技术细节看 `docs/archive/ai-technical-iteration-plan.md`。本文保留已完成轨迹和待办细项，不再作为最高优先级入口。
 > 当前阶段主线是 **AI 学习与实验沙盒**，长期目标是演进为生产级游戏项目 / 生产级玩法运行时。完整数据驱动 Def、触发器玩法、编辑器、UGC 方向暂缓一次性铺开；只有在它们直接服务 AI 学习 sample、生产级地基收口或清晰垂直切片时再小步引入。
 
 ## 当前目标
@@ -209,7 +211,7 @@
 
 ## P0/P1 - 下一阶段技术迭代
 
-> 详细规划见 `docs/planning/ai-technical-iteration-plan.md`。当前重点从“继续新增 sample”转向“把已跑通的 AI 概念收口为可扩展 C++ 底座”。
+> 详细规划见 `docs/archive/ai-technical-iteration-plan.md`。当前重点从“继续新增 sample”转向“把已跑通的 AI 概念收口为可扩展 C++ 底座”。
 
 - [x] `AgentSpatialIndexSystem` 第一版：`ObjectManager` 每帧 rebuild agent grid，`IAgentSpatialQuery` 默认优先走 grid，支持 `maxResults` 和基础 candidates/results stats。
 - [x] `AgentSpatialIndexSystem` 二期第一段：补 teamId / alive / includeSelf / objectType 过滤和 queryMs / filtered / reject 统计，grid 与 linear fallback 共用过滤语义。

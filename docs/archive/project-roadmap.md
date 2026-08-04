@@ -1,10 +1,10 @@
 # 项目后续发展路线图（AI 之外）
 
-> ⚠️ 文档状态（2026-06-11）：**历史/补充**。本文成文于早期非 AI 主线整理阶段，其优先级（尤其 FGUI-first、数据驱动切片、编辑器/UGC 相关排期）**已被 `docs/project-direction.md`（北极星）和 `docs/planning/long-term-iteration-plan.md` 取代**。当前项目阶段是 **AI 学习与实验沙盒**，长期目标是生产级游戏项目 / 玩法运行时。本文中 UI、runtime、调试、构建、稳定性等具体条目仍有参考价值，但**排序一律以北极星和长期迭代规划为准**。
+> ⚠️ 文档状态（2026-06-11）：**历史/补充**。本文成文于早期非 AI 主线整理阶段，其优先级（尤其 FGUI-first、数据驱动切片、编辑器/UGC 相关排期）**已被 `docs/project-direction.md`（北极星）和 `docs/archive/long-term-iteration-plan.md` 取代**。当前项目阶段是 **AI 学习与实验沙盒**，长期目标是生产级游戏项目 / 玩法运行时。本文中 UI、runtime、调试、构建、稳定性等具体条目仍有参考价值，但**排序一律以北极星和长期迭代规划为准**。
 >
 > 目标：记录 `HelloOgre3D` 在 AI 之外值得持续迭代的方向，方便后续按优先级拆任务、补文档、做回归。
 >
-> 边界：AI 相关路线独立维护在 `docs/planning/ai-roadmap.md`；本文关注 UI、runtime、玩法基础设施、调试观测、构建测试、稳定性、对象系统等非 AI 主线。
+> 边界：AI 相关路线独立维护在 `docs/archive/ai-roadmap.md`；本文关注 UI、runtime、玩法基础设施、调试观测、构建测试、稳定性、对象系统等非 AI 主线。
 
 ## 1. 总体判断
 
@@ -244,9 +244,9 @@
 
 ## 12. 近期执行队列（⚠️ 已被北极星取代，留作历史）
 
-> 本节是早期 UI 优先阶段的旧排期，**已失效**。下面内容仅作历史记录；实际排期以 `docs/planning/long-term-iteration-plan.md` 和 `docs/planning/ai-technical-iteration-plan.md` 为准。
+> 本节是早期 UI 优先阶段的旧排期，**已失效**。下面内容仅作历史记录；实际排期以 `docs/archive/long-term-iteration-plan.md` 和 `docs/archive/ai-technical-iteration-plan.md` 为准。
 
-以下保留原文，仅作历史记录。专项细节如需参考，仍见 `docs/fgui/fairygui-business-framework-todo.md`、`docs/planning/ai-roadmap.md` 和对应实现文档。
+以下保留原文，仅作历史记录。专项细节如需参考，仍见 `docs/fgui/fairygui-business-framework-todo.md`、`docs/archive/ai-roadmap.md` 和对应实现文档。
 
 ### 第一阶段：FGUI 压力样例与性能观测
 

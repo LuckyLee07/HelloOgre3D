@@ -41,4 +41,4 @@
 
 ## 8. 已知 gap / 相关文档
 
-- 无单独 gap 文档；作为 Chapter6 教学样本保留。`docs/planning/ai-technical-iteration-plan.md`。
+- 无单独 gap 文档；作为 Chapter6 教学样本保留。`docs/archive/ai-technical-iteration-plan.md`。

@@ -1,6 +1,6 @@
 # ai_perf Release x64 基线（2026-07-10，P9 热点组件缓存后刷新）
 
-> 对应 `docs/design/architecture-improvement-plan.md` §9 P9 验收最后一项「清理后再采集 `ai_perf_100/500/1000` 基线」、`docs/planning/long-term-iteration-plan.md` §8 执行队列 #1。
+> 对应 `docs/design/architecture-improvement-plan.md` §9 P9 验收最后一项「清理后再采集 `ai_perf_100/500/1000` 基线」、`docs/archive/long-term-iteration-plan.md` §8 执行队列 #1。
 >
 > 前一版基线见 `docs/perf/ai-perf-release-baseline-20260612.md`（口径一致，可直接对照）。
 

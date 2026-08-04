@@ -41,4 +41,4 @@ FSM 运行时：状态注册、转移（布尔/evaluator）、当前状态驱动
 
 ## 8. 已知 gap / 相关文档
 
-- 待：RandomMoveState 补全或弃用（行为变更，基线后做）。`docs/planning/ai-technical-iteration-plan.md`。
+- 待：RandomMoveState 补全或弃用（行为变更，基线后做）。`docs/archive/ai-technical-iteration-plan.md`。

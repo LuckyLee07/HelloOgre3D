@@ -96,18 +96,34 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 - 现有观察相机、HUD、胜负与重置。（小地图 viewport 已于 2026-07-10 移除；2026-07-11 雷达改为 Gorilla 矢量雷达 `UIPolygon`：左上角浅蓝圆盘、敌红友绿圆点 blip、player-up、中心三角箭头。原 FairyGUI 程序化裸对象在本项目不渲染，已弃用。）
 - `player_soldier` / `ai_soldier` profile 的 controller 互斥断言。
 
-下一步先做手动手感验收和小范围硬化，再依据实际体验决定偏直接操控、战术指挥或继续保持 AI 实验场；**FPS 相机仍不作为当前优先项**（第三人称 FOLLOW 已作为经确认的方向调整加入、限定 Sandbox19，与 FPS 是两回事），也不在验收前铺开新的系统主线。
+手感验收已于 2026-07-11 由用户确认通过（A/D 转向、W/S 前后、射击方向、相机跟随、圆盘雷达、重开无残留均正常）。**FPS 相机仍不作为当前优先项**（第三人称 FOLLOW 已作为经确认的方向调整加入、限定 Sandbox19，与 FPS 是两回事）。
+
+### 5.1 品类决策：待 cycle-01 结束时落档
+
+切片跑通了，但"偏直接操控 / 战术指挥 / 继续做 AI 实验场"的结论**至今未做**——2026-07-11 验收后悬空了三周。原因是这个决策程序本身欠定：用一个一天做出来的原型的手感，承载不了"长期做什么"。
+
+因此改为**用 artifact 回答，而不是用思辨回答**：`docs/cycle-01.md` 做战术指挥切片（玩家只下指令、不直接开枪），4 周，交付一个别人能玩 5 分钟的 build，并找真人试玩。**2026-08-31 必须在本节写下结论，包括"结论是不做游戏、继续当技术 lab"也算有效结论。**
+
+### 5.2 项目运作方式（2026-08-04 起）
+
+不再维护 6–12 个月长期路线图（对个人项目是负资产，只会不断提醒还有多少没做完）。改为：
+
+- **北极星**（本文）——方向定调，不含状态。
+- **当前 cycle**（`docs/cycle-01.md`）——一次只有一个，4–6 周，三行定义（问题 / 产出 / 截止），到期必须结束并写结论。
+- **候选池**（`docs/backlog.md`）——唯一带 `[ ]`/`[x]` 的清单，不排期。
+
+每个 cycle 必须交付下列三者之一，交不出也要结束、写结论、进下一个：① 一个别人能玩 5 分钟的 build；② 一篇能给同事讲 20 分钟的技术总结；③ 一个能搬进真实工程的模块或结论。
 
 ## 6. 文档关系
 
 | 文档 | 当前定位 |
 |---|---|
-| `docs/planning/ai-roadmap.md` | AI 长期愿景和能力地图，近期排期以本文和 `docs/planning/long-term-iteration-plan.md` 为准。 |
-| `docs/planning/long-term-iteration-plan.md` | 长期迭代总规划，把北极星拆成阶段、近期执行队列和暂缓清单。 |
-| `docs/planning/ai-technical-iteration-plan.md` | AI 技术落地顺序，承接 spatial、perception、team、tactics、BT runtime 与 benchmark。 |
+| `docs/cycle-01.md` | **当前周期**。现在在做什么、什么时候结束。 |
+| `docs/backlog.md` | **唯一活清单**。想做什么；只有这里有 `[ ]`/`[x]`。 |
+| `docs/design/architecture-improvement-plan.md` | P1–C5 / P8–P11 的证据与方案（§7/§9）。backlog 只记做不做，细节看这里。 |
 | `docs/reference/minigame-ai-production-reference.md` | MiniGame 生产级 AI 性能与架构参考；只吸收热路径系统化、AOI、缓存、调度和 benchmark 思路，不照搬历史包袱。 |
-| `docs/planning/high-priority-todo.md` | 当前迭代任务清单，必须随方向变化更新。 |
 | `docs/design/behavior-tree-gap-analysis.md` | 行为树学习与补强参考。 |
+| `docs/archive/ai-roadmap.md` / `long-term-iteration-plan.md` / `ai-technical-iteration-plan.md` / `high-priority-todo.md` / `playable-vertical-slice-todolist.md` | 2026-08-04 归档的历史排期，只作脉络与证据，不看旧优先级。 |
 | `docs/archive/trigger-system-gap-analysis.md` | 触发器方向暂缓，作为历史参考。 |
 | `docs/archive/foundation-modules-inventory.md` | 生产级地基盘点参考；近期只选能支撑当前验证面的部分。 |
 | `docs/archive/project-roadmap.md` | 长期生产级路线参考，阶段优先级低于本文。 |
