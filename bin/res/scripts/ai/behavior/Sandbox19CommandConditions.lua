@@ -18,15 +18,15 @@ setmetatable(Sandbox19CommandConditions, { __index = SoldierConditions })
 
 local _COMMAND_TTL_MS = 8000
 
+-- GameManager:getTimeInMillis 是"启动至今的仿真时间"，sample 刚初始化时可能为 0，
+-- 因此不能拿 issuedMs>0 当有效性判据（0 是合法时刻）——有没有指令看 Has 即可。
+-- elapsed>=0 用于挡住 reload 后时钟回退等异常情况。
 local function _IsFresh(bb)
     if bb == nil or not bb:Has("command.issuedMs") then
         return false
     end
-    local issuedMs = bb:GetInt("command.issuedMs", 0)
-    if issuedMs <= 0 then
-        return false
-    end
-    return (GameManager:getTimeInMillis() - issuedMs) <= _COMMAND_TTL_MS
+    local elapsed = GameManager:getTimeInMillis() - bb:GetInt("command.issuedMs", -1)
+    return elapsed >= 0 and elapsed <= _COMMAND_TTL_MS
 end
 
 local function _IsKind(bb, kind)
@@ -54,7 +54,17 @@ function Sandbox19CommandConditions.HasCommandFocus(agent, bb)
         return false
     end
 
-    local target = ObjectManager:getObjectById(targetId)
+    -- ObjectManager:getObjectById 未导出给 Lua，按 id 扫 getAllAgents 解析。
+    -- 顺带天然处理了目标已被销毁的情况（扫不到即条件落空）。
+    local target = nil
+    local agents = ObjectManager:getAllAgents()
+    for i = 0, agents:size() - 1 do
+        local a = agents[i]
+        if a ~= nil and a:GetObjId() == targetId then
+            target = a
+            break
+        end
+    end
     if target == nil or target:GetHealth() <= 0 then
         return false
     end

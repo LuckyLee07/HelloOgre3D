@@ -211,6 +211,20 @@ local function _GetBlackboard(agent)
 	return ai ~= nil and ai:GetBlackboard() or nil
 end
 
+-- ObjectManager:getObjectById 未导出给 Lua；且跨帧持有 agent userdata 有悬垂风险
+-- （对象可能已被销毁）。选择集只存 objId，每次按 id 扫 getAllAgents 解析（7 个 agent，可忽略）。
+local function _FindAgentById(objId)
+	if objId == nil or objId <= 0 then return nil end
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent:GetObjId() == objId then
+			return agent
+		end
+	end
+	return nil
+end
+
 local function _IsSelectableAlly(agent)
 	return agent ~= nil and agent ~= _player and agent:GetHealth() > 0
 		and _player ~= nil and agent:GetTeamId() == _player:GetTeamId()
@@ -351,7 +365,7 @@ local function _IssueCommand(kind, focusTargetId, basePos)
 	local issued = 0
 
 	for objId in pairs(_selection) do
-		local agent = ObjectManager:getObjectById(objId)
+		local agent = _FindAgentById(objId)
 		if agent ~= nil and agent:GetHealth() > 0 then
 			local bb = _GetBlackboard(agent)
 			if bb ~= nil then
@@ -417,7 +431,7 @@ local function _IssueFocus()
 	if targetId <= 0 then
 		targetId = _FindEnemyInPlayerCone()
 	else
-		local marked = ObjectManager:getObjectById(targetId)
+		local marked = _FindAgentById(targetId)
 		if marked == nil or marked:GetHealth() <= 0 then
 			_lastPickedEnemyId = 0
 			targetId = _FindEnemyInPlayerCone()
@@ -449,7 +463,7 @@ local function _UpdateCommandUi()
 	local slot = 1
 	for objId in pairs(_selection) do
 		if slot > SELECT_MARK_POOL then break end
-		local agent = ObjectManager:getObjectById(objId)
+		local agent = _FindAgentById(objId)
 		if agent ~= nil and agent:GetHealth() > 0 then
 			local sp = _ScreenPosOf(agent)
 			if sp ~= nil then
@@ -465,6 +479,72 @@ local function _UpdateCommandUi()
 			_selectMarks[i]:setVisible(false)
 		end
 	end
+end
+
+-- smoke-only 自测：headless smoke 驱动不了鼠标键盘，这里用合成指令走通
+-- "写 blackboard -> 指令条件命中 -> TTL 过期后回落" 全链路，作为指令层的自动化证据。
+local function _RunCommandSelfTest()
+	local ally = nil
+	for _, agent in ipairs(_agents) do
+		if _IsSelectableAlly(agent) then ally = agent break end
+	end
+	if ally == nil then
+		print("[Sandbox19CommandSelfTest] FAIL reason=noAlly")
+		return
+	end
+
+	local bb = _GetBlackboard(ally)
+	local conds = _G["Sandbox19CommandConditions"]
+	if bb == nil or conds == nil then
+		print("[Sandbox19CommandSelfTest] FAIL reason=noBlackboardOrConditions")
+		return
+	end
+
+	-- 1) 撤退指令：写 movePos + command.kind，条件应命中
+	_ClearSelection()
+	_selection[ally:GetObjId()] = true
+	_IssueCommand("retreat", -1, _player:GetPosition())
+	local retreatOk = conds.HasCommandRetreat(ally, bb) == true
+	local rallyOff = conds.HasCommandRally(ally, bb) == false
+
+	-- 2) 集火指令：条件命中时应把 blackboard.enemy 覆写为指定目标
+	local enemyId = _FindEnemyInPlayerCone()
+	local focusOk, enemyOverridden = false, false
+	if enemyId <= 0 then
+		local agents = ObjectManager:getAllAgents()
+		for i = 0, agents:size() - 1 do
+			local a = agents[i]
+			if a ~= nil and a:GetHealth() > 0 and a:GetTeamId() ~= _player:GetTeamId() then
+				enemyId = a:GetObjId()
+				break
+			end
+		end
+	end
+	if enemyId > 0 then
+		_IssueCommand("focus", enemyId, nil)
+		focusOk = conds.HasCommandFocus(ally, bb) == true
+		local overridden = bb:GetAgent("enemy")
+		enemyOverridden = overridden ~= nil and overridden:GetObjId() == enemyId
+	end
+
+	-- 3) TTL：把 issuedMs 推到超出 TTL 的过去，条件应全部落空
+	bb:SetInt("command.issuedMs", GameManager:getTimeInMillis() - COMMAND.ttlMs - 1000)
+	local expiredOk = conds.HasCommandFocus(ally, bb) == false
+		and conds.HasCommandRetreat(ally, bb) == false
+		and conds.HasCommandRally(ally, bb) == false
+
+	_ClearSelection()
+	bb:Remove("command.kind")
+	bb:Remove("command.issuedMs")
+	bb:Remove("command.focusTargetId")
+
+	local pass = retreatOk and rallyOff and focusOk and enemyOverridden and expiredOk
+	print("[Sandbox19CommandSelfTest] " .. (pass and "PASS" or "FAIL") ..
+		" retreat=" .. tostring(retreatOk) ..
+		" rallyExclusive=" .. tostring(rallyOff) ..
+		" focus=" .. tostring(focusOk) ..
+		" enemyOverridden=" .. tostring(enemyOverridden) ..
+		" ttlExpired=" .. tostring(expiredOk))
 end
 
 local function _ClearCommandState()
@@ -506,6 +586,10 @@ local function _SpawnEncounter()
 	print("[Sandbox19] ready playerId=" .. tostring(_player:GetObjId()) ..
 		" components=" .. tostring(_player:BuildComponentDebugString()))
 	-- blip 池在 _CreateRadar 已建好并复用；_UpdateRadar 每帧按存活单位重定位/隐藏，无需重建。
+
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true then
+		_RunCommandSelfTest()
+	end
 end
 
 local function _RestartEncounter()
