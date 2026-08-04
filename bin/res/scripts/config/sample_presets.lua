@@ -316,6 +316,45 @@ SamplePresets.chapter8_perception_parity.parityTrace = {
 	includeAiSummary = false,
 }
 
+-- Chapter-8 legacy parity(C 方案试点)：Sandbox11 在此 preset 下改用纯 Lua legacy 重写
+-- agent，旁路 modern C++ BT/感知/locomotion（仅 parity 模式，不影响 Sandbox11 基线）。
+-- 第一步先直接复用 ch9 的 Chapter9LegacySoldierAgent 验证接线（chapter-8 是其子集，
+-- 空 chapter9Tactics config 下即通用 legacy 士兵行为）；通了再产出 Chapter8LegacySoldierAgent。
+SamplePresets.chapter8_perception_legacy_parity = cloneTable(SamplePresets.chapter8_perception_parity)
+SamplePresets.chapter8_perception_legacy_parity.aiBlackboard.strings["debug.demo"] = "chapter8_perception_legacy_parity"
+SamplePresets.chapter8_perception_legacy_parity.chapter8Comms.agentScript = "res/scripts/agent/Chapter9LegacySoldierAgent.lua"
+-- 剧本注入：legacy(chapter-8, 播种 math.random 后确定)每个 agent 首帧 randomMove 的目标点。
+-- ch9 legacy agent 读 chapter9Tactics.legacyRandomMovePoints[index][randomMoveCount]，
+-- legacyForceInitialRandomAgents 让首次决策强制走 randomMove（对齐 legacy t=33ms 首帧选点）。
+-- firstAgentId=115 对齐 modern objId 起始 → _GetAgentIndex 得到 spawn 序 index。
+SamplePresets.chapter8_perception_legacy_parity.chapter9Tactics = {
+	legacyFirstAgentId = 115,
+	-- 视觉 3 刀（复刻 chapter-8 AgentSenses）：头骨骼 b_Head1 起点+朝向、关掉 AABB 关卡遮挡。
+	useHeadBoneVision = true,
+	useLevelBoxOcclusion = false,
+	-- 运动对齐：让 modern 改用可调 profiled steering，压前期(帧1-7)微差、避免帧8选敌临界点被放大。
+	-- 参数先借 ch9 legacy parity（同 demo_framework Soldier locomotion），跑出来再逐项调。
+	-- maxSpeed 甜点=3：legacy targetSpeed=GetMaxSpeed()=7 但 legacy 速度饱和在 ~2.8；
+	-- modern OpenSteerAdapter 的 speedForce 响应更强，maxSpeed=7 会过冲(maxPosError 23.7)，
+	-- maxSpeed=3 时 modern ~2.5(仅慢 legacy ~5%)是局部最优(13.5)。深层差在 adapter speedForce。
+	movementProfile = {
+		enabled = true, maxSpeed = 3.0, maxForce = 1000.0, mass = 90.7,
+		predictionTime = 0.5, followWeight = 1.5, stayWeight = 0.4,
+		avoidAgentWeight = 1.0, avoidObjectWeight = 2.0, speedWeight = 7.0,
+		accelerationBlend = 0.4, forwardBlend = 0.2, forceScale = 1.0,
+		slowDamping = 0.91, minSteeringLengthSq = 0.1, minForwardVelocityLengthSq = 0.1,
+	},
+	legacyForceInitialRandomAgents = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true },
+	legacyRandomMovePoints = {
+		[1] = { { 24.566, 3.324, 38.694 } },
+		[2] = { { 27.334, 0.050, 4.011 } },
+		[3] = { { 14.961, 0.050, 68.025 } },
+		[4] = { { 27.816, 0.050, 40.208 } },
+		[5] = { { -1.737, 0.050, 7.209 } },
+		[6] = { { -18.510, 0.122, 15.467 } },
+	},
+}
+
 SamplePresets.team_blackboard = cloneTable(SamplePresets.chapter8_comms)
 SamplePresets.team_blackboard.agentCount = 6
 SamplePresets.team_blackboard.lightTeamCount = 3

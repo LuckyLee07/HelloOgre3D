@@ -127,6 +127,10 @@ btRigidBody* PhysicsFactory::CreateRigidBodyCapsule(Ogre::Real height, Ogre::Rea
 
 	// 设置滚动摩擦，这有助于防止刚体在平面上无限滚动。
 	capsuleRigidBodyCI.m_rollingFriction = 0.2f;
+	// agent 用 setAngularFactor(0) 禁转后只能"滑"不能"滚"，默认线性摩擦(0.5)每帧多吃约 3× 水平速度
+	// （对拍 HelloOgre3DX chapter-8：legacy capsule 允许旋转、靠 rolling friction 主导、线速度衰减小）。
+	// 降低线性摩擦补偿禁转的滑动衰减，使 agent 实际速度接近 steering 意图（parity 前 7 帧逐帧对齐验证）。
+	capsuleRigidBodyCI.m_friction = 0.15f;
 
 	// 使用上述构造信息创建刚体对象。
 	btRigidBody* const rigidBody = new btRigidBody(capsuleRigidBodyCI);

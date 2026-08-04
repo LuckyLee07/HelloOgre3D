@@ -396,16 +396,15 @@ local function _CanSeeAgent(agent, candidate)
 
 	local rayVector = toTarget:normalisedCopy()
 	local dotProduct = rayVector:dotProduct(forward)
+	local blocked = _IsBlockedByLevel(eyePosition, target)
 	if dotProduct < _COS_45_DEGREES then
 		return false
 	end
-
-	if _IsBlockedByLevel(eyePosition, target) then
+	if blocked then
 		return false
 	end
-
-	local hitObjectId = raycastApi:RayCastObjectId(eyePosition, target)
-	return hitObjectId == 0 or hitObjectId == candidate:GetObjId()
+	local hit = raycastApi:RayCastObjectId(eyePosition, target)
+	return hit == 0 or hit == candidate:GetObjId()
 end
 
 local function _UpdateVisibility(agent, state)
@@ -1003,6 +1002,9 @@ function Agent_Initialize(agent)
 	if agent == nil then return end
 
 	local config = _GetChapter9Config()
+	-- Chapter-8 复刻开关（从 preset.chapter9Tactics 读；ch9 preset 不设 => 保持默认，ch9 行为不变）。
+	_USE_HEAD_BONE_VISION = config.useHeadBoneVision == true
+	_USE_LEVEL_BOX_OCCLUSION = config.useLevelBoxOcclusion ~= false
 	if _GetAgentIndex(agent, config) == 1 then
 		_states = {}
 		_pendingLegacyMessages = {}

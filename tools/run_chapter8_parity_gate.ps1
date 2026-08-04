@@ -18,6 +18,7 @@ param(
 	[int]$TraceMaxSamples = 16,
 	[int]$TraceMaxAgents = 6,
 	[int]$Seed = 20260812,
+	[string]$ModernPreset = "chapter8_perception_parity",
 	[double]$PositionTolerance = 1.05,
 	[double]$TargetTolerance = 1.5,
 	[double]$TimeToleranceMs = 250.0,
@@ -99,7 +100,7 @@ Write-Host "[CH8_PARITY] legacy samples=$legSamples"
 $env:HELLO_PARITY_TRACE_FILE = $ModernTrace
 & $SmokeScript `
 	-Sample Sandbox11 `
-	-Preset chapter8_perception_parity `
+	-Preset $ModernPreset `
 	-ParityTrace `
 	-ParityTraceDelayMs $TraceDelayMs `
 	-ParityTraceIntervalMs $TraceIntervalMs `

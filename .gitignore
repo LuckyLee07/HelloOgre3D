@@ -18,3 +18,6 @@ __pycache__/
 
 # Codex 跨项目记忆 dump（非本仓文档，工具无关记忆在 docs/memory/）
 docs/memories/
+
+# 本地临时/诊断输出（parity trace、对拍日志、可视化 HTML、打包等），不入库
+/tmp/

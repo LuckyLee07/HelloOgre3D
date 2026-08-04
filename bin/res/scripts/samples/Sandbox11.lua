@@ -840,7 +840,7 @@ function Sandbox_Initialize()
     _CreateDemoPanel()
     _Chapter8DebugLog(ConfigManager:BuildDebugSummary(sampleName))
 
-    local agentLuafile = "res/scripts/agent/BehaviorSoldierAgent.lua"
+    local agentLuafile = chapter8Config.agentScript or "res/scripts/agent/BehaviorSoldierAgent.lua"
     for i = 1, agentCount do
         local teamId = ConfigManager:GetAgentTeamId(sampleName, i)
         if chapter8Config.alternateTeams == true then

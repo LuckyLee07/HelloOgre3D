@@ -22,3 +22,5 @@
 - [别假设 greenfield 事件设施](no-greenfield-event-infra.md) — 已有 typed Blackboard + SandboxEventPayload/Dispatcher，勿提 std::variant/新建事件系统
 - [近期进度快照](recent-progress-snapshot.md) — 截至 2026-06-12 的主线弧：方向回正→AI 地基→sample→热点 C++ 化→Chapter9 parity
 - [Tracy profiler 采样方式](tracy-profiler-no-cli-capture.md) — 仓库自带 tracy-profiler.exe 只有打开/连接 GUI，没有无界面 capture CLI
+- [中间产物放本地](local-output-not-cloud-artifact.md) — 诊断图/可视化默认写项目内 tmp、自包含 HTML，别默认发 Artifact/claude.ai
+- [chapter-8 对拍：速度已修+感知天花板](chapter8-parity-rootcause.md) — 根因全清但**保架构下逐帧复刻不可达**：①速度=capsule setAngularFactor(0)禁转→滑动摩擦3×衰减(已修:friction 0.15+去forceScale，前7帧对齐)；②感知可见性分岔=全局多体发散(agent#2 s3最早/agent#3 s8集体转折)，**双铁证**:agent#3多看见id118(legvis:顶起box挡视线)、agent#2少看见id119(visdbg116:视锥后方)，两套独立实现不可逐位对齐。已排除随机数(巡逻点已注入对齐)/选择逻辑(纯nearest)。诊断法:A3DIAG对比setVel(物理前)vs speed(物理后)
