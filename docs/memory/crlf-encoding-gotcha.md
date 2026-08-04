@@ -1,6 +1,6 @@
 ---
 name: crlf-encoding-gotcha
-description: 新建带中文注释的 .h/.cpp 必须 UTF-8 with BOM + CRLF，否则 MSVC 按 GBK 误读爆 C2447
+description: 新建带中文注释的 .h/.cpp 必须 UTF-8 with BOM + CRLF（否则 MSVC 按 GBK 误读爆 C2447）；且 git bash 的 sed -i 会剥掉 CRLF 导致 git add fatal
 metadata:
   type: feedback
 ---
@@ -26,3 +26,16 @@ Get-ChildItem -Path $dir -Recurse -Include *.h,*.cpp | ForEach-Object {
 - **不要**用"避免在 .h 里写中文注释/改 ASCII"绕过——项目本来就大量中文注释，改英文反而风格不一致。正解是 BOM + 转码。
 - Edit 改老文件不破坏已有 BOM（保留原编码），所以只需对**新建**文件转一次。
 - `git diff --check` 行尾检查只是**提示不是证据**；要查时逐文件确认 CRLF/LF/CR/BOM，嵌套仓单独审。
+
+## 另一面：git bash 的 sed -i 会把 CRLF 剥成 LF（2026-08-04 实测）
+
+本仓 `core.autocrlf=true` + `core.safecrlf=true`，工作树文档一律 CRLF。**msys/git-bash 的 `sed -i` 按文本模式读写，会把 CRLF 全部改写成 LF**——即使替换表达式跟行尾无关。
+
+后果：`git add` 直接 **fatal: LF would be replaced by CRLF**（safecrlf 拒绝不可逆往返），且是硬失败不是警告。实测：用 `sed -i` 对 35 个 .md/.json 批量改写路径引用后全部中招。
+
+**How to apply:**
+- 批量改文档优先用 PowerShell（`[System.IO.File]::ReadAllText` + `WriteAllText`，见上方脚本），它保留行尾。
+- 已经用 sed 了就补一刀还原：对改动过且不含 `\r` 的文件跑 `sed -i 's/$/\r/'`（只对纯 LF 文件跑，否则会变 `\r\r`）。
+- 新建 .md 同理：Write 工具产出 LF，`git add` 前要转 CRLF（.md 不需要 BOM，.h/.cpp 才需要）。
+- 判断口径：`file <path>` 输出带 `with CRLF line terminators` 才算对；`grep -q $'\r' <path>` 可做批量筛。
+- 还原后务必确认 `git diff --cached --stat` 是**纯内容行数**（几行几行），若出现整文件重写就是行尾没还原干净。

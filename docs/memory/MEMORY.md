@@ -14,7 +14,7 @@
 - [用户画像与协作偏好](user.md) — code-anchored 真值核对、verify-first、要 observable 验证、方向先看 project-direction
 - [Release 构建跑运行时](build-release-for-runtime.md) — bin 卡顿先查是不是 Debug 构建覆盖了
 - [parity gate 的 Python](parity-gate-python.md) — 默认 python 是坏 shim，用 E:\SoftWare\Python\Python310\python.exe
-- [CRLF / 编码坑](crlf-encoding-gotcha.md) — 新建带中文注释的 .h/.cpp 必须 UTF-8 with BOM + CRLF，否则 MSVC 按 GBK 误读爆 C2447
+- [CRLF / 编码坑](crlf-encoding-gotcha.md) — 新建带中文注释的 .h/.cpp 必须 UTF-8 with BOM + CRLF，否则 MSVC 按 GBK 误读爆 C2447；另：git bash `sed -i` 会把 CRLF 剥成 LF，safecrlf 让 `git add` 直接 fatal，批量改文档改用 PowerShell 或事后补 `s/$/\r/`
 - [ABI 改动要 clean rebuild](abi-change-clean-rebuild.md) — 改虚函数/继承/字段布局后必须全量重编，否则 dynamic_cast 在 RTTI 内崩
 - [tolua 不暴露 .new()](tolua-no-new.md) — Lua 端造对象走 functor 或引擎 Create*/New* 工厂
 - [验证环](validation-loop.md) — 混合 Lua/C++ 改动最小验证：luac -p + git diff --check + Release x64 + run_sandbox_smoke
