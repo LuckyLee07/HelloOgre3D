@@ -1,6 +1,7 @@
-#ifndef __CAMERA_SERVICE_H__
+﻿#ifndef __CAMERA_SERVICE_H__
 #define __CAMERA_SERVICE_H__
 
+#include "OgreVector2.h"
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
 #include <functional>
@@ -43,6 +44,11 @@ public:
 	Ogre::Vector3 GetCameraPosition();
 	Ogre::Vector3 GetCameraRotation();
 	Ogre::Quaternion GetCameraOrientation();
+
+	// 屏幕坐标互转（供 sample 做单位点选 / 框选 / 地面点选）。
+	// WorldToScreen 在相机后方或无 viewport 时返回 (-1,-1)，调用方据此丢弃。
+	Ogre::Vector2 WorldToScreen(const Ogre::Vector3& world);
+	Ogre::Vector3 ScreenToGroundPoint(Ogre::Real screenX, Ogre::Real screenY, Ogre::Real groundY);
 
 	long long GetRenderTime();
 	long long GetSimulateTime();
