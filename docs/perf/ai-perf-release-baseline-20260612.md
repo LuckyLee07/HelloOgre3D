@@ -1,5 +1,7 @@
 # ai_perf Release x64 基线（2026-06-12）
 
+> 状态：历史基线。**当前 Release x64 基线以 `docs/perf/ai-perf-release-baseline-20260710.md` 为准**；本文保留作 06-12 时点对照。最后核实：2026-07-11。
+>
 > 对应 `docs/planning/long-term-iteration-plan.md` §8 执行队列 #1、`docs/planning/high-priority-todo.md` 的 `ai_perf baseline 二期`（Release x64 部分）。
 >
 > 配套 Debug x64 基线见 `docs/perf/ai-perception-baseline-20260602.md`；spatial filter 复测见 `docs/perf/ai-spatial-filter-retest-20260602.md`。

@@ -1,5 +1,7 @@
 # FairyGUI 对标 env1 生产级 MiniUI 最终目标
 
+> 状态：历史 / 长期目标参考（保留作脉络，非当前施工真源）。FGUI 当前权威——验收看 `fairygui-production-gate.md`，收口状态看 `fairygui-production-convergence-todo.md`；FGUI 在 `../project-direction.md` 属暂缓 / 非主线。最后核实：2026-07-11。
+
 ## 文档定位
 
 本文档用于记录 HelloOgre3D 的 FairyGUI 接入在长期阶段希望追到的生产级 MiniUI 目标。

@@ -331,6 +331,8 @@
 ## 7. 跟踪清单
 
 > 状态符号：[x] 已解决 · [~] 部分完成 · [ ] 仍成立（待办）。2026-06-11 逐条对代码核实。
+>
+> 📌 **P1–C5 / P8–P11 完成状态的唯一真源是本文 §7 与 §9**。`registry.json`、`modules/*.md`、`recent-progress-snapshot.md`、`planning/*` 中出现的 P/C 编号完成度均为叙述性引用，如与本文冲突以本文为准；推进某条后请只在本文勾选，避免多处状态漂移。
 
 - [x] P1 SandboxServices 注入，去 sandbox→game 反向依赖与 `g_*` 热点 —— 服务已引入并下发，AI/Locomotion/FSM/Weapon/Physics/AgentObject/BlockObject/SoldierObject 热点已清，Render/Anim/Input include 已清，raycast 已下沉到 RaycastService 且 SandboxMgr 已删除，SceneFactory root node、UIManager camera、CameraService、NavigationMesh debug visual 与 ObjectManager 场景/时间访问已从 GameManager/ClientManager 解耦，manager `g_*` 已清零，静态门禁守住回归
 - [~] P2 停止对象层转发样板，Lua/sample 走组件直取 —— `SoldierObject::Update` 已不再手写 AI/Render/Anim/Weapon update block，改由 `BaseObject::Update` + `IComponent::getUpdateOrder` 驱动；BaseObject typed component getter 已暴露给 Lua，agent 入口、`Sandbox2/3/5/6/10-13/16/17/18`、Chapter2/4 sample、DT/BT 条件、DT/BT action、`AgentUtils.lua`、`MoveHelpers.lua`、`MoveAction/PursueAction`、`ConfigManager` 和 `parity_trace.lua` 已通过 typed component getter / `AgentComponentAccess.lua` 优先走组件直取；`SoldierObject` getWeapon/AI/maxHealth/ammo/敌人查询/移动目标/射击/Enter*Anim、`AgentObject:getBody/GetAnimation/GetObjectASM` 与 `AgentObject` 纯 Locomotion facade 已撤出 Lua 导出，Soldier 这批 C++ 兼容转发也已删除；`AgentObject` target/path/maxForce/maxSpeed/steering force/shape getter/`ApplyForce`/`GetLocomotion`/`GetAdapter` C++ pure Locomotion facade 已删除，AI/FSM/Soldier/ObjectManager 相关调用已改为 `FindComponent<AgentLocomotion>()` / `PhysicsComponent`；RuntimeDiag `ComponentProbeAgent` 已验证非 Soldier AgentObject 组件复用，并覆盖 Locomotion maxSpeed/target/targetRadius round-trip、Anim body ASM、Weapon ammo round-trip / `ShootBullet()`；**待**：其它对象门面和跨组件语义入口继续审计

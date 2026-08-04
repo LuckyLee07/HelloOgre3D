@@ -3,6 +3,8 @@
 > 目的：让阅读和施工先找对文档，避免被历史路线图带偏。
 >
 > 治理规则：方向取舍先看 `project-direction.md`；阶段排期看 `planning/long-term-iteration-plan.md`；具体实现看对应模块文档 `modules/<alias>.md` 或专项文档。历史文档（`archive/`）只看证据和具体条目，不看旧排期。
+>
+> 单一真源约定：**P1–C5 / P8–P11 架构重构进度**看 `design/architecture-improvement-plan.md` §7/§9（其它文档的 P/C 编号完成度只是叙述引用）；**当前性能基线**看 `perf/` 里日期最新的一份（见 §8）；**当前可玩切片进度**看 `planning/playable-vertical-slice-todolist.md`。
 
 ## 0. 目录结构
 
@@ -91,7 +93,8 @@ docs/
 
 | 文档 | 用途 |
 |---|---|
-| `perf/ai-perf-release-baseline-20260612.md` | AI perf **Release x64** 基线；结论：帧时间被 VM 渲染(engineGap)主导，AI 主成本是 perceptionSystem。 |
+| `perf/ai-perf-release-baseline-20260710.md` | **当前 Release x64 基线**（AI perf）。做性能对比先以本文为基准。 |
+| `perf/ai-perf-release-baseline-20260612.md` | 历史 Release x64 基线（已被 20260710 取代）；结论：帧时间被 VM 渲染(engineGap)主导，AI 主成本是 perceptionSystem。 |
 | `perf/ai-perception-baseline-20260602.md` | AI perception pressure Debug x64 基线，100/500/1000 agent 对照。 |
 | `perf/ai-spatial-filter-retest-20260602.md` | Spatial filter 复测，candidates/filtered/reject/queryMs。 |
 | `perf/fgui-tracy-sample-*.md` | FGUI Tracy 实测报告。 |

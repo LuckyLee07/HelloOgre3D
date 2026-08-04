@@ -1,5 +1,7 @@
 # FairyGUI 接入计划
 
+> 状态：历史 / 已完成规划（保留作脉络，非当前施工真源）。FGUI 当前权威——验收看 `fairygui-production-gate.md`，收口状态看 `fairygui-production-convergence-todo.md`，业务接入看 `fairygui-business-ui-standard-flow.md`；FGUI 在 `../project-direction.md` 属暂缓 / 非主线。最后核实：2026-07-11。
+
 ## 背景
 
 当前项目已有 Gorilla UI，适合 sample 里的基础文字、调试和面板显示；如果后续要承载更完整的游戏 UI，仍需要 FairyGUI 这类编辑器驱动的组件体系。

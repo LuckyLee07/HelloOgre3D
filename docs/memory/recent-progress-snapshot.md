@@ -1,9 +1,11 @@
 ---
 name: recent-progress-snapshot
-description: 项目近期进度快照（截至 2026-06-12）：主线弧 + 当前阶段 + 进度真相来源指针
+description: 项目近期进度快照（截至 2026-06-12，会过期的历史里程碑）：主线弧 + 当前阶段 + 活来源指针
 metadata:
   type: project
 ---
+
+> ⚠️ 这是**点时快照，非进度真源**（截至 2026-06-12，未覆盖 2026-07 的 Sandbox19 可玩切片 / 第三人称相机 / 雷达）。当前进度真相以活来源为准：`git log`、`docs/project-direction.md`、`docs/planning/playable-vertical-slice-todolist.md`、`docs/design/architecture-improvement-plan.md` §7/§9。
 
 近期（2026-05-28 ~ 06-12，约 61 个提交）主线弧：
 1. **2026-05-28~29**：FGUI internal helper / Store 收口 + 文档路线整理 + `SandboxServices` 依赖注入地基。

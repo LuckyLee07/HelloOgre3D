@@ -1,5 +1,7 @@
 # FairyGUI 最终目标与落地路线
 
+> 状态：历史 / 长期能力地图（保留作脉络，非当前施工真源）。FGUI 当前权威——验收看 `fairygui-production-gate.md`，收口状态看 `fairygui-production-convergence-todo.md`，业务接入看 `fairygui-business-ui-standard-flow.md`；FGUI 在 `../project-direction.md` 属暂缓 / 非主线。最后核实：2026-07-11。
+
 ## 1. 最终目标
 
 FairyGUI 接入的最终目标不是简单显示 `.fui`，而是在当前项目中形成一套可维护、可扩展、可调试的 Lua 驱动 UI 子系统。

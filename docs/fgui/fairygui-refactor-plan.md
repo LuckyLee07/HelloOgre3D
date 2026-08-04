@@ -1,6 +1,7 @@
 # FGUI 代码结构重构落地方案
 
-> 状态：已核实 / 已按静态门禁与真实状态归属重新调整（2026-05-28）
+> 状态：历史 / 结构重构大半完成（保留作脉络，非当前施工真源）。FGUI 当前权威——验收看 `fairygui-production-gate.md`，收口状态看 `fairygui-production-convergence-todo.md`。最后核实：2026-07-11。
+> 原始核实说明：已核实 / 已按静态门禁与真实状态归属重新调整（2026-05-28）
 > 适用范围：`src/HelloOgre3D/runtime/ui/fairygui/`、`bin/res/scripts/manager/fairygui/`、`bin/res/scripts/ui/` 及相关 autogen / 验收工具
 > 相关文档：[fairygui-final-roadmap.md](fairygui-final-roadmap.md)、[fairygui-production-convergence-todo.md](fairygui-production-convergence-todo.md)、[fairygui-business-framework-todo.md](fairygui-business-framework-todo.md)
 
