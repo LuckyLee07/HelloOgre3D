@@ -1598,6 +1598,98 @@ static int tolua_SandboxToLua_CameraService_GetCameraOrientation00(lua_State* to
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: WorldToScreen of class  CameraService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_CameraService_WorldToScreen00
+static int tolua_SandboxToLua_CameraService_WorldToScreen00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"CameraService",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"const Ogre::Vector3",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  CameraService* self = (CameraService*)  tolua_tousertype(tolua_S,1,0);
+  const Ogre::Vector3* world = ((const Ogre::Vector3*)  tolua_tousertype(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'WorldToScreen'", NULL);
+#endif
+  {
+   Ogre::Vector2 tolua_ret = (Ogre::Vector2)  self->WorldToScreen(*world);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector2)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector2");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector2));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector2");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'WorldToScreen'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ScreenToGroundPoint of class  CameraService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_CameraService_ScreenToGroundPoint00
+static int tolua_SandboxToLua_CameraService_ScreenToGroundPoint00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"CameraService",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,5,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  CameraService* self = (CameraService*)  tolua_tousertype(tolua_S,1,0);
+  Ogre::Real screenX = ((Ogre::Real)  tolua_tonumber(tolua_S,2,0));
+  Ogre::Real screenY = ((Ogre::Real)  tolua_tonumber(tolua_S,3,0));
+  Ogre::Real groundY = ((Ogre::Real)  tolua_tonumber(tolua_S,4,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ScreenToGroundPoint'", NULL);
+#endif
+  {
+   Ogre::Vector3 tolua_ret = (Ogre::Vector3)  self->ScreenToGroundPoint(screenX,screenY,groundY);
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((Ogre::Vector3)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(Ogre::Vector3));
+     tolua_pushusertype(tolua_S,tolua_obj,"Ogre::Vector3");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ScreenToGroundPoint'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetRenderTime of class  CameraService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_CameraService_GetRenderTime00
 static int tolua_SandboxToLua_CameraService_GetRenderTime00(lua_State* tolua_S)
@@ -16578,6 +16670,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetCameraPosition",tolua_SandboxToLua_CameraService_GetCameraPosition00);
    tolua_function(tolua_S,"GetCameraRotation",tolua_SandboxToLua_CameraService_GetCameraRotation00);
    tolua_function(tolua_S,"GetCameraOrientation",tolua_SandboxToLua_CameraService_GetCameraOrientation00);
+   tolua_function(tolua_S,"WorldToScreen",tolua_SandboxToLua_CameraService_WorldToScreen00);
+   tolua_function(tolua_S,"ScreenToGroundPoint",tolua_SandboxToLua_CameraService_ScreenToGroundPoint00);
    tolua_function(tolua_S,"GetRenderTime",tolua_SandboxToLua_CameraService_GetRenderTime00);
    tolua_function(tolua_S,"GetSimulateTime",tolua_SandboxToLua_CameraService_GetSimulateTime00);
    tolua_function(tolua_S,"GetTotalSimulateTime",tolua_SandboxToLua_CameraService_GetTotalSimulateTime00);
