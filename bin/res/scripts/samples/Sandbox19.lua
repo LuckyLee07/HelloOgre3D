@@ -26,18 +26,39 @@ local RADAR = {
 	blipRadius = 5, arrowRadius = 11, poolSize = 16,
 }
 
+-- 指挥层：玩家是小队长，LMB 仍是射击，RMB 用于选择友军（点选/框选），F/T/G 下令。
+-- 指令写进 agent blackboard 的 command.* 命名空间（由 Sandbox19CommandBT 消费），
+-- 同时写一份 TeamBlackboard typed fact（团队级 + TTL + 可被 RuntimeDiag 观测）。
+local COMMAND = {
+	ttlMs = 8000,          -- 与 Sandbox19CommandConditions._COMMAND_TTL_MS 保持一致
+	pickRadiusPx = 48,     -- 点选命中阈值；超出视为空点选并清空选择集
+	dragThresholdPx = 8,   -- 拖拽超过此像素才算框选，否则按点选处理
+	fallbackFovDeg = 45,   -- 集火无点选目标时，玩家朝向 ±45° 扇形内取最近敌人
+	rallySpacing = 2.5,    -- 编队时各单位在玩家周围的间距
+	groundY = 0.0,
+}
+
+local _selection = {}          -- objId -> true
+local _dragging = false
+local _dragStart = { x = 0, y = 0 }
+local _dragNow = { x = 0, y = 0 }
+local _lastPickedEnemyId = 0
+local _commandHint = ""
+
 local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 	"[Sandbox19 - Playable Encounter]" .. GUI.MarkupNewline ..
 	"W/S: move forward/back" .. GUI.MarkupNewline ..
 	"A/D: turn left/right" .. GUI.MarkupNewline ..
 	"Shift: sprint" .. GUI.MarkupNewline ..
 	"LMB: fire    R: reload" .. GUI.MarkupNewline ..
+	"RMB: select ally (click / drag box)" .. GUI.MarkupNewline ..
+	"F: focus fire   T: fall back   G: rally" .. GUI.MarkupNewline ..
 	"Enter: restart encounter"
 
 local function _CreateHud()
 	_hud = SandboxUI:CreateUIFrame()
 	_hud:setPosition(Vector2(20, 188))   -- 下移避开左上角雷达
-	_hud:setDimension(Vector2(330, 125))
+	_hud:setDimension(Vector2(330, 158))
 	_hud:setTextMargin(12, 10)
 	_hud:setGradientColor(Gorilla.Gradient_NorthSouth,
 		ColourValue(0.05, 0.08, 0.09, 0.82),
@@ -81,13 +102,17 @@ local function _UpdateHud()
 	if _matchState ~= "FIGHT" then
 		stateText = _matchState .. " - press Enter to restart"
 	end
+	local selCount = 0
+	for _ in pairs(_selection) do selCount = selCount + 1 end
 	local text = string.format(
-		"HP: %d / 100\nAmmo: %d / %d\nAllies: %d    Enemies: %d\n%s",
+		"HP: %d / 100\nAmmo: %d / %d\nAllies: %d    Enemies: %d\nSelected: %d    %s\n%s",
 		math.max(0, math.floor(_player:GetHealth())),
 		ammo,
 		maxAmmo,
 		friendlyAlive,
 		enemyAlive,
+		selCount,
+		_commandHint,
 		stateText)
 	_hud:setText(text)
 end
@@ -158,6 +183,243 @@ local function _UpdateRadar()
 	end
 end
 
+-- ===== 指挥层：选择 =====
+
+local function _GetBlackboard(agent)
+	if agent == nil then return nil end
+	local ai = agent:GetAIComponent()
+	return ai ~= nil and ai:GetBlackboard() or nil
+end
+
+local function _IsSelectableAlly(agent)
+	return agent ~= nil and agent ~= _player and agent:GetHealth() > 0
+		and _player ~= nil and agent:GetTeamId() == _player:GetTeamId()
+end
+
+-- 用 WorldToScreen 投影做拾取：对 2-6 个单位比射线更准（不受胶囊碰撞体形状影响），
+-- 点选与框选共用同一次投影。返回 (-1,-1) 表示在相机后方，直接跳过。
+local function _ScreenPosOf(agent)
+	local sp = SandboxCamera:WorldToScreen(agent:GetPosition())
+	if sp.x < 0 and sp.y < 0 then return nil end
+	return sp
+end
+
+local function _ClearSelection()
+	_selection = {}
+end
+
+local function _PickAt(x, y)
+	local bestId, bestDistSq = 0, COMMAND.pickRadiusPx * COMMAND.pickRadiusPx
+	local bestEnemyId, bestEnemyDistSq = 0, COMMAND.pickRadiusPx * COMMAND.pickRadiusPx
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent ~= _player and agent:GetHealth() > 0 then
+			local sp = _ScreenPosOf(agent)
+			if sp ~= nil then
+				local dx, dy = sp.x - x, sp.y - y
+				local distSq = dx * dx + dy * dy
+				if agent:GetTeamId() == _player:GetTeamId() then
+					if distSq < bestDistSq then
+						bestDistSq = distSq
+						bestId = agent:GetObjId()
+					end
+				elseif distSq < bestEnemyDistSq then
+					bestEnemyDistSq = distSq
+					bestEnemyId = agent:GetObjId()
+				end
+			end
+		end
+	end
+
+	-- 点到敌人：记下来供集火用，不改变友军选择集。
+	if bestEnemyId > 0 and (bestId == 0 or bestEnemyDistSq < bestDistSq) then
+		_lastPickedEnemyId = bestEnemyId
+		_commandHint = "target marked"
+		return
+	end
+
+	_ClearSelection()
+	if bestId > 0 then
+		_selection[bestId] = true
+		_commandHint = "1 ally selected"
+	else
+		_commandHint = "selection cleared"
+	end
+end
+
+local function _BoxSelect(x0, y0, x1, y1)
+	local minX, maxX = math.min(x0, x1), math.max(x0, x1)
+	local minY, maxY = math.min(y0, y1), math.max(y0, y1)
+	_ClearSelection()
+	local count = 0
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if _IsSelectableAlly(agent) then
+			local sp = _ScreenPosOf(agent)
+			if sp ~= nil and sp.x >= minX and sp.x <= maxX and sp.y >= minY and sp.y <= maxY then
+				_selection[agent:GetObjId()] = true
+				count = count + 1
+			end
+		end
+	end
+	_commandHint = count .. " allies selected"
+end
+
+-- ===== 指挥层：下令 =====
+
+local function _SelectionCount()
+	local n = 0
+	for _ in pairs(_selection) do n = n + 1 end
+	return n
+end
+
+-- 集火兜底：玩家朝向 ±fallbackFovDeg 扇形内最近的存活敌人。
+local function _FindEnemyInPlayerCone()
+	if _player == nil then return 0 end
+	local pp = _player:GetPosition()
+	local pf = _player:GetForward()
+	local flen = math.sqrt(pf.x * pf.x + pf.z * pf.z)
+	if flen < 1e-4 then return 0 end
+	local fx, fz = pf.x / flen, pf.z / flen
+	local cosLimit = math.cos(math.rad(COMMAND.fallbackFovDeg))
+
+	local bestId, bestDistSq = 0, math.huge
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent ~= _player and agent:GetHealth() > 0
+			and agent:GetTeamId() ~= _player:GetTeamId() then
+			local ap = agent:GetPosition()
+			local dx, dz = ap.x - pp.x, ap.z - pp.z
+			local distSq = dx * dx + dz * dz
+			if distSq > 1e-4 then
+				local dist = math.sqrt(distSq)
+				if (dx / dist * fx + dz / dist * fz) >= cosLimit and distSq < bestDistSq then
+					bestDistSq = distSq
+					bestId = agent:GetObjId()
+				end
+			end
+		end
+	end
+	return bestId
+end
+
+-- 三个指令互斥：写入前清掉另两个键，避免旧指令残留把条件误判成活跃。
+local function _WriteCommand(bb, kind, focusTargetId, targetPos, nowMs)
+	bb:SetString("command.kind", kind)
+	bb:SetInt("command.issuedMs", nowMs)
+	if kind == "focus" then
+		bb:SetObjectId("command.focusTargetId", focusTargetId)
+	else
+		bb:Remove("command.focusTargetId")
+		bb:SetVec3("movePos", targetPos)
+	end
+end
+
+local function _IssueCommand(kind, focusTargetId, basePos)
+	if _player == nil then return end
+	if _SelectionCount() == 0 then
+		_commandHint = "no ally selected"
+		return
+	end
+
+	local nowMs = GameManager:getTimeInMillis()
+	local teamId = _player:GetTeamId()
+	local slotIndex = 0
+	local issued = 0
+
+	for objId in pairs(_selection) do
+		local agent = ObjectManager:getObjectById(objId)
+		if agent ~= nil and agent:GetHealth() > 0 then
+			local bb = _GetBlackboard(agent)
+			if bb ~= nil then
+				local targetPos = basePos
+				if kind == "rally" then
+					-- 在玩家周围一字排开，避免所有单位挤同一点。
+					local offset = (slotIndex - 0.5) * COMMAND.rallySpacing
+					local pf = _player:GetForward()
+					local flen = math.sqrt(pf.x * pf.x + pf.z * pf.z)
+					if flen > 1e-4 then
+						local rx, rz = -pf.z / flen, pf.x / flen
+						targetPos = Vector3(basePos.x + rx * offset, basePos.y, basePos.z + rz * offset)
+					end
+				end
+				_WriteCommand(bb, kind, focusTargetId, targetPos, nowMs)
+
+				-- 同步 typed fact：团队级记录 + TTL，供 RuntimeDiag / 后续可视化读取。
+				if kind == "focus" then
+					TeamBlackboard:RememberFocusTarget(teamId, {
+						teamId = teamId,
+						sourceAgentId = _player:GetObjId(),
+						targetId = focusTargetId,
+						targetPos = _player:GetPosition(),
+						timeMs = nowMs,
+						confidence = 1.0,
+						ttlMs = COMMAND.ttlMs,
+						key = "playerCommand",
+					})
+				elseif kind == "retreat" then
+					TeamBlackboard:RememberRetreatPoint(teamId, {
+						teamId = teamId,
+						agentId = objId,
+						retreatPos = targetPos,
+						timeMs = nowMs,
+						confidence = 1.0,
+						ttlMs = COMMAND.ttlMs,
+						key = "playerCommand:" .. tostring(objId),
+					})
+				else
+					TeamBlackboard:RememberFormationSlot(teamId, {
+						teamId = teamId,
+						agentId = objId,
+						focusTargetId = -1,
+						slotPos = targetPos,
+						timeMs = nowMs,
+						ttlMs = COMMAND.ttlMs,
+					})
+				end
+
+				slotIndex = slotIndex + 1
+				issued = issued + 1
+			end
+		end
+	end
+
+	_commandHint = kind .. " -> " .. issued .. " ally"
+	print("[Sandbox19Command] kind=" .. kind .. " issued=" .. issued ..
+		" focusTargetId=" .. tostring(focusTargetId))
+end
+
+local function _IssueFocus()
+	local targetId = _lastPickedEnemyId
+	if targetId <= 0 then
+		targetId = _FindEnemyInPlayerCone()
+	else
+		local marked = ObjectManager:getObjectById(targetId)
+		if marked == nil or marked:GetHealth() <= 0 then
+			_lastPickedEnemyId = 0
+			targetId = _FindEnemyInPlayerCone()
+		end
+	end
+	if targetId <= 0 then
+		_commandHint = "no target in view"
+		return
+	end
+	_IssueCommand("focus", targetId, nil)
+end
+
+local function _ClearCommandState()
+	_ClearSelection()
+	_dragging = false
+	_lastPickedEnemyId = 0
+	_commandHint = ""
+	if TeamBlackboard ~= nil and TeamBlackboard.Reset ~= nil then
+		TeamBlackboard:Reset()
+	end
+end
+
 local function _SpawnEncounter()
 	_agents = {}
 	_matchState = "FIGHT"
@@ -192,18 +454,56 @@ end
 local function _RestartEncounter()
 	_player = nil
 	_agents = {}
+	_ClearCommandState()
 	ObjectManager:clearAllObjects(MGR_OBJ_AGENT)
 	_SpawnEncounter()
 end
 
 function EventHandle_Keyboard(keycode, pressed)
 	GUI_HandleKeyEvent(keycode, pressed)
-	if pressed and keycode == OIS.KC_RETURN then
+	if not pressed then return end
+
+	if keycode == OIS.KC_RETURN then
 		_restartRequested = true
+	elseif keycode == OIS.KC_F then
+		_IssueFocus()
+	elseif keycode == OIS.KC_T then
+		-- 撤退="到我这来"。用 T 而非 R：R 已是 PlayerController 的换弹键。
+		if _player ~= nil then
+			_IssueCommand("retreat", -1, _player:GetPosition())
+		end
+	elseif keycode == OIS.KC_G then
+		if _player ~= nil then
+			_IssueCommand("rally", -1, _player:GetPosition())
+		end
 	end
 end
 
+-- ctype: 0=move / 1=down / 2=up；button 沿用 OIS 数值（左 0 / 右 1）。
+-- 只消费右键：左键仍归 PlayerController 射击。
 function EventHandle_Mouse(ctype, x, y, button)
+	if ctype == 0 then
+		if _dragging then
+			_dragNow.x, _dragNow.y = x, y
+		end
+		return
+	end
+
+	if button ~= 1 then return end
+
+	if ctype == 1 then
+		_dragging = true
+		_dragStart.x, _dragStart.y = x, y
+		_dragNow.x, _dragNow.y = x, y
+	elseif ctype == 2 and _dragging then
+		_dragging = false
+		local dx, dy = x - _dragStart.x, y - _dragStart.y
+		if math.sqrt(dx * dx + dy * dy) >= COMMAND.dragThresholdPx then
+			_BoxSelect(_dragStart.x, _dragStart.y, x, y)
+		else
+			_PickAt(x, y)
+		end
+	end
 end
 
 function EventHandle_WindowResized(width, height)
