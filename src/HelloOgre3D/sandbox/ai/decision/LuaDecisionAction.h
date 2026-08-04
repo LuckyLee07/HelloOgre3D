@@ -9,7 +9,6 @@
 
 class AgentObject;
 class Blackboard;
-class SoldierObject;
 
 // Lua-backed Action leaf — body of Initialize/Update/CleanUp lives in a Lua file.
 //
@@ -25,7 +24,6 @@ class LuaDecisionAction : public DecisionAction //tolua_exports
 { //tolua_exports
 public:
 	LuaDecisionAction(const std::string& name, AgentObject* owner, Blackboard* blackboard = nullptr);
-	LuaDecisionAction(const std::string& name, SoldierObject* owner);
 	virtual ~LuaDecisionAction();
 
 	//tolua_begin

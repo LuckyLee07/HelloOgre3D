@@ -2,7 +2,6 @@
 
 #include "components/ai/AIController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
 #include "ai/decision/DecisionTreeDriver.h"
 #include "ai/common/Blackboard.h"
@@ -10,11 +9,6 @@
 
 LuaDecisionAction::LuaDecisionAction(const std::string& name, AgentObject* owner, Blackboard* blackboard)
 	: DecisionAction(name), m_owner(owner), m_blackboard(blackboard)
-{
-}
-
-LuaDecisionAction::LuaDecisionAction(const std::string& name, SoldierObject* owner)
-	: LuaDecisionAction(name, static_cast<AgentObject*>(owner), nullptr)
 {
 }
 

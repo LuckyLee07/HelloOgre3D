@@ -2,7 +2,6 @@
 
 #include "components/ai/AIController.h"
 #include "objects/AgentObject.h"
-#include "objects/SoldierObject.h"
 #include "scripting/LuaPluginMgr.h"
 #include "ai/behavior/BehaviorTreeDriver.h"
 #include "ai/common/Blackboard.h"
@@ -10,11 +9,6 @@
 
 LuaBehaviorAction::LuaBehaviorAction(const std::string& name, AgentObject* owner, Blackboard* blackboard)
 	: BehaviorAction(name), m_owner(owner), m_blackboard(blackboard)
-{
-}
-
-LuaBehaviorAction::LuaBehaviorAction(const std::string& name, SoldierObject* owner)
-	: LuaBehaviorAction(name, static_cast<AgentObject*>(owner), nullptr)
 {
 }
 

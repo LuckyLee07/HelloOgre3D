@@ -163,27 +163,6 @@ void SoldierObject::Update(int deltaMilisec)
 	TryApplyPendingStance();
 }
 
-void SoldierObject::TickAi(int deltaMilisec)
-{
-	AIController* ai = m_cachedAI;
-	if (ai != nullptr)
-		ai->TickAI(deltaMilisec);
-}
-
-void SoldierObject::SetAiTickInUpdateEnabled(bool enabled)
-{
-	AIController* ai = m_cachedAI;
-	if (ai != nullptr)
-		ai->SetTickInOwnerUpdateEnabled(enabled);
-}
-
-void SoldierObject::SyncWeaponToHandBone()
-{
-	WeaponComponent* weaponComp = m_cachedWeapon;
-	if (weaponComp != nullptr)
-		weaponComp->SyncToHandBone();
-}
-
 Ogre::Vector3 SoldierObject::GetBonePosition(const Ogre::String& boneName) const
 {
 	if (m_renderComp != nullptr)

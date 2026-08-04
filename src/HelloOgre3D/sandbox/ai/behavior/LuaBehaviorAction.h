@@ -8,7 +8,6 @@
 #include "script/LuaClassNameTraits.h"
 
 class AgentObject;
-class SoldierObject;
 class Blackboard;
 
 // Lua 实现的 BT 叶动作 —— 跟 LuaDecisionAction 平行，不同点：
@@ -19,7 +18,6 @@ class LuaBehaviorAction : public BehaviorAction //tolua_exports
 { //tolua_exports
 public:
 	LuaBehaviorAction(const std::string& name, AgentObject* owner, Blackboard* blackboard = nullptr);
-	LuaBehaviorAction(const std::string& name, SoldierObject* owner);
 	virtual ~LuaBehaviorAction();
 
 	//tolua_begin

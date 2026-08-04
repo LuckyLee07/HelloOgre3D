@@ -70,11 +70,9 @@ public:
 	};
 
 	Blackboard();
-	explicit Blackboard(SoldierObject* owner);
 	explicit Blackboard(AgentObject* owner);
 	~Blackboard();
 
-	void SetOwner(SoldierObject* owner);
 	void SetOwner(AgentObject* owner);
 
 	//tolua_begin

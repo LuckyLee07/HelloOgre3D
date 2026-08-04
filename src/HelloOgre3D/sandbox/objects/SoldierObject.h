@@ -17,8 +17,6 @@ public:
 
 	virtual void Init() override;
 	virtual void Update(int deltaMs) override;
-	void TickAi(int deltaMs);
-	void SetAiTickInUpdateEnabled(bool enabled);
 
 	//tolua_begin
 	void initWeapon(const Ogre::String& meshFile);
@@ -63,7 +61,6 @@ public:
 private:
 	void ApplyStanceParams(int stanceType);
 	void TryApplyPendingStance();
-	void SyncWeaponToHandBone();
 	void ApplyIdleCommand();
 	void ApplyMoveCommand();
 	void ApplyAttackCommand();

@@ -123,12 +123,6 @@ Blackboard::Blackboard()
 {
 }
 
-Blackboard::Blackboard(SoldierObject* owner)
-	: m_owner(owner)
-	, m_revision(0)
-{
-}
-
 Blackboard::Blackboard(AgentObject* owner)
 	: m_owner(owner)
 	, m_revision(0)
@@ -138,11 +132,6 @@ Blackboard::Blackboard(AgentObject* owner)
 Blackboard::~Blackboard()
 {
 	Clear();
-}
-
-void Blackboard::SetOwner(SoldierObject* owner)
-{
-	m_owner = owner;
 }
 
 void Blackboard::SetOwner(AgentObject* owner)
