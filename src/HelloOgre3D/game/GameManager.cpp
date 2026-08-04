@@ -1,4 +1,4 @@
-#include "GameManager.h"
+﻿#include "GameManager.h"
 #include "Ogre.h"
 #include "OgreDpiHelper.h"
 #include "ScriptLuaVM.h"
@@ -373,6 +373,9 @@ bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 			return true;
 	}
 #endif
+	// 派发给 sample：ctype 0=move / 1=down / 2=up，button 沿用 OIS 数值（左 0 / 右 1），move 无按钮传 -1。
+	// FGUI 消费掉的事件已在上面 return，保持 UI 优先于 sample 的既有次序。
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 0, evt.state.X.abs, evt.state.Y.abs, -1);
 	return false;
 }
 
@@ -383,6 +386,7 @@ bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID 
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
 #endif
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 1, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn));
 	return false;
 }
 
@@ -393,6 +397,7 @@ bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
 #endif
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 2, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn));
 	return false;
 }
 

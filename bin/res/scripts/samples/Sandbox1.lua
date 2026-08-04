@@ -105,7 +105,7 @@ function EventHandle_Keyboard(keycode, pressed)
     end
 end
 
-function EventHandle_Mouse(ctype)
+function EventHandle_Mouse(ctype, x, y, button)
 
 end
 
