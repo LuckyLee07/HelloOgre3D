@@ -35,6 +35,23 @@ local function _ShouldRunBtHotReloadSelfTest(sampleName)
     return behaviorTree ~= nil and behaviorTree.hotReloadSelfTest == true
 end
 
+-- 行为树绑定：preset.behaviorTree 可覆盖模块/全局名/条件表，缺省仍是共享的 SoldierBT。
+-- 用于 Sandbox19 指挥切片挂自己的树，避免改共享 SoldierBT 影响其它 sample。
+local function _GetBtBinding(sampleName)
+    local behaviorTree = _GetBehaviorTreePreset(sampleName)
+    local moduleName = _SOLDIER_BT_MODULE
+    local globalName = _SOLDIER_BT_GLOBAL
+    local conditions = SoldierConditions
+    if behaviorTree ~= nil then
+        if behaviorTree.module ~= nil then moduleName = behaviorTree.module end
+        if behaviorTree.global ~= nil then globalName = behaviorTree.global end
+        if behaviorTree.conditionsGlobal ~= nil and _G[behaviorTree.conditionsGlobal] ~= nil then
+            conditions = _G[behaviorTree.conditionsGlobal]
+        end
+    end
+    return moduleName, globalName, conditions
+end
+
 local function _GetAgentId(agent)
     if agent == nil then return -1 end
     if agent.GetObjId ~= nil then return agent:GetObjId() end
@@ -70,31 +87,33 @@ function Agent_Initialize(agent)
         ConfigManager:ConfigureBehaviorTreeDriver(driver, sampleName)
     end
 
+    local btModule, btGlobal, btConditions = _GetBtBinding(sampleName)
+
     if _ShouldRunBtRebuildSelfTest(sampleName) then
-        local warmupTree = BehaviorTreeLoader.Build(SoldierBTConfig, agent, driver, bb, SoldierConditions)
+        local warmupTree = BehaviorTreeLoader.Build(_G[btGlobal] or SoldierBTConfig, agent, driver, bb, btConditions)
         if warmupTree ~= nil then
             driver:SetTree(warmupTree)
         end
     end
 
-    local tree = BehaviorTreeLoader.BuildFromModule(_SOLDIER_BT_MODULE, _SOLDIER_BT_GLOBAL, agent, driver, bb, SoldierConditions)
+    local tree = BehaviorTreeLoader.BuildFromModule(btModule, btGlobal, agent, driver, bb, btConditions)
     if tree == nil then
-        print("Error: failed to build Soldier behavior tree from config")
+        print("Error: failed to build Soldier behavior tree from config module=" .. tostring(btModule))
         return
     end
     driver:SetTree(tree)
 
     if _ShouldRunBtHotReloadSelfTest(sampleName) then
-        local ok, meta = BehaviorTreeLoader.ReloadModule(_SOLDIER_BT_MODULE, _SOLDIER_BT_GLOBAL, agent, driver, bb, SoldierConditions)
+        local ok, meta = BehaviorTreeLoader.ReloadModule(btModule, btGlobal, agent, driver, bb, btConditions)
         local context = meta ~= nil and meta.context or nil
         if ok then
             print("[BTHotReloadSelfTest] PASS agent=" .. tostring(_GetAgentId(agent)) ..
-                " module=" .. tostring(_SOLDIER_BT_MODULE) ..
+                " module=" .. tostring(btModule) ..
                 " subtreeBuilds=" .. tostring(context ~= nil and context.subtreeBuildCount or 0) ..
                 " warnings=" .. tostring(context ~= nil and context.warningCount or 0))
         else
             print("[BTHotReloadSelfTest] FAIL agent=" .. tostring(_GetAgentId(agent)) ..
-                " module=" .. tostring(_SOLDIER_BT_MODULE) ..
+                " module=" .. tostring(btModule) ..
                 " reason=" .. tostring(meta ~= nil and meta.error or "unknown"))
         end
     end
