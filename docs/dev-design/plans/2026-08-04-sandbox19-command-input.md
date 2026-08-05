@@ -6,7 +6,7 @@
 
 **Spec:** [docs/dev-design/specs/2026-08-04-sandbox19-command-input-design.md](../specs/2026-08-04-sandbox19-command-input-design.md)
 
-**状态:** 已批准，执行中
+**状态:** 已完成
 
 ---
 

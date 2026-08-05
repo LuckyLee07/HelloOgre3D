@@ -23,7 +23,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 | 7 | 决策树(DT) | | 16 | 感知压力(ai_perf) |
 | 8 | 行为树(BT) | | 17 | Chapter9 战术(Lua-first) |
 | 9 | Chapter7 知识源 | | 18 | Chapter9 战术(C++) |
-| 19 | 可玩遭遇战(PlayerController 第三人称相机 + BT AI + Gorilla 圆盘雷达) | | | |
+| 19 | 可玩遭遇战(PlayerController 第三人称相机 + BT AI + Gorilla 圆盘雷达 + 玩家指令层) | | | |
 
 入口：`game_init.lua`(选 HELLO_SANDBOX_SAMPLE，默认 Sandbox17)、`fgui_init.lua`、`parity_trace.lua`、`runtime_diagnostics.lua`。
 
@@ -38,7 +38,14 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 - Sandbox17/18 是 Chapter9 对照面，受 `run_chapter9_parity_gate`/`visual_capture` 守。
 - Sandbox19 的 `player_soldier` / `ai_soldier` profile 必须保持 controller 互斥，启动脚本会直接断言该约束。
 - Sandbox19 第三人称相机由 `PlayerController` 在 `onSandboxServicesChanged` 进 FOLLOW、`onDetach` 退回 FREELOOK（防污染其它 sample），控制为 tank 式（A/D 转向、W/S 沿朝向前后、无横移无鼠标转向）；圆盘雷达经 `SandboxUI:CreatePolygon`（`UIPolygon` 封装 `Gorilla::Polygon`）建浅蓝圆盘 + 静止朝上三角箭头 + 复用红/绿圆点 blip 池，每帧按玩家朝向投影（player-up）。原 FairyGUI 程序化裸对象在本项目不渲染（仅 `.fui` 包视图才渲染），已弃用。
-- sample reload 须清理上轮 agent/UI/debug draw。
+- Sandbox19 指令层（2026-08-04，cycle-01 W1）：LMB 射击不变、RMB 点选/框选友军、F 集火 / T 撤退 / G 编队
+  （**T 而非 R——R 是 PlayerController 的换弹键**）。指令写 agent blackboard 的 `command.*` 命名空间
+  （三指令互斥，撤退/编队直接写 MoveAction 既有的 `movePos`）+ 一份 TeamBlackboard typed fact。
+  AI 侧走 preset 指定的 `Sandbox19CommandBT` + `Sandbox19CommandConditions`，共享 `SoldierBT` 零改动，见 [[ai-behavior]]。
+  `[Sandbox19CommandSelfTest]`（`HELLO_SANDBOX_SMOKE_MODE` 门控）覆盖指令命中 / 互斥 / enemy 覆写 / TTL 过期。
+- **`ObjectManager:getObjectById` 未导出给 Lua**（`.h` 有声明但不在 tolua 块内）：Lua 侧按 id 找对象只能扫
+  `getAllAgents()`；顺带避免跨帧持有 agent userdata 的悬垂风险。
+- sample reload 须清理上轮 agent/UI/debug draw；Sandbox19 还须清选择集/拖拽/集火标记并 `TeamBlackboard:Reset()`。
 
 ## 6. 数据流 / 与其他模块关系
 

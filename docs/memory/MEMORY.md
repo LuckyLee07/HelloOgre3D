@@ -17,6 +17,7 @@
 - [CRLF / 编码坑](crlf-encoding-gotcha.md) — 新建带中文注释的 .h/.cpp 必须 UTF-8 with BOM + CRLF，否则 MSVC 按 GBK 误读爆 C2447；另：git bash `sed -i` 会把 CRLF 剥成 LF，safecrlf 让 `git add` 直接 fatal，批量改文档改用 PowerShell 或事后补 `s/$/\r/`
 - [ABI 改动要 clean rebuild](abi-change-clean-rebuild.md) — 改虚函数/继承/字段布局后必须全量重编，否则 dynamic_cast 在 RTTI 内崩
 - [tolua 不暴露 .new()](tolua-no-new.md) — Lua 端造对象走 functor 或引擎 Create*/New* 工厂
+- [Lua 侧缺失导出与时钟坑](lua-missing-exports-and-clock.md) — `ObjectManager:getObjectById` 有声明但没导出（按 id 找对象要扫 `getAllAgents`）；`getTimeInMillis` 是启动至今的仿真时间、初始化期可能为 0，别拿 `>0` 当有效性判据
 - [验证环](validation-loop.md) — 混合 Lua/C++ 改动最小验证：luac -p + git diff --check + Release x64 + run_sandbox_smoke
 - [自己跑自己读日志](run-and-diagnose.md) — 改完自己跑 exe 读 stderr/Sandbox_d.log 定位，别甩给用户
 - [别假设 greenfield 事件设施](no-greenfield-event-infra.md) — 已有 typed Blackboard + SandboxEventPayload/Dispatcher，勿提 std::variant/新建事件系统

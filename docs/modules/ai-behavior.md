@@ -34,6 +34,14 @@
 - 节点所有权全归 driver；Lua 只经工厂拿指针，勿自管生命周期。
 - 性能项：`BehaviorTreeDriver` 已支持 trace sampling（`HELLO_BT_TRACE_SAMPLE_INTERVAL` / `SetDebugTraceSampleInterval`）、runtime tick LOD（`HELLO_BT_TICK_INTERVAL_MS` / `HELLO_BT_TICK_STAGGER` 或 preset `behaviorTree.tickIntervalMs` / `tickStagger`）、基于 perception / sense / knowledge / memory / move target 距离的 distance LOD（`HELLO_BT_DISTANCE_LOD_NEAR` / `HELLO_BT_DISTANCE_LOD_FAR` / `HELLO_BT_DISTANCE_LOD_MAX_MULTIPLIER` 或 preset `behaviorTree.distanceLodNear` / `distanceLodFar` / `distanceLodMaxMultiplier`）、每帧树 tick budget（`HELLO_BT_MAX_TREE_TICKS_PER_FRAME` 或 preset `behaviorTree.maxTreeTicksPerFrame`）、LuaCondition result cache、显式模块热重载，以及 driver-local rebuild storage pool（复用 Sequence/Selector/Parallel/Random/Wait/Decorator/BehaviorTree；LuaAction/LuaCondition 因 Lua env/ref 生命周期延迟到下一次 C++ tick 释放并按 build 重建）；RuntimeDiag 输出 `[BTStats] ticks/treeTicks/tickSkipped/budgetSkipped/tickIntervalMs/effectiveTickIntervalMs/distanceLodMultiplier/distanceLodSkipped/budgetMax/cacheHits/invalidated/storageResets/nodeReuses/treeReuses/retiredLuaActions/retiredLuaConditions`。仍缺跨 agent/template 级 node cache。
 - 开放：G2 事件节点（依赖统一事件总线）、G3 参数运行时求值；G5 子树复用和显式热重载第一段已落地，文件 watcher、运行中节点状态迁移和跨 agent/template 级缓存仍待后续。
+- **每 sample 换树（2026-08-04）**：`BehaviorSoldierAgent` 的 BT 绑定改为从 `preset.behaviorTree` 读
+  `module` / `global` / `conditionsGlobal`，缺省仍是 `SoldierBT` + `SoldierConditions`。
+  `Sandbox19CommandBT` 据此挂载：根为 `Selector{ commandBranch, SoldierBTConfig.tree }`——
+  引用**整棵**原树而非 `subtrees.combat`，否则会丢掉 evadeDanger / callForBackup / investigate / formation 分支。
+  条件表 `Sandbox19CommandConditions` 用 `__index` 继承 `SoldierConditions`。
+  ⚠️ `conditionsGlobal` 查 `_G` 失败会**静默回落**到 `SoldierConditions`，条件表模块必须在 agent 建树前 require。
+  ⚠️ `HasCommandFocus` 是**带副作用的条件**（命中时覆写 `blackboard.enemy`，用来压过 `AIController::WritePerceptionResult`
+  每 tick 的改写，从而复用既有 shoot/pursue 而不新造动作），因此**绝不能包进 `CachedCondition`**——缓存跳过求值会丢副作用。
 
 ## 6. 数据流 / 与其他模块关系
 

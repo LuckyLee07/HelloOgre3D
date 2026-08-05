@@ -43,6 +43,10 @@
 - SceneFactory 不应 include `GameManager.h`；root scene node 通过 `SetRootSceneNode` 注入。
 - UIManager 不应 include `GameManager.h`；camera 通过构造注入。
 - CameraService 不应 include `ClientManager.h`；profile time 通过构造注入的 getter 查询。
+- CameraService 屏幕坐标互转（2026-08-04 加，供 Sandbox19 指挥切片做单位点选 / 框选 / 地面点选）：
+  `WorldToScreen(world)` 返回屏幕像素，**相机后方或无 viewport 时返回 (-1,-1)**，调用方必须据此丢弃；
+  `ScreenToGroundPoint(x, y, groundY)` 与水平面求交，**射线与平面平行/背离时返回相机位置**兜底、不返回 NaN。
+  两者均按手术式补 tolua 绑定，未跑 `tolua.bat` 全量重生成。
 - NavigationService 不应 include `GameManager.h` / `ClientManager.h`；通过构造注入 `ObjectManager*` 读取 fixed blocks，navmesh 所有权由 NavigationService 的 `unique_ptr` map 按 name 管理；`AddNavigationMesh` 接收历史 raw pointer 后立即接管所有权。
 - RaycastService 不应 include `GameManager.h` / `ClientManager.h` / `ObjectManager.h`；通过构造注入 `PhysicsWorld*`。
 - SceneService 不应 include `GameManager.h` / `ClientManager.h`；通过构造注入 `SceneManager*` 和 `CameraService*`。

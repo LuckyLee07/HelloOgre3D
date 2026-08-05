@@ -30,6 +30,12 @@
 - 引擎/中间件耦合逻辑收口在 runtime（AGENTS.md 依赖流）。
 - **判断 AI 成本看 `updateCall`/`perceptionSystem`，非 `cpuFrame`**（VM 上帧时间被渲染 engineGap 主导，见基线报告）。
 - RuntimeProfileCounters 是 static，调用方控频；FairyGUI lua_bridge 是手工 glue（非 tolua），见 [[fgui]]。
+- **输入到 Lua 的入口**由 `GameManager` 派发：`EventHandle_Keyboard(keycode, pressed)` 与
+  `EventHandle_Mouse(ctype, x, y, button)`（2026-08-04 接通，此前 Lua 侧 stub 存在但 C++ 从未调用）。
+  `ctype` 0=move / 1=down / 2=up，`button` 沿用 OIS 数值（左 0 / 右 1），move 传 -1。
+  FGUI 消费掉的事件提前 return，**UI 优先于 sample** 的次序不可颠倒。
+- `GameManager:getTimeInMillis()` 返回的是**启动至今的仿真时间**（非墙钟 epoch），
+  sample 初始化期间可能为 **0**——用它做时间戳时不要拿 `>0` 当有效性判据。
 
 ## 6. 数据流 / 与其他模块关系
 
