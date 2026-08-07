@@ -49,7 +49,11 @@ plan 的每个 task 声明下列之一（或组合）。展示给用户选择：
 ```
 MSBuild build\HelloOgre3D.sln /p:Configuration=Release /p:Platform=x64 /m /v:minimal /nologo
 ```
-- MSBuild 路径优先 VS2022（`C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe`），无则用 vswhere 探测。
+- MSBuild 用 **VS2017**：`C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\amd64\MSBuild.exe`
+  （`build\HelloOgre3D.sln` 是 VS2017 格式，`AGENTS.md` 也以 VS2017 为构建真源；机器上虽装了 VS2022 但不要用）。
+- 只编目标 target 更快：`/t:HelloOgre3D`（引擎依赖是 `libs/` 下的预编译 .lib，不需要重编 Ogre）。
+- 新增了 `.cpp` / `.h` 文件时**必须先重生成工程**（premake 用 `**.cpp` glob）：
+  `tools\premake\premake5.exe --os=windows --file=premake/premake.lua vs2017 --with-fairygui`，否则新文件不会进编译。
 - 预期：退出码 0，产物 `bin\HelloOgre3D.exe`（Release ~9MB；Debug ~34MB 说明配置错了）。
 - 改了导出给 Lua 的 C++ API：**优先手术式改 `SandboxToLua.cpp` 绑定 + 头文件**；`tolua.bat` 全量重生成已知会引入难定位回归（曾导致 Sandbox18 栈溢出 0xC0000409），非必要不用。
 
@@ -84,7 +88,7 @@ tools\run_chapter9_visual_capture.ps1 -CaptureMs "2500"
 powershell -ExecutionPolicy Bypass -File tools\run_fgui_production_gate.ps1 -Mode Full -StopExisting
 ```
 
-**[6] ai_perf 基线**（动 AI 热点系统时量化开销，对照 `docs/perf/ai-perf-release-baseline-20260612.md`）
+**[6] ai_perf 基线**（动 AI 热点系统时量化开销，对照 `docs/perf/` 里**日期最新**的那份基线，别写死某一份）
 
 ```
 tools\run_sandbox_smoke.ps1 -Preset ai_perf_1000 -StopExisting -NoTail   # 自动开 FramePerf

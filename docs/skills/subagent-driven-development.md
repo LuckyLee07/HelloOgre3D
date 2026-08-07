@@ -42,11 +42,12 @@
 上下文：spec=<path> plan=<path> 关联文档=<阶段0按README索引读到的docs>
 期望产出：改动文件=<列表>  验证方式=<plan 声明的策略>
 约束：
-  - 提交信息中文，沿用仓库 [dev]<描述> 风格；git add 精确路径
+  - 不自己 commit（由主会话经 gitcommit.md 统一落地）；只回报改动文件与建议的一行 subject
+  - 建议 subject 用中文、沿用仓库 [dev]<描述> 风格、**只一行不写 body**（结论归 docs 不归 log）
   - 遵循 AGENTS.md 依赖流与位置真源规则
   - 改了导出给 Lua 的 C++ API → 手术式同步 SandboxToLua.cpp 绑定，勿全量 tolua.bat 重生成
   - 不动 src/Engine、src/External 除非任务明确要求
-报告：单消息回报改了哪些文件 / 是否 commit / 卡点 / 状态（DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED）
+报告：单消息回报改了哪些文件 / 建议的一行 subject / 卡点 / 状态（DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED）
 ---
 ```
 
@@ -80,7 +81,8 @@
 
 ## 红旗（绝不）
 
-- 在 master 上直接派发实施（先确认在功能分支；HelloOgre3D 默认分支 master，结构性改动应先建分支）
+- 擅自建功能分支：本仓是单人仓库、历史上全部提交都直接落 `master`，**默认就在 `master` 上做**。
+  只有用户明确要求、或改动风险高到需要可丢弃的沙盒时才建分支，且要先问。
 - 跳过任一 review（spec 或 quality）
 - 未修问题就进下一 task
 - 让子代理自己 Read plan（必须直接给全文）

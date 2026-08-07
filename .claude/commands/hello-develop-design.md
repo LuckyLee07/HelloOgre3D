@@ -22,7 +22,7 @@
 | 读源码 / 文档 | 仓库内任意 |
 | 写 spec | 仅 `docs/dev-design/specs/` |
 | 写 plan | 仅 `docs/dev-design/plans/` |
-| 改源码 | 通过阶段 4 子代理派发，主会话不直接改 |
+| 改源码 | 通过阶段 4 子代理派发；**子代理不可用时降级为主会话直接改**，但每 task 的验证门与 commit 路由照常，并在收尾报告注明降级 |
 | 改项目文档 | 仅阶段 5 doc-sync 触发 |
 
 基线规则：全程遵循 `AGENTS.md`（依赖流、位置真源、目录职责）与 `docs/project-direction.md`（北极星）。严禁修改 `src/Engine`、`src/External` vendored 代码，除非子代理 plan task 显式要求。
