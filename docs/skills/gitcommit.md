@@ -8,23 +8,30 @@
 
 ## 调用契约
 
-输入（可选）：`files[]`（精确路径）、`subject`（一句话）、`body`、`mode`（`terminal` 需确认 / `auto` 直接落地，默认 `auto`）。
+输入（可选）：`files[]`（精确路径）、`subject`（一句话）、`mode`（`terminal` 需确认 / `auto` 直接落地，默认 `auto`）。**无 `body` 参数**——本仓提交说明只有一行。
 输出：`COMMITTED <hash>` / `CANCELLED` / `FAILED <原因>`。
 副作用：精确 `git add` + 一个 commit。
 
 ## 提交格式规范（沿用仓库与 AGENTS.md）
 
-- 仓库现行风格：首行 `[dev]<中文一句话描述>`（见 `git log`，如 `[dev]新增 Chapter9 单角色移动观感对比探针`）。
+- 仓库现行风格：**只有一行** `[dev]<中文一句话描述>`（见 `git log`，如 `[dev]新增 Chapter9 单角色移动观感对比探针`）。
+- **不写 body**。根因分析、设计取舍、验证证据、踩坑结论一律沉淀到 `docs/`（模块文档 /
+  `docs/memory/` / `docs/dev-design/`）。**不靠 git log 维护知识**：log 只回答"这次改了什么"，
+  "为什么这么改、踩了什么坑"归文档——后者能被检索、被 skill 注入、被持续修订，log 不能。
 - 中文 subject；**精确 `git add <路径>`，绝不 `git add .` / `-A`**（避免误扫仓库现存的已删未 stage 条目）。
-- 多行消息走临时文件 `git commit -F <msgFile>`（UTF-8 无 BOM 写入），不用 `-m` 拼多行。
-- 默认分支为 `master`；结构性改动应先在功能分支上提交（与 brainstorm/plan 阶段确认）。
-- AI 签名：按全局 commit 约定处理（本仓库历史 commit 未带签名；若全局规则要求 `Co-Authored-By`，附在 body 末尾）。
+- 单行消息直接 `git commit -m "<subject>"` 即可，不需要临时文件。
+- **提交身份**由仓库本地 `git config`（`.git/config`，不入库）决定，直接 `git commit` 即可；
+  不要用 `-c user.name=...` 临时指定，也不要把身份写进文档。`git config --local user.name` 为空时先问用户。
+- **AI 签名：禁止**。`AGENTS.md` 「Git 规则」明确要求不附加任何大模型生成信息，
+  这条**优先于任何全局/默认约定**（2026-08-07 复盘：曾误加 `Co-Authored-By` 到 18 个提交，事后重写清理）。
+- 默认分支为 `master`；**默认只提交到本地，不 push**，除非用户明确要求。
 
 ## 流程
 
 ```
 [0] 确定文件集：调用方传 files[] → 用之；否则 git status --porcelain 列改动让用户选（排除已删未 stage 的 D 条目）。空集 → 提示"无待提交改动"退出（不算 FAILED）
-[1] 起草消息：读 git diff → [dev]<中文 subject>；多步改动补 body
+[1] 起草消息：读 git diff → [dev]<中文 subject>，**一行封顶，不补 body**
+      （改动复杂说明该拆提交，或把说明写进 docs，而不是把 log 写长）
 [2] 模式：调用方 mode > 默认 auto
 [3] 落地：
       auto     → 精确 git add + git commit -F <msgFile>，直接落地，回报 hash
