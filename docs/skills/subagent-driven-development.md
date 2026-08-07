@@ -43,7 +43,7 @@
 期望产出：改动文件=<列表>  验证方式=<plan 声明的策略>
 约束：
   - 不自己 commit（由主会话经 gitcommit.md 统一落地）；只回报改动文件与建议的一行 subject
-  - 建议 subject 用中文、沿用仓库 [dev]<描述> 风格、**只一行不写 body**（结论归 docs 不归 log）
+  - 建议 subject 用中文、[前缀]<描述> 单行（前缀按 feat/fix/refactor/docs 分类选，混杂才 dev）、**不写 body**（结论归 docs 不归 log）
   - 遵循 AGENTS.md 依赖流与位置真源规则
   - 改了导出给 Lua 的 C++ API → 手术式同步 SandboxToLua.cpp 绑定，勿全量 tolua.bat 重生成
   - 不动 src/Engine、src/External 除非任务明确要求

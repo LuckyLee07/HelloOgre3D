@@ -93,7 +93,7 @@ Read 全文并严格执行：探索上下文 → 单问题多选澄清 → 提 2
 1. 路径 `docs/dev-design/specs/<YYYY-MM-DD>-<topic-kebab>-design.md`
 2. 按 brainstorming.md 模板写，含 `状态：草案，待 Review`
 3. 自审清单四项就地修
-4. 经 `docs/skills/gitcommit.md` 落地 spec **创建** commit（中文 `[dev]` message）
+4. 经 `docs/skills/gitcommit.md` 落地 spec **创建** commit（中文 `[docs]` 单行 message——spec/plan 属文档）
 
 ---
 

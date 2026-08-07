@@ -61,7 +61,7 @@ HelloOgre3D 大量任务是改 C++ / 改 Lua sample / 改配置，多数**没有
 - [ ] **Step 1：<具体改动，给代码块>**
 - [ ] **Step 2：编 Release** `MSBuild build\HelloOgre3D.sln /p:Configuration=Release /p:Platform=x64 /m`
 - [ ] **Step 3：跑 smoke** `tools\run_sandbox_smoke.ps1 -Sample Sandbox<X> -StopExisting -NoTail` → 预期 `status=PASS`
-- [ ] **Step 4：commit**（精确 git add + 中文 `[dev]` **单行** message，不写 body）
+- [ ] **Step 4：commit**（精确 git add + 中文**单行** message，前缀按 feat/fix/refactor/docs 分类选，不写 body）
 ````
 
 ## 禁止占位（plan failure）
@@ -77,7 +77,7 @@ HelloOgre3D 大量任务是改 C++ / 改 Lua sample / 改配置，多数**没有
 
 1. **层归属** + **回归 sample**（verify 据此选 smoke 目标）
 2. **验证策略**：Release 编译 / sample smoke / parity_gate / visual_capture / fgui_production_gate / 手动 / skip
-3. **commit message 中文**，沿用仓库 `[dev]<描述>` 风格，**只一行、不写 body**（结论归 `docs/`，不靠 git log 维护）
+3. **commit message 中文**，` [前缀]<描述> ` 单行，前缀按 feat/fix/refactor/docs 分类选（混杂才 dev），**不写 body**（结论归 `docs/`，不靠 git log 维护）
 4. **`git add` 精确路径**，不 `git add -A`
 5. 改了导出给 Lua 的 C++ API → 必须有 tolua 同步步骤（手术式优先）
 6. 不动 `src/Engine`、`src/External` vendored 代码，除非任务明确要求
