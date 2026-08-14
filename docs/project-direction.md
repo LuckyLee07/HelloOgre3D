@@ -87,16 +87,17 @@ sample 仍然是核心资产：它们是当前阶段的 AI 学习章节、实验
 
 ## 5. 当前落地切片
 
-当前唯一实现主线是 **`Sandbox19` 可玩战术遭遇战**：玩家与 AI 复用同一个 `SoldierObject`，只通过互斥的 `PlayerController` / `AIController` 切换控制来源。
+当前唯一实现主线是 **`Sandbox19` 可玩战术指挥遭遇战**：玩家与 AI 复用同一个 `SoldierObject`，只通过互斥的 `PlayerController` / `AIController` 切换控制来源；cycle-01 中玩家采用无武器 `commander_soldier`，移动和观察战场，但胜负只能由 AI 小队执行战斗产生。
 
 这条切片已经串起：
 
-- 玩家第三人称相机（A/D 平滑转向角色偏航、W/S 沿朝向前后、弹簧跟随后上方，照搬 code-master FollowCamera 数学 + tank 式控制）、朝向、射击与换弹。
+- 玩家第三人称相机（A/D 平滑转向角色偏航、W/S 沿朝向前后、弹簧跟随后上方，照搬 code-master FollowCamera 数学 + tank 式控制）与朝向；直接操控原型保留 `player_soldier` 的射击/换弹能力，cycle-01 的 commander profile 则显式移除武器。
 - AI 感知、BehaviorTree、团队关系和战斗组件。
-- 现有观察相机、HUD、胜负与重置。（小地图 viewport 已于 2026-07-10 移除；2026-07-11 雷达改为 Gorilla 矢量雷达 `UIPolygon`：左上角浅蓝圆盘、敌红友绿圆点 blip、player-up、中心三角箭头。原 FairyGUI 程序化裸对象在本项目不渲染，已弃用。）
-- `player_soldier` / `ai_soldier` profile 的 controller 互斥断言。
+- RMB 点选/框选友军，F/T/G 下达集火/撤退/编队指令；指令复用既有 Blackboard、TeamBlackboard 与 BT，不增加平行 AI 系统。
+- 面向玩家的 AI 意图卡片、目标标记和意图着色雷达，以及部署、三波交火、波间整备、胜负与重开闭环。（小地图 viewport 已于 2026-07-10 移除；2026-07-11 雷达改为 Gorilla 矢量雷达 `UIPolygon`。原 FairyGUI 程序化裸对象在本项目不渲染，已弃用。）
+- `player_soldier` / `commander_soldier` / `ai_soldier` profile 的 controller 互斥与可选武器断言。
 
-手感验收已于 2026-07-11 由用户确认通过（A/D 转向、W/S 前后、射击方向、相机跟随、圆盘雷达、重开无残留均正常）。**FPS 相机仍不作为当前优先项**（第三人称 FOLLOW 已作为经确认的方向调整加入、限定 Sandbox19，与 FPS 是两回事）。
+直接操控基线的手感验收已于 2026-07-11 由用户确认通过（A/D 转向、W/S 前后、射击方向、相机跟随、圆盘雷达、重开无残留均正常）。cycle-01 已在此基础上切到“无武器 commander + AI 小队指令”，其意图可读性和五分钟节奏仍须 W4 真人验收，不能用旧的直接操控验收代替。**FPS 相机仍不作为当前优先项**（第三人称 FOLLOW 与 FPS 是两回事）。
 
 ### 5.1 品类决策：待 cycle-01 结束时落档
 

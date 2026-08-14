@@ -152,6 +152,9 @@ end
 
 function Soldier_InitWeaponAsm(agent)
     local weapon = agent:GetWeaponComponent();
+    if weapon == nil then
+        return
+    end
 
     -- Create an animation state machine to handle weapon animations.
     local weaponAsm = weapon:GetObjectASM();

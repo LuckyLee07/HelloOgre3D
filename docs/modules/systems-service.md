@@ -16,7 +16,7 @@
 |---|---|---|
 | `ObjectFactory.{h,cpp}` | 工厂 | CreatePlane/Block/Bullet/Agent/AgentWithProfile/Soldier/SoldierWithProfile |
 | `AgentFactory.{h,cpp}` | 装配 | 通过 `default` / `component_probe` / `movement_only` / `animated_probe` 轻量 profile 装配普通 Agent 的 locomotion/physics/script/render + AI/Attrib/Weapon/Anim |
-| `SoldierFactory.{h,cpp}` | 装配 | Soldier 专化；`ai_soldier` / `player_soldier` profile 互斥装配 AI/玩家 controller |
+| `SoldierFactory.{h,cpp}` | 装配 | Soldier 专化；`ai_soldier` / `player_soldier` / `commander_soldier` profile 互斥装配 AI/玩家 controller，并允许武器成为可选组件 |
 | `PhysicsFactory.{h,cpp}` | 工厂 | 刚体/形状，见 [[systems-physics]] |
 | `SceneFactory.{h,cpp}` | 工厂 | Ogre SceneNode/ManualObject；root scene node 由 `GameManager::Initialize` 注入 |
 | `AgentConfigService.{h,cpp}` | 服务 | CppFSM flag；Lua 全局 `SandboxAgentConfig` 访问，`AgentObject` 通过 `SandboxServices.agentConfig` 读取 |
@@ -29,7 +29,7 @@
 ## 4. 公开能力要点
 
 - 对象工厂链 ObjectFactory→AgentFactory/SoldierFactory 分层装配组件。
-- `ObjectFactory` 已导出给 Lua 全局 `SandboxObjects`，对象创建不再通过 `SandboxMgr` 纯转发；`CreateAgentWithProfile` 可按命名 profile 创建普通 `AgentObject`，`CreateSoldierWithProfile` 通过 `ai_soldier` / `player_soldier` 选择互斥 controller；`SandboxServices.objectFactory` 供组件侧创建 bullet 等运行时对象。
+- `ObjectFactory` 已导出给 Lua 全局 `SandboxObjects`，对象创建不再通过 `SandboxMgr` 纯转发；`CreateAgentWithProfile` 可按命名 profile 创建普通 `AgentObject`，`CreateSoldierWithProfile` 通过 `ai_soldier` / `player_soldier` / `commander_soldier` 选择互斥 controller 与可选武器；`SandboxServices.objectFactory` 供组件侧创建 bullet 等运行时对象。
 - `AgentConfigService` 已导出给 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 `SandboxMgr` 持有；`SandboxServices.agentConfig` 供 `AgentObject` 读取。
 - `NavigationService` 已导出给 Lua 全局 `SandboxNav`，导航配置/构建/查询和 navmesh 所有权不再通过 `SandboxMgr` / `ObjectManager` 主路径；`SandboxServices.navigation` 供 AI/FSM/感知侧查询路径和随机点。
 - `RaycastService` 已导出给 Lua 全局 `SandboxRaycast`，raycast 不再由 `SandboxMgr` 直接访问 `ObjectManager`/`PhysicsWorld`；`SandboxServices.raycast` 供后续 C++ 侧查询。
@@ -38,7 +38,7 @@
 
 ## 5. 约束与红线
 
-- **P5**：AgentFactory 已给普通 Agent 默认装配 AI/Attrib/Weapon/Anim 这组可复用运行组件，并新增轻量 profile 表；RuntimeDiag 通过 `component_probe` profile 覆盖非 Soldier `anim`/`bodyAsm` 与武器组件，通过 `animated_probe` 覆盖普通 `AgentObject` 挂 animated mesh、配置 body ASM 并请求状态切换；SoldierFactory 已支持 `ai_soldier` / `player_soldier` 控制 profile，但 profile 仍是 C++ 内置表且对象类型仍绑死 `SoldierObject`，新 NPC 泛化仍待推进。
+- **P5**：AgentFactory 已给普通 Agent 默认装配 AI/Attrib/Weapon/Anim 这组可复用运行组件，并新增轻量 profile 表；RuntimeDiag 通过 `component_probe` profile 覆盖非 Soldier `anim`/`bodyAsm` 与武器组件，通过 `animated_probe` 覆盖普通 `AgentObject` 挂 animated mesh、配置 body ASM 并请求状态切换；SoldierFactory 已支持 `ai_soldier` / `player_soldier` / `commander_soldier` 控制 profile，后者证明武器可从 Soldier 装配中拿掉；profile 仍是 C++ 内置表且对象类型仍绑死 `SoldierObject`，新 NPC 泛化仍待推进。
 - **C1/C2 进展**：UIService 空壳已删除；UIManager 由应用层构造并导出为 Lua 全局 `SandboxUI`，Gorilla UI frame/color API 不再通过 SandboxMgr 转发（2026-07-11 另加 `CreatePolygon`→`UIPolygon` 封装 `Gorilla::Polygon` 矢量多边形，供 Sandbox19 圆盘雷达画浅蓝圆盘/圆点 blip/三角箭头，手术式补 tolua 绑定、C++ 持所有权）；AgentConfigService 由 GameManager 持有并导出为 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 SandboxMgr 持有；CameraService 由 GameManager 持有并导出为 Lua 全局 `SandboxCamera`，相机/profile 查询不再通过 SandboxMgr 转发；NavigationService 由 GameManager 持有并导出为 Lua 全局 `SandboxNav`，导航配置/构建/查询不再通过 SandboxMgr 转发；RaycastService 由 GameManager 持有并导出为 Lua 全局 `SandboxRaycast`，raycast 不再由 SandboxMgr 实现；SceneService 由 GameManager 持有并导出为 Lua 全局 `SandboxScene`，场景/light/material API 不再通过 SandboxMgr 纯转发；ScriptService 由 GameManager 持有并导出为 Lua 全局 `SandboxScript`，CallFile 不再通过 SandboxMgr 纯转发。SandboxMgr class/global 已删除。
 - SceneFactory 不应 include `GameManager.h`；root scene node 通过 `SetRootSceneNode` 注入。
 - UIManager 不应 include `GameManager.h`；camera 通过构造注入。

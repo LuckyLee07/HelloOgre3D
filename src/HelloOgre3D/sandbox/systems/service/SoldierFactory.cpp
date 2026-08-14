@@ -24,15 +24,17 @@ namespace
 	struct SoldierAssemblyProfile
 	{
 		const char* name;
+		bool attachWeapon;
 		bool attachAI;
 		bool attachPlayer;
 	};
 
 	const SoldierAssemblyProfile kSoldierAssemblyProfiles[] =
 	{
-		{ "default", true, false },
-		{ "ai_soldier", true, false },
-		{ "player_soldier", false, true },
+		{ "default", true, true, false },
+		{ "ai_soldier", true, true, false },
+		{ "player_soldier", true, false, true },
+		{ "commander_soldier", false, false, true },
 	};
 
 	const SoldierAssemblyProfile& ResolveSoldierAssemblyProfile(const char* profileName)
@@ -67,7 +69,8 @@ namespace
 
 		AgentAttrib* attrib = new AgentAttrib(soldier->GetHealth(), std::max<Ogre::Real>(soldier->GetHealth(), 1.0f), SOLDIER_STAND, -1);
 		AddSoldierComponent(soldier, ComponentKeys::Attrib, attrib);
-		AddSoldierComponent(soldier, ComponentKeys::Weapon, new WeaponComponent());
+		if (profile.attachWeapon)
+			AddSoldierComponent(soldier, ComponentKeys::Weapon, new WeaponComponent());
 
 		if (profile.attachAI)
 			AddSoldierComponent(soldier, ComponentKeys::AI, new AIController());

@@ -30,6 +30,7 @@
 ### 2.2 可复现 / 观测（我认为下一个技术周期的首选）
 
 - [ ] 输入录制 + 回放（固定 seed + 输入流），让 parity / perf / 偶现 bug 三类问题共用一套复现设施。
+- [ ] AI driver 运行契约：`Pause / Resume / Reset`、driver 类型、配置来源和 profile 身份统一进入既有 RuntimeDiag；先由需要暂停/接管 AI 的实际玩法认领，不单独造框架。
 - [ ] parity 验收口径从"逐帧复刻"改为**统计等价**（胜率 / 存活时长 / 首次接敌帧 / 路径长度分布落在 legacy 置信区间）。
       理由见 `memory/chapter8-parity-rootcause.md`：保架构下逐帧对齐已被证明不可达，现口径是一个永远红的门禁。
 - [ ] `run_chapter8_parity_gate.ps1` 降级为诊断工具（保留 A3DIAG 对比法），不再作为验收门禁。
@@ -47,6 +48,7 @@
 ### 2.4 AI 能力（边际价值已低，除非玩法需要，否则不做）
 
 - [ ] navigation：navmesh 真实边界（去 2001 固定）、多层 navmesh、动态障碍。← 这条是 AI 链路里唯一明显薄的一环。
+- [ ] navigation 请求治理：同步 `FindPath` 外围增加每帧预算/排队、短时结果复用和 repath 距离/时间阈值；先用战术指挥或 100+ agent 的真实 spike 证明需要，再进入技术 cycle。
 - [ ] BT：G2 事件节点（依赖统一事件总线）、G3 参数运行时求值、G6 黑板类型扩展、跨 agent/template 级节点缓存。
 - [ ] 感知：更多非视觉 sense、AOI / visibility set 淘汰、空间查询上限调参。
 - [ ] 战术：更细粒度增量 rebuild、真实 cover 来源、更细 crowd 模型。

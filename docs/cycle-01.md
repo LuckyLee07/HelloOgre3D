@@ -28,13 +28,41 @@
 | W3 | 08-18 ~ 08-24 | 一局的节奏：关卡布局、胜负、重开，让 5 分钟有开局 / 交火 / 收尾 | 自己能连玩三局不觉得空 |
 | W4 | 08-25 ~ 08-31 | 找 1–2 个真人玩，记录他们前 5 分钟的行为；写 cycle 总结 + 品类决策 | 有外部反馈，`project-direction.md` §5 落档 |
 
+### W2/W3 实施合同（2026-08-13）
+
+上轮方向讨论中的“小队命令 → AI 可解释 → 一局闭环”按当前 cycle 收敛为以下交付，不新增平行 AI system：
+
+- **意图卡片**：每个存活友军头顶持续显示 `FOCUS / RETREAT / RALLY / ENGAGE / SEARCH / PATROL` 等玩家语义，以及“玩家指令 / 自主感知 / 最后已知位置”等原因。
+- **目标表达**：集火目标有红色屏幕标记；撤退/编队目标点有对应颜色的落点标记；雷达 blip 同步采用当前意图颜色。
+- **指令生命周期**：TTL 过期、集火目标死亡和重开时清理 `command.*` 与指令专用 `movePos`，HUD 显示活跃指令数量和剩余时间。
+- **指挥官身份**：玩家仍可用第三人称移动和观察战场，但改用无武器 `commander_soldier` profile，不能直接开枪；战斗结果必须来自 AI 小队执行。
+- **一局节奏**：部署准备 → 三波交火 → 波间整备 → 最终胜负；固定 seed、固定出生模板并记录阶段转换日志，保证同一 build 的基础场景可重复。
+- **验证**：在既有 `[Sandbox19CommandSelfTest]` 外补意图和 match-flow 自测，再跑 Release x64 与 `Sandbox19 / Sandbox8 / Sandbox12 / Sandbox17` smoke；视觉可读性仍须真人桌面验收。
+
+上轮同时讨论的通用 `Pause / Resume / Reset`、driver 身份、寻路预算/排队和完整输入录制回放不塞进本应用 cycle；它们已回到 `backlog.md`，等技术 cycle 再按真实压力认领。
+
+### W2/W3 代码完成记录（2026-08-13）
+
+W2/W3 已提前完成代码落地：`Sandbox19` 现为无武器 commander 指挥两名 AI 友军，
+以头顶 action/reason 卡片、目标标记、雷达意图色和 HUD 指令计数表达 AI 状态；
+对局按 `PREPARE → WAVE × 3 → INTERMISSION → VICTORY/DEFEAT` 推进，固定 seed/出生点，波次参数收口在 `sample_presets.lua`。
+指令会在 TTL、目标失效、波次结束和重开时清理，且只移除由指令拥有的 `movePos`。
+
+自动化证据：Release x64 构建 0 warning / 0 error；
+`[Sandbox19CommandSelfTest] PASS`、`[Sandbox19IntentSelfTest] PASS`、`[Sandbox19MatchSelfTest] PASS`；
+`Sandbox19` / `Sandbox8` / `Sandbox12` / `Sandbox17` smoke 均为 `status=PASS`。
+
+W2/W3 的“代码与自动化”已完成，但周完成标志仍不提前勾选：意图卡是否在真实战斗中可读、
+三波节奏是否能支撑 5 分钟，以及玩家是否理解自己只能下令，必须由 W4 真人桌面试玩回答。
+
 ### W1 完成记录（2026-08-04）
 
 经 `/hello-develop-design` 六阶段流程落地，spec / plan 见
 `dev-design/specs/2026-08-04-sandbox19-command-input-design.md`、
 `dev-design/plans/2026-08-04-sandbox19-command-input.md`。
 
-操作：`LMB` 射击（不变）· `RMB` 点选/框选友军 · `F` 集火 · `T` 撤退 · `G` 编队。
+W1 当时的操作是 `LMB` 射击 · `RMB` 点选/框选友军 · `F` 集火 · `T` 撤退 · `G` 编队；
+W2/W3 已按本 cycle 的原始问题改成无武器 commander，`LMB` 射击不再存在。
 （撤退用 `T` 而非原定 `R`——`R` 是 `PlayerController` 的换弹键。）
 
 自动化证据：`[Sandbox19CommandSelfTest] PASS`（指令命中 / 三指令互斥 /

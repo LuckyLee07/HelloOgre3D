@@ -220,6 +220,12 @@ SamplePresets.Sandbox19.behaviorTree = SamplePresets.Sandbox19.behaviorTree or {
 SamplePresets.Sandbox19.behaviorTree.module = "res.scripts.ai.behavior.config.Sandbox19CommandBT.lua"
 SamplePresets.Sandbox19.behaviorTree.global = "Sandbox19CommandBTConfig"
 SamplePresets.Sandbox19.behaviorTree.conditionsGlobal = "Sandbox19CommandConditions"
+SamplePresets.Sandbox19.commanderMatch = {
+	prepareMs = 6000,
+	intermissionMs = 7000,
+	allyCount = 2,
+	waveEnemyCounts = { 2, 3, 4 },
+}
 
 SamplePresets.chapter8_comms = {
 	seed = 20260530,
