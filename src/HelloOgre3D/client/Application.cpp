@@ -67,6 +67,11 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
             frameTiming.inputCaptureMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
+    // Cocoa can dispatch the native close event from inside keyboard capture.
+    // Stop this frame immediately once the callback has requested shutdown.
+    if (m_pClientManager->GetShutdown())
+        return false;
+
     {
         H3D_PROFILE_SCOPE("Application::Update");
         if (perfEnabled)

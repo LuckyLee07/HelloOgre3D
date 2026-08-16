@@ -6,7 +6,6 @@
 #include "debug/DebugDrawer.h"
 #include "systems/input/InputManager.h"
 #include "core/SandboxMacros.h"
-#include "common/RenderConfigHelper.h"
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
 #if defined(HELLO_ENABLE_FGUI)
@@ -25,6 +24,7 @@
 #include "ogre3d_gorilla/include/Gorilla.h"
 
 #include <cstdlib>
+#include <cstring>
 
 using namespace Ogre;
 namespace
@@ -48,6 +48,55 @@ namespace
         if (hz > 240)
             return 240;
         return hz;
+    }
+
+    const char* ReadEnvValue(const char* name)
+    {
+        const char* value = std::getenv(name);
+        return value != nullptr && value[0] != '\0' ? value : nullptr;
+    }
+
+    Ogre::String ReadStringEnvValue(const char* name, const Ogre::String& defaultValue)
+    {
+        const char* value = ReadEnvValue(name);
+        return value != nullptr ? Ogre::String(value) : defaultValue;
+    }
+
+    bool ReadBoolEnvValue(const char* name, bool defaultValue)
+    {
+        const char* value = ReadEnvValue(name);
+        if (value == nullptr)
+            return defaultValue;
+
+        if (std::strcmp(value, "1") == 0 ||
+            std::strcmp(value, "true") == 0 ||
+            std::strcmp(value, "yes") == 0 ||
+            std::strcmp(value, "on") == 0)
+        {
+            return true;
+        }
+
+        if (std::strcmp(value, "0") == 0 ||
+            std::strcmp(value, "false") == 0 ||
+            std::strcmp(value, "no") == 0 ||
+            std::strcmp(value, "off") == 0)
+        {
+            return false;
+        }
+
+        return defaultValue;
+    }
+
+    Ogre::ShadowTechnique ReadShadowTechnique(bool defaultEnabled)
+    {
+        return ReadBoolEnvValue("HELLO_RENDER_SHADOWS", defaultEnabled) ?
+            Ogre::SHADOWTYPE_STENCIL_ADDITIVE :
+            Ogre::SHADOWTYPE_NONE;
+    }
+
+    const char* GetShadowTechniqueName(Ogre::ShadowTechnique technique)
+    {
+        return technique == Ogre::SHADOWTYPE_NONE ? "none" : "stencil additive";
     }
 }
 
@@ -225,11 +274,16 @@ bool ClientManager::Configure()
         try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
     if (configOptions.find("FSAA") != configOptions.end())
     {
-        const Ogre::String fsaa = RenderConfigHelper::SelectBestMacFsaa(configOptions);
+        const Ogre::String fsaa = ReadStringEnvValue("HELLO_RENDER_FSAA", "0");
         try { selected->setConfigOption("FSAA", fsaa); } catch (...) {}
+        Ogre::LogManager::getSingleton().logMessage("Mac render FSAA: " + fsaa);
     }
     if (configOptions.find("VSync") != configOptions.end())
-        try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
+    {
+        const Ogre::String vsync = ReadBoolEnvValue("HELLO_RENDER_VSYNC", true) ? "Yes" : "No";
+        try { selected->setConfigOption("VSync", vsync); } catch (...) {}
+        Ogre::LogManager::getSingleton().logMessage("Mac render VSync: " + vsync);
+    }
     if (configOptions.find("Colour Depth") != configOptions.end())
         try { selected->setConfigOption("Colour Depth", "32"); } catch (...) {}
     if (configOptions.find("RTT Preferred Mode") != configOptions.end())
@@ -240,8 +294,9 @@ bool ClientManager::Configure()
         try { selected->setConfigOption("macAPI", "cocoa"); } catch (...) {}
     if (configOptions.find("Content Scaling Factor") != configOptions.end())
     {
-        const Ogre::String contentScale = RenderConfigHelper::SelectBestMacContentScale(configOptions);
+        const Ogre::String contentScale = ReadStringEnvValue("HELLO_RENDER_CONTENT_SCALE", "1.0");
         try { selected->setConfigOption("Content Scaling Factor", contentScale); } catch (...) {}
+        Ogre::LogManager::getSingleton().logMessage("Mac render content scale: " + contentScale);
     }
     if (configOptions.find("contextProfile") != configOptions.end())
         try { selected->setConfigOption("contextProfile", isGL3 ? "1" : "0"); } catch (...) {}
@@ -417,7 +472,15 @@ void ClientManager::Initialize()
     m_pRenderWindow->setDeactivateOnFocusChange(false);
 
     m_pSceneManager->setAmbientLight(ambient);
-    m_pSceneManager->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+#if defined(__APPLE__)
+    const bool defaultShadowsEnabled = false;
+#else
+    const bool defaultShadowsEnabled = true;
+#endif
+    const Ogre::ShadowTechnique shadowTechnique = ReadShadowTechnique(defaultShadowsEnabled);
+    m_pSceneManager->setShadowTechnique(shadowTechnique);
+    Ogre::LogManager::getSingleton().logMessage(
+        Ogre::String("Render shadows: ") + GetShadowTechniqueName(shadowTechnique));
 
     m_pCamera->setFarClipDistance(1000.0f);
     m_pCamera->setNearClipDistance(0.1f);
@@ -602,9 +665,8 @@ void ClientManager::WindowClosed()
     if (m_pRoot)
         m_pRoot->queueEndRendering();
 
-    if (m_pInputManager)
-        m_pInputManager->closeWindow();
-
+    // Input teardown is owned by the destructor. On Cocoa this callback can run
+    // inside OIS keyboard capture, so destroying OIS here would delete the active stack object.
     if (m_pGameManager)
         m_pGameManager->HandleWindowClosed();
 }

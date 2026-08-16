@@ -55,7 +55,12 @@ void SceneService::SetSkyBox(const Ogre::String materialName, const Ogre::Vector
 		return;
 
 	const Ogre::Quaternion& newOrientation = QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z);
-	sceneMgr->setSkyBox(true, materialName, 5000.0f, true, newOrientation);
+	Ogre::Real skyBoxDistance = 500.0f;
+	Ogre::Camera* camera = GetSceneGraphCamera();
+	if (camera != nullptr && camera->getFarClipDistance() > 0.0f)
+		skyBoxDistance = camera->getFarClipDistance() * 0.5f;
+
+	sceneMgr->setSkyBox(true, materialName, skyBoxDistance, true, newOrientation);
 }
 
 void SceneService::SetAmbientLight(const Ogre::Vector3& colourValue)
