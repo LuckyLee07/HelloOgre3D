@@ -83,6 +83,8 @@ class ObfuscatedZipDataStream : public Ogre::DataStream
 {
 protected:
     ZZIP_FILE* mZzipFile;
+    /// Keep serializer look-ahead/backpedal inside memory instead of rewinding deflate streams.
+    Ogre::StaticCache<2 * OGRE_STREAM_TEMP_SIZE> mCache;
 public:
     /// Unnamed constructor
     ObfuscatedZipDataStream(ZZIP_FILE* zzipFile, size_t uncompressedSize);

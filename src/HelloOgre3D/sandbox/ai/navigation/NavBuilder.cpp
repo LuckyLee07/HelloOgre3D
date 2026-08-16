@@ -3,6 +3,56 @@
 #include "objects/BlockObject.h"
 #include "Ogre.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+
+namespace
+{
+	const std::uint64_t FNV_OFFSET_BASIS = UINT64_C(14695981039346656037);
+	const std::uint64_t FNV_PRIME = UINT64_C(1099511628211);
+
+	void HashBytes(std::uint64_t& hash, const void* data, size_t size)
+	{
+		const unsigned char* bytes = static_cast<const unsigned char*>(data);
+		for (size_t index = 0; index < size; ++index)
+		{
+			hash ^= static_cast<std::uint64_t>(bytes[index]);
+			hash *= FNV_PRIME;
+		}
+	}
+
+	template <typename T>
+	void HashValue(std::uint64_t& hash, const T& value)
+	{
+		HashBytes(hash, &value, sizeof(value));
+	}
+
+	void HashConfig(std::uint64_t& hash, const rcConfig& cfg)
+	{
+		HashValue(hash, cfg.width);
+		HashValue(hash, cfg.height);
+		HashValue(hash, cfg.tileSize);
+		HashValue(hash, cfg.borderSize);
+		HashValue(hash, cfg.cs);
+		HashValue(hash, cfg.ch);
+		HashBytes(hash, cfg.bmin, sizeof(cfg.bmin));
+		HashBytes(hash, cfg.bmax, sizeof(cfg.bmax));
+		HashValue(hash, cfg.walkableSlopeAngle);
+		HashValue(hash, cfg.walkableHeight);
+		HashValue(hash, cfg.walkableClimb);
+		HashValue(hash, cfg.walkableRadius);
+		HashValue(hash, cfg.maxEdgeLen);
+		HashValue(hash, cfg.maxSimplificationError);
+		HashValue(hash, cfg.minRegionArea);
+		HashValue(hash, cfg.mergeRegionArea);
+		HashValue(hash, cfg.maxVertsPerPoly);
+		HashValue(hash, cfg.detailSampleDist);
+		HashValue(hash, cfg.detailSampleMaxError);
+	}
+}
+
 bool NavBuilder::Build(const rcConfig& cfg,
 	const std::vector<BlockObject*>& objects,
 	dtNavMesh*& outNavMesh,
@@ -47,6 +97,98 @@ bool NavBuilder::Build(const rcConfig& cfg,
 	outNavMesh = nav;
 	outQuery = query;
 	return true;
+}
+
+bool NavBuilder::FitBoundsToObjects(rcConfig& cfg,
+	const std::vector<BlockObject*>& objects,
+	float padding)
+{
+	float boundsMin[3] = {
+		std::numeric_limits<float>::max(),
+		std::numeric_limits<float>::max(),
+		std::numeric_limits<float>::max()
+	};
+	float boundsMax[3] = {
+		-std::numeric_limits<float>::max(),
+		-std::numeric_limits<float>::max(),
+		-std::numeric_limits<float>::max()
+	};
+	bool foundGeometry = false;
+	std::vector<float> verts;
+	std::vector<int> tris;
+
+	for (size_t objectIndex = 0; objectIndex < objects.size(); ++objectIndex)
+	{
+		BlockObject* object = objects[objectIndex];
+		if (object == NULL || !ExtractTriangleSoup(*object, verts, tris))
+			continue;
+
+		for (size_t vertexIndex = 0; vertexIndex + 2 < verts.size(); vertexIndex += 3)
+		{
+			const float x = verts[vertexIndex];
+			const float y = verts[vertexIndex + 1];
+			const float z = verts[vertexIndex + 2];
+			if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
+				continue;
+
+			boundsMin[0] = std::min(boundsMin[0], x);
+			boundsMin[1] = std::min(boundsMin[1], y);
+			boundsMin[2] = std::min(boundsMin[2], z);
+			boundsMax[0] = std::max(boundsMax[0], x);
+			boundsMax[1] = std::max(boundsMax[1], y);
+			boundsMax[2] = std::max(boundsMax[2], z);
+			foundGeometry = true;
+		}
+	}
+
+	if (!foundGeometry)
+		return false;
+
+	const float safePadding = std::max(padding,
+		static_cast<float>(cfg.walkableRadius) * cfg.cs + cfg.cs * 2.0f);
+	for (int axis = 0; axis < 3; ++axis)
+	{
+		cfg.bmin[axis] = boundsMin[axis] - safePadding;
+		cfg.bmax[axis] = boundsMax[axis] + safePadding;
+	}
+	rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
+	return cfg.width > 0 && cfg.height > 0;
+}
+
+std::uint64_t NavBuilder::ComputeInputFingerprint(const rcConfig& cfg,
+	const std::vector<BlockObject*>& objects)
+{
+	std::uint64_t hash = FNV_OFFSET_BASIS;
+	HashConfig(hash, cfg);
+
+	std::vector<std::uint64_t> objectHashes;
+	std::vector<float> verts;
+	std::vector<int> tris;
+	for (size_t objectIndex = 0; objectIndex < objects.size(); ++objectIndex)
+	{
+		BlockObject* object = objects[objectIndex];
+		if (object == NULL || !ExtractTriangleSoup(*object, verts, tris))
+			continue;
+
+		std::uint64_t objectHash = FNV_OFFSET_BASIS;
+		const std::uint64_t vertexCount = static_cast<std::uint64_t>(verts.size());
+		const std::uint64_t indexCount = static_cast<std::uint64_t>(tris.size());
+		HashValue(objectHash, vertexCount);
+		HashValue(objectHash, indexCount);
+		if (!verts.empty())
+			HashBytes(objectHash, &verts[0], verts.size() * sizeof(float));
+		if (!tris.empty())
+			HashBytes(objectHash, &tris[0], tris.size() * sizeof(int));
+		objectHashes.push_back(objectHash);
+	}
+
+	std::sort(objectHashes.begin(), objectHashes.end());
+	const std::uint64_t objectCount = static_cast<std::uint64_t>(objectHashes.size());
+	HashValue(hash, objectCount);
+	if (!objectHashes.empty())
+		HashBytes(hash, &objectHashes[0], objectHashes.size() * sizeof(std::uint64_t));
+
+	return hash;
 }
 
 bool NavBuilder::BuildPolyMeshes(const rcConfig& cfg,
@@ -596,4 +738,3 @@ bool NavBuilder::ExtractTriangleSoup(const BlockObject& obj,
 
 	return true;
 }
-

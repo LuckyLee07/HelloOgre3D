@@ -47,7 +47,8 @@
 
 ### 2.4 AI 能力（边际价值已低，除非玩法需要，否则不做）
 
-- [ ] navigation：navmesh 真实边界（去 2001 固定）、多层 navmesh、动态障碍。← 这条是 AI 链路里唯一明显薄的一环。
+- [x] navigation：按 fixed geometry 自动收紧 navmesh 真实边界（去 2001 固定），并以 config + 变换后几何指纹缓存单 tile Detour 数据。
+- [ ] navigation：多层/tiled navmesh、动态障碍。← 这是 AI 链路里剩余的明显薄弱项。
 - [ ] navigation 请求治理：同步 `FindPath` 外围增加每帧预算/排队、短时结果复用和 repath 距离/时间阈值；先用战术指挥或 100+ agent 的真实 spike 证明需要，再进入技术 cycle。
 - [ ] BT：G2 事件节点（依赖统一事件总线）、G3 参数运行时求值、G6 黑板类型扩展、跨 agent/template 级节点缓存。
 - [ ] 感知：更多非视觉 sense、AOI / visibility set 淘汰、空间查询上限调参。

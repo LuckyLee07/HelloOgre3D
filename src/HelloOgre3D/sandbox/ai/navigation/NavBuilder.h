@@ -1,6 +1,7 @@
 #ifndef __NAV_BUILDER_H__
 #define __NAV_BUILDER_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "OgreVector3.h"
@@ -21,6 +22,15 @@ public:
 		const std::vector<BlockObject*>& objects,
 		dtNavMesh*& outNavMesh,
 		dtNavMeshQuery*& outQuery);
+
+	// Tighten the Recast grid to the transformed geometry instead of the legacy fixed world bounds.
+	bool FitBoundsToObjects(rcConfig& cfg,
+		const std::vector<BlockObject*>& objects,
+		float padding);
+
+	// Stable fingerprint for cache invalidation. Includes config and transformed triangle geometry.
+	std::uint64_t ComputeInputFingerprint(const rcConfig& cfg,
+		const std::vector<BlockObject*>& objects);
 
 	// Build Recast poly/detail mesh only.
 	bool BuildPolyMeshes(const rcConfig& cfg,

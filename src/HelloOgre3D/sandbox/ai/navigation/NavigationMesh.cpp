@@ -8,14 +8,221 @@
 #include "NavBuilder.h"
 #include "systems/service/SceneFactory.h"
 #include "Ogre.h"
+#include <cerrno>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <unordered_set>
 #include "profiling/Profile.h"
 
+#if defined(_WIN32)
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
 namespace
 {
+	const std::uint32_t NAV_CACHE_MAGIC = UINT32_C(0x48334E56); // H3NV
+	const std::uint32_t NAV_CACHE_VERSION = 1;
+	const std::uint32_t NAV_CACHE_MAX_DATA_SIZE = 64 * 1024 * 1024;
+	const float NAV_BOUNDS_PADDING = 2.0f;
+
+	bool IsFalseEnvValue(const char* value)
+	{
+		return value != NULL &&
+			(std::strcmp(value, "0") == 0 ||
+			 std::strcmp(value, "false") == 0 ||
+			 std::strcmp(value, "off") == 0 ||
+			 std::strcmp(value, "no") == 0);
+	}
+
+	bool IsNavMeshCacheEnabled()
+	{
+		return !IsFalseEnvValue(std::getenv("HELLO_NAVMESH_CACHE"));
+	}
+
+	bool MakeDirectory(const std::string& path)
+	{
+#if defined(_WIN32)
+		const int result = _mkdir(path.c_str());
+#else
+		const int result = mkdir(path.c_str(), 0755);
+#endif
+		return result == 0 || errno == EEXIST;
+	}
+
+	bool ResolveNavMeshCacheDirectory(std::string& outDirectory)
+	{
+		const char* overrideDirectory = std::getenv("HELLO_NAVMESH_CACHE_DIR");
+		if (overrideDirectory != NULL && overrideDirectory[0] != '\0')
+		{
+			outDirectory = overrideDirectory;
+			return MakeDirectory(outDirectory);
+		}
+
+		if (!MakeDirectory("../tmp"))
+			return false;
+		outDirectory = "../tmp/navmesh-cache";
+		return MakeDirectory(outDirectory);
+	}
+
+	std::string BuildNavMeshCachePath(const std::string& directory, std::uint64_t fingerprint)
+	{
+		std::ostringstream stream;
+		stream << directory << "/nav_"
+			<< std::hex << std::setw(16) << std::setfill('0') << fingerprint
+			<< ".bin";
+		return stream.str();
+	}
+
+	template <typename T>
+	bool ReadCacheValue(std::ifstream& stream, T& value)
+	{
+		stream.read(reinterpret_cast<char*>(&value), sizeof(value));
+		return stream.good();
+	}
+
+	template <typename T>
+	bool WriteCacheValue(std::ofstream& stream, const T& value)
+	{
+		stream.write(reinterpret_cast<const char*>(&value), sizeof(value));
+		return stream.good();
+	}
+
+	bool LoadNavMeshCache(const std::string& path,
+		std::uint64_t expectedFingerprint,
+		dtNavMesh*& outNavMesh,
+		dtNavMeshQuery*& outQuery)
+	{
+		outNavMesh = NULL;
+		outQuery = NULL;
+		std::ifstream stream(path.c_str(), std::ios::in | std::ios::binary);
+		if (!stream.is_open())
+			return false;
+
+		std::uint32_t magic = 0;
+		std::uint32_t cacheVersion = 0;
+		std::uint32_t detourVersion = 0;
+		std::uint64_t fingerprint = 0;
+		std::uint32_t dataSize = 0;
+		if (!ReadCacheValue(stream, magic) ||
+			!ReadCacheValue(stream, cacheVersion) ||
+			!ReadCacheValue(stream, detourVersion) ||
+			!ReadCacheValue(stream, fingerprint) ||
+			!ReadCacheValue(stream, dataSize) ||
+			magic != NAV_CACHE_MAGIC ||
+			cacheVersion != NAV_CACHE_VERSION ||
+			detourVersion != static_cast<std::uint32_t>(DT_NAVMESH_VERSION) ||
+			fingerprint != expectedFingerprint ||
+			dataSize == 0 || dataSize > NAV_CACHE_MAX_DATA_SIZE)
+		{
+			return false;
+		}
+
+		unsigned char* navData = static_cast<unsigned char*>(dtAlloc(dataSize, DT_ALLOC_PERM));
+		if (navData == NULL)
+			return false;
+
+		stream.read(reinterpret_cast<char*>(navData), dataSize);
+		if (!stream.good())
+		{
+			dtFree(navData);
+			return false;
+		}
+
+		dtNavMesh* navMesh = dtAllocNavMesh();
+		if (navMesh == NULL)
+		{
+			dtFree(navData);
+			return false;
+		}
+
+		const dtStatus initStatus = navMesh->init(navData, static_cast<int>(dataSize), DT_TILE_FREE_DATA);
+		if (dtStatusFailed(initStatus))
+		{
+			dtFree(navData);
+			dtFreeNavMesh(navMesh);
+			return false;
+		}
+
+		NavBuilder builder;
+		dtNavMeshQuery* query = NULL;
+		if (!builder.BuildDetourQuery(*navMesh, query))
+		{
+			dtFreeNavMesh(navMesh);
+			return false;
+		}
+
+		outNavMesh = navMesh;
+		outQuery = query;
+		return true;
+	}
+
+	bool SaveNavMeshCache(const std::string& path,
+		std::uint64_t fingerprint,
+		const dtNavMesh& navMesh)
+	{
+		const dtMeshTile* tile = NULL;
+		int validTileCount = 0;
+		for (int tileIndex = 0; tileIndex < navMesh.getMaxTiles(); ++tileIndex)
+		{
+			const dtMeshTile* candidate = navMesh.getTile(tileIndex);
+			if (candidate != NULL && candidate->header != NULL &&
+				candidate->data != NULL && candidate->dataSize > 0)
+			{
+				tile = candidate;
+				++validTileCount;
+			}
+		}
+		if (validTileCount != 1 || tile == NULL ||
+			static_cast<std::uint32_t>(tile->dataSize) > NAV_CACHE_MAX_DATA_SIZE)
+			return false;
+
+		const std::string tempPath = path + ".tmp";
+		std::ofstream stream(tempPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+		if (!stream.is_open())
+			return false;
+
+		const std::uint32_t detourVersion = static_cast<std::uint32_t>(DT_NAVMESH_VERSION);
+		const std::uint32_t dataSize = static_cast<std::uint32_t>(tile->dataSize);
+		const bool headerWritten =
+			WriteCacheValue(stream, NAV_CACHE_MAGIC) &&
+			WriteCacheValue(stream, NAV_CACHE_VERSION) &&
+			WriteCacheValue(stream, detourVersion) &&
+			WriteCacheValue(stream, fingerprint) &&
+			WriteCacheValue(stream, dataSize);
+		if (headerWritten)
+			stream.write(reinterpret_cast<const char*>(tile->data), tile->dataSize);
+		stream.close();
+		if (!headerWritten || stream.fail())
+		{
+			std::remove(tempPath.c_str());
+			return false;
+		}
+
+		std::remove(path.c_str());
+		if (std::rename(tempPath.c_str(), path.c_str()) != 0)
+		{
+			std::remove(tempPath.c_str());
+			return false;
+		}
+		return true;
+	}
+
+	double ElapsedMilliseconds(const std::chrono::steady_clock::time_point& start)
+	{
+		return std::chrono::duration<double, std::milli>(
+			std::chrono::steady_clock::now() - start).count();
+	}
+
 	static bool FindNearestPoly(const dtNavMeshQuery& query,
 		const Ogre::Vector3& point,
 		dtPolyRef& outPoly,
@@ -229,20 +436,49 @@ NavigationMesh::NavigationMesh(const rcConfig& config, const std::vector<BlockOb
 	, m_navQuery(NULL)
 	, m_debugNode(NULL)
 {
+	const std::chrono::steady_clock::time_point totalStart = std::chrono::steady_clock::now();
 	rcConfig buildCfg = config;
-	// Keep the caller-provided bounds to match the legacy navigation build.
-	//EnsureConfig(buildCfg);
-
 	NavBuilder builder;
-	if (!builder.Build(buildCfg, blocks, m_navMesh, m_navQuery))
+	const int legacyWidth = buildCfg.width;
+	const int legacyHeight = buildCfg.height;
+	const bool fittedBounds = builder.FitBoundsToObjects(buildCfg, blocks, NAV_BOUNDS_PADDING);
+	const std::uint64_t fingerprint = builder.ComputeInputFingerprint(buildCfg, blocks);
+
+	std::string cacheDirectory;
+	std::string cachePath;
+	const bool cacheEnabled = IsNavMeshCacheEnabled() && ResolveNavMeshCacheDirectory(cacheDirectory);
+	if (cacheEnabled)
+		cachePath = BuildNavMeshCachePath(cacheDirectory, fingerprint);
+
+	const std::chrono::steady_clock::time_point loadStart = std::chrono::steady_clock::now();
+	const bool cacheHit = cacheEnabled && LoadNavMeshCache(cachePath, fingerprint, m_navMesh, m_navQuery);
+	const double cacheLoadMs = ElapsedMilliseconds(loadStart);
+	const std::chrono::steady_clock::time_point buildStart = std::chrono::steady_clock::now();
+	if (!cacheHit && !builder.Build(buildCfg, blocks, m_navMesh, m_navQuery))
 	{
 		m_navMesh = NULL;
 		m_navQuery = NULL;
 		return;
 	}
+	const double buildMs = cacheHit ? 0.0 : ElapsedMilliseconds(buildStart);
+	const bool cacheSaved = !cacheHit && cacheEnabled && m_navMesh != NULL &&
+		SaveNavMeshCache(cachePath, fingerprint, *m_navMesh);
 
 	RebuildDebugVisual();
 	SetDebugVisible(true);
+
+	std::ostringstream log;
+	log << "[NavigationMesh] cache=" << (cacheHit ? "hit" : "miss")
+		<< " saved=" << (cacheSaved ? "true" : "false")
+		<< " fitted=" << (fittedBounds ? "true" : "false")
+		<< " grid=" << legacyWidth << "x" << legacyHeight
+		<< "->" << buildCfg.width << "x" << buildCfg.height
+		<< " fingerprint=" << std::hex << fingerprint << std::dec
+		<< std::fixed << std::setprecision(2)
+		<< " cacheLoadMs=" << cacheLoadMs
+		<< " buildMs=" << buildMs
+		<< " totalMs=" << ElapsedMilliseconds(totalStart);
+	Ogre::LogManager::getSingleton().logMessage(log.str());
 }
 
 NavigationMesh::~NavigationMesh()
@@ -442,6 +678,4 @@ void NavigationMesh::DestroyDebugVisual()
 		m_debugMeshName.clear();
 	}
 }
-
-
 
