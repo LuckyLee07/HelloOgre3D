@@ -2,8 +2,9 @@
 /bin/*.log
 /bin/*.exe
 /bin/*.pdb
-/libs/*.lib
-/libs/*.pdb
+/bin/HelloOgre3D
+/bin/HelloOgre3D.dSYM/
+/libs/*
 
 # Local agent / IDE state
 /.vscode/
