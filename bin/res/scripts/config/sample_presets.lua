@@ -223,6 +223,7 @@ SamplePresets.Sandbox19.behaviorTree.conditionsGlobal = "Sandbox19CommandConditi
 SamplePresets.Sandbox19.commanderMatch = {
 	prepareMs = 6000,
 	intermissionMs = 7000,
+	stalemateMs = 20000,
 	allyCount = 2,
 	waveEnemyCounts = { 2, 3, 4 },
 }

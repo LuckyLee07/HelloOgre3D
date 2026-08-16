@@ -17,6 +17,9 @@ local _restartRequested = false
 local _waveIndex = 0
 local _phaseDeadlineMs = 0
 local _matchStartedMs = 0
+local _waveLastProgressMs = 0
+local _waveLastEnemyAlive = 0
+local _waveConvergeCount = 0
 
 -- Gorilla 圆盘雷达（SandboxUI:CreatePolygon → UIPolygon，与 HP 面板同一 Gorilla 层，确保渲染）：
 -- 浅蓝圆盘（高边数≈圆，深色描边）+ 中心三角箭头（静止朝上，player-up）+ 复用圆点 blip 池
@@ -45,6 +48,7 @@ local COMMAND = {
 local MATCH = {
 	prepareMs = 6000,
 	intermissionMs = 7000,
+	stalemateMs = 20000,
 	allyCount = 2,
 	waveEnemyCounts = { 2, 3, 4 },
 	waveSpawnIndices = {
@@ -71,7 +75,9 @@ local _selectMarks = {}
 local INTENT_CARD_POOL = 4
 local INTENT_CARD_WIDTH = 164
 local INTENT_CARD_HEIGHT = 34
+local INTENT_CARD_GAP = 6
 local INTENT_TARGET_RADIUS = 8
+local INTENT_HUD_BOUNDS = { x = 20, y = 188, w = 370, h = 190 }
 local _intentCards = {}
 local _intentTargets = {}
 local _focusTargetLabel = nil
@@ -154,6 +160,7 @@ local function _LoadMatchConfig()
 	if cfg == nil then return end
 	MATCH.prepareMs = math.max(0, tonumber(cfg.prepareMs) or MATCH.prepareMs)
 	MATCH.intermissionMs = math.max(0, tonumber(cfg.intermissionMs) or MATCH.intermissionMs)
+	MATCH.stalemateMs = math.max(5000, tonumber(cfg.stalemateMs) or MATCH.stalemateMs)
 	MATCH.allyCount = math.max(1, tonumber(cfg.allyCount) or MATCH.allyCount)
 	if type(cfg.waveEnemyCounts) == "table" and #cfg.waveEnemyCounts > 0 then
 		MATCH.waveEnemyCounts = {}
@@ -203,7 +210,7 @@ local function _UpdateHud()
 	local allyAlive, enemyAlive = _CountAliveAgents()
 	local selCount = 0
 	for _ in pairs(_selection) do selCount = selCount + 1 end
-	local text = string.format(
+	local text = GUI.MarkupColor.White .. GUI.Markup.SmallMono .. string.format(
 		"Commander HP: %d / 100    Time: %s\n%s\nSquad: %d    Enemies: %d    Selected: %d\nOrders F:%d  T:%d  G:%d\n%s",
 		math.max(0, math.floor(_player:GetHealth())),
 		_FormatSeconds(nowMs - _matchStartedMs),
@@ -215,7 +222,7 @@ local function _UpdateHud()
 		_intentCounts.retreat or 0,
 		_intentCounts.rally or 0,
 		_commandHint)
-	_hud:setText(text)
+	_hud:setMarkupText(text)
 end
 
 local function _CreateRadar()
@@ -722,9 +729,45 @@ local function _UpdateCommandUi()
 	end
 end
 
+local function _RectsOverlap(a, b)
+	return a.x < b.x + b.w and a.x + a.w > b.x
+		and a.y < b.y + b.h and a.y + a.h > b.y
+end
+
+local function _ResolveIntentCardRect(screen, placedCards)
+	local screenWidth, screenHeight = GameManager:getScreenWidth(), GameManager:getScreenHeight()
+	local rect = {
+		x = math.max(4, math.min(screenWidth - INTENT_CARD_WIDTH - 4,
+			screen.x - INTENT_CARD_WIDTH * 0.5)),
+		y = math.max(4, math.min(screenHeight - INTENT_CARD_HEIGHT - 4,
+			screen.y - INTENT_CARD_HEIGHT)),
+		w = INTENT_CARD_WIDTH,
+		h = INTENT_CARD_HEIGHT,
+	}
+
+	-- 靠近左侧 HUD 时先移到 HUD 右边；友军聚在一起时再逐张向上堆叠。
+	if _RectsOverlap(rect, INTENT_HUD_BOUNDS) then
+		rect.x = math.min(screenWidth - rect.w - 4,
+			INTENT_HUD_BOUNDS.x + INTENT_HUD_BOUNDS.w + INTENT_CARD_GAP)
+	end
+	for i = 1, #placedCards do
+		if _RectsOverlap(rect, placedCards[i]) then
+			local above = placedCards[i].y - rect.h - INTENT_CARD_GAP
+			if above >= 4 then
+				rect.y = above
+			else
+				rect.y = math.min(screenHeight - rect.h - 4,
+					placedCards[i].y + placedCards[i].h + INTENT_CARD_GAP)
+			end
+		end
+	end
+	return rect
+end
+
 local function _UpdateIntentVisuals()
 	local slot = 1
 	local focusLabelShown = false
+	local placedCards = {}
 	local agents = ObjectManager:getAllAgents()
 	for i = 0, agents:size() - 1 do
 		local agent = agents[i]
@@ -734,13 +777,15 @@ local function _UpdateIntentVisuals()
 			if intent ~= nil and screen ~= nil then
 				local colour = _IntentColour(intent)
 				local card = _intentCards[slot]
+				local cardRect = _ResolveIntentCardRect(screen, placedCards)
 				local remaining = intent.remainingMs ~= nil and ("  " .. _FormatSeconds(intent.remainingMs)) or ""
-				card:setPosition(Vector2(screen.x - INTENT_CARD_WIDTH * 0.5, screen.y - INTENT_CARD_HEIGHT))
+				card:setPosition(Vector2(cardRect.x, cardRect.y))
 				card:setBackgroundColor(colour)
 				card:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
 					"#" .. tostring(agent:GetObjId()) .. "  " .. intent.code .. remaining ..
 					GUI.MarkupNewline .. intent.reason)
 				card:setVisible(true)
+				table.insert(placedCards, cardRect)
 
 				local targetMarker = _intentTargets[slot]
 				if intent.commandKind ~= nil and intent.commandKind ~= "focus" and intent.targetPos ~= nil then
@@ -917,6 +962,114 @@ local function _SpawnWaveEnemy(waveIndex, slotIndex)
 	return enemy
 end
 
+local function _FindNearestOpponent(agent)
+	local nearest, nearestDistSq = nil, math.huge
+	local position = agent:GetPosition()
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local candidate = agents[i]
+		if candidate ~= nil and candidate ~= agent and candidate:GetHealth() > 0
+			and candidate:GetTeamId() ~= agent:GetTeamId() then
+			local delta = candidate:GetPosition() - position
+			local distSq = delta:squaredLength()
+			if distSq < nearestDistSq then
+				nearest, nearestDistSq = candidate, distSq
+			end
+		end
+	end
+	return nearest
+end
+
+local function _IsFinitePosition(position)
+	local function finite(value)
+		return value == value and value > -100000 and value < 100000
+	end
+	return position ~= nil and finite(position.x) and finite(position.y) and finite(position.z)
+end
+
+local function _BuildContactPosition(opponent, slotIndex)
+	local opponentPosition = opponent:GetPosition()
+	if not _IsFinitePosition(opponentPosition) then
+		local fallback = _player:GetPosition()
+		return Vector3(fallback.x, fallback.y, fallback.z)
+	end
+
+	-- 失联单位只在第二次超时后被拉回最近对手周围；固定有限偏移避免导航路径
+	-- 的异常点直接进入 Bullet/Ogre transform，也避免多个敌人叠在同一点。
+	local side = slotIndex % 2 == 0 and -1 or 1
+	local ring = math.floor(slotIndex / 2)
+	return Vector3(
+		opponentPosition.x + side * (3.0 + ring * 1.5),
+		opponentPosition.y,
+		opponentPosition.z + (slotIndex % 3 - 1) * 1.5)
+end
+
+local function _ForceWaveContact()
+	local moved = 0
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent:GetHealth() > 0
+			and agent:GetTeamId() ~= _player:GetTeamId() then
+			local opponent = _FindNearestOpponent(agent)
+			if opponent ~= nil then
+				local contactPosition = _BuildContactPosition(opponent, moved + 1)
+				if _IsFinitePosition(contactPosition) then
+					agent:SetVelocity(Vector3(0, 0, 0))
+					agent:setPosition(contactPosition)
+					local bb = _GetBlackboard(agent)
+					if bb ~= nil then bb:SetVec3("movePos", opponent:GetPosition()) end
+					moved = moved + 1
+				end
+			end
+		end
+	end
+	return moved
+end
+
+local function _ConvergeStalledWave(nowMs, enemyAlive)
+	if enemyAlive < _waveLastEnemyAlive then
+		_waveLastEnemyAlive = enemyAlive
+		_waveLastProgressMs = nowMs
+		_waveConvergeCount = 0
+		return
+	end
+	if nowMs - _waveLastProgressMs < MATCH.stalemateMs then return end
+
+	_waveConvergeCount = _waveConvergeCount + 1
+	if _waveConvergeCount >= 2 then
+		local moved = _ForceWaveContact()
+		_waveLastProgressMs = nowMs
+		_commandHint = "lost enemies forced back into contact"
+		print("[Sandbox19Match] phase=FORCE_CONTACT wave=" .. tostring(_waveIndex) ..
+			" enemies=" .. tostring(enemyAlive) ..
+			" moved=" .. tostring(moved) ..
+			" elapsedMs=" .. tostring(nowMs - _matchStartedMs))
+		return
+	end
+
+	local redirected = 0
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if agent ~= nil and agent ~= _player and agent:GetHealth() > 0 then
+			local bb = _GetBlackboard(agent)
+			local opponent = _FindNearestOpponent(agent)
+			if bb ~= nil and opponent ~= nil and not bb:Has("command.issuedMs") then
+				bb:SetVec3("movePos", opponent:GetPosition())
+				redirected = redirected + 1
+			end
+		end
+	end
+
+	_waveLastProgressMs = nowMs
+	_commandHint = "contact lost - squads converging"
+	print("[Sandbox19Match] phase=CONVERGE wave=" .. tostring(_waveIndex) ..
+		" enemies=" .. tostring(enemyAlive) ..
+		" redirected=" .. tostring(redirected) ..
+		" elapsedMs=" .. tostring(nowMs - _matchStartedMs))
+end
+
 local function _StartNextWave(nowMs)
 	_waveIndex = _waveIndex + 1
 	local enemyCount = MATCH.waveEnemyCounts[_waveIndex] or 0
@@ -925,6 +1078,9 @@ local function _StartNextWave(nowMs)
 	for slot = 1, enemyCount do
 		_SpawnWaveEnemy(_waveIndex, slot)
 	end
+	_waveLastEnemyAlive = enemyCount
+	_waveLastProgressMs = nowMs
+	_waveConvergeCount = 0
 	_SelectAllLivingAllies()
 	_commandHint = "wave " .. tostring(_waveIndex) .. " incoming - squad selected"
 	print("[Sandbox19Match] phase=WAVE wave=" .. tostring(_waveIndex) ..
@@ -962,11 +1118,15 @@ local function _UpdateMatchFlow(nowMs)
 	end
 	if _matchState == "PREPARE" then
 		if nowMs >= _phaseDeadlineMs then _StartNextWave(nowMs) end
-	elseif _matchState == "WAVE" and enemyAlive <= 0 then
-		if _waveIndex >= #MATCH.waveEnemyCounts then
-			_SetTerminalMatchState("VICTORY", nowMs)
+	elseif _matchState == "WAVE" then
+		if enemyAlive <= 0 then
+			if _waveIndex >= #MATCH.waveEnemyCounts then
+				_SetTerminalMatchState("VICTORY", nowMs)
+			else
+				_EnterIntermission(nowMs)
+			end
 		else
-			_EnterIntermission(nowMs)
+			_ConvergeStalledWave(nowMs, enemyAlive)
 		end
 	elseif _matchState == "INTERMISSION" and nowMs >= _phaseDeadlineMs then
 		_StartNextWave(nowMs)
@@ -980,12 +1140,15 @@ local function _RunMatchSelfTest()
 	local waveStarted = _matchState == "WAVE" and _waveIndex == 1
 	local enemyCountOk = enemyAlive == MATCH.waveEnemyCounts[1]
 	local fixedSeed = preset ~= nil and tonumber(preset.seed) == 20260710
-	local pass = commanderUnarmed and waveStarted and enemyCountOk and fixedSeed and #MATCH.waveEnemyCounts >= 3
+	local contactPositionFinite = _player ~= nil and _IsFinitePosition(_BuildContactPosition(_player, 1))
+	local pass = commanderUnarmed and waveStarted and enemyCountOk and fixedSeed
+		and contactPositionFinite and #MATCH.waveEnemyCounts >= 3
 	print("[Sandbox19MatchSelfTest] " .. (pass and "PASS" or "FAIL") ..
 		" commanderUnarmed=" .. tostring(commanderUnarmed) ..
 		" waveStarted=" .. tostring(waveStarted) ..
 		" enemyCount=" .. tostring(enemyAlive) ..
 		" fixedSeed=" .. tostring(fixedSeed) ..
+		" contactPositionFinite=" .. tostring(contactPositionFinite) ..
 		" waves=" .. tostring(#MATCH.waveEnemyCounts))
 end
 
@@ -996,6 +1159,9 @@ local function _SpawnEncounter()
 	_waveIndex = 0
 	_matchStartedMs = GameManager:getTimeInMillis()
 	_phaseDeadlineMs = _matchStartedMs + MATCH.prepareMs
+	_waveLastProgressMs = _matchStartedMs
+	_waveLastEnemyAlive = 0
+	_waveConvergeCount = 0
 
 	local humanScript = "res/scripts/agent/HumanSoldierAgent.lua"
 	_player = Create_SoldierWithProfile(humanScript, Soldier.AppearanceTypes.LIGHT, 1, "commander_soldier")
