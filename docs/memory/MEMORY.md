@@ -26,3 +26,4 @@
 - [D3D9 smoke 需要桌面图形会话](d3d9-smoke-desktop-session.md) — 受限会话可能在 Lua 初始化前报 Cannot create device，须在可访问实际桌面的会话重跑
 - [中间产物放本地](local-output-not-cloud-artifact.md) — 诊断图/可视化默认写项目内 tmp、自包含 HTML，别默认发 Artifact/claude.ai
 - [chapter-8 对拍：速度已修+感知天花板](chapter8-parity-rootcause.md) — 根因全清但**保架构下逐帧复刻不可达**：①速度=capsule setAngularFactor(0)禁转→滑动摩擦3×衰减(已修:friction 0.15+去forceScale，前7帧对齐)；②感知可见性分岔=全局多体发散(agent#2 s3最早/agent#3 s8集体转折)，**双铁证**:agent#3多看见id118(legvis:顶起box挡视线)、agent#2少看见id119(visdbg116:视锥后方)，两套独立实现不可逐位对齐。已排除随机数(巡逻点已注入对齐)/选择逻辑(纯nearest)。诊断法:A3DIAG对比setVel(物理前)vs speed(物理后)
+- [macOS 启动卡顿的两个热点](macos-startup-loading-hotspots.md) — Sandbox19 启动慢主要是同步 Recast 构建和压缩 OBF 骨骼流反复回退解压，不是 initialiseAllResourceGroups 或贴图上传
