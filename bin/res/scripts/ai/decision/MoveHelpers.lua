@@ -14,6 +14,14 @@ MoveHelpers = {}
 function MoveHelpers.BuildAndSetPath(agent, fromPos, toPos)
     local path = std.vector_Ogre__Vector3_()
     local ok = SandboxNav:FindPath("default", fromPos, toPos, path)
+    if _G.HELLO_SANDBOX_SAMPLE_NAME == "Sandbox19" then
+        local ai = AgentComponents.GetAI(agent)
+        local bb = ai ~= nil and ai:GetBlackboard() or nil
+        if bb ~= nil then
+            bb:SetString("__debug.navStatus", ok and path:size() > 0 and "success" or "failure")
+            bb:SetInt("__debug.navTimeMs", GameManager:getTimeInMillis())
+        end
+    end
     if not ok or path:size() == 0 then
         return false
     end

@@ -7,6 +7,17 @@ require("res.scripts.agent.BehaviorSoldierAgent.lua")
 -- conditionsGlobal 名字查 _G，查不到会静默回落到 SoldierConditions。
 require("res.scripts.ai.behavior.Sandbox19CommandConditions.lua")
 
+local Observer = require("res.scripts.samples.ai_observer")
+local _observer = Observer.New()
+_observer.enabled = false
+local _observerPanel = nil
+local _profiles = {}
+local _observationTest = nil
+if os.getenv("HELLO_SANDBOX19_OBSERVATION_SELF_TEST") == "1" then
+	_observer.enabled = true
+	_observationTest = require("res.scripts.samples.ai_observer_selftest").New()
+end
+
 local _sampleName = "Sandbox19"
 local _agents = {}
 local _player = nil
@@ -17,6 +28,8 @@ local _restartRequested = false
 local _waveIndex = 0
 local _phaseDeadlineMs = 0
 local _matchStartedMs = 0
+local _matchEndedMs = nil
+local _matchEndReason = ""
 local _waveLastProgressMs = 0
 local _waveLastEnemyAlive = 0
 local _waveConvergeCount = 0
@@ -64,6 +77,11 @@ local _dragStart = { x = 0, y = 0 }
 local _dragNow = { x = 0, y = 0 }
 local _lastPickedEnemyId = 0
 local _commandHint = ""
+local _commandHintUntilMs = 0
+local function _SetHint(text)
+	_commandHint = text
+	_commandHintUntilMs = GameManager:getTimeInMillis() + 5000
+end
 local _inputDiagEnabled = os.getenv ~= nil and os.getenv("HELLO_SANDBOX19_INPUT_DIAG") == "1"
 
 local SELECT_MARK_POOL = 4       -- Sandbox19 友方 AI 只有 2 个，留一倍余量
@@ -77,7 +95,7 @@ local INTENT_CARD_WIDTH = 164
 local INTENT_CARD_HEIGHT = 34
 local INTENT_CARD_GAP = 6
 local INTENT_TARGET_RADIUS = 8
-local INTENT_HUD_BOUNDS = { x = 20, y = 188, w = 370, h = 190 }
+local INTENT_HUD_BOUNDS = { x = 20, y = 188, w = 410, h = 150 }
 local _intentCards = {}
 local _intentTargets = {}
 local _focusTargetLabel = nil
@@ -85,23 +103,29 @@ local _intentSnapshot = {}
 local _intentCounts = { focus = 0, retreat = 0, rally = 0 }
 local _IntentColour = nil
 
-local infoText = GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
-	"[Sandbox19 - Tactical Command]" .. GUI.MarkupNewline ..
-	"W/S: move commander" .. GUI.MarkupNewline ..
-	"A/D: turn    Shift: sprint" .. GUI.MarkupNewline ..
-	"Commander is unarmed" .. GUI.MarkupNewline ..
-	"RMB: select ally (click / drag box)" .. GUI.MarkupNewline ..
-	"F: focus fire   T: fall back   G: rally" .. GUI.MarkupNewline ..
-	"Enter: restart encounter"
+local infoText = GUI.MarkupColor.White .. GUI.Markup.MediumMono ..
+	"LEAD YOUR SQUAD THROUGH 3 WAVES" .. GUI.MarkupNewline ..
+	"Unarmed: W/S move | A/D turn" .. GUI.MarkupNewline ..
+	"Tab: select all living allies" .. GUI.MarkupNewline ..
+	"RMB: select ally / mark enemy" .. GUI.MarkupNewline ..
+	"Shift sprint | RMB drag: box select" .. GUI.MarkupNewline ..
+	"F focus | T fall back | G rally here" .. GUI.MarkupNewline ..
+	"Orders last 8s, then AI takes over" .. GUI.MarkupNewline ..
+	"Enter restart | I observer | F2 help"
 
 local function _CreateHud()
 	_hud = SandboxUI:CreateUIFrame()
 	_hud:setPosition(Vector2(20, 188))   -- 下移避开左上角雷达
-	_hud:setDimension(Vector2(370, 190))
+	_hud:setDimension(Vector2(410, 150))
 	_hud:setTextMargin(12, 10)
 	_hud:setGradientColor(Gorilla.Gradient_NorthSouth,
 		ColourValue(0.05, 0.08, 0.09, 0.82),
 		ColourValue(0.0, 0.0, 0.0, 0.84))
+
+	_observerPanel = SandboxUI:CreateUIFrame()
+	_observerPanel:setDimension(Vector2(460, 290))
+	_observerPanel:setTextMargin(8, 8)
+	_observerPanel:setBackgroundColor(ColourValue(0.03, 0.05, 0.08, 0.90))
 
 	_crosshair = SandboxUI:CreateUIFrame()
 	_crosshair:setDimension(Vector2(32, 32))
@@ -210,18 +234,28 @@ local function _UpdateHud()
 	local allyAlive, enemyAlive = _CountAliveAgents()
 	local selCount = 0
 	for _ in pairs(_selection) do selCount = selCount + 1 end
-	local text = GUI.MarkupColor.White .. GUI.Markup.SmallMono .. string.format(
-		"Commander HP: %d / 100    Time: %s\n%s\nSquad: %d    Enemies: %d    Selected: %d\nOrders F:%d  T:%d  G:%d\n%s",
-		math.max(0, math.floor(_player:GetHealth())),
-		_FormatSeconds(nowMs - _matchStartedMs),
-		_BuildPhaseText(nowMs),
-		allyAlive,
-		enemyAlive,
-		selCount,
-		_intentCounts.focus or 0,
-		_intentCounts.retreat or 0,
-		_intentCounts.rally or 0,
-		_commandHint)
+	local active, nextExpiry = 0, COMMAND.ttlMs
+	for _, intent in pairs(_intentSnapshot) do
+		if intent.commandKind ~= nil then
+			active = active + 1
+			nextExpiry = math.min(nextExpiry, intent.remainingMs or 0)
+		end
+	end
+	local orders = active > 0 and string.format("Orders: %d | next expiry %s", active, _FormatSeconds(nextExpiry))
+		or "Orders: none - autonomous AI"
+	local hint = _commandHint
+	if nowMs >= _commandHintUntilMs then
+		hint = selCount == 0 and "Tab selects squad | F / T / G orders" or "RMB enemy then F to focus fire"
+	end
+	if _matchEndedMs ~= nil then
+		orders = _matchEndReason
+		hint = "Enter: restart with a fresh squad"
+	end
+	local text = GUI.MarkupColor.White .. GUI.Markup.MediumMono .. string.format(
+		"%s\nHP %d/100 | Time %s\nAllies %d | Enemies %d | Selected %d\n%s\n",
+		_BuildPhaseText(nowMs), math.max(0, math.floor(_player:GetHealth())),
+		_FormatSeconds((_matchEndedMs or nowMs) - _matchStartedMs), allyAlive, enemyAlive, selCount, orders)
+		.. GUI.MarkupColor.Yellow .. hint
 	_hud:setMarkupText(text)
 end
 
@@ -401,16 +435,16 @@ local function _PickAt(x, y)
 	-- 点到敌人：记下来供集火用，不改变友军选择集。
 	if bestEnemyId > 0 and (bestId == 0 or bestEnemyDistSq < bestDistSq) then
 		_lastPickedEnemyId = bestEnemyId
-		_commandHint = "target marked"
+		_SetHint("Enemy marked - F to focus fire")
 		return
 	end
 
 	_ClearSelection()
 	if bestId > 0 then
 		_selection[bestId] = true
-		_commandHint = "1 ally selected"
+		_SetHint("1 ally selected")
 	else
-		_commandHint = "selection cleared"
+		_SetHint("Selection cleared - Tab: select all")
 	end
 end
 
@@ -430,7 +464,7 @@ local function _BoxSelect(x0, y0, x1, y1)
 			end
 		end
 	end
-	_commandHint = count .. " allies selected"
+	_SetHint(count .. " allies selected")
 end
 
 -- ===== 指挥层：下令 =====
@@ -484,6 +518,7 @@ local function _ClearAgentCommand(bb, reason)
 		bb:Remove("movePos")
 	end
 	if hadCommand and reason ~= nil then
+		bb:SetString("__debug.commandClearReason", reason)
 		print("[Sandbox19CommandLifecycle] cleared reason=" .. tostring(reason))
 	end
 	return hadCommand
@@ -511,9 +546,7 @@ local function _BuildIntentForAgent(agent, nowMs)
 
 	if bb:Has("command.issuedMs") then
 		local elapsed = nowMs - bb:GetInt("command.issuedMs", nowMs)
-		if elapsed < 0 or elapsed > COMMAND.ttlMs then
-			_ClearAgentCommand(bb, "ttl-expired")
-		else
+		if elapsed >= 0 and elapsed <= COMMAND.ttlMs then
 			local kind = bb:GetString("command.kind")
 			local remainingMs = COMMAND.ttlMs - elapsed
 			if kind == "focus" then
@@ -529,7 +562,6 @@ local function _BuildIntentForAgent(agent, nowMs)
 						remainingMs = remainingMs,
 					}
 				end
-				_ClearAgentCommand(bb, "focus-target-invalid")
 			elseif (kind == "retreat" or kind == "rally") and bb:Has("command.targetPos") then
 				local targetPos = bb:GetVec3("command.targetPos")
 				local delta = targetPos - agent:GetPosition()
@@ -561,6 +593,36 @@ local function _BuildIntentForAgent(agent, nowMs)
 		return { code = "MOVE", reason = "autonomous destination", targetPos = bb:GetVec3("movePos") }
 	end
 	return { code = "PATROL", reason = "no contact" }
+end
+
+local function _MaintainCommands(nowMs)
+	for id in pairs(_selection) do
+		local agent = _FindAgentById(id)
+		if agent == nil or agent:GetHealth() <= 0 then _selection[id] = nil end
+	end
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		local bb = _GetBlackboard(agent)
+		if bb ~= nil then
+			local command = Observer.Command(bb, nowMs, COMMAND.ttlMs, _FindAgentById)
+			if agent:GetHealth() <= 0 then
+				_ClearAgentCommand(bb, "owner-dead")
+				_selection[agent:GetObjId()] = nil
+			elseif command.reason ~= nil then
+				_ClearAgentCommand(bb, command.reason)
+			end
+		end
+	end
+end
+
+local function _UpdateObserver(nowMs)
+	_observer:Update(_selection, _FindAgentById, nowMs, COMMAND.ttlMs, _profiles)
+	_observerPanel:setVisible(_observer.enabled)
+	if not _observer.enabled then return end
+	_observerPanel:setPosition(Vector2(math.max(4, GameManager:getScreenWidth() - 470), 10))
+	_observerPanel:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.SmallMono ..
+		table.concat(Observer.Lines(_observer.snapshot), GUI.MarkupNewline))
 end
 
 local function _RefreshIntentSnapshot(nowMs)
@@ -597,11 +659,11 @@ end
 local function _IssueCommand(kind, focusTargetId, basePos)
 	if _player == nil then return end
 	if _matchState == "VICTORY" or _matchState == "DEFEAT" then
-		_commandHint = "match finished - press Enter"
+		_SetHint("match finished - press Enter")
 		return
 	end
 	if _SelectionCount() == 0 then
-		_commandHint = "no ally selected"
+		_SetHint("No allies selected - press Tab")
 		return
 	end
 
@@ -669,12 +731,16 @@ local function _IssueCommand(kind, focusTargetId, basePos)
 		end
 	end
 
-	_commandHint = kind .. " -> " .. issued .. " ally"
+	_SetHint(string.upper(kind) .. ": " .. issued .. " allies | lasts 8s")
 	print("[Sandbox19Command] kind=" .. kind .. " issued=" .. issued ..
 		" focusTargetId=" .. tostring(focusTargetId))
 end
 
 local function _IssueFocus()
+	if _SelectionCount() == 0 then
+		_SetHint("No allies selected - press Tab")
+		return
+	end
 	local targetId = _lastPickedEnemyId
 	if targetId <= 0 then
 		targetId = _FindEnemyInPlayerCone()
@@ -686,7 +752,7 @@ local function _IssueFocus()
 		end
 	end
 	if targetId <= 0 then
-		_commandHint = "no target in view"
+		_SetHint("No target - RMB an enemy, then F")
 		return
 	end
 	_IssueCommand("focus", targetId, nil)
@@ -749,6 +815,12 @@ local function _ResolveIntentCardRect(screen, placedCards)
 	if _RectsOverlap(rect, INTENT_HUD_BOUNDS) then
 		rect.x = math.min(screenWidth - rect.w - 4,
 			INTENT_HUD_BOUNDS.x + INTENT_HUD_BOUNDS.w + INTENT_CARD_GAP)
+	end
+	if _observer.enabled then
+		local panel = { x = math.max(4, screenWidth - 470), y = 10, w = 460, h = 290 }
+		if _RectsOverlap(rect, panel) then
+			rect.y = math.min(screenHeight - rect.h - 4, panel.y + panel.h + INTENT_CARD_GAP)
+		end
 	end
 	for i = 1, #placedCards do
 		if _RectsOverlap(rect, placedCards[i]) then
@@ -881,7 +953,7 @@ local function _RunCommandSelfTest()
 	local expiredOk = conds.HasCommandFocus(ally, bb) == false
 		and conds.HasCommandRetreat(ally, bb) == false
 		and conds.HasCommandRally(ally, bb) == false
-	_BuildIntentForAgent(ally, GameManager:getTimeInMillis())
+	_MaintainCommands(GameManager:getTimeInMillis())
 	local lifecycleCleared = not bb:Has("command.kind") and not bb:Has("command.issuedMs")
 
 	_ClearSelection()
@@ -902,6 +974,8 @@ local function _RunCommandSelfTest()
 end
 
 local function _ClearCommandState()
+	_observer:Release(_FindAgentById)
+	_profiles = {}
 	_ClearSelection()
 	_dragging = false
 	_lastPickedEnemyId = 0
@@ -957,6 +1031,7 @@ local function _SpawnWaveEnemy(waveIndex, slotIndex)
 	if not enemy:HasComponent("ai") or enemy:HasComponent("player") then
 		error("[Sandbox19] wave enemy must contain ai and exclude player")
 	end
+	_profiles[enemy:GetObjId()] = "ai_soldier"
 	table.insert(_agents, enemy)
 	ConfigManager:PlaceAgentOnPresetSpawn(enemy, _sampleName, spawnIndex, "default")
 	return enemy
@@ -1040,7 +1115,7 @@ local function _ConvergeStalledWave(nowMs, enemyAlive)
 	if _waveConvergeCount >= 2 then
 		local moved = _ForceWaveContact()
 		_waveLastProgressMs = nowMs
-		_commandHint = "lost enemies forced back into contact"
+		_SetHint("Enemies regrouped nearby")
 		print("[Sandbox19Match] phase=FORCE_CONTACT wave=" .. tostring(_waveIndex) ..
 			" enemies=" .. tostring(enemyAlive) ..
 			" moved=" .. tostring(moved) ..
@@ -1063,7 +1138,7 @@ local function _ConvergeStalledWave(nowMs, enemyAlive)
 	end
 
 	_waveLastProgressMs = nowMs
-	_commandHint = "contact lost - squads converging"
+	_SetHint("contact lost - squads converging")
 	print("[Sandbox19Match] phase=CONVERGE wave=" .. tostring(_waveIndex) ..
 		" enemies=" .. tostring(enemyAlive) ..
 		" redirected=" .. tostring(redirected) ..
@@ -1082,7 +1157,7 @@ local function _StartNextWave(nowMs)
 	_waveLastProgressMs = nowMs
 	_waveConvergeCount = 0
 	_SelectAllLivingAllies()
-	_commandHint = "wave " .. tostring(_waveIndex) .. " incoming - squad selected"
+	_SetHint("wave " .. tostring(_waveIndex) .. " incoming - squad selected")
 	print("[Sandbox19Match] phase=WAVE wave=" .. tostring(_waveIndex) ..
 		" enemies=" .. tostring(enemyCount) ..
 		" elapsedMs=" .. tostring(nowMs - _matchStartedMs))
@@ -1094,16 +1169,19 @@ local function _EnterIntermission(nowMs)
 	_ClearSquadCommands("wave-complete")
 	_RecoverSquad()
 	_SelectAllLivingAllies()
-	_commandHint = "wave clear - squad recovered and selected"
+	_SetHint("Wave clear - squad healed")
 	print("[Sandbox19Match] phase=INTERMISSION completedWave=" .. tostring(_waveIndex) ..
 		" nextInMs=" .. tostring(MATCH.intermissionMs))
 end
 
 local function _SetTerminalMatchState(state, nowMs)
+	_matchEndReason = state == "VICTORY" and "All waves cleared - well done!"
+		or (_player:GetHealth() <= 0 and "Defeat: commander down" or "Defeat: squad eliminated")
+	_matchEndedMs = nowMs
 	_matchState = state
 	_phaseDeadlineMs = 0
 	_ClearSquadCommands("match-" .. string.lower(state))
-	_commandHint = state .. " - press Enter to restart"
+	_SetHint(state .. " - press Enter to restart")
 	print("[Sandbox19Match] phase=" .. state ..
 		" wave=" .. tostring(_waveIndex) ..
 		" elapsedMs=" .. tostring(nowMs - _matchStartedMs))
@@ -1153,6 +1231,8 @@ local function _RunMatchSelfTest()
 end
 
 local function _SpawnEncounter()
+	_matchEndedMs = nil
+	_matchEndReason = ""
 	_agents = {}
 	_matchState = "PREPARE"
 	_restartRequested = false
@@ -1168,6 +1248,7 @@ local function _SpawnEncounter()
 	if not _player:HasComponent("player") or _player:HasComponent("ai") or _player:HasComponent("weapon") then
 		error("[Sandbox19] commander_soldier must contain player and exclude ai/weapon")
 	end
+	_profiles[_player:GetObjId()] = "commander_soldier"
 	table.insert(_agents, _player)
 	ConfigManager:PlaceAgentOnPresetSpawn(_player, _sampleName, 1, "default")
 
@@ -1177,17 +1258,18 @@ local function _SpawnEncounter()
 		if not agent:HasComponent("ai") or agent:HasComponent("player") then
 			error("[Sandbox19] ai_soldier profile must contain ai and exclude player")
 		end
+		_profiles[agent:GetObjId()] = "ai_soldier"
 		table.insert(_agents, agent)
 		ConfigManager:PlaceAgentOnPresetSpawn(agent, _sampleName, i + 1, "default")
 	end
 	_SelectAllLivingAllies()
-	_commandHint = "deploy - squad selected"
+	_SetHint("deploy - squad selected")
 
 	print("[Sandbox19] ready playerId=" .. tostring(_player:GetObjId()) ..
 		" role=commander components=" .. tostring(_player:BuildComponentDebugString()))
 	-- blip 池在 _CreateRadar 已建好并复用；_UpdateRadar 每帧按存活单位重定位/隐藏，无需重建。
 
-	if _G.HELLO_SANDBOX_SMOKE_MODE == true then
+	if _G.HELLO_SANDBOX_SMOKE_MODE == true or _observationTest ~= nil then
 		_StartNextWave(_matchStartedMs)
 		_RunCommandSelfTest()
 		if TeamBlackboard ~= nil and TeamBlackboard.Reset ~= nil then TeamBlackboard:Reset() end
@@ -1210,6 +1292,13 @@ function EventHandle_Keyboard(keycode, pressed)
 
 	if keycode == OIS.KC_RETURN then
 		_restartRequested = true
+	elseif keycode == OIS.KC_TAB then
+		_SelectAllLivingAllies()
+		_SetHint(_SelectionCount() .. " allies selected | F / T / G")
+	elseif keycode == OIS.KC_I then
+		_observer.enabled = not _observer.enabled
+	elseif keycode == OIS.KC_O then
+		_observer:Dump()
 	elseif keycode == OIS.KC_F then
 		_IssueFocus()
 	elseif keycode == OIS.KC_T then
@@ -1262,7 +1351,7 @@ end
 
 function Sandbox_Initialize()
 	GUI_CreateCameraAndProfileInfo()
-	GUI_CreateSandboxText(infoText, { w = 320, h = 220 })
+	GUI_CreateSandboxText(infoText, { w = 430, h = 210 })
 	_LoadMatchConfig()
 	_CreateHud()
 	_CreateRadar()
@@ -1297,7 +1386,47 @@ function Sandbox_Initialize()
 	_SpawnEncounter()
 end
 
+local function _UpdateObservationTest(nowMs)
+	if _observationTest == nil or _observationTest.done then return end
+	_observationTest:Step({
+		find = _FindAgentById,
+		snapshot = function() return _observer.snapshot end,
+		select = function(id) _ClearSelection(); _selection[id] = true end,
+		pickPair = function()
+			local allyId, enemyId = nil, nil
+			local agents = ObjectManager:getAllAgents()
+			for i = 0, agents:size() - 1 do
+				local a = agents[i]
+				if _IsSelectableAlly(a) and allyId == nil then allyId = a:GetObjId() end
+				if a:GetTeamId() ~= _player:GetTeamId() and enemyId == nil then enemyId = a:GetObjId() end
+			end
+			return allyId, enemyId
+		end,
+		focus = function(id, targetId)
+			_ClearSelection(); _selection[id] = true
+			_IssueCommand("focus", targetId, nil)
+		end,
+		retreat = function(id)
+			_ClearSelection(); _selection[id] = true
+			_IssueCommand("retreat", -1, _player:GetPosition())
+		end,
+		hideEnemies = function()
+			local agents = ObjectManager:getAllAgents()
+			for i = 0, agents:size() - 1 do
+				local a = agents[i]
+				if a:GetTeamId() ~= _player:GetTeamId() then
+					a:setPosition(Vector3(300 + i * 3, 0.8, 300))
+					a:SetVelocity(Vector3(0, 0, 0))
+				end
+			end
+		end,
+		restart = _RestartEncounter,
+	}, nowMs)
+end
+
 function Sandbox_Update(deltaTimeInMillis)
+	-- The client can tick Lua before scene initialization has created the UI.
+	if _observerPanel == nil or _player == nil then return end
 	GUI_UpdateCameraInfo()
 	GUI_UpdateProfileInfo()
 
@@ -1307,10 +1436,13 @@ function Sandbox_Update(deltaTimeInMillis)
 
 	local nowMs = GameManager:getTimeInMillis()
 	_UpdateMatchFlow(nowMs)
+	_MaintainCommands(nowMs)
 	_RefreshIntentSnapshot(nowMs)
+	_UpdateObserver(nowMs)
 
 	_UpdateHud()
 	_UpdateRadar()
 	_UpdateCommandUi()
 	_UpdateIntentVisuals()
+	_UpdateObservationTest(nowMs)
 end
