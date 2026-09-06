@@ -28,3 +28,4 @@
 - [chapter-8 对拍：速度已修+感知天花板](chapter8-parity-rootcause.md) — 根因全清但**保架构下逐帧复刻不可达**：①速度=capsule setAngularFactor(0)禁转→滑动摩擦3×衰减(已修:friction 0.15+去forceScale，前7帧对齐)；②感知可见性分岔=全局多体发散(agent#2 s3最早/agent#3 s8集体转折)，**双铁证**:agent#3多看见id118(legvis:顶起box挡视线)、agent#2少看见id119(visdbg116:视锥后方)，两套独立实现不可逐位对齐。已排除随机数(巡逻点已注入对齐)/选择逻辑(纯nearest)。诊断法:A3DIAG对比setVel(物理前)vs speed(物理后)
 - [macOS 启动卡顿的两个热点](macos-startup-loading-hotspots.md) — Sandbox19 启动慢主要是同步 Recast 构建和压缩 OBF 骨骼流反复回退解压，不是 initialiseAllResourceGroups 或贴图上传
 - [macOS 启动卡顿修复的实测结果](macos-startup-loading-fix.md) — OBF 回退缓存消除 zzip_seek 放大；NavMesh 收紧到 920×840 后冷构建约 1.07 秒、缓存命中约 1.16 毫秒
+- [个人项目定位](personal-project-positioning.md) — 用户明确为个人项目，方向讨论不默认以外部玩家或产品交付为前提

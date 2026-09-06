@@ -9,7 +9,7 @@
 > - **P1–C5 / P8–P11 的证据与方案**看 `design/architecture-improvement-plan.md` §7/§9；backlog 只记"做不做"，不复制细节。
 > - **当前性能基线**看 `perf/` 里日期最新的一份（见 §8）。
 >
-> 2026-08-04 收敛：原 `planning/` 下 5 份规划文档（long-term-iteration-plan / ai-technical-iteration-plan / ai-roadmap / high-priority-todo / playable-vertical-slice-todolist）已全部归档到 `archive/`——其中 ai-roadmap 的 P0/P1 七项已全部完成、可玩切片已完成，长期排期对个人项目是负资产。改为「北极星 + 当前 cycle + 候选池」三份。
+> 2026-08-04 收敛：原 `planning/` 下 5 份规划文档（long-term-iteration-plan / ai-technical-iteration-plan / ai-roadmap / high-priority-todo / playable-vertical-slice-todolist）已全部归档到 `archive/`——其中 ai-roadmap 的 P0/P1 七项已全部完成、可玩切片已有阶段成果。保留「方向 + 当前 cycle + 候选池」三份入口。2026-09-05 按个人项目定位修订：长期能力地图与详细阶段设计在方向文档中维护，取消外部试玩和固定周期交付的硬门槛。
 
 ## 0. 目录结构
 
@@ -17,7 +17,7 @@
 docs/
 ├── README.md                  本索引
 ├── project-direction.md       北极星（方向总纲，不含状态）
-├── cycle-01.md                当前周期（4-6 周，三行定义 + 排期）
+├── cycle-01.md                当前阶段（问题、最小成果、证据与复盘）
 ├── backlog.md                 唯一活清单（候选池，只有这里有 [ ]/[x]）
 ├── registry.json              模块知识库注册表（/hello-develop-design 阶段0 + verify 用）
 ├── architecture.html          架构总览渲染图
@@ -35,8 +35,8 @@ docs/
 
 | 文档 | 用途 |
 |---|---|
-| `project-direction.md` | 北极星。方向定调，不含进度状态。 |
-| `cycle-01.md` | **当前在做什么**。一次只有一个 cycle，4–6 周，到期必须结束并写结论。 |
+| `project-direction.md` | 方向与长期演进设计。含目标、阶段依赖、M1–M3 详细设计与验收，不含任务勾选状态。 |
+| `cycle-01.md` | **当前在做什么**。一次认领一个主要问题，以证据复盘，允许缩小、调整和暂停。 |
 | `backlog.md` | **想做什么**。唯一带 `[ ]`/`[x]` 的清单；候选池不排期，认领时才拉进 cycle。 |
 
 > 历史排期文档（`archive/long-term-iteration-plan.md`、`ai-technical-iteration-plan.md`、`ai-roadmap.md`、`high-priority-todo.md`、`playable-vertical-slice-todolist.md`）保留作脉络与证据，**不再作为入口**。
