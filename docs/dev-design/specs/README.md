@@ -1,7 +1,5 @@
-# dev-design / specs
+# 设计文档
 
-`/hello-develop-design` 流程阶段 2 写入的设计 spec 存放处。
+共享工作流在用户要求 spec 或跨模块任务需要持久设计时写入这里，规则见 [设计探索](../../skills/brainstorming.md)。
 
-- 命名：`<YYYY-MM-DD>-<topic-kebab>-design.md`
-- Header 必含 `状态` 字段（`草案，待 Review` / `已批准`），是阶段 0 续跑探测的唯一依据。
-- 由 `docs/skills/brainstorming.md` 定义写作模板。
+命名 `<YYYY-MM-DD>-<topic>-design.md`；记录日期、目标、方案、验收与真实状态。只有用户实际批准才写“已批准”；续跑按任务上下文和内容识别，不按日期自动选择或删除草案。

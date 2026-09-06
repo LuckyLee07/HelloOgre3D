@@ -1,7 +1,5 @@
-# dev-design / plans
+# 实施计划
 
-`/hello-develop-design` 流程阶段 3 写入的实施 plan 存放处。
+共享工作流在跨模块、长期任务或用户要求计划时写入这里，规则见 [实施计划](../../skills/writing-plans.md)。
 
-- 命名：`<YYYY-MM-DD>-<topic-kebab>.md`
-- Header 必含 `状态` 字段（`草案，待 Review` / `已批准，执行中` / `已完成`）。
-- 由 `docs/skills/writing-plans.md` 定义写作模板。
+命名 `<YYYY-MM-DD>-<topic>.md`；记录目标、设计链接（如有）、依赖、任务、验证与状态。使用“草案 / 执行中 / 待验证 / 受阻 / 已完成”，兼容历史“已批准”状态；必要验收未满足不得标完成。

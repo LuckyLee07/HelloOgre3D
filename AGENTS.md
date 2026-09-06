@@ -1,253 +1,59 @@
 # AGENTS.md
 
-## 项目记忆（所有 AI agent 通用，不区分工具）
+## 项目与真源
 
-本仓库的**唯一权威项目记忆**在 `docs/memory/`（纯 markdown，随仓库走，Claude Code / Codex / 其它 agent 都读写这里）：
+HelloOgre3D 是长期维护的个人游戏 AI 与玩法实验项目，核心是把 AI 能力讲清楚、跑起来、看得见、能实验。生产级质量约束具体模块；外部玩家、发行、固定日历交付、完整引擎或 UGC 平台不是完成前提。
 
-- **开工前**先读 `docs/memory/MEMORY.md` 索引，再按需读对应条目（用户偏好、构建/运行坑、验证环、进度快照等）。
-- **学到非显然、跨会话有用、且代码本身不记录的经验**，就在 `docs/memory/` 新建 `<slug>.md` 并在 `MEMORY.md` 加一行索引；一文件一事实。
-- 别记代码已记录的（结构、修复、git 历史）——查代码 / `git log` 即可。
-- 各工具自带的记忆机制（如 Claude Code 的 `.claude/.../memory`）一律降级为指向此目录的薄指针，**以 `docs/memory/` 为准**。
+- 开工先读 [项目记忆索引](docs/memory/MEMORY.md)，只加载与任务相关的条目。非显然、跨会话有用、代码未记录的经验写入 `docs/memory/`，一文件一事实并更新索引；工具私有项目记忆只保留指针。
+- 方向与优先级见 [project-direction](docs/project-direction.md)、[当前周期](docs/cycle-01.md)、[backlog](docs/backlog.md)。README 开发日记和 `docs/archive/` 仅作历史参考，不据此扩展当前任务。
+- 模块定位用 [registry](docs/registry.json) 和 [文档索引](docs/README.md)，按需读命中模块与直接相关资料，再核对源码；不全量加载 related_docs。
 
-## 项目定位
+## 协作与执行
 
-`HelloOgre3D` 是长期维护的**个人游戏 AI 与玩法实验项目**：通过可运行、可观察、可逐步扩展的 sandbox，学习并验证游戏 AI、对象系统、脚本编排、调试可视化与性能观测，积累可靠的 C++ / Lua 工程能力。可玩场景用于个人探索和技术验证；外部玩家、发行、最终品类和固定日历交付不是阶段完成的前提。生产级质量用于约束具体模块，不要求最终建设完整商业引擎、编辑器或 UGC 平台。完整定调与阶段设计以 `docs/project-direction.md` 为准。
+- 中文沟通，先说结果、证据和必要限制。任务明确就执行到实现、相关验证与必要文档同步完成；常规实现选择自行判断，仅在影响结果的关键歧义或缺少授权时询问。
+- 用户当前指令和已有授权优先于 skill 的流程默认值。只要求设计/审计时遵守该范围；明确要求实现时不因模板中的阶段名重复索取批准。
+- 小修直接处理。跨模块功能、设计或显式 `hello-develop-design` 使用 [共享工作流](docs/skills/workflow.md)，按任务复杂度选节点。
+- 先检查工作区改动，保留用户工作；默认沿用当前 checkout，不为流程仪式切分支。需要隔离实验时可使用独立目录/worktree，遵守当前环境权限。
+- 搜索优先 `rg`；独立只读检查可批量并行。工具与模型使用当前环境实际提供的能力，不把文档里的工具名当作可调用保证。
 
-当前核心主轴：**把 AI 能力讲清楚、跑起来、看得见、能实验**。近期按 M1 行为证据链 → M2 可重复实验 → M3 团队共享对照递进，一次只认领当前 cycle 的问题；保留现有 AI sample 与可维护、可验证的模块边界。阶段以证据复盘，允许按个人时间调整或暂停，不强制应用/技术周期交替。
+## 架构与工程约束
 
-判断基准：
-- 能让 AI 概念更清楚、更可观察、更容易实验的 → 升优先级。
-- 能保留并强化 `Sandbox6` / `Sandbox7` / `Sandbox8` 等 AI sample 的 → 升优先级。
-- 脱离当前 AI 验证面、一次性铺开完整 Def 管线、触发器编辑器、UGC、世界 streaming 的 → 暂缓；能沉淀生产级地基且有清晰验证面的 → 小步推进。
+- 保持现有 sample 可运行并符合章节目标，尤其 `Sandbox6/7/8` 的 FSM/DT/BT 回归面。优先局部、可验证、可回退的改动。
+- `runtime` 收口 Ogre/OIS/FGUI/Tracy 等适配；`sandbox` 放对象、AI、物理、脚本桥和可复用玩法设施；`game/client` 负责应用编排；Lua 负责 sample、行为配置和 UI 业务。不要向 `common` 增加 Ogre 专属 helper 或扩大单体 manager。
+- AI 热点放 C++，复用现有 driver、Blackboard 和事件设施。行为异常先追 Lua → AI driver → runtime/输入/debug 链路，按证据定位。
+- 有有效 Bullet 刚体时，PhysicsComponent/刚体是位置与朝向真源；否则 RenderComponent transform 是真源，不造假刚体。同步由 `RenderComponent::Update` 负责，对象层只触发；物理对象视觉偏移走 `SetVisualOffset(...)`。
+- 修改平台逻辑同时检查 Windows/macOS 条件编译。工程配置真源是 `premake/premake.lua`，路径按实际大小写（`src/external`）处理。vendored 引擎/第三方、资源只在任务确有必要时局部修改并说明原因。
+- 保持目标文件风格、编码和换行，不顺手格式化。C/C++ 用 Tab；新增文本默认 CRLF；含中文的 C/C++ 编码见 [编码经验](docs/memory/crlf-encoding-gotcha.md)。使用现有日志系统。
 
-默认工作原则：
-- sample 是当前阶段的 AI 学习章节、实验场和回归面；改动应保持现有 sample 可运行，并尽量让某个 sample 更清楚地展示一个 AI 概念，同时沉淀可复用的生产级基础能力。
-- 优先做局部、可验证、可回退的小改动。
-- 引擎耦合逻辑收口到 `runtime`；AI 热点逻辑优先放 C++，Lua 侧负责 sample 编排、行为配置和可读性。
-- 结构性改动应服务于解耦、AI 可观测性、可复现实验、后续感知 / 记忆 / 战术扩展，以及长期生产级项目需要的清晰模块边界。
+## Lua / FGUI 高风险边界
 
-注意：`README.md` 早期的逐日开发记录与“沉淀经验”表述属历史脉络，项目身份与方向以本节及 `docs/project-direction.md` 为准。
+- 改 Lua 导出接口同步检查头文件、`.pkg`/其引用的导出声明、绑定 cpp、Lua 调用点和受影响 sample；明确 C++/Lua 所有权、GC、callback/ref 清理和 table/self 调用约定。
+- **当前 tolua 例外**：已有全量生成导致 Sandbox18 崩溃的记录，默认局部同步绑定，禁止把 `tolua.bat` 当作例行步骤。详情见 [绑定模块](docs/modules/scripting-tolua.md)。修复生成链本身应作为明确任务，在隔离输出中比较并完成相关运行回归后再替换。
+- FGUI C++ 管适配、输入、handle 和事件桥；Lua 管生命周期、业务和资源策略，不长期持有底层 FairyGUI/Cocos 裸指针。复杂 UI 用 Ctrl/Model/View/AutoGen，简单调试 UI 可轻量化。
+- FGUI 接入与生成查 [AutoGen 工作流](docs/fgui/fairygui-autogen-workflow.md)，阶段验收查 [生产 gate](docs/fgui/fairygui-production-gate.md)。
 
-## 位置真源规则
+## 验证与完成
 
-对象位置 / 朝向按组件条件判定权威来源：
-- 挂有 `PhysicsComponent` 且存在有效 `btRigidBody` 时，`PhysicsComponent` / Bullet 刚体是位置与朝向权威，渲染层只能从它同步。
-- 没有 `PhysicsComponent`，或 `PhysicsComponent` 没有有效刚体时，`RenderComponent` 自身 transform 是权威，不能为了复用逻辑创建假刚体。
-- `RenderComponent::Update` 负责执行上述同步判断；对象层如 `AgentObject`、`BlockObject` 只触发同步，不重复手写 Bullet → SceneNode 转换。
-- 需要对物理对象施加视觉偏移时，使用 `SetVisualOffset(...)`；不要直接改写物理对象的 RenderComponent 世界位置。
+按 [验证工作流](docs/skills/verify.md) 选择最小充分验证面，已有相关检查通过后，仅因新改动、失败或未解决风险扩大/重跑。
 
-## 快速命令
-
-常用命令以仓库根目录为工作目录执行。
-
-| 场景 | 命令 | 说明 |
-|---|---|---|
-| 生成 VS2017 工程 | `vs2017.bat` | 默认设置 `ENABLE_FGUI=1`，并清理 `build`、`lib` 和 `bin` 下部分运行产物。 |
-| VS2017 构建 HelloOgre3D | `"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\amd64\MSBuild.exe" build\HelloOgre3D.sln /t:HelloOgre3D /p:Configuration=Debug /p:Platform=x64 /m` | 当前 Windows 构建验证默认使用 VS2017 MSBuild。 |
-| 直接调用 premake | `tools\premake\premake5 --os=windows --file=premake/premake.lua vs2017` | 需要自定义参数时使用，例如 `--with-tracy`、`--with-fairygui`。 |
-| 生成 Xcode 工程 | `xcode.sh` | 依赖本机已安装 `premake5`，输出到 `build/`。 |
-| 重新生成 Lua 绑定 | `src\HelloOgre3D\tolua.bat` | 修改 `.pkg` 或暴露给 Lua 的 C++ API 后执行。 |
-| FGUI 集中自测 | `cd bin; $env:HELLO_FGUI_SELF_TEST_ALL="1"; .\HelloOgre3D.exe` | 用于 FGUI 打开、关闭、输入、生命周期、资源清理回归。 |
-| FGUI 长循环自测 | `cd bin; $env:HELLO_FGUI_LONG_LOOP_SELF_TEST="1"; .\HelloOgre3D.exe` | 用于重复打开关闭 UI，观察资源和生命周期问题。 |
-| FGUI 生产验收 | `powershell -ExecutionPolicy Bypass -File tools\run_fgui_production_gate.ps1 -Mode Full -StopExisting` | 一键串联 VS2017 Debug/Release x64、静态检查、All、LongLoop、Pressure 和 `git diff --check`。 |
-
-构建配置：
-- Premake solution：`HelloOgre3D`
-- Configurations：`Debug`、`Release`
-- Platforms：`x86`、`x64`
-- 可执行文件输出：`bin/`
-- 静态库输出：`libs/`
-- 工程与中间目录：`build/`
-- 运行日志：`bin/Sandbox.log`
-
-## 当前技术栈
-
-- 渲染与场景：Ogre 1.10
-- 输入：OIS
-- 物理：Bullet
-- UI：Gorilla + FairyGUI 接入中
-- 脚本：Lua 5.1 + tolua++ + LuaSocket + LuaPanda
-- 寻路：Recast + Detour
-- 转向行为：OpenSteer
-- 性能分析：Tracy 接入中
-- 构建系统：Premake
-- 工程生成：Windows 下 Visual Studio，macOS 下 Xcode
-
-## 架构依赖流
-
-当前项目的依赖方向应尽量保持自下而上：
-
-```text
-src/Engine + src/External
-  -> src/HelloOgre3D/runtime
-    -> src/HelloOgre3D/sandbox
-      -> src/HelloOgre3D/game + src/HelloOgre3D/client
-        -> bin/res/scripts
-          -> bin/res/scripts/samples
-```
-
-约束：
-- `runtime` 承接 Ogre / OIS / Gorilla / FairyGUI / Tracy 等引擎或中间件适配。
-- `sandbox` 承接对象系统、AI、物理、脚本桥接、服务与 sample 所需的可复用玩法基础设施。
-- `game` 和 `client` 做应用编排、窗口、主循环、manager 汇聚，不继续堆具体玩法规则。
-- Lua 脚本负责 sample 编排、AI 行为配置、UI 业务组织和运行时扩展。
-
-## 目录职责
-
-| 目录 | 职责 | 注意事项 |
-|---|---|---|
-| `src/HelloOgre3D/client` | 应用入口与启动封装。 | 不放具体玩法规则。 |
-| `src/HelloOgre3D/game` | 应用编排层、`ClientManager`、`GameManager`、debug 绘制入口。 | 避免继续沉积 Ogre helper 和玩法细节。 |
-| `src/HelloOgre3D/runtime` | 引擎 / 中间件适配层，如 profiling、FairyGUI、未来 Ogre runtime helper。 | 引擎耦合逻辑优先在这里收口。 |
-| `src/HelloOgre3D/sandbox` | 对象系统、AI、物理、脚本绑定、服务、样例实现基础设施。 | 可放玩法基础能力，但要避免变成单体 manager。 |
-| `src/HelloOgre3D/common` | 跨层通用工具和 Lua VM 等历史公共代码。 | 不要再塞 Ogre 专属 helper，除非确实与引擎实现无关。 |
-| `bin/res/scripts` | 运行时 Lua 脚本。 | 修改 C++ 行为时要同步检查脚本调用点。 |
-| `bin/res/scripts/samples` | sample 入口，是行为回归的重要验证面。 | 影响 sample 表现的改动必须手动或脚本验证。 |
-| `bin/res/scripts/ai` | AI 决策树、行为树、条件、action 配置。 | 后续 AI 方向参考 `docs/backlog.md`。 |
-| `bin/res/scripts/ui` | FairyGUI Lua 侧 UI 框架和业务 UI。 | 复杂 UI 默认走 MVC / AutoGen 约定。 |
-| `media` | 材质、shader、模型、贴图、粒子等资源。 | 只在任务直接相关时修改。 |
-| `premake` | 工程生成和第三方依赖配置事实来源。 | 新增 C++ 文件或库配置优先检查这里。 |
-| `src/Engine`、`src/External` | vendored 引擎与第三方代码。 | 除非任务明确要求，否则不要随意修改。 |
-| `docs` | 迭代路线、FGUI、AI、资源与工具文档。 | 结构性决策应同步记录到对应文档。 |
-
-## 项目演进脉络
-
-根据 `README.md`，仓库当前已经完成或部分完成：
-
-- Chapter 1：Ogre 基础框架、Lua / tolua、Bullet、UI、输入。
-- Chapter 2：智能体移动、steer、路径与对象控制链路。
-- Chapter 3：动画状态机与有限状态机，角色状态支持 C++ 与 Lua 双侧扩展。
-- Lua 绑定扩展：新增 `LuaPluginMgr`，支持 C++ 对象与 Lua 文件绑定。
-- 当前重构方向：处理 Object 体系长继承链、减少冗余、拆分引擎耦合逻辑与业务逻辑。
-- AI 后续方向：以 `docs/backlog.md` 为事实来源（`docs/archive/ai-roadmap.md` 的 P0/P1 已全部完成，仅作历史愿景参考）。
-- 非 AI 后续方向：以 `docs/archive/project-roadmap.md` 为事实来源。
-- FGUI 后续方向：优先参考 `docs/fgui/fairygui-final-roadmap.md`、`docs/fgui/fairygui-business-framework-todo.md`、`docs/fgui/fairygui-autogen-workflow.md`。
-- FGUI 阶段性生产验收：以 `docs/fgui/fairygui-production-gate.md` 和 `tools/run_fgui_production_gate.ps1` 为准。
-
-## 中长期规划
-
-`README.md`、`docs/archive/ai-roadmap.md` 与 `docs/archive/project-roadmap.md` 已记录的兼容目标包括：
-
-- 决策树、行为树、黑板、知识源、感知、通信、影响力地图、战术层。
-- 触发器、技能 timeline、团队 Blackboard、AI 调试面板、AI 更新调度。
-- Jobs 多线程、崩溃上报模块、性能分析模块、imgui / FGUI 调试面板。
-
-设计新增系统时默认考虑：
-- 是否能挂接到 AI、技能、调试、性能分析链路。
-- 是否方便被 Lua 配置和 sample 验证。
-- 是否能保持系统可组合、可观测、可脚本扩展。
-
-## 编码约定
-
-| 类别 | 约定 |
+| 改动 | 必要证据 |
 |---|---|
-| 格式 | 保持目标文件既有风格，不顺手格式化无关代码。 |
-| 缩进 | C/C++ 文件缩进使用 Tab，不把既有 Tab 转为空格。 |
-| 换行 | 项目文本文件默认使用 CRLF；Windows 下 C/C++ 源文件、头文件必须保持 CRLF。新增或生成 `.md`、`.ps1`、`.py`、`.lua`、`.json`、`.bat` 等文本文件也默认按 CRLF 落盘。不要无意转换整文件换行。 |
-| 命名 | 优先沿用周边代码风格，不为统一命名做无关重命名。 |
-| 日志 | 使用项目既有日志路径和日志系统，不在核心代码里随意新增 `printf` / `std::cout`。 |
-| 注释 | 只在复杂逻辑前加必要说明，避免解释显而易见的代码。 |
-| 内存 | 明确 C++ 对象所有权，特别是 tolua 暴露对象、Lua callback、UI binding、C++ manager 持有关系。 |
-| 生成文件 | `.pkg` 改动后优先通过生成链更新绑定 cpp，不长期手改生成文件。 |
-| 第三方 | `src/Engine`、`src/External` 中的 vendored 代码除非必要不改；必要修改要局部且注明原因。 |
+| 文档/skill | 内容与引用核对、相关格式/元数据检查、`git diff --check`；不构建游戏 |
+| Lua/gameplay | Lua 5.1 语法检查 + 受影响 sample 运行证据 |
+| C++/构建 | 当前平台构建；运行时默认 Release + 相关 sample。新增源文件/工程配置变更先生成工程；ABI 布局变更 clean rebuild |
+| Lua 绑定 | 上述接口同步检查 + Release 构建 + 消费该绑定的 sample |
+| 相机/输入/渲染/导航 | 对应真实窗口或截图/交互证据；导航同时看路径与 debug 绘制 |
+| FGUI | 对应自测；复杂生命周期改动跑 All，阶段收口跑生产 gate |
+| 性能 | 保留 Tracy 埋点，记录可比基线与日志 |
 
-## Lua 与绑定规则
+- 自己运行并读取 stderr、`bin/Sandbox.log`（Debug 为 `Sandbox_d.log`）及 smoke 日志定位。静态通过、编译通过、运行通过、视觉通过分开报告。
+- 缺平台/图形会话时完成可执行检查，明确未验证项与原因，不把环境失败、超时或未执行标为 PASS。
+- 构建入口：Windows `vs2017.bat`（会清理部分产物，先检查脚本）或直接 Premake + VS2017 MSBuild；macOS `bash xcode.sh` + 生成的 Xcode target。具体命令见验证工作流。
 
-- 很多可见行为由 Lua 控制，修改 C++ 时必须关注脚本侧联动。
-- 修改暴露给 Lua 的 C++ 接口时，应同步更新：
-  - `.pkg` 绑定定义
-  - 生成代码
-  - Lua 调用点
-  - 受影响 sample
-- `LuaPluginMgr`、宿主对象绑定、Lua 环境表、`lua_pcall` 参数个数、table/self 调用约定属于高风险区域。
-- `README.md` 已记录 tolua 对象释放导致的内存泄露问题，Lua/C++ 生命周期、GC、脚本对象释放链路必须谨慎。
-- Lua action / condition / UI callback 尽量保持调用约定稳定；需要破坏兼容时，应同步更新 sample 和文档。
+## Git
 
-## AI 专项规则
-
-- AI 后续做什么以 `docs/backlog.md` 为准，当前周期见 `docs/cycle-01.md`；`docs/archive/ai-roadmap.md` 只作历史愿景参考。
-- 当前已有 FSM / DecisionTree / BehaviorTree / Blackboard 能力，新增 AI 功能时优先复用现有 driver 和 Blackboard。
-- Knowledge、Perception、Tactics 迁移时，应保持 C++ 热点逻辑与 Lua 配置逻辑分离。
-- 感知扫描、影响力传播、寻路预算等热点逻辑优先放 C++；Lua 侧负责编排、配置和可读性。
-- 行为类问题优先检查脚本层、AI driver、runtime 适配层、输入链路、debug 绘制，再考虑大规模改对象层。
-- 修改 AI sample 行为时，至少检查 `bin/res/scripts/samples` 下对应入口。
-
-## FGUI 专项规则
-
-- FGUI 长期路线参考：
-  - `docs/fgui/fairygui-final-roadmap.md`
-  - `docs/fgui/fairygui-business-framework-todo.md`
-  - `docs/fgui/fairygui-autogen-workflow.md`
-  - `docs/fgui/fairygui-assets.md`
-- C++ 侧负责 runtime 适配、渲染、输入、handle、事件桥；Lua 侧负责 UI 生命周期、业务逻辑、MVC、资源策略。
-- Lua 不长期直接持有 FairyGUI / Cocos 底层对象指针，优先通过 handle 和 binding id 通信。
-- 复杂 UI 默认走 Ctrl / Model / View / AutoGen 结构；简单调试 UI 可用轻量 View。
-- 改 FGUI 输入、生命周期、资源、layer、cache 时，优先跑对应 `HELLO_FGUI_*_SELF_TEST`。
-- FGUI 阶段性收口优先跑 `tools\run_fgui_production_gate.ps1`；该脚本会启动 D3D9 窗口，需在可创建图形设备的桌面会话中运行。
-
-## 平台约束
-
-- 仓库虽然最初偏 Windows + Direct3D9，但现在已经推进 macOS / Xcode 迁移。
-- 非 Windows 下，`ClientManager` 会尝试加载 `RenderSystem_GL` / `RenderSystem_GL3Plus`。
-- `premake` 路径已统一到 `src/external`，修改路径、包含关系、资源路径时注意大小写敏感问题。
-- 修改平台相关代码时，不要只考虑 Win32 分支。
-- Windows 专属 API、DirectX、OIS win32 分支要用条件编译隔离。
-
-## 验证清单
-
-按最小相关面验证，不要求每次全量验证：
-
-| 改动类型 | 验证方式 |
-|---|---|
-| 工程生成或 premake 改动 | Windows 下执行 `vs2017.bat` 或 VS2017 `MSBuild.exe`；macOS 下执行 `xcode.sh`。 |
-| `.pkg` / Lua 绑定改动 | 执行 `src\HelloOgre3D\tolua.bat`，检查生成代码和 Lua 调用点。 |
-| Lua / gameplay 行为改动 | 检查并运行受影响的 `bin/res/scripts/samples`。 |
-| AI 决策 / 行为树 / FSM 改动 | 至少验证 `Sandbox6` / `Sandbox7` / `Sandbox8` 中相关入口，必要时补专用 sample。 |
-| 导航 / 寻路改动 | 同时验证路径结果和 debug 绘制结果。 |
-| 相机 / 输入 / 渲染问题 | 优先手动跑对应 sample，因为这类问题通常不是纯编译问题。 |
-| FGUI 改动 | 运行对应 `HELLO_FGUI_*_SELF_TEST`，复杂生命周期改动优先跑 `HELLO_FGUI_SELF_TEST_ALL=1`。 |
-| 性能相关改动 | 保留 Tracy 埋点，必要时记录前后对比。 |
-| 平台兼容改动 | 至少检查 Windows / macOS 分支条件编译是否正确。 |
-
-## 文件格式与工具
-
-- 搜索优先使用 `rg`。
-- 优先阅读 `README.md`、`premake/premake.lua` 和相关 `docs/*.md`，确认当前阶段和构建意图。
-- 保持与周边文件一致的编码和换行风格；默认新建或生成文本文件使用 CRLF。
-- 如需把 LF 文本转换为 CRLF，可运行 `tools\dos2unix\lf2crlf.bat <path>`；如需处理编码规范化，可参考 `src/HelloOgre3D/tools.py`。
-- 当前项目未配置 MiniGame 那种 `code-review-graph` MCP；默认使用 `rg`、文件阅读和局部构建验证。
-
-## 修改建议
-
-- 优先做最小 diff，保持当前文件既有风格。
-- 除非任务明确要求重构，不要大规模移动目录或重命名整块系统。
-- 不要把当前结构继续往“单体 manager + 强耦合对象”方向推。
-- 引擎耦合的相机、窗口、输入、渲染辅助逻辑优先放到 `runtime`。
-- 新增资源、材质、配置文件只在与任务直接相关时修改。
-- 如果 Ogre 1.10 迁移后某个行为异常，先检查 `runtime` 适配层，再判断是否需要改业务层。
-- 如果修改会影响 sample 展示效果，优先保持 sample 表现与原章节目标一致。
-
-## Git 规则
-
-- 可能存在用户未提交的工作区改动，禁止回退或覆盖无关改动。
-- 不使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
-- 如需提交，提交说明使用中文，不附加任何大模型生成信息（**不要 `Co-Authored-By` 等模型署名**）。
-- **提交说明只写一行 subject**：`[前缀]<中文一句话>`。**不写 body。**
-- **前缀分类**（按改动主体选，只用这五个）：
-
-  | 前缀 | 用于 |
-  |---|---|
-  | `[feat]` | 新增功能 / 新能力（含为新能力铺的接口、绑定、配置） |
-  | `[fix]` | 修缺陷（行为不符合预期） |
-  | `[refactor]` | 不改变对外行为的结构调整、清理、死代码删除 |
-  | `[docs]` | 只动 `docs/` / `AGENTS.md` / 注释 / spec / plan |
-  | `[dev]` | **兜底**：确实混杂、不好归入上面任一类时才用 |
-
-  一次提交同时含多类，说明该拆提交；拆不动才用 `[dev]`。
-  根因分析、设计取舍、验证证据、踩坑结论一律沉淀到 `docs/`（模块文档 / `docs/memory/` /
-  `docs/dev-design/`），**不靠 git log 维护知识**——log 只回答"这次改了什么"，
-  "为什么这么改、踩了什么坑"归文档。
-- **提交身份走仓库本地 `git config`**（`.git/config`，不入库），不要在提交时用 `-c user.name=...`
-  临时指定，也不要把身份写进文档。若 `git config --local user.name` 为空，先问用户再配置——
-  直接落到全局身份会在 log 里混入第二个作者。
-- 默认**只提交到本地**，不 `push`，除非用户明确要求。
+- 不回退/覆盖无关改动；不执行 `git reset --hard`、`git checkout --` 等破坏性操作，除非用户明确要求。
+- 提交需用户授权，流程不会自动 commit/amend。只暂存本次精确路径/改动块，检查已有 staged 内容。默认仅本地提交，push 需明确要求。
+- 提交说明仅一行 `[前缀]<中文一句话>`，不写 body 或模型署名（含 `Co-Authored-By`）。前缀：`[feat]` 新能力、`[fix]` 缺陷、`[refactor]` 结构清理、`[docs]` 文档/注释、`[dev]` 无法拆开的混杂改动兜底。
+- 用仓库本地 git 身份，不用 `-c user.name=...` 临时覆盖，不把身份写进文档。`git config --local user.name` 为空时先问用户再配置。
+- 根因、设计取舍与验证证据写相关 `docs/`；git log 只记录这次改了什么。
