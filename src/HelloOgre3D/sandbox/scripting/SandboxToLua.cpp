@@ -8284,6 +8284,34 @@ static int tolua_SandboxToLua_AIController_GetBehaviorTreeDriver00(lua_State* to
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: RequestDestroyAgent of class ObjectFactory (local binding sync) */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectFactory_RequestDestroyAgent00
+static int tolua_SandboxToLua_ObjectFactory_RequestDestroyAgent00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+	tolua_Error tolua_err;
+	if (!tolua_isusertype(tolua_S,1,"ObjectFactory",0,&tolua_err) ||
+		!tolua_isnumber(tolua_S,2,0,&tolua_err) || !tolua_isnoobj(tolua_S,3,&tolua_err))
+		goto tolua_lerror;
+	else
+#endif
+	{
+		ObjectFactory* self = (ObjectFactory*)tolua_tousertype(tolua_S,1,0);
+		int objId = (int)tolua_tonumber(tolua_S,2,0);
+#ifndef TOLUA_RELEASE
+		if (!self) tolua_error(tolua_S,"invalid 'self' in function 'RequestDestroyAgent'",NULL);
+#endif
+		tolua_pushboolean(tolua_S,self->RequestDestroyAgent(objId));
+	}
+	return 1;
+#ifndef TOLUA_RELEASE
+	tolua_lerror:
+	tolua_error(tolua_S,"#ferror in function 'RequestDestroyAgent'.",&tolua_err);
+	return 0;
+#endif
+}
+#endif
+
 /* method: CreatePlane of class  ObjectFactory */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectFactory_CreatePlane00
 static int tolua_SandboxToLua_ObjectFactory_CreatePlane00(lua_State* tolua_S)
@@ -16918,6 +16946,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateBullet",tolua_SandboxToLua_ObjectFactory_CreateBullet00);
    tolua_function(tolua_S,"CreateAgent",tolua_SandboxToLua_ObjectFactory_CreateAgent00);
    tolua_function(tolua_S,"CreateAgentWithProfile",tolua_SandboxToLua_ObjectFactory_CreateAgentWithProfile00);
+   tolua_function(tolua_S,"RequestDestroyAgent",tolua_SandboxToLua_ObjectFactory_RequestDestroyAgent00);
    tolua_function(tolua_S,"CreateSoldier",tolua_SandboxToLua_ObjectFactory_CreateSoldier00);
    tolua_function(tolua_S,"CreateSoldierWithProfile",tolua_SandboxToLua_ObjectFactory_CreateSoldierWithProfile00);
   tolua_endmodule(tolua_S);

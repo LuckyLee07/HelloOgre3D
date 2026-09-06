@@ -204,14 +204,15 @@ SamplePresets.Sandbox19.seed = 20260710
 SamplePresets.Sandbox19.agentCount = 7
 SamplePresets.Sandbox19.lightTeamCount = 3
 SamplePresets.Sandbox19.spawnMode = "fixed"
+-- 中央开阔接敌线：玩家朝 +Z，友军在前方两侧，各波敌人都从前半场进入。
 SamplePresets.Sandbox19.spawnPoints = {
-	{ -5, 0, 13 },
-	{ -10, 0, 18 },
-	{ -10, 0, 8 },
-	{ 15, 0, 21 },
-	{ 19, 0, 25 },
-	{ 24, 4, 36 },
-	{ 39, 3, 17 },
+	{ 0, 0, -6 },
+	{ -3, 0, 1 },
+	{ 3, 0, 1 },
+	{ -5, 0, 18 },
+	{ 5, 0, 18 },
+	{ -7, 0, 25 },
+	{ 7, 0, 25 },
 }
 SamplePresets.Sandbox19.aiScheduler.maxPerFrame = 6
 -- 指挥切片：AI 换用 Sandbox19 专用行为树（玩家指令分支 + 引用整棵 SoldierBT 兜底），

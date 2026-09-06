@@ -155,7 +155,7 @@ local function runComponentAccessSelfTest()
 		"blackboardOwner=" .. tostring(blackboardOwnerMatches),
 		"debug=" .. tostring(debugString),
 		"detail=" .. table.concat(detail, ","))
-	return ok
+	return ok, agent
 end
 
 local function runNonSoldierAnimationProfileSelfTest()
@@ -220,7 +220,7 @@ local function runNonSoldierAnimationProfileSelfTest()
 		"hasIdleClip=" .. tostring(idleAnim ~= nil),
 		"hasMoveClip=" .. tostring(moveAnim ~= nil),
 		"detail=" .. table.concat(detail, ","))
-	return ok
+	return ok, agent
 end
 
 function RuntimeDiagnostics.RunSelfTest()
@@ -322,12 +322,50 @@ function RuntimeDiagnostics.RunSelfTest()
 		printLines(GameManager:buildRuntimeResourceDump(maxResources))
 	end
 
-	if not runComponentAccessSelfTest() then
-		ok = false
+	local probeIds = {}
+	local function retireProbe(agent)
+		if agent == nil then return end
+		table.insert(probeIds, agent:GetObjId())
+		-- Keep animation ticks available, but exclude diagnostic hosts from
+		-- sensing/match counts and physical contact while the animation runs.
+		agent:SetHealth(0)
+		agent:setPosition(Vector3(0, -1000, 0))
 	end
-	if not runNonSoldierAnimationProfileSelfTest() then
-		ok = false
-	end
+	local componentOk, componentProbe = runComponentAccessSelfTest()
+	local animationOk, animationProbe = runNonSoldierAnimationProfileSelfTest()
+	ok = ok and componentOk and animationOk
+	retireProbe(componentProbe)
+	retireProbe(animationProbe)
+
+	-- Store ids only: a restart can destroy these objects before this callback.
+	threadpool:delay(2, function()
+		local invalidRejected = not SandboxObjects:RequestDestroyAgent(0)
+			and not SandboxObjects:RequestDestroyAgent(-1)
+		local blocks = ObjectManager:getAllBlocks()
+		if blocks:size() > 0 then
+			invalidRejected = invalidRejected and not SandboxObjects:RequestDestroyAgent(blocks[0]:GetObjId())
+		end
+		local requested = 0
+		for _, id in ipairs(probeIds) do
+			if SandboxObjects:RequestDestroyAgent(id) then requested = requested + 1 end
+		end
+		threadpool:delay(0.1, function()
+			local remaining = 0
+			local agents = ObjectManager:getAllAgents()
+			for i = 0, agents:size() - 1 do
+				for _, id in ipairs(probeIds) do
+					if agents[i]:GetObjId() == id then remaining = remaining + 1 end
+				end
+			end
+			local staleRejected = true
+			for _, id in ipairs(probeIds) do
+				staleRejected = not SandboxObjects:RequestDestroyAgent(id) and staleRejected
+			end
+			print("[RuntimeDiagProbeCleanup] result=" .. tostring(remaining == 0 and invalidRejected and staleRejected) ..
+				" requested=" .. tostring(requested) .. " remaining=" .. tostring(remaining) ..
+				" invalidRejected=" .. tostring(invalidRejected) .. " staleRejected=" .. tostring(staleRejected))
+		end)
+	end)
 
 	print("[RuntimeDiag] self test result:", ok)
 	return ok

@@ -13,6 +13,8 @@
 
 ## 0. 目录结构
 
+[2026-09-06 Sandbox19 稳定性记录](stability-2026-09-06.md)：分离力 NaN、诊断 probe 生命周期、完整对局及验证边界。
+
 ```
 docs/
 ├── README.md                  本索引
@@ -85,9 +87,13 @@ docs/
 
 ## 6. /hello-develop-design 工作流（skills/ + dev-design/）
 
+[2026-09-06 指令审计](agent-instructions-audit-2026-09-06.md)：官方依据、冲突处理、精简结果与验证边界。
+
 | 路径 | 用途 |
 |---|---|
-| `skills/brainstorming.md` `writing-plans.md` `subagent-driven-development.md` `verify.md` `gitcommit.md` `doc-sync.md` | 六阶段开发工作流的节点 skill 方法论（命令在 `.claude/commands/hello-develop-design.md`） |
+| `skills/brainstorming.md` `writing-plans.md` `subagent-driven-development.md` `verify.md` `gitcommit.md` `doc-sync.md` | 按需读取的设计、实施、验证与收尾节点；统一流程见 [skills/workflow.md](skills/workflow.md) |
+| `.agents/skills/hello-develop-design/SKILL.md` | Codex 仓库自动发现入口；Claude 入口与旧 Codex 分发入口共享同一流程 |
+| `skills/workflow.md` | 工作流真源：按用户意图与改动风险选择流程 |
 | `dev-design/specs/` `dev-design/plans/` | 工作流产出的设计 spec 与实施 plan |
 
 ## 7. FGUI 专项（fgui/）

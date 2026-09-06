@@ -96,3 +96,18 @@ SoldierObject* ObjectFactory::CreateSoldierWithProfile(const Ogre::String& meshF
 	return SoldierFactory::CreateSoldierWithProfile(m_objectManager, meshFile, profileName, filepath);
 }
 
+// Defer deletion to ObjectLifecycleSystem so Lua callbacks never delete their
+// own host or invalidate an active object-update iteration.
+bool ObjectFactory::RequestDestroyAgent(int objId)
+{
+	if (m_objectManager == nullptr || objId <= 0) return false;
+	AgentObject* agent = dynamic_cast<AgentObject*>(m_objectManager->getObjectById(objId));
+	if (agent == nullptr) return false;
+	// Bullets may outlive the host; detach their non-owning owner reference.
+	for (BlockObject* block : m_objectManager->getAllBlocks())
+	{
+		if (block != nullptr && block->GetOwner() == agent) block->SetOwner(nullptr);
+	}
+	agent->SetNeedClear(0, true);
+	return true;
+}

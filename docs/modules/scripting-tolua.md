@@ -21,6 +21,8 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 
 ## 4. 公开能力要点
 
+- `ObjectFactory::RequestDestroyAgent(int)` 经头文件的 tolua 区域及 `.pkg` 的 `$cfile` 引用导出，本次局部同步 `SandboxToLua.cpp`，未全量生成。Lua 使用冒号调用 `SandboxObjects:RequestDestroyAgent(id)`，对象仍由 C++ 生命周期系统持有；验证含有效、非法、非 agent 和已删除 id，见 [稳定性记录](../stability-2026-09-06.md)。
+
 - tolua 自动绑定 + 手工钩子（Lua closure 捕获）+ 动态脚本加载与环境隔离。
 
 ## 5. 约束与红线

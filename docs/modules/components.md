@@ -26,6 +26,8 @@
 
 ## 4. 公开能力要点
 
+- `AgentLocomotion::ForceToSeparate` 保留 OpenSteer 邻域与常规 1/d 权重；距离小于 1mm 时限制权重，完全重合时按对象 id 选择相反水平力，避免 0/0。`HELLO_LOCOMOTION_SELF_TEST=1` 在 Sandbox19 验证真实绑定的边界行为，见 [稳定性记录](../stability-2026-09-06.md)。
+
 - `IComponent`：onAttach/onDetach/update；`getUpdateOrder()` 显式声明组件更新顺序；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
 - 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。
 

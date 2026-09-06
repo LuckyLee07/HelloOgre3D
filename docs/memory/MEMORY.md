@@ -11,6 +11,8 @@
 
 ## 索引
 
+- [macOS arm64 构建选择](macos-arm64-build.md) — 默认通用构建的 Bullet x86_64 intrinsic 失败与本机 arm64 验证命令
+
 - [用户画像与协作偏好](user.md) — code-anchored 真值核对、verify-first、要 observable 验证、方向先看 project-direction
 - [Release 构建跑运行时](build-release-for-runtime.md) — bin 卡顿先查是不是 Debug 构建覆盖了
 - [parity gate 的 Python](parity-gate-python.md) — 默认 python 是坏 shim，用 E:\SoftWare\Python\Python310\python.exe

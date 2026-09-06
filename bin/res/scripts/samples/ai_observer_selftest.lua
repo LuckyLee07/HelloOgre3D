@@ -46,7 +46,8 @@ function Test:Step(host, nowMs)
 	local s = Observer.Capture(ally, nowMs, Observer.Command(bb, nowMs, 8000, host.find), "ai_soldier")
 	if revision ~= bb:GetRevision() then check(false, "read-only"); return end
 	if self.stage == "autonomous" then
-		if not s.visible or (s.action ~= "pursue" and s.action ~= "shoot") then return end
+		-- 开阔场地首帧就可能接敌；等观察器启用后产生真实 trace，再验收行为证据。
+		if s.traceFrame <= 0 or not s.visible or (s.action ~= "pursue" and s.action ~= "shoot") then return end
 		if not check(s.command.kind == "none" and s.traceFrame > 0, "autonomous-vision-action") then return end
 		print("[AIObservationCase] autonomous " .. s.trace)
 		host.focus(self.allyId, self.enemyId)

@@ -18,6 +18,7 @@ if os.getenv("HELLO_SANDBOX19_OBSERVATION_SELF_TEST") == "1" then
 	_observationTest = require("res.scripts.samples.ai_observer_selftest").New()
 end
 
+local _stabilityTest = require("res.scripts.samples.sandbox19_stability_selftest.lua").New()
 local _sampleName = "Sandbox19"
 local _agents = {}
 local _player = nil
@@ -1034,6 +1035,7 @@ local function _SpawnWaveEnemy(waveIndex, slotIndex)
 	_profiles[enemy:GetObjId()] = "ai_soldier"
 	table.insert(_agents, enemy)
 	ConfigManager:PlaceAgentOnPresetSpawn(enemy, _sampleName, spawnIndex, "default")
+	enemy:SetForward(Vector3(0, 0, -1))
 	return enemy
 end
 
@@ -1349,6 +1351,53 @@ function EventHandle_WindowResized(width, height)
 	_LayoutCrosshair(width, height)
 end
 
+-- 此场地只服务指挥切片；其它 AI 章节保留原来的高台/坡道关卡。
+local function _CreateCommandArena()
+	_G.SandboxLevelBoxes = {}
+	-- 沿用已验证的立方体生成路径，拼成无高差平台。
+	-- 长方体在当前 procedural 渲染路径会出现竖直薄片，不在此处扩改第三方生成器。
+	for _, x in ipairs({ -16, 0, 16 }) do
+		for _, z in ipairs({ -16, 0, 16, 32 }) do
+			CreateLevelBox(16, Vector3(x, -8, z), Vector3(0, 0, 0))
+		end
+	end
+	-- 中央 x=-6..6 保持连通与可见，掩体留在两翼。
+	for _, x in ipairs({ -10, 10 }) do
+		for _, z in ipairs({ 8, 10, 22, 24 }) do
+			CreateLevelBox(2, Vector3(x, 1, z), Vector3(0, 0, 0))
+		end
+	end
+end
+
+local function _RunArenaSelfTest()
+	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true then return end
+	local points = ConfigManager:GetSamplePreset(_sampleName).spawnPoints
+	local start = Vector3(points[1][1], points[1][2], points[1][3])
+	-- ConfigManager 深合并会保留默认数组尾部，只验收本遭遇战实际引用的槽位。
+	local used = {}
+	for index = 1, MATCH.allyCount + 1 do used[index] = true end
+	for _, wave in ipairs(MATCH.waveSpawnIndices) do
+		for _, index in ipairs(wave) do used[index] = true end
+	end
+	local pass = true
+	for index = 1, #points do
+		if used[index] then
+			local point = points[index]
+			local intended = Vector3(point[1], point[2], point[3])
+			local projected = SandboxNav:FindClosestPoint("default", intended)
+			local path = std.vector_Ogre__Vector3_()
+			local found = SandboxNav:FindPath("default", start, intended, path)
+			local nearSpawn = _IsFinitePosition(projected) and (projected - intended):squaredLength() < 1
+			local reachesSpawn = found and path:size() > 0
+				and (path[path:size() - 1] - intended):squaredLength() < 1
+			local ok = nearSpawn and reachesSpawn
+			pass = pass and ok
+			print("[Sandbox19ArenaSelfTest] " .. (ok and "PASS" or "FAIL") .. " spawn=" .. index)
+		end
+	end
+	print("[Sandbox19ArenaSelfTest] " .. (pass and "PASS" or "FAIL") .. " all-spawns-connected")
+end
+
 function Sandbox_Initialize()
 	GUI_CreateCameraAndProfileInfo()
 	GUI_CreateSandboxText(infoText, { w = 430, h = 210 })
@@ -1372,7 +1421,7 @@ function Sandbox_Initialize()
 	directLight:setDiffuseColour(ColourValue(1.8, 1.4, 0.9))
 	directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9))
 
-	SandboxUtilities_CreateLevel()
+	_CreateCommandArena()
 	SandboxScene:UpdateSceneGraph()
 
 	local navMeshConfig = rcConfig()
@@ -1381,9 +1430,13 @@ function Sandbox_Initialize()
 	navMeshConfig.minRegionArea = math.pow(250, 2)
 	navMeshConfig.walkableSlopeAngle = 45
 	SandboxNav:CreateNavigationMesh(navMeshConfig, "default")
+	_RunArenaSelfTest()
 
 	print(ConfigManager:BuildDebugSummary(_sampleName))
 	_SpawnEncounter()
+	if os.getenv("HELLO_LOCOMOTION_SELF_TEST") == "1" then
+		require("res.scripts.samples.locomotion_selftest.lua").Run(_agents[2], _agents[3])
+	end
 end
 
 local function _UpdateObservationTest(nowMs)
@@ -1445,4 +1498,18 @@ function Sandbox_Update(deltaTimeInMillis)
 	_UpdateCommandUi()
 	_UpdateIntentVisuals()
 	_UpdateObservationTest(nowMs)
+	if _stabilityTest ~= nil then
+		_stabilityTest:Step({
+			playerId = _player:GetObjId(), state = _matchState, wave = _waveIndex,
+			restart = function() _restartRequested = true end,
+			clearWave = function()
+				local agents = ObjectManager:getAllAgents()
+				for i = 0, agents:size() - 1 do
+					local agent = agents[i]
+					if _profiles[agent:GetObjId()] ~= nil and agent:GetTeamId() ~= _player:GetTeamId()
+						and agent:GetHealth() > 0 then agent:SetHealth(0) end
+				end
+			end,
+		}, nowMs)
+	end
 end

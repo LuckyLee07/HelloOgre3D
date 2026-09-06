@@ -25,6 +25,7 @@ public:
 	AgentObject* CreateAgentWithProfile(AGENT_OBJ_TYPE agentType, const char* profileName, const char* filepath = nullptr);
 	SoldierObject* CreateSoldier(const Ogre::String& meshFile, const char* filepath = nullptr);
 	SoldierObject* CreateSoldierWithProfile(const Ogre::String& meshFile, const char* profileName, const char* filepath = nullptr);
+	bool RequestDestroyAgent(int objId);
 	//tolua_end
 
 	ObjectManager* GetObjectManager() const { return m_objectManager; }

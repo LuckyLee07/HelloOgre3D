@@ -354,22 +354,45 @@ Ogre::Vector3 AgentLocomotion::ForceToSeparate(const std::vector<AgentObject*>& 
 {
 	if (!m_adapter) return Ogre::Vector3::ZERO;
 
-	OpenSteer::AVGroup group;
-	group.reserve(agents.size());
 	AgentObject* owner = GetAgentOwner();
+	const float maxCos = cosf(Ogre::Degree(angle).valueRadians());
+	const OpenSteer::Vec3 position = m_adapter->position();
+	OpenSteer::Vec3 steering;
+	int neighbors = 0;
 	for (auto* a : agents)
 	{
-		if (a == nullptr || a == owner) // 排除自己
+		if (a == nullptr || a == owner)
 			continue;
 		AgentLocomotion* locomotion = a->GetLocomotionComponent();
 		auto* veh = locomotion != nullptr ? locomotion->GetAdapter() : nullptr;
-		if (!veh) continue;
-		group.push_back(veh);
+		if (veh == nullptr || !m_adapter->inBoidNeighborhood(*veh, m_adapter->radius() * 3,
+			static_cast<float>(distance), maxCos))
+			continue;
+
+		// Preserve OpenSteer's neighborhood and 1/d weighting. At coincident
+		// positions its offset / distanceSquared is 0/0; choose opposite,
+		// repeatable horizontal directions for the pair instead.
+		const OpenSteer::Vec3 offset = veh->position() - position;
+		const float distanceSquared = offset.lengthSquared();
+		const float minDistance = 0.001f;
+		if (distanceSquared >= minDistance * minDistance)
+		{
+			steering += offset / -distanceSquared;
+		}
+		else if (distanceSquared > 0.0f)
+		{
+			steering += offset / -(sqrtf(distanceSquared) * minDistance);
+		}
+		else
+		{
+			const float side = owner != nullptr && owner->GetObjId() < a->GetObjId() ? -1.0f : 1.0f;
+			steering += OpenSteer::Vec3(side / minDistance, 0.0f, 0.0f);
+		}
+		++neighbors;
 	}
 
-	const float maxCos = cosf(Ogre::Degree(angle).valueRadians());
-	const OpenSteer::Vec3 steer = m_adapter->steerForSeparation(static_cast<float>(distance), maxCos, group);
-	return Vec3ToVector3(steer);
+	if (neighbors > 0) steering = (steering / static_cast<float>(neighbors)).normalize();
+	return Vec3ToVector3(steering);
 }
 
 void AgentLocomotion::ApplyForce(const Ogre::Vector3& force)

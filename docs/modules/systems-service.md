@@ -28,6 +28,8 @@
 
 ## 4. 公开能力要点
 
+- `SandboxObjects:RequestDestroyAgent(objId)` 对有效 agent 标记延迟清理，由 ObjectLifecycleSystem 删除；缺失、非 agent、非正 id 返回 false。返回 true 只表示已接受请求，Lua 不获得所有权，也不可据此继续保存裸 userdata；跨帧清理回调只保存 id。RuntimeDiag 用该入口回收临时 probe。
+
 - 对象工厂链 ObjectFactory→AgentFactory/SoldierFactory 分层装配组件。
 - `ObjectFactory` 已导出给 Lua 全局 `SandboxObjects`，对象创建不再通过 `SandboxMgr` 纯转发；`CreateAgentWithProfile` 可按命名 profile 创建普通 `AgentObject`，`CreateSoldierWithProfile` 通过 `ai_soldier` / `player_soldier` / `commander_soldier` 选择互斥 controller 与可选武器；`SandboxServices.objectFactory` 供组件侧创建 bullet 等运行时对象。
 - `AgentConfigService` 已导出给 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 `SandboxMgr` 持有；`SandboxServices.agentConfig` 供 `AgentObject` 读取。

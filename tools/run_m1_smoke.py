@@ -14,7 +14,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = {
     'Sandbox19': ['[Sandbox19CommandSelfTest] PASS', '[Sandbox19IntentSelfTest] PASS',
-                  '[Sandbox19MatchSelfTest] PASS', '[Sandbox19ObservationSelfTest] PASS all=true'],
+                  '[Sandbox19MatchSelfTest] PASS', '[Sandbox19ArenaSelfTest] PASS all-spawns-connected',
+                  '[Sandbox19ObservationSelfTest] PASS all=true'],
     'Sandbox8': ['[ConfigManager] preset=Sandbox8 sample=Sandbox8'],
     'Sandbox12': ['[TeamBlackboardSmoke] PASS', '[TeamBlackboardLifecycleSelfTest] PASS'],
     'Sandbox17': ['[Chapter9TacticsSmoke] PASS'],
