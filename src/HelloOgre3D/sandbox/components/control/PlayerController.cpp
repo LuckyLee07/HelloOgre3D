@@ -16,13 +16,6 @@ namespace
 	const Ogre::Real kSprintMultiplier = 1.75f;
 	const Ogre::Real kDirectionEpsilon = 1e-6f;
 	const Ogre::Real kTurnRate = 2.5f; // 弧度/秒（A/D 平滑转向速率，照搬 code-master 角速度思路）
-
-	// 第三人称跟随相机参数（Sandbox19 尺度；SoldierObject ~人高）。
-	const float kFollowHorzDist = 8.0f;
-	const float kFollowVertDist = 4.0f;
-	const float kFollowTargetDist = 3.0f;
-	const float kFollowEyeHeight = 1.5f;
-	const float kFollowSpring = 64.0f;
 }
 
 PlayerController::PlayerController(BaseObject* owner)
@@ -35,6 +28,8 @@ PlayerController::PlayerController(BaseObject* owner)
 	, m_backPressed(false)
 	, m_leftPressed(false)
 	, m_rightPressed(false)
+	, m_rotateLeftPressed(false)
+	, m_rotateRightPressed(false)
 	, m_sprintPressed(false)
 	, m_firePressed(false)
 	, m_reloadRequested(false)
@@ -76,7 +71,7 @@ void PlayerController::onSandboxServicesChanged(const SandboxServices* services)
 	RegisterInput(services != nullptr ? services->input : nullptr);
 	CameraService* camera = services != nullptr ? services->camera : nullptr;
 	if (camera != nullptr)
-		camera->EnterFollowMode(kFollowHorzDist, kFollowVertDist, kFollowTargetDist, kFollowEyeHeight, kFollowSpring);
+		camera->EnterFollowMode();
 }
 
 int PlayerController::getUpdateOrder() const
@@ -123,6 +118,14 @@ bool PlayerController::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 	case OIS::KC_RIGHT:
 		m_rightPressed = true;
 		return true;
+	case OIS::KC_Q:
+		if (!UsesCameraRelativeMovement()) return false;
+		m_rotateLeftPressed = true;
+		return true;
+	case OIS::KC_E:
+		if (!UsesCameraRelativeMovement()) return false;
+		m_rotateRightPressed = true;
+		return true;
 	case OIS::KC_LSHIFT:
 	case OIS::KC_RSHIFT:
 		m_sprintPressed = true;
@@ -156,6 +159,12 @@ bool PlayerController::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	case OIS::KC_RIGHT:
 		m_rightPressed = false;
 		break;
+	case OIS::KC_Q:
+		m_rotateLeftPressed = false;
+		return UsesCameraRelativeMovement();
+	case OIS::KC_E:
+		m_rotateRightPressed = false;
+		return UsesCameraRelativeMovement();
 	case OIS::KC_LSHIFT:
 	case OIS::KC_RSHIFT:
 		m_sprintPressed = false;
@@ -228,12 +237,20 @@ void PlayerController::UnregisterInput()
 	m_registeredInput = nullptr;
 }
 
+void PlayerController::ResetTransientInput()
+{
+	ResetInputState();
+	StopHorizontalMovement();
+}
+
 void PlayerController::ResetInputState()
 {
 	m_forwardPressed = false;
 	m_backPressed = false;
 	m_leftPressed = false;
 	m_rightPressed = false;
+	m_rotateLeftPressed = false;
+	m_rotateRightPressed = false;
 	m_sprintPressed = false;
 	m_firePressed = false;
 	m_reloadRequested = false;
@@ -256,7 +273,10 @@ void PlayerController::UpdateCameraFollow(int deltaMs)
 	if (ownerPosition.isNaN())
 		return;
 
-	camera->UpdateFollow(ownerPosition, m_aimDirection, static_cast<float>(deltaMs) / 1000.0f);
+	const Ogre::Vector3 cameraForward = UsesCameraRelativeMovement()
+		? Ogre::Vector3(Ogre::Math::Sin(Ogre::Radian(m_yaw)), 0.0f, Ogre::Math::Cos(Ogre::Radian(m_yaw)))
+		: m_aimDirection;
+	camera->UpdateFollow(ownerPosition, cameraForward, static_cast<float>(deltaMs) / 1000.0f);
 }
 
 void PlayerController::UpdateTurning(int deltaMs)
@@ -278,12 +298,14 @@ void PlayerController::UpdateTurning(int deltaMs)
 
 	// A/D 平滑角速度转向（非瞬时，故相机 look-at 不会跳变）；A=左、D=右（按当前手性）。
 	Ogre::Real angular = 0.0f;
-	if (m_leftPressed) angular += kTurnRate;
-	if (m_rightPressed) angular -= kTurnRate;
+	const bool relativeMovement = UsesCameraRelativeMovement();
+	if (relativeMovement ? m_rotateLeftPressed : m_leftPressed) angular += kTurnRate;
+	if (relativeMovement ? m_rotateRightPressed : m_rightPressed) angular -= kTurnRate;
 	if (angular != 0.0f)
 		m_yaw += angular * (static_cast<Ogre::Real>(deltaMs) / 1000.0f);
 
-	UpdateFacingForward();
+	if (!relativeMovement)
+		UpdateFacingForward();
 }
 
 void PlayerController::UpdateFacingForward()
@@ -309,8 +331,11 @@ void PlayerController::UpdateMovement()
 		return;
 	}
 
-	// tank 手感：只沿角色朝向前/后（W/S），A/D 用于转向不参与位移，无横移（消除"左右移动相反"）。
+	// 默认保持 tank；sample 显式选择相机平面移动时，WASD 位移与镜头偏航分开。
 	Ogre::Vector3 forward = m_aimDirection;
+	const bool relativeMovement = UsesCameraRelativeMovement();
+	if (relativeMovement)
+		forward = GetSandboxServices()->camera->GetCameraForward();
 	forward.y = 0.0f;
 	if (forward.isZeroLength())
 		forward = Ogre::Vector3::UNIT_Z;
@@ -319,6 +344,12 @@ void PlayerController::UpdateMovement()
 	Ogre::Vector3 movement = Ogre::Vector3::ZERO;
 	if (m_forwardPressed) movement += forward;
 	if (m_backPressed) movement -= forward;
+	if (relativeMovement)
+	{
+		const Ogre::Vector3 right = forward.crossProduct(Ogre::Vector3::UNIT_Y);
+		if (m_leftPressed) movement -= right;
+		if (m_rightPressed) movement += right;
+	}
 
 	AnimComponent* anim = GetAnimComponent();
 	if (movement.squaredLength() <= kDirectionEpsilon)
@@ -330,6 +361,11 @@ void PlayerController::UpdateMovement()
 	}
 
 	movement.normalise();
+	if (relativeMovement)
+	{
+		m_aimDirection = movement;
+		owner->SetForward(movement);
+	}
 	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	const Ogre::Real baseSpeed = locomotion != nullptr ? locomotion->GetMaxSpeed() : static_cast<Ogre::Real>(SOLDIER_STAND_SPEED);
 	const Ogre::Real speed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);
@@ -441,6 +477,12 @@ void PlayerController::EnterDeadState()
 	if (anim != nullptr)
 		anim->EnterDeathIntent();
 	m_deathIntentIssued = true;
+}
+
+bool PlayerController::UsesCameraRelativeMovement() const
+{
+	const SandboxServices* services = GetSandboxServices();
+	return services != nullptr && services->camera != nullptr && services->camera->IsCameraRelativeMovement();
 }
 
 bool PlayerController::IsAlive() const

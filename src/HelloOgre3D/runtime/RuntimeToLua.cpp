@@ -14,11 +14,85 @@
 TOLUA_API int  tolua_RuntimeToLua_open (lua_State* tolua_S);
 
 #include "ui/fairygui/lua_bridge/FairyGuiLuaApi.h"
+#include "audio/RuntimeUiSound.h"
 
 /* function to register type */
 static void tolua_reg_types (lua_State* tolua_S)
 {
  tolua_usertype(tolua_S,"FairyGuiLuaApi");
+ tolua_usertype(tolua_S,"RuntimeUiSound");
+}
+
+/* method: IsAvailable of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_IsAvailable00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'IsAvailable'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'IsAvailable'",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->IsAvailable());
+	return 1;
+}
+
+/* method: Play of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_Play00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isstring(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'Play'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'Play'",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->Play(tolua_tostring(tolua_S,2,nullptr)));
+	return 1;
+}
+
+/* method: StopAll of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_StopAll00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'StopAll'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'StopAll'",nullptr), 0;
+	self->StopAll();
+	return 0;
+}
+
+/* method: SetVolume of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_SetVolume00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isnumber(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SetVolume'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SetVolume'",nullptr), 0;
+	self->SetVolume(static_cast<float>(tolua_tonumber(tolua_S,2,0)));
+	return 0;
+}
+
+/* method: GetVolume of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_GetVolume00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'GetVolume'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'GetVolume'",nullptr), 0;
+	tolua_pushnumber(tolua_S,self->GetVolume());
+	return 1;
 }
 
 /* method: IsAvailable of class  FairyGuiLuaApi */
@@ -4013,6 +4087,14 @@ TOLUA_API int tolua_RuntimeToLua_open (lua_State* tolua_S)
  tolua_reg_types(tolua_S);
  tolua_module(tolua_S,NULL,0);
  tolua_beginmodule(tolua_S,NULL);
+  tolua_cclass(tolua_S,"RuntimeUiSound","RuntimeUiSound","",NULL);
+  tolua_beginmodule(tolua_S,"RuntimeUiSound");
+   tolua_function(tolua_S,"IsAvailable",tolua_RuntimeToLua_RuntimeUiSound_IsAvailable00);
+   tolua_function(tolua_S,"Play",tolua_RuntimeToLua_RuntimeUiSound_Play00);
+   tolua_function(tolua_S,"StopAll",tolua_RuntimeToLua_RuntimeUiSound_StopAll00);
+   tolua_function(tolua_S,"SetVolume",tolua_RuntimeToLua_RuntimeUiSound_SetVolume00);
+   tolua_function(tolua_S,"GetVolume",tolua_RuntimeToLua_RuntimeUiSound_GetVolume00);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"FairyGuiLuaApi","FairyGuiLuaApi","",NULL);
   tolua_beginmodule(tolua_S,"FairyGuiLuaApi");
    tolua_function(tolua_S,"IsAvailable",tolua_RuntimeToLua_FairyGuiLuaApi_IsAvailable00);

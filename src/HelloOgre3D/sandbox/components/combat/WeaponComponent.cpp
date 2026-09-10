@@ -169,6 +169,20 @@ void WeaponComponent::ShootBulletTowards(const Ogre::Vector3& direction)
 	DoShootBullet(position, orientation);
 }
 
+void WeaponComponent::ShootBulletAt(const Ogre::Vector3& worldTarget)
+{
+	Ogre::Vector3 position;
+	Ogre::Quaternion orientation;
+	if (worldTarget.isNaN() || !ResolveMuzzleTransform(position, orientation))
+		return;
+	Ogre::Vector3 direction = worldTarget - position;
+	if (direction.isNaN() || direction.isZeroLength())
+		return;
+	direction.normalise();
+	orientation = Ogre::Vector3::UNIT_X.getRotationTo(direction, Ogre::Vector3::UNIT_Y);
+	DoShootBullet(position, orientation);
+}
+
 bool WeaponComponent::ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation) const
 {
 	RenderComponent* ownerRender = FindOwnerRender(this);

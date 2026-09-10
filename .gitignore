@@ -2,6 +2,7 @@
 /bin/*.log
 /bin/*.exe
 /bin/*.pdb
+/bin/relay_settings.cfg
 /bin/HelloOgre3D
 /bin/HelloOgre3D.dSYM/
 /libs/*

@@ -1041,6 +1041,31 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	return false;
 }
 
+int ObjectManager::ClearProjectiles()
+{
+	// Snapshot ids because removing a bullet mutates both the registry and block index.
+	std::vector<int> projectileIds;
+	for (BlockObject* block : m_registry->Blocks())
+	{
+		if (block != nullptr && block->GetObjType() == BaseObject::OBJ_TYPE_BULLET)
+		{
+			block->SetOwner(nullptr);
+			projectileIds.push_back(static_cast<int>(block->GetObjId()));
+		}
+	}
+	int removed = 0;
+	for (int id : projectileIds)
+		if (removeObjectById(id)) ++removed;
+
+	// Only BulletImpact currently registers these transient scene nodes.
+	for (auto& pending : m_remSceneNodes)
+		pending.second = 0;
+	ObjectLifecycleSystem::UpdateContext context;
+	context.removedSceneNodes = &m_remSceneNodes;
+	m_objectLifecycleSystem.CleanupRemovedSceneNodes(0, context);
+	return removed;
+}
+
 bool ObjectManager::removeObjectById(int objid)
 {
 	BaseObject* pObject = nullptr;

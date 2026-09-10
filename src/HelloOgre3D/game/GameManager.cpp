@@ -36,6 +36,10 @@
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
 #include "diagnostics/RuntimeResourceDiagnostics.h"
+#include "diagnostics/InputReplay.h"
+#include "audio/RuntimeUiSound.h"
+#include "components/control/PlayerController.h"
+#include "objects/AgentObject.h"
 
 using namespace Ogre;
 
@@ -65,8 +69,8 @@ FairyGuiSystem* ResolveFairyGuiSystem(ClientManager* clientManager)
 
 GameManager::GameManager(ClientManager* pClientMgr)
 	: m_pClientManager(pClientMgr), m_pScriptVM(nullptr), m_pPhysicsWorld(nullptr),
-	m_pCameraService(nullptr), m_pAgentConfigService(nullptr), m_pNavigationService(nullptr), m_pRaycastService(nullptr), m_pSceneService(nullptr), m_pScriptService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_SimulationTime(0),
-	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr)))
+	m_pCameraService(nullptr), m_pAgentConfigService(nullptr), m_pNavigationService(nullptr), m_pRaycastService(nullptr), m_pSceneService(nullptr), m_pScriptService(nullptr), m_pUIManager(nullptr), m_pObjectManager(nullptr), m_pObjectFactory(nullptr), m_simulationPaused(false), m_SimulationTime(0),
+	m_pFairyGuiLuaApi(new FairyGuiLuaApi(ResolveFairyGuiSystem(pClientMgr))), m_pUiSound(new RuntimeUiSound())
 {
 	
 }
@@ -86,6 +90,7 @@ GameManager::~GameManager()
 	SAFE_DELETE(m_pUIManager);
 	SAFE_DELETE(m_pCameraService);
 	SAFE_DELETE(m_pFairyGuiLuaApi);
+	SAFE_DELETE(m_pUiSound);
 
 	m_pClientManager = nullptr;
 }
@@ -177,6 +182,7 @@ void GameManager::InitLuaEnv()
 	m_pScriptVM->setUserTypePointer("SandboxObjects", "ObjectFactory", m_pObjectFactory);
 	m_pScriptVM->setUserTypePointer("GameManager", "GameManager", this);
 	m_pScriptVM->setUserTypePointer("FairyGuiRuntime", "FairyGuiLuaApi", m_pFairyGuiLuaApi);
+	m_pScriptVM->setUserTypePointer("SandboxAudio", "RuntimeUiSound", m_pUiSound);
 	m_pScriptVM->setUserTypePointer("ObjectManager", "ObjectManager", m_pObjectManager);
 	m_pScriptVM->setUserTypePointer("DebugDrawer", "DebugDrawer", DebugDrawer::GetInstance());
 	m_pScriptVM->setUserTypePointer("LuaInterface", "LuaInterface", LuaInterface::GetInstance());
@@ -190,12 +196,13 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
+	if (InputReplay::Update(*this, m_pObjectManager, getInputManager(), deltaMilliseconds))
+		return;
 	H3D_PROFILE_SCOPE("GameManager::UpdateStages");
 	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
 	RuntimeGameUpdateTiming perfTiming;
 	long long stageStartMicros = 0;
-	//struct timeval stNow;
-	//gettimeofday(&stNow, NULL);
+	if (!m_simulationPaused)
 	{
 		H3D_PROFILE_SCOPE("Lua::__tick__");
 		if (perfEnabled)
@@ -208,32 +215,35 @@ void GameManager::Update(int deltaMilliseconds)
 		}
 	}
 
-	m_SimulationTime += deltaMilliseconds;
-
+	if (!m_simulationPaused)
 	{
-		H3D_PROFILE_SCOPE("ObjectManager::Update");
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_pObjectManager->SetCurrentTimeMs(m_SimulationTime);
-		m_pObjectManager->Update(deltaMilliseconds);
-		if (perfEnabled)
-			perfTiming.objectManagerMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
-	}
+		m_SimulationTime += deltaMilliseconds;
 
-	{
-		H3D_PROFILE_SCOPE("PhysicsWorld::Step");
-		if (perfEnabled)
-			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_pPhysicsWorld->stepWorld(deltaMilliseconds / 1000.0f);
-		if (perfEnabled)
-			perfTiming.physicsMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		{
+			H3D_PROFILE_SCOPE("ObjectManager::Update");
+			if (perfEnabled)
+				stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+			m_pObjectManager->SetCurrentTimeMs(m_SimulationTime);
+			m_pObjectManager->Update(deltaMilliseconds);
+			if (perfEnabled)
+				perfTiming.objectManagerMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		}
+
+		{
+			H3D_PROFILE_SCOPE("PhysicsWorld::Step");
+			if (perfEnabled)
+				stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
+			m_pPhysicsWorld->stepWorld(deltaMilliseconds / 1000.0f);
+			if (perfEnabled)
+				perfTiming.physicsMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+		}
 	}
 
 	{
 		H3D_PROFILE_SCOPE("Lua::Sandbox_Update");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_pScriptVM->callFunction("Sandbox_Update", "i", deltaMilliseconds);
+		m_pScriptVM->callFunction("Sandbox_Update", "i", m_simulationPaused ? 0 : deltaMilliseconds);
 		if (perfEnabled)
 		{
 			perfTiming.sandboxLuaMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
@@ -338,8 +348,8 @@ bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 	if (consumed)
 		return true;
 
-	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, true);
-	return false;
+	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib>B", keycode, true, &consumed);
+	return consumed || m_simulationPaused;
 }
 
 bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
@@ -355,10 +365,11 @@ bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	if (consumed)
 		return true;
 
-	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib", keycode, false);
+	m_pScriptVM->callFunction("EventHandle_Keyboard", "ib>B", keycode, false, &consumed);
 
-	m_pObjectManager->HandleKeyEvent(keycode, key);
-	return false;
+	if (!consumed && !m_simulationPaused)
+		m_pObjectManager->HandleKeyEvent(keycode, key);
+	return consumed || m_simulationPaused;
 }
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
@@ -375,8 +386,11 @@ bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 #endif
 	// 派发给 sample：ctype 0=move / 1=down / 2=up，button 沿用 OIS 数值（左 0 / 右 1），move 无按钮传 -1。
 	// FGUI 消费掉的事件已在上面 return，保持 UI 优先于 sample 的既有次序。
-	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 0, evt.state.X.abs, evt.state.Y.abs, -1);
-	return false;
+	bool consumed = false;
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii>B", 0, evt.state.X.abs, evt.state.Y.abs, -1, &consumed);
+	if (!consumed && !m_simulationPaused && evt.state.Z.rel != 0 && m_pCameraService != nullptr)
+		consumed = m_pCameraService->ZoomFollowCamera(-static_cast<float>(evt.state.Z.rel) / 120.0f);
+	return consumed || m_simulationPaused;
 }
 
 bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
@@ -386,8 +400,9 @@ bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID 
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
 #endif
-	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 1, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn));
-	return false;
+	bool consumed = false;
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii>B", 1, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn), &consumed);
+	return consumed || m_simulationPaused;
 }
 
 bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
@@ -397,8 +412,34 @@ bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
 		return true;
 #endif
-	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii", 2, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn));
-	return false;
+	bool consumed = false;
+	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii>B", 2, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn), &consumed);
+	return consumed || m_simulationPaused;
+}
+
+void GameManager::SetSimulationPaused(bool paused)
+{
+	if (paused && !m_simulationPaused && m_pObjectManager != nullptr)
+	{
+		for (AgentObject* agent : m_pObjectManager->getAllAgents())
+		{
+			PlayerController* player = agent != nullptr ? agent->FindComponent<PlayerController>() : nullptr;
+			if (player != nullptr)
+				player->ResetTransientInput();
+		}
+	}
+	m_simulationPaused = paused;
+}
+
+bool GameManager::IsSimulationPaused() const
+{
+	return m_simulationPaused;
+}
+
+void GameManager::RequestQuit()
+{
+	if (m_pClientManager != nullptr)
+		m_pClientManager->SetShutdown(true);
 }
 
 long long GameManager::getTimeInMillis()

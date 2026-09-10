@@ -84,6 +84,7 @@ public:
 	void addNewObject(BaseObject* pObject);
 
 	bool removeObjectById(int objid);
+	int ClearProjectiles();
 	BaseObject* getObjectById(int objid);
 
 	void markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds);

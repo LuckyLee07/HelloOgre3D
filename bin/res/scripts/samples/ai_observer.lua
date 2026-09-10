@@ -13,8 +13,9 @@ function Observer.Command(bb, nowMs, ttlMs, findAgent)
 	if bb == nil or not bb:Has("command.issuedMs") then return { kind = "none" } end
 	local kind = bb:GetString("command.kind")
 	local elapsed = nowMs - bb:GetInt("command.issuedMs", nowMs)
+	local semantic = bb:GetBool("command.semantic", false)
 	local reason = nil
-	if elapsed < 0 or elapsed > ttlMs then
+	if elapsed < 0 or (not semantic and elapsed > ttlMs) then
 		reason = "ttl-expired"
 	elseif kind == "focus" then
 		local target = findAgent(bb:GetObjectId("command.focusTargetId", 0))
@@ -23,6 +24,7 @@ function Observer.Command(bb, nowMs, ttlMs, findAgent)
 		reason = "invalid-command"
 	end
 	return { kind = kind, active = reason == nil, reason = reason,
+		semantic = semantic, status = semantic and bb:GetString("command.status") or nil,
 		remainingMs = math.max(0, ttlMs - elapsed), targetId = bb:GetObjectId("command.focusTargetId", 0) }
 end
 
@@ -102,7 +104,7 @@ function Observer.Lines(s)
 		"Local visual memory: " .. (s.memory and ("#" .. s.memoryId .. " age=" .. s.memoryAgeMs .. "ms") or "none"),
 		"Last seen: " .. s.observedAtMs .. "ms | pos=" .. s.memoryPos,
 		"Team support fact: #" .. s.teamId .. " from #" .. s.teamFrom,
-		"Order: " .. s.command.kind .. " | " .. (s.command.active and (s.command.remainingMs .. "ms left") or "inactive"),
+		"Order: " .. s.command.kind .. " | " .. (s.command.active and (s.command.semantic and s.command.status or (s.command.remainingMs .. "ms left")) or "inactive"),
 		"Last order clear: " .. (s.lastClear ~= "" and s.lastClear or "none"),
 		"Move request: " .. s.movePos,
 		string.format("Speed %.2f | ammo %d | path points %d", s.speed, s.ammo, s.pathPoints),

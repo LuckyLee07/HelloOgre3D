@@ -204,30 +204,32 @@ SamplePresets.Sandbox19.seed = 20260710
 SamplePresets.Sandbox19.agentCount = 7
 SamplePresets.Sandbox19.lightTeamCount = 3
 SamplePresets.Sandbox19.spawnMode = "fixed"
--- 中央开阔接敌线：玩家朝 +Z，友军在前方两侧，各波敌人都从前半场进入。
+-- 中继站：前三槽是入口小队，后四槽是两段前方守卫；与 sandbox19_scene anchors 对齐。
 SamplePresets.Sandbox19.spawnPoints = {
-	{ 0, 0, -6 },
-	{ -3, 0, 1 },
-	{ 3, 0, 1 },
-	{ -5, 0, 18 },
-	{ 5, 0, 18 },
-	{ -7, 0, 25 },
-	{ 7, 0, 25 },
+	{ 0, 0, -18 },
+	{ -3, 0, -14 },
+	{ 3, 0, -14 },
+	{ -4, 0, 6 },
+	{ 4, 0, 6 },
+	{ -4, 0, 32 },
+	{ 4, 0, 32 },
 }
 SamplePresets.Sandbox19.aiScheduler.maxPerFrame = 6
--- 指挥切片：AI 换用 Sandbox19 专用行为树（玩家指令分支 + 引用整棵 SoldierBT 兜底），
+SamplePresets.Sandbox19.aiBlackboard.floats["perception.visionRange"] = 18.0
+SamplePresets.Sandbox19.aiBlackboard.floats["perception.fieldOfViewDegrees"] = 140.0
+-- 指挥任务：AI 换用 Sandbox19 专用行为树（玩家指令 + 局部守卫，复用战斗动作），
 -- 条件表换成继承 SoldierConditions 的 Sandbox19CommandConditions。共享 SoldierBT 不受影响。
 SamplePresets.Sandbox19.behaviorTree = SamplePresets.Sandbox19.behaviorTree or {}
 SamplePresets.Sandbox19.behaviorTree.module = "res.scripts.ai.behavior.config.Sandbox19CommandBT.lua"
 SamplePresets.Sandbox19.behaviorTree.global = "Sandbox19CommandBTConfig"
 SamplePresets.Sandbox19.behaviorTree.conditionsGlobal = "Sandbox19CommandConditions"
 SamplePresets.Sandbox19.commanderMatch = {
-	prepareMs = 6000,
-	intermissionMs = 7000,
-	stalemateMs = 20000,
-	criticalRetreatMs = 6000,
 	allyCount = 2,
-	waveEnemyCounts = { 2, 3, 4 },
+	commanderHealth = 160,
+	allyHealth = 240,
+	enemyHealth = 100,
+	waveEnemyCounts = { 2, 2 },
+	waveSpawnIndices = { { 4, 5 }, { 6, 7 } },
 }
 
 SamplePresets.chapter8_comms = {

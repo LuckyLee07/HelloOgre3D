@@ -31,6 +31,7 @@ public:
 	AgentAnimStateMachine* GetObjectASM() const;
 	void SyncToHandBone();
 	void ShootBullet();
+	void ShootBulletAt(const Ogre::Vector3& worldTarget);
 
 	void SetAmmo(int ammo);
 	int GetAmmo() const { return m_ammo; }

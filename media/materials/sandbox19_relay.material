@@ -1,0 +1,108 @@
+// Original Sandbox19 palette, reusing CC0 Nobiax surface textures.
+// Source notices: media/textures/nobiax_textures/LICENSE.txt and
+// media/textures/nobiax_modular/LICENSE.txt. No shared material is overridden.
+
+// Ogre inheritance resolves AST definitions in this script or explicit imports;
+// an already-created material in the resource manager is not an inheritance base.
+import base_material from "materials/base.material"
+
+material Relay/Ground : base_material
+{
+	set $diffuseCol "1.12 1.10 1.01 1"
+	set $specularCol "0.03 0.03 0.03"
+	set $shininess "8"
+	set_texture_alias diffuseMap textures/nobiax_textures/ground2Diffuse.tga
+	set_texture_alias normalMap textures/nobiax_textures/ground2Normal.tga
+}
+
+material Relay/MainRoute : Relay/Ground
+{
+	set $diffuseCol "1.30 1.24 1.10 1"
+}
+
+material Relay/Concrete : base_material
+{
+	set $diffuseCol "0.75 0.72 0.65 1"
+	set $specularCol "0.02 0.02 0.02"
+	set $shininess "8"
+	// Pale painted concrete: retain relief, discard the original dark stain map.
+	set_texture_alias normalMap textures/nobiax_modular/modularNormal.dds
+}
+
+material Relay/Metal : base_material
+{
+	set $diffuseCol "0.36 0.46 0.43 1"
+	set $specularCol "0.12 0.12 0.12"
+	set $shininess "16"
+}
+
+material Relay/Equipment : Relay/Concrete
+{
+	set $diffuseCol "0.42 0.53 0.47 1"
+	set $specularCol "0.07 0.07 0.07"
+	set $shininess "16"
+}
+
+material Relay/SafeMark : base_material
+{
+	set $diffuseCol "0.24 0.67 0.64 1"
+	set $specularCol "0 0 0"
+	set $shininess "1"
+}
+
+material Relay/GoalMark : base_material
+{
+	set $diffuseCol "0.91 0.62 0.29 1"
+	set $specularCol "0 0 0"
+	set $shininess "1"
+}
+
+material Relay/RouteMark : base_material
+{
+	set $diffuseCol "0.82 0.79 0.69 1"
+	set $specularCol "0 0 0"
+	set $shininess "1"
+}
+
+// TropicalSunnyDay from SkyboxSet by Heiko Irrgang, CC BY-SA 3.0.
+// Original textures unchanged; see textures/skybox_set/LICENSE.txt.
+material Relay/Sky
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+
+			vertex_program_ref skybox_vs_glsl
+			{
+			}
+
+			fragment_program_ref skybox_fs_glsl
+			{
+			}
+
+			texture_unit skyboxMap
+			{
+				cubic_texture textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayFront2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayBack2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayRight2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayLeft2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayUp2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayDown2048.png separateUV
+				tex_address_mode clamp
+			}
+		}
+	}
+
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+
+			texture_unit
+			{
+				cubic_texture textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayFront2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayBack2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayRight2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayLeft2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayUp2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayDown2048.png separateUV
+				tex_address_mode clamp
+			}
+		}
+	}
+}

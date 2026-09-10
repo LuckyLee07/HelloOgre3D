@@ -813,6 +813,21 @@ static int tolua_SandboxToLua_UIManager_CreateUIFrame00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetBuildInfoVisible of class UIManager; surgical binding */
+static int tolua_SandboxToLua_UIManager_SetBuildInfoVisible00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"UIManager",0,&error)
+		|| !tolua_isboolean(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SetBuildInfoVisible'.",&error), 0;
+	UIManager* self = static_cast<UIManager*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SetBuildInfoVisible'",nullptr), 0;
+	self->SetBuildInfoVisible(tolua_toboolean(tolua_S,2,0) != 0);
+	return 0;
+}
+
 /* method: SetMarkupColor of class  UIManager */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_UIManager_SetMarkupColor00
 static int tolua_SandboxToLua_UIManager_SetMarkupColor00(lua_State* tolua_S)
@@ -1689,6 +1704,108 @@ static int tolua_SandboxToLua_CameraService_ScreenToGroundPoint00(lua_State* tol
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
+
+/* method: ConfigureFollowCamera of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_ConfigureFollowCamera00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isnumber(tolua_S,2,0,&error)
+		|| !tolua_isnumber(tolua_S,3,0,&error)
+		|| !tolua_isnumber(tolua_S,4,0,&error)
+		|| !tolua_isnumber(tolua_S,5,0,&error)
+		|| !tolua_isnumber(tolua_S,6,0,&error)
+		|| !tolua_isnumber(tolua_S,7,0,&error)
+		|| !tolua_isnoobj(tolua_S,8,&error))
+		return tolua_error(tolua_S,"#ferror in function 'ConfigureFollowCamera'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'ConfigureFollowCamera'",nullptr), 0;
+	const float distance = static_cast<float>(tolua_tonumber(tolua_S,2,0));
+	const float height = static_cast<float>(tolua_tonumber(tolua_S,3,0));
+	const float lookAhead = static_cast<float>(tolua_tonumber(tolua_S,4,0));
+	const float eyeHeight = static_cast<float>(tolua_tonumber(tolua_S,5,0));
+	const float minDistance = static_cast<float>(tolua_tonumber(tolua_S,6,0));
+	const float maxDistance = static_cast<float>(tolua_tonumber(tolua_S,7,0));
+	tolua_pushboolean(tolua_S,self->ConfigureFollowCamera(distance, height, lookAhead, eyeHeight, minDistance, maxDistance));
+	return 1;
+}
+
+/* method: ResetFollowCamera of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_ResetFollowCamera00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'ResetFollowCamera'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'ResetFollowCamera'",nullptr), 0;
+	self->ResetFollowCamera();
+	return 0;
+}
+
+/* method: SetCameraRelativeMovement of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_SetCameraRelativeMovement00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isboolean(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SetCameraRelativeMovement'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SetCameraRelativeMovement'",nullptr), 0;
+	const bool enabled = tolua_toboolean(tolua_S,2,0) != 0;
+	self->SetCameraRelativeMovement(enabled);
+	return 0;
+}
+
+/* method: IsCameraRelativeMovement of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_IsCameraRelativeMovement00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'IsCameraRelativeMovement'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'IsCameraRelativeMovement'",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->IsCameraRelativeMovement());
+	return 1;
+}
+
+/* method: SnapFollowTarget of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_SnapFollowTarget00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isusertype(tolua_S,2,"Ogre::Vector3",0,&error)
+		|| !tolua_isusertype(tolua_S,3,"Ogre::Vector3",0,&error)
+		|| !tolua_isnoobj(tolua_S,4,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SnapFollowTarget'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SnapFollowTarget'",nullptr), 0;
+	const Ogre::Vector3& position = *static_cast<Ogre::Vector3*>(tolua_tousertype(tolua_S,2,0));
+	const Ogre::Vector3& forward = *static_cast<Ogre::Vector3*>(tolua_tousertype(tolua_S,3,0));
+	self->SnapFollowTarget(position, forward);
+	return 0;
+}
+
+/* method: GetFollowDistance of class CameraService; surgical binding */
+static int tolua_SandboxToLua_CameraService_GetFollowDistance00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"CameraService",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'GetFollowDistance'.",&error), 0;
+	CameraService* self = static_cast<CameraService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'GetFollowDistance'",nullptr), 0;
+	tolua_pushnumber(tolua_S,static_cast<lua_Number>(self->GetFollowDistance()));
+	return 1;
+}
 
 /* method: GetRenderTime of class  CameraService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_CameraService_GetRenderTime00
@@ -7173,6 +7290,20 @@ static int tolua_SandboxToLua_WeaponComponent_ShootBullet00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: ShootBulletAt of class WeaponComponent */
+static int tolua_SandboxToLua_WeaponComponent_ShootBulletAt00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S, 1, "WeaponComponent", 0, &error)
+		|| !tolua_isusertype(tolua_S, 2, "Ogre::Vector3", 0, &error)
+		|| !tolua_isnoobj(tolua_S, 3, &error))
+		return tolua_error(tolua_S, "#ferror in function 'ShootBulletAt'.", &error), 0;
+	WeaponComponent* self = static_cast<WeaponComponent*>(tolua_tousertype(tolua_S, 1, nullptr));
+	Ogre::Vector3* target = static_cast<Ogre::Vector3*>(tolua_tousertype(tolua_S, 2, nullptr));
+	if (self != nullptr && target != nullptr) self->ShootBulletAt(*target);
+	return 0;
+}
+
 /* method: SetAmmo of class  WeaponComponent */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_WeaponComponent_SetAmmo00
 static int tolua_SandboxToLua_WeaponComponent_SetAmmo00(lua_State* tolua_S)
@@ -7929,6 +8060,22 @@ static int tolua_SandboxToLua_AIController_GetEnemy00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: CanSeeEnemy of class AIController; surgical binding */
+static int tolua_SandboxToLua_AIController_CanSeeEnemy00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"AIController",0,&error)
+		|| !tolua_isnumber(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'CanSeeEnemy'.",&error), 0;
+	AIController* self = static_cast<AIController*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'CanSeeEnemy'",nullptr), 0;
+	const int enemyId = static_cast<int>(tolua_tonumber(tolua_S,2,0));
+	tolua_pushboolean(tolua_S,self->CanSeeEnemy(enemyId));
+	return 1;
+}
+
 /* method: HasEnemy of class  AIController */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_AIController_HasEnemy00
 static int tolua_SandboxToLua_AIController_HasEnemy00(lua_State* tolua_S)
@@ -8311,6 +8458,20 @@ static int tolua_SandboxToLua_ObjectFactory_RequestDestroyAgent00(lua_State* tol
 #endif
 }
 #endif
+
+/* method: ClearProjectiles of class ObjectFactory; surgical binding */
+static int tolua_SandboxToLua_ObjectFactory_ClearProjectiles00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"ObjectFactory",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'ClearProjectiles'.",&error), 0;
+	ObjectFactory* self = static_cast<ObjectFactory*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'ClearProjectiles'",nullptr), 0;
+	tolua_pushnumber(tolua_S,static_cast<lua_Number>(self->ClearProjectiles()));
+	return 1;
+}
 
 /* method: CreatePlane of class  ObjectFactory */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_ObjectFactory_CreatePlane00
@@ -16677,6 +16838,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"CreateUIFrame",tolua_SandboxToLua_UIManager_CreateUIFrame00);
    tolua_function(tolua_S,"CreatePolygon",tolua_SandboxToLua_UIManager_CreatePolygon00);
    tolua_function(tolua_S,"SetMarkupColor",tolua_SandboxToLua_UIManager_SetMarkupColor00);
+   tolua_function(tolua_S,"SetBuildInfoVisible",tolua_SandboxToLua_UIManager_SetBuildInfoVisible00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"IPlayerInput","IPlayerInput","",NULL);
   tolua_beginmodule(tolua_S,"IPlayerInput");
@@ -16691,6 +16853,12 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"CameraService","CameraService","",NULL);
   tolua_beginmodule(tolua_S,"CameraService");
+   tolua_function(tolua_S,"ConfigureFollowCamera",tolua_SandboxToLua_CameraService_ConfigureFollowCamera00);
+   tolua_function(tolua_S,"ResetFollowCamera",tolua_SandboxToLua_CameraService_ResetFollowCamera00);
+   tolua_function(tolua_S,"SetCameraRelativeMovement",tolua_SandboxToLua_CameraService_SetCameraRelativeMovement00);
+   tolua_function(tolua_S,"IsCameraRelativeMovement",tolua_SandboxToLua_CameraService_IsCameraRelativeMovement00);
+   tolua_function(tolua_S,"SnapFollowTarget",tolua_SandboxToLua_CameraService_SnapFollowTarget00);
+   tolua_function(tolua_S,"GetFollowDistance",tolua_SandboxToLua_CameraService_GetFollowDistance00);
    tolua_function(tolua_S,"GetCamera",tolua_SandboxToLua_CameraService_GetCamera00);
    tolua_function(tolua_S,"GetCameraUp",tolua_SandboxToLua_CameraService_GetCameraUp00);
    tolua_function(tolua_S,"GetCameraLeft",tolua_SandboxToLua_CameraService_GetCameraLeft00);
@@ -16897,6 +17065,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetObjectASM",tolua_SandboxToLua_WeaponComponent_GetObjectASM00);
    tolua_function(tolua_S,"SyncToHandBone",tolua_SandboxToLua_WeaponComponent_SyncToHandBone00);
    tolua_function(tolua_S,"ShootBullet",tolua_SandboxToLua_WeaponComponent_ShootBullet00);
+   tolua_function(tolua_S,"ShootBulletAt",tolua_SandboxToLua_WeaponComponent_ShootBulletAt00);
    tolua_function(tolua_S,"SetAmmo",tolua_SandboxToLua_WeaponComponent_SetAmmo00);
    tolua_function(tolua_S,"GetAmmo",tolua_SandboxToLua_WeaponComponent_GetAmmo00);
    tolua_function(tolua_S,"SetMaxAmmo",tolua_SandboxToLua_WeaponComponent_SetMaxAmmo00);
@@ -16923,6 +17092,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"AIController","AIController","IComponent",NULL);
   tolua_beginmodule(tolua_S,"AIController");
+   tolua_function(tolua_S,"CanSeeEnemy",tolua_SandboxToLua_AIController_CanSeeEnemy00);
    tolua_function(tolua_S,"GetAgentOwner",tolua_SandboxToLua_AIController_GetAgentOwner00);
    tolua_function(tolua_S,"GetBlackboard",tolua_SandboxToLua_AIController_GetBlackboard00);
    tolua_function(tolua_S,"GetEnemy",tolua_SandboxToLua_AIController_GetEnemy00);
@@ -16940,6 +17110,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"ObjectFactory","ObjectFactory","",NULL);
   tolua_beginmodule(tolua_S,"ObjectFactory");
+   tolua_function(tolua_S,"ClearProjectiles",tolua_SandboxToLua_ObjectFactory_ClearProjectiles00);
    tolua_function(tolua_S,"CreatePlane",tolua_SandboxToLua_ObjectFactory_CreatePlane00);
    tolua_function(tolua_S,"CreateBlockObject",tolua_SandboxToLua_ObjectFactory_CreateBlockObject00);
    tolua_function(tolua_S,"CreateBlockBox",tolua_SandboxToLua_ObjectFactory_CreateBlockBox00);

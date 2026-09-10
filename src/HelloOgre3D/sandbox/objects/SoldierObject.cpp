@@ -407,6 +407,9 @@ void SoldierObject::ExecuteAnimShoot()
 		player->ExecuteAnimShoot();
 		return;
 	}
+	// Some action profiles own the shot and ammo timing; animation is visual only.
+	if (m_cachedAI != nullptr && m_cachedAI->GetBlackboard()->GetBool("weapon.actionOwnsFire", false))
+		return;
 	const_cast<SoldierObject*>(this)->ApplyFireWeaponCommand();
 }
 

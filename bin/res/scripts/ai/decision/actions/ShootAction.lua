@@ -81,7 +81,13 @@ function OnUpdate(deltaMs, owner, bb)
         _hasFired = true
         if AgentComponents.HasAmmo(owner) then
             AgentComponents.ConsumeAmmo(owner, 1)
-            AgentComponents.ShootBullet(owner)
+            if bb:GetBool("sandbox19.aimedFire", false) and enemy and enemy:GetHealth() > 0 then
+                -- Opt-in range profile: aim the physical projectile from the muzzle
+                -- at the target body. Damage still requires a real Bullet collision.
+                owner:GetWeaponComponent():ShootBulletAt(enemy:GetPosition())
+            else
+                AgentComponents.ShootBullet(owner)
+            end
         end
     end
 

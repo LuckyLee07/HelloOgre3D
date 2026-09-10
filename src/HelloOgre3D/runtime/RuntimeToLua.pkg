@@ -1,1 +1,2 @@
 $cfile "ui/fairygui/lua_bridge/FairyGuiLuaApi.h"
+$cfile "audio/RuntimeUiSound.h"

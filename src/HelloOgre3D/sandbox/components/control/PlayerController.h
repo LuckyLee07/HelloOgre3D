@@ -32,6 +32,7 @@ public:
 	virtual bool OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn) override;
 
 	void ExecuteAnimShoot();
+	void ResetTransientInput();
 
 private:
 	enum CombatState
@@ -59,6 +60,7 @@ private:
 	void BeginReload();
 	void EnterDeadState();
 	bool IsAlive() const;
+	bool UsesCameraRelativeMovement() const;
 
 private:
 	InputManager* m_registeredInput;
@@ -70,6 +72,8 @@ private:
 	bool m_backPressed;
 	bool m_leftPressed;
 	bool m_rightPressed;
+	bool m_rotateLeftPressed;
+	bool m_rotateRightPressed;
 	bool m_sprintPressed;
 	bool m_firePressed;
 	bool m_reloadRequested;

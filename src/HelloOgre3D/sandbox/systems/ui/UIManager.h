@@ -35,6 +35,7 @@ public:
 	UIFrame* CreateUIFrame(unsigned int index = 1);
 	UIPolygon* CreatePolygon(unsigned int index = 1);
 	void SetMarkupColor(unsigned int index, const Ogre::ColourValue& color);
+	void SetBuildInfoVisible(bool visible);
 	//tolua_end
 
 	void HandleWindowResized(unsigned int width, unsigned int height);

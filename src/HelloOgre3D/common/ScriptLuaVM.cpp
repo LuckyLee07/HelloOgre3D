@@ -294,6 +294,10 @@ endwhile:
 			assert(lua_isstring(m_pState, nres));
 			strcpy(va_arg(vl, char *), lua_tostring(m_pState, nres));
 			break;
+		case 'B': /* optional boolean result; nil means unhandled */
+			assert(lua_isboolean(m_pState, nres) || lua_isnil(m_pState, nres));
+			*va_arg(vl, bool *) = (0 != lua_toboolean(m_pState, nres));
+			break;
 		case 'b': /* boolean argument */
 			assert(lua_isboolean(m_pState, nres));
 			*va_arg(vl, bool *) = (0 != lua_toboolean(m_pState, nres));
@@ -472,6 +476,10 @@ endwhile:
 		case 's':
 			assert(lua_isstring(m_pState, resIndex));
 			strcpy(va_arg(vl, char*), lua_tostring(m_pState, resIndex));
+			break;
+		case 'B': /* optional boolean result; nil means unhandled */
+			assert(lua_isboolean(m_pState, resIndex) || lua_isnil(m_pState, resIndex));
+			*va_arg(vl, bool*) = (0 != lua_toboolean(m_pState, resIndex));
 			break;
 		case 'b': /* boolean argument */
 			assert(lua_isboolean(m_pState, resIndex));

@@ -58,6 +58,8 @@ public:
 	Blackboard* GetBlackboard() const;
 
 	AgentObject* GetEnemy() const;
+	// Reuses vision range/FOV/occlusion without changing the current target or memory.
+	bool CanSeeEnemy(int enemyId) const;
 	bool HasEnemy(const Ogre::String& navMeshName = "default");
 	bool CanShootEnemy(const Ogre::String& navMeshName = "default", float shootDistance = 3.0f);
 

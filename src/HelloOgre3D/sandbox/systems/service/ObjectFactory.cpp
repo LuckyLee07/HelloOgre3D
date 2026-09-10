@@ -111,3 +111,8 @@ bool ObjectFactory::RequestDestroyAgent(int objId)
 	agent->SetNeedClear(0, true);
 	return true;
 }
+
+int ObjectFactory::ClearProjectiles()
+{
+	return m_objectManager != nullptr ? m_objectManager->ClearProjectiles() : 0;
+}

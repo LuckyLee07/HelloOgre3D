@@ -1,6 +1,7 @@
 #include "InputManager.h"
 #include "OISInputManager.h"
 #include "OgreRenderWindow.h"
+#include "OgreLogManager.h"
 #include "ogre/OgreCameraController.h"
 
 #include <algorithm>
@@ -37,6 +38,15 @@ InputManager::~InputManager()
 
 void InputManager::Initialize()
 {
+#if defined(OIS_WIN32_PLATFORM)
+	// Hidden automation renders and accepts internal replay events only. It must
+	// never acquire the user's hardware input while another application is active.
+	if (m_renderWindow != nullptr && m_renderWindow->isHidden())
+	{
+		Ogre::LogManager::getSingleton().logMessage("[WindowMode] hidden=true physical-input=disabled");
+		return;
+	}
+#endif
 	std::ostringstream windowHndStr;
 	windowHndStr << m_windowHnd;
 

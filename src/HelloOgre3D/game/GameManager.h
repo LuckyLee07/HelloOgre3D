@@ -21,6 +21,7 @@ class NavigationService;
 class RaycastService;
 class SceneService;
 class ScriptService;
+class RuntimeUiSound;
 
 class GameManager : public IInputHandler //tolua_exports
 { //tolua_exports
@@ -43,6 +44,11 @@ public:
 	long long getTimeInMillis();
 	Ogre::Real getTimeInSeconds();
 	std::string buildRuntimeResourceDump(int maxEntriesPerType);
+
+	// Paused frames retain input and Sandbox_Update(0), but freeze all simulation clocks.
+	void SetSimulationPaused(bool paused);
+	bool IsSimulationPaused() const;
+	void RequestQuit();
 	//tolua_end
 
 	Ogre::Camera* getCamera();
@@ -79,9 +85,11 @@ private:
 	ObjectManager* m_pObjectManager;
 	ObjectFactory* m_pObjectFactory;
 
+	bool m_simulationPaused;
 	long long m_SimulationTime; // 运行时间
 
 	FairyGuiLuaApi* m_pFairyGuiLuaApi;
+	RuntimeUiSound* m_pUiSound;
 
 }; //tolua_exports
 

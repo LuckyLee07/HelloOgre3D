@@ -7,9 +7,13 @@
 #include "OgreRay.h"
 #include "GameFunction.h"
 #include "ogre/OgreCameraController.h"
+#include <algorithm>
+#include <cmath>
 
 CameraService::CameraService(Ogre::Camera* camera, Ogre::SceneManager* sceneManager, OgreCameraController* cameraController, const ProfileTimeGetter& profileTimeGetter)
-	: m_camera(camera), m_sceneManager(sceneManager), m_cameraController(cameraController), m_profileTimeGetter(profileTimeGetter)
+	: m_camera(camera), m_sceneManager(sceneManager), m_cameraController(cameraController), m_profileTimeGetter(profileTimeGetter),
+	m_followDistance(8.0f), m_followHeight(4.0f), m_followLookAhead(3.0f), m_followEyeHeight(1.5f),
+	m_followMinDistance(8.0f), m_followMaxDistance(8.0f), m_followConfigured(false), m_cameraRelativeMovement(false)
 {
 }
 
@@ -114,16 +118,87 @@ void CameraService::TranslateCameraWorld(const Ogre::Vector3& delta)
 	pCamera->setPosition(pCamera->getPosition() + delta);
 }
 
-void CameraService::EnterFollowMode(float horz, float vert, float target, float eye, float spring)
+bool CameraService::ConfigureFollowCamera(float distance, float height, float lookAhead, float eyeHeight, float minDistance, float maxDistance)
+{
+	if (!std::isfinite(distance) || !std::isfinite(height) || !std::isfinite(lookAhead)
+		|| !std::isfinite(eyeHeight) || !std::isfinite(minDistance) || !std::isfinite(maxDistance)
+		|| minDistance < 2.0f || maxDistance > 80.0f || minDistance > maxDistance
+		|| height < 0.5f || height > 60.0f || lookAhead < 0.0f || lookAhead > 40.0f
+		|| eyeHeight < 0.0f || eyeHeight > 10.0f)
+		return false;
+	m_followDistance = std::max(minDistance, std::min(maxDistance, distance));
+	m_followHeight = height;
+	m_followLookAhead = lookAhead;
+	m_followEyeHeight = eyeHeight;
+	m_followMinDistance = minDistance;
+	m_followMaxDistance = maxDistance;
+	m_followConfigured = true;
+	if (m_cameraController != nullptr)
+		m_cameraController->setFollowParams(m_followDistance, m_followHeight, m_followLookAhead, m_followEyeHeight, 64.0f);
+	return true;
+}
+
+void CameraService::ResetFollowCamera()
+{
+	m_followDistance = 8.0f;
+	m_followHeight = 4.0f;
+	m_followLookAhead = 3.0f;
+	m_followEyeHeight = 1.5f;
+	m_followMinDistance = 8.0f;
+	m_followMaxDistance = 8.0f;
+	m_followConfigured = false;
+	m_cameraRelativeMovement = false;
+	if (m_cameraController != nullptr)
+		m_cameraController->setFollowParams(m_followDistance, m_followHeight, m_followLookAhead, m_followEyeHeight, 64.0f);
+}
+
+void CameraService::SetCameraRelativeMovement(bool enabled)
+{
+	m_cameraRelativeMovement = enabled;
+}
+
+bool CameraService::IsCameraRelativeMovement() const
+{
+	return m_cameraRelativeMovement;
+}
+
+float CameraService::GetFollowDistance() const
+{
+	return m_followDistance;
+}
+
+void CameraService::SnapFollowTarget(const Ogre::Vector3& position, const Ogre::Vector3& forward)
+{
+	if (!std::isfinite(position.x) || !std::isfinite(position.y) || !std::isfinite(position.z)
+		|| !std::isfinite(forward.x) || !std::isfinite(forward.y) || !std::isfinite(forward.z))
+		return;
+	UpdateFollow(position, forward, 0.0f);
+}
+
+bool CameraService::ZoomFollowCamera(float distanceDelta)
+{
+	if (!m_followConfigured || m_cameraController == nullptr
+		|| m_cameraController->getStyle() != OgreCameraController::CS_FOLLOW || !std::isfinite(distanceDelta))
+		return false;
+	const float distance = std::max(m_followMinDistance, std::min(m_followMaxDistance, m_followDistance + distanceDelta));
+	// Keep the elevation angle stable as the sample zooms.
+	m_followHeight *= distance / m_followDistance;
+	m_followDistance = distance;
+	m_cameraController->setFollowParams(m_followDistance, m_followHeight, m_followLookAhead, m_followEyeHeight, 64.0f);
+	return true;
+}
+
+void CameraService::EnterFollowMode()
 {
 	if (m_cameraController == nullptr)
 		return;
-	m_cameraController->setFollowParams(horz, vert, target, eye, spring);
+	m_cameraController->setFollowParams(m_followDistance, m_followHeight, m_followLookAhead, m_followEyeHeight, 64.0f);
 	m_cameraController->enterFollow();
 }
 
 void CameraService::ExitFollowMode()
 {
+	ResetFollowCamera();
 	if (m_cameraController != nullptr)
 		m_cameraController->exitFollow();
 }

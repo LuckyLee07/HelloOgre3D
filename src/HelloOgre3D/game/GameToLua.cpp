@@ -3608,6 +3608,50 @@ static int tolua_GameToLua_GameManager_buildRuntimeResourceDump00(lua_State* tol
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetSimulationPaused of class GameManager; surgical binding */
+static int tolua_GameToLua_GameManager_SetSimulationPaused00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"GameManager",0,&error)
+		|| !tolua_isboolean(tolua_S,2,0,&error)
+		|| !tolua_isnoobj(tolua_S,3,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SetSimulationPaused'.",&error), 0;
+	GameManager* self = static_cast<GameManager*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SetSimulationPaused'",nullptr), 0;
+	const bool paused = tolua_toboolean(tolua_S,2,0) != 0;
+	self->SetSimulationPaused(paused);
+	return 0;
+}
+
+/* method: IsSimulationPaused of class GameManager; surgical binding */
+static int tolua_GameToLua_GameManager_IsSimulationPaused00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"GameManager",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'IsSimulationPaused'.",&error), 0;
+	GameManager* self = static_cast<GameManager*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'IsSimulationPaused'",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->IsSimulationPaused());
+	return 1;
+}
+
+/* method: RequestQuit of class GameManager; surgical binding */
+static int tolua_GameToLua_GameManager_RequestQuit00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"GameManager",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'RequestQuit'.",&error), 0;
+	GameManager* self = static_cast<GameManager*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'RequestQuit'",nullptr), 0;
+	self->RequestQuit();
+	return 0;
+}
+
 /* method: getIsEnable of class  DebugDrawer */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_DebugDrawer_getIsEnable00
 static int tolua_GameToLua_DebugDrawer_getIsEnable00(lua_State* tolua_S)
@@ -4198,6 +4242,9 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"GameManager","GameManager","IInputHandler",NULL);
   tolua_beginmodule(tolua_S,"GameManager");
+   tolua_function(tolua_S,"SetSimulationPaused",tolua_GameToLua_GameManager_SetSimulationPaused00);
+   tolua_function(tolua_S,"IsSimulationPaused",tolua_GameToLua_GameManager_IsSimulationPaused00);
+   tolua_function(tolua_S,"RequestQuit",tolua_GameToLua_GameManager_RequestQuit00);
    tolua_function(tolua_S,"getScreenWidth",tolua_GameToLua_GameManager_getScreenWidth00);
    tolua_function(tolua_S,"getScreenHeight",tolua_GameToLua_GameManager_getScreenHeight00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_GameToLua_GameManager_getTimeInMillis00);

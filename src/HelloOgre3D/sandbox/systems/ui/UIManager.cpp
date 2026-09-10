@@ -136,3 +136,9 @@ void UIManager::HandleWindowResized(unsigned int width, unsigned int height)
 	m_pMarkupText->left(leftPos);
 	m_pMarkupText->top(topPos);
 }
+
+void UIManager::SetBuildInfoVisible(bool visible)
+{
+	if (m_pMarkupText != nullptr)
+		m_pMarkupText->visible(visible);
+}

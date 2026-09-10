@@ -22,6 +22,7 @@ public:
 
 	bool callString(const char *szLua_code);
 
+	// Result format B accepts bool or nil (nil is false); b remains a required boolean.
 	bool callFunction(const char* funcname, const char* format, ...);
 
 	bool callFunctionV(const char* funcname, const char* format, va_list vl);

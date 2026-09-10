@@ -109,6 +109,16 @@ static Ogre::String BuildDpiScaledVideoMode(unsigned int baseWidth, unsigned int
     return Ogre::StringConverter::toString(scaledWidth) + " x " +
            Ogre::StringConverter::toString(scaledHeight) + " @ 32-bit colour";
 }
+
+static unsigned int ReadBackgroundDimension(const char* name, unsigned int fallback, unsigned int minimum, unsigned int maximum)
+{
+	const char* value = std::getenv(name);
+	if (value == nullptr || value[0] == 0) return fallback;
+	char* end = nullptr;
+	const long size = std::strtol(value, &end, 10);
+	return end != value && *end == 0 && size >= static_cast<long>(minimum) && size <= static_cast<long>(maximum)
+		? static_cast<unsigned int>(size) : fallback;
+}
 #endif
 
 
@@ -338,7 +348,32 @@ bool ClientManager::Configure()
     try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
     try { selected->setConfigOption("FSAA", "0"); } catch (...) {}
 
-    m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
+    if (ReadBoolEnvValue("HELLO_WINDOW_BACKGROUND", false))
+    {
+		// Create hidden from the outset. Hiding a normally created D3D9 window
+		// afterwards still lets Ogre's SW_SHOWNORMAL steal foreground focus.
+		const HWND foregroundBefore = GetForegroundWindow();
+		const unsigned int width = ReadBackgroundDimension("HELLO_WINDOW_WIDTH", 1280, 640, 3840);
+		const unsigned int height = ReadBackgroundDimension("HELLO_WINDOW_HEIGHT", 800, 360, 2160);
+		m_pRoot->initialise(false, m_applicationTitle);
+		Ogre::NameValuePairList parameters;
+		parameters["hidden"] = "true";
+		parameters["border"] = "none";
+		parameters["outerDimensions"] = "true";
+		parameters["left"] = "0";
+		parameters["top"] = "0";
+		parameters["colourDepth"] = "32";
+		parameters["FSAA"] = "0";
+		parameters["vsync"] = "true";
+		m_pRenderWindow = m_pRoot->createRenderWindow(m_applicationTitle, width, height, false, &parameters);
+		m_pRenderWindow->setActive(true);
+		Ogre::LogManager::getSingleton().logMessage("[WindowMode] background=true hidden="
+			+ Ogre::StringConverter::toString(m_pRenderWindow->isHidden())
+			+ " foregroundUnchanged=" + Ogre::StringConverter::toString(foregroundBefore == GetForegroundWindow())
+			+ " pixels=" + Ogre::StringConverter::toString(width) + "x" + Ogre::StringConverter::toString(height));
+    }
+    else
+        m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
     return m_pRenderWindow != 0;
 #else
     if (renderers.size() == 1)

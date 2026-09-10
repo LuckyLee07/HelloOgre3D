@@ -392,6 +392,16 @@ SoldierObject* AIController::GetSoldierOwner() const
 	return dynamic_cast<SoldierObject*>(GetAgentOwner());
 }
 
+bool AIController::CanSeeEnemy(int enemyId) const
+{
+	ObjectManager* objects = ResolveObjectManager(this);
+	AgentObject* owner = GetAgentOwner();
+	if (objects == nullptr || owner == nullptr || owner->GetHealth() <= 0.0f || enemyId < 0)
+		return false;
+	AgentObject* enemy = dynamic_cast<AgentObject*>(objects->getObjectById(static_cast<unsigned int>(enemyId)));
+	return enemy != nullptr && IsEnemyValid(enemy, "default", false);
+}
+
 bool AIController::IsEnemyValid(AgentObject* enemy, const Ogre::String& navMeshName, bool requirePath) const
 {
 	AgentPerceptionQuery query(ResolveObjectManager(this), ResolveNavigationService(this));

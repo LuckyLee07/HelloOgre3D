@@ -50,6 +50,14 @@ public:
 	Ogre::Vector2 WorldToScreen(const Ogre::Vector3& world);
 	Ogre::Vector3 ScreenToGroundPoint(Ogre::Real screenX, Ogre::Real screenY, Ogre::Real groundY);
 
+	// A sample owns its profile until ResetFollowCamera or ExitFollowMode.
+	bool ConfigureFollowCamera(float distance, float height, float lookAhead, float eyeHeight, float minDistance, float maxDistance);
+	void ResetFollowCamera();
+	void SetCameraRelativeMovement(bool enabled);
+	bool IsCameraRelativeMovement() const;
+	void SnapFollowTarget(const Ogre::Vector3& position, const Ogre::Vector3& forward);
+	float GetFollowDistance() const;
+
 	long long GetRenderTime();
 	long long GetSimulateTime();
 	long long GetTotalSimulateTime();
@@ -58,7 +66,8 @@ public:
 	void TranslateCameraWorld(const Ogre::Vector3& delta);
 
 	// 第三人称跟随门面（非 tolua，C++ 内部用；转发到 OgreCameraController CS_FOLLOW）。
-	void EnterFollowMode(float horz, float vert, float target, float eye, float spring);
+	void EnterFollowMode();
+	bool ZoomFollowCamera(float distanceDelta);
 	void ExitFollowMode();
 	void UpdateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, float dtSec);
 
@@ -69,6 +78,14 @@ private:
 	Ogre::SceneManager* m_sceneManager; // non-owning; injected by GameManager
 	OgreCameraController* m_cameraController; // non-owning; injected by GameManager
 	ProfileTimeGetter m_profileTimeGetter;
+	float m_followDistance;
+	float m_followHeight;
+	float m_followLookAhead;
+	float m_followEyeHeight;
+	float m_followMinDistance;
+	float m_followMaxDistance;
+	bool m_followConfigured;
+	bool m_cameraRelativeMovement;
 }; //tolua_exports
 
 #endif // __CAMERA_SERVICE_H__
