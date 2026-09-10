@@ -6,7 +6,7 @@
 
 本实验回答：A 能直接看到敌人而 B 被实体遮挡时，团队共享是否会让 B 读取 A 发布的敌情并移动；敌人离开视野、团队事实过期后，B 是否会停止依赖旧信息。
 
-在本轮固定场景与调度下，答案是肯定的。共享关闭时 9/9 局均没有发布、消费或移动，B 的总位移为 0。共享开启时 9/9 局均在 33ms 发布并由 B 在同次 Lua 更新中消费，B 在 396ms 后出现可测移动，观察窗内总位移为 6291mm。事实失效并清理移动状态后，两组的额外位移都为 0。九组成对结果完全一致。
+在本轮固定场景与调度下，答案是肯定的。共享关闭时 9/9 局均没有发布、消费或移动，B 的总位移为 0。共享开启时 9/9 局均在 33ms 发布并由 B 在同次 Lua 更新中消费，B 在 396ms 后出现可测移动，观察窗内总位移为 6291mm。事实失效并清理移动状态后，两组的累计行程、最大偏移和观察窗末速度都为 0，且没有残余 path。九组成对结果完全一致。
 
 这证明当前 Sandbox12 的“直接目击 → 团队事实 → 队友消费 → 行为响应 → TTL 清理”链路在受控条件下成立。它不证明团队共享在自然战斗中一定改善胜率。
 
@@ -36,21 +36,23 @@ python tools/run_ai_experiment.py tools/experiments/sandbox12-team-sharing.json
 | B 首次可测位移延迟 | 无 | 396ms | — |
 | 已发布事实失效年龄 | 不适用 | 3498ms | — |
 | B 总位移 | 0mm | 6291mm | +6291mm |
-| 失效后的额外位移 | 0mm | 0mm | 0mm |
+| 失效后累计行程 | 0mm | 0mm | 0mm |
+| 失效后最大偏移 | 0mm | 0mm | 0mm |
+| 观察窗末水平速度 | 0mm/s | 0mm/s | 0mm/s |
 
 每项的九次取值均相同。关闭组仍在 3531ms 记录一次“已无事实、支援意图和移动状态”的清理检查点；由于该组从未发布事实，不把这个检查点解释为事实年龄。开启组在 33ms 发布，3531ms 确认事实和移动状态均已清理，因此已发布事实年龄为 3498ms。0ms 消费延迟表示发布与消费发生在同次 Lua 更新，不代表跨线程或网络传输没有成本。
 
-正式批次的本地临时证据位于 `tmp/m3-team-sharing-20260910-1932/`，含逐局日志、`result.json`、配置/二进制指纹、`summary.json` 和 `summary.md`；该目录不随仓库分发。可复现的长期真源是 manifest、runner 和场景代码。
+二审修复后的正式批次本地临时证据位于 `tmp/m3-review-fixes-20260910-v2/`，含逐局日志、`result.json`、配置/二进制指纹、`summary.json` 和 `summary.md`；该目录不随仓库分发。该批次以 dirty patch 快照记录待提交修复，可复现的长期真源是 manifest、runner 和场景代码。
 
 ## 实现与验证
 
 - `TeamBlackboardService` 增加可恢复的 agent 自动同步开关；关闭时 `SyncFromAgents` 仍推进时间并清理 TTL，但不再扫描 agent 或发布新事实。`Reset` 恢复默认开启。
 - `TeamBlackboard.lua` 通过局部 tolua 绑定配置该开关；未运行已知会破坏 Sandbox18 的全量 `tolua.bat`。
-- Sandbox12 的实验路径输出 `ready / visibility / published / consumed / moved / target-hidden / expired / horizon` 有界事件。关闭组禁止 `published / consumed / moved`，开启组要求全部事件和终态字段成立。
-- 清理共享支援时同时删除 Blackboard 移动意图、locomotion path/target/velocity。共享 `MoveAction` 在 `movePos` 被外部删除时也终止并清理运动状态，避免旧路径继续漂移。
-- 通用 runner 新增声明式事件契约、字段断言与 manifest 指标，同时保持 M2 入口可用；无 PlayerController 的 sample 由 manifest 设置 `replay.wait_for_player=false`，从首个更新循环开始回放。
+- Sandbox12 的实验路径输出 `ready / visibility / published / consumed / moved / target-hidden / expired / horizon` 有界事件。关闭组禁止 `published / consumed / moved`，开启组要求全部事件和终态字段成立；horizon 还检查累计行程、最大偏移、残余 path 和水平速度。
+- 清理共享支援时同时删除 Blackboard 移动意图、locomotion path/target/velocity。共享 `MoveAction` 在下一次更新或先发生的 BT 抢占清理中都能收口状态；若相同目标重入时 path 已空，则强制重新寻路。
+- 通用 runner 新增声明式事件契约、字段断言与 manifest 指标，同时保持 M2 入口可用；`UNRESOLVED` 结果和已出现但没有有效数值字段的指标会令运行失败，确实不适用的字段必须显式声明为可选。无 PlayerController 的 sample 由 manifest 设置 `replay.wait_for_player=false`，从首个更新循环开始回放。
 
-本轮 Windows Release x64 构建通过；正式实验 18/18 局通过；Sandbox12 默认 `team_blackboard` smoke、Sandbox6/7/8 smoke 通过；Python runner 10 项单元测试、Python 编译、M2/M3 dry-run、Lua 5.1 语法和 JSON 解析通过。人工输入、手感、听感和 macOS 未由本实验验证。
+本轮 Windows Release x64 构建通过；二审修复后的正式实验 18/18 局通过；Sandbox12 默认 `team_blackboard` 70 秒 smoke、Sandbox6/7/8 各 10 秒 smoke 通过；Python runner 13 项单元测试、Python 编译、M2/M3 dry-run、Lua 5.1 语法和 JSON 解析通过。人工输入、手感、听感和 macOS 未由本实验验证。
 
 ## 适用边界
 

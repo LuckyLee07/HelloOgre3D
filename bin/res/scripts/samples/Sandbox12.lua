@@ -93,6 +93,9 @@ local _experiment = {
     targetHiddenAtMs = nil,
     expiredAtMs = nil,
     expiredBPos = nil,
+    postExpiryLastBPos = nil,
+    postExpiryTravel = 0.0,
+    postExpiryMaxExcursion = 0.0,
     visibilityLogged = false,
     targetHiddenLogged = false,
     expiredLogged = false,
@@ -992,25 +995,47 @@ local function _UpdateTeamExperimentEvidence()
             _experiment.expiredAtMs = math.floor(_chapter8.elapsedMs)
             local pos = _experiment.b:GetPosition()
             _experiment.expiredBPos = Vector3(pos.x, pos.y, pos.z)
-            _ExperimentEvent("expired", {
+            _experiment.postExpiryLastBPos = Vector3(pos.x, pos.y, pos.z)
+            _experiment.postExpiryTravel = 0.0
+            _experiment.postExpiryMaxExcursion = 0.0
+            local fields = {
                 "factPresent=false",
                 "supportActive=false",
                 "bHasMove=false",
-                "factAgeMs=" .. (_experiment.publishedAtMs ~= nil
-                    and tostring(math.max(0, _experiment.expiredAtMs - _experiment.publishedAtMs)) or "none"),
                 "bDisplacementMm=" .. tostring(math.floor(bDisplacement * 1000 + 0.5)),
-            })
+            }
+            if _experiment.publishedAtMs ~= nil then
+                table.insert(fields, "factAgeMs="
+                    .. tostring(math.max(0, _experiment.expiredAtMs - _experiment.publishedAtMs)))
+            end
+            _ExperimentEvent("expired", fields)
         end
     end
 
-    local horizonMs = tonumber((_chapter8.config.experiment or {}).horizonMs)
-        or tonumber(os.getenv("HELLO_EXPERIMENT_HORIZON_MS")) or 7000
+    if _experiment.expiredBPos ~= nil then
+        local pos = _experiment.b:GetPosition()
+        _experiment.postExpiryTravel = _experiment.postExpiryTravel
+            + _FlatDistance(pos, _experiment.postExpiryLastBPos)
+        _experiment.postExpiryMaxExcursion = math.max(
+            _experiment.postExpiryMaxExcursion,
+            _FlatDistance(pos, _experiment.expiredBPos))
+        _experiment.postExpiryLastBPos = Vector3(pos.x, pos.y, pos.z)
+    end
+
+    local horizonMs = tonumber(os.getenv("HELLO_EXPERIMENT_HORIZON_MS"))
+        or tonumber((_chapter8.config.experiment or {}).horizonMs) or 7000
     if not _experiment.horizonLogged and _chapter8.elapsedMs >= horizonMs then
         local postExpiryDisplacement = _FlatDistance(_experiment.b:GetPosition(), _experiment.expiredBPos)
         local tolerance = tonumber((_chapter8.config.experiment or {}).postExpiryTolerance) or 0.20
+        local speedTolerance = tonumber((_chapter8.config.experiment or {}).postExpirySpeedTolerance) or 0.05
+        local bHasPath = AgentComponents.HasPath(_experiment.b)
+        local postExpirySpeed = _FlatDistance(_experiment.b:GetVelocity(), Vector3(0, 0, 0))
         local supportActive, cppFactPresent, hasMove = _ExperimentSupportState()
         local complete = _experiment.visibilityLogged and _experiment.targetHiddenLogged and _experiment.expiredLogged
-            and not supportActive and not cppFactPresent and not hasMove
+            and not supportActive and not cppFactPresent and not hasMove and not bHasPath
+            and _experiment.postExpiryTravel <= tolerance
+            and _experiment.postExpiryMaxExcursion <= tolerance
+            and postExpirySpeed <= speedTolerance
         if _experiment.sharingEnabled then
             complete = complete and _experiment.publishedAtMs ~= nil and _experiment.consumedAtMs ~= nil
                 and _experiment.movedAtMs ~= nil and postExpiryDisplacement <= tolerance
@@ -1025,8 +1050,12 @@ local function _UpdateTeamExperimentEvidence()
             "supportActive=" .. _BoolText(supportActive),
             "factPresent=" .. _BoolText(_ExperimentLocalFact() ~= nil or cppFactPresent),
             "bHasMove=" .. _BoolText(hasMove),
+            "bHasPath=" .. _BoolText(bHasPath),
             "bDisplacementMm=" .. tostring(math.floor(bDisplacement * 1000 + 0.5)),
             "postExpireDisplacementMm=" .. tostring(math.floor(postExpiryDisplacement * 1000 + 0.5)),
+            "postExpireTravelMm=" .. tostring(math.floor(_experiment.postExpiryTravel * 1000 + 0.5)),
+            "postExpireMaxExcursionMm=" .. tostring(math.floor(_experiment.postExpiryMaxExcursion * 1000 + 0.5)),
+            "postExpireSpeedMmps=" .. tostring(math.floor(postExpirySpeed * 1000 + 0.5)),
         })
     end
 end
@@ -1047,6 +1076,9 @@ local function _InitializeTeamExperiment()
     _experiment.targetHiddenAtMs = nil
     _experiment.expiredAtMs = nil
     _experiment.expiredBPos = nil
+    _experiment.postExpiryLastBPos = nil
+    _experiment.postExpiryTravel = 0.0
+    _experiment.postExpiryMaxExcursion = 0.0
     _experiment.visibilityLogged = false
     _experiment.targetHiddenLogged = false
     _experiment.expiredLogged = false

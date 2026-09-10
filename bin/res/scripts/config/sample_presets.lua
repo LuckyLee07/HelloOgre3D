@@ -453,6 +453,7 @@ SamplePresets.team_sharing_experiment.chapter8Comms.experiment = {
 	horizonMs = 7000,
 	moveEvidenceDistance = 0.25,
 	postExpiryTolerance = 0.20,
+	postExpirySpeedTolerance = 0.05,
 	receiverMaxSpeed = 2.4,
 	occluder = { size = 4.0, position = { 0.0, 2.0, 0.0 } },
 	hiddenTargetPosition = { -14.0, 0.05, -20.0 },

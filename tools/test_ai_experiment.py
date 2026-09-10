@@ -88,6 +88,18 @@ class ExperimentLogContractTest(unittest.TestCase):
         self.assertEqual("TIME_LIMIT", result["outcome"])
         self.assertEqual(1, result["metrics"]["final_ally_alive"])
 
+    def test_early_horizon_is_unresolved_runner_failure(self):
+        result = analyze("""
+[ConfigManager] preset= Sandbox19 sample= Sandbox19 seed= 20260710 agents= 7 spawnMode= fixed deterministic= true
+[Sandbox19] ready playerId=229 role=commander mission=relay-outpost
+[Sandbox19Experiment] schema=1 runId=m2-test event=ready simulationMs=0 matchElapsedMs=0 state=PREPARE wave=0 commanderHp=160 allyAlive=2 allyHp=240,240 enemyAlive=0 enemyHp=- issued=0 completed=0 failed=0 replaced=0 cancelled=0 active=0 director=none
+[Sandbox19Experiment] schema=1 runId=m2-test event=horizon simulationMs=29999 matchElapsedMs=29999 state=ADVANCE wave=1 commanderHp=160 allyAlive=1 allyHp=0,145 enemyAlive=0 enemyHp=0,0 issued=0 completed=0 failed=0 replaced=0 cancelled=0 active=0 director=none
+[InputReplay] synthetic=true completed reason=quit
+""", expected_focus_count=0)
+        self.assertEqual("FAIL", result["status"])
+        self.assertEqual("UNRESOLVED", result["outcome"])
+        self.assertIn("unresolved-outcome", result["reasons"])
+
     def test_graphics_device_failure_is_infrastructure_failure(self):
         result = analyze("""
 OGRE EXCEPTION(3:RenderingAPIException): Cannot create device! in D3D9Device::createD3D9Device
@@ -162,6 +174,67 @@ OGRE EXCEPTION(3:RenderingAPIException): Cannot create device! in D3D9Device::cr
         self.assertEqual("TIME_LIMIT", result["outcome"])
         self.assertEqual(20, result["metrics"]["consume_latency_ms"])
         self.assertEqual(4210, result["metrics"]["b_displacement_mm"])
+
+    def test_generic_event_contract_rejects_invalid_declared_metric(self):
+        body = """
+[ConfigManager] preset=team_sharing_experiment sample=Sandbox12 seed=20260720 agents=3 light=2 spawnMode=fixed aiScheduler=true tickMs=50 maxPerFrame=3 spawnPoints=3
+[AIExperiment] schema=1 runId=m3-test event=ready simulationMs=0 matchElapsedMs=0 sharingEnabled=true
+[AIExperiment] schema=1 runId=m3-test event=horizon simulationMs=7000 matchElapsedMs=7000 postExpireTravelMm=none
+[InputReplay] synthetic=true completed reason=quit
+"""
+        result = experiment.analyze_run_log(
+            WINDOW + body,
+            expected_run_id="m3-test",
+            expected_seed=20260720,
+            expected_sample="Sandbox12",
+            expected_preset="team_sharing_experiment",
+            horizon_ms=7000,
+            exit_code=0,
+            require_window_evidence=True,
+            expected_events={"required": ["ready", "horizon"], "forbidden": [], "fields": {}},
+            metric_definitions=[
+                {"name": "post_expiry_travel_mm", "label": "累计行程 mm",
+                 "event": "horizon", "field": "postExpireTravelMm"},
+            ],
+        )
+        self.assertEqual("FAIL", result["status"])
+        self.assertIn("invalid-metric-value", result["reasons"])
+        self.assertIsNone(result["metrics"]["post_expiry_travel_mm"])
+
+    def test_generic_event_contract_allows_absent_optional_metric_event(self):
+        body = """
+[ConfigManager] preset=team_sharing_experiment sample=Sandbox12 seed=20260720 agents=3 light=2 spawnMode=fixed aiScheduler=true tickMs=50 maxPerFrame=3 spawnPoints=3
+[AIExperiment] schema=1 runId=m3-test event=ready simulationMs=0 matchElapsedMs=0 sharingEnabled=false
+[AIExperiment] schema=1 runId=m3-test event=horizon simulationMs=7000 matchElapsedMs=7000 postExpireTravelMm=0
+[InputReplay] synthetic=true completed reason=quit
+"""
+        result = experiment.analyze_run_log(
+            WINDOW + body,
+            expected_run_id="m3-test",
+            expected_seed=20260720,
+            expected_sample="Sandbox12",
+            expected_preset="team_sharing_experiment",
+            horizon_ms=7000,
+            exit_code=0,
+            require_window_evidence=True,
+            expected_events={
+                "required": ["ready", "horizon"],
+                "forbidden": ["consumed"],
+                "fields": {"ready": {"sharingEnabled": False}},
+            },
+            metric_definitions=[
+                {"name": "consume_ms", "label": "消费 ms",
+                 "event": "consumed", "field": "simulationMs"},
+                {"name": "post_expiry_travel_mm", "label": "累计行程 mm",
+                 "event": "horizon", "field": "postExpireTravelMm"},
+                {"name": "optional_age_ms", "label": "可选年龄 ms",
+                 "event": "horizon", "field": "factAgeMs", "optional": True},
+            ],
+        )
+        self.assertEqual("PASS", result["status"])
+        self.assertIsNone(result["metrics"]["consume_ms"])
+        self.assertEqual(0, result["metrics"]["post_expiry_travel_mm"])
+        self.assertIsNone(result["metrics"]["optional_age_ms"])
 
     def test_generic_event_contract_rejects_forbidden_response(self):
         body = """

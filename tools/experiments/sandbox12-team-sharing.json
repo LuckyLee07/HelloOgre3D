@@ -68,7 +68,8 @@
             "sharingEnabled": false,
             "factPresent": false,
             "supportActive": false,
-            "bHasMove": false
+            "bHasMove": false,
+            "bHasPath": false
           }
         }
       }
@@ -114,7 +115,8 @@
             "sharingEnabled": true,
             "factPresent": false,
             "supportActive": false,
-            "bHasMove": false
+            "bHasMove": false,
+            "bHasPath": false
           }
         }
       }
@@ -149,7 +151,8 @@
       "name": "expiry_age_ms",
       "label": "失效年龄 ms",
       "event": "expired",
-      "field": "factAgeMs"
+      "field": "factAgeMs",
+      "optional": true
     },
     {
       "name": "b_displacement_mm",
@@ -158,10 +161,22 @@
       "field": "bDisplacementMm"
     },
     {
-      "name": "post_expiry_displacement_mm",
-      "label": "失效后位移 mm",
+      "name": "post_expiry_travel_mm",
+      "label": "失效后累计行程 mm",
       "event": "horizon",
-      "field": "postExpireDisplacementMm"
+      "field": "postExpireTravelMm"
+    },
+    {
+      "name": "post_expiry_max_excursion_mm",
+      "label": "失效后最大偏移 mm",
+      "event": "horizon",
+      "field": "postExpireMaxExcursionMm"
+    },
+    {
+      "name": "post_expiry_speed_mmps",
+      "label": "观察窗末速度 mm/s",
+      "event": "horizon",
+      "field": "postExpireSpeedMmps"
     }
   ],
   "expected": {

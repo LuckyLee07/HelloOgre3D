@@ -15,6 +15,16 @@ local _segmentMs = 2000
 local _acc = nil           -- steering accumulator；跨切片持续，平滑加速度
 local _lastTarget = nil    -- 上一次实际建过 path 的目标点
 
+local function _StopMovement(owner)
+    if owner == nil then return end
+    AgentComponents.ClearMovePosition(owner)
+    local emptyPath = std.vector_Ogre__Vector3_()
+    AgentComponents.SetPath(owner, emptyPath, false)
+    AgentComponents.SetTarget(owner, owner:GetPosition())
+    owner:SetVelocity(Vector3(0, 0, 0))
+    AgentComponents.EnterIdleAnim(owner)
+end
+
 function OnInitialize(owner, bb)
     _elapsedMs = 0
     _segmentMs = bb and bb:GetFloat("move.segmentMs", 2000.0) or 2000
@@ -27,7 +37,7 @@ function OnInitialize(owner, bb)
     local target = bb:GetVec3("movePos")
     AgentComponents.SetMovePosition(owner, target)
 
-    local needRebuild = (_lastTarget == nil)
+    local needRebuild = (_lastTarget == nil) or not AgentComponents.HasPath(owner)
         or ((target - _lastTarget):squaredLength() > _SAME_TARGET_SQ)
     if needRebuild then
         if MoveHelpers.BuildAndSetPath(owner, owner:GetPosition(), target) then
@@ -61,12 +71,7 @@ function OnUpdate(deltaMs, owner, bb)
     end
 
     if bb == nil or not bb:Has("movePos") then
-        AgentComponents.ClearMovePosition(owner)
-        local emptyPath = std.vector_Ogre__Vector3_()
-        AgentComponents.SetPath(owner, emptyPath, false)
-        AgentComponents.SetTarget(owner, owner:GetPosition())
-        owner:SetVelocity(Vector3(0, 0, 0))
-        AgentComponents.EnterIdleAnim(owner)
+        _StopMovement(owner)
         _acc = Vector3(0, 0, 0)
         _lastTarget = nil
         ActionIntent.Record(owner, bb, {
@@ -127,16 +132,20 @@ function OnUpdate(deltaMs, owner, bb)
 end
 
 function OnCleanUp(owner, bb)
-    -- 不刹车：velocity 留给下一段 / 下一个 action 自己接管。
-    -- 真正想停下来的 action（Idle / Shoot / Reload）会自己 SetVelocity(0)。
+    local preserveMovement = owner ~= nil and bb ~= nil and bb:Has("movePos")
+    if not preserveMovement then
+        _StopMovement(owner)
+        _acc = Vector3(0, 0, 0)
+        _lastTarget = nil
+    end
     ActionIntent.Record(owner, bb, {
         action = "move",
         phase = "cleanup",
-        movement = "handoff",
-        animation = "move",
+        movement = preserveMovement and "handoff" or "stop",
+        animation = preserveMovement and "move" or "idle",
         elapsedMs = _elapsedMs,
         durationMs = _segmentMs,
-        reason = "preserveVelocity",
+        reason = preserveMovement and "preserveVelocity" or "moveTargetCleared",
     })
     _elapsedMs = 0
 end

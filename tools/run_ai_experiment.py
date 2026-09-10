@@ -271,6 +271,8 @@ def load_manifest(path: Path) -> dict[str, Any]:
                     raise ManifestError(f"metrics[{index}].{key} must be a non-empty string")
             if metric["name"] in metric_names:
                 raise ManifestError(f"duplicate metric name: {metric['name']}")
+            if "optional" in metric and not isinstance(metric["optional"], bool):
+                raise ManifestError(f"metrics[{index}].optional must be a boolean")
             metric_names.add(metric["name"])
     return manifest
 
@@ -413,7 +415,7 @@ def analyze_run_log(
     expected_conditions: dict[str, Any] | None = None,
     expected_focus_execution_count: int | None = None,
     expected_events: dict[str, Any] | None = None,
-    metric_definitions: list[dict[str, str]] | None = None,
+    metric_definitions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     error_category, error_line = fatal_from_text(text)
     if forced_error is not None:
@@ -530,19 +532,23 @@ def analyze_run_log(
     if (expected_focus_execution_count is not None
             and len(focus_execution_latencies) != expected_focus_execution_count):
         reasons.append("focus-execution-count-mismatch")
-    status = "PASS" if not reasons else "FAIL"
     if terminal is not None and terminal.get("state") in ("VICTORY", "DEFEAT"):
         outcome = terminal["state"]
     elif horizon is not None and (horizon.get("matchElapsedMs") or 0) >= horizon_ms:
         outcome = "TIME_LIMIT"
     else:
         outcome = "UNRESOLVED"
+        reasons.append("unresolved-outcome")
     if metric_definitions is not None:
         metrics = {}
         for definition in metric_definitions:
             source = next((event for event in events if event.get("event") == definition["event"]), None)
             value = source.get(definition["field"]) if source is not None else None
-            metrics[definition["name"]] = value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+            numeric_value = value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+            metrics[definition["name"]] = numeric_value
+            field_missing = source is not None and definition["field"] not in source
+            if source is not None and numeric_value is None and not (field_missing and definition.get("optional", False)):
+                reasons.append("invalid-metric-value")
     else:
         metrics = {
             "first_contact_ms": first_contact.get("matchElapsedMs") if first_contact else None,
@@ -560,6 +566,7 @@ def analyze_run_log(
             "orders_replaced": final.get("replaced") if final else None,
             "orders_cancelled": final.get("cancelled") if final else None,
         }
+    status = "PASS" if not reasons else "FAIL"
     return {
         "status": status,
         "classification": reasons[0] if reasons else "evidence-complete",
