@@ -1,0 +1,18 @@
+0 key_press RETURN
+600 mouse_down 640 366 1
+650 mouse_up 640 366 1
+5500 key_press F
+10000 key_press F
+24000 key_down W
+35000 key_up W
+35100 mouse_down 640 465 1
+35150 mouse_up 640 465 1
+45000 key_press F
+52000 key_press F
+60000 key_down W
+62000 key_press F
+66500 key_up W
+66600 key_press G
+76000 key_press RETURN
+78500 key_press ESC
+80000 quit

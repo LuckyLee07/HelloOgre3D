@@ -144,6 +144,12 @@ $RuntimeDiagEnabled = $RuntimeDiag.IsPresent -or $BlackboardSelfTest.IsPresent -
 
 $KnownEnvNames = @(
 	"HELLO_SANDBOX_SMOKE_TEST",
+	"HELLO_WINDOW_BACKGROUND",
+	"HELLO_WINDOW_WIDTH",
+	"HELLO_WINDOW_HEIGHT",
+	"HELLO_AUDIO_SILENT",
+	"HELLO_INPUT_REPLAY",
+	"HELLO_SANDBOX19_PRODUCT_TEST",
 	"HELLO_SANDBOX_SAMPLE",
 	"HELLO_SANDBOX_SMOKE_RUN_ID",
 	"HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST",
@@ -198,6 +204,8 @@ if ($RuntimeDiagEnabled -and -not $PSBoundParameters.ContainsKey("Seconds") -and
 }
 $SelectedEnv = [ordered]@{
 	"HELLO_SANDBOX_SMOKE_TEST" = "1"
+	"HELLO_WINDOW_BACKGROUND" = $(if ($Visible) { "0" } else { "1" })
+	"HELLO_AUDIO_SILENT" = $(if ($Visible) { "0" } else { "1" })
 	"HELLO_SANDBOX_SAMPLE" = $SelectedSample
 	"HELLO_SANDBOX_SMOKE_RUN_ID" = $RunId
 }

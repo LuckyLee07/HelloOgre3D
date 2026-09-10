@@ -13,10 +13,9 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = {
-    'Sandbox19': ['[Sandbox19CommandSelfTest] PASS', '[Sandbox19IntentSelfTest] PASS',
-                  '[Sandbox19RetreatSelfTest] PASS',
-                  '[Sandbox19MatchSelfTest] PASS', '[Sandbox19ArenaSelfTest] PASS all-spawns-connected',
-                  '[Sandbox19ObservationSelfTest] PASS all=true'],
+    'Sandbox19': ['[Sandbox19ProductSelfTest] PASS all=true',
+                  '[Sandbox19ArenaSelfTest] PASS all-spawns-connected',
+                  '[Sandbox19ArenaSelfTest] PASS relay-static-collision'],
     'Sandbox6': ['[ConfigManager] preset=Sandbox6 sample=Sandbox6'],
     'Sandbox7': ['[ConfigManager] preset=Sandbox7 sample=Sandbox7'],
     'Sandbox8': ['[ConfigManager] preset=Sandbox8 sample=Sandbox8'],
@@ -39,9 +38,10 @@ def main():
     for sample in args.samples:
         env = {k: v for k, v in os.environ.items() if not k.startswith('HELLO_')}
         env['HELLO_WINDOW_BACKGROUND'] = '1'
+        env['HELLO_AUDIO_SILENT'] = '1'
         env.update(HELLO_SANDBOX_SAMPLE=sample, HELLO_SANDBOX_SMOKE_TEST='1')
         if sample == 'Sandbox19':
-            env['HELLO_SANDBOX19_OBSERVATION_SELF_TEST'] = '1'
+            env['HELLO_SANDBOX19_PRODUCT_TEST'] = '1'
         log = output / (sample + '.log')
         early_exit = None
         with log.open('wb') as stream:

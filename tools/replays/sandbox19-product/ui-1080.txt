@@ -1,0 +1,19 @@
+1000 mouse_down 750 810 0
+1050 mouse_up 750 810 0
+2000 key_press ESC
+4000 mouse_down 1245 525 0
+4050 mouse_up 1245 525 0
+4500 mouse_down 960 525 0
+4550 mouse_up 960 525 0
+5200 mouse_down 750 690 0
+5250 mouse_up 750 690 0
+5800 mouse_down 960 510 1
+5850 mouse_up 960 510 1
+6200 key_press F3
+8000 key_press F3
+9000 key_down E
+9600 key_up E
+10500 key_press ESC
+12500 mouse_down 1140 774 0
+12550 mouse_up 1140 774 0
+15000 quit

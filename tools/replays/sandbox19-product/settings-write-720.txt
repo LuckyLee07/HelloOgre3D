@@ -1,0 +1,9 @@
+1000 key_press RETURN
+2000 key_press ESC
+3000 mouse_down 710 350 0
+3050 mouse_up 710 350 0
+4000 mouse_down 830 350 0
+4050 mouse_up 830 350 0
+6000 mouse_down 760 516 0
+6050 mouse_up 760 516 0
+8000 quit

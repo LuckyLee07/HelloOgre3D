@@ -1,0 +1,43 @@
+1000 mouse_down 500 540 0
+1050 mouse_up 500 540 0
+1500 key_press 1
+1800 key_press 2
+2100 key_press TAB
+2400 mouse_down 400 300 0
+2600 mouse_move 850 530
+2800 mouse_up 850 530 0
+3200 mouse_down 640 330 1
+3250 mouse_up 640 330 1
+3600 key_press F
+4500 key_down W
+5300 key_press ESC
+5400 key_up W
+5500 key_down Q
+5700 key_up Q
+6000 mouse_down 710 350 0
+6050 mouse_up 710 350 0
+7000 mouse_down 830 350 0
+7050 mouse_up 830 350 0
+8000 mouse_down 500 460 0
+8050 mouse_up 500 460 0
+9000 key_down Q
+9700 key_up Q
+9900 wheel 640 360 120
+10400 wheel 640 360 -120
+11000 key_press 1
+11300 key_press T
+11500 key_press 2
+11800 key_press G
+12500 key_press TAB
+12800 key_press X
+13500 key_press I
+14000 key_press O
+14500 key_press I
+15500 key_press ESC
+16200 mouse_down 500 516 0
+16250 mouse_up 500 516 0
+17500 key_press G
+20000 key_press ESC
+20500 mouse_down 760 516 0
+20550 mouse_up 760 516 0
+23000 quit
