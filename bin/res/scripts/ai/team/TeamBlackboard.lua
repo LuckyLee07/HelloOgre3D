@@ -180,6 +180,16 @@ function TeamBlackboard:ConfigureCppService(ttlMs)
 	return false
 end
 
+function TeamBlackboard:ConfigureCppAgentSync(enabled)
+	local service = _CppService()
+	if service ~= nil and service.configureTeamBlackboardAgentSync ~= nil then
+		service:configureTeamBlackboardAgentSync(enabled == true)
+		return service.isTeamBlackboardAgentSyncEnabled ~= nil
+			and service:isTeamBlackboardAgentSyncEnabled() == (enabled == true)
+	end
+	return false
+end
+
 function TeamBlackboard:WriteBestCppEnemyToBlackboard(agent, keyPrefix, allowOwnReport)
 	local service = _CppService()
 	if service == nil or service.writeBestTeamEnemyFactToBlackboard == nil or agent == nil then

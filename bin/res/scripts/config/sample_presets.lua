@@ -409,6 +409,55 @@ SamplePresets.team_blackboard.chapter8Comms.scriptedOpeningSighting = {
 
 SamplePresets.Sandbox12 = SamplePresets.team_blackboard
 
+-- M3 controlled comparison: two team-mates and one enemy around a single
+-- occluder. The runner selects sharing-on/off without changing this preset.
+SamplePresets.team_sharing_experiment = cloneTable(SamplePresets.team_blackboard)
+SamplePresets.team_sharing_experiment.agentCount = 3
+SamplePresets.team_sharing_experiment.lightTeamCount = 2
+SamplePresets.team_sharing_experiment.spawnMode = "fixed"
+SamplePresets.team_sharing_experiment.seed = 20260720
+SamplePresets.team_sharing_experiment.spawnPoints = {
+	{ 8.0, 0.05, -6.0 },
+	{ 0.0, 0.05, -6.0 },
+	{ 0.0, 0.05, 6.0 },
+}
+SamplePresets.team_sharing_experiment.aiBlackboard.strings["debug.demo"] = "team_sharing_experiment"
+SamplePresets.team_sharing_experiment.aiScheduler.enabled = true
+SamplePresets.team_sharing_experiment.aiScheduler.tickMs = 50
+SamplePresets.team_sharing_experiment.aiScheduler.maxPerFrame = 3
+SamplePresets.team_sharing_experiment.behaviorTree.module = "res.scripts.ai.behavior.config.TeamSharingExperimentBT.lua"
+SamplePresets.team_sharing_experiment.behaviorTree.global = "TeamSharingExperimentBTConfig"
+SamplePresets.team_sharing_experiment.behaviorTree.debugTrace = true
+SamplePresets.team_sharing_experiment.behaviorTree.debugTracePrint = false
+SamplePresets.team_sharing_experiment.chapter8Comms.showDemoPanel = false
+SamplePresets.team_sharing_experiment.chapter8Comms.drawAgentMarkers = false
+SamplePresets.team_sharing_experiment.chapter8Comms.drawTeamBroadcasts = false
+SamplePresets.team_sharing_experiment.chapter8Comms.drawTeamMemories = false
+SamplePresets.team_sharing_experiment.chapter8Comms.drawDirectSightLines = false
+SamplePresets.team_sharing_experiment.chapter8Comms.useOriginalRandomSpawn = false
+SamplePresets.team_sharing_experiment.chapter8Comms.alternateTeams = false
+SamplePresets.team_sharing_experiment.chapter8Comms.scriptedOpeningSighting.enabled = false
+SamplePresets.team_sharing_experiment.chapter8Comms.teamMemoryTtlMs = 1500
+SamplePresets.team_sharing_experiment.chapter8Comms.supportResponseTtlMs = 1500
+SamplePresets.team_sharing_experiment.chapter8Comms.eventTtlMs = 1500
+SamplePresets.team_sharing_experiment.chapter8Comms.broadcastIntervalMs = 200
+SamplePresets.team_sharing_experiment.chapter8Comms.supportOffsetDistance = 0.0
+SamplePresets.team_sharing_experiment.chapter8Comms.sightScanIntervalMs = 50
+SamplePresets.team_sharing_experiment.chapter8Comms.sightPairsPerTick = 6
+SamplePresets.team_sharing_experiment.chapter8Comms.teamApplyIntervalMs = 50
+SamplePresets.team_sharing_experiment.chapter8Comms.teamAgentsPerTick = 3
+SamplePresets.team_sharing_experiment.chapter8Comms.teamPruneIntervalMs = 50
+SamplePresets.team_sharing_experiment.chapter8Comms.experiment = {
+	enabled = true,
+	leaveSightAtMs = 2000,
+	horizonMs = 7000,
+	moveEvidenceDistance = 0.25,
+	postExpiryTolerance = 0.20,
+	receiverMaxSpeed = 2.4,
+	occluder = { size = 4.0, position = { 0.0, 2.0, 0.0 } },
+	hiddenTargetPosition = { -14.0, 0.05, -20.0 },
+}
+
 SamplePresets.influence_map = cloneTable(SamplePresets.team_blackboard)
 SamplePresets.influence_map.aiBlackboard.strings["debug.demo"] = "influence_map"
 SamplePresets.influence_map.aiScheduler.enabled = true

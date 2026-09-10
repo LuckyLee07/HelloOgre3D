@@ -87,6 +87,8 @@ namespace
 		{
 			const char* path = std::getenv("HELLO_INPUT_REPLAY");
 			if (path == nullptr || path[0] == 0) return;
+			const char* waitForPlayer = std::getenv("HELLO_INPUT_REPLAY_WAIT_FOR_PLAYER");
+			m_waitForPlayer = waitForPlayer == nullptr || std::string(waitForPlayer) != "0";
 			Load(path);
 		}
 
@@ -96,16 +98,19 @@ namespace
 			if (!m_started)
 			{
 				AgentObject* player = nullptr;
-				for (AgentObject* agent : objects->getAllAgents())
-					if (agent != nullptr && agent->FindComponent<PlayerController>() != nullptr)
-					{
-						player = agent;
-						break;
-					}
-				if (player == nullptr) return false;
+				if (m_waitForPlayer)
+				{
+					for (AgentObject* agent : objects->getAllAgents())
+						if (agent != nullptr && agent->FindComponent<PlayerController>() != nullptr)
+						{
+							player = agent;
+							break;
+						}
+					if (player == nullptr) return false;
+				}
 				m_started = true;
 				m_elapsedMs = 0;
-				Log("started player=" + std::to_string(player->GetObjId())
+				Log("started player=" + (player != nullptr ? std::to_string(player->GetObjId()) : std::string("none"))
 					+ " simMs=" + std::to_string(game.getTimeInMillis())
 					+ " clock=update-delta-pauses-included");
 			}
@@ -175,7 +180,9 @@ namespace
 				return;
 			}
 			m_enabled = true;
-			Log("loaded events=" + std::to_string(m_events.size()) + " waiting=player path=" + path);
+			Log("loaded events=" + std::to_string(m_events.size())
+				+ " waiting=" + (m_waitForPlayer ? std::string("player") : std::string("update-loop"))
+				+ " path=" + path);
 		}
 
 		bool Parse(const std::string& line, Event& event)
@@ -268,6 +275,7 @@ namespace
 		}
 
 		bool m_enabled = false;
+		bool m_waitForPlayer = true;
 		bool m_started = false;
 		bool m_complete = false;
 		long long m_elapsedMs = 0;

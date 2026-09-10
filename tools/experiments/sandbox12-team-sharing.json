@@ -1,0 +1,197 @@
+{
+  "$schema_version": 1,
+  "profile": "event-comparison",
+  "experiment_id": "sandbox12-team-sharing",
+  "question": "A 能直接看到敌人而 B 被实体遮挡时，团队共享是否让 B 响应，并在敌人离开视野、事实过期后停止依赖旧信息？",
+  "sample": "Sandbox12",
+  "preset": "team_sharing_experiment",
+  "build": {
+    "configuration": "Release",
+    "architecture": "x64"
+  },
+  "window": {
+    "width": 1280,
+    "height": 800
+  },
+  "horizon_ms": 7000,
+  "timeout_seconds": 30,
+  "seeds": [
+    20260720,
+    20260721,
+    20260722
+  ],
+  "repetitions": 3,
+  "direct_state_mutation": true,
+  "variable": {
+    "name": "team_sharing_enabled",
+    "unit": "boolean",
+    "description": "是否允许 agent 感知快照自动发布、Sandbox12 直接目击发布及队友消费；其余场景、TTL、调度和目标脚本相同。"
+  },
+  "replay": {
+    "format_version": 1,
+    "wait_for_player": false,
+    "common_events": [
+      "7000 mouse_move 640 400",
+      "7500 quit"
+    ]
+  },
+  "cases": [
+    {
+      "id": "sharing-off",
+      "value": false,
+      "events": [],
+      "expected_events": {
+        "required": ["ready", "visibility", "target-hidden", "expired", "horizon"],
+        "forbidden": ["published", "consumed", "moved"],
+        "fields": {
+          "ready": {
+            "sharingEnabled": false,
+            "agentSyncConfigured": true,
+            "agentSyncEnabled": false
+          },
+          "visibility": {
+            "aDirect": true,
+            "bDirect": false,
+            "bBlocked": true
+          },
+          "target-hidden": {
+            "aDirect": false,
+            "bDirect": false
+          },
+          "expired": {
+            "factPresent": false,
+            "supportActive": false,
+            "bHasMove": false
+          },
+          "horizon": {
+            "complete": true,
+            "sharingEnabled": false,
+            "factPresent": false,
+            "supportActive": false,
+            "bHasMove": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sharing-on",
+      "value": true,
+      "events": [],
+      "expected_events": {
+        "required": ["ready", "visibility", "published", "consumed", "moved", "target-hidden", "expired", "horizon"],
+        "forbidden": [],
+        "fields": {
+          "ready": {
+            "sharingEnabled": true,
+            "agentSyncConfigured": true,
+            "agentSyncEnabled": true
+          },
+          "visibility": {
+            "aDirect": true,
+            "bDirect": false,
+            "bBlocked": true
+          },
+          "published": {
+            "sharingEnabled": true
+          },
+          "consumed": {
+            "bDirect": false
+          },
+          "moved": {
+            "action": "move"
+          },
+          "target-hidden": {
+            "aDirect": false,
+            "bDirect": false
+          },
+          "expired": {
+            "factPresent": false,
+            "supportActive": false,
+            "bHasMove": false
+          },
+          "horizon": {
+            "complete": true,
+            "sharingEnabled": true,
+            "factPresent": false,
+            "supportActive": false,
+            "bHasMove": false
+          }
+        }
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "name": "visibility_ms",
+      "label": "视野隔离 ms",
+      "event": "visibility",
+      "field": "simulationMs"
+    },
+    {
+      "name": "publish_ms",
+      "label": "发布 ms",
+      "event": "published",
+      "field": "simulationMs"
+    },
+    {
+      "name": "consume_latency_ms",
+      "label": "消费延迟 ms",
+      "event": "consumed",
+      "field": "responseLatencyMs"
+    },
+    {
+      "name": "move_latency_ms",
+      "label": "位移延迟 ms",
+      "event": "moved",
+      "field": "moveLatencyMs"
+    },
+    {
+      "name": "expiry_age_ms",
+      "label": "失效年龄 ms",
+      "event": "expired",
+      "field": "factAgeMs"
+    },
+    {
+      "name": "b_displacement_mm",
+      "label": "B 总位移 mm",
+      "event": "horizon",
+      "field": "bDisplacementMm"
+    },
+    {
+      "name": "post_expiry_displacement_mm",
+      "label": "失效后位移 mm",
+      "event": "horizon",
+      "field": "postExpireDisplacementMm"
+    }
+  ],
+  "expected": {
+    "spawn_mode": "fixed",
+    "ai_scheduler_enabled": true,
+    "ai_tick_ms": 50,
+    "ai_max_per_frame": 3,
+    "agent_count": 3,
+    "light_team_count": 2
+  },
+  "limitations": [
+    "The target is moved by the controlled scene script to create a fixed loss-of-sight event.",
+    "The experiment isolates the existing Sandbox12 visibility and support path; it does not measure combat outcomes.",
+    "Fixed seeds do not guarantee frame-identical Bullet simulation across runs or machines."
+  ],
+  "summary_limitations": [
+    "敌人由受控场景脚本移动，以产生固定的离开视野事件；该过程不代表自然敌方移动。",
+    "本实验隔离 Sandbox12 既有视野与支援链，不衡量战斗胜率。",
+    "固定 seed 不保证 Bullet 在不同运行或机器上逐帧一致。"
+  ],
+  "config_files": [
+    "bin/res/scripts/config/sample_presets.lua",
+    "bin/res/scripts/manager/ConfigManager.lua",
+    "bin/res/scripts/samples/Sandbox12.lua",
+    "bin/res/scripts/ai/team/TeamBlackboard.lua",
+    "bin/res/scripts/ai/behavior/config/TeamSharingExperimentBT.lua",
+    "bin/res/scripts/ai/decision/actions/MoveAction.lua",
+    "src/HelloOgre3D/sandbox/ai/team/TeamBlackboardService.h",
+    "src/HelloOgre3D/sandbox/ai/team/TeamBlackboardService.cpp",
+    "src/HelloOgre3D/sandbox/scripting/SandboxToLua.pkg",
+    "src/HelloOgre3D/sandbox/scripting/SandboxToLua.cpp"
+  ]
+}

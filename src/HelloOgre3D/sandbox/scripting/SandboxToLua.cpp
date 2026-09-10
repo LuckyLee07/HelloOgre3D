@@ -9383,6 +9383,71 @@ static int tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboard00(lu
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: configureTeamBlackboardAgentSync of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboardAgentSync00
+static int tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboardAgentSync00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isboolean(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  TeamBlackboardService* self = (TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+  bool enabled = ((bool)  tolua_toboolean(tolua_S,2,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'configureTeamBlackboardAgentSync'", NULL);
+#endif
+  {
+   self->configureTeamBlackboardAgentSync(enabled);
+  }
+ }
+ return 0;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'configureTeamBlackboardAgentSync'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: isTeamBlackboardAgentSyncEnabled of class  TeamBlackboardService */
+#ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_isTeamBlackboardAgentSyncEnabled00
+static int tolua_SandboxToLua_TeamBlackboardService_isTeamBlackboardAgentSyncEnabled00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const TeamBlackboardService",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const TeamBlackboardService* self = (const TeamBlackboardService*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'isTeamBlackboardAgentSyncEnabled'", NULL);
+#endif
+  {
+   bool tolua_ret = (bool)  self->isTeamBlackboardAgentSyncEnabled();
+   tolua_pushboolean(tolua_S,(bool)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'isTeamBlackboardAgentSyncEnabled'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: rememberTeamEnemyFact of class  TeamBlackboardService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_TeamBlackboardService_rememberTeamEnemyFact00
 static int tolua_SandboxToLua_TeamBlackboardService_rememberTeamEnemyFact00(lua_State* tolua_S)
@@ -17147,6 +17212,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"TeamBlackboardService");
    tolua_function(tolua_S,"clearTeamBlackboardFacts",tolua_SandboxToLua_TeamBlackboardService_clearTeamBlackboardFacts00);
    tolua_function(tolua_S,"configureTeamBlackboard",tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboard00);
+   tolua_function(tolua_S,"configureTeamBlackboardAgentSync",tolua_SandboxToLua_TeamBlackboardService_configureTeamBlackboardAgentSync00);
+   tolua_function(tolua_S,"isTeamBlackboardAgentSyncEnabled",tolua_SandboxToLua_TeamBlackboardService_isTeamBlackboardAgentSyncEnabled00);
    tolua_function(tolua_S,"rememberTeamEnemyFact",tolua_SandboxToLua_TeamBlackboardService_rememberTeamEnemyFact00);
    tolua_function(tolua_S,"rememberTeamFact",tolua_SandboxToLua_TeamBlackboardService_rememberTeamFact00);
    tolua_function(tolua_S,"writeBestTeamEnemyFactToBlackboard",tolua_SandboxToLua_TeamBlackboardService_writeBestTeamEnemyFactToBlackboard00);

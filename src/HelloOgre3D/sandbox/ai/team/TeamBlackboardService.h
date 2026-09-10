@@ -66,6 +66,8 @@ public:
 	void Clear();
 	void SetFactTtlMs(int ttlMs);
 	int GetFactTtlMs() const { return m_factTtlMs; }
+	void SetAgentSyncEnabled(bool enabled) { m_agentSyncEnabled = enabled; }
+	bool IsAgentSyncEnabled() const { return m_agentSyncEnabled; }
 
 	bool RememberEnemySighting(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, long long lastSeenMs, float confidence);
 	bool RememberFact(const std::string& factType, int teamId, int sourceAgentId, int targetAgentId, const Ogre::Vector3& position, long long timeMs, float confidence, int priority, int ttlMs, const std::string& key);
@@ -80,6 +82,8 @@ public:
 	//tolua_begin
 	void clearTeamBlackboardFacts();
 	void configureTeamBlackboard(int ttlMs);
+	void configureTeamBlackboardAgentSync(bool enabled);
+	bool isTeamBlackboardAgentSyncEnabled() const;
 	bool rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence);
 	bool rememberTeamFact(const std::string& factType, int teamId, int sourceAgentId, int targetAgentId, const Ogre::Vector3& position, int timeMs, float confidence, int priority, int ttlMs, const std::string& key);
 	bool writeBestTeamEnemyFactToBlackboard(AgentObject* agent, const std::string& keyPrefix, bool allowOwnReport = false);
@@ -122,6 +126,7 @@ private:
 	std::unordered_map<int, TeamState> m_teams;
 	Stats m_stats;
 	int m_factTtlMs;
+	bool m_agentSyncEnabled;
 }; //tolua_exports
 
 #endif // __TEAM_BLACKBOARD_SERVICE_H__

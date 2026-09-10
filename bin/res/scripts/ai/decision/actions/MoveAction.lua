@@ -60,6 +60,27 @@ function OnUpdate(deltaMs, owner, bb)
         return ActionStatus.TERMINATED
     end
 
+    if bb == nil or not bb:Has("movePos") then
+        AgentComponents.ClearMovePosition(owner)
+        local emptyPath = std.vector_Ogre__Vector3_()
+        AgentComponents.SetPath(owner, emptyPath, false)
+        AgentComponents.SetTarget(owner, owner:GetPosition())
+        owner:SetVelocity(Vector3(0, 0, 0))
+        AgentComponents.EnterIdleAnim(owner)
+        _acc = Vector3(0, 0, 0)
+        _lastTarget = nil
+        ActionIntent.Record(owner, bb, {
+            action = "move",
+            phase = "terminate",
+            movement = "stop",
+            animation = "idle",
+            elapsedMs = _elapsedMs,
+            durationMs = _segmentMs,
+            reason = "moveTargetCleared",
+        })
+        return ActionStatus.TERMINATED
+    end
+
     MoveHelpers.ApplySteering(owner, _acc, deltaMs)
     -- 仿 Sandbox6 C++ MoveState：橙色折线 + 末端圆圈，仅 Move 期间画。
     -- target 来自 RandomPoint，本就在 navmesh 上，可直接当圆心。

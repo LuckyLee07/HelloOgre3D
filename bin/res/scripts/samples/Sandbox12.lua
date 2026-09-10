@@ -78,6 +78,27 @@ local _chapter8 = {
     config = {},
 }
 
+local _experiment = {
+    enabled = false,
+    runId = "",
+    caseId = "",
+    sharingEnabled = false,
+    a = nil,
+    b = nil,
+    enemy = nil,
+    initialBPos = nil,
+    publishedAtMs = nil,
+    consumedAtMs = nil,
+    movedAtMs = nil,
+    targetHiddenAtMs = nil,
+    expiredAtMs = nil,
+    expiredBPos = nil,
+    visibilityLogged = false,
+    targetHiddenLogged = false,
+    expiredLogged = false,
+    horizonLogged = false,
+}
+
 local function _AxisValue(pos, axis)
     if axis == "x" then return pos.x end
     if axis == "y" then return pos.y end
@@ -278,9 +299,59 @@ local function _ClearSupportBlackboard(bb)
     bb:Remove("team.supportSeenAtMs")
 end
 
+local function _ClearSupportMove(agent, bb)
+    if agent == nil or bb == nil then return end
+    if _GetStringValue(bb, "team.intent", "") == _TEAM_INTENT_SUPPORT then
+        AgentComponents.ClearMovePosition(agent)
+        local emptyPath = std.vector_Ogre__Vector3_()
+        AgentComponents.SetPath(agent, emptyPath, false)
+        AgentComponents.SetTarget(agent, agent:GetPosition())
+        agent:SetVelocity(Vector3(0, 0, 0))
+    end
+    _ClearSupportBlackboard(bb)
+end
+
 local function _FormatVec3(pos)
     if pos == nil then return "-" end
     return string.format("%.1f, %.1f, %.1f", pos.x, pos.y, pos.z)
+end
+
+local function _BoolText(value)
+    return value and "true" or "false"
+end
+
+local function _FlatDistance(a, b)
+    if a == nil or b == nil then return 0.0 end
+    local delta = a - b
+    delta.y = 0
+    return delta:length()
+end
+
+local function _ExperimentEvent(eventName, fields)
+    if not _experiment.enabled then return end
+    local elapsedMs = math.floor(_chapter8.elapsedMs or 0)
+    local parts = {
+        "[AIExperiment]",
+        "schema=1",
+        "runId=" .. _experiment.runId,
+        "event=" .. eventName,
+        "simulationMs=" .. tostring(elapsedMs),
+        "matchElapsedMs=" .. tostring(elapsedMs),
+    }
+    for _, field in ipairs(fields or {}) do
+        table.insert(parts, field)
+    end
+    print(table.concat(parts, " "))
+end
+
+local function _ExperimentVisibility(observer, target)
+    local line = _BuildSightLine(observer, target)
+    return line ~= nil and not line.blocked, line ~= nil and line.blocked
+end
+
+local function _ExperimentAllowsSharing()
+    return not _experiment.enabled
+        or (_experiment.sharingEnabled and _experiment.targetHiddenAtMs == nil)
 end
 
 local function _Chapter8DebugLog(...)
@@ -491,6 +562,9 @@ local function _MarkSupportResponse(agent, sighting, supportPos)
 end
 
 local function _PublishEnemySighted(sighting)
+    if not _ExperimentAllowsSharing() then
+        return
+    end
     local memory = _EnsureTeamMemory(sighting.teamId)
     local existing = memory.visibleEnemies[sighting.targetId]
     local isNew = existing == nil or (_chapter8.elapsedMs - existing.lastSeenMs) > 250
@@ -642,12 +716,21 @@ local function _SelectTeamMemoryForAgent(agent)
 end
 
 local function _HasDirectTarget(agent)
+    if _experiment.enabled and _experiment.enemy ~= nil then
+        local direct = _ExperimentVisibility(agent, _experiment.enemy)
+        return direct
+    end
     local bb = _GetBlackboard(agent)
     return bb ~= nil and bb:GetBool("perception.hasTarget", false)
 end
 
 local function _ApplyTeamMemoryToAgent(agent)
     if agent == nil then
+        return false
+    end
+    if _experiment.enabled and not _experiment.sharingEnabled then
+        local disabledBb = _GetBlackboard(agent)
+        if disabledBb ~= nil then _ClearSupportMove(agent, disabledBb) end
         return false
     end
 
@@ -662,18 +745,18 @@ local function _ApplyTeamMemoryToAgent(agent)
     local bb = _GetBlackboard(agent)
     local target = sighting ~= nil and _agentsById[sighting.targetId] or nil
     if _HasDirectTarget(agent) then
-        _ClearSupportBlackboard(bb)
+        _ClearSupportMove(agent, bb)
         return false
     end
     if sighting == nil or bb == nil then
         if bb ~= nil then
-            _ClearSupportBlackboard(bb)
+            _ClearSupportMove(agent, bb)
         end
         return false
     end
 
     if not _IsAlive(target) then
-        _ClearSupportBlackboard(bb)
+        _ClearSupportMove(agent, bb)
         return false
     end
 
@@ -806,17 +889,228 @@ local function _UpdateScheduledTeamApply(deltaTimeInMillis)
     end
 end
 
+local function _ExperimentLocalFact()
+    if not _experiment.enabled or _experiment.a == nil or _experiment.enemy == nil then return nil end
+    local visibleEnemies = TeamBlackboard:GetVisibleEnemies(_experiment.a:GetTeamId())
+    return visibleEnemies[_GetAgentId(_experiment.enemy)]
+end
+
+local function _ExperimentSupportState()
+    local bb = _GetBlackboard(_experiment.b)
+    if bb == nil then return false, false, false end
+    local supportActive = _GetStringValue(bb, "team.intent", "") == _TEAM_INTENT_SUPPORT
+    local cppFactPresent = bb:GetBool("team.cpp.hasEnemy", false)
+    local hasMove = AgentComponents.HasMovePosition(_experiment.b, 0.0)
+    return supportActive, cppFactPresent, hasMove
+end
+
+local function _MoveExperimentTargetOutOfSight()
+    if not _experiment.enabled or _experiment.targetHiddenAtMs ~= nil then return end
+    local config = _chapter8.config.experiment or {}
+    local leaveSightAtMs = tonumber(config.leaveSightAtMs) or 2000
+    if _chapter8.elapsedMs < leaveSightAtMs then return end
+
+    local point = config.hiddenTargetPosition or { -14.0, 0.05, -20.0 }
+    local groundPos = Vector3(point[1] or -14.0, point[2] or 0.05, point[3] or -20.0)
+    local navPos = SandboxNav:FindClosestPoint("default", groundPos) or groundPos
+    navPos.y = navPos.y + _GetAgentHeight(_experiment.enemy) * 0.5
+    _experiment.enemy:setPosition(navPos)
+    _ClearAgentDemoOrders(_experiment.enemy)
+    AgentComponents.SetMaxSpeed(_experiment.enemy, 0)
+    _experiment.targetHiddenAtMs = math.floor(_chapter8.elapsedMs)
+
+    local aDirect = _ExperimentVisibility(_experiment.a, _experiment.enemy)
+    local bDirect, bBlocked = _ExperimentVisibility(_experiment.b, _experiment.enemy)
+    _experiment.targetHiddenLogged = true
+    _ExperimentEvent("target-hidden", {
+        "aDirect=" .. _BoolText(aDirect),
+        "bDirect=" .. _BoolText(bDirect),
+        "bBlocked=" .. _BoolText(bBlocked),
+        "targetX=" .. tostring(math.floor(navPos.x * 1000)),
+        "targetZ=" .. tostring(math.floor(navPos.z * 1000)),
+    })
+end
+
+local function _UpdateTeamExperimentEvidence()
+    if not _experiment.enabled then return end
+
+    local aDirect = _ExperimentVisibility(_experiment.a, _experiment.enemy)
+    local bDirect, bBlocked = _ExperimentVisibility(_experiment.b, _experiment.enemy)
+    if not _experiment.visibilityLogged and _chapter8.sightScanRunCount > 0 then
+        _experiment.visibilityLogged = true
+        _ExperimentEvent("visibility", {
+            "aDirect=" .. _BoolText(aDirect),
+            "bDirect=" .. _BoolText(bDirect),
+            "bBlocked=" .. _BoolText(bBlocked),
+        })
+    end
+
+    local fact = _ExperimentLocalFact()
+    if _experiment.publishedAtMs == nil and fact ~= nil then
+        _experiment.publishedAtMs = math.floor(_chapter8.elapsedMs)
+        _ExperimentEvent("published", {
+            "sourceId=" .. tostring(fact.spotterId or -1),
+            "targetId=" .. tostring(fact.targetId or -1),
+            "sharingEnabled=" .. _BoolText(_experiment.sharingEnabled),
+        })
+    end
+
+    local bb = _GetBlackboard(_experiment.b)
+    local consumed = bb ~= nil
+        and _GetStringValue(bb, "team.intent", "") == _TEAM_INTENT_SUPPORT
+        and _GetIntValue(bb, "team.supportFromAgentId", -1) == _GetAgentId(_experiment.a)
+        and bb:GetObjectId("team.focusTargetId", -1) == _GetAgentId(_experiment.enemy)
+        and not bDirect
+    if _experiment.consumedAtMs == nil and consumed then
+        _experiment.consumedAtMs = math.floor(_chapter8.elapsedMs)
+        _ExperimentEvent("consumed", {
+            "sourceId=" .. tostring(_GetAgentId(_experiment.a)),
+            "targetId=" .. tostring(_GetAgentId(_experiment.enemy)),
+            "bDirect=false",
+            "responseLatencyMs=" .. tostring(math.max(0, _experiment.consumedAtMs - (_experiment.publishedAtMs or _experiment.consumedAtMs))),
+        })
+    end
+
+    local bDisplacement = _FlatDistance(_experiment.b:GetPosition(), _experiment.initialBPos)
+    local moveEvidenceDistance = tonumber((_chapter8.config.experiment or {}).moveEvidenceDistance) or 0.25
+    if _experiment.movedAtMs == nil and bDisplacement >= moveEvidenceDistance then
+        _experiment.movedAtMs = math.floor(_chapter8.elapsedMs)
+        _ExperimentEvent("moved", {
+            "action=" .. _GetStringValue(bb, "__bt.currentAction", "unknown"),
+            "bDisplacementMm=" .. tostring(math.floor(bDisplacement * 1000 + 0.5)),
+            "moveLatencyMs=" .. tostring(math.max(0, _experiment.movedAtMs - (_experiment.publishedAtMs or _experiment.movedAtMs))),
+        })
+    end
+
+    local ttlMs = tonumber(_chapter8.config.teamMemoryTtlMs) or 2500
+    if (not _experiment.expiredLogged and _experiment.targetHiddenAtMs ~= nil
+            and _chapter8.elapsedMs >= (_experiment.targetHiddenAtMs + ttlMs)) then
+        local supportActive, cppFactPresent, hasMove = _ExperimentSupportState()
+        local factPresent = _ExperimentLocalFact() ~= nil or cppFactPresent
+        if not factPresent and not supportActive and not hasMove then
+            _experiment.expiredLogged = true
+            _experiment.expiredAtMs = math.floor(_chapter8.elapsedMs)
+            local pos = _experiment.b:GetPosition()
+            _experiment.expiredBPos = Vector3(pos.x, pos.y, pos.z)
+            _ExperimentEvent("expired", {
+                "factPresent=false",
+                "supportActive=false",
+                "bHasMove=false",
+                "factAgeMs=" .. (_experiment.publishedAtMs ~= nil
+                    and tostring(math.max(0, _experiment.expiredAtMs - _experiment.publishedAtMs)) or "none"),
+                "bDisplacementMm=" .. tostring(math.floor(bDisplacement * 1000 + 0.5)),
+            })
+        end
+    end
+
+    local horizonMs = tonumber((_chapter8.config.experiment or {}).horizonMs)
+        or tonumber(os.getenv("HELLO_EXPERIMENT_HORIZON_MS")) or 7000
+    if not _experiment.horizonLogged and _chapter8.elapsedMs >= horizonMs then
+        local postExpiryDisplacement = _FlatDistance(_experiment.b:GetPosition(), _experiment.expiredBPos)
+        local tolerance = tonumber((_chapter8.config.experiment or {}).postExpiryTolerance) or 0.20
+        local supportActive, cppFactPresent, hasMove = _ExperimentSupportState()
+        local complete = _experiment.visibilityLogged and _experiment.targetHiddenLogged and _experiment.expiredLogged
+            and not supportActive and not cppFactPresent and not hasMove
+        if _experiment.sharingEnabled then
+            complete = complete and _experiment.publishedAtMs ~= nil and _experiment.consumedAtMs ~= nil
+                and _experiment.movedAtMs ~= nil and postExpiryDisplacement <= tolerance
+        else
+            complete = complete and _experiment.publishedAtMs == nil and _experiment.consumedAtMs == nil
+                and _experiment.movedAtMs == nil and bDisplacement <= tolerance
+        end
+        _experiment.horizonLogged = true
+        _ExperimentEvent("horizon", {
+            "complete=" .. _BoolText(complete),
+            "sharingEnabled=" .. _BoolText(_experiment.sharingEnabled),
+            "supportActive=" .. _BoolText(supportActive),
+            "factPresent=" .. _BoolText(_ExperimentLocalFact() ~= nil or cppFactPresent),
+            "bHasMove=" .. _BoolText(hasMove),
+            "bDisplacementMm=" .. tostring(math.floor(bDisplacement * 1000 + 0.5)),
+            "postExpireDisplacementMm=" .. tostring(math.floor(postExpiryDisplacement * 1000 + 0.5)),
+        })
+    end
+end
+
+local function _InitializeTeamExperiment()
+    local config = _chapter8.config.experiment or {}
+    local runId = os.getenv("HELLO_EXPERIMENT_RUN_ID") or ""
+    _experiment.enabled = config.enabled == true and runId ~= ""
+    if not _experiment.enabled then return end
+
+    _experiment.runId = runId
+    _experiment.caseId = os.getenv("HELLO_EXPERIMENT_CASE_ID") or ""
+    _experiment.sharingEnabled = (os.getenv("HELLO_EXPERIMENT_CASE_VALUE") or "") == "true"
+    _experiment.a, _experiment.b, _experiment.enemy = _agents[1], _agents[2], _agents[3]
+    _experiment.publishedAtMs = nil
+    _experiment.consumedAtMs = nil
+    _experiment.movedAtMs = nil
+    _experiment.targetHiddenAtMs = nil
+    _experiment.expiredAtMs = nil
+    _experiment.expiredBPos = nil
+    _experiment.visibilityLogged = false
+    _experiment.targetHiddenLogged = false
+    _experiment.expiredLogged = false
+    _experiment.horizonLogged = false
+
+    for _, agent in ipairs({_experiment.a, _experiment.b, _experiment.enemy}) do
+        _ClearAgentDemoOrders(agent)
+        agent:SetVelocity(Vector3(0, 0, 0))
+    end
+    AgentComponents.SetMaxSpeed(_experiment.a, 0)
+    AgentComponents.SetMaxSpeed(_experiment.b, tonumber(config.receiverMaxSpeed) or 2.4)
+    AgentComponents.SetMaxSpeed(_experiment.enemy, 0)
+    local aForward = _experiment.enemy:GetPosition() - _experiment.a:GetPosition()
+    local bForward = _experiment.enemy:GetPosition() - _experiment.b:GetPosition()
+    aForward.y, bForward.y = 0, 0
+    _experiment.a:SetForward(Vector.Normalize(aForward))
+    _experiment.b:SetForward(Vector.Normalize(bForward))
+    _experiment.enemy:SetForward(Vector3(0, 0, -1))
+    local bPos = _experiment.b:GetPosition()
+    _experiment.initialBPos = Vector3(bPos.x, bPos.y, bPos.z)
+
+    local syncConfigured = TeamBlackboard:ConfigureCppAgentSync(_experiment.sharingEnabled)
+    local preset = ConfigManager:GetSamplePreset("Sandbox12")
+    print(ConfigManager:BuildDebugSummary("Sandbox12"))
+    _ExperimentEvent("ready", {
+        "caseId=" .. _experiment.caseId,
+        "sharingEnabled=" .. _BoolText(_experiment.sharingEnabled),
+        "agentSyncConfigured=" .. _BoolText(syncConfigured),
+        "agentSyncEnabled=" .. _BoolText(_experiment.sharingEnabled),
+        "spawnMode=" .. tostring(preset.spawnMode),
+        "aiSchedulerEnabled=" .. _BoolText(preset.aiScheduler.enabled == true),
+        "aiTickMs=" .. tostring(preset.aiScheduler.tickMs),
+        "aiMaxPerFrame=" .. tostring(preset.aiScheduler.maxPerFrame),
+        "agentCount=" .. tostring(preset.agentCount),
+        "lightTeamCount=" .. tostring(preset.lightTeamCount),
+        "aId=" .. tostring(_GetAgentId(_experiment.a)),
+        "bId=" .. tostring(_GetAgentId(_experiment.b)),
+        "enemyId=" .. tostring(_GetAgentId(_experiment.enemy)),
+    })
+end
+
+local function _CreateTeamExperimentOccluder(preset)
+    local config = preset ~= nil and preset.chapter8Comms or nil
+    local experiment = config ~= nil and config.experiment or nil
+    local occluder = experiment ~= nil and experiment.occluder or nil
+    if experiment == nil or experiment.enabled ~= true or occluder == nil then return end
+    local point = occluder.position or { 0.0, 2.0, 0.0 }
+    CreateLevelBox(tonumber(occluder.size) or 4.0,
+        Vector3(point[1] or 0.0, point[2] or 2.0, point[3] or 0.0), Vector3(0, 0, 0))
+end
+
 local function _UpdateChapter8Comms(deltaTimeInMillis)
     if not _chapter8.enabled then return end
 
     _chapter8.elapsedMs = _chapter8.elapsedMs + math.max(0, deltaTimeInMillis)
 
+    _MoveExperimentTargetOutOfSight()
     _UpdateScheduledSightScan(deltaTimeInMillis)
     _PublishScriptedOpeningSighting()
     _UpdateScheduledTeamPrune(deltaTimeInMillis)
     _PruneRecentEvents()
     _UpdateScheduledTeamApply(deltaTimeInMillis)
     _MaybePrintTeamBlackboardSmoke()
+    _UpdateTeamExperimentEvidence()
 end
 
 local function _DrawAgentMarker(agent)
@@ -1038,6 +1332,8 @@ local function _InitializeChapter8Comms(sampleName)
     _chapter8.supportSmokePrinted = false
     _chapter8.config = config
 
+    _InitializeTeamExperiment()
+
     if _chapter8.enabled then
         _Chapter8DebugLog("[Chapter8Comms] armed", "agents=", #_agents, "teamMemoryTtlMs=", tonumber(config.teamMemoryTtlMs) or 2500)
     end
@@ -1151,6 +1447,7 @@ function Sandbox_Initialize()
     directLight:setSpecularColour(ColourValue(1.8, 1.4, 0.9));
 
     SandboxUtilities_CreateLevel()
+    _CreateTeamExperimentOccluder(ConfigManager:GetSamplePreset("Sandbox12"))
     SandboxScene:UpdateSceneGraph()
 
     local navMeshConfig = rcConfig();

@@ -74,6 +74,7 @@ TeamBlackboardService::TeamFact::TeamFact()
 
 TeamBlackboardService::TeamBlackboardService()
 	: m_factTtlMs(kDefaultFactTtlMs)
+	, m_agentSyncEnabled(true)
 {
 	m_stats.ttlMs = m_factTtlMs;
 }
@@ -83,6 +84,7 @@ void TeamBlackboardService::Clear()
 	m_teams.clear();
 	m_stats = Stats();
 	m_stats.ttlMs = m_factTtlMs;
+	m_agentSyncEnabled = true;
 }
 
 void TeamBlackboardService::SetFactTtlMs(int ttlMs)
@@ -142,32 +144,35 @@ void TeamBlackboardService::SyncFromAgents(const std::vector<AgentObject*>& agen
 
 	int scannedAgents = 0;
 	int writers = 0;
-	for (AgentObject* agent : agents)
+	if (m_agentSyncEnabled)
 	{
-		if (agent == nullptr)
-			continue;
-		++scannedAgents;
+		for (AgentObject* agent : agents)
+		{
+			if (agent == nullptr)
+				continue;
+			++scannedAgents;
 
-		AIController* ai = agent->GetAIComponent();
-		Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
-		if (blackboard == nullptr || !blackboard->GetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, false))
-			continue;
+			AIController* ai = agent->GetAIComponent();
+			Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+			if (blackboard == nullptr || !blackboard->GetBool(AIMemoryKeys::kMemorySnapshotHasLastKnownEnemy, false))
+				continue;
 
-		EnemySightingFact fact;
-		fact.teamId = agent->GetTeamId();
-		fact.targetId = blackboard->GetObjectId(AIMemoryKeys::kMemorySnapshotLastKnownEnemyId, -1);
-		if (fact.targetId < 0)
-			continue;
+			EnemySightingFact fact;
+			fact.teamId = agent->GetTeamId();
+			fact.targetId = blackboard->GetObjectId(AIMemoryKeys::kMemorySnapshotLastKnownEnemyId, -1);
+			if (fact.targetId < 0)
+				continue;
 
-		const int ageMs = std::max(0, blackboard->GetInt(AIMemoryKeys::kMemorySnapshotLastKnownEnemyAgeMs, 0));
-		fact.reporterId = static_cast<int>(agent->GetObjId());
-		fact.reportCount = 1;
-		fact.lastSeenMs = m_stats.currentTimeMs - ageMs;
-		fact.targetPosition = blackboard->GetVec3(AIMemoryKeys::kMemorySnapshotLastKnownEnemyPos);
-		fact.confidence = std::max(0.0f, std::min(1.0f, blackboard->GetFloat(AIMemoryKeys::kMemorySnapshotLastKnownEnemyConfidence, 0.0f)));
-		fact.priority = BuildPriority(fact.confidence, fact.reportCount, ageMs);
-		RememberEnemyFact(fact);
-		++writers;
+			const int ageMs = std::max(0, blackboard->GetInt(AIMemoryKeys::kMemorySnapshotLastKnownEnemyAgeMs, 0));
+			fact.reporterId = static_cast<int>(agent->GetObjId());
+			fact.reportCount = 1;
+			fact.lastSeenMs = m_stats.currentTimeMs - ageMs;
+			fact.targetPosition = blackboard->GetVec3(AIMemoryKeys::kMemorySnapshotLastKnownEnemyPos);
+			fact.confidence = std::max(0.0f, std::min(1.0f, blackboard->GetFloat(AIMemoryKeys::kMemorySnapshotLastKnownEnemyConfidence, 0.0f)));
+			fact.priority = BuildPriority(fact.confidence, fact.reportCount, ageMs);
+			RememberEnemyFact(fact);
+			++writers;
+		}
 	}
 
 	const int expired = PruneExpiredFacts();
@@ -233,6 +238,7 @@ std::string TeamBlackboardService::BuildDebugSummary() const
 {
 	std::ostringstream stream;
 	stream << "[TeamBlackboardService] teams=" << m_stats.teamCount
+		<< " agentSync=" << (m_agentSyncEnabled ? "true" : "false")
 		<< " facts=" << m_stats.factCount
 		<< " enemyFacts=" << m_stats.enemyFactCount
 		<< " typedFacts=" << m_stats.typedFactCount
@@ -327,6 +333,16 @@ void TeamBlackboardService::clearTeamBlackboardFacts()
 void TeamBlackboardService::configureTeamBlackboard(int ttlMs)
 {
 	SetFactTtlMs(ttlMs);
+}
+
+void TeamBlackboardService::configureTeamBlackboardAgentSync(bool enabled)
+{
+	SetAgentSyncEnabled(enabled);
+}
+
+bool TeamBlackboardService::isTeamBlackboardAgentSyncEnabled() const
+{
+	return IsAgentSyncEnabled();
 }
 
 bool TeamBlackboardService::rememberTeamEnemyFact(int teamId, int reporterId, int targetId, const Ogre::Vector3& targetPosition, int lastSeenMs, float confidence)
