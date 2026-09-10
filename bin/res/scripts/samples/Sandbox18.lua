@@ -926,11 +926,14 @@ local function _MaybePrintSmoke()
 		if not schemaPassed then
 			return
 		end
+		-- The layer summary may append projection counters after its config.
+		local dangerConfig = string.match(dirtySummary, "danger%((configured=[^)]*)%)") or ""
+		local expectedDangerConfig = "configured=true,order=12,y=0.18,threshold=0.1,maxCells=96,neutral=false,projectToNav=true,nav=default,"
 		local debugConfigPassed = string.find(dirtySummary, "[TacticalDebugDraw]", 1, true) ~= nil
 			and string.find(dirtySummary, "configs=", 1, true) ~= nil
 			and string.find(dirtySummary, "order=", 1, true) ~= nil
 			and string.find(dirtySummary, "projectToNav=", 1, true) ~= nil
-			and string.find(dirtySummary, "danger(configured=true,order=12,y=0.18,threshold=0.1,maxCells=96,neutral=false,projectToNav=true,nav=default)", 1, true) ~= nil
+			and string.find(dangerConfig .. ",", expectedDangerConfig, 1, true) == 1
 		print("[TacticalDebugConfigSmoke]", debugConfigPassed and "PASS" or "FAIL", "summary=", dirtySummary)
 		if not debugConfigPassed then
 			return

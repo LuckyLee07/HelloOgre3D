@@ -699,7 +699,8 @@ try {
 			}
 		}
 
-		if ($Chapter9TacticsCppPresetNames -contains $Preset) {
+		if (($Chapter9TacticsCppPresetNames -contains $Preset) -or
+			($SelectedSample -eq "Sandbox18" -and ($Preset -eq "" -or $Preset -eq "Sandbox18"))) {
 			$tacticsMatches = @($LogLinesForChecks | Select-String -Pattern "\[Chapter9TacticsCppSmoke\]\s+PASS")
 			if ($tacticsMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm Chapter 9 C++ tactics behavior."
@@ -768,7 +769,7 @@ try {
 		}
 
 		$CheckedLogLineCount = $LogLinesForChecks.Count
-		$FailurePattern = "OGRE EXCEPTION|PANIC:|lua_dofile path|call_func error|call_string error|lua_pcall|stack traceback|self test result:\s*false|self test case:.*FAIL|\[VisualTraceGate\] result:\s*false"
+		$FailurePattern = "OGRE EXCEPTION|PANIC:|lua_dofile path|call_func error|call_string error|lua_pcall|stack traceback|self test result:\s*false|self test case:.*FAIL|\[[^\]\r\n]*Smoke\]\s+FAIL\b|\[VisualTraceGate\] result:\s*false"
 		$Failures = @($LogLinesForChecks | Select-String -Pattern $FailurePattern)
 		if ($Failures.Count -gt 0) {
 			Write-Host "[SMOKE] detected log failures:"
