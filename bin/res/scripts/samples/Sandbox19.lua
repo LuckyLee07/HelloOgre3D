@@ -22,6 +22,7 @@ local _lastEnemy, _restart, _restartStart = 0, false, false
 local _paused, _lastProgressMs, _lastAlive = false, 0, 0
 local _debug = false
 local _test = nil
+local _experiment = nil
 local _names = {"VEGA", "ROOK"}
 local SAMPLE = "Sandbox19"
 
@@ -53,6 +54,91 @@ local function living(ids)
 		if a ~= nil and a:GetHealth() > 0 then count = count + 1 end
 	end
 	return count
+end
+local function experimentHealth(ids)
+	local values, total = {}, 0
+	for _, id in ipairs(ids) do
+		local actor = find(id)
+		local health = math.max(0, math.floor((actor ~= nil and actor:GetHealth() or 0) + 0.5))
+		values[#values + 1] = tostring(health)
+		total = total + health
+	end
+	return #values > 0 and table.concat(values, ",") or "-", total
+end
+local function recordExperiment(event)
+	if _experiment == nil or _player == nil then return end
+	local allyHp = experimentHealth(_allyIds)
+	local enemyHp = experimentHealth(_enemyIds)
+	local stats = _commands ~= nil and _commands.stats or {}
+	local simulationMs = now()
+	local matchElapsedMs = _state == "PREPARE" and 0 or math.max(0, simulationMs - _startedMs)
+	print(string.format("[Sandbox19Experiment] schema=1 runId=%s event=%s simulationMs=%d matchElapsedMs=%d state=%s wave=%d commanderHp=%d allyAlive=%d allyHp=%s enemyAlive=%d enemyHp=%s issued=%d completed=%d failed=%d replaced=%d cancelled=%d active=%d director=none spawnMode=%s aiSchedulerEnabled=%s aiTickMs=%d aiMaxPerFrame=%d commanderMaxHp=%d allyMaxHp=%d enemyMaxHp=%d",
+		_experiment.runId, event, simulationMs, matchElapsedMs, _state, _wave,
+		math.max(0, math.floor(_player:GetHealth() + 0.5)), living(_allyIds), allyHp,
+		living(_enemyIds), enemyHp, stats.issued or 0, stats.completed or 0,
+		stats.failed or 0, stats.replaced or 0, stats.cancelled or 0, stats.active or 0,
+		_experiment.spawnMode, tostring(_experiment.aiSchedulerEnabled), _experiment.aiTickMs, _experiment.aiMaxPerFrame,
+		_experiment.commanderMaxHp, _experiment.allyMaxHp, _experiment.enemyMaxHp))
+end
+local function initializeExperiment()
+	local runId = os.getenv ~= nil and os.getenv("HELLO_EXPERIMENT_RUN_ID") or nil
+	if runId == nil or runId == "" then return end
+	if #runId > 96 or string.match(runId, "^[%w_.%-]+$") == nil then
+		error("[Sandbox19Experiment] invalid HELLO_EXPERIMENT_RUN_ID")
+	end
+	local horizonMs = tonumber(os.getenv("HELLO_EXPERIMENT_HORIZON_MS"))
+	if horizonMs == nil or horizonMs < 1000 or horizonMs > 3500000 then
+		error("[Sandbox19Experiment] invalid HELLO_EXPERIMENT_HORIZON_MS")
+	end
+	local allyAlive, enemyAlive = living(_allyIds), living(_enemyIds)
+	local _, allyTotal = experimentHealth(_allyIds)
+	local _, enemyTotal = experimentHealth(_enemyIds)
+	local preset = ConfigManager:GetSamplePreset(SAMPLE)
+	local scheduler = preset.aiScheduler or {}
+	_experiment = {runId = runId, horizonMs = math.floor(horizonMs), horizonLogged = false,
+		firstContactLogged = false, nextHeartbeatMs = now() + 5000,
+		lastPhase = _state .. ":" .. tostring(_wave), lastAllyAlive = allyAlive,
+		lastEnemyAlive = enemyAlive, previousHealth = math.max(0, _player:GetHealth()) + allyTotal + enemyTotal,
+		spawnMode = tostring(preset.spawnMode), aiSchedulerEnabled = scheduler.enabled == true,
+		aiTickMs = tonumber(scheduler.tickMs) or 0,
+		aiMaxPerFrame = tonumber(scheduler.maxPerFrame) or 0,
+		commanderMaxHp = tonumber(_matchConfig.commanderHealth) or 0,
+		allyMaxHp = tonumber(_matchConfig.allyHealth) or 0,
+		enemyMaxHp = tonumber(_matchConfig.enemyHealth) or 0}
+	recordExperiment("ready")
+end
+local function updateExperiment()
+	if _experiment == nil or _player == nil then return end
+	local simulationMs = now()
+	local matchElapsedMs = _state == "PREPARE" and 0 or math.max(0, simulationMs - _startedMs)
+	local allyAlive, enemyAlive = living(_allyIds), living(_enemyIds)
+	local _, allyTotal = experimentHealth(_allyIds)
+	local _, enemyTotal = experimentHealth(_enemyIds)
+	local totalHealth = math.max(0, _player:GetHealth()) + allyTotal + enemyTotal
+	if not _experiment.firstContactLogged and _state ~= "PREPARE"
+		and totalHealth < _experiment.previousHealth - 0.1 then
+		_experiment.firstContactLogged = true
+		recordExperiment("first-contact")
+	end
+	local phase = _state .. ":" .. tostring(_wave)
+	if phase ~= _experiment.lastPhase then
+		_experiment.lastPhase = phase
+		recordExperiment((_state == "VICTORY" or _state == "DEFEAT") and "terminal" or "phase")
+	end
+	if allyAlive < _experiment.lastAllyAlive or enemyAlive < _experiment.lastEnemyAlive then
+		recordExperiment("casualty")
+	end
+	if not _experiment.horizonLogged and _state ~= "PREPARE"
+		and matchElapsedMs >= _experiment.horizonMs then
+		_experiment.horizonLogged = true
+		recordExperiment("horizon")
+	elseif _state ~= "PREPARE" and _state ~= "VICTORY" and _state ~= "DEFEAT"
+		and simulationMs >= _experiment.nextHeartbeatMs then
+		recordExperiment("heartbeat")
+		_experiment.nextHeartbeatMs = simulationMs + 5000
+	end
+	_experiment.lastAllyAlive, _experiment.lastEnemyAlive = allyAlive, enemyAlive
+	_experiment.previousHealth = totalHealth
 end
 local function selectAll()
 	_selection = {}
@@ -543,6 +629,7 @@ function Sandbox_Initialize()
 	_observerPanel:setBackgroundColor(ColourValue(0.03, 0.06, 0.07, 0.96))
 	_observerPanel:setVisible(false)
 	spawnEncounter()
+	initializeExperiment()
 	updateHud()
 	if _G.HELLO_SANDBOX_SMOKE_MODE == true or os.getenv("HELLO_SANDBOX19_PRODUCT_TEST") == "1"
 		or os.getenv("HELLO_SANDBOX19_OBSERVATION_SELF_TEST") == "1" then
@@ -564,4 +651,5 @@ function Sandbox_Update(deltaMs)
 			start = startMission, issue = issue, pause = setPaused, restart = restartEncounter,
 			finish = finish, observer = _observer, selected = _selection}, now())
 	end
+	updateExperiment()
 end

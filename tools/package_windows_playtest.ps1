@@ -113,7 +113,7 @@ setlocal
 cd /d "%~dp0bin"
 rem Remove inherited automated tests, without clearing graphics/audio settings.
 for /f "tokens=1 delims==" %%V in ('set HELLO_ 2^>nul ^| findstr /i /r /c:"^HELLO_[A-Z0-9_]*SELF_TEST[A-Z0-9_]*=" /c:"^HELLO_[A-Z0-9_]*PRODUCT_TEST[A-Z0-9_]*=" /c:"^HELLO_[A-Z0-9_]*SMOKE[A-Z0-9_]*="') do set "%%V="
-for %%P in (HELLO_INPUT_REPLAY HELLO_RENDER_CAPTURE HELLO_VISUAL_CAPTURE HELLO_VISUAL_TRACE HELLO_PARITY_TRACE HELLO_PARITY_SEED HELLO_INTENT_TRACE) do call :ClearPrefix %%P
+for %%P in (HELLO_INPUT_REPLAY HELLO_EXPERIMENT HELLO_RENDER_CAPTURE HELLO_VISUAL_CAPTURE HELLO_VISUAL_TRACE HELLO_PARITY_TRACE HELLO_PARITY_SEED HELLO_INTENT_TRACE) do call :ClearPrefix %%P
 set "HELLO_WINDOW_BACKGROUND="
 set "HELLO_WINDOW_WIDTH="
 set "HELLO_WINDOW_HEIGHT="

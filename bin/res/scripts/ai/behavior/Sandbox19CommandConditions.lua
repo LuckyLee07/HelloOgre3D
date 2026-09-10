@@ -17,7 +17,11 @@ end
 local function executing(agent, bb)
 	if bb:GetString("command.status") ~= "executing" then
 		bb:SetString("command.status", "executing")
-		print("[Sandbox19Order] agent=" .. agent:GetObjId() .. " kind=" .. bb:GetString("command.kind") .. " result=executing source=bt-condition")
+		local simulationMs = GameManager:getTimeInMillis()
+		local issuedMs = bb:GetInt("command.issuedMs", simulationMs)
+		print("[Sandbox19Order] agent=" .. agent:GetObjId() .. " kind=" .. bb:GetString("command.kind")
+			.. " result=executing source=bt-condition simulationMs=" .. simulationMs
+			.. " issuedMs=" .. issuedMs .. " latencyMs=" .. math.max(0, simulationMs - issuedMs))
 	end
 	return true
 end

@@ -1,0 +1,74 @@
+{
+  "$schema_version": 1,
+  "experiment_id": "sandbox19-focus-order",
+  "question": "固定入口交战条件下，在 5500ms 下达一次集火命令是否改变首次接敌、第一段清场和 30 秒时双方状态？",
+  "sample": "Sandbox19",
+  "preset": "Sandbox19",
+  "build": {
+    "configuration": "Release",
+    "architecture": "x64"
+  },
+  "window": {
+    "width": 1280,
+    "height": 800
+  },
+  "horizon_ms": 30000,
+  "timeout_seconds": 60,
+  "seeds": [
+    20260710,
+    20260711,
+    20260712
+  ],
+  "repetitions": 3,
+  "variable": {
+    "name": "focus_order_enabled",
+    "unit": "boolean",
+    "description": "两组先用同一地面指令把默认选中的两名队友部署到入口；随后在 5500ms 是否按一次 F。"
+  },
+  "replay": {
+    "format_version": 1,
+    "common_events": [
+      "0 key_press RETURN",
+      "600 mouse_down 640 366 1",
+      "650 mouse_up 640 366 1",
+      "30000 mouse_move 640 400",
+      "30500 quit"
+    ]
+  },
+  "cases": [
+    {
+      "id": "autonomous",
+      "value": false,
+      "expected_focus_execution_count": 0,
+      "events": []
+    },
+    {
+      "id": "focus-5500ms",
+      "value": true,
+      "expected_focus_execution_count": 2,
+      "events": [
+        "5500 key_press F"
+      ]
+    }
+  ],
+  "expected": {
+    "director": "none",
+    "spawn_mode": "fixed",
+    "ai_scheduler_enabled": true,
+    "ai_tick_ms": 50,
+    "ai_max_per_frame": 6,
+    "commander_health": 160,
+    "ally_health": 240,
+    "enemy_health": 100
+  },
+  "config_files": [
+    "bin/res/scripts/config/sample_presets.lua",
+    "bin/res/scripts/manager/ConfigManager.lua",
+    "bin/res/scripts/samples/Sandbox19.lua",
+    "bin/res/scripts/samples/sandbox19_commands.lua",
+    "bin/res/scripts/samples/sandbox19_scene.lua",
+    "bin/res/scripts/ai/behavior/config/Sandbox19CommandBT.lua",
+    "bin/res/scripts/ai/behavior/Sandbox19CommandConditions.lua",
+    "bin/res/scripts/ai/decision/actions/ShootAction.lua"
+  ]
+}
