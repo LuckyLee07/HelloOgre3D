@@ -13,6 +13,12 @@
 
 ## 0. 目录结构
 
+[2026-09-10 玩法收敛与整体视觉设计](dev-design/plans/2026-09-10-sandbox19-product-experience.md)：当前体验改版的目标、首批设计产物、实施依赖与联合验收；具体状态见 cycle/backlog。
+
+[P0审阅稿与三张目标画面](dev-design/specs/2026-09-10-sandbox19-product-experience-design.md) · [核心玩法一页说明](dev-design/specs/2026-09-10-sandbox19-core-loop.md)：真实Windows截图、概念稿、视觉/资源规范和能力缺口；整体方向已获作者批准；概念稿与实施前历史截图单独保留。
+
+[中继站当前实现与验收](playtest-relay-2026-09-10.md)：实际场景、操作、命令、自然对局与独立包证据；阶段状态仍见 cycle/backlog。
+
 [2026-09-10 配置列表修复与后台验证](config-presets-2026-09-10.md)：列表覆盖语义、回归与 macOS 窗口焦点。
 
 [2026-09-06 Sandbox19 稳定性记录](stability-2026-09-06.md)：分离力 NaN、诊断 probe 生命周期、完整对局及验证边界。
