@@ -39,6 +39,7 @@ THE SOFTWARE.
 #import <QuartzCore/CVDisplayLink.h>
 #import "OgreViewport.h"
 #import <iomanip>
+#include <cstdlib>
 
 @implementation OgreGL3PlusWindow
 
@@ -62,6 +63,13 @@ THE SOFTWARE.
 namespace Ogre {
     namespace
     {
+		// Automated desktop checks must not activate or cover the current app.
+		bool backgroundWindowRequested()
+		{
+			const char* value = std::getenv("HELLO_WINDOW_BACKGROUND");
+			return value && value[0] == '1' && value[1] == '\0';
+		}
+
 #if defined(NSWindowStyleMaskTitled)
         static const NSUInteger kOgreWindowedStyleMask = NSWindowStyleMaskTitled |
             NSWindowStyleMaskClosable |
@@ -483,6 +491,8 @@ namespace Ogre {
         {
             if (hidden)
                 [mWindow orderOut:nil];
+            else if (backgroundWindowRequested())
+                [mWindow orderBack:nil];
             else
                 [mWindow makeKeyAndOrderFront:nil];
         }
@@ -710,9 +720,16 @@ namespace Ogre {
         // Show window
         if(mWindow)
         {
-            [mWindow orderFrontRegardless];
-            [mWindow makeKeyAndOrderFront:nil];
-            [mWindow makeMainWindow];
+			if (backgroundWindowRequested())
+			{
+				[mWindow orderBack:nil];
+			}
+			else
+			{
+				[mWindow orderFrontRegardless];
+				[mWindow makeKeyAndOrderFront:nil];
+				[mWindow makeMainWindow];
+			}
         }
 
         // Add our window to the window event listener class
@@ -802,8 +819,15 @@ namespace Ogre {
             
             // Even though OgreCocoaView doesn't accept first responder, it will get passed onto the next in the chain
             [mWindow makeFirstResponder:mView];
-            [mWindow orderFrontRegardless];
-            [NSApp activateIgnoringOtherApps:YES];
+			if (backgroundWindowRequested())
+			{
+				[mWindow orderBack:nil];
+			}
+			else
+			{
+				[mWindow orderFrontRegardless];
+				[NSApp activateIgnoringOtherApps:YES];
+			}
         }
     }
 

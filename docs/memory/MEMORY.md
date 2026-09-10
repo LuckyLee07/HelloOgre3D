@@ -11,6 +11,8 @@
 
 ## 索引
 
+- [验证窗口后台启动](background-test-windows.md) — 自动验证不抢占当前活动窗口
+
 - [macOS arm64 构建选择](macos-arm64-build.md) — 默认通用构建的 Bullet x86_64 intrinsic 失败与本机 arm64 验证命令
 
 - [用户画像与协作偏好](user.md) — code-anchored 真值核对、verify-first、要 observable 验证、方向先看 project-direction

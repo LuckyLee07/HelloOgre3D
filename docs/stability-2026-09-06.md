@@ -1,5 +1,7 @@
 # Sandbox19 稳定性：2026-09-06
 
+> 后续：本页发现的低血量僵持已通过 Sandbox19 有限自主回避规则修复，新增九局验证见 [僵持修复](stalemate-2026-09-06.md)。下文保留当时的通过、失败与未完成结论；历史 NaN 同源性仍未证明。
+
 ## 修复与因果边界
 
 确认并修复了可独立复现的分离力 NaN：OpenSteer `steerForSeparation` 对重合邻居执行 `offset / -distanceSquared`，得到 0/0。`AgentLocomotion::ForceToSeparate` 现在在本项目适配层保留邻域判定与普通距离下的 1/d 权重；小于 1mm 时限制权重，完全重合时按对象 id 给出相反且可重复的水平力。没有修改 vendored OpenSteer，也没有用最后有效坐标掩盖错误。

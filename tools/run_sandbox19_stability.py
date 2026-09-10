@@ -3,6 +3,7 @@
 
 Ordinary/probe runs do not issue combat commands or kill units. The separately
 labelled scripted-victory mode exercises all-wave victory/restart transitions.
+Low-health mode sets each AI spawn to 15% health once to reproduce mutual retreat.
 The child is terminated after evidence collection; this is not a window-close test.
 """
 import argparse
@@ -25,13 +26,15 @@ def main():
     parser.add_argument('--rounds', type=int, default=3)
     parser.add_argument('--timeout-per-round', type=int, default=120)
     parser.add_argument('--probe', action='store_true')
-    parser.add_argument('--scripted-victory', action='store_true')
+    scenario = parser.add_mutually_exclusive_group()
+    scenario.add_argument('--scripted-victory', action='store_true')
+    scenario.add_argument('--low-health', action='store_true')
     parser.add_argument('--executable', type=Path, default=ROOT / 'bin' /
                         ('HelloOgre3D.exe' if os.name == 'nt' else 'HelloOgre3D'))
     args = parser.parse_args()
     if args.rounds < 1 or args.timeout_per_round < 10:
         parser.error('rounds must be positive and timeout-per-round at least 10 seconds')
-    mode = 'scripted-victory' if args.scripted_victory else 'ordinary'
+    mode = 'scripted-victory' if args.scripted_victory else ('low-health' if args.low_health else 'ordinary')
     if args.probe:
         mode += '-probe'
     (ROOT / 'tmp').mkdir(exist_ok=True)
@@ -39,6 +42,7 @@ def main():
                                    dir=ROOT / 'tmp'))
     log = output / 'Sandbox19.log'
     env = {k: v for k, v in os.environ.items() if not k.startswith('HELLO_')}
+    env['HELLO_WINDOW_BACKGROUND'] = '1'
     env.update(HELLO_SANDBOX_SAMPLE='Sandbox19',
                HELLO_SANDBOX19_STABILITY_ROUNDS=str(args.rounds),
                HELLO_SANDBOX19_STABILITY_TIMEOUT=str(args.timeout_per_round))
@@ -46,6 +50,8 @@ def main():
         env['HELLO_RUNTIME_DIAGNOSTIC_SELF_TEST'] = '1'
     if args.scripted_victory:
         env['HELLO_SANDBOX19_STABILITY_SCRIPTED_VICTORY'] = '1'
+    if args.low_health:
+        env['HELLO_SANDBOX19_STABILITY_LOW_HEALTH'] = '1'
     expected = '[Sandbox19Stability] PASS rounds=' + str(args.rounds) + ' '
     deadline = time.monotonic() + args.rounds * args.timeout_per_round + 30
     exit_before_evidence = None
@@ -69,7 +75,9 @@ def main():
                 probe_ok = not args.probe or ('[RuntimeDiagProbeCleanup] result=true' in text
                                                and re.search(r'\[RuntimeDiag\] self test result:\s*true', text))
                 if expected in text and probe_ok:
-                    reason = 'evidence-complete'
+                    scenario_ok = not args.low_health or ('[Sandbox19LowHealth] initialized' in text
+                                                          and re.search(r'\[Sandbox19Retreat\] id=\d+ phase=EXHAUSTED', text))
+                    reason = 'evidence-complete' if scenario_ok else 'scenario-not-exercised'
                     break
                 time.sleep(0.2)
         finally:
@@ -87,7 +95,8 @@ def main():
                    reason=reason, early_exit=exit_before_evidence,
                    graceful_shutdown_verified=False, errors=errors,
                    evidence=[line for line in text.splitlines()
-                             if '[Sandbox19Stability]' in line or '[RuntimeDiagProbeCleanup]' in line])
+                             if any(marker in line for marker in ('[Sandbox19Stability]', '[RuntimeDiagProbeCleanup]',
+                                                                 '[Sandbox19Retreat]', '[Sandbox19LowHealth]'))])
     (output / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
     print(f'[StabilityRunner] status={summary["status"]} reason={reason} summary={output / "summary.json"}', flush=True)
     return 0 if passed else 1

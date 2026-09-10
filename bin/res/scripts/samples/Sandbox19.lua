@@ -7,6 +7,7 @@ require("res.scripts.agent.BehaviorSoldierAgent.lua")
 -- conditionsGlobal 名字查 _G，查不到会静默回落到 SoldierConditions。
 require("res.scripts.ai.behavior.Sandbox19CommandConditions.lua")
 
+local RetreatPolicy = require("res.scripts.samples.sandbox19_retreat.lua")
 local Observer = require("res.scripts.samples.ai_observer")
 local _observer = Observer.New()
 _observer.enabled = false
@@ -63,6 +64,7 @@ local MATCH = {
 	prepareMs = 6000,
 	intermissionMs = 7000,
 	stalemateMs = 20000,
+	criticalRetreatMs = 6000,
 	allyCount = 2,
 	waveEnemyCounts = { 2, 3, 4 },
 	waveSpawnIndices = {
@@ -186,6 +188,7 @@ local function _LoadMatchConfig()
 	MATCH.prepareMs = math.max(0, tonumber(cfg.prepareMs) or MATCH.prepareMs)
 	MATCH.intermissionMs = math.max(0, tonumber(cfg.intermissionMs) or MATCH.intermissionMs)
 	MATCH.stalemateMs = math.max(5000, tonumber(cfg.stalemateMs) or MATCH.stalemateMs)
+	MATCH.criticalRetreatMs = math.max(0, tonumber(cfg.criticalRetreatMs) or MATCH.criticalRetreatMs)
 	MATCH.allyCount = math.max(1, tonumber(cfg.allyCount) or MATCH.allyCount)
 	if type(cfg.waveEnemyCounts) == "table" and #cfg.waveEnemyCounts > 0 then
 		MATCH.waveEnemyCounts = {}
@@ -926,6 +929,7 @@ local function _RunCommandSelfTest()
 	local rallyOff = conds.HasCommandRally(ally, bb) == false
 	local retreatIntent = _BuildIntentForAgent(ally, GameManager:getTimeInMillis())
 	local retreatIntentOk = retreatIntent.commandKind == "retreat"
+	require("res.scripts.samples.sandbox19_retreat_selftest.lua").Run(ally, bb, conds)
 
 	-- 2) 集火指令：条件命中时应把 blackboard.enemy 覆写为指定目标
 	local enemyId = _FindEnemyInPlayerCone()
@@ -1373,7 +1377,7 @@ local function _RunArenaSelfTest()
 	if _G.HELLO_SANDBOX_SMOKE_MODE ~= true then return end
 	local points = ConfigManager:GetSamplePreset(_sampleName).spawnPoints
 	local start = Vector3(points[1][1], points[1][2], points[1][3])
-	-- ConfigManager 深合并会保留默认数组尾部，只验收本遭遇战实际引用的槽位。
+	-- 只验收本遭遇战引用的槽位；配置数组替换语义另由 test_config_presets 覆盖。
 	local used = {}
 	for index = 1, MATCH.allyCount + 1 do used[index] = true end
 	for _, wave in ipairs(MATCH.waveSpawnIndices) do
@@ -1477,6 +1481,17 @@ local function _UpdateObservationTest(nowMs)
 	}, nowMs)
 end
 
+local function _UpdateRetreatPolicy(nowMs)
+	local agents = ObjectManager:getAllAgents()
+	for i = 0, agents:size() - 1 do
+		local agent = agents[i]
+		if _profiles[agent:GetObjId()] == "ai_soldier" then
+			local bb = _GetBlackboard(agent)
+			if bb ~= nil then RetreatPolicy.Update(agent, bb, nowMs, MATCH.criticalRetreatMs) end
+		end
+	end
+end
+
 function Sandbox_Update(deltaTimeInMillis)
 	-- The client can tick Lua before scene initialization has created the UI.
 	if _observerPanel == nil or _player == nil then return end
@@ -1489,6 +1504,7 @@ function Sandbox_Update(deltaTimeInMillis)
 
 	local nowMs = GameManager:getTimeInMillis()
 	_UpdateMatchFlow(nowMs)
+	_UpdateRetreatPolicy(nowMs)
 	_MaintainCommands(nowMs)
 	_RefreshIntentSnapshot(nowMs)
 	_UpdateObserver(nowMs)
@@ -1501,6 +1517,7 @@ function Sandbox_Update(deltaTimeInMillis)
 	if _stabilityTest ~= nil then
 		_stabilityTest:Step({
 			playerId = _player:GetObjId(), state = _matchState, wave = _waveIndex,
+			isCombatAgent = function(agent) return _profiles[agent:GetObjId()] == "ai_soldier" end,
 			restart = function() _restartRequested = true end,
 			clearWave = function()
 				local agents = ObjectManager:getAllAgents()

@@ -1,0 +1,38 @@
+-- Exercise the real agent/Blackboard/condition binding without advancing a frame.
+local Policy = require("res.scripts.samples.sandbox19_retreat.lua")
+local Test = {}
+function Test.Run(agent, bb, conditions)
+	local savedHealth = agent:GetHealth()
+	local target = bb:GetVec3("movePos")
+	local maxHealth = bb:GetFloat("maxHealth", 100)
+	local ok, reason = pcall(function()
+		local function check(name, passed)
+			print("[Sandbox19RetreatSelfTest] case=" .. name .. " result=" .. tostring(passed))
+			assert(passed, name)
+		end
+		agent:SetHealth(maxHealth * 0.15)
+		Policy.Update(agent, bb, 0, 6000)
+		check("zero-time-start", conditions.IsCriticalHealth(agent, bb)
+			and bb:Has("sandbox19.retreatStartedMs") and bb:GetInt("sandbox19.retreatStartedMs", -1) == 0)
+		Policy.Update(agent, bb, 5999, 6000)
+		check("before-deadline", conditions.IsCriticalHealth(agent, bb))
+		Policy.Update(agent, bb, 6000, 6000)
+		check("deadline", not conditions.IsCriticalHealth(agent, bb))
+		check("shared-condition-unchanged", SoldierConditions.IsCriticalHealth(agent, bb))
+		check("player-retreat-preserved", conditions.HasCommandRetreat(agent, bb)
+			and (bb:GetVec3("movePos") - target):squaredLength() == 0)
+		Policy.Update(agent, bb, 12000, 6000)
+		check("no-permanent-retrigger", not conditions.IsCriticalHealth(agent, bb))
+		agent:SetHealth(maxHealth * 0.2)
+		Policy.Update(agent, bb, 12001, 6000)
+		check("recovered", not bb:Has("sandbox19.retreatStartedMs") and not bb:Has("sandbox19.retreatExhausted"))
+		agent:SetHealth(maxHealth * 0.15)
+		Policy.Update(agent, bb, 12002, 6000)
+		check("new-injury", conditions.IsCriticalHealth(agent, bb))
+	end)
+	agent:SetHealth(savedHealth)
+	Policy.Update(agent, bb, 12003, 6000)
+	print("[Sandbox19RetreatSelfTest] " .. (ok and "PASS" or "FAIL") .. " detail=" .. tostring(reason or "all"))
+	return ok
+end
+return Test

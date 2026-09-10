@@ -225,6 +225,7 @@ SamplePresets.Sandbox19.commanderMatch = {
 	prepareMs = 6000,
 	intermissionMs = 7000,
 	stalemateMs = 20000,
+	criticalRetreatMs = 6000,
 	allyCount = 2,
 	waveEnemyCounts = { 2, 3, 4 },
 }

@@ -29,6 +29,10 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 ## 4. 公开能力要点
 
+- ConfigManager 分层合并时，`spawnPoints`、`waveEnemyCounts`、`waveSpawnIndices` 整表替换（空表可清空）；其他配置表递归继承，包括按 agent id 索引的数值键 map。纯 Lua 回归入口 `lua5.1 tools/test_config_presets.lua`；详见 [配置修复与后台验证](../config-presets-2026-09-10.md)。
+
+- Sandbox19 `commanderMatch.criticalRetreatMs` 默认 6000，限制双方自主低血量回避时长；`--low-health` 独立压力场景把每名 AI 初始生命设为 15%，与普通/probe 和合成清敌模式分开报告。策略边界、玩家撤退保留与恢复重置见 [僵持修复](../stalemate-2026-09-06.md)。
+
 - Sandbox19 完整对局回归：`python3 tools/run_sandbox19_stability.py --rounds 3`；`--probe` 验证 RuntimeDiag 临时对象隔离与删除，`--scripted-victory` 单独验证三波胜利/重开分支。普通模式不杀敌、不发指令，仍保留 sample 现有关卡导演。脚本结束后终止自己的进程，不能作为窗口关闭证据；详见 [稳定性记录](../stability-2026-09-06.md)。
 
 - 各 sample `Sandbox_Initialize` + 键盘/鼠标事件；是 AI 行为回归基线。

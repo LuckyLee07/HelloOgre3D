@@ -2,7 +2,7 @@
 -- Sandbox19 指挥切片的玩家指令条件表。
 --
 -- 与 SoldierConditions 平行：通过 __index 继承它的全部条件（引用的整棵 SoldierBT
--- 仍要用 HasEnemy / HasAmmo / CanShootEnemy 等），只额外提供三个 command.* 条件。
+-- 仍要用 HasEnemy / HasAmmo / CanShootEnemy 等）；增加指令条件并限制自主低血回避。
 -- preset.behaviorTree.conditionsGlobal 指定本表，BehaviorSoldierAgent 据此挂载。
 --
 -- 指令 blackboard 约定（由 Sandbox19.lua 写入）：
@@ -15,6 +15,13 @@ require("res.scripts.ai.behavior.SoldierConditions.lua")
 
 Sandbox19CommandConditions = {}
 setmetatable(Sandbox19CommandConditions, { __index = SoldierConditions })
+
+-- Sample policy updates this state independently of the chosen BT branch.
+-- Player retreat remains in commandBranch and never consults this condition.
+function Sandbox19CommandConditions.IsCriticalHealth(agent, bb)
+    return SoldierConditions.IsCriticalHealth(agent, bb)
+        and not bb:GetBool("sandbox19.retreatExhausted", false)
+end
 
 local _COMMAND_TTL_MS = 8000
 

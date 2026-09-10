@@ -9,7 +9,12 @@ function Test.New()
 		or os.getenv("HELLO_SANDBOX19_OBSERVATION_SELF_TEST") == "1" then
 		error("[Sandbox19Stability] cannot combine with synthetic M1/smoke tests")
 	end
-	return setmetatable({ rounds = math.floor(rounds), completed = 0, nextCheckMs = 0,
+	if os.getenv("HELLO_SANDBOX19_STABILITY_LOW_HEALTH") == "1"
+		and os.getenv("HELLO_SANDBOX19_STABILITY_SCRIPTED_VICTORY") == "1" then
+		error("[Sandbox19Stability] low-health and scripted-victory are separate scenarios")
+	end
+	return setmetatable({ lowHealth = os.getenv("HELLO_SANDBOX19_STABILITY_LOW_HEALTH") == "1",
+		rounds = math.floor(rounds), completed = 0, nextCheckMs = 0,
 		timeoutMs = (tonumber(os.getenv("HELLO_SANDBOX19_STABILITY_TIMEOUT")) or 120) * 1000,
 		scripted = os.getenv("HELLO_SANDBOX19_STABILITY_SCRIPTED_VICTORY") == "1", maxWave = 0 }, Test)
 end
@@ -44,7 +49,7 @@ function Test:Step(ctx, nowMs)
 			print("[Sandbox19Stability] restart-clean=true")
 		end
 		self.playerId, self.roundStartMs, self.roundMaxWave = ctx.playerId, nowMs, 0
-		self.awaitRestart, self.nextSnapshotMs = false, nil
+		self.awaitRestart, self.nextSnapshotMs, self.preparedIds = false, nil, {}
 	end
 	if self.awaitRestart then
 		if nowMs - self.restartRequestedMs > 2000 then self:Fail("restart-timeout") end
@@ -66,6 +71,21 @@ function Test:Step(ctx, nowMs)
 		for line in string.gmatch(tostring(summary), "[^\r\n]+") do print(line) end
 	end
 	if nowMs - self.roundStartMs > self.timeoutMs then self:Fail("round-timeout"); return end
+
+	-- A separate stress scenario: one initial injury per AI, never repeated
+	-- damage, forced death, extra ammo or a scripted terminal state.
+	if self.lowHealth and ctx.state == "WAVE" then
+		for i = 0, agents:size() - 1 do
+			local agent = agents[i]
+			local id = agent:GetObjId()
+			if not self.preparedIds[id] and ctx.isCombatAgent(agent) and agent:GetHealth() > 0 then
+				self.preparedIds[id] = true
+				local bb = agent:GetAIComponent():GetBlackboard()
+				agent:SetHealth(bb:GetFloat("maxHealth", 100) * 0.15)
+				print("[Sandbox19LowHealth] initialized id=" .. id)
+			end
+		end
+	end
 
 	-- This mode only validates all-wave victory/restart transitions. Its result
 	-- must not be reported as a naturally won match or combat-quality evidence.

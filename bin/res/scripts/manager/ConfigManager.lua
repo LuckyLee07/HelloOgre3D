@@ -38,10 +38,18 @@ local function cloneTable(value)
 	return result
 end
 
+-- These fields are complete lists. Numeric keys elsewhere can be agent ids
+-- (e.g. Chapter9 legacy controls), so table shape alone cannot select a policy.
+local listFields = {
+	spawnPoints = true,
+	waveEnemyCounts = true,
+	waveSpawnIndices = true,
+}
+
 local function mergeTable(base, override)
 	local result = cloneTable(base or {})
 	for k, v in pairs(override or {}) do
-		if type(v) == "table" and type(result[k]) == "table" then
+		if type(v) == "table" and type(result[k]) == "table" and not listFields[k] then
 			result[k] = mergeTable(result[k], v)
 		else
 			result[k] = cloneTable(v)
@@ -254,7 +262,7 @@ end
 function ConfigManager:BuildDebugSummary(sampleName)
 	local preset = self:GetSamplePreset(sampleName)
 	local scheduler = preset.aiScheduler or {}
-	return string.format("[ConfigManager] preset=%s sample=%s seed=%d agents=%d light=%d spawnMode=%s aiScheduler=%s tickMs=%d maxPerFrame=%d",
+	return string.format("[ConfigManager] preset=%s sample=%s seed=%d agents=%d light=%d spawnMode=%s aiScheduler=%s tickMs=%d maxPerFrame=%d spawnPoints=%d",
 		tostring(preset.name),
 		tostring(preset.sampleName),
 		tonumber(preset.seed) or 0,
@@ -263,7 +271,8 @@ function ConfigManager:BuildDebugSummary(sampleName)
 		tostring(preset.spawnMode),
 		tostring(scheduler.enabled == true),
 		tonumber(scheduler.tickMs) or 0,
-		tonumber(scheduler.maxPerFrame) or 0)
+		tonumber(scheduler.maxPerFrame) or 0,
+		type(preset.spawnPoints) == "table" and #preset.spawnPoints or 0)
 end
 
 _G.ConfigManager = ConfigManager

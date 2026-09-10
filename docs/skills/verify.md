@@ -43,6 +43,8 @@ python3 tools/run_m1_smoke.py --help
 python3 tools/run_m1_smoke.py --samples Sandbox19
 ```
 
+macOS 自动验证启动设置 `HELLO_WINDOW_BACKGROUND=1`：窗口置于后方，不主动激活应用；`run_m1_smoke.py` 和 `run_sandbox19_stability.py` 已默认设置。手工直接启动验证也应设置此变量，遵守 [后台启动偏好](../memory/background-test-windows.md)。普通交互启动不设置该变量。
+
 该脚本运行 `bin/HelloOgre3D` 并检查 marker/错误，支持的 sample 以实际 `--help` 为准；其他 sample 用原生程序和仓库现有环境变量启动，观察相应成功证据。不要把 M1 smoke 等同于 Windows Chapter9/FGUI 全套 gate。
 
 ## 日志与失败

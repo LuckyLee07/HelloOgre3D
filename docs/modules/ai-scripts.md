@@ -24,6 +24,8 @@ Lua 侧 AI 行为库：DT/BT action+condition、知识源、Lua 影响图、团�
 
 ## 4. 公开能力要点
 
+- Sandbox19 的 `IsCriticalHealth` 条件覆盖只限制自主回避：`sandbox19_retreat.lua` 每帧维护 Blackboard 的 `sandbox19.retreatStartedMs` / `sandbox19.retreatExhausted`，默认持续 6 秒；到期后回落正常行为，恢复到 20% 生命时重置。玩家 commandBranch 优先级与共享 SoldierConditions/SoldierBT 不变，详见 [僵持修复](../stalemate-2026-09-06.md)。
+
 - DT/BT 树装配、condition/action、知识源→Blackboard、Lua 影响图层、团队 fact、AI event table 规范化、agent 生命周期。
 
 ## 5. 约束与红线
