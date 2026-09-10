@@ -19,6 +19,12 @@
 
 [中继站当前实现与验收](playtest-relay-2026-09-10.md)：实际场景、操作、命令、自然对局与独立包证据；阶段状态仍见 cycle/backlog。
 
+[M2 可重复成对实验](dev-design/plans/2026-09-10-m2-repeatable-comparison.md)：固定入口交战下的单变量设计、版本化 manifest、结构化事件、18 局成对矩阵、结果契约与验证边界。
+
+[M2 入口集火实验结果](sandbox19-focus-order-experiment-2026-09-10.md)：18/18 局与 9/9 配对证据、指标、结论及限制。
+
+[M3 团队信息共享实验](dev-design/plans/2026-09-10-m3-team-sharing-experiment.md) · [M3 实验结果](sandbox12-team-sharing-experiment-2026-09-10.md)：Sandbox12 共享开启/关闭的受控设计、18 局发布/消费/位移/过期证据和适用边界。
+
 [2026-09-10 配置列表修复与后台验证](config-presets-2026-09-10.md)：列表覆盖语义、回归与 macOS 窗口焦点。
 
 [2026-09-06 Sandbox19 稳定性记录](stability-2026-09-06.md)：分离力 NaN、诊断 probe 生命周期、完整对局及验证边界。

@@ -17,7 +17,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 |---|---|---|---|---|
 | 1 | 物理/射击基础 | | 10 | 感知/记忆/lastKnown |
 | 2 | 转向行为 | | 11 | 多单位感知/通信 |
-| 3 | 骨骼动画状态机 | | 12 | TeamBlackboard(C++) |
+| 3 | 骨骼动画状态机 | | 12 | TeamBlackboard(C++)；M3 共享开/关对照 |
 | 4 | FSM 直接控制 | | 13 | 影响图(Lua 教学) |
 | 5 | 路径/navmesh 可视化 | | 14 | **= Sandbox13 别名空壳** |
 | 6 | 间接控制 FSM + 导航 | | 15 | **= Sandbox13 别名空壳** |
@@ -31,6 +31,8 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 ## 4. 公开能力要点
 
 - ConfigManager 分层合并时，`spawnPoints`、`waveEnemyCounts`、`waveSpawnIndices` 整表替换（空表可清空）；其他配置表递归继承，包括按 agent id 索引的数值键 map。纯 Lua 回归入口 `lua5.1 tools/test_config_presets.lua`；详见 [配置修复与后台验证](../config-presets-2026-09-10.md)。
+
+- Sandbox12 的 `team_sharing_experiment` preset 固定 A/B/敌人和一处实体遮挡，使用最小 BT 隔离发布、消费、移动与 TTL 清理。它只在 manifest 提供实验 run id 时启用，不改变默认 `team_blackboard` 教学场景。
 
 - Sandbox19 场地为约 48×64 米单层中继站，中央直路与西侧遮挡路线汇入前方院区；复用 Nobiax 墙体/设备与士兵资源，材质入口为 `media/materials/sandbox19_relay.material`。`sandbox19_scene.lua` 分别检查出生点/两条路线/终点的完整路径，以及真实 Bullet 墙体和地面射线；导航与路径 debug 默认关闭，F3 按需打开。
 
@@ -73,6 +75,8 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 - 产品 gate：用 Python 3 执行 `tools/run_sandbox19_stability.py --product-fixture --timeout 90`，必须同时取得产品 `PASS all=true synthetic=true`、导航与真实静态碰撞 marker。强化 fixture 等待真实 BT 写入 executing 与实际动作，覆盖替换、取消幂等、目标失去视野/死亡、执行者死亡、暂停、结算及活动命令重开清理；它显式提高测试生命、挪动/杀死对象，因此不证明自然战斗平衡或外部输入。`tools/run_m1_smoke.py` 采用同一组 marker，macOS 仍需实际运行。
 - 当前验收边界（2026-09-10）：Windows Release 全量重编、Lua 语法及上述强化产品 fixture 完整通过，见[本机 gate 摘要](../../tmp/relay-product-fixture-20260910-140218-noxicg2_/summary.json)（本地临时证据，不随仓库分发）。内部输入回放已在独立包取得 69.267 秒自然通关、重开/正常退出、720p/1080p 与设置保存证据，见[本轮验收](../playtest-relay-2026-09-10.md)。人工外部输入、听感与 macOS 尚未验证，不据此宣称 P3 全部验收完成。
 - `HELLO_INPUT_REPLAY=<事件文件>` 是应用内部合成输入回放，日志标 `synthetic=true`，可检查输入路由但不能冒充人工操作。Windows 后台验证用 `HELLO_WINDOW_BACKGROUND=1` 从创建时隐藏窗口并禁用硬件输入；设置 `HELLO_WINDOW_WIDTH/HEIGHT=1280/720` 或 `1920/1080` 指定像素尺寸，`HELLO_AUDIO_SILENT=1` 临时静音而不改变保存的静音偏好。配置与日志边界见 [[runtime]]；两尺寸截图/回放仍不能替代外部点击验收。
+- M2 入口为 `python tools/run_ai_experiment.py tools/experiments/sandbox19-focus-order.json`。runner 清除继承的 `HELLO_*` 后按 manifest 生成成对内部回放，保存 HEAD/dirty patch、配置原文与 hash、可执行文件 hash、每局原始日志和结果；只统计配置证据完整且达到终局/观察窗的局。`HELLO_EXPERIMENT_RUN_ID` 与 `HELLO_EXPERIMENT_HORIZON_MS` 仅为该入口启用 Sandbox19 结构化事件，普通游玩不输出；实际批次必须在可创建 D3D9 device 的桌面会话运行。精确变量与边界见 [M2 成对实验计划](../dev-design/plans/2026-09-10-m2-repeatable-comparison.md)。
+- 通用 runner 的 `event-comparison` profile 由 manifest 声明必需/禁止事件、字段断言和数值指标；`replay.wait_for_player` 默认 `true`，无 PlayerController 的受控 sample 必须显式设为 `false`。M3 入口为 `python tools/run_ai_experiment.py tools/experiments/sandbox12-team-sharing.json`；正式批次 18/18 局通过，结果见 [M3 实验记录](../sandbox12-team-sharing-experiment-2026-09-10.md)。
 
 ## 8. 已知 gap / 相关文档
 

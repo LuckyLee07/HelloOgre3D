@@ -45,7 +45,7 @@
 - Windows 音频动态装载 `winmm.dll` 并调用异步 PlaySound；Apple 分支使用 NSSound，其他平台 `IsAvailable=false`。API 可用与 Play 返回成功都不能证明扬声器听感、事件时序或平台验收；macOS 分支本轮尚未实际构建/播放验证。
 - Windows `HELLO_WINDOW_BACKGROUND=1` 使用 `initialise(false)` 后创建 `hidden=true` 的无边框 D3D9 窗口，从创建阶段避免普通显示路径激活窗口；保持渲染 active。InputManager 检测到隐藏窗口便跳过 OIS 硬件输入初始化，日志应包含 `hidden=true physical-input=disabled`，另记录 `foregroundUnchanged` 与实际像素尺寸。后台窗口不能用来验收真实键鼠输入。
 - 后台像素尺寸由 `HELLO_WINDOW_WIDTH`（640–3840，默认 1280）与 `HELLO_WINDOW_HEIGHT`（360–2160，默认 800）指定；非法值回退默认。两目标尺寸分别设为 `1280/720`、`1920/1080`，该专用路径直接创建指定像素窗口，不使用普通窗口的 DPI 放大模式。`HELLO_AUDIO_SILENT=1` 让 Sandbox19 本轮播放音量为 0，不改写 `relay_settings.cfg` 中用户保存的 muted 偏好。
-- `HELLO_INPUT_REPLAY=<文件>` 启用 GameManager 更新入口的内部事件回放，等待 PlayerController 存在后计时；回放时钟包含暂停期间的 update delta，支持恢复菜单操作。事件经过 InputManager/应用输入路由，日志统一标 `[InputReplay] synthetic=true`；文件结束释放持有按键，QUIT 请求应用退出。它既不是硬件输入，也不是人工手感或外部窗口交互证据。
+- `HELLO_INPUT_REPLAY=<文件>` 启用 GameManager 更新入口的内部事件回放，默认等待 PlayerController 存在后计时；无玩家的受控 sample 可同时设置 `HELLO_INPUT_REPLAY_WAIT_FOR_PLAYER=0`，从首个更新循环开始计时。回放时钟包含暂停期间的 update delta，支持恢复菜单操作。事件经过 InputManager/应用输入路由，日志统一标 `[InputReplay] synthetic=true`；文件结束释放持有按键，QUIT 请求应用退出。它既不是硬件输入，也不是人工手感或外部窗口交互证据。
 
 ## 6. 数据流 / 与其他模块关系
 
