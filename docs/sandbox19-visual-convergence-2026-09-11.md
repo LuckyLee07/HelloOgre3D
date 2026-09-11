@@ -30,7 +30,8 @@
 | 材质与光照统一 | PARTIAL | 风化混凝土表面、三类主材和暖色日光已统一，D3D9 真实加载通过；旧低多边形模块、平直几何、贴图密度与目标稿仍有品质差距。 |
 | HUD 层级与点击 | PASS | 720p 回放覆盖开始、选择/拖框、右键、暂停设置、三种命令、重试和退出；1080p 无裁切。 |
 | 空间与玩法一致 | PASS | 七个出生点、目标/撤回点、主路/侧路共 18 项路径通过；侧墙两高度射线、主路无遮挡和地面碰撞通过。 |
-| 目标画面整体完成度 | IN PROGRESS | 核心构图和信息层级已经显著接近；定制建筑/道具、环境远景、材质细节、角色资产和最终声音/手感仍属于 P3。 |
+| 本轮视觉收口 | PASS | relay 专用门面、结构边、信标与场地细节已落地；曳光、枪口焰、命中火花和 HP 差分受伤反馈在正常镜头下可辨认。 |
+| 目标画面整体完成度 | PARTIAL | 核心构图和信息层级已经显著接近；角色/植被资产、PBR/后处理和最终声音/手感仍低于或尚未达到目标稿。 |
 
 ## 运行证据
 
@@ -42,4 +43,27 @@
 - 提交后复核发现 1280 宽命令按钮的固定宽度没有计入 12 像素左右文字边距，实机被截成 `F FOCU / T FALL B / G RALL / X CAN`；现已按 Gorilla 14px 字形 advance 加宽四个按钮并替换上方 720p 实机图，完整标签与两侧 HUD 间距通过离屏抓帧复核。
 - 选中圈和移动落点原为世界坐标投影后的屏幕 UI 圆形，大小与朝向不受相机透视影响。现改为深度检测的世界空间圆环：选中圈跟随 agent 脚点，移动落点跟随两名队员各自的编队位置并带中心十字；`world-rings-720-pass3-20260911` 的 720p 回放确认移动中贴地、命令完成后落点消失。
 
-本轮环境深化已经完成，后续视觉工作继续留在 P3。下一步只在定制资产或渲染能力能实际缩小角色、建筑、植被与 PBR 细节差距时增加范围；人工手感/听感、动态窗口和 macOS 仍按独立证据验收。
+## P3 视觉体验收口追加
+
+环境结构完成后仍有三个直接影响正常游玩画面的缺口：relay 正面像程序方块，战斗弹道/命中瞬间太弱，HUD 不能立即区分谁正在受伤。本轮在不改玩法、路径和碰撞合同的前提下完成对应收口。
+
+- relay 三段主体换用项目专用 `relay_facade_diffuse.png`，新增深色结构框、基座/檐口、门体设备、屋顶横梁和青/琥珀信标；外围墙、侧墙和六组掩体补压顶，沿路线增加少量设备，所有新增静态碰撞均嵌入原有实体或位于非行走区域。
+- 主光方向改为朝 relay 和主要交战面照射，降低环境光，保留暖色天空同时恢复建筑正面和角色轮廓的明暗层次。
+- `Bullet` 使用短寿命、世界空间粒子留下细曳光；`BulletImpact` 改成可读的暖色火花；真实 `WeaponComponent::DoShootBullet` 入口同时触发短枪口焰，效果服务于所有既有武器路径，Sandbox6/7/8 回归通过。
+- Sandbox19 每帧只比较指挥官与两名队友的真实 HP 样本：下降时显示 220ms 反馈，指挥官使用四边弱红闪和状态卡变色，队友只闪对应卡片；暂停/结算清掉反馈计时，重开同时清空采样，不从声音、动画或结果反推伤害。
+
+![P3 relay 专用门面与场地层次](dev-design/specs/assets/sandbox19-runtime/p3-relay-close-720.png)
+
+![P3 指挥官受伤边缘与状态卡反馈](dev-design/specs/assets/sandbox19-runtime/p3-commander-damage-720.png)
+
+![P3 交火中的世界空间曳光](dev-design/specs/assets/sandbox19-runtime/p3-combat-tracer-720.png)
+
+### 本轮证据与限制
+
+- `bash xcode.sh` 生成工程成功，macOS arm64 Release 完整构建及加入枪口焰后的增量构建通过。
+- 最终 `python3 tools/run_sandbox19_stability.py --product-fixture --timeout 90` 返回 `status=PASS reason=evidence-complete`，摘要位于 `tmp/relay-product-fixture-20260911-233131-rp7dw2r3/summary.json`；它是合成 fixture，不证明自然通关、外部输入或人工手感。
+- 最终 `python3 tools/run_m1_smoke.py --samples Sandbox19 Sandbox6 Sandbox7 Sandbox8 --seconds 20` 四个 sample 全部 PASS，日志位于 `tmp/m1-smoke-20260911-233154/`。Sandbox19 日志记录 Apple M1 Pro / OpenGL 4.1、1280×720，以及新 1024×1024 facade 纹理实际加载。
+- 当前机器没有 Lua 5.1 可执行文件；三个改动脚本由 `/usr/local/bin/luac` 5.3 解析通过。这不能替代严格的 5.1 parser 证据，但最终程序内嵌 Lua 5.1 已实际加载并执行这些脚本，产品 fixture 与 smoke 均未报 Lua 错误。
+- Apple 普通窗口路径目前在 `ClientManager` 中固定为 1280×720，`HELLO_WINDOW_WIDTH/HEIGHT` 只作用于 Windows 后台窗口，所以本轮没有新的 macOS 1920×1080 图；此前 Windows D3D9 1080p 布局证据仍有效。动态窗口调整、人工持续输入、扬声器听感、角色/植被替换和 PBR/后处理继续单列。
+
+当前渲染链内可兑现的 P3 视觉收口已经完成；后续只有在引入定制角色/植被或扩展渲染能力时，才继续追逐目标稿中的资产与 PBR 细节。P3 总体验仍保留人工手感、听感和动态窗口等独立验收边界。

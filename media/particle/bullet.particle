@@ -1,12 +1,14 @@
 particle_system Bullet
 {
 	material Particles/Bullet
-	particle_width 0.02
-	particle_height 0.02
-	quota 100
+	particle_width 0.085
+	particle_height 0.22
+	quota 128
 	cull_each false
 	sorted false
-	local_space true
+	// Leave emitted particles in world space while the physics bullet advances;
+	// this turns the bright sprites into a readable tracer instead of one dot.
+	local_space false
 	iteration_interval 0.0
 	nonvisible_update_timeout 0.0
 	billboard_type point
@@ -22,12 +24,12 @@ particle_system Bullet
 		angle 0
 		width 0
 		height 0
-		depth 0.3
-		emission_rate 10000
+		depth 0.55
+		emission_rate 900
 		velocity_min 0
 		velocity_max 0
-		time_to_live_min 2
-		time_to_live_max 5
+		time_to_live_min 0.08
+		time_to_live_max 0.16
 		duration_min 0
 		duration_max 0
 		repeat_delay_min 0
@@ -50,5 +52,39 @@ particle_system Bullet
 		colour4 0.5 0.5 0.5 1
 		time5 1
 		colour5 0 0 0 1
+	}
+}
+
+particle_system MuzzleFlash
+{
+	material Particles/Impact
+	particle_width 0.42
+	particle_height 0.42
+	quota 48
+	cull_each false
+	sorted false
+	local_space false
+
+	emitter Point
+	{
+		position 0 0 0
+		direction 1 0 0
+		angle 10
+		emission_rate 320
+		velocity_min 1.2
+		velocity_max 2.2
+		time_to_live_min 0.12
+		time_to_live_max 0.20
+		duration_min 0.16
+		duration_max 0.18
+		repeat_delay_min 0
+		repeat_delay_max 0
+		colour_range_start 1 0.96 0.72 1
+		colour_range_end 1 0.42 0.08 1
+	}
+
+	affector Scaler
+	{
+		rate 0.65
 	}
 }

@@ -62,6 +62,7 @@ local function Inside(x, y, bounds)
 end
 
 local FRAME_KEYS = {
+	"damage_top", "damage_bottom", "damage_left", "damage_right",
 	"mission", "mission_accent", "mission_kicker", "mission_title", "mission_detail",
 	"clock", "clock_text", "pause", "pause_accent", "context", "focus", "focus_accent",
 	"retreat", "retreat_accent", "rally", "rally_accent", "cancel", "cancel_accent",
@@ -95,6 +96,8 @@ function Hud.New()
 		selected = ColourValue(0.110, 0.267, 0.282, 0.97),
 		hover = ColourValue(0.157, 0.318, 0.329, 0.98),
 		pressed = ColourValue(0.204, 0.416, 0.416, 1.0),
+		damage = ColourValue(0.310, 0.105, 0.074, 0.97),
+		damageSoft = ColourValue(0.914, 0.245, 0.120, 0.14),
 		disabled = ColourValue(0.082, 0.114, 0.129, 0.91),
 		clear = ColourValue(0, 0, 0, 0),
 	}
@@ -107,7 +110,8 @@ function Hud.New()
 		self.frames[key] = { object = frame, visible = false }
 	end
 	for _, key in ipairs(FRAME_KEYS) do
-		Frame(key, key == "shade" and 8 or (IsModal(key) and 10 or 5))
+		local layer = key == "shade" and 8 or (key:find("^damage_") and 4 or (IsModal(key) and 10 or 5))
+		Frame(key, layer)
 	end
 	for i = 1, 2 do
 		for _, suffix in ipairs({ "panel", "accent", "key", "name", "hp_value", "track", "hp", "status" }) do
@@ -200,11 +204,12 @@ function Hud:_Ally(index, ally, y)
 	local alive = ally.alive ~= false and hp > 0
 	local prefix = "ally" .. index .. "_"
 	local selected = alive and ally.selected == true
+	local damaged = alive and ally.damaged == true
 	local hovered = alive and Inside(Number(self.model.mouseX, -1) / self.scale, Number(self.model.mouseY, -1) / self.scale,
 		{ x = 24, y = y, w = 264, h = 56 })
-	local color = hovered and (self.model.mouseDown and "pressed" or "hover") or (selected and "selected" or "panel")
+	local color = damaged and "damage" or (hovered and (self.model.mouseDown and "pressed" or "hover") or (selected and "selected" or "panel"))
 	self:_Frame(prefix .. "panel", 24, y, 264, 56, color)
-	self:_Frame(prefix .. "accent", 24, y, 3, 56, selected and "cyan" or (alive and "muted" or "danger"))
+	self:_Frame(prefix .. "accent", 24, y, 3, 56, damaged and "danger" or (selected and "cyan" or (alive and "muted" or "danger")))
 	self:_Text(prefix .. "key", 38, y + 27, 22, 22, tostring(index), 14, alive and "%0" or "%8")
 	self:_Text(prefix .. "name", 67, y + 3, 136, 23, ally.name or (index == 1 and "ALPHA" or "BRAVO"), 14)
 	self:_Text(prefix .. "hp_value", 217, y + 3, 55, 23, tostring(math.floor(hp)), 14, alive and "%0" or "%8")
@@ -235,6 +240,13 @@ function Hud:_Combat(model, width, height, state)
 	local bottom = height - 24
 	local hp, maxHp = math.max(0, Number(model.commanderHp, 100)), math.max(1, Number(model.commanderMaxHp, 100))
 	local selected = Count(model.selectedCount)
+	if model.commanderDamaged == true then
+		local edge = 18
+		self:_Frame("damage_top", 0, 0, width, edge, "damageSoft")
+		self:_Frame("damage_bottom", 0, height - edge, width, edge, "damageSoft")
+		self:_Frame("damage_left", 0, edge, edge, height - edge * 2, "damageSoft")
+		self:_Frame("damage_right", width - edge, edge, edge, height - edge * 2, "damageSoft")
+	end
 	local objective, objectiveLines = self:_Wrap("objective", model.objective or "SECURE THE COURTYARD", 307, 14, 2)
 	local objectiveStep = 24 / self.scale
 	local detailY = 54 + objectiveLines * objectiveStep + 5
@@ -275,7 +287,7 @@ function Hud:_Combat(model, width, height, state)
 	local contextHeight = contextLines * (self.smallFont == 14 and 22 or 14) / self.scale + 2
 	self:_Text("context", (width - commandWidth) * 0.5, bottom - 53 - contextHeight, commandWidth, contextHeight, contextText, self.smallFont)
 	local commanderX = width - 280
-	self:_Frame("commander", commanderX, bottom - 94, 256, 46, "panel")
+	self:_Frame("commander", commanderX, bottom - 94, 256, 46, model.commanderDamaged and "damage" or "panel")
 	self:_Text("commander_title", commanderX + 12, bottom - 91, 174, 22, "COMMANDER", 14)
 	self:_Text("commander_value", commanderX + 209, bottom - 91, 36, 22, tostring(math.floor(hp)), 14)
 	self:_Frame("commander_track", commanderX + 12, bottom - 62, 232, 4, "track")

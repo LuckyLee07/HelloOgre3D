@@ -29,7 +29,7 @@
 - `AgentLocomotion::ForceToSeparate` 保留 OpenSteer 邻域与常规 1/d 权重；距离小于 1mm 时限制权重，完全重合时按对象 id 选择相反水平力，避免 0/0。`HELLO_LOCOMOTION_SELF_TEST=1` 在 Sandbox19 验证真实绑定的边界行为，见 [稳定性记录](../stability-2026-09-06.md)。
 
 - `IComponent`：onAttach/onDetach/update；`getUpdateOrder()` 显式声明组件更新顺序；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
-- 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。
+- 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。`WeaponComponent::DoShootBullet` 在真实发射入口创建短寿命 `MuzzleFlash`，并继续通过原有 ObjectFactory 生成物理子弹；粒子节点登记到 ObjectManager 的延迟清理队列，重开时和 `BulletImpact` 一并清除。该反馈作用于所有武器路径，不能由 Sandbox19 HUD 伪造。
 
 ## 5. 约束与红线
 
@@ -50,7 +50,7 @@
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox6/7/8/9/10/11/12/13/16/17/19` 与 `chapter9_tactics_legacy_parity`；RuntimeDiag `Sandbox2 -RuntimeDiag` 的 `[ComponentAccessSelfTest] result=true`；Lua 侧优先 `agent:GetAIComponent()` / `agent:GetAttribComponent()` / `agent:GetLocomotionComponent()` 或 `AgentComponentAccess.lua`，C++ 侧优先 `owner->FindComponent<WeaponComponent>()->ShootBullet()`。
+- 回归 sample：`Sandbox6/7/8/9/10/11/12/13/16/17/19` 与 `chapter9_tactics_legacy_parity`；RuntimeDiag `Sandbox2 -RuntimeDiag` 的 `[ComponentAccessSelfTest] result=true`；Lua 侧优先 `agent:GetAIComponent()` / `agent:GetAttribComponent()` / `agent:GetLocomotionComponent()` 或 `AgentComponentAccess.lua`，C++ 侧优先 `owner->FindComponent<WeaponComponent>()->ShootBullet()`。2026-09-11 枪口焰改动后的 macOS arm64 Release 构建和 Sandbox6/7/8/19 smoke 通过。
 
 ## 8. 已知 gap / 相关文档
 

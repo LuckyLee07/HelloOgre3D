@@ -21,6 +21,7 @@ local _enemyMarks = {}
 local _matchConfig = nil
 local _lastEnemy, _restart, _restartStart = 0, false, false
 local _paused, _lastProgressMs, _lastAlive = false, 0, 0
+local _healthSamples, _damageUntil = {}, {}
 local _debug = false
 local _test = nil
 local _experiment = nil
@@ -59,6 +60,21 @@ local function living(ids)
 		if a ~= nil and a:GetHealth() > 0 then count = count + 1 end
 	end
 	return count
+end
+local function updateDamageFeedback()
+	local timeMs = now()
+	local function sample(actor)
+		if actor == nil then return end
+		local id, hp = actor:GetObjId(), math.max(0, actor:GetHealth())
+		local previous = _healthSamples[id]
+		if previous ~= nil and hp < previous - 0.1 then _damageUntil[id] = timeMs + 220 end
+		_healthSamples[id] = hp
+	end
+	sample(_player)
+	for _, id in ipairs(_allyIds) do sample(find(id)) end
+end
+local function isDamaged(id)
+	return id ~= nil and now() < (_damageUntil[id] or 0)
 end
 local function experimentHealth(ids)
 	local values, total = {}, 0
@@ -221,6 +237,7 @@ local function setPaused(paused)
 	if _state == "PREPARE" or _state == "VICTORY" or _state == "DEFEAT" then return end
 	_paused = paused
 	_drag = nil
+	if paused then _damageUntil = {} end
 	GameManager:SetSimulationPaused(paused)
 	_audio:Play("pause", now())
 	print("[Sandbox19Pause] paused=" .. tostring(paused) .. " simulationMs=" .. now())
@@ -230,6 +247,7 @@ local function finish(state, reason)
 	_commands:Clear("cancelled", "mission-ended")
 	_paused = false
 	_drag = nil
+	_damageUntil = {}
 	GameManager:SetSimulationPaused(true)
 	_audio:Play(state == "VICTORY" and "victory" or "defeat", now())
 	print("[Sandbox19Match] phase=" .. state .. " reason=" .. reason .. " wave=" .. _wave
@@ -302,6 +320,7 @@ local function spawnEncounter()
 	_paused, _state, _wave = false, "PREPARE", 0
 	_startedMs, _endedMs, _endReason, _lastEnemy = now(), nil, "", 0
 	_allyIds, _enemyIds, _profiles, _selection = {}, {}, {}, {}
+	_healthSamples, _damageUntil = {}, {}
 	_commands = Commands.New({find = find, hint = hint})
 	_player = spawnAgent(1, 1, true)
 	for slot = 2, 3 do
@@ -481,6 +500,7 @@ local function updateMarkers()
 	end
 end
 local function updateHud()
+	updateDamageFeedback()
 	for id in pairs(_selection) do local a = find(id); if a == nil or a:GetHealth() <= 0 then _selection[id] = nil end end
 	local allies = {}
 	for index, id in ipairs(_allyIds) do
@@ -489,7 +509,7 @@ local function updateHud()
 		local order = _commands.active[id]
 		local currentAction = bb ~= nil and bb:GetString("__bt.currentAction") or ""
 		allies[index] = {id = id, name = _names[index], hp = a ~= nil and a:GetHealth() or 0, maxHp = _matchConfig.allyHealth,
-			alive = a ~= nil and a:GetHealth() > 0, selected = _selection[id] == true,
+			alive = a ~= nil and a:GetHealth() > 0, selected = _selection[id] == true, damaged = isDamaged(id),
 			command = order ~= nil and string.upper(order.kind) or (bb ~= nil and bb:Has("sandbox19.holdPos") and "HOLD" or "AUTONOMOUS"),
 			status = currentAction ~= "" and string.upper(currentAction) or "READY"}
 	end
@@ -498,6 +518,7 @@ local function updateHud()
 		elapsedMs = _state == "PREPARE" and 0 or ((_endedMs or now()) - _startedMs),
 		enemyAlive = living(_enemyIds), enemyTotal = 4, enemyKilled = #_enemyIds - living(_enemyIds),
 		allyAlive = living(_allyIds), selectedCount = selectedCount(), commanderHp = _player:GetHealth(), commanderMaxHp = _matchConfig.commanderHealth,
+		commanderDamaged = isDamaged(_player:GetObjId()),
 		allies = allies, hint = now() <= _hintUntil and _hint or "", hintKind = _hintKind,
 		audioVolume = _audio.volume, audioMuted = _audio.muted, audioAvailable = _audio.available,
 		mouseX = _mouse.x, mouseY = _mouse.y, mouseDown = _mouse.down, orders = _commands.stats, endReason = _endReason},

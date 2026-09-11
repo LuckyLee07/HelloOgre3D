@@ -85,10 +85,12 @@ function Scene.Create()
 
 	-- Pitch raises the generated mountain belt behind the relay silhouette.
 	SandboxScene:SetSkyBox("Relay/Sky", Vector3(-12, 180, 0))
-	SandboxScene:SetAmbientLight(Vector3(0.32, 0.30, 0.27))
-	local sunlight = SandboxScene:CreateDirectionalLight(Vector3(-0.55, -1, -0.20))
-	sunlight:setDiffuseColour(ColourValue(1.16, 1.02, 0.82))
-	sunlight:setSpecularColour(ColourValue(0.16, 0.14, 0.11))
+	SandboxScene:SetAmbientLight(Vector3(0.29, 0.28, 0.26))
+	-- Light travels toward the relay so the front elevation and combatants keep
+	-- readable form instead of becoming silhouettes against the bright sky.
+	local sunlight = SandboxScene:CreateDirectionalLight(Vector3(0.42, -1, 0.52))
+	sunlight:setDiffuseColour(ColourValue(1.10, 1.02, 0.86))
+	sunlight:setSpecularColour(ColourValue(0.18, 0.16, 0.13))
 
 	-- 48 x 64 m floor; all visible surfaces have matching static Bullet bodies.
 	for _, x in ipairs({ -16, 0, 16 }) do
@@ -106,6 +108,13 @@ function Scene.Create()
 	_Box(48, 2.4, 0.55, 0, 1.2, -23.72, 0, "Relay/ConcreteShade")
 	_Box(15.5, 2.4, 0.55, -16.25, 1.2, 39.72, 0, "Relay/Concrete")
 	_Box(15.5, 2.4, 0.55, 16.25, 1.2, 39.72, 0, "Relay/ConcreteShade")
+	-- Dark caps and sparse piers give the perimeter a designed edge while all
+	-- added collision remains embedded in the existing wall volume.
+	_Box(0.76, 0.14, 64, -23.72, 2.47, 8, 0, "Relay/Trim")
+	_Box(0.76, 0.14, 64, 23.72, 2.47, 8, 0, "Relay/Trim")
+	_Box(48, 0.14, 0.76, 0, 2.47, -23.72, 0, "Relay/Trim")
+	_Box(15.5, 0.14, 0.76, -16.25, 2.47, 39.72, 0, "Relay/Trim")
+	_Box(15.5, 0.14, 0.76, 16.25, 2.47, 39.72, 0, "Relay/Trim")
 	for _, z in ipairs({ 0, 16, 32 }) do
 		_Module(PILLAR_MESH, -23.35, 1.28, z, 0, "Relay/Metal")
 		_Module(PILLAR_MESH, 23.35, 1.28, z, 0, "Relay/Metal")
@@ -115,8 +124,10 @@ function Scene.Create()
 	-- Main route remains x=-8..8; both join the north yard before the relay.
 	local bypassWall = _Box(0.55, 2.6, 25.6, -12, 1.3, 4.8, 0, "Relay/ConcreteShade")
 	_sideWallIds[bypassWall:GetObjId()] = true
+	_Box(0.75, 0.14, 25.6, -12, 2.67, 4.8, 0, "Relay/Trim")
 	-- Service bay to the east and two pillars identify the courtyard threshold.
 	_Box(0.55, 2.6, 12.8, 13, 1.3, 10.24, 0, "Relay/Concrete")
+	_Box(0.75, 0.14, 12.8, 13, 2.67, 10.24, 0, "Relay/Trim")
 	for _, x in ipairs({ -8, 8 }) do
 		_Module(PILLAR_MESH, x, 1.28, 20, 0, "Relay/Metal")
 	end
@@ -142,6 +153,7 @@ function Scene.Create()
 	}) do
 		local barrier = _Box(4.2, 1.25, 1.15, cover[1], 0.625, cover[2], cover[3], "Relay/Cover")
 		_coverIds[barrier:GetObjId()] = true
+		_Box(4.28, 0.10, 1.22, cover[1], 1.30, cover[2], cover[3], "Relay/Trim")
 	end
 
 	-- Open service canopies frame the near lane. Their posts stay outside both
@@ -159,18 +171,34 @@ function Scene.Create()
 	for _, prop in ipairs({
 		{ -20.2, -10.2, 0 }, { -20.2, -9.2, 90 }, { -15.8, -5.0, 0 },
 		{ 20.2, -10.2, 0 }, { 20.2, -9.2, 90 }, { 15.8, -5.0, 0 },
+		{ -20.2, 5.5, 90 }, { 19.8, 3.8, 0 },
 		{ -17.6, 12.5, 0 }, { 17.6, 12.5, 0 },
+		{ -20.1, 27.0, 0 }, { 19.6, 27.8, 90 },
 	}) do
 		_Module(BLOCK_MESH, prop[1], 0.32, prop[2], prop[3], "Relay/Equipment")
 	end
 
 	-- A stepped relay building gives the destination a readable silhouette:
 	-- low wings, central gatehouse, rooftop plant and a narrow mast.
-	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Concrete")
-	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/ConcreteShade")
-	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Concrete")
-	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/ConcreteShade")
-	_Box(5.6, 0.20, 0.18, 0, 3.65, 37.36, 0, "Relay/Accent")
+	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Facade")
+	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/Facade")
+	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Facade")
+	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/Trim")
+	-- A mounted front kit turns the composite boxes into one authored facade.
+	-- It is entirely inside the non-walkable relay footprint.
+	_Box(17.6, 0.36, 0.24, 0, 0.18, 37.34, 0, "Relay/Trim")
+	for _, x in ipairs({ -8.55, -2.70, 2.70, 8.55 }) do
+		_Box(0.26, 3.55, 0.24, x, 1.78, 37.30, 0, "Relay/Trim")
+	end
+	_Box(5.75, 0.30, 0.28, 0, 4.35, 37.27, 0, "Relay/Trim")
+	_Box(5.45, 0.14, 0.28, -5.75, 2.67, 37.25, 0, "Relay/Accent")
+	_Box(5.45, 0.14, 0.28, 5.75, 2.67, 37.25, 0, "Relay/Accent")
+	for _, x in ipairs({ -7.65, 7.65 }) do
+		_Box(0.22, 0.46, 0.20, x, 2.18, 37.18, 0, "Relay/BeaconCyan")
+	end
+	for _, x in ipairs({ -2.15, 2.15 }) do
+		_Box(0.20, 0.34, 0.20, x, 3.58, 37.15, 0, "Relay/BeaconAmber")
+	end
 	_Module(HANGAR_MESH, 0, 1.28, 37.38, 0, "Relay/Equipment")
 	for _, x in ipairs({ -5.8, 5.8 }) do
 		_Module(COOLING_MESH, x, 1.20, 37.42, 180, "Relay/Metal")
@@ -182,6 +210,10 @@ function Scene.Create()
 	for _, y in ipairs({ 7.2, 9.7 }) do
 		_Module(PILLAR_MESH, 0, y, 39.25, 0, "Relay/Metal")
 	end
+	_Box(3.8, 0.14, 0.18, 0, 7.72, 39.25, 0, "Relay/Trim")
+	_Box(2.7, 0.12, 0.18, 0, 9.02, 39.25, 0, "Relay/Trim")
+	_Box(0.32, 0.32, 0.32, -1.25, 9.02, 39.12, 0, "Relay/BeaconCyan")
+	_Box(0.32, 0.32, 0.32, 1.25, 9.02, 39.12, 0, "Relay/BeaconAmber")
 
 	_PaintCorners(0, -16, 5, 4, "Relay/SafeMark")
 	_PaintCorners(0, 33.5, 5, 3, "Relay/GoalMark")
@@ -191,7 +223,7 @@ function Scene.Create()
 	end
 
 	SandboxScene:UpdateSceneGraph()
-	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=desert-layered")
+	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p3-facade-lit")
 	return _Anchors()
 end
 

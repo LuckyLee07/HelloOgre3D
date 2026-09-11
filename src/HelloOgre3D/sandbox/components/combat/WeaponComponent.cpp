@@ -4,6 +4,7 @@
 
 #include "GameFunction.h"
 #include "SandboxMacros.h"
+#include "OgreParticleSystem.h"
 #include "OgreSceneNode.h"
 #include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
@@ -309,6 +310,16 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	}
 
 	ObjectManager* objectManager = ResolveObjectManager(this);
+	Ogre::SceneNode* muzzleFlash = objectManager != nullptr ? SceneFactory::CreateParticle("MuzzleFlash") : nullptr;
+	if (muzzleFlash != nullptr)
+	{
+		muzzleFlash->setPosition(position + forward * 0.16f);
+		muzzleFlash->setOrientation(qRotation);
+		if (muzzleFlash->numAttachedObjects() > 0)
+			static_cast<Ogre::ParticleSystem*>(muzzleFlash->getAttachedObject(0))->setEmitting(true);
+		objectManager->markNodeRemInSeconds(muzzleFlash, 0.5f);
+	}
+
 	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
 	if (tactics != nullptr)
 	{

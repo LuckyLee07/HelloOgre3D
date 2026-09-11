@@ -45,6 +45,28 @@ material Relay/Window : base_material
 	set_texture_alias specMap textures/nobiax_modular/modularSpecular.dds
 }
 
+// Project-specific relay facade panels. The albedo is deliberately neutral-lit;
+// scene lighting supplies the final warm/cool separation on both D3D9 and GL.
+material Relay/Facade : base_material
+{
+	set $diffuseCol "0.92 0.90 0.82 1"
+	set $specularCol "0.05 0.06 0.05"
+	set $shininess "18"
+	set_texture_alias diffuseMap textures/sandbox19/relay_facade_diffuse.png
+	set_texture_alias normalMap textures/base/baseFlatNormal.dds
+	set_texture_alias specMap textures/nobiax_modular/modularSpecular.dds
+}
+
+material Relay/Trim : base_material
+{
+	set $diffuseCol "0.30 0.36 0.32 1"
+	set $specularCol "0.12 0.12 0.11"
+	set $shininess "28"
+	set_texture_alias diffuseMap textures/nobiax_modular/modularDiffuse.dds
+	set_texture_alias normalMap textures/nobiax_modular/modularNormal.dds
+	set_texture_alias specMap textures/nobiax_modular/modularSpecular.dds
+}
+
 material Relay/Cover : base_material
 {
 	set $diffuseCol "0.72 0.68 0.58 1"
@@ -101,6 +123,34 @@ material Relay/Accent : base_material
 	set $diffuseCol "0.92 0.56 0.20 1"
 	set $specularCol "0.02 0.02 0.02"
 	set $shininess "4"
+}
+
+material Relay/BeaconCyan
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			ambient 0.25 0.95 0.91 1
+			diffuse 0.25 0.95 0.91 1
+			emissive 0.25 0.95 0.91 1
+		}
+	}
+}
+
+material Relay/BeaconAmber
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			ambient 1.00 0.62 0.22 1
+			diffuse 1.00 0.62 0.22 1
+			emissive 1.00 0.62 0.22 1
+		}
+	}
 }
 
 // Project-specific desert panorama generated on 2026-09-11 and converted to

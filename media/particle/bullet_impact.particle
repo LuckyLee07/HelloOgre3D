@@ -1,9 +1,9 @@
 particle_system BulletImpact
 {
 	material Particles/Impact
-	particle_width 0.03
-	particle_height 0.03
-	quota 150
+	particle_width 0.11
+	particle_height 0.11
+	quota 96
 	cull_each false
 	sorted false
 	local_space false
@@ -20,7 +20,7 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 26.4
-		emission_rate 3000
+		emission_rate 620
 		velocity_min 0.5
 		velocity_max 1.0
 		time_to_live_min 0.4
@@ -29,8 +29,8 @@ particle_system BulletImpact
 		duration_max 0.1
 		repeat_delay_min 0
 		repeat_delay_max 0
-		colour_range_start 1 1 1 1
-		colour_range_end 1 1 1 1
+		colour_range_start 1 0.92 0.58 1
+		colour_range_end 1 0.48 0.12 1
 	}
 	
 	emitter Point
@@ -38,7 +38,7 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 45
-		emission_rate 500
+		emission_rate 180
 		velocity_min 1
 		velocity_max 2
 		time_to_live_min 0.5
@@ -47,8 +47,8 @@ particle_system BulletImpact
 		duration_max 0.1
 		repeat_delay_min 0
 		repeat_delay_max 0
-		colour_range_start 1 1 1 1
-		colour_range_end 1 1 1 1
+		colour_range_start 1 0.78 0.30 1
+		colour_range_end 0.80 0.24 0.05 1
 	}
 	
 	emitter Point
@@ -56,7 +56,7 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 60
-		emission_rate 100
+		emission_rate 60
 		velocity_min 3
 		velocity_max 5
 		time_to_live_min 1
@@ -65,8 +65,8 @@ particle_system BulletImpact
 		duration_max 0.1
 		repeat_delay_min 0
 		repeat_delay_max 0
-		colour_range_start 1 1 1 1
-		colour_range_end 1 1 1 1
+		colour_range_start 1 0.68 0.22 1
+		colour_range_end 0.65 0.18 0.04 1
 	}
 
 	affector LinearForce
@@ -93,6 +93,6 @@ particle_system BulletImpact
 
 	affector Scaler
 	{
-		rate 0.0005
+		rate 0.035
 	}
 }

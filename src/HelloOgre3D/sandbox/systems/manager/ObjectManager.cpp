@@ -1057,7 +1057,7 @@ int ObjectManager::ClearProjectiles()
 	for (int id : projectileIds)
 		if (removeObjectById(id)) ++removed;
 
-	// Only BulletImpact currently registers these transient scene nodes.
+	// BulletImpact and short-lived muzzle flashes register transient scene nodes.
 	for (auto& pending : m_remSceneNodes)
 		pending.second = 0;
 	ObjectLifecycleSystem::UpdateContext context;
@@ -1095,4 +1095,3 @@ bool ObjectManager::addNavigationMesh(const Ogre::String& navName, NavigationMes
 {
 	return m_services.navigation != nullptr ? m_services.navigation->AddNavigationMesh(navName, pNavMesh) : false;
 }
-
