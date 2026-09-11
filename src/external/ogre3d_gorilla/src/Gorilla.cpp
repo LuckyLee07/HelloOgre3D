@@ -1098,6 +1098,13 @@ namespace Gorilla
     (void)repeatThisInvocation;
   if (queueGroupId != SCREEN_RENDERQUEUE)
    return;
+  // Compositor texture targets reuse the scene manager and fire the overlay
+  // queue too. Draw this Screen only for the viewport it was created for;
+  // otherwise the HUD is baked upside-down into the scene texture and then
+  // drawn a second time on the final viewport.
+  Ogre::Viewport* activeViewport = mRenderSystem ? mRenderSystem->_getViewport() : 0;
+  if (activeViewport != mViewport)
+   return;
   if (!mIsVisible || mLayers.empty())
    return;
   renderOnce();

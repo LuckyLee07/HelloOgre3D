@@ -628,6 +628,9 @@ end
 function Sandbox_Initialize()
 	GUI_CreateCameraAndProfileInfo()
 	SandboxUI:SetBuildInfoVisible(false)
+	if not SandboxScene:SetCompositorEnabled("Relay/SceneGrade", true) then
+		print("[Sandbox19Visual] compositor=Relay/SceneGrade status=unavailable")
+	end
 	GUI_CreateSandboxText(GUI.MarkupColor.White .. GUI.Markup.Medium ..
 		"RELAY OUTPOST\nWASD move | Q/E orbit | Wheel zoom\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 230}):setVisible(false)
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = true

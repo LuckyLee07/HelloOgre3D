@@ -23,7 +23,7 @@
 | `CameraService.{h,cpp}` | 服务 | 相机/profile 查询 facade；提供 C++ 侧世界位移平移入口，并新增第三人称 FOLLOW 门面 `EnterFollowMode`/`ExitFollowMode`/`UpdateFollow`（**非 tolua**，转发到注入的 `OgreCameraController`，供 `PlayerController` 驱动 Sandbox19 弹簧跟随）；camera / scene manager / **OgreCameraController** / profile time getter 由 GameManager 注入（均 non-owning），Lua 全局 `SandboxCamera` 访问 |
 | `NavigationService.{h,cpp}` | 服务 | Recast config 默认值/agent 设置、navmesh 构建、按 name 以 `unique_ptr` 持有 navmesh map 与 `RandomPoint`/`FindClosestPoint`/`FindPath` 查询；ObjectManager 由应用层注入用于读取 fixed blocks，Lua 全局 `SandboxNav` 访问 |
 | `RaycastService.{h,cpp}` | 服务 | 物理 raycast facade；PhysicsWorld 由应用层注入，Lua 全局 `SandboxRaycast` 访问 |
-| `SceneService.{h,cpp}` | 服务 | skybox、ambient light、directional light、material 与 scene graph 更新 facade；SceneManager / CameraService 由应用层注入，Lua 全局 `SandboxScene` 访问 |
+| `SceneService.{h,cpp}` | 服务 | skybox、ambient light、directional light、material、scene compositor 与 scene graph 更新 facade；SceneManager / CameraService 由应用层注入，Lua 全局 `SandboxScene` 访问 |
 | `ScriptService.{h,cpp}` | 服务 | 脚本文件加载 facade；ScriptLuaVM 由应用层注入，Lua 全局 `SandboxScript` 访问 |
 
 ## 4. 公开能力要点
@@ -36,7 +36,7 @@
 - `AgentConfigService` 已导出给 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 `SandboxMgr` 持有；`SandboxServices.agentConfig` 供 `AgentObject` 读取。
 - `NavigationService` 已导出给 Lua 全局 `SandboxNav`，导航配置/构建/查询和 navmesh 所有权不再通过 `SandboxMgr` / `ObjectManager` 主路径；`SandboxServices.navigation` 供 AI/FSM/感知侧查询路径和随机点。
 - `RaycastService` 已导出给 Lua 全局 `SandboxRaycast`，raycast 不再由 `SandboxMgr` 直接访问 `ObjectManager`/`PhysicsWorld`；`SandboxServices.raycast` 供后续 C++ 侧查询。
-- `SceneService` 已导出给 Lua 全局 `SandboxScene`，skybox/light/material/scene graph 更新不再通过 `SandboxMgr` 纯转发；`SandboxServices.scene` 供后续 C++ 场景门面收口。
+- `SceneService` 已导出给 Lua 全局 `SandboxScene`，skybox/light/material/scene graph 更新不再通过 `SandboxMgr` 纯转发；`SetCompositorEnabled(name, enabled)` 按当前 camera viewport 幂等查找/添加并切换 compositor，缺资源返回 false 并写日志；`SandboxServices.scene` 供后续 C++ 场景门面收口。
 - `ScriptService` 已导出给 Lua 全局 `SandboxScript`，旧 sample 的 `CallFile` 不再通过 `SandboxMgr` 纯转发；`SandboxServices.scriptService` 供后续 C++ 脚本门面收口。
 
 ## 5. 约束与红线

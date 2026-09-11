@@ -1,0 +1,37 @@
+vertex_program relay_post_vs_hlsl hlsl
+{
+	source shaders/relay_post.hlsl
+	entry_point main_vp
+	target vs_2_0
+}
+
+fragment_program relay_post_fs_hlsl hlsl
+{
+	source shaders/relay_post.hlsl
+	entry_point main_fp
+	target ps_2_0
+}
+
+vertex_program relay_post_vs_glsl glsl
+{
+	source shaders/relay_post_vs.glsl
+	syntax glsl150
+}
+
+fragment_program relay_post_fs_glsl glsl
+{
+	source shaders/relay_post_fs.glsl
+	syntax glsl150
+}
+
+vertex_program relay_post_vs unified
+{
+	delegate relay_post_vs_glsl
+	delegate relay_post_vs_hlsl
+}
+
+fragment_program relay_post_fs unified
+{
+	delegate relay_post_fs_glsl
+	delegate relay_post_fs_hlsl
+}

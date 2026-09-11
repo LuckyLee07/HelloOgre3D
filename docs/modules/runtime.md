@@ -20,7 +20,7 @@
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称弹簧跟随（后上方+看角色前方+弹簧阻尼），由 `PlayerController → CameraService → updateFollow` 每帧驱动；仍不做 FPS 模式 |
 | `audio/RuntimeUiSound.{h,cpp}` / `RuntimeUiSoundMac.mm` | 声音 | PCM 16-bit WAV 短音单路播放；Windows PlaySound / macOS NSSound 适配，音频缓冲与 native handle 由 runtime 持有 |
-| `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌，见 [[fgui]] |
+| `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌；渲染几何使用最终视图专用 visibility bit，避免被场景 compositor 采样，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
 
 ## 4. 公开能力要点
@@ -28,10 +28,12 @@
 - 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、既有相机模式、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
 - [CameraService](../../src/HelloOgre3D/sandbox/systems/service/CameraService.h) 导出 `ConfigureFollowCamera` / `ResetFollowCamera` / `SetCameraRelativeMovement` / `SnapFollowTarget` / `GetFollowDistance`。sample 配置参数与范围，控制器统一驱动镜头；Sandbox19 使用距离 6.5、高 3.2、前视 0、眼高 1.5 和距离范围 5.5–11，WASD 沿相机平面移动、Q/E 调整偏航，未被 UI 消费的滚轮调整跟随距离。退出 FOLLOW 重置配置及相对移动开关，其他 sample 默认 tank 控制保持原语义。
 - `SandboxAudio` 为 GameManager 注入的 `RuntimeUiSound`：`IsAvailable`、`Play(path)`、`StopAll`、`SetVolume(0..1)`、`GetVolume`。Lua 负责事件/限频/音量设置；runtime 读取、校验、缓存短 WAV 并持有播放缓冲。Sandbox19 的设置与事件入口见 [sandbox19_audio.lua](../../bin/res/scripts/samples/sandbox19_audio.lua)，自制素材来源记录见 [relay 音效说明](../../bin/res/audio/relay/README.md)。
+- Scene compositor 通过 [[systems-service]] SceneService 按相机 viewport 启停。Sandbox19 的 Relay/SceneGrade 仅处理三维 scene texture；Gorilla active-viewport 守卫和 FairyGUI visibility bit 让两套 UI 留在最终 viewport，不被滤色或重复绘制。完整设计与实机证据见[场景色调与 UI 合成隔离](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)。
 
 ## 5. 约束与红线
 
 - 引擎/中间件耦合逻辑收口在 runtime（AGENTS.md 依赖流）。
+- compositor scene RTT 与最终 viewport 会复用同一 SceneManager/render queue；render-queue listener 必须核对 active viewport，不能只看 queue id。最终 UI 使用 0x80000000，可做 scene-only target 的 0x7fffffff 排除位；修改默认 viewport visibility mask 时须保留该位。
 - **判断 AI 成本看 `updateCall`/`perceptionSystem`，非 `cpuFrame`**（VM 上帧时间被渲染 engineGap 主导，见基线报告）。
 - RuntimeProfileCounters 是 static，调用方控频；FairyGUI lua_bridge 是手工 glue（非 tolua），见 [[fgui]]。
 - **输入到 Lua 的入口**由 `GameManager` 派发：`EventHandle_Keyboard(keycode, pressed)` 与
@@ -54,7 +56,7 @@
 
 ## 7. 验证策略
 
-- 回归 sample：`Sandbox16`(性能采样)；gate：`run_fgui_production_gate.ps1`、`ai_perf_1000`。
+- 回归 sample：`Sandbox16`(性能采样)；gate：`run_fgui_production_gate.ps1`、`ai_perf_1000`。改 compositor/UI viewport 隔离时还要跑使用该 compositor 的真实抓帧，并至少执行 FairyGUI All 自测，分别证明场景链与常规 UI 渲染。
 - 相机/输入/暂停改动还需 Sandbox19 真实窗口：WASD/QE/滚轮、UI 命中优先级、调整尺寸、暂停前后按键与战斗冻结。新产品 fixture 可证明合成场景下时钟/位置/HP 冻结和恢复流程，不能代替外部输入或镜头手感验收。
 - 音频需分别核查短音资产、失败退化、静音/音量与设置重载，以及设备实际播放；Windows 和 macOS 分开记录。Windows Release 全量重编、Lua 语法及强化产品 fixture 完整通过，内部输入回放已取得独立包自然通关、重开/退出、两尺寸和声音设置跨进程保存证据，见[本轮验收](../playtest-relay-2026-09-10.md)。2026-09-11 macOS arm64 Release、Sandbox19 产品 fixture、Sandbox19/6/7/8 smoke 与 720p GL 画面也已通过；这些仍不证明人工外部输入、扬声器听感或动态窗口。
 

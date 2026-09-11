@@ -4,11 +4,16 @@
 #include "systems/service/CameraService.h"
 #include "OgreCamera.h"
 #include "OgreColourValue.h"
+#include "OgreCompositorChain.h"
+#include "OgreCompositorInstance.h"
+#include "OgreCompositorManager.h"
 #include "OgreEntity.h"
 #include "OgreLight.h"
+#include "OgreLogManager.h"
 #include "OgreManualObject.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
+#include "OgreViewport.h"
 #include <cassert>
 
 SceneService::SceneService(Ogre::SceneManager* sceneManager, CameraService* cameraService)
@@ -92,6 +97,31 @@ Ogre::Light* SceneService::CreateDirectionalLight(const Ogre::Vector3& direction
 	lightNode->attachObject(lightEntity);
 
 	return lightEntity;
+}
+
+bool SceneService::SetCompositorEnabled(const Ogre::String& compositorName, bool enabled)
+{
+	Ogre::Camera* camera = GetSceneGraphCamera();
+	Ogre::Viewport* viewport = camera != nullptr ? camera->getViewport() : nullptr;
+	Ogre::CompositorManager* compositorManager = Ogre::CompositorManager::getSingletonPtr();
+	if (viewport == nullptr || compositorManager == nullptr || compositorName.empty())
+		return false;
+
+	Ogre::CompositorChain* chain = compositorManager->getCompositorChain(viewport);
+	Ogre::CompositorInstance* instance = chain != nullptr ? chain->getCompositor(compositorName) : nullptr;
+	if (enabled && instance == nullptr)
+		instance = compositorManager->addCompositor(viewport, compositorName);
+	if (instance == nullptr)
+	{
+		Ogre::LogManager::getSingleton().logMessage(
+			"Scene compositor unavailable: " + compositorName, Ogre::LML_CRITICAL);
+		return false;
+	}
+
+	compositorManager->setCompositorEnabled(viewport, compositorName, enabled);
+	Ogre::LogManager::getSingleton().logMessage(
+		"Scene compositor " + compositorName + (enabled ? " enabled" : " disabled"));
+	return true;
 }
 
 void SceneService::setMaterial(BlockObject* pObject, const Ogre::String& materialName)

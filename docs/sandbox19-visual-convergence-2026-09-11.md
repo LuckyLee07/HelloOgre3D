@@ -27,11 +27,11 @@
 | 视野结构 | PASS | 1080p 集火图中场地占据主体，主角、两名队友、两名敌人与 relay 同屏；720p 主角全身与底部命令栏分离。 |
 | 环境纵深与轮廓 | PASS | 1080p/720p 均可见荒漠远山、低墙、长条掩体和分层 relay；重复双层窗片与等大方块群已移除。 |
 | 敌我与选择可读性 | PASS | 友军青色三角/圆环、敌方橙色菱形/生命条、目标框和短确认提示同时可见，形状与颜色双重区分。 |
-| 材质与光照统一 | PARTIAL | 风化混凝土表面、三类主材、低对比地表旧化、接触阴影和暖色日光已统一，D3D9 与 GL 真实加载通过；旧低多边形模块、平直几何、贴图密度与目标稿仍有品质差距。 |
+| 材质与光照统一 | PARTIAL | 风化混凝土表面、三类主材、低对比地表旧化、接触阴影、暖色日光和轻量场景色调已统一，D3D9 基础材质与 GL 全链实际加载通过；旧低多边形模块、平直几何、非 PBR 材质与目标稿仍有品质差距。 |
 | HUD 层级与点击 | PASS | 720p 回放覆盖开始、选择/拖框、右键、暂停设置、三种命令、重试和退出；1080p 无裁切。 |
 | 空间与玩法一致 | PASS | 七个出生点、目标/撤回点、主路/侧路共 18 项路径通过；侧墙两高度射线、主路无遮挡和地面碰撞通过。 |
 | 本轮视觉收口 | PASS | relay 专用门面、结构边、信标与场地细节已落地；曳光、枪口焰、命中火花和 HP 差分受伤反馈在正常镜头下可辨认。 |
-| 目标画面整体完成度 | PARTIAL | 核心构图和信息层级已经显著接近，定制荒漠植被与接地层已进入实机；角色资产、PBR/后处理和最终声音/手感仍低于或尚未达到目标稿。 |
+| 目标画面整体完成度 | PARTIAL | 核心构图和信息层级已经显著接近，定制荒漠植被、接地层与克制的场景后处理已进入实机；角色资产、PBR 高阶材质和最终声音/手感仍低于或尚未达到目标稿。 |
 
 ## 运行证据
 
@@ -64,7 +64,7 @@
 - 最终 `python3 tools/run_sandbox19_stability.py --product-fixture --timeout 90` 返回 `status=PASS reason=evidence-complete`，摘要位于 `tmp/relay-product-fixture-20260911-233131-rp7dw2r3/summary.json`；它是合成 fixture，不证明自然通关、外部输入或人工手感。
 - 最终 `python3 tools/run_m1_smoke.py --samples Sandbox19 Sandbox6 Sandbox7 Sandbox8 --seconds 20` 四个 sample 全部 PASS，日志位于 `tmp/m1-smoke-20260911-233154/`。Sandbox19 日志记录 Apple M1 Pro / OpenGL 4.1、1280×720，以及新 1024×1024 facade 纹理实际加载。
 - 当前机器没有 Lua 5.1 可执行文件；三个改动脚本由 `/usr/local/bin/luac` 5.3 解析通过。这不能替代严格的 5.1 parser 证据，但最终程序内嵌 Lua 5.1 已实际加载并执行这些脚本，产品 fixture 与 smoke 均未报 Lua 错误。
-- Apple 普通窗口路径目前在 `ClientManager` 中固定为 1280×720，`HELLO_WINDOW_WIDTH/HEIGHT` 只作用于 Windows 后台窗口，所以本轮没有新的 macOS 1920×1080 图；此前 Windows D3D9 1080p 布局证据仍有效。动态窗口调整、人工持续输入、扬声器听感、角色/植被替换和 PBR/后处理继续单列。
+- Apple 普通窗口路径目前在 `ClientManager` 中固定为 1280×720，`HELLO_WINDOW_WIDTH/HEIGHT` 只作用于 Windows 后台窗口，所以本轮没有新的 macOS 1920×1080 图；此前 Windows D3D9 1080p 布局证据仍有效。动态窗口调整、人工持续输入、扬声器听感、角色替换和 PBR 高阶材质继续单列；scene-only 后处理已由后续追加完成。
 
 当前渲染链内可兑现的 P3 视觉收口已经完成；后续只有在引入定制角色或扩展渲染能力时，才继续追逐目标稿中的资产与 PBR 细节。P3 总体验仍保留人工手感、听感和动态窗口等独立验收边界。
 
@@ -84,3 +84,18 @@ P3 门面与战斗反馈完成后，正常镜头仍能看到大面积单层地�
 - 最终产品 fixture 位于 `tmp/relay-product-fixture-20260912-001326-8tkcwsmi/`，返回 `PASS reason=evidence-complete`；七个出生点、主路/侧路、掩体/侧墙/地面/relay 真实碰撞和全部命令生命周期通过。最终 `Sandbox19/6/7/8` smoke 位于 `tmp/m1-smoke-20260912-001359/`，四项均 PASS。
 - 不改血、不传送、不强制清敌的现有 80 秒输入配方已推进到第二段守卫并正常退出，但未在时限内结算；额外延长配方在第一段仍有一名守卫时让无武器指挥官前压，于 53.823 秒自然战败，日志为 `tmp/sandbox19-natural-grounding-defeat-20260912.log`。这两次都没有导航/碰撞异常，但本轮没有新的自然胜利证据，不能用 fixture 替代。
 - 当前机器没有独立 Lua 5.1 解析器；两个改动脚本由 `/usr/local/bin/luac` 5.3 解析，并由游戏内嵌 Lua 5.1 实际执行。HLSL/D3D9 本轮没有在 macOS 验证；合成 fixture 不证明自然通关、外部输入、手感或声音。
+
+## 场景色调与 UI 合成隔离追加（2026-09-12）
+
+地表、植被和接地进入实机后，画面仍缺最终色调收束：荒漠亮部与混凝土中间调分离不足，边缘信息与中央交战区权重接近。本轮新增 Relay/SceneGrade，只处理三维场景纹理，以轻量 S 曲线、6.5% 饱和度提升、冷阴影/暖高光和低强度暗角统一画面；它不是 HDR、动态曝光或 PBR 管线。
+
+Gorilla 的 render-queue listener 会在 compositor scene RTT viewport 再次收到 overlay queue，首版因此把倒置 HUD 烘入场景纹理，并在最终 viewport 重画一次。现由 Screen 对比 render system active viewport 与自身创建 viewport，只在真正目标 viewport 绘制；FairyGUI manual object 同时使用最终视图专用 visibility bit，scene texture 掩码排除该 bit。调色后的 UI 保持原色、清晰且只出现一次。
+
+![最终场景色调与清晰 HUD](dev-design/specs/assets/sandbox19-runtime/scene-grade-720.png)
+
+### 追加验证与边界
+
+- macOS arm64 Release 重新编译、重链接通过；Apple M1 Pro / OpenGL 4.1 日志解析新增 compositor/material/program/shader，并明确记录 Scene compositor Relay/SceneGrade enabled，无 relay shader compiler error。
+- 产品 fixture 位于 `tmp/relay-product-fixture-20260912-005627-xuk1ahd6/`，返回 PASS reason=evidence-complete；Sandbox19/6/7/8 smoke 位于 `tmp/m1-smoke-20260912-005647/`，四项均 PASS。
+- 最终 1280×720 GL 抓帧位于 `tmp/product-grade-post-final/`，确认准备模态和常规 HUD 都无倒置、重影或滤色；FairyGUI All 自测 30/30、长循环 3/3 且 finalClean=true。
+- HLSL/D3D9 后处理本轮未在 macOS 验证；现有 D3D9 证据只覆盖加入该 compositor 之前的基础材质与画面。角色资产、PBR 高阶材质、人工手感/扬声器听感和动态窗口仍是 P3 明确边界。

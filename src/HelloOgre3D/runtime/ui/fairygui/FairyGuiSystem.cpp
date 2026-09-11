@@ -710,6 +710,9 @@ bool FairyGuiSystemImpl::Initialize(Ogre::RenderWindow* renderWindow, Ogre::Scen
 		m_pManualObject->setUseIdentityView(true);
 		m_pManualObject->setKeepDeclarationOrder(true);
 		m_pManualObject->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_OVERLAY, 100);
+		// Scene compositors reserve the high visibility bit for final-view UI so
+		// FairyGUI geometry is not sampled into an offscreen scene texture.
+		m_pManualObject->setVisibilityFlags(0x80000000u);
 		m_pManualObject->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pManualNode->attachObject(m_pManualObject);
 		m_pManualNode->_updateBounds();

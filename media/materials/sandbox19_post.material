@@ -1,0 +1,28 @@
+material Relay/PostProcess
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_check off
+			depth_write off
+			cull_hardware none
+			cull_software none
+
+			vertex_program_ref relay_post_vs
+			{
+			}
+
+			fragment_program_ref relay_post_fs
+			{
+			}
+
+			texture_unit sceneMap
+			{
+				tex_address_mode clamp
+				filtering bilinear
+			}
+		}
+	}
+}

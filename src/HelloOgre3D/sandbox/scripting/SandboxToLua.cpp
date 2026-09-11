@@ -2283,6 +2283,24 @@ static int tolua_SandboxToLua_SceneService_CreateDirectionalLight00(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetCompositorEnabled of class SceneService; surgical binding */
+static int tolua_SandboxToLua_SceneService_SetCompositorEnabled00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"SceneService",0,&error)
+		|| !tolua_iscppstring(tolua_S,2,0,&error)
+		|| !tolua_isboolean(tolua_S,3,0,&error)
+		|| !tolua_isnoobj(tolua_S,4,&error))
+		return tolua_error(tolua_S,"#ferror in function 'SetCompositorEnabled'.",&error), 0;
+	SceneService* self = static_cast<SceneService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'SetCompositorEnabled'",nullptr), 0;
+	const std::string compositorName = tolua_tocppstring(tolua_S,2,0);
+	const bool enabled = tolua_toboolean(tolua_S,3,0) != 0;
+	tolua_pushboolean(tolua_S,self->SetCompositorEnabled(compositorName, enabled));
+	return 1;
+}
+
 /* method: setMaterial of class  SceneService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SceneService_setMaterial00
 static int tolua_SandboxToLua_SceneService_setMaterial00(lua_State* tolua_S)
@@ -16991,6 +17009,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetSkyBox",tolua_SandboxToLua_SceneService_SetSkyBox00);
    tolua_function(tolua_S,"SetAmbientLight",tolua_SandboxToLua_SceneService_SetAmbientLight00);
    tolua_function(tolua_S,"CreateDirectionalLight",tolua_SandboxToLua_SceneService_CreateDirectionalLight00);
+   tolua_function(tolua_S,"SetCompositorEnabled",tolua_SandboxToLua_SceneService_SetCompositorEnabled00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SceneService_setMaterial00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SceneService_setMaterial01);
    tolua_function(tolua_S,"UpdateSceneGraph",tolua_SandboxToLua_SceneService_UpdateSceneGraph00);

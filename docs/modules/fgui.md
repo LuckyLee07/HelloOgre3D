@@ -30,6 +30,7 @@ FairyGUI UI 完整栈：C++ 系统（init/render/input/对象管理）+ Lua brid
 - Lua native 后端只走 `FairyGuiRuntime`；`GameManager` 不再暴露或保留 `*FairyGui*` API 转发。
 - handle 生命周期需显式销毁（销毁父容器不自动清子）；二次销毁崩溃。
 - 输入 `Inject*` 返回 bool 表是否被 FGUI 拦截，主循环据此决定是否透传游戏逻辑。
+- FGUI manual object 使用 `0x80000000` 最终视图专用 visibility bit；scene-only compositor target 应以 `0x7fffffff` 排除它，主 viewport visibility mask 必须保留该 bit。此约定避免 FairyGUI 被后处理采样，同时不改变输入和 handle 生命周期。
 - cocoslite 内嵌渲染，改版本需完整回归 FGUI gate。
 
 ## 6. 数据流 / 与其他模块关系
@@ -40,6 +41,7 @@ FairyGUI UI 完整栈：C++ 系统（init/render/input/对象管理）+ Lua brid
 
 - gate：`tools/run_fgui_production_gate.ps1 -Mode Full -StopExisting`（含 Fast/All/LongLoop/Pressure + 静态检查）。
 - 自测：`tools/run_fgui_selftest.ps1 -Mode All -StopExisting`（要求 suite `N / N` 全通过）。
+- 改 visibility/render queue 时除自测外需在带 compositor 的真实窗口抓帧，确认 UI 可见、原色且未重复；Sandbox19 场景色调实现见[专项计划](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)。
 
 ## 8. 已知 gap / 相关文档
 

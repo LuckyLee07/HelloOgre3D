@@ -1,0 +1,27 @@
+// Scene-only grade for Relay Outpost. Ogre's original scene compositor stops
+// at RENDER_QUEUE_SKIES_LATE (95), so Gorilla/FairyGUI overlays at queue 100
+// remain crisp and keep their authored colours.
+compositor Relay/SceneGrade
+{
+	technique
+	{
+		texture scene target_width target_height PF_R8G8B8A8 no_fsaa
+
+		target scene
+		{
+			input previous
+			visibility_mask 2147483647
+		}
+
+		target_output
+		{
+			input none
+
+			pass render_quad
+			{
+				material Relay/PostProcess
+				input 0 scene
+			}
+		}
+	}
+}

@@ -34,3 +34,4 @@
 - [macOS 启动卡顿修复的实测结果](macos-startup-loading-fix.md) — OBF 回退缓存消除 zzip_seek 放大；NavMesh 收紧到 920×840 后冷构建约 1.07 秒、缓存命中约 1.16 毫秒
 - [个人项目定位](personal-project-positioning.md) — 用户明确为个人项目，方向讨论不默认以外部玩家或产品交付为前提
 - [Ogre GL3+ 透明叠加材质](ogre-gl3-overlay-material.md) — core profile 不会可靠回退 fixed pipeline；透明 visual plane 需显式 shader，并以实机图和实际 PNG alpha 验强度
+- [macOS Xcode Release 依赖代理](xcode-release-dependency-proxy.md) — 生成的主工程可能在 Release 仍链接 _d 静态库；改 vendored 依赖须核对代理名、重建实际 archive 并确认进入二进制
