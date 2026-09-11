@@ -17,6 +17,7 @@ public:
 
 	//tolua_begin
 	BlockObject* CreatePlane(float length, float width);
+	BlockObject* CreateVisualPlane(float width, float height);
 	BlockObject* CreateBlockObject(const Ogre::String& meshfilePath);
 	BlockObject* CreateBlockBox(float width, float height, float length, float uTile, float vTile);
 	BlockObject* CreateBullet(Ogre::Real height, Ogre::Real radius);

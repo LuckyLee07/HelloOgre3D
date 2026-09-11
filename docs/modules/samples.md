@@ -34,7 +34,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 - Sandbox12 的 `team_sharing_experiment` preset 固定 A/B/敌人和一处实体遮挡，使用最小 BT 隔离发布、消费、移动与 TTL 清理。它只在 manifest 提供实验 run id 时启用，不改变默认 `team_blackboard` 教学场景。
 
-- Sandbox19 场地为约 48×64 米单层中继站，中央直路与西侧遮挡路线汇入前方院区；复用 Nobiax 墙体/设备与士兵资源，材质入口为 `media/materials/sandbox19_relay.material`。relay 主体使用项目专用 `textures/sandbox19/relay_facade_diffuse.png`，另有结构框、压顶、信标和路线外设备；装饰碰撞嵌入既有实体或位于非行走区。`sandbox19_scene.lua` 分别检查出生点/两条路线/终点的完整路径，以及真实 Bullet 墙体和地面射线；导航与路径 debug 默认关闭，F3 按需打开。
+- Sandbox19 场地为约 48×64 米单层中继站，中央直路与西侧遮挡路线汇入前方院区；复用 Nobiax 墙体/设备与士兵资源，材质入口为 `media/materials/sandbox19_relay.material`。relay 主体使用项目专用 `textures/sandbox19/relay_facade_diffuse.png`，另有结构框、压顶、信标和路线外设备；24 组定制荒漠 crossed-card 植被、九块地表旧化及静态/角色接触阴影均由无刚体 visual plane 承载，不进入 navmesh 或 AI 视线判定。六组长掩体位于约 `x=±8`，保留中央与西侧路线；其它装饰碰撞嵌入既有实体或位于非行走区。`sandbox19_scene.lua` 分别检查出生点/两条路线/终点的完整路径，以及真实 Bullet 墙体和地面射线；导航与路径 debug 默认关闭，F3 按需打开。
 
 - 对局为 `PREPARE → WAVE(门前两名守卫) → ADVANCE → WAVE(院区两名守卫) → REGROUP → VICTORY/DEFEAT`。准备阶段冻结，点击 START MISSION 或 Enter 主动开始；清除首段敌人后，指挥官或存活队友越过院区入口才产生第二段前方守卫。全部清敌后仍需指挥官与至少一名存活队友到达集合区；指挥官死亡或两名队友都阵亡即失败。普通流程没有 FORCE_CONTACT 传送或自动清敌，45 秒接敌无进展只报告 STALEMATE 与调整提示。
 

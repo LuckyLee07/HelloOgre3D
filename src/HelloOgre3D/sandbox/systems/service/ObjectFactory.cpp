@@ -11,6 +11,8 @@
 #include "btBulletDynamicsCommon.h"
 #include "AppConfig.h"
 
+#include <algorithm>
+
 ObjectFactory::ObjectFactory(ObjectManager* pMananger)
 	: m_objectManager(pMananger)
 {
@@ -25,6 +27,33 @@ BlockObject* ObjectFactory::CreatePlane(float length, float width)
 	BlockObject* pObject = new BlockObject(planeNode, planeRigidBody);
 	pObject->SetObjType(BaseObject::OBJ_TYPE_PLANE);
 
+	m_objectManager->addNewObject(pObject);
+
+	return pObject;
+}
+
+BlockObject* ObjectFactory::CreateVisualPlane(float width, float height)
+{
+	const Ogre::Real clampedWidth = std::max(Ogre::Real(0.01f), Ogre::Real(width));
+	const Ogre::Real clampedHeight = std::max(Ogre::Real(0.01f), Ogre::Real(height));
+
+	Procedural::PlaneGenerator planeGenerator;
+	planeGenerator.setSizeX(clampedWidth);
+	planeGenerator.setSizeY(clampedHeight);
+	planeGenerator.setUTile(1.0f);
+	planeGenerator.setVTile(1.0f);
+
+	const Ogre::MeshPtr mesh = planeGenerator.realizeMesh();
+	Ogre::SceneNode* planeNode = SceneFactory::CreateChildSceneNode();
+	Ogre::Entity* planeEntity = planeNode->getCreator()->createEntity(mesh);
+	planeEntity->setMaterialName(DEFAULT_MATERIAL);
+	planeEntity->setCastShadows(false);
+	planeNode->attachObject(planeEntity);
+
+	BlockObject* pObject = new BlockObject(planeNode, nullptr);
+	// Visual planes participate in normal object ownership and cleanup. The plane
+	// type excludes them from navmesh; no rigid body keeps them out of sight rays.
+	pObject->SetObjType(BaseObject::OBJ_TYPE_PLANE);
 	m_objectManager->addNewObject(pObject);
 
 	return pObject;

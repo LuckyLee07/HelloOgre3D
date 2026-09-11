@@ -14,7 +14,7 @@
 
 | 文件 | 角色 | 说明 |
 |---|---|---|
-| `ObjectFactory.{h,cpp}` | 工厂 | CreatePlane/Block/Bullet/Agent/AgentWithProfile/Soldier/SoldierWithProfile |
+| `ObjectFactory.{h,cpp}` | 工厂 | CreatePlane/VisualPlane/Block/Bullet/Agent/AgentWithProfile/Soldier/SoldierWithProfile |
 | `AgentFactory.{h,cpp}` | 装配 | 通过 `default` / `component_probe` / `movement_only` / `animated_probe` 轻量 profile 装配普通 Agent 的 locomotion/physics/script/render + AI/Attrib/Weapon/Anim |
 | `SoldierFactory.{h,cpp}` | 装配 | Soldier 专化；`ai_soldier` / `player_soldier` / `commander_soldier` profile 互斥装配 AI/玩家 controller，并允许武器成为可选组件 |
 | `PhysicsFactory.{h,cpp}` | 工厂 | 刚体/形状，见 [[systems-physics]] |
@@ -32,6 +32,7 @@
 
 - 对象工厂链 ObjectFactory→AgentFactory/SoldierFactory 分层装配组件。
 - `ObjectFactory` 已导出给 Lua 全局 `SandboxObjects`，对象创建不再通过 `SandboxMgr` 纯转发；`CreateAgentWithProfile` 可按命名 profile 创建普通 `AgentObject`，`CreateSoldierWithProfile` 通过 `ai_soldier` / `player_soldier` / `commander_soldier` 选择互斥 controller 与可选武器；`SandboxServices.objectFactory` 供组件侧创建 bullet 等运行时对象。
+- `CreateVisualPlane(width, height)` 创建 ObjectManager 持有的 `BlockObject` 与 Ogre plane/entity，但不创建 Bullet 刚体；`OBJ_TYPE_PLANE` 使其不进入 navmesh 固定几何，无刚体使其不进入物理射线和 AI 视线阻挡。Lua 返回值是 non-owning userdata，Sandbox19 用它承载地表旧化、接触阴影与 crossed-card 植被。
 - `AgentConfigService` 已导出给 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 `SandboxMgr` 持有；`SandboxServices.agentConfig` 供 `AgentObject` 读取。
 - `NavigationService` 已导出给 Lua 全局 `SandboxNav`，导航配置/构建/查询和 navmesh 所有权不再通过 `SandboxMgr` / `ObjectManager` 主路径；`SandboxServices.navigation` 供 AI/FSM/感知侧查询路径和随机点。
 - `RaycastService` 已导出给 Lua 全局 `SandboxRaycast`，raycast 不再由 `SandboxMgr` 直接访问 `ObjectManager`/`PhysicsWorld`；`SandboxServices.raycast` 供后续 C++ 侧查询。

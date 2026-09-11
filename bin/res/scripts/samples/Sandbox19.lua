@@ -22,6 +22,7 @@ local _matchConfig = nil
 local _lastEnemy, _restart, _restartStart = 0, false, false
 local _paused, _lastProgressMs, _lastAlive = false, 0, 0
 local _healthSamples, _damageUntil = {}, {}
+local _actorShadows = {}
 local _debug = false
 local _test = nil
 local _experiment = nil
@@ -75,6 +76,21 @@ local function updateDamageFeedback()
 end
 local function isDamaged(id)
 	return id ~= nil and now() < (_damageUntil[id] or 0)
+end
+local function updateActorShadows()
+	local actorIds = {_player ~= nil and _player:GetObjId() or 0}
+	for _, id in ipairs(_allyIds) do actorIds[#actorIds + 1] = id end
+	for _, id in ipairs(_enemyIds) do actorIds[#actorIds + 1] = id end
+	for slot, shadow in ipairs(_actorShadows) do
+		local actor = find(actorIds[slot] or 0)
+		if actor ~= nil and actor:GetHealth() > 0 then
+			local foot = actor:GetPosition()
+			foot.y = foot.y - AgentComponents.GetHeight(actor, 1.6) * 0.5 + 0.016
+			shadow:setPosition(foot)
+		else
+			shadow:setPosition(Vector3(0, -10 - slot, 0))
+		end
+	end
 end
 local function experimentHealth(ids)
 	local values, total = {}, 0
@@ -501,6 +517,7 @@ local function updateMarkers()
 end
 local function updateHud()
 	updateDamageFeedback()
+	updateActorShadows()
 	for id in pairs(_selection) do local a = find(id); if a == nil or a:GetHealth() <= 0 then _selection[id] = nil end end
 	local allies = {}
 	for index, id in ipairs(_allyIds) do
@@ -616,6 +633,7 @@ function Sandbox_Initialize()
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = true
 	SandboxAgentConfig:SetUseCppFsmFlag(true)
 	_anchors = Scene.Create()
+	for slot = 1, 7 do _actorShadows[slot] = Scene.CreateActorShadow() end
 	_matchConfig = ConfigManager:GetSamplePreset(SAMPLE).commanderMatch
 	SandboxScene:UpdateSceneGraph()
 	_nav = Scene.CreateNavigation()

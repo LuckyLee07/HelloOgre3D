@@ -44,6 +44,29 @@ local function _Module(mesh, x, y, z, yaw, material)
 	return block
 end
 
+local function _VisualPlane(width, height, x, y, z, pitch, yaw, material)
+	local plane = SandboxObjects:CreateVisualPlane(width, height)
+	plane:setPosition(Vector3(x, y, z))
+	plane:setRotation(Vector3(pitch or 0, yaw or 0, 0))
+	plane:setMaterial(material)
+	return plane
+end
+
+local function _GroundLayer(width, length, x, z, yaw, material)
+	-- Kept a few millimetres above the floor. These are render-only planes, so
+	-- they cannot alter Bullet contacts, navmesh rasterisation, or weapon rays.
+	return _VisualPlane(width, length, x, 0.014, z, 0, yaw, material)
+end
+
+local function _Plant(width, height, x, z, yaw)
+	-- Two crossed cards give a stable silhouette from the orbit camera. The source
+	-- cutout has transparent bottom padding, hence the slightly lowered centre.
+	local centerY = height * 0.43
+	_VisualPlane(width, height, x, centerY, z, 90, yaw, "Relay/Vegetation")
+	_VisualPlane(width, height, x, centerY, z, 90, yaw + 90, "Relay/Vegetation")
+	_GroundLayer(width * 0.92, width * 0.66, x, z, yaw, "Relay/ContactShadow")
+end
+
 local function _PaintCorners(cx, cz, halfWidth, halfDepth, material)
 	-- Sparse flush corner tiles keep the gameplay zone discoverable without
 	-- turning a large luminous outline into the dominant foreground shape.
@@ -100,6 +123,17 @@ function Scene.Create()
 			_floorIds[floor:GetObjId()] = true
 		end
 	end
+	-- Broad, softly feathered dust/scuff layers break the 16 m floor grid without
+	-- pretending to be geometry or changing the two validated navigation routes.
+	for _, patch in ipairs({
+		{ 10.5, 13.0, -0.5, -15.0, 4 }, { 8.0, 10.0, -13.5, -10.0, -18 },
+		{ 7.0, 11.0, 14.2, -5.5, 22 }, { 10.0, 12.0, -1.5, 2.5, -8 },
+		{ 8.5, 9.5, -14.8, 12.0, 14 }, { 8.0, 11.0, 14.5, 17.0, -24 },
+		{ 11.0, 10.0, 0.8, 27.5, 7 }, { 7.0, 7.0, -17.5, 31.0, -15 },
+		{ 7.0, 7.0, 17.0, 32.0, 18 },
+	}) do
+		_GroundLayer(patch[1], patch[2], patch[3], patch[4], patch[5], "Relay/GroundDust")
+	end
 
 	-- Continuous low perimeter slabs replace the former fence of repeated panels.
 	-- Their 2.4 m top reveals the generated desert horizon from the follow camera.
@@ -144,16 +178,17 @@ function Scene.Create()
 		_Module(BLOCK_MESH, 20.6, 0.32, z, 0, "Relay/Equipment")
 	end
 
-	-- Long low barriers replace clusters of identical cubes. They stay outside
-	-- the x=-8..8 main lane and leave the x=-18 bypass open.
+	-- Long low barriers now frame a 10 m central assault lane, close enough to
+	-- read from the follow camera while leaving the x=-18 bypass untouched.
 	for _, cover in ipairs({
-		{ -10.6, -8.5, -4 }, { 10.6, -8.5, 4 },
-		{ -10.3, 5.5, 3 }, { 10.3, 5.5, -3 },
-		{ -10.1, 23.5, -5 }, { 10.1, 23.5, 5 },
+		{ -8.3, -8.5, -4 }, { 8.3, -8.5, 4 },
+		{ -7.9, 5.5, 3 }, { 7.9, 5.5, -3 },
+		{ -7.7, 23.5, -5 }, { 7.7, 23.5, 5 },
 	}) do
 		local barrier = _Box(4.2, 1.25, 1.15, cover[1], 0.625, cover[2], cover[3], "Relay/Cover")
 		_coverIds[barrier:GetObjId()] = true
 		_Box(4.28, 0.10, 1.22, cover[1], 1.30, cover[2], cover[3], "Relay/Trim")
+		_GroundLayer(4.7, 1.7, cover[1] + 0.12, cover[2] - 0.08, cover[3], "Relay/ContactShadow")
 	end
 
 	-- Open service canopies frame the near lane. Their posts stay outside both
@@ -176,6 +211,27 @@ function Scene.Create()
 		{ -20.1, 27.0, 0 }, { 19.6, 27.8, 90 },
 	}) do
 		_Module(BLOCK_MESH, prop[1], 0.32, prop[2], prop[3], "Relay/Equipment")
+		_GroundLayer(1.35, 1.15, prop[1], prop[2], prop[3], "Relay/ContactShadow")
+	end
+
+	-- Vegetation stays on perimeter/service strips and around cover shoulders. It
+	-- softens the hard modular silhouette while preserving the x=-8..8 lane and
+	-- the x=-18 bypass as unobstructed gameplay space.
+	for _, plant in ipairs({
+		{ 1.65, 1.35, -21.2, -17.8, 12 }, { 1.30, 1.05, 20.8, -17.0, -24 },
+		{ 1.80, 1.45, -14.4, -13.8, 32 }, { 1.35, 1.10, 15.0, -12.0, -6 },
+		{ 1.35, 1.08, -5.9, -8.7, 18 }, { 1.50, 1.20, 5.9, -8.3, -14 },
+		{ 1.55, 1.25, -21.2, -4.0, -18 }, { 1.85, 1.48, -14.7, 0.8, 22 },
+		{ 1.40, 1.12, 16.0, 0.0, 10 }, { 1.75, 1.42, 21.0, 4.5, -33 },
+		{ 1.45, 1.16, -5.5, 5.3, -8 }, { 1.30, 1.04, 5.5, 5.7, 24 },
+		{ 1.30, 1.05, -21.0, 9.0, 14 }, { 1.70, 1.36, -14.6, 13.5, -12 },
+		{ 1.50, 1.22, 16.0, 14.3, 28 }, { 1.85, 1.48, 21.0, 18.0, -5 },
+		{ 1.30, 1.04, -5.3, 23.3, 12 }, { 1.45, 1.16, 5.3, 23.7, -22 },
+		{ 1.45, 1.16, -21.0, 23.0, 35 }, { 1.80, 1.45, -14.0, 28.5, -20 },
+		{ 1.55, 1.24, 14.5, 28.0, 18 }, { 1.85, 1.50, 21.0, 32.0, -28 },
+		{ 1.30, 1.05, -10.5, 34.5, 8 }, { 1.45, 1.16, 10.8, 34.2, -16 },
+	}) do
+		_Plant(plant[1], plant[2], plant[3], plant[4], plant[5])
 	end
 
 	-- A stepped relay building gives the destination a readable silhouette:
@@ -183,6 +239,9 @@ function Scene.Create()
 	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Facade")
 	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/Facade")
 	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Facade")
+	_GroundLayer(6.8, 3.8, -5.7, 37.9, 0, "Relay/ContactShadow")
+	_GroundLayer(6.8, 3.8, 5.7, 37.9, 0, "Relay/ContactShadow")
+	_GroundLayer(5.8, 4.1, 0, 37.8, 0, "Relay/ContactShadow")
 	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/Trim")
 	-- A mounted front kit turns the composite boxes into one authored facade.
 	-- It is entirely inside the non-walkable relay footprint.
@@ -223,8 +282,12 @@ function Scene.Create()
 	end
 
 	SandboxScene:UpdateSceneGraph()
-	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p3-facade-lit")
+	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p4-depth-contact vegetation=24")
 	return _Anchors()
+end
+
+function Scene.CreateActorShadow()
+	return _VisualPlane(1.20, 0.72, 0, -10, 0, 0, 0, "Relay/ContactShadow")
 end
 
 function Scene.CreateNavigation()

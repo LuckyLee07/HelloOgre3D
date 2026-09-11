@@ -153,6 +153,109 @@ material Relay/BeaconAmber
 	}
 }
 
+// Visual-only layers use ObjectFactory::CreateVisualPlane. They never enter
+// Bullet, navmesh rasterisation, or AI line-of-sight queries.
+material Relay/Vegetation
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			cull_software none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write on
+			alpha_rejection greater_equal 128
+
+			vertex_program_ref relay_overlay_vs
+			{
+			}
+
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.72 0.64 0.50 0.92
+			}
+
+			texture_unit overlayMap
+			{
+				texture textures/sandbox19/desert_grass.png
+				tex_address_mode clamp
+				filtering anisotropic
+			}
+		}
+	}
+}
+
+material Relay/ContactShadow
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+
+			vertex_program_ref relay_overlay_vs
+			{
+			}
+
+			fragment_program_ref relay_overlay_fs
+			{
+				// The SVG rasteriser stores a deliberately broad alpha field;
+				// keep the final contact response restrained in-world.
+				param_named tint float4 1 1 1 0.20
+			}
+
+			texture_unit overlayMap
+			{
+				texture textures/sandbox19/contact_shadow.png
+				tex_address_mode clamp
+				filtering linear linear none
+			}
+		}
+	}
+}
+
+material Relay/GroundDust
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+
+			vertex_program_ref relay_overlay_vs
+			{
+			}
+
+			fragment_program_ref relay_overlay_fs
+			{
+				// Floor breakup should register as patina, never as a decal plate.
+				param_named tint float4 1 1 1 0.065
+			}
+
+			texture_unit overlayMap
+			{
+				texture textures/sandbox19/ground_dust.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
 // Project-specific desert panorama generated on 2026-09-11 and converted to
 // cubemap faces. Prompt and conversion notes: textures/sandbox19/desert_sky/SOURCE.md.
 material Relay/Sky

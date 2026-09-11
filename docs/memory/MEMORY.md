@@ -33,3 +33,4 @@
 - [macOS 启动卡顿的两个热点](macos-startup-loading-hotspots.md) — Sandbox19 启动慢主要是同步 Recast 构建和压缩 OBF 骨骼流反复回退解压，不是 initialiseAllResourceGroups 或贴图上传
 - [macOS 启动卡顿修复的实测结果](macos-startup-loading-fix.md) — OBF 回退缓存消除 zzip_seek 放大；NavMesh 收紧到 920×840 后冷构建约 1.07 秒、缓存命中约 1.16 毫秒
 - [个人项目定位](personal-project-positioning.md) — 用户明确为个人项目，方向讨论不默认以外部玩家或产品交付为前提
+- [Ogre GL3+ 透明叠加材质](ogre-gl3-overlay-material.md) — core profile 不会可靠回退 fixed pipeline；透明 visual plane 需显式 shader，并以实机图和实际 PNG alpha 验强度

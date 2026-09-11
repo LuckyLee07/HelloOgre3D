@@ -1,0 +1,57 @@
+vertex_program relay_overlay_vs_hlsl hlsl
+{
+	source shaders/relay_overlay.hlsl
+	entry_point main_vp
+	target vs_2_0
+
+	default_params
+	{
+		param_named_auto worldViewProj worldviewproj_matrix
+	}
+}
+
+fragment_program relay_overlay_fs_hlsl hlsl
+{
+	source shaders/relay_overlay.hlsl
+	entry_point main_fp
+	target ps_2_0
+
+	default_params
+	{
+		param_named tint float4 1 1 1 1
+	}
+}
+
+vertex_program relay_overlay_vs_glsl glsl
+{
+	source shaders/relay_overlay_vs.glsl
+	syntax glsl150
+
+	default_params
+	{
+		param_named_auto worldViewProj worldviewproj_matrix
+	}
+}
+
+fragment_program relay_overlay_fs_glsl glsl
+{
+	source shaders/relay_overlay_fs.glsl
+	syntax glsl150
+
+	default_params
+	{
+		param_named tint float4 1 1 1 1
+	}
+}
+
+vertex_program relay_overlay_vs unified
+{
+	delegate relay_overlay_vs_glsl
+	delegate relay_overlay_vs_hlsl
+}
+
+fragment_program relay_overlay_fs unified
+{
+	delegate relay_overlay_fs_glsl
+	delegate relay_overlay_fs_hlsl
+}
