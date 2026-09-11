@@ -10,7 +10,7 @@
 | `settings-write-720.txt` | 1280×720 | 从默认 65% 写入 75%/静音，再通过 UI 退出 |
 | `ui-1080.txt` | 1920×1080 | 重启后读取静音设置，再恢复 65%/非静音；点击、导航 debug、转向与 UI 退出 |
 
-Windows 自动运行必须同时设 `HELLO_WINDOW_BACKGROUND=1`、`HELLO_AUDIO_SILENT=1`、`HELLO_WINDOW_WIDTH/HEIGHT`，从游戏 `bin` 工作目录启动，并使用 `Start-Process -WindowStyle Hidden`。前两项确保游戏从创建起隐藏、禁用 OIS 硬件输入且静音；不能只靠 `-WindowStyle Hidden`。尺寸变量是后台测试专用，普通 Play.cmd 使用默认窗口路径。每次串行运行前清理其它 `HELLO_*` 测试变量，固定 `HELLO_SANDBOX_SAMPLE=Sandbox19` / `HELLO_SAMPLE_PRESET=Sandbox19`。
+Windows 自动运行必须同时设 `HELLO_WINDOW_BACKGROUND=1`、`HELLO_AUDIO_SILENT=1`、`HELLO_WINDOW_WIDTH/HEIGHT`，并从游戏 `bin` 工作目录用普通 `Start-Process` 启动，不传 `-WindowStyle Hidden`。后台开关让 D3D9 在虚拟桌面范围外创建可渲染但不激活的工具窗口，并禁用 OIS 硬件输入；静音开关避免测试声音。尺寸变量是后台测试专用，普通 Play.cmd 使用默认窗口路径。每次串行运行前清理其它 `HELLO_*` 测试变量，固定 `HELLO_SANDBOX_SAMPLE=Sandbox19` / `HELLO_SAMPLE_PRESET=Sandbox19`。
 
 `HELLO_INPUT_REPLAY` 使用文件绝对路径，时间单位是 Update delta 累加的毫秒，包含暂停等待。行格式为 `毫秒 事件 参数`；支持 `key_press/down/up`、`mouse_down/up x y button`、`mouse_move x y`、`wheel x y delta`、`quit`。日志带 `synthetic=true`，记录仿真时间、玩家和相机状态。真实战斗受调度与帧率影响，固定 seed 不保证跨机器逐帧确定性。
 

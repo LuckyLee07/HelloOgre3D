@@ -55,6 +55,7 @@ namespace Ogre
         mActive = false;        
         mClosed = false;
         mHidden = false;
+        mNoActivate = false;
         mSwitchingFullscreen = false;
         mDisplayFrequency = 0;
         mDeviceValid = false;
@@ -93,6 +94,7 @@ namespace Ogre
         size_t fsaaSamples = 0;
         String fsaaHint;
         bool enableDoubleClick = false;
+        mNoActivate = false;
         int monitorIndex = -1;  //Default by detecting the adapter from left / top position
         
 
@@ -128,6 +130,10 @@ namespace Ogre
             opt = miscParams->find("hidden");
             if(opt != miscParams->end())
                 mHidden = StringConverter::parseBool(opt->second);
+            // noActivate [parseBool]
+            opt = miscParams->find("noActivate");
+            if(opt != miscParams->end())
+                mNoActivate = StringConverter::parseBool(opt->second);
             // vsyncInterval    [parseUnsignedInt]
             opt = miscParams->find("vsyncInterval");
             if(opt != miscParams->end())
@@ -193,7 +199,7 @@ namespace Ogre
 
         if (!externalHandle)
         {
-            DWORD       dwStyleEx = 0;
+            DWORD       dwStyleEx = mNoActivate ? WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE : 0;
             HMONITOR    hMonitor = NULL;        
             MONITORINFO monitorInfo;
             RECT        rc;
@@ -236,7 +242,7 @@ namespace Ogre
             mFullscreenWinStyle = WS_CLIPCHILDREN | WS_POPUP;
             mWindowedWinStyle   = WS_CLIPCHILDREN;
 
-            if (!mHidden)
+            if (!mHidden && !mNoActivate)
             {
                 mFullscreenWinStyle |= WS_VISIBLE;
                 mWindowedWinStyle |= WS_VISIBLE;
@@ -701,6 +707,12 @@ namespace Ogre
         {
             if (hidden)
                 ShowWindow(mHWnd, SW_HIDE);
+            else if (mNoActivate)
+            {
+                ShowWindow(mHWnd, SW_SHOWNOACTIVATE);
+                SetWindowPos(mHWnd, HWND_BOTTOM, 0, 0, 0, 0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
             else
                 ShowWindow(mHWnd, SW_SHOWNORMAL);
         }

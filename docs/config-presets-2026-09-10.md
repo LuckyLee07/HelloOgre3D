@@ -12,7 +12,7 @@
 
 用户要求自动验证启动不要抢占当前活动窗口。macOS 的 Ogre Cocoa 适配在创建/调整窗口时调用 `orderFrontRegardless`、`makeKeyAndOrderFront` 和 `activateIgnoringOtherApps:YES`，仅在 shell 后台运行不能阻止激活。
 
-局部修改 vendored `OgreOSXCocoaWindow.mm` 是为了在实际发起激活的位置处理 `HELLO_WINDOW_BACKGROUND=1`：创建、重新显示、调整窗口走 `orderBack`，不主动激活应用。未设置开关时保留原交互启动行为；Windows 分支未改。这是运行时环境开关，无 ABI/绑定/工程文件变更。
+局部修改 vendored `OgreOSXCocoaWindow.mm` 是为了在实际发起激活的位置处理 `HELLO_WINDOW_BACKGROUND=1`：创建、重新显示、调整窗口走 `orderBack`，不主动激活应用。未设置开关时保留原交互启动行为。本文记录的 2026-09-10 修改当时没有涉及 Windows；Windows 后台 D3D9 路径于 2026-09-11 独立收口，见[运行时模块](modules/runtime.md)。
 
 `run_m1_smoke.py` 与 `run_sandbox19_stability.py` 默认注入开关；M1 脚本新增可选 Sandbox6/7，默认四个入口保持不变。手工后台验证示例（仓库根目录）：
 

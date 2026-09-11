@@ -53,6 +53,7 @@ namespace Ogre
         bool                isVSync             () const { return mVSync; }
         bool                isAA                () const { return mFSAA != 0; }
         bool                isHidden            () const { return mHidden; }
+        bool                isNoActivate        () const { return mNoActivate; }
         void                setHidden           (bool hidden);
         void                setVSyncEnabled     (bool vsync);
         bool                isVSyncEnabled      () const;
@@ -133,6 +134,7 @@ namespace Ogre
         bool                        mIsExternal;            // window not created by Ogre
         bool                        mClosed;                // Is this window destroyed.        
         bool                        mHidden;                // True if this is hidden render window. 
+        bool                        mNoActivate;            // Show without activating or raising this window.
         bool                        mSwitchingFullscreen;   // Are we switching from fullscreen to windowed or vice versa       
         D3DMULTISAMPLE_TYPE         mFSAAType;              // AA type.
         DWORD                       mFSAAQuality;           // AA quality.

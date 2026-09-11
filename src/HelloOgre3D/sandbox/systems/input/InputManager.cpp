@@ -5,6 +5,9 @@
 #include "ogre/OgreCameraController.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <string>
 
 namespace
 {
@@ -15,6 +18,18 @@ namespace
 		if (value < 0)
 			return 0;
 		return value > maxValue ? maxValue : value;
+	}
+
+	bool IsBackgroundWindowRequested()
+	{
+		const char* value = std::getenv("HELLO_WINDOW_BACKGROUND");
+		if (value == nullptr || value[0] == '\0')
+			return false;
+
+		std::string normalized(value);
+		std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+			[](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+		return normalized != "0" && normalized != "false" && normalized != "no" && normalized != "off";
 	}
 }
 
@@ -39,11 +54,11 @@ InputManager::~InputManager()
 void InputManager::Initialize()
 {
 #if defined(OIS_WIN32_PLATFORM)
-	// Hidden automation renders and accepts internal replay events only. It must
+	// Background automation renders and accepts internal replay events only. It must
 	// never acquire the user's hardware input while another application is active.
-	if (m_renderWindow != nullptr && m_renderWindow->isHidden())
+	if (IsBackgroundWindowRequested())
 	{
-		Ogre::LogManager::getSingleton().logMessage("[WindowMode] hidden=true physical-input=disabled");
+		Ogre::LogManager::getSingleton().logMessage("[WindowMode] background=true physical-input=disabled");
 		return;
 	}
 #endif

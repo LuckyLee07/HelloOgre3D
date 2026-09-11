@@ -11,8 +11,8 @@ import run_ai_experiment as experiment
 
 
 WINDOW = """
-[WindowMode] background=true hidden=true foregroundUnchanged=true pixels=1280x800
-[WindowMode] hidden=true physical-input=disabled
+[WindowMode] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true pixels=1280x800
+[WindowMode] background=true physical-input=disabled
 """
 CONFIG = "[ConfigManager] preset=Sandbox19 sample=Sandbox19 seed=20260710 agents=7 light=3 spawnMode=fixed aiScheduler=true tickMs=50 maxPerFrame=6 spawnPoints=7"
 EXPECTED = {

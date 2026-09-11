@@ -8,24 +8,31 @@ import base_material from "materials/base.material"
 
 material Relay/Ground : base_material
 {
-	set $diffuseCol "0.92 0.82 0.68 1"
+	set $diffuseCol "0.68 0.63 0.54 1"
 	set $specularCol "0.02 0.02 0.02"
 	set $shininess "8"
-	set_texture_alias diffuseMap textures/nobiax_textures/ground2Diffuse.tga
-	set_texture_alias normalMap textures/nobiax_textures/ground2Normal.tga
+	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
+	set_texture_alias normalMap textures/base/baseFlatNormal.dds
 }
 
 material Relay/MainRoute : Relay/Ground
 {
-	set $diffuseCol "1.02 0.91 0.74 1"
+	set $diffuseCol "0.74 0.69 0.58 1"
 }
 
 material Relay/Concrete : base_material
 {
-	set $diffuseCol "0.95 0.84 0.68 1"
+	set $diffuseCol "0.85 0.80 0.68 1"
 	set $specularCol "0.03 0.03 0.03"
 	set $shininess "12"
-	set_texture_alias normalMap textures/nobiax_modular/modularNormal.dds
+	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
+	set_texture_alias normalMap textures/base/baseFlatNormal.dds
+	set_texture_alias specMap textures/nobiax_textures/ground2Specular.dds
+}
+
+material Relay/ConcreteShade : Relay/Concrete
+{
+	set $diffuseCol "0.68 0.65 0.58 1"
 }
 
 material Relay/Window : base_material
@@ -40,11 +47,11 @@ material Relay/Window : base_material
 
 material Relay/Cover : base_material
 {
-	set $diffuseCol "0.82 0.74 0.61 1"
+	set $diffuseCol "0.72 0.68 0.58 1"
 	set $specularCol "0.02 0.02 0.02"
 	set $shininess "8"
-	set_texture_alias diffuseMap textures/nobiax_textures/ground2Diffuse.tga
-	set_texture_alias normalMap textures/nobiax_textures/ground2Normal.tga
+	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
+	set_texture_alias normalMap textures/base/baseFlatNormal.dds
 	set_texture_alias specMap textures/nobiax_textures/ground2Specular.dds
 }
 
@@ -89,8 +96,15 @@ material Relay/RouteMark : base_material
 	set $shininess "1"
 }
 
-// TropicalSunnyDay from SkyboxSet by Heiko Irrgang, CC BY-SA 3.0.
-// Original textures unchanged; see textures/skybox_set/LICENSE.txt.
+material Relay/Accent : base_material
+{
+	set $diffuseCol "0.92 0.56 0.20 1"
+	set $specularCol "0.02 0.02 0.02"
+	set $shininess "4"
+}
+
+// Project-specific desert panorama generated on 2026-09-11 and converted to
+// cubemap faces. Prompt and conversion notes: textures/sandbox19/desert_sky/SOURCE.md.
 material Relay/Sky
 {
 	technique
@@ -110,7 +124,7 @@ material Relay/Sky
 
 			texture_unit skyboxMap
 			{
-				cubic_texture textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayFront2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayBack2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayRight2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayLeft2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayUp2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayDown2048.png separateUV
+				cubic_texture textures/sandbox19/desert_sky/DesertRelayFront1024.png textures/sandbox19/desert_sky/DesertRelayBack1024.png textures/sandbox19/desert_sky/DesertRelayRight1024.png textures/sandbox19/desert_sky/DesertRelayLeft1024.png textures/sandbox19/desert_sky/DesertRelayUp1024.png textures/sandbox19/desert_sky/DesertRelayDown1024.png separateUV
 				tex_address_mode clamp
 			}
 		}
@@ -125,7 +139,7 @@ material Relay/Sky
 
 			texture_unit
 			{
-				cubic_texture textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayFront2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayBack2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayRight2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayLeft2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayUp2048.png textures/skybox_set/TropicalSunnyDay/TropicalSunnyDayDown2048.png separateUV
+				cubic_texture textures/sandbox19/desert_sky/DesertRelayFront1024.png textures/sandbox19/desert_sky/DesertRelayBack1024.png textures/sandbox19/desert_sky/DesertRelayRight1024.png textures/sandbox19/desert_sky/DesertRelayLeft1024.png textures/sandbox19/desert_sky/DesertRelayUp1024.png textures/sandbox19/desert_sky/DesertRelayDown1024.png separateUV
 				tex_address_mode clamp
 			}
 		}

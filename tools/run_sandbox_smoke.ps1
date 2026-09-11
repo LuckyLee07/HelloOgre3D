@@ -390,7 +390,7 @@ try {
 	if ($Visible) {
 		$process = Start-Process -FilePath $ExePath -WorkingDirectory $BinDir -PassThru
 	} else {
-		$process = Start-Process -FilePath $ExePath -WorkingDirectory $BinDir -WindowStyle Hidden -PassThru
+		$process = Start-Process -FilePath $ExePath -WorkingDirectory $BinDir -PassThru
 	}
 
 	Write-Host "[SMOKE] started pid=$($process.Id)"
@@ -479,6 +479,17 @@ try {
 		$sampleMatches = @($LogLinesForChecks | Select-String -Pattern $samplePattern)
 		if ($sampleMatches.Count -eq 0) {
 			throw "Sandbox smoke log did not confirm sample selection: $SelectedSample"
+		}
+
+		if (-not $Visible) {
+			$backgroundWindowMatches = @($NewLogLines | Select-String -Pattern "\[WindowMode\] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true")
+			if ($backgroundWindowMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm an offscreen, non-activating background window."
+			}
+			$backgroundInputMatches = @($NewLogLines | Select-String -Pattern "\[WindowMode\] background=true physical-input=disabled")
+			if ($backgroundInputMatches.Count -eq 0) {
+				throw "Sandbox smoke log did not confirm disabled physical input in background mode."
+			}
 		}
 
 		if ($RuntimeDiagEnabled) {

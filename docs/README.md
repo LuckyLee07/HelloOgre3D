@@ -15,6 +15,8 @@
 
 [2026-09-10 玩法收敛与整体视觉设计](dev-design/plans/2026-09-10-sandbox19-product-experience.md)：当前体验改版的目标、首批设计产物、实施依赖与联合验收；具体状态见 cycle/backlog。
 
+[2026-09-11 环境视觉深化](dev-design/plans/2026-09-11-sandbox19-environment-visual.md) · [深化设计与实机图](dev-design/specs/2026-09-11-sandbox19-environment-visual-design.md)：荒漠天空、远景纵深、低墙/长掩体轮廓和材质光照已完成实机收敛。
+
 [P0审阅稿与三张目标画面](dev-design/specs/2026-09-10-sandbox19-product-experience-design.md) · [核心玩法一页说明](dev-design/specs/2026-09-10-sandbox19-core-loop.md)：真实Windows截图、概念稿、视觉/资源规范和能力缺口；整体方向已获作者批准；概念稿与实施前历史截图单独保留。
 
 [中继站当前实现与验收](playtest-relay-2026-09-10.md)：实际场景、操作、命令、自然对局与独立包证据；阶段状态仍见 cycle/backlog。

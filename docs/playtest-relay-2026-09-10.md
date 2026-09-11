@@ -75,7 +75,7 @@ Sandbox18 的 Lua 自测将 danger 配置摘要硬匹配到 `nav=default)`，C++
 
 ## 后台运行与独立包
 
-用户明确要求复跑不抢占工作窗口。Windows 普通 Ogre 窗口创建会调用显示窗口逻辑，单独 `Start-Process -WindowStyle Hidden` 不足。因此增加 `HELLO_WINDOW_BACKGROUND=1`：从创建起隐藏窗口、保持渲染、禁用 OIS 硬件输入；日志核验 `foregroundUnchanged=true`。`HELLO_WINDOW_WIDTH/HEIGHT` 指定后台像素尺寸，`HELLO_AUDIO_SILENT=1` 静音。常规启动保持原窗口行为；Play.cmd 清理测试变量供用户主动启动。
+用户明确要求复跑不抢占工作窗口。Windows 普通 Ogre 窗口创建会调用显示窗口逻辑，单独 `Start-Process -WindowStyle Hidden` 不足；2026-09-11 又确认完全隐藏的 HWND 对该 D3D9 驱动创建设备不可靠，而只用 noActivate 的 `(0,0)` 大窗口仍会遮挡桌面。因此 `HELLO_WINDOW_BACKGROUND=1` 当前把可渲染工具窗口创建在虚拟桌面范围外，并保留 noActivate、禁用 OIS 硬件输入；日志契约为 `hidden=false noActivate=true offscreen=true foregroundUnchanged=true`。`HELLO_WINDOW_WIDTH/HEIGHT` 指定后台像素尺寸，`HELLO_AUDIO_SILENT=1` 静音。修正后的 10 秒与 40 秒 Windows Release smoke 均通过，1280×800 实际窗口位于 `-3264,-864`，前台焦点保持不变；常规启动保持原窗口行为，Play.cmd 清理测试变量供用户主动启动。
 
 `tools/package_windows_playtest.ps1 -Archive` 只写新的输出目录，收集受版本管理资源和本轮明确新增文件，未触碰或纳入用户的 `bin/res/radar/`。包包含 Release exe、资源、许可、配置、Play.cmd、manifest 和 x64 D3DX9_43；资源配置拒绝绝对路径/越出包，其他 DLL 为 Windows 系统组件。本轮包从 checkout 外独立目录启动，完整资源加载通过。设置读写、重启、通关后重开及退出以最终日志为准。
 

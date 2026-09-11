@@ -350,27 +350,47 @@ bool ClientManager::Configure()
 
     if (ReadBoolEnvValue("HELLO_WINDOW_BACKGROUND", false))
     {
-		// Create hidden from the outset. Hiding a normally created D3D9 window
-		// afterwards still lets Ogre's SW_SHOWNORMAL steal foreground focus.
+		// A hidden HWND is unreliable for D3D9 device creation. Keep the render
+		// window alive beyond the virtual desktop without activating or listing it.
 		const HWND foregroundBefore = GetForegroundWindow();
 		const unsigned int width = ReadBackgroundDimension("HELLO_WINDOW_WIDTH", 1280, 640, 3840);
 		const unsigned int height = ReadBackgroundDimension("HELLO_WINDOW_HEIGHT", 800, 360, 2160);
+		const int offscreenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN) - static_cast<int>(width) - 64;
+		const int offscreenTop = GetSystemMetrics(SM_YVIRTUALSCREEN) - static_cast<int>(height) - 64;
 		m_pRoot->initialise(false, m_applicationTitle);
 		Ogre::NameValuePairList parameters;
-		parameters["hidden"] = "true";
+		parameters["hidden"] = "false";
+		parameters["noActivate"] = "true";
 		parameters["border"] = "none";
 		parameters["outerDimensions"] = "true";
-		parameters["left"] = "0";
-		parameters["top"] = "0";
+		parameters["left"] = Ogre::StringConverter::toString(offscreenLeft);
+		parameters["top"] = Ogre::StringConverter::toString(offscreenTop);
 		parameters["colourDepth"] = "32";
 		parameters["FSAA"] = "0";
 		parameters["vsync"] = "true";
 		m_pRenderWindow = m_pRoot->createRenderWindow(m_applicationTitle, width, height, false, &parameters);
 		m_pRenderWindow->setActive(true);
+		unsigned int actualWidth = 0;
+		unsigned int actualHeight = 0;
+		unsigned int actualColourDepth = 0;
+		int actualLeft = 0;
+		int actualTop = 0;
+		m_pRenderWindow->getMetrics(actualWidth, actualHeight, actualColourDepth, actualLeft, actualTop);
+		const int virtualLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
+		const int virtualTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
+		const int virtualRight = virtualLeft + GetSystemMetrics(SM_CXVIRTUALSCREEN);
+		const int virtualBottom = virtualTop + GetSystemMetrics(SM_CYVIRTUALSCREEN);
+		const bool isOffscreen = actualLeft + static_cast<int>(actualWidth) <= virtualLeft
+			|| actualLeft >= virtualRight
+			|| actualTop + static_cast<int>(actualHeight) <= virtualTop
+			|| actualTop >= virtualBottom;
 		Ogre::LogManager::getSingleton().logMessage("[WindowMode] background=true hidden="
 			+ Ogre::StringConverter::toString(m_pRenderWindow->isHidden())
+			+ " noActivate=true"
+			+ " offscreen=" + Ogre::StringConverter::toString(isOffscreen)
 			+ " foregroundUnchanged=" + Ogre::StringConverter::toString(foregroundBefore == GetForegroundWindow())
-			+ " pixels=" + Ogre::StringConverter::toString(width) + "x" + Ogre::StringConverter::toString(height));
+			+ " pixels=" + Ogre::StringConverter::toString(actualWidth) + "x" + Ogre::StringConverter::toString(actualHeight)
+			+ " position=" + Ogre::StringConverter::toString(actualLeft) + "," + Ogre::StringConverter::toString(actualTop));
     }
     else
         m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);

@@ -448,8 +448,9 @@ def analyze_run_log(
     replay_complete = "[InputReplay] synthetic=true completed reason=quit" in text
     ready = (("[Sandbox19] ready" in text) if expected_events is None else
              any(event.get("event") == "ready" for event in events))
-    window_ok = bool(re.search(r"\[WindowMode\] background=true hidden=true foregroundUnchanged=true", text))
-    input_disabled = "[WindowMode] hidden=true physical-input=disabled" in text
+    window_ok = bool(re.search(
+        r"\[WindowMode\] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true", text))
+    input_disabled = "[WindowMode] background=true physical-input=disabled" in text
     reasons: list[str] = []
     if wall_timeout:
         reasons.append("wall-timeout")

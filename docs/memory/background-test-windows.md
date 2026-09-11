@@ -6,4 +6,8 @@ type: feedback
 
 2026-09-10 用户明确要求：“启动窗口请在后台启动，不要抢占当前活动窗口吧”。后续自动运行游戏验证时遵守该偏好；不要以启动后再切回应用代替避免抢焦点。当前 macOS 启动方式见 [验证工作流](../skills/verify.md)。
 
-同日用户开始工作时再次强调后台复跑。Windows 的 `Start-Process -WindowStyle Hidden` 本身不足：Ogre 普通创建窗口会调用 `SW_SHOWNORMAL`。现有游戏入口已支持 `HELLO_WINDOW_BACKGROUND=1`，从创建时隐藏 D3D9 窗口并禁用硬件输入；验证日志应有 `[WindowMode] background=true hidden=true foregroundUnchanged=true` 与 `physical-input=disabled`。自动验证同时设 `HELLO_AUDIO_SILENT=1`，避免测试声音打断工作。不要启用 smoke 的 `-Visible`，也不为取证把窗口切到前台。
+2026-09-11 在真实桌面会话确认：完全隐藏的 HWND 对该 D3D9 驱动创建设备不可靠；只用 `WS_EX_NOACTIVATE` 放在屏幕 `(0,0)` 又会以大窗口遮挡用户。Windows 的 `HELLO_WINDOW_BACKGROUND=1` 应创建 `hidden=false`、带 `WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW` 的无边框渲染窗口，并把位置计算到整个虚拟桌面范围之外；显示使用 `SW_SHOWNOACTIVATE`。不要再向 `Start-Process` 传 `-WindowStyle Hidden`，也不要通过 `SetForegroundWindow` 暂时抢焦点再切回。
+
+验证日志应同时有 `[WindowMode] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true` 与 `[WindowMode] background=true physical-input=disabled`。自动验证再设 `HELLO_AUDIO_SILENT=1`，避免测试声音打断工作。不要启用 smoke 的 `-Visible`，也不为取证把窗口切到前台。`WindowMode` 早于 Lua 的 smoke run-id 写入日志，启动器应从本次新增日志核验窗口安全字段，再用 run-id 隔离 sample 与自测结果。
+
+2026-09-11 在用户允许续跑后，修正后的 10 秒与 40 秒 Windows Release smoke 均为 PASS；实际 1280×800 窗口位于 `-3264,-864`，日志确认 `offscreen=true`、`foregroundUnchanged=true` 与物理输入禁用。

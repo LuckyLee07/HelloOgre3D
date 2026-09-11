@@ -2,9 +2,7 @@
 -- Nobiax meshes/textures retain their CC0 notices under media/{models,textures}.
 local Scene = {}
 
-local WALL_MESH = "models/nobiax_modular/modular_wall_concrete_1.mesh"
 local PILLAR_MESH = "models/nobiax_modular/modular_pillar_concrete_1.mesh"
-local WINDOW_MESH = "models/nobiax_modular/modular_concrete_small_double_window.mesh"
 local ROOF_MESH = "models/nobiax_modular/modular_roof.mesh"
 local BLOCK_MESH = "models/nobiax_modular/modular_block.mesh"
 local COOLING_MESH = "models/nobiax_modular/modular_cooling.mesh"
@@ -13,15 +11,22 @@ local _navMesh = nil
 local _debugVisible = false
 local _sideWallIds = {}
 local _floorIds = {}
+local _coverIds = {}
 
-local function _Cube(size, x, y, z, material)
-	-- Keep the proven equal-sided procedural path; unequal dimensions currently
-	-- have a render/physics mismatch. Submerged cubes provide a continuous floor.
-	local block = SandboxObjects:CreateBlockBox(size, size, size, size * 0.25, size * 0.25)
+local function _Box(width, height, length, x, y, z, yaw, material)
+	-- Procedural geometry and Bullet receive the same dimensions. Unequal boxes
+	-- are reserved for simple slabs and housings whose visual alignment is checked
+	-- in the product capture; detailed props continue to use authored meshes.
+	local block = SandboxObjects:CreateBlockBox(width, height, length, width * 0.25, length * 0.25)
 	block:setPosition(Vector3(x, y, z))
-	block:setRotation(Vector3(0, 0, 0))
+	block:setRotation(Vector3(0, yaw or 0, 0))
 	block:setMaterial(material)
 	block:SetMass(0)
+	return block
+end
+
+local function _Cube(size, x, y, z, material)
+	local block = _Box(size, size, size, x, y, z, 0, material)
 	table.insert(_G.SandboxLevelBoxes, {
 		size = size, position = Vector3(x, y, z), rotation = Vector3(0, 0, 0),
 	})
@@ -37,18 +42,6 @@ local function _Module(mesh, x, y, z, yaw, material)
 	block:setMaterial(material or "Relay/Concrete")
 	block:SetMass(0)
 	return block
-end
-
-local function _WallAt(mesh, x, y, z, yaw, material)
-	-- Measured mesh bounds: x=-1.277934..1.282066, y=-1.268740..1.291260,
-	-- z=-0.16..0.16. Its lower edge is sunk 1 cm; no walkable wall-top survives
-	-- the 0.4 m navmesh erosion radius.
-	local resolvedMaterial = material or (mesh == WINDOW_MESH and "Relay/Window" or "Relay/Concrete")
-	return _Module(mesh or WALL_MESH, x, y or 1.25874, z, yaw, resolvedMaterial)
-end
-
-local function _Wall(x, z, yaw)
-	return _WallAt(WALL_MESH, x, 1.25874, z, yaw, "Relay/Concrete")
 end
 
 local function _PaintCorners(cx, cz, halfWidth, halfDepth, material)
@@ -87,14 +80,15 @@ end
 
 function Scene.Create()
 	_G.SandboxLevelBoxes = {}
-	_sideWallIds, _floorIds = {}, {}
+	_sideWallIds, _floorIds, _coverIds = {}, {}, {}
 	_navMesh, _debugVisible = nil, false
 
-	SandboxScene:SetSkyBox("Relay/Sky", Vector3(0, 180, 0))
-	SandboxScene:SetAmbientLight(Vector3(0.42, 0.40, 0.37))
+	-- Pitch raises the generated mountain belt behind the relay silhouette.
+	SandboxScene:SetSkyBox("Relay/Sky", Vector3(-12, 180, 0))
+	SandboxScene:SetAmbientLight(Vector3(0.32, 0.30, 0.27))
 	local sunlight = SandboxScene:CreateDirectionalLight(Vector3(-0.55, -1, -0.20))
-	sunlight:setDiffuseColour(ColourValue(1.08, 0.98, 0.80))
-	sunlight:setSpecularColour(ColourValue(0.18, 0.16, 0.13))
+	sunlight:setDiffuseColour(ColourValue(1.16, 1.02, 0.82))
+	sunlight:setSpecularColour(ColourValue(0.16, 0.14, 0.11))
 
 	-- 48 x 64 m floor; all visible surfaces have matching static Bullet bodies.
 	for _, x in ipairs({ -16, 0, 16 }) do
@@ -105,38 +99,28 @@ function Scene.Create()
 		end
 	end
 
-	-- An enclosed yard grounds the scene visually; no floating platform edges.
-	for index = 0, 24 do
-		local z = -22.72 + index * 2.56
-		_Wall(-23.60, z, 90)
-		_Wall(23.60, z, 90)
-		_WallAt(index % 3 == 0 and WINDOW_MESH or WALL_MESH, -23.60, 3.81874, z, 90)
-		_WallAt(index % 3 == 0 and WINDOW_MESH or WALL_MESH, 23.60, 3.81874, z, 90)
-	end
-	for index = 0, 18 do
-		local x = -23.04 + index * 2.56
-		_Wall(x, -23.70, 0)
-		_Wall(x, 39.70, 0)
-		_WallAt(index % 3 == 1 and WINDOW_MESH or WALL_MESH, x, 3.81874, 39.70, 0)
+	-- Continuous low perimeter slabs replace the former fence of repeated panels.
+	-- Their 2.4 m top reveals the generated desert horizon from the follow camera.
+	_Box(0.55, 2.4, 64, -23.72, 1.2, 8, 0, "Relay/ConcreteShade")
+	_Box(0.55, 2.4, 64, 23.72, 1.2, 8, 0, "Relay/Concrete")
+	_Box(48, 2.4, 0.55, 0, 1.2, -23.72, 0, "Relay/ConcreteShade")
+	_Box(15.5, 2.4, 0.55, -16.25, 1.2, 39.72, 0, "Relay/Concrete")
+	_Box(15.5, 2.4, 0.55, 16.25, 1.2, 39.72, 0, "Relay/ConcreteShade")
+	for _, z in ipairs({ 0, 16, 32 }) do
+		_Module(PILLAR_MESH, -23.35, 1.28, z, 0, "Relay/Metal")
+		_Module(PILLAR_MESH, 23.35, 1.28, z, 0, "Relay/Metal")
 	end
 
 	-- The western bypass is a real line-of-sight break, open at both ends.
 	-- Main route remains x=-8..8; both join the north yard before the relay.
-	for index = 0, 9 do
-		local wall = _Wall(-12, -6.72 + index * 2.56, 90)
-		_sideWallIds[wall:GetObjId()] = true
-		_WallAt(index % 2 == 0 and WINDOW_MESH or WALL_MESH, -12, 3.81874, -6.72 + index * 2.56, 90)
-	end
+	local bypassWall = _Box(0.55, 2.6, 25.6, -12, 1.3, 4.8, 0, "Relay/ConcreteShade")
+	_sideWallIds[bypassWall:GetObjId()] = true
 	-- Service bay to the east and two pillars identify the courtyard threshold.
-	for index = 0, 4 do
-		local z = 5.12 + index * 2.56
-		_Wall(13, z, 90)
-		_WallAt(index % 2 == 0 and WINDOW_MESH or WALL_MESH, 13, 3.81874, z, 90)
-	end
+	_Box(0.55, 2.6, 12.8, 13, 1.3, 10.24, 0, "Relay/Concrete")
 	for _, x in ipairs({ -8, 8 }) do
 		_Module(PILLAR_MESH, x, 1.28, 20, 0, "Relay/Metal")
 	end
-	for index = 0, 3 do _Wall(14.08 + index * 2.56, 20, 0) end
+	_Box(10.24, 2.6, 0.55, 17.92, 1.3, 20, 0, "Relay/ConcreteShade")
 	-- Two solid service units sit behind the eastern bay wall. Their independent
 	-- 3.17 m roof panels are inaccessible and each is below the nav region cutoff.
 	-- The validated main lane and western bypass keep their original geometry.
@@ -149,26 +133,25 @@ function Scene.Create()
 		_Module(BLOCK_MESH, 20.6, 0.32, z, 0, "Relay/Equipment")
 	end
 
-	-- Low side cover gives the camera a foreground and midground without closing
-	-- the x=-8..8 main lane or the x=-18 western bypass.
+	-- Long low barriers replace clusters of identical cubes. They stay outside
+	-- the x=-8..8 main lane and leave the x=-18 bypass open.
 	for _, cover in ipairs({
-		{ -8.8, -8.5 }, { -10.0, -8.5 }, { -11.2, -8.5 },
-		{ 8.8, -8.5 }, { 10.0, -8.5 }, { 11.2, -8.5 },
-		{ -8.8, 5.5 }, { -10.0, 5.5 }, { -11.2, 5.5 },
-		{ 8.8, 5.5 }, { 10.0, 5.5 }, { 11.2, 5.5 },
-		{ -8.8, 23.5 }, { -10.0, 23.5 }, { 8.8, 23.5 }, { 10.0, 23.5 },
+		{ -10.6, -8.5, -4 }, { 10.6, -8.5, 4 },
+		{ -10.3, 5.5, 3 }, { 10.3, 5.5, -3 },
+		{ -10.1, 23.5, -5 }, { 10.1, 23.5, 5 },
 	}) do
-		_Cube(1.2, cover[1], 0.6, cover[2], "Relay/Cover")
+		local barrier = _Box(4.2, 1.25, 1.15, cover[1], 0.625, cover[2], cover[3], "Relay/Cover")
+		_coverIds[barrier:GetObjId()] = true
 	end
 
 	-- Open service canopies frame the near lane. Their posts stay outside both
 	-- validated routes; the roof collision remains above actor height.
-	for _, x in ipairs({ -18.0, 18.0 }) do
-		for _, z in ipairs({ -11.0, -7.8, -4.6 }) do
+	for _, x in ipairs({ -18.0 }) do
+		for _, z in ipairs({ -7.0, -3.8, -0.6 }) do
 			_Module(ROOF_MESH, x, 2.68, z, 0, "Relay/Equipment")
 		end
 		for _, px in ipairs({ x - 2.4, x + 2.4 }) do
-			for _, pz in ipairs({ -12.6, -3.0 }) do
+			for _, pz in ipairs({ -8.6, 1.0 }) do
 				_Module(PILLAR_MESH, px, 1.28, pz, 0, "Relay/Metal")
 			end
 		end
@@ -181,35 +164,24 @@ function Scene.Create()
 		_Module(BLOCK_MESH, prop[1], 0.32, prop[2], prop[3], "Relay/Equipment")
 	end
 
-	-- The relay facade marks a destination, not an enterable fake doorway.
-	-- Its front edge is beyond the goal centre, leaving a full-sized assembly pad.
-	for _, x in ipairs({ -5.12, -2.56, 0, 2.56, 5.12 }) do
-		_Wall(x, 38.1, 0)
-		_WallAt(x == 0 and WINDOW_MESH or WALL_MESH, x, 3.81874, 38.1, 0)
+	-- A stepped relay building gives the destination a readable silhouette:
+	-- low wings, central gatehouse, rooftop plant and a narrow mast.
+	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Concrete")
+	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/ConcreteShade")
+	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Concrete")
+	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/ConcreteShade")
+	_Box(5.6, 0.20, 0.18, 0, 3.65, 37.36, 0, "Relay/Accent")
+	_Module(HANGAR_MESH, 0, 1.28, 37.38, 0, "Relay/Equipment")
+	for _, x in ipairs({ -5.8, 5.8 }) do
+		_Module(COOLING_MESH, x, 1.20, 37.42, 180, "Relay/Metal")
+		_Module(ROOF_MESH, x, 3.54, 39.0, 0, "Relay/Equipment")
 	end
-	for _, x in ipairs({ -6.7, 6.7 }) do
-		_Module(PILLAR_MESH, x, 1.28, 38.1, 0, "Relay/Metal")
-		_Module(PILLAR_MESH, x, 3.84, 38.1, 0, "Relay/Metal")
+	for _, x in ipairs({ -1.45, 1.45 }) do
+		_Module(COOLING_MESH, x, 5.15, 39.1, 0, "Relay/Equipment")
 	end
-	-- Solid relay housings begin at z=38.1, beyond the assembly pad. Separate
-	-- roof caps retain a low-complexity skyline without a second walking level.
-	for _, x in ipairs({ -4, 0, 4 }) do
-		_Cube(2, x, 1, 39.1, "Relay/Cover")
-		_Cube(2, x, 3, 39.1, "Relay/Cover")
-		_Module(ROOF_MESH, x, 4.14, 39.1, 0, "Relay/Equipment")
+	for _, y in ipairs({ 7.2, 9.7 }) do
+		_Module(PILLAR_MESH, 0, y, 39.25, 0, "Relay/Metal")
 	end
-	-- A stacked central headhouse and mast keep the relay legible from the entry.
-	for _, x in ipairs({ -2.56, 0, 2.56 }) do
-		_WallAt(x == 0 and WINDOW_MESH or WALL_MESH, x, 6.37874, 38.0, 0)
-	end
-	for _, y in ipairs({ 6.40, 8.96, 11.52 }) do
-		_Module(PILLAR_MESH, 0, y, 38.2, 0, "Relay/Metal")
-	end
-	_Module(ROOF_MESH, 0, 7.74, 38.4, 0, "Relay/Equipment")
-	-- A visibly closed sage panel belongs to the solid facade; it is not a portal.
-	_Module(HANGAR_MESH, 0, 1.28, 37.90, 0, "Relay/Equipment")
-	_Module(COOLING_MESH, -5.1, 1.20, 37.65, 180, "Relay/Metal")
-	_Module(COOLING_MESH, 5.1, 1.20, 37.65, 180, "Relay/Metal")
 
 	_PaintCorners(0, -16, 5, 4, "Relay/SafeMark")
 	_PaintCorners(0, 33.5, 5, 3, "Relay/GoalMark")
@@ -219,7 +191,7 @@ function Scene.Create()
 	end
 
 	SandboxScene:UpdateSceneGraph()
-	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=layered")
+	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=desert-layered")
 	return _Anchors()
 end
 
@@ -293,6 +265,10 @@ function Scene.ValidateCollision()
 	local directClear = directHit == 0
 	print("[Sandbox19ArenaSelfTest] " .. (directClear and "PASS" or "FAIL") .. " direct-line-clear")
 	pass = directClear and pass
+	local coverHit = SandboxRaycast:RayCastObjectId(Vector3(-14, 0.8, -8.5), Vector3(-7.5, 0.8, -8.5))
+	local coverSolid = _coverIds[coverHit] == true
+	print("[Sandbox19ArenaSelfTest] " .. (coverSolid and "PASS" or "FAIL") .. " rectangular-cover-ray")
+	pass = coverSolid and pass
 	local floorHit = SandboxRaycast:RayCastObjectId(Vector3(2, 3, 2), Vector3(2, -2, 2))
 	local floorSolid = _floorIds[floorHit] == true
 	print("[Sandbox19ArenaSelfTest] " .. (floorSolid and "PASS" or "FAIL") .. " floor-collision")

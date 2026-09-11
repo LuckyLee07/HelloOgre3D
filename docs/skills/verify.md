@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File tools\run_sandbox_smoke.ps1 -Sample San
 
 需要生成工程时用 `tools\premake\premake5.exe --os=windows --file=premake/premake.lua vs2017 --with-fairygui` 并保持任务所需选项；`vs2017.bat` 会清理部分产物，先查看脚本。
 
-Windows 自动验证默认设置 `HELLO_WINDOW_BACKGROUND=1` 与 `HELLO_AUDIO_SILENT=1`；`run_sandbox_smoke.ps1` 已默认设置。D3D9 窗口从创建时隐藏、继续渲染、不初始化硬件键鼠；内部 `HELLO_INPUT_REPLAY` 可用于输入链回归，但不能称为外部输入或人工手感验收。后台模式可用 `HELLO_WINDOW_WIDTH` / `HELLO_WINDOW_HEIGHT` 指定实际像素尺寸（640–3840 / 360–2160），不受默认 DPI 尺寸覆盖。读取 `[WindowMode]` 的隐藏、前台未变化与输入禁用证据；不以单独 `Start-Process -WindowStyle Hidden` 代替。正常手动试玩不设后台/静音变量。
+Windows 自动验证默认设置 `HELLO_WINDOW_BACKGROUND=1` 与 `HELLO_AUDIO_SILENT=1`；`run_sandbox_smoke.ps1` 已默认设置。D3D9 后台窗口保持可渲染，但创建在虚拟桌面范围之外，并用 `WS_EX_NOACTIVATE` / `SW_SHOWNOACTIVATE` 避免激活；它不初始化硬件键鼠。内部 `HELLO_INPUT_REPLAY` 可用于输入链回归，但不能称为外部输入或人工手感验收。后台模式可用 `HELLO_WINDOW_WIDTH` / `HELLO_WINDOW_HEIGHT` 指定实际像素尺寸（640–3840 / 360–2160），不受默认 DPI 尺寸覆盖。读取 `[WindowMode]` 的 `hidden=false noActivate=true offscreen=true`、前台未变化与输入禁用证据；启动器不要再传 `Start-Process -WindowStyle Hidden`。正常手动试玩不设后台/静音变量。
 
 按需使用 `tools/run_chapter9_parity_gate.ps1`、`tools/run_chapter9_visual_capture.ps1`、`tools/run_fgui_selftest.ps1`、`tools/run_fgui_production_gate.ps1` 或 smoke 的 `-Preset ai_perf_1000`。先读参数与当前环境；历史 Windows Python 绝对路径仅见记忆，不能照搬到其他机器。`-StopExisting` 会终止已有进程，只在确认属于本次测试或已授权时使用。
 
