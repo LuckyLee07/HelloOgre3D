@@ -286,11 +286,11 @@ local function cancel()
 	hint("Orders cancelled. Squad guards its current position.")
 end
 local function objective()
-	if _state == "PREPARE" then return "Clear the guards. Regroup at the relay entrance." end
-	if _state == "ADVANCE" then return "Gate clear. Advance through the marked courtyard entrance." end
-	if _state == "REGROUP" then return "Area clear. Bring commander + one ally to RELAY." end
-	if _wave == 1 then return "Clear the gate guards. Main lane or west flank." end
-	return "Clear the courtyard guards, then regroup at RELAY."
+	if _state == "PREPARE" then return "SECURE THE RELAY" end
+	if _state == "ADVANCE" then return "ADVANCE TO THE COURTYARD" end
+	if _state == "REGROUP" then return "REGROUP AT THE RELAY" end
+	if _wave == 1 then return "CLEAR THE GATE" end
+	return "SECURE THE COURTYARD"
 end
 local function spawnEncounter()
 	GameManager:SetSimulationPaused(false)
@@ -304,7 +304,7 @@ local function spawnEncounter()
 		_allyIds[#_allyIds + 1] = a:GetObjId()
 	end
 	selectAll()
-	SandboxCamera:ConfigureFollowCamera(12, 9, 6, 1.5, 8, 18)
+	SandboxCamera:ConfigureFollowCamera(6.5, 3.2, 0, 1.5, 5.5, 11)
 	SandboxCamera:SetCameraRelativeMovement(true)
 	SandboxCamera:SnapFollowTarget(_player:GetPosition(), _player:GetForward())
 	-- Pause only after placement and camera setup; no actor can fire in the briefing.
@@ -413,7 +413,7 @@ local function updateWorldMarkers()
 		local a = find(id)
 		local mark = _worldMarks[slot]
 		local p = a ~= nil and a:GetPosition() or nil
-		if p ~= nil then p.y = p.y + 1.3 end
+		if p ~= nil then p.y = p.y + 1.85 end
 		local s = p ~= nil and screen(p) or nil
 		local show = visible and a ~= nil and a:GetHealth() > 0 and s ~= nil
 		mark:setVisible(show)
@@ -421,9 +421,8 @@ local function updateWorldMarkers()
 		_selectionMarks[slot]:setVisible(show and _selection[id] == true and foot ~= nil)
 		if foot ~= nil then _selectionMarks[slot]:setPosition(Vector2(foot.x, foot.y)) end
 		if show then
-			mark:setPosition(Vector2(s.x - 46, s.y - 12))
-			mark:setBackgroundColor(_selection[id] and ColourValue(0.05, 0.55, 0.59, 0.94) or ColourValue(0.08, 0.14, 0.16, 0.84))
-			mark:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.Small .. (slot .. "  " .. _names[slot]))
+			mark:setPosition(Vector2(s.x, s.y - 8))
+			mark:setBackgroundColor(_selection[id] and ColourValue(0.40, 0.93, 0.91, 1.0) or ColourValue(0.31, 0.70, 0.72, 0.92))
 		end
 		slot = slot + 1
 	end
@@ -452,12 +451,13 @@ local function updateWorldMarkers()
 	local s = target ~= nil and target:GetHealth() > 0 and visibleToSquad(_lastEnemy)
 		and screen(target:GetPosition() + Vector3(0, 1.9, 0)) or nil
 	_targetMark:setVisible(visible and s ~= nil)
-	if s ~= nil then _targetMark:setPosition(Vector2(s.x - 55, s.y - 12)) end
+	if s ~= nil then _targetMark:setPosition(Vector2(s.x - 31, s.y - 10)) end
 	local goal = _state == "ADVANCE" and _anchors.trigger.center or _anchors.goal
 	local gs = screen(goal + Vector3(0, 2, 0))
-	_goalLabel:setVisible(visible and gs ~= nil)
+	local showGoal = visible and gs ~= nil and (_state == "ADVANCE" or _state == "REGROUP")
+	_goalLabel:setVisible(showGoal)
 	if gs ~= nil then
-		_goalLabel:setPosition(Vector2(gs.x - 63, gs.y - 15))
+		_goalLabel:setPosition(Vector2(gs.x - 43, gs.y - 12))
 		_goalLabel:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.Small ..
 			(_state == "ADVANCE" and "COURTYARD" or "RELAY") .. "  " .. math.floor(distance(_player:GetPosition(), goal)) .. "m")
 	end
@@ -593,8 +593,8 @@ function Sandbox_Initialize()
 		ring:setBackgroundColor(ColourValue(0.3, 0.85, 0.85, 0.10))
 		ring:setBorder(2, ColourValue(0.3, 0.85, 0.85, 0.9)); ring:setVisible(false)
 		_selectionMarks[i] = ring
-		local mark = SandboxUI:CreateUIFrame()
-		mark:setDimension(Vector2(92, 24)); mark:setTextMargin(5, 6)
+		local mark = SandboxUI:CreatePolygon()
+		mark:setSides(3); mark:setRadius(7); mark:setAngleDegrees(90); mark:setVisible(false)
 		_worldMarks[i] = mark
 		local destination = SandboxUI:CreatePolygon()
 		destination:setSides(24); destination:setRadius(14)
@@ -613,12 +613,12 @@ function Sandbox_Initialize()
 		_enemyMarks[i] = {icon = icon, track = track, hp = hp}
 	end
 	_targetMark = SandboxUI:CreateUIFrame()
-	_targetMark:setDimension(Vector2(110, 24)); _targetMark:setTextMargin(4, 6)
-	_targetMark:setBackgroundColor(ColourValue(0.7, 0.19, 0.10, 0.92))
-	_targetMark:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.Small .. "FOCUS TARGET")
+	_targetMark:setDimension(Vector2(62, 18)); _targetMark:setTextMargin(2, 7)
+	_targetMark:setBackgroundColor(ColourValue(0.08, 0.10, 0.10, 0.90))
+	_targetMark:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.Small .. "FOCUS")
 	_goalLabel = SandboxUI:CreateUIFrame()
-	_goalLabel:setDimension(Vector2(126, 26)); _goalLabel:setTextMargin(5, 7)
-	_goalLabel:setBackgroundColor(ColourValue(0.45, 0.34, 0.17, 0.92))
+	_goalLabel:setDimension(Vector2(86, 22)); _goalLabel:setTextMargin(3, 6)
+	_goalLabel:setBackgroundColor(ColourValue(0.28, 0.22, 0.14, 0.88))
 	_dragFrame = SandboxUI:CreateUIFrame()
 	_dragFrame:setBackgroundColor(ColourValue(0.20, 0.80, 0.85, 0.18))
 	_dragFrame:setVisible(false)

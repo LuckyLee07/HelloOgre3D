@@ -19,6 +19,8 @@
 
 [中继站当前实现与验收](playtest-relay-2026-09-10.md)：实际场景、操作、命令、自然对局与独立包证据；阶段状态仍见 cycle/backlog。
 
+[中继站视觉收敛复盘](sandbox19-visual-convergence-2026-09-11.md)：作者反馈后的实机目标对照、结构改动、截图 gate 与 P3 剩余差距。
+
 [M2 可重复成对实验](dev-design/plans/2026-09-10-m2-repeatable-comparison.md)：固定入口交战下的单变量设计、版本化 manifest、结构化事件、18 局成对矩阵、结果契约与验证边界。
 
 [M2 入口集火实验结果](sandbox19-focus-order-experiment-2026-09-10.md)：18/18 局与 9/9 配对证据、指标、结论及限制。

@@ -201,15 +201,15 @@ function Hud:_Ally(index, ally, y)
 	local prefix = "ally" .. index .. "_"
 	local selected = alive and ally.selected == true
 	local hovered = alive and Inside(Number(self.model.mouseX, -1) / self.scale, Number(self.model.mouseY, -1) / self.scale,
-		{ x = 24, y = y, w = 280, h = 66 })
+		{ x = 24, y = y, w = 264, h = 56 })
 	local color = hovered and (self.model.mouseDown and "pressed" or "hover") or (selected and "selected" or "panel")
-	self:_Frame(prefix .. "panel", 24, y, 280, 66, color)
-	self:_Frame(prefix .. "accent", 24, y, 3, 66, selected and "cyan" or (alive and "muted" or "danger"))
-	self:_Text(prefix .. "key", 40, y + 33, 25, 25, tostring(index), 14, alive and "%0" or "%8")
-	self:_Text(prefix .. "name", 73, y + 5, 154, 25, ally.name or (index == 1 and "ALPHA" or "BRAVO"), 14)
-	self:_Text(prefix .. "hp_value", 238, y + 5, 55, 25, tostring(math.floor(hp)), 14, alive and "%0" or "%8")
-	self:_Frame(prefix .. "track", 74, y + 31, 212, 4, "track")
-	if alive then self:_Frame(prefix .. "hp", 74, y + 31, 212 * Clamp(hp / maxHp, 0, 1), 4, hp <= maxHp * 0.3 and "danger" or "cyan") end
+	self:_Frame(prefix .. "panel", 24, y, 264, 56, color)
+	self:_Frame(prefix .. "accent", 24, y, 3, 56, selected and "cyan" or (alive and "muted" or "danger"))
+	self:_Text(prefix .. "key", 38, y + 27, 22, 22, tostring(index), 14, alive and "%0" or "%8")
+	self:_Text(prefix .. "name", 67, y + 3, 136, 23, ally.name or (index == 1 and "ALPHA" or "BRAVO"), 14)
+	self:_Text(prefix .. "hp_value", 217, y + 3, 55, 23, tostring(math.floor(hp)), 14, alive and "%0" or "%8")
+	self:_Frame(prefix .. "track", 68, y + 27, 203, 4, "track")
+	if alive then self:_Frame(prefix .. "hp", 68, y + 27, 203 * Clamp(hp / maxHp, 0, 1), 4, hp <= maxHp * 0.3 and "danger" or "cyan") end
 	local command = tostring(ally.command or ""):upper()
 	local activity = tostring(ally.status or ""):upper()
 	command, activity = COMMAND_LABELS[command] or command, STATUS_LABELS[activity] or activity
@@ -218,13 +218,13 @@ function Hud:_Ally(index, ally, y)
 		status = command ~= "" and command or (activity ~= "" and activity or "AUTONOMOUS")
 		if command ~= "" and activity ~= "" and activity ~= command then status = status .. " / " .. activity end
 	end
-	status = self:_Wrap(prefix .. "status", tostring(status):upper(), 213, self.smallFont, 1)
-	self:_Text(prefix .. "status", 74, y + 39, 213, 25, status, self.smallFont, alive and "%0" or "%8")
-	self:_Region(24, y, 280, 66, alive and ally.id ~= nil and "select" or "block", ally.id)
+	status = self:_Wrap(prefix .. "status", tostring(status):upper(), 202, self.smallFont, 1)
+	self:_Text(prefix .. "status", 68, y + 34, 202, 19, status, self.smallFont, alive and "%0" or "%8")
+	self:_Region(24, y, 264, 56, alive and ally.id ~= nil and "select" or "block", ally.id)
 	local mark = self.polygons[index]
 	if mark and mark.object then
-		mark.object:setPosition(Vector2(49 * self.scale, (y + 21) * self.scale))
-		mark.object:setRadius(9 * self.scale)
+		mark.object:setPosition(Vector2(47 * self.scale, (y + 18) * self.scale))
+		mark.object:setRadius(7 * self.scale)
 		mark.object:setBackgroundColor(self.colors[alive and "cyan" or "muted"])
 		if not mark.visible then mark.object:setVisible(true); mark.visible = true end
 		mark.used = true
@@ -235,53 +235,55 @@ function Hud:_Combat(model, width, height, state)
 	local bottom = height - 24
 	local hp, maxHp = math.max(0, Number(model.commanderHp, 100)), math.max(1, Number(model.commanderMaxHp, 100))
 	local selected = Count(model.selectedCount)
-	local objective, objectiveLines = self:_Wrap("objective", model.objective or "SECURE THE COURTYARD", 359, 14, 2)
+	local objective, objectiveLines = self:_Wrap("objective", model.objective or "SECURE THE COURTYARD", 307, 14, 2)
 	local objectiveStep = 24 / self.scale
-	local detailY = 61 + objectiveLines * objectiveStep + 8
-	local missionHeight = detailY - 24 + 33
-	self:_Frame("mission", 24, 24, 392, missionHeight, "panel")
+	local detailY = 54 + objectiveLines * objectiveStep + 5
+	local missionHeight = detailY - 24 + 27
+	self:_Frame("mission", 24, 24, 340, missionHeight, "panel")
 	self:_Frame("mission_accent", 24, 24, 3, missionHeight, "amber")
-	self:_Text("mission_kicker", 41, 32, 355, 23, "RELAY OUTPOST", 14)
-	self:_Text("mission_title", 41, 61, 359, objectiveLines * objectiveStep + 2, objective, 14)
+	self:_Text("mission_kicker", 39, 30, 309, 22, "RELAY OUTPOST", 14)
+	self:_Text("mission_title", 39, 54, 307, objectiveLines * objectiveStep + 2, objective, 14)
 	local detail = model.phase and tostring(model.phase) .. "  /  " or ""
 	detail = detail .. "Hostiles remaining  " .. tostring(Count(model.enemyAlive))
-	self:_Text("mission_detail", 41, detailY, 359, 23, detail, self.smallFont)
-	self:_Region(24, 24, 392, missionHeight)
+	self:_Text("mission_detail", 39, detailY, 307, 21, detail, self.smallFont)
+	self:_Region(24, 24, 340, missionHeight)
 	self:_Frame("clock", width - 184, 24, 98, 44, "panel")
 	self:_Text("clock_text", width - 172, 34, 87, 29, Clock(model.elapsedMs), 14)
 	self:_Region(width - 184, 24, 98, 44)
 	self:_Button("pause", width - 80, 24, 56, 44, "II", "pause", state == "ACTIVE", false)
-	self:_Ally(1, model.allies and model.allies[1], bottom - 140)
-	self:_Ally(2, model.allies and model.allies[2], bottom - 66)
-	local commandX = 328
+	self:_Ally(1, model.allies and model.allies[1], bottom - 120)
+	self:_Ally(2, model.allies and model.allies[2], bottom - 56)
 	local available = selected > 0 and state == "ACTIVE"
 	local defs = {
-		{ key = "focus", label = "F  FOCUS", w = 138 },
-		{ key = "retreat", label = "T  FALL BACK", w = 158 },
-		{ key = "rally", label = "G  RALLY", w = 134 },
-		{ key = "cancel", label = "X  CANCEL", w = 132 },
+		{ key = "focus", label = "F  FOCUS", w = 106 },
+		{ key = "retreat", label = "T  FALL BACK", w = 120 },
+		{ key = "rally", label = "G  RALLY", w = 106 },
+		{ key = "cancel", label = "X  CANCEL", w = 96 },
 	}
+	local commandWidth = 0
+	for index, def in ipairs(defs) do commandWidth = commandWidth + def.w + (index > 1 and 8 or 0) end
+	local commandX = (width - commandWidth) * 0.5
 	for _, def in ipairs(defs) do
 		local cfg = model.commands and model.commands[def.key] or {}
 		local enabled = available and cfg.enabled ~= false
-		self:_Button(def.key, commandX, bottom - 46, def.w, 46, def.label, def.key, enabled, false, nil,
+		self:_Button(def.key, commandX, bottom - 42, def.w, 42, def.label, def.key, enabled, false, nil,
 			cfg.reason or (selected == 0 and "Select a squadmate with 1 / 2 / Tab" or "Order unavailable"))
 		commandX = commandX + def.w + 8
 	end
 	local context = self.disabledReason or model.context or (selected > 0 and (tostring(selected) .. " SELECTED  /  Right-click target or ground") or "1 / 2 select   |   Tab selects squad")
-	local contextText, contextLines = self:_Wrap("context", context, 593, self.smallFont, 2)
+	local contextText, contextLines = self:_Wrap("context", context, commandWidth, self.smallFont, 2)
 	local contextHeight = contextLines * (self.smallFont == 14 and 22 or 14) / self.scale + 2
-	self:_Text("context", 328, bottom - 57 - contextHeight, 593, contextHeight, contextText, self.smallFont)
-	local commanderX = width - 312
-	self:_Frame("commander", commanderX, bottom - 102, 288, 52, "panel")
-	self:_Text("commander_title", commanderX + 12, bottom - 97, 204, 24, "COMMANDER", 14)
-	self:_Text("commander_value", commanderX + 239, bottom - 97, 44, 24, tostring(math.floor(hp)), 14)
-	self:_Frame("commander_track", commanderX + 12, bottom - 65, 264, 5, "track")
-	if hp > 0 then self:_Frame("commander_hp", commanderX + 12, bottom - 65, 264 * Clamp(hp / maxHp, 0, 1), 5, hp <= maxHp * 0.3 and "danger" or "cyan") end
-	self:_Region(commanderX, bottom - 102, 288, 52)
-	self:_Button("select_all", commanderX, bottom - 42, 288, 42, "TAB   SELECT SQUAD", "select_all", state == "ACTIVE", false)
+	self:_Text("context", (width - commandWidth) * 0.5, bottom - 53 - contextHeight, commandWidth, contextHeight, contextText, self.smallFont)
+	local commanderX = width - 280
+	self:_Frame("commander", commanderX, bottom - 94, 256, 46, "panel")
+	self:_Text("commander_title", commanderX + 12, bottom - 91, 174, 22, "COMMANDER", 14)
+	self:_Text("commander_value", commanderX + 209, bottom - 91, 36, 22, tostring(math.floor(hp)), 14)
+	self:_Frame("commander_track", commanderX + 12, bottom - 62, 232, 4, "track")
+	if hp > 0 then self:_Frame("commander_hp", commanderX + 12, bottom - 62, 232 * Clamp(hp / maxHp, 0, 1), 4, hp <= maxHp * 0.3 and "danger" or "cyan") end
+	self:_Region(commanderX, bottom - 94, 256, 46)
+	self:_Button("select_all", commanderX, bottom - 38, 256, 38, "TAB   SELECT SQUAD", "select_all", state == "ACTIVE", false)
 	if model.hint ~= nil and tostring(model.hint) ~= "" and state == "ACTIVE" then
-		local bannerWidth = math.min(584, width - 48)
+		local bannerWidth = math.min(420, width - 48)
 		local bx = (width - bannerWidth) * 0.5
 		local bannerText, bannerLines = self:_Wrap("banner", model.hint, bannerWidth - 30, 14, 2)
 		local by = math.max(145, 24 + missionHeight + 12)
