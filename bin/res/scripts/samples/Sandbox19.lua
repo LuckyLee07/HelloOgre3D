@@ -2,6 +2,7 @@
 require("res.scripts.agent.SoldierAgent.lua")
 require("res.scripts.agent.BehaviorSoldierAgent.lua")
 require("res.scripts.ai.behavior.Sandbox19CommandConditions.lua")
+local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 local Scene = require("res.scripts.samples.sandbox19_scene.lua")
 local Hud = require("res.scripts.samples.sandbox19_hud.lua")
 local Commands = require("res.scripts.samples.sandbox19_commands.lua")
@@ -15,8 +16,8 @@ local _allyIds, _enemyIds, _selection, _profiles = {}, {}, {}, {}
 local _state, _wave, _startedMs, _endedMs, _endReason = "PREPARE", 0, 0, nil, ""
 local _hint, _hintKind, _hintUntil = "", "info", 0
 local _drag, _dragFrame, _mouse = nil, nil, {x = 0, y = 0, down = false}
-local _worldMarks, _targetMark, _goalLabel = {}, nil, nil
-local _enemyMarks, _orderMarks, _selectionMarks = {}, {}, {}
+local _allyHeadMarks, _targetMark, _goalLabel = {}, nil, nil
+local _enemyMarks = {}
 local _matchConfig = nil
 local _lastEnemy, _restart, _restartStart = 0, false, false
 local _paused, _lastProgressMs, _lastAlive = false, 0, 0
@@ -25,6 +26,10 @@ local _test = nil
 local _experiment = nil
 local _names = {"VEGA", "ROOK"}
 local SAMPLE = "Sandbox19"
+local _markerColors = {
+	selection = ColourValue(0.30, 0.85, 0.85, 0.95),
+	destination = ColourValue(0.30, 0.85, 0.85, 0.85),
+}
 
 local function now() return GameManager:getTimeInMillis() end
 local function find(id)
@@ -406,20 +411,23 @@ local function action(name, id)
 	elseif name == "audio_down" then _audio.volume = math.max(0, _audio.volume - 0.1); _audio:Apply(true); _audio:Play("select", now())
 	elseif name == "audio_mute" then _audio.muted = not _audio.muted; _audio:Apply(true) end
 end
-local function updateWorldMarkers()
+local function updateMarkers()
 	local visible = not _paused and _state ~= "PREPARE" and _state ~= "VICTORY" and _state ~= "DEFEAT"
 	local slot = 1
 	for _, id in ipairs(_allyIds) do
 		local a = find(id)
-		local mark = _worldMarks[slot]
+		local mark = _allyHeadMarks[slot]
 		local p = a ~= nil and a:GetPosition() or nil
 		if p ~= nil then p.y = p.y + 1.85 end
 		local s = p ~= nil and screen(p) or nil
-		local show = visible and a ~= nil and a:GetHealth() > 0 and s ~= nil
+		local alive = visible and a ~= nil and a:GetHealth() > 0
+		local show = alive and s ~= nil
 		mark:setVisible(show)
-		local foot = a ~= nil and screen(a:GetPosition() - Vector3(0, 0.72, 0)) or nil
-		_selectionMarks[slot]:setVisible(show and _selection[id] == true and foot ~= nil)
-		if foot ~= nil then _selectionMarks[slot]:setPosition(Vector2(foot.x, foot.y)) end
+		if alive and _selection[id] == true then
+			local foot = a:GetPosition()
+			foot.y = foot.y - AgentComponents.GetHeight(a, 1.6) * 0.5 + 0.08
+			DebugDrawer:drawCircle(foot, 0.65, 32, _markerColors.selection, false)
+		end
 		if show then
 			mark:setPosition(Vector2(s.x, s.y - 8))
 			mark:setBackgroundColor(_selection[id] and ColourValue(0.40, 0.93, 0.91, 1.0) or ColourValue(0.31, 0.70, 0.72, 0.92))
@@ -441,11 +449,16 @@ local function updateWorldMarkers()
 			mark.hp:setDimension(Vector2(40 * math.max(0, enemy:GetHealth()) / enemy:GetAttribComponent():GetMaxHealth(), 3))
 		end
 	end
-	for index, id in ipairs(_allyIds) do
+	for _, id in ipairs(_allyIds) do
 		local order = _commands.active[id]
-		local p = order ~= nil and order.position ~= nil and screen(order.position + Vector3(0, 0.15, 0)) or nil
-		_orderMarks[index]:setVisible(visible and p ~= nil)
-		if p ~= nil then _orderMarks[index]:setPosition(Vector2(p.x, p.y)) end
+		if visible and order ~= nil and order.position ~= nil then
+			local destination = order.position + Vector3(0, 0.08, 0)
+			DebugDrawer:drawCircle(destination, 0.42, 28, _markerColors.destination, false)
+			DebugDrawer:drawLine(destination + Vector3(-0.14, 0, 0),
+				destination + Vector3(0.14, 0, 0), _markerColors.destination)
+			DebugDrawer:drawLine(destination + Vector3(0, 0, -0.14),
+				destination + Vector3(0, 0, 0.14), _markerColors.destination)
+		end
 	end
 	local target = find(_lastEnemy)
 	local s = target ~= nil and target:GetHealth() > 0 and visibleToSquad(_lastEnemy)
@@ -495,7 +508,7 @@ local function updateHud()
 		_observerPanel:setPosition(Vector2(math.max(4, GameManager:getScreenWidth() - 490), 90))
 		_observerPanel:setMarkupText(GUI.MarkupColor.White .. GUI.Markup.SmallMono .. table.concat(Observer.Lines(_observer.snapshot), "\n"))
 	end
-	updateWorldMarkers()
+	updateMarkers()
 end
 
 function EventHandle_Keyboard(keycode, pressed)
@@ -588,19 +601,9 @@ function Sandbox_Initialize()
 	if _G.HELLO_SANDBOX_SMOKE_MODE == true or os.getenv("HELLO_SANDBOX19_PRODUCT_TEST") == "1" then Scene.ValidateNavigation(_anchors) end
 	-- Markers precede HUD so modal panels cover them.
 	for i = 1, 2 do
-		local ring = SandboxUI:CreatePolygon()
-		ring:setSides(28); ring:setRadius(17)
-		ring:setBackgroundColor(ColourValue(0.3, 0.85, 0.85, 0.10))
-		ring:setBorder(2, ColourValue(0.3, 0.85, 0.85, 0.9)); ring:setVisible(false)
-		_selectionMarks[i] = ring
 		local mark = SandboxUI:CreatePolygon()
 		mark:setSides(3); mark:setRadius(7); mark:setAngleDegrees(90); mark:setVisible(false)
-		_worldMarks[i] = mark
-		local destination = SandboxUI:CreatePolygon()
-		destination:setSides(24); destination:setRadius(14)
-		destination:setBackgroundColor(ColourValue(0.3, 0.85, 0.85, 0.14))
-		destination:setBorder(2, ColourValue(0.3, 0.85, 0.85, 0.95)); destination:setVisible(false)
-		_orderMarks[i] = destination
+		_allyHeadMarks[i] = mark
 	end
 	for i = 1, 4 do
 		local icon = SandboxUI:CreatePolygon()

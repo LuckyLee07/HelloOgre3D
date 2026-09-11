@@ -39,5 +39,7 @@
 - Release x64 构建为 0 错误；环境实现与 offscreen 修正后的 `run_sandbox_smoke.ps1 -Sample Sandbox19 -Seconds 40 -NoTail` 均返回 `status=PASS`。最终后台日志记录 1280×800 窗口实际位于 `-3264,-864`，`hidden=false noActivate=true offscreen=true foregroundUnchanged=true` 且物理输入禁用；`[Sandbox19ArenaSelfTest]` 导航/碰撞（含新增长条掩体射线）全部 PASS，`[Sandbox19ProductSelfTest] PASS all=true synthetic=true`。
 - 扩展的真实战斗输入回放没有 fixture、改血或传送：82.236 秒清敌进入 REGROUP，99.297 秒自然 VICTORY，两名队友存活，`director=none`，随后 D3D9 正常关闭。日志在 `tmp/product-runtime/visual-gap-current-natural-extended-20260911-runtime.log`。
 - Lua 5.1 语法、材质/模型/天空六面加载与 `git diff --check` 通过。后台窗口适配涉及 C++，已重新构建 Windows Release x64。
+- 提交后复核发现 1280 宽命令按钮的固定宽度没有计入 12 像素左右文字边距，实机被截成 `F FOCU / T FALL B / G RALL / X CAN`；现已按 Gorilla 14px 字形 advance 加宽四个按钮并替换上方 720p 实机图，完整标签与两侧 HUD 间距通过离屏抓帧复核。
+- 选中圈和移动落点原为世界坐标投影后的屏幕 UI 圆形，大小与朝向不受相机透视影响。现改为深度检测的世界空间圆环：选中圈跟随 agent 脚点，移动落点跟随两名队员各自的编队位置并带中心十字；`world-rings-720-pass3-20260911` 的 720p 回放确认移动中贴地、命令完成后落点消失。
 
 本轮环境深化已经完成，后续视觉工作继续留在 P3。下一步只在定制资产或渲染能力能实际缩小角色、建筑、植被与 PBR 细节差距时增加范围；人工手感/听感、动态窗口和 macOS 仍按独立证据验收。

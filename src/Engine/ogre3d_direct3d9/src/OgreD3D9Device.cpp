@@ -974,9 +974,11 @@ namespace Ogre
         // Find the monitor this render window belongs to.
         hRenderWindowMonitor = MonitorFromWindow(renderWindow->getWindowHandle(), MONITOR_DEFAULTTONULL);
 
-        // This window doesn't intersect with any of the display monitor
-        if (hRenderWindowMonitor == NULL)       
-            return false;       
+        // A non-activating automation window intentionally lives outside the
+        // virtual desktop. Keep using the device chosen from its nearest
+        // monitor at creation; ordinary windows still require an intersection.
+        if (hRenderWindowMonitor == NULL)
+            return renderWindow->isNoActivate();
         
 
         // Case this window changed monitor.

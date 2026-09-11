@@ -255,10 +255,10 @@ function Hud:_Combat(model, width, height, state)
 	self:_Ally(2, model.allies and model.allies[2], bottom - 56)
 	local available = selected > 0 and state == "ACTIVE"
 	local defs = {
-		{ key = "focus", label = "F  FOCUS", w = 106 },
-		{ key = "retreat", label = "T  FALL BACK", w = 120 },
-		{ key = "rally", label = "G  RALLY", w = 106 },
-		{ key = "cancel", label = "X  CANCEL", w = 96 },
+		{ key = "focus", label = "F  FOCUS", w = 114 },
+		{ key = "retreat", label = "T  FALL BACK", w = 150 },
+		{ key = "rally", label = "G  RALLY", w = 110 },
+		{ key = "cancel", label = "X  CANCEL", w = 126 },
 	}
 	local commandWidth = 0
 	for index, def in ipairs(defs) do commandWidth = commandWidth + def.w + (index > 1 and 8 or 0) end

@@ -186,7 +186,7 @@ void DebugDrawer::buildCircle(const Ogre::Vector3& centre, float radius, int seg
 	float angle = 0.0f;
 
 	Ogre::ColourValue colorWithAlpha = color;
-	colorWithAlpha.r = alpha;
+	colorWithAlpha.a = alpha;
 	for (int i = 0; i < segmentsCount; i++)
 	{
 		Ogre::Real posx = centre.x + radius * Ogre::Math::Cos(angle);

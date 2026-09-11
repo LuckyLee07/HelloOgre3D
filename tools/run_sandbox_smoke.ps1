@@ -460,12 +460,22 @@ try {
 
 		$runPattern = "\[SandboxSmoke\] run id:\s+$([regex]::Escape($RunId))"
 		$LogLinesForChecks = $NewLogLines
+		$LogLinesForStartupChecks = $NewLogLines
 		$runMatches = @()
 		if ($TouchedLogLines.Count -gt 0) {
 			$runMatches = @($TouchedLogLines | Select-String -Pattern $runPattern)
 			if ($runMatches.Count -gt 0) {
 				$lastRunLineNumber = $runMatches[$runMatches.Count - 1].LineNumber
 				$LogLinesForChecks = @($TouchedLogLines | Select-Object -Skip ($lastRunLineNumber - 1))
+				$startupStartLineNumber = 1
+				$allRunMatches = @($TouchedLogLines | Select-String -Pattern "\[SandboxSmoke\] run id:")
+				foreach ($candidateRunMatch in $allRunMatches) {
+					if ($candidateRunMatch.LineNumber -lt $lastRunLineNumber) {
+						$startupStartLineNumber = $candidateRunMatch.LineNumber + 1
+					}
+				}
+				$startupLineCount = $lastRunLineNumber - $startupStartLineNumber + 1
+				$LogLinesForStartupChecks = @($TouchedLogLines | Select-Object -Skip ($startupStartLineNumber - 1) | Select-Object -First $startupLineCount)
 			}
 		}
 		if ($runMatches.Count -eq 0) {
@@ -482,11 +492,11 @@ try {
 		}
 
 		if (-not $Visible) {
-			$backgroundWindowMatches = @($NewLogLines | Select-String -Pattern "\[WindowMode\] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true")
+			$backgroundWindowMatches = @($LogLinesForStartupChecks | Select-String -Pattern "\[WindowMode\] background=true hidden=false noActivate=true offscreen=true foregroundUnchanged=true")
 			if ($backgroundWindowMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm an offscreen, non-activating background window."
 			}
-			$backgroundInputMatches = @($NewLogLines | Select-String -Pattern "\[WindowMode\] background=true physical-input=disabled")
+			$backgroundInputMatches = @($LogLinesForStartupChecks | Select-String -Pattern "\[WindowMode\] background=true physical-input=disabled")
 			if ($backgroundInputMatches.Count -eq 0) {
 				throw "Sandbox smoke log did not confirm disabled physical input in background mode."
 			}
