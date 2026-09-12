@@ -7,6 +7,25 @@ local function AddDebugSuffix(libraries)
 end
 
 local function LinkProjectLibraries(libraries)
+  if _ACTION == "xcode4" then
+    -- Premake's Xcode product proxies use the first configuration's filename.
+    -- Keep build dependencies, but select each archive in the configuration's
+    -- linker settings so Release cannot silently consume the Debug product.
+    dependson(libraries)
+    for _, buildcfg in ipairs({ "Debug", "Release" }) do
+      local suffix = buildcfg == "Debug" and "_d" or ""
+      local archives = {}
+      for _, library in ipairs(libraries) do
+        local archive = path.getabsolute("../libs/lib" .. library .. suffix .. ".a")
+        table.insert(archives, '"' .. archive .. '"')
+      end
+      filter("configurations:" .. buildcfg)
+        linkoptions(archives)
+    end
+    filter {}
+    return
+  end
+
   filter "configurations:Debug"
     links(AddDebugSuffix(libraries))
   filter "configurations:Release"
