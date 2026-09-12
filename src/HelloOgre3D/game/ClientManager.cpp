@@ -8,6 +8,7 @@
 #include "core/SandboxMacros.h"
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
+#include "RenderConfigHelper.h"
 #if defined(HELLO_ENABLE_FGUI)
 #include "ui/fairygui/FairyGuiSystem.h"
 #endif
@@ -98,6 +99,29 @@ namespace
     {
         return technique == Ogre::SHADOWTYPE_NONE ? "none" : "stencil additive";
     }
+
+    unsigned int ReadWindowDimension(const char* name, unsigned int fallback,
+        unsigned int minimum, unsigned int maximum)
+    {
+        const char* value = ReadEnvValue(name);
+        if (value == nullptr)
+            return fallback;
+
+        char* end = nullptr;
+        const long size = std::strtol(value, &end, 10);
+        return end != value && *end == 0 && size >= static_cast<long>(minimum) && size <= static_cast<long>(maximum)
+            ? static_cast<unsigned int>(size) : fallback;
+    }
+
+    bool HasWindowSizeOverride()
+    {
+        return ReadEnvValue("HELLO_WINDOW_WIDTH") != nullptr || ReadEnvValue("HELLO_WINDOW_HEIGHT") != nullptr;
+    }
+
+    bool IsBackgroundWindowRequested()
+    {
+        return ReadBoolEnvValue("HELLO_WINDOW_BACKGROUND", false);
+    }
 }
 
 #if defined(_WIN32)
@@ -110,15 +134,6 @@ static Ogre::String BuildDpiScaledVideoMode(unsigned int baseWidth, unsigned int
            Ogre::StringConverter::toString(scaledHeight) + " @ 32-bit colour";
 }
 
-static unsigned int ReadBackgroundDimension(const char* name, unsigned int fallback, unsigned int minimum, unsigned int maximum)
-{
-	const char* value = std::getenv(name);
-	if (value == nullptr || value[0] == 0) return fallback;
-	char* end = nullptr;
-	const long size = std::strtol(value, &end, 10);
-	return end != value && *end == 0 && size >= static_cast<long>(minimum) && size <= static_cast<long>(maximum)
-		? static_cast<unsigned int>(size) : fallback;
-}
 #endif
 
 
@@ -148,6 +163,8 @@ ClientManager::ClientManager()
     m_lastDrawTimeInMicro = m_Timer.getMicroseconds();   //微秒级
     m_lastViewportWidth = 0;
     m_lastViewportHeight = 0;
+    m_pendingWindowWidth = 0;
+    m_pendingWindowHeight = 0;
 }
 
 ClientManager::~ClientManager()
@@ -212,6 +229,26 @@ void ClientManager::SetWindowActive(bool state)
     m_pRenderWindow->setActive(state);
 }
 
+bool ClientManager::RequestWindowSize(unsigned int width, unsigned int height)
+{
+    if (m_pRenderWindow == nullptr || width < 640 || width > 3840 || height < 360 || height > 2160)
+        return false;
+#if defined(_WIN32)
+    // A Windows background render window is positioned using its creation size.
+    // Resizing it later could move an edge back onto the visible desktop.
+    if (IsBackgroundWindowRequested())
+        return false;
+#endif
+    if (HasWindowSizeOverride())
+        return false;
+
+    m_pendingWindowWidth = width;
+    m_pendingWindowHeight = height;
+    Ogre::LogManager::getSingleton().logMessage("[WindowResize] queued logical="
+        + Ogre::StringConverter::toString(width) + "x" + Ogre::StringConverter::toString(height));
+    return true;
+}
+
 void ClientManager::SetupResources()
 {
     // Load resource paths from config file
@@ -251,6 +288,8 @@ bool ClientManager::Configure()
     }
 
 #if defined(__APPLE__)
+    const unsigned int requestedWidth = ReadWindowDimension("HELLO_WINDOW_WIDTH", 1280, 640, 3840);
+    const unsigned int requestedHeight = ReadWindowDimension("HELLO_WINDOW_HEIGHT", 720, 360, 2160);
     Ogre::RenderSystem* selected = 0;
     Ogre::RenderSystem* glFallback = 0;
     for (Ogre::RenderSystemList::const_iterator it = renderers.begin(); it != renderers.end(); ++it)
@@ -279,12 +318,14 @@ bool ClientManager::Configure()
         selected->getName().find("OpenGL 3+") != Ogre::String::npos;
 
     if (configOptions.find("Video Mode") != configOptions.end())
-        try { selected->setConfigOption("Video Mode", "1280 x 720"); } catch (...) {}
+        try { selected->setConfigOption("Video Mode", Ogre::StringConverter::toString(requestedWidth)
+            + " x " + Ogre::StringConverter::toString(requestedHeight)); } catch (...) {}
     if (configOptions.find("Full Screen") != configOptions.end())
         try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
     if (configOptions.find("FSAA") != configOptions.end())
     {
-        const Ogre::String fsaa = ReadStringEnvValue("HELLO_RENDER_FSAA", "0");
+        const Ogre::String fsaa = ReadStringEnvValue(
+            "HELLO_RENDER_FSAA", RenderConfigHelper::SelectBestMacFsaa(configOptions));
         try { selected->setConfigOption("FSAA", fsaa); } catch (...) {}
         Ogre::LogManager::getSingleton().logMessage("Mac render FSAA: " + fsaa);
     }
@@ -316,6 +357,15 @@ bool ClientManager::Configure()
     {
         m_pRenderWindow->setVisible(true);
         m_pRenderWindow->setActive(true);
+        unsigned int actualWidth = 0, actualHeight = 0, colourDepth = 0;
+        int left = 0, top = 0;
+        m_pRenderWindow->getMetrics(actualWidth, actualHeight, colourDepth, left, top);
+        Ogre::LogManager::getSingleton().logMessage("[WindowMode] platform=mac background="
+            + Ogre::StringConverter::toString(IsBackgroundWindowRequested())
+            + " requestedLogical=" + Ogre::StringConverter::toString(requestedWidth) + "x"
+            + Ogre::StringConverter::toString(requestedHeight)
+            + " pixels=" + Ogre::StringConverter::toString(actualWidth) + "x"
+            + Ogre::StringConverter::toString(actualHeight));
     }
     return m_pRenderWindow != 0;
 #elif defined(_WIN32)
@@ -342,7 +392,9 @@ bool ClientManager::Configure()
 
     m_pRoot->setRenderSystem(selected);
     try { selected->setConfigOption("Full Screen", "No"); } catch (...) {}
-    const Ogre::String dpiScaledVideoMode = BuildDpiScaledVideoMode(1280, 800);
+    const unsigned int requestedWidth = ReadWindowDimension("HELLO_WINDOW_WIDTH", 1280, 640, 3840);
+    const unsigned int requestedHeight = ReadWindowDimension("HELLO_WINDOW_HEIGHT", 800, 360, 2160);
+    const Ogre::String dpiScaledVideoMode = BuildDpiScaledVideoMode(requestedWidth, requestedHeight);
     Ogre::LogManager::getSingleton().logMessage("Windows DPI-scaled video mode: " + dpiScaledVideoMode);
     try { selected->setConfigOption("Video Mode", dpiScaledVideoMode); } catch (...) {}
     try { selected->setConfigOption("VSync", "Yes"); } catch (...) {}
@@ -353,8 +405,8 @@ bool ClientManager::Configure()
 		// A hidden HWND is unreliable for D3D9 device creation. Keep the render
 		// window alive beyond the virtual desktop without activating or listing it.
 		const HWND foregroundBefore = GetForegroundWindow();
-		const unsigned int width = ReadBackgroundDimension("HELLO_WINDOW_WIDTH", 1280, 640, 3840);
-		const unsigned int height = ReadBackgroundDimension("HELLO_WINDOW_HEIGHT", 800, 360, 2160);
+		const unsigned int width = requestedWidth;
+		const unsigned int height = requestedHeight;
 		const int offscreenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN) - static_cast<int>(width) - 64;
 		const int offscreenTop = GetSystemMetrics(SM_YVIRTUALSCREEN) - static_cast<int>(height) - 64;
 		m_pRoot->initialise(false, m_applicationTitle);
@@ -393,7 +445,20 @@ bool ClientManager::Configure()
 			+ " position=" + Ogre::StringConverter::toString(actualLeft) + "," + Ogre::StringConverter::toString(actualTop));
     }
     else
+    {
         m_pRenderWindow = m_pRoot->initialise(true, m_applicationTitle);
+        if (m_pRenderWindow)
+        {
+            unsigned int actualWidth = 0, actualHeight = 0, colourDepth = 0;
+            int left = 0, top = 0;
+            m_pRenderWindow->getMetrics(actualWidth, actualHeight, colourDepth, left, top);
+            Ogre::LogManager::getSingleton().logMessage("[WindowMode] platform=windows background=false requestedLogical="
+                + Ogre::StringConverter::toString(requestedWidth) + "x"
+                + Ogre::StringConverter::toString(requestedHeight)
+                + " pixels=" + Ogre::StringConverter::toString(actualWidth) + "x"
+                + Ogre::StringConverter::toString(actualHeight));
+        }
+    }
     return m_pRenderWindow != 0;
 #else
     if (renderers.size() == 1)
@@ -700,6 +765,8 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 {
     H3D_PROFILE_SCOPE("ClientManager::FrameRendering");
 
+    ApplyPendingWindowSize();
+
     {
         H3D_PROFILE_SCOPE("CameraController::frameRenderingQueued");
         m_pCameraController->frameRenderingQueued(event);
@@ -711,6 +778,35 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 #endif
 
     UpdateViewportLayout(false);
+}
+
+void ClientManager::ApplyPendingWindowSize()
+{
+    if (m_pRenderWindow == nullptr || m_pendingWindowWidth == 0 || m_pendingWindowHeight == 0)
+        return;
+
+    const unsigned int logicalWidth = m_pendingWindowWidth;
+    const unsigned int logicalHeight = m_pendingWindowHeight;
+    m_pendingWindowWidth = 0;
+    m_pendingWindowHeight = 0;
+
+#if defined(_WIN32)
+    const unsigned int nativeWidth = Ogre::DpiHelper::toPhysicalPixels(logicalWidth);
+    const unsigned int nativeHeight = Ogre::DpiHelper::toPhysicalPixels(logicalHeight);
+#else
+    const unsigned int nativeWidth = logicalWidth;
+    const unsigned int nativeHeight = logicalHeight;
+#endif
+    m_pRenderWindow->resize(nativeWidth, nativeHeight);
+
+    unsigned int actualWidth = 0, actualHeight = 0, colourDepth = 0;
+    int left = 0, top = 0;
+    m_pRenderWindow->getMetrics(actualWidth, actualHeight, colourDepth, left, top);
+    Ogre::LogManager::getSingleton().logMessage("[WindowResize] applied logical="
+        + Ogre::StringConverter::toString(logicalWidth) + "x" + Ogre::StringConverter::toString(logicalHeight)
+        + " pixels=" + Ogre::StringConverter::toString(actualWidth) + "x"
+        + Ogre::StringConverter::toString(actualHeight));
+    UpdateViewportLayout(true);
 }
 
 void ClientManager::WindowClosed()
@@ -748,12 +844,14 @@ void ClientManager::WindowResized(unsigned int width, unsigned int height)
             uiHeight = static_cast<unsigned int>(Ogre::Real(physicalHeight) / pointToPixelScale + 0.5f);
         }
     }
-    m_pGameManager->HandleWindowResized(uiWidth, uiHeight);
-
 #if defined(HELLO_ENABLE_FGUI)
+    // GameManager forwards the resize to the Lua FairyGuiManager, whose layout
+    // queries the native FairyGUI screen size. Publish that size first.
     if (m_pFairyGuiSystem)
         m_pFairyGuiSystem->HandleWindowResized(uiWidth, uiHeight);
 #endif
+
+    m_pGameManager->HandleWindowResized(uiWidth, uiHeight);
 
     UpdateViewportLayout(true);
 }

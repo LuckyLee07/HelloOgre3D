@@ -77,7 +77,9 @@ $relayNewFiles = @(
 	'bin/res/scripts/samples/sandbox19_commands.lua',
 	'bin/res/scripts/samples/sandbox19_audio.lua',
 	'bin/res/scripts/samples/sandbox19_product_selftest.lua',
-	'media/materials/sandbox19_relay.material'
+	'media/materials/sandbox19_relay.material',
+	'media/textures/sandbox19/courtyard_paving_diffuse_v2.png',
+	'media/textures/sandbox19/signal_glow.png'
 )
 $relayNewFiles += Get-ChildItem -LiteralPath (Join-Path $relayRoot 'bin\res\audio\relay') -File | ForEach-Object {
 	'bin/res/audio/relay/' + $_.Name
@@ -137,15 +139,17 @@ self-test, smoke and capture settings. Normal rendering settings remain usable.
 Use Play.cmd rather than launching the EXE from an arbitrary working directory.
 
 WASD move; Q/E orbit; mouse wheel zoom; Shift sprint.
+Space fires toward the camera; R reloads. Firing does not block movement.
 Left click/drag selects allies; 1/2 select one; Tab selects both.
 Right click ground rallies; right click visible enemy focuses.
 F focus; G gather at commander; T fall back to the entry and hold; X cancel.
-Esc pauses; the pause menu has sound settings, retry and quit.
+Esc pauses; the pause menu has display/sound settings, retry and quit.
 Clear the gate, advance to the courtyard, clear its guards, then bring the
 commander and at least one surviving ally to the amber relay assembly zone.
 I opens the AI observer; O writes its evidence; F3 paths; F5 performance.
 
-Settings are written to bin/relay_settings.cfg; runtime log is bin/Sandbox.log.
+Display, volume and mute settings are written to bin/relay_settings.cfg;
+runtime log is bin/Sandbox.log.
 This package reuses existing project soldier assets subject to their original
 DEXSOFT license. Nobiax and other source notices remain in media. The package
 uses unchanged TropicalSunnyDay textures from SkyboxSet by Heiko Irrgang,

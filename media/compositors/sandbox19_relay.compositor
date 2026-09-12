@@ -5,7 +5,9 @@ compositor Relay/SceneGrade
 {
 	technique
 	{
-		texture scene target_width target_height PF_R8G8B8A8 no_fsaa
+		// Preserve the main viewport's FSAA on the scene render target. If this
+		// is disabled, 4x window FSAA only smooths the final fullscreen quad.
+		texture scene target_width target_height PF_R8G8B8A8
 
 		target scene
 		{

@@ -73,12 +73,13 @@ local FRAME_KEYS = {
 	"modal_detail4", "modal_detail5", "modal_detail6", "modal_detail7", "modal_detail8",
 	"stat1_label", "stat1_value", "stat2_label", "stat2_value", "stat3_label", "stat3_value",
 	"primary", "primary_accent", "secondary", "secondary_accent", "tertiary", "tertiary_accent",
+	"display_label", "display_prev", "display_prev_accent", "display_next", "display_next_accent",
 	"audio_label", "audio_down", "audio_down_accent", "audio_up", "audio_up_accent",
 	"audio_mute", "audio_mute_accent", "modal_footer",
 }
 
 local function IsModal(key)
-	return key:find("^modal") or key:find("^stat") or key:find("^audio") or
+	return key:find("^modal") or key:find("^stat") or key:find("^display") or key:find("^audio") or
 		key:find("^primary") or key:find("^secondary") or key:find("^tertiary")
 end
 
@@ -328,7 +329,7 @@ function Hud:_Prepare(model, width, height)
 	self:_Text("modal_detail3", x + 32, y + 227, 576, 25, "02   REGROUP AT THE RELAY", 14)
 	self:_Text("modal_detail4", x + 69, y + 257, 539, 23, "Reach the marked zone with at least one surviving squadmate.", self.smallFont)
 	self:_Frame("modal_line2", x + 32, y + 292, 576, 1, "muted")
-	self:_Text("modal_detail5", x + 32, y + 306, 576, 24, model.controls or "WASD move  |  Q/E orbit  |  Wheel zoom  |  1 / 2 / Tab select", self.smallFont)
+	self:_Text("modal_detail5", x + 32, y + 306, 576, 24, model.controls or "WASD move  |  Q/E orbit  |  Space fire  |  R reload  |  1 / 2 / Tab select", self.smallFont)
 	self:_Text("modal_detail6", x + 32, y + 332, 576, 24, "Right-click to order  |  F focus  |  T fall back  |  G rally", self.smallFont)
 	self:_Text("modal_detail7", x + 32, y + 358, 576, 24, "X cancel  |  Esc pause", self.smallFont)
 	self:_Button("primary", x + 32, y + 384, 366, 44, "START MISSION", "start", true, true)
@@ -336,18 +337,24 @@ function Hud:_Prepare(model, width, height)
 end
 
 function Hud:_Pause(model, width, height)
-	local x, y = self:_Modal(width, height, 392, "cyan", "MISSION PAUSED", "Your squad is holding. Resume when you are ready.")
+	local x, y = self:_Modal(width, height, 468, "cyan", "MISSION PAUSED", "Your squad is holding. Resume when you are ready.")
+	local displayAvailable = model.displayAvailable ~= false
+	local displayLabel = string.format("DISPLAY  %d x %d", Count(model.displayWidth), Count(model.displayHeight))
+	if not displayAvailable then displayLabel = displayLabel .. "  LOCKED" end
+	self:_Text("display_label", x + 32, y + 166, 370, 28, displayLabel, 14)
+	self:_Button("display_prev", x + 424, y + 160, 88, 42, "<", "display_prev", displayAvailable, false)
+	self:_Button("display_next", x + 520, y + 160, 88, 42, ">", "display_next", displayAvailable, false)
 	local audioAvailable = model.audioAvailable ~= false
 	local volume = math.floor(Clamp(Number(model.audioVolume, 1), 0, 1) * 100 + 0.5)
 	local audioLabel = audioAvailable and ("AUDIO  " .. (model.audioMuted and "MUTED" or tostring(volume) .. "%")) or "AUDIO UNAVAILABLE"
-	self:_Text("audio_label", x + 32, y + 172, 255, 28, audioLabel, 14)
-	self:_Button("audio_down", x + 298, y + 166, 52, 42, "-", "audio_down", audioAvailable, false)
-	self:_Button("audio_up", x + 360, y + 166, 52, 42, "+", "audio_up", audioAvailable, false)
-	self:_Button("audio_mute", x + 424, y + 166, 184, 42, model.audioMuted and "UNMUTE" or "MUTE", "audio_mute", audioAvailable, false)
-	self:_Text("modal_detail1", x + 32, y + 228, 576, 25, "Mission time  " .. Clock(model.elapsedMs) .. "    |    Esc to resume", 14)
-	self:_Button("primary", x + 32, y + 275, 576, 46, "RESUME MISSION", "resume", true, true)
-	self:_Button("secondary", x + 32, y + 333, 282, 38, "RETRY", "retry", true, false)
-	self:_Button("tertiary", x + 326, y + 333, 282, 38, "QUIT", "quit", true, false)
+	self:_Text("audio_label", x + 32, y + 224, 255, 28, audioLabel, 14)
+	self:_Button("audio_down", x + 298, y + 218, 52, 42, "-", "audio_down", audioAvailable, false)
+	self:_Button("audio_up", x + 360, y + 218, 52, 42, "+", "audio_up", audioAvailable, false)
+	self:_Button("audio_mute", x + 424, y + 218, 184, 42, model.audioMuted and "UNMUTE" or "MUTE", "audio_mute", audioAvailable, false)
+	self:_Text("modal_detail1", x + 32, y + 280, 576, 25, "Mission time  " .. Clock(model.elapsedMs) .. "    |    Esc to resume", 14)
+	self:_Button("primary", x + 32, y + 327, 576, 46, "RESUME MISSION", "resume", true, true)
+	self:_Button("secondary", x + 32, y + 385, 282, 38, "RETRY", "retry", true, false)
+	self:_Button("tertiary", x + 326, y + 385, 282, 38, "QUIT", "quit", true, false)
 end
 
 function Hud:_Result(model, width, height, victory)

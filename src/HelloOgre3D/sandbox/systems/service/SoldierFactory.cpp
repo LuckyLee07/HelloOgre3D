@@ -34,7 +34,7 @@ namespace
 		{ "default", true, true, false },
 		{ "ai_soldier", true, true, false },
 		{ "player_soldier", true, false, true },
-		{ "commander_soldier", false, false, true },
+		{ "commander_soldier", true, false, true },
 	};
 
 	const SoldierAssemblyProfile& ResolveSoldierAssemblyProfile(const char* profileName)

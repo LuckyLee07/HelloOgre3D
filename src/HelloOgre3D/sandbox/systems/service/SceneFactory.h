@@ -25,6 +25,8 @@ public:
 	static void RemParticleBySceneNode(Ogre::SceneNode* particleNode);
 	static Ogre::SceneNode* CreateParticle(const Ogre::String& particleName);
 	static Ogre::SceneNode* CreateParticle(Ogre::SceneNode* parentNode, const Ogre::String& particleName);
+	static Ogre::SceneNode* CreateTracerLine(const Ogre::Vector3& start, const Ogre::Vector3& end,
+		Ogre::Real width, const Ogre::String& materialName);
 
 	static void GetMeshInfo(const Ogre::Mesh* mesh, size_t& vertex_count, Ogre::Vector3*& vertices, size_t& index_count, unsigned long*& indices);
 

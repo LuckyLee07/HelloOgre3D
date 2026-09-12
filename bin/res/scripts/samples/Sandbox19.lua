@@ -21,6 +21,7 @@ local _enemyMarks = {}
 local _matchConfig = nil
 local _lastEnemy, _restart, _restartStart = 0, false, false
 local _paused, _lastProgressMs, _lastAlive = false, 0, 0
+local _formationUpdateMs = -1000
 local _healthSamples, _damageUntil = {}, {}
 local _actorShadows = {}
 local _debug = false
@@ -46,8 +47,8 @@ local function bbOf(agent)
 	local ai = agent ~= nil and agent:GetAIComponent() or nil
 	return ai ~= nil and ai:GetBlackboard() or nil
 end
-local function hint(text, kind)
-	_hint, _hintKind, _hintUntil = text, kind or "info", now() + (kind == "accepted" and 1800 or 3500)
+local function hint(text, kind, durationMs)
+	_hint, _hintKind, _hintUntil = text, kind or "info", now() + (durationMs or (kind == "accepted" and 1800 or 3500))
 	if _audio ~= nil and (kind == "accepted" or kind == "failed") then _audio:Play(kind, now()) end
 end
 local function distance(a, b)
@@ -206,6 +207,25 @@ end
 local function isActive()
 	return _state ~= "PREPARE" and _state ~= "VICTORY" and _state ~= "DEFEAT" and not _paused
 end
+local function updateSquadAutonomy()
+	if not isActive() or _player == nil or now() - _formationUpdateMs < 250 then return end
+	_formationUpdateMs = now()
+	local playerPos = _player:GetPosition()
+	local forward = _player:GetForward()
+	forward.y = 0
+	if forward:squaredLength() < 0.001 then forward = Vector3(0, 0, 1)
+	else forward = forward:normalisedCopy() end
+	local right = Vector3(forward.z, 0, -forward.x)
+	for index, id in ipairs(_allyIds) do
+		local ally = find(id)
+		local bb = bbOf(ally)
+		if bb ~= nil and not bb:Has("command.issuedMs") and not bb:Has("sandbox19.holdPos") then
+			local lateral = index == 1 and -2.8 or 2.8
+			local anchor = SandboxNav:FindClosestPoint("default", playerPos + forward * 3.0 + right * lateral)
+			bb:SetVec3("sandbox19.anchorPos", anchor)
+		end
+	end
+end
 local function spawnAgent(slot, team, player)
 	local a = Create_SoldierWithProfile(player and "res/scripts/agent/HumanSoldierAgent.lua"
 		or "res/scripts/agent/BehaviorSoldierAgent.lua",
@@ -221,6 +241,8 @@ local function spawnAgent(slot, team, player)
 	if bb ~= nil then
 		bb:SetFloat("maxHealth", hp)
 		bb:SetFloat("pursue.reach", 9)
+		bb:SetFloat("perception.visionRange", team == 1 and 24 or 20)
+		bb:SetFloat("sandbox19.engagementRadius", team == 1 and 26 or 16)
 		bb:SetBool("sandbox19.aimedFire", true)
 		bb:SetBool("weapon.actionOwnsFire", true)
 		bb:SetVec3("sandbox19.anchorPos", a:GetPosition())
@@ -238,7 +260,7 @@ local function startWave()
 	end
 	_lastProgressMs, _lastAlive = now(), 2
 	hint(_wave == 1 and "Gate guards active. Choose the main lane or west flank."
-		or "Courtyard guards ahead. Clear the relay approach.")
+		or "Courtyard guards ahead. Clear the relay approach.", "info", 1800)
 	print("[Sandbox19Match] phase=WAVE wave=" .. _wave .. " enemies=2 director=none elapsedMs=" .. (now() - _startedMs))
 end
 local function startMission()
@@ -334,7 +356,9 @@ end
 local function spawnEncounter()
 	GameManager:SetSimulationPaused(false)
 	_paused, _state, _wave = false, "PREPARE", 0
+	_formationUpdateMs = -1000
 	_startedMs, _endedMs, _endReason, _lastEnemy = now(), nil, "", 0
+	Scene.UpdateRelayFeedback(_state, _wave, now())
 	_allyIds, _enemyIds, _profiles, _selection = {}, {}, {}, {}
 	_healthSamples, _damageUntil = {}, {}
 	_commands = Commands.New({find = find, hint = hint})
@@ -442,6 +466,10 @@ local function action(name, id)
 	elseif name == "rally" then issue("rally", -1, _player:GetPosition())
 	elseif name == "retreat" then issue("retreat", -1, _anchors.fallback)
 	elseif name == "cancel" then cancel()
+	elseif name == "display_prev" or name == "display_next" then
+		local ok, message = _audio:CycleWindow(name == "display_prev" and -1 or 1)
+		print("[Sandbox19Display] status=" .. (ok and "accepted" or "rejected") .. " message=" .. message)
+		if ok then _audio:Play("select", now()) end
 	elseif name == "audio_up" then _audio.volume = math.min(1, _audio.volume + 0.1); _audio:Apply(true); _audio:Play("select", now())
 	elseif name == "audio_down" then _audio.volume = math.max(0, _audio.volume - 0.1); _audio:Apply(true); _audio:Play("select", now())
 	elseif name == "audio_mute" then _audio.muted = not _audio.muted; _audio:Apply(true) end
@@ -538,6 +566,7 @@ local function updateHud()
 		commanderDamaged = isDamaged(_player:GetObjId()),
 		allies = allies, hint = now() <= _hintUntil and _hint or "", hintKind = _hintKind,
 		audioVolume = _audio.volume, audioMuted = _audio.muted, audioAvailable = _audio.available,
+		displayWidth = _audio.windowWidth, displayHeight = _audio.windowHeight, displayAvailable = not _audio.windowLocked,
 		mouseX = _mouse.x, mouseY = _mouse.y, mouseDown = _mouse.down, orders = _commands.stats, endReason = _endReason},
 		GameManager:getScreenWidth(), GameManager:getScreenHeight())
 	_observer:Update(_selection, find, now(), 2147483647, _profiles)
@@ -622,6 +651,7 @@ function EventHandle_Mouse(ctype, x, y, button)
 	return ctype ~= 0
 end
 function EventHandle_WindowResized(width, height)
+	if _audio ~= nil then _audio:ObserveWindow(width, height) end
 	GUI_WindowResized(width, height)
 	if _player ~= nil then updateHud() end
 end
@@ -632,7 +662,7 @@ function Sandbox_Initialize()
 		print("[Sandbox19Visual] compositor=Relay/SceneGrade status=unavailable")
 	end
 	GUI_CreateSandboxText(GUI.MarkupColor.White .. GUI.Markup.Medium ..
-		"RELAY OUTPOST\nWASD move | Q/E orbit | Wheel zoom\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 230}):setVisible(false)
+		"RELAY OUTPOST\nWASD move | Q/E orbit | Wheel zoom\nSpace fire | R reload\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 250}):setVisible(false)
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = true
 	SandboxAgentConfig:SetUseCppFsmFlag(true)
 	_anchors = Scene.Create()
@@ -685,7 +715,9 @@ end
 function Sandbox_Update(deltaMs)
 	if _hud == nil or _player == nil then return end
 	if _restart then local start = _restartStart; _restart = false; restartEncounter(start) end
+	updateSquadAutonomy()
 	updateMission()
+	Scene.UpdateRelayFeedback(_state, _wave, now())
 	if isActive() then _audio:Observe(ObjectManager:getAllAgents(), now()) end
 	updateHud()
 	GUI_UpdateCameraInfo()

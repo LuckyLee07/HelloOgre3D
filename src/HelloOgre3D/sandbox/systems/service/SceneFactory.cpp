@@ -101,17 +101,57 @@ Ogre::SceneNode* SceneFactory::CreateParticle(Ogre::SceneNode* parentNode, const
 	return particle;
 }
 
+Ogre::SceneNode* SceneFactory::CreateTracerLine(const Ogre::Vector3& start, const Ogre::Vector3& end,
+	Ogre::Real width, const Ogre::String& materialName)
+{
+	if (s_rootSceneNode == nullptr || start.isNaN() || end.isNaN())
+		return nullptr;
+
+	const Ogre::Vector3 direction = end - start;
+	if (direction.isZeroLength())
+		return nullptr;
+
+	Ogre::BillboardChain* tracer = s_rootSceneNode->getCreator()->createBillboardChain();
+	if (tracer == nullptr)
+		return nullptr;
+	tracer->setMaxChainElements(3);
+	tracer->setUseTextureCoords(false);
+	tracer->setUseVertexColours(true);
+	tracer->setMaterialName(materialName);
+	tracer->setCastShadows(false);
+	tracer->setRenderQueueGroup(Ogre::RENDER_QUEUE_8);
+
+	const Ogre::Real clampedWidth = std::max(Ogre::Real(0.02f), width);
+	const Ogre::ColourValue startColour(1.0f, 0.94f, 0.60f, 1.0f);
+	const Ogre::ColourValue middleColour(1.0f, 0.58f, 0.12f, 0.62f);
+	const Ogre::ColourValue endColour(1.0f, 0.25f, 0.02f, 0.08f);
+	const Ogre::Quaternion orientation = Ogre::Quaternion::IDENTITY;
+	// addChainElement inserts at the head, so add tail-to-head to preserve the
+	// intended bright muzzle-to-dim-target gradient.
+	tracer->addChainElement(0, Ogre::BillboardChain::Element(end, clampedWidth * 0.20f, 1.0f, endColour, orientation));
+	tracer->addChainElement(0, Ogre::BillboardChain::Element(start + direction * 0.68f,
+		clampedWidth * 0.62f, 0.68f, middleColour, orientation));
+	tracer->addChainElement(0, Ogre::BillboardChain::Element(start, clampedWidth, 0.0f, startColour, orientation));
+
+	Ogre::SceneNode* node = s_rootSceneNode->createChildSceneNode();
+	node->attachObject(tracer);
+	return node;
+}
+
 void SceneFactory::RemParticleBySceneNode(Ogre::SceneNode* particleNode)
 {
-	const unsigned short numAttachedObjects = particleNode->numAttachedObjects();
-	for (unsigned short index = 0; index < numAttachedObjects; ++index)
+	while (particleNode->numAttachedObjects() > 0)
 	{
-		Ogre::MovableObject* pObject = particleNode->getAttachedObject(index);
+		Ogre::MovableObject* pObject = particleNode->getAttachedObject(0);
+		particleNode->detachObject(pObject);
 		if (pObject->getMovableType() == Ogre::ParticleSystemFactory::FACTORY_TYPE_NAME)
 		{
 			Ogre::ParticleSystem* particleSys = static_cast<Ogre::ParticleSystem*>(pObject);
-			particleNode->detachObject(particleSys);
 			particleNode->getCreator()->destroyParticleSystem(particleSys);
+		}
+		else
+		{
+			particleNode->getCreator()->destroyMovableObject(pObject);
 		}
 	}
 }

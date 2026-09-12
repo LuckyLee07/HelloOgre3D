@@ -12,6 +12,7 @@ local _debugVisible = false
 local _sideWallIds = {}
 local _floorIds = {}
 local _coverIds = {}
+local _relayFeedback = {}
 
 local function _Box(width, height, length, x, y, z, yaw, material)
 	-- Procedural geometry and Bullet receive the same dimensions. Unequal boxes
@@ -52,19 +53,25 @@ local function _VisualPlane(width, height, x, y, z, pitch, yaw, material)
 	return plane
 end
 
+local function _TrackFeedback(group, object)
+	local items = _relayFeedback[group]
+	items[#items + 1] = {object = object, material = nil}
+	return object
+end
+
+local function _SetFeedbackMaterial(group, material)
+	for _, item in ipairs(_relayFeedback[group] or {}) do
+		if item.material ~= material then
+			item.object:setMaterial(material)
+			item.material = material
+		end
+	end
+end
+
 local function _GroundLayer(width, length, x, z, yaw, material)
 	-- Kept a few millimetres above the floor. These are render-only planes, so
 	-- they cannot alter Bullet contacts, navmesh rasterisation, or weapon rays.
 	return _VisualPlane(width, length, x, 0.014, z, 0, yaw, material)
-end
-
-local function _Plant(width, height, x, z, yaw)
-	-- Two crossed cards give a stable silhouette from the orbit camera. The source
-	-- cutout has transparent bottom padding, hence the slightly lowered centre.
-	local centerY = height * 0.43
-	_VisualPlane(width, height, x, centerY, z, 90, yaw, "Relay/Vegetation")
-	_VisualPlane(width, height, x, centerY, z, 90, yaw + 90, "Relay/Vegetation")
-	_GroundLayer(width * 0.92, width * 0.66, x, z, yaw, "Relay/ContactShadow")
 end
 
 local function _PaintCorners(cx, cz, halfWidth, halfDepth, material)
@@ -104,6 +111,7 @@ end
 function Scene.Create()
 	_G.SandboxLevelBoxes = {}
 	_sideWallIds, _floorIds, _coverIds = {}, {}, {}
+	_relayFeedback = {beacons = {}, strips = {}, beam = {}, door = {}, goal = {}, threshold = {}, phase = "", mode = "off"}
 	_navMesh, _debugVisible = nil, false
 
 	-- Pitch raises the generated mountain belt behind the relay silhouette.
@@ -214,26 +222,6 @@ function Scene.Create()
 		_GroundLayer(1.35, 1.15, prop[1], prop[2], prop[3], "Relay/ContactShadow")
 	end
 
-	-- Vegetation stays on perimeter/service strips and around cover shoulders. It
-	-- softens the hard modular silhouette while preserving the x=-8..8 lane and
-	-- the x=-18 bypass as unobstructed gameplay space.
-	for _, plant in ipairs({
-		{ 1.65, 1.35, -21.2, -17.8, 12 }, { 1.30, 1.05, 20.8, -17.0, -24 },
-		{ 1.80, 1.45, -14.4, -13.8, 32 }, { 1.35, 1.10, 15.0, -12.0, -6 },
-		{ 1.35, 1.08, -5.9, -8.7, 18 }, { 1.50, 1.20, 5.9, -8.3, -14 },
-		{ 1.55, 1.25, -21.2, -4.0, -18 }, { 1.85, 1.48, -14.7, 0.8, 22 },
-		{ 1.40, 1.12, 16.0, 0.0, 10 }, { 1.75, 1.42, 21.0, 4.5, -33 },
-		{ 1.45, 1.16, -5.5, 5.3, -8 }, { 1.30, 1.04, 5.5, 5.7, 24 },
-		{ 1.30, 1.05, -21.0, 9.0, 14 }, { 1.70, 1.36, -14.6, 13.5, -12 },
-		{ 1.50, 1.22, 16.0, 14.3, 28 }, { 1.85, 1.48, 21.0, 18.0, -5 },
-		{ 1.30, 1.04, -5.3, 23.3, 12 }, { 1.45, 1.16, 5.3, 23.7, -22 },
-		{ 1.45, 1.16, -21.0, 23.0, 35 }, { 1.80, 1.45, -14.0, 28.5, -20 },
-		{ 1.55, 1.24, 14.5, 28.0, 18 }, { 1.85, 1.50, 21.0, 32.0, -28 },
-		{ 1.30, 1.05, -10.5, 34.5, 8 }, { 1.45, 1.16, 10.8, 34.2, -16 },
-	}) do
-		_Plant(plant[1], plant[2], plant[3], plant[4], plant[5])
-	end
-
 	-- A stepped relay building gives the destination a readable silhouette:
 	-- low wings, central gatehouse, rooftop plant and a narrow mast.
 	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Facade")
@@ -250,13 +238,13 @@ function Scene.Create()
 		_Box(0.26, 3.55, 0.24, x, 1.78, 37.30, 0, "Relay/Trim")
 	end
 	_Box(5.75, 0.30, 0.28, 0, 4.35, 37.27, 0, "Relay/Trim")
-	_Box(5.45, 0.14, 0.28, -5.75, 2.67, 37.25, 0, "Relay/Accent")
-	_Box(5.45, 0.14, 0.28, 5.75, 2.67, 37.25, 0, "Relay/Accent")
+	_TrackFeedback("strips", _Box(5.45, 0.14, 0.28, -5.75, 2.67, 37.25, 0, "Relay/StateOff"))
+	_TrackFeedback("strips", _Box(5.45, 0.14, 0.28, 5.75, 2.67, 37.25, 0, "Relay/StateOff"))
 	for _, x in ipairs({ -7.65, 7.65 }) do
-		_Box(0.22, 0.46, 0.20, x, 2.18, 37.18, 0, "Relay/BeaconCyan")
+		_TrackFeedback("beacons", _Box(0.22, 0.46, 0.20, x, 2.18, 37.18, 0, "Relay/StateOff"))
 	end
 	for _, x in ipairs({ -2.15, 2.15 }) do
-		_Box(0.20, 0.34, 0.20, x, 3.58, 37.15, 0, "Relay/BeaconAmber")
+		_TrackFeedback("beacons", _Box(0.20, 0.34, 0.20, x, 3.58, 37.15, 0, "Relay/StateOff"))
 	end
 	_Module(HANGAR_MESH, 0, 1.28, 37.38, 0, "Relay/Equipment")
 	for _, x in ipairs({ -5.8, 5.8 }) do
@@ -271,8 +259,16 @@ function Scene.Create()
 	end
 	_Box(3.8, 0.14, 0.18, 0, 7.72, 39.25, 0, "Relay/Trim")
 	_Box(2.7, 0.12, 0.18, 0, 9.02, 39.25, 0, "Relay/Trim")
-	_Box(0.32, 0.32, 0.32, -1.25, 9.02, 39.12, 0, "Relay/BeaconCyan")
-	_Box(0.32, 0.32, 0.32, 1.25, 9.02, 39.12, 0, "Relay/BeaconAmber")
+	_TrackFeedback("beacons", _Box(0.32, 0.32, 0.32, -1.25, 9.02, 39.12, 0, "Relay/StateOff"))
+	_TrackFeedback("beacons", _Box(0.32, 0.32, 0.32, 1.25, 9.02, 39.12, 0, "Relay/StateOff"))
+
+	-- Soft, state-driven signal layers make the mission phase readable in the
+	-- world. They are render-only and share the project-owned radial mask.
+	_TrackFeedback("beam", _VisualPlane(0.72, 3.6, 0, 10.25, 39.1, 90, 0, "Relay/SignalOff"))
+	_TrackFeedback("beam", _VisualPlane(0.72, 3.6, 0, 10.25, 39.1, 90, 90, "Relay/SignalOff"))
+	_TrackFeedback("door", _VisualPlane(5.2, 3.3, 0, 1.72, 37.02, 90, 0, "Relay/SignalOff"))
+	_TrackFeedback("threshold", _GroundLayer(8.0, 3.4, 0, 19.0, 0, "Relay/SignalOff"))
+	_TrackFeedback("goal", _GroundLayer(9.0, 6.5, 0, 35.0, 0, "Relay/SignalOff"))
 
 	_PaintCorners(0, -16, 5, 4, "Relay/SafeMark")
 	_PaintCorners(0, 33.5, 5, 3, "Relay/GoalMark")
@@ -282,8 +278,63 @@ function Scene.Create()
 	end
 
 	SandboxScene:UpdateSceneGraph()
-	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p4-depth-contact vegetation=24")
+	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p4-depth-contact vegetation=0")
 	return _Anchors()
+end
+
+local function _FeedbackProfile(state, wave)
+	if state == "PREPARE" then
+		return {mode = "standby", colour = "Amber", stepMs = 700, maxLevel = 2, door = true}
+	elseif state == "WAVE" then
+		return {mode = "contested", colour = "Amber", stepMs = wave == 1 and 240 or 140,
+			maxLevel = 3, beam = true, door = true}
+	elseif state == "ADVANCE" then
+		return {mode = "advance", colour = "Amber", stepMs = 260, maxLevel = 3,
+			beam = true, door = true, threshold = true}
+	elseif state == "REGROUP" then
+		return {mode = "regroup", colour = "Cyan", stepMs = 240, maxLevel = 3,
+			beam = true, door = true, goal = true}
+	elseif state == "VICTORY" then
+		return {mode = "secured", colour = "Cyan", steady = 3,
+			beam = true, door = true, goal = true}
+	end
+	return {mode = state == "DEFEAT" and "failed" or "off"}
+end
+
+local function _FeedbackMaterial(prefix, colour, level)
+	if colour == nil or level <= 0 then return "Relay/" .. prefix .. "Off" end
+	local suffix = level == 1 and "Dim" or (level == 2 and "Mid" or "")
+	return "Relay/" .. prefix .. colour .. suffix
+end
+
+function Scene.UpdateRelayFeedback(state, wave, timeMs)
+	local profile = _FeedbackProfile(tostring(state or ""), tonumber(wave) or 0)
+	local pulse = {1, 2, 3, 2}
+	local tick = math.floor(math.max(0, tonumber(timeMs) or 0) / (profile.stepMs or 1000))
+	local level = profile.steady or math.min(profile.maxLevel or 0, pulse[(tick % #pulse) + 1])
+	local softLevel = math.max(1, level - 1)
+	local signalOff = "Relay/SignalOff"
+
+	_SetFeedbackMaterial("beacons", _FeedbackMaterial("State", profile.colour, level))
+	_SetFeedbackMaterial("strips", _FeedbackMaterial("State", profile.colour, level))
+	_SetFeedbackMaterial("beam", profile.beam and _FeedbackMaterial("Signal", profile.colour, softLevel) or signalOff)
+	_SetFeedbackMaterial("door", profile.door and _FeedbackMaterial("Signal", profile.colour, softLevel) or signalOff)
+	_SetFeedbackMaterial("threshold", profile.threshold and _FeedbackMaterial("Signal", profile.colour, level) or signalOff)
+	_SetFeedbackMaterial("goal", profile.goal and _FeedbackMaterial("Signal", profile.colour, level) or signalOff)
+
+	local phase = tostring(state) .. ":" .. tostring(wave)
+	_relayFeedback.mode = profile.mode
+	if _relayFeedback.phase ~= phase then
+		_relayFeedback.phase = phase
+		local ground = profile.threshold and "threshold" or (profile.goal and "goal" or "off")
+		print("[Sandbox19RelayFeedback] phase=" .. phase .. " mode=" .. profile.mode
+			.. " colour=" .. tostring(profile.colour or "off") .. " ground=" .. ground)
+	end
+	return profile.mode
+end
+
+function Scene.GetRelayFeedbackState()
+	return _relayFeedback.mode or "off"
 end
 
 function Scene.CreateActorShadow()

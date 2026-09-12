@@ -93,12 +93,14 @@ function Test:Step(h, nowMs)
 		if self.frames < 30 then return end
 		if not self:Check(h.state == "PREPARE" and #h.enemies == 0 and nowMs == self.frozenTime
 			and (h.player:GetPosition() - self.frozenPos):squaredLength() < 0.001, "briefing-freezes-simulation") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "standby", "relay-feedback-standby") then return end
 		h.start()
 		self:Next("move", nowMs)
 	elseif self.stage == "move" then
 		if nowMs - self.since < 300 then return end
 		if not self:Check(Scene.ValidateCollision(), "real-wall-and-floor-collision") then return end
-		if not self:Check(h.wave == 1 and #h.enemies == 2 and h.player:GetWeaponComponent() == nil, "unarmed-two-guard-start") then return end
+		if not self:Check(h.wave == 1 and #h.enemies == 2 and h.player:GetWeaponComponent() ~= nil, "armed-commander-two-guard-start") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "contested", "relay-feedback-first-wave") then return end
 		h.selectAll()
 		h.issue("rally", -1, Vector3(0, 0, -10))
 		if not self:Check(h.commands.stats.issued == 2, "rally-accepted-two-actors") then return end
@@ -219,19 +221,31 @@ function Test:Step(h, nowMs)
 		self:Next("advance", nowMs)
 	elseif self.stage == "advance" then
 		if not self:Check(h.state == "ADVANCE" and h.wave == 1, "clear-alone-does-not-spawn-next-stage") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "advance", "relay-feedback-advance") then return end
 		h.player:setPosition(h.anchors.trigger.center)
 		self:Next("second", nowMs)
 	elseif self.stage == "second" then
 		if not self:Check(h.wave == 2 and #h.enemies == 4, "advance-triggers-front-guards") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "contested", "relay-feedback-second-wave") then return end
 		for _, id in ipairs(h.enemies) do local e = h.find(id); if e then e:SetHealth(0) end end
 		self:Next("regroup", nowMs)
 	elseif self.stage == "regroup" then
-		if not self:Check(h.state == "REGROUP", "clear-is-not-victory-without-regroup") then return end
+		if not self.regroupChecked then
+			if not self:Check(h.state == "REGROUP", "clear-is-not-victory-without-regroup") then return end
+			if not self:Check(Scene.GetRelayFeedbackState() == "regroup", "relay-feedback-regroup") then return end
+			self.regroupChecked = true
+		end
+		if nowMs - self.since < 700 then return end
 		h.player:setPosition(h.anchors.goal)
 		ally:setPosition(h.anchors.goal + Vector3(2, 0, 0))
 		self:Next("victory", nowMs)
 	elseif self.stage == "victory" then
-		if not self:Check(h.state == "VICTORY" and GameManager:IsSimulationPaused(), "regroup-victory-freezes") then return end
+		if not self.victoryChecked then
+			if not self:Check(h.state == "VICTORY" and GameManager:IsSimulationPaused(), "regroup-victory-freezes") then return end
+			if not self:Check(Scene.GetRelayFeedbackState() == "secured", "relay-feedback-victory") then return end
+			self.victoryChecked = true
+		end
+		if self.frames < 24 then return end
 		self.oldId = h.player:GetObjId()
 		h.restart(false)
 		self:Next("restart", nowMs)
@@ -239,6 +253,7 @@ function Test:Step(h, nowMs)
 		if not self:Check(h.player:GetObjId() ~= self.oldId and h.find(self.oldId) == nil and h.state == "PREPARE"
 			and #h.enemies == 0 and h.commands.stats.issued == 0 and next(h.commands.active) == nil
 			and commandCleared(bb) and not bb:Has("sandbox19.holdPos"), "restart-new-identities-clean-orders") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "standby", "relay-feedback-restart") then return end
 		h.start()
 		if not self:Check(h.commands:Issue(ally, "rally", -1, Vector3(0, 0, -8), nowMs), "live-restart-order-accepted") then return end
 		self:Next("restart-executing", nowMs)
@@ -257,6 +272,7 @@ function Test:Step(h, nowMs)
 		self:Next("defeat", nowMs)
 	elseif self.stage == "defeat" then
 		if not self:Check(h.state == "DEFEAT", "commander-down-defeat") then return end
+		if not self:Check(Scene.GetRelayFeedbackState() == "failed", "relay-feedback-defeat") then return end
 		self.done = true
 		print("[Sandbox19ProductSelfTest] PASS all=true synthetic=true")
 	end

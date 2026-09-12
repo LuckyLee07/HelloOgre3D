@@ -28,7 +28,7 @@
 | 环境纵深与轮廓 | PASS | 1080p/720p 均可见荒漠远山、低墙、长条掩体和分层 relay；重复双层窗片与等大方块群已移除。 |
 | 敌我与选择可读性 | PASS | 友军青色三角/圆环、敌方橙色菱形/生命条、目标框和短确认提示同时可见，形状与颜色双重区分。 |
 | 材质与光照统一 | PARTIAL | 风化混凝土表面、三类主材、低对比地表旧化、接触阴影、暖色日光和轻量场景色调已统一，D3D9 基础材质与 GL 全链实际加载通过；旧低多边形模块、平直几何、非 PBR 材质与目标稿仍有品质差距。 |
-| HUD 层级与点击 | PASS | 720p 回放覆盖开始、选择/拖框、右键、暂停设置、三种命令、重试和退出；1080p 无裁切。 |
+| HUD 层级与点击 | PASS | 720p 回放覆盖开始、选择/拖框、右键、暂停设置、三种命令、重试和退出；后续 720p→900p 同进程切换及 1920×945 受约束窗口均无裁切。 |
 | 空间与玩法一致 | PASS | 七个出生点、目标/撤回点、主路/侧路共 18 项路径通过；侧墙两高度射线、主路无遮挡和地面碰撞通过。 |
 | 本轮视觉收口 | PASS | relay 专用门面、结构边、信标与场地细节已落地；曳光、枪口焰、命中火花和 HP 差分受伤反馈在正常镜头下可辨认。 |
 | 目标画面整体完成度 | PARTIAL | 核心构图和信息层级已经显著接近，定制荒漠植被、接地层与克制的场景后处理已进入实机；角色资产、PBR 高阶材质和最终声音/手感仍低于或尚未达到目标稿。 |
@@ -99,3 +99,29 @@ Gorilla 的 render-queue listener 会在 compositor scene RTT viewport 再次收
 - 产品 fixture 位于 `tmp/relay-product-fixture-20260912-005627-xuk1ahd6/`，返回 PASS reason=evidence-complete；Sandbox19/6/7/8 smoke 位于 `tmp/m1-smoke-20260912-005647/`，四项均 PASS。
 - 最终 1280×720 GL 抓帧位于 `tmp/product-grade-post-final/`，确认准备模态和常规 HUD 都无倒置、重影或滤色；FairyGUI All 自测 30/30、长循环 3/3 且 finalClean=true。
 - HLSL/D3D9 后处理本轮未在 macOS 验证；现有 D3D9 证据只覆盖加入该 compositor 之前的基础材质与画面。角色资产、PBR 高阶材质、人工手感/扬声器听感和动态窗口仍是 P3 明确边界。
+
+## 动态窗口与多分辨率追加（2026-09-12）
+
+此前 macOS 普通窗口固定为 1280×720，暂停菜单也只有声音设置；“布局写成响应式”没有真实动态 resize 证据。本轮把启动尺寸解析扩展到 macOS，并以 `GameManager::RequestWindowSize` 将 Lua 请求排到下一帧安全点执行。暂停层现在提供 1280×720、1600×900、1920×1080 三档 DISPLAY 选择，保存值与声音设置共用纯数据 `relay_settings.cfg`；显式启动覆盖优先并锁定控件。
+
+![切换到 1600×900 后的暂停菜单与完整 HUD](dev-design/specs/assets/sandbox19-runtime/settings-resize-900.png)
+
+### 追加验证与边界
+
+- `tmp/window-dynamic-final-20260912/` 在同一 macOS Release 进程中实际从 1280×720 切到 1600×900；两张抓帧尺寸与日志的 queued/applied 值一致，暂停层、底部命令栏、左右状态卡、场景 compositor 均按新宽高重排，无拉伸、裁切或 UI 重影。
+- `tmp/window-persistence-1600x900-20260912/` 验证普通重启从默认 1280×720 读取保存值并安全切到 1600×900；`tmp/window-1080-final-20260912/` 验证启动覆盖优先和锁定态。本机 macOS 可见工作区把请求的 1920×1080 标题栏窗口约束为实际 1920×945，日志与 HUD 均报告实际值，不能称为 macOS 1080p PASS。
+- `tmp/fgui-screen-adapt-1600x900-20260912/` 的 FairyGUI 屏幕适配自测在实际 1600×900 下返回 true；居中弹窗、边缘弹出层、引导遮罩和 Toast 全部在屏内。该自动化模式按既有合同跳过 Sandbox 场景，因此与动态 HUD 抓帧分开取证。
+- macOS arm64 Release 构建、产品 fixture 和 Sandbox19/6/7/8 smoke 均通过；时序修正后的最终目录分别为 `tmp/relay-product-fixture-20260912-081628-ao4a0iay/` 和 `tmp/m1-smoke-20260912-081650/`。测试结束已把 `relay_settings.cfg` 恢复为用户原值。
+- Windows 普通窗口的 DPI resize 代码完成静态条件编译核对，后台窗口按设计拒绝运行时调整；当前没有 Windows 会话，未把新 DISPLAY 菜单或 D3D9 动态 resize 记为运行通过。内部回放也不替代人工持续输入与窗口拖动手感。
+
+此前各节把“动态窗口”列为未验，以上证据现已关闭 macOS 功能与自动布局缺口；P3 仍保留 Windows 普通窗口实机复核、人工手感/扬声器听感、角色资产和 PBR 高阶材质边界。
+
+## 核心战斗体感复核（2026-09-12）
+
+作者再看实机后指出此前的 24 组 crossed-card 草在运动画面中像黑边纸片；本文件上方“植被改善”的判断只代表当时静态抓帧，不是当前验收结论。现已全部移除，当前 scene 日志 `vegetation=0`。指挥官改为真实持枪并用 Space 开火、R 换弹，射击不再阻止 WASD 移动；子弹为 48 m/s 的真实 Bullet 碰撞物体，薄的短时 BillboardChain 曳光在 GL 抓帧可见。队友无指令时跟随玩家前方编队，扩大本章视野/接敌范围；自然 60 秒合成输入于 40.260 秒通关，未出现原先的首波僵持。macOS 实际 FSAA=4，scene compositor 的 RTT 也继承 MSAA。细节、抓帧与边界见 [核心体感记录](dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
+
+在不改碰撞/导航的前提下，庭院整片地面又改用项目专用混凝土板缝贴图，与目标稿的铺地语言更接近；中路仅作轻微明度区分。最终 1024×1024 资源在 GL 日志真实加载，无强化自然局最终在 40.161 秒胜利。下图为最终版本的 1280×720 游戏内画面，不是目标概念图；完整运行日志另存 `tmp/sandbox19-final-paving-longrun-20260912/Sandbox19.log`。
+
+![撤掉草卡、持枪交火及铺地材质后的 Sandbox19 实机画面](dev-design/specs/assets/sandbox19-runtime/core-combat-paving-720.png)
+
+这些改动让玩法信息可读，却没有把旧低模士兵、现有科幻枪械、地表与 relay 升级为目标稿的高质量资产。人工操作、Windows/D3D9 新改动和听觉体验本轮仍未验收；P3 不应因自然回放与测试 fixture 通过就勾选完成。

@@ -56,6 +56,7 @@ public:
 	void CreateWindowEventListener(Ogre::WindowEventListener* newListener);
 
 	void SetWindowActive(bool state);
+	bool RequestWindowSize(unsigned int width, unsigned int height);
 
 	void WindowClosed();
 	void WindowResized(unsigned int width, unsigned int height);
@@ -84,6 +85,7 @@ private:
 	bool Configure();
 	void CreateCamera();
 	void CreateViewports();
+	void ApplyPendingWindowSize();
 	void UpdateViewportLayout(bool force);
 	void LoadResources();
 	void SetupResources();
@@ -106,6 +108,8 @@ private:
 	long long m_profileTimes[PROFILE_TIME_COUNT];
 	unsigned int m_lastViewportWidth;
 	unsigned int m_lastViewportHeight;
+	unsigned int m_pendingWindowWidth;
+	unsigned int m_pendingWindowHeight;
 	
 	GameManager* m_pGameManager;
 	DebugDrawer* m_pDebugDrawer;

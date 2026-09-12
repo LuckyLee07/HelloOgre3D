@@ -1,11 +1,14 @@
 #include "WeaponComponent.h"
 
 #include <algorithm>
+#include <cstdlib>
 
 #include "GameFunction.h"
 #include "SandboxMacros.h"
 #include "OgreParticleSystem.h"
+#include "OgreLogManager.h"
 #include "OgreSceneNode.h"
+#include "OgreStringConverter.h"
 #include "ai/tactics/TacticalService.h"
 #include "core/SandboxServices.h"
 #include "core/object/BaseObject.h"
@@ -13,6 +16,7 @@
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimProfile.h"
 #include "components/anim/AnimComponent.h"
+#include "components/physics/PhysicsComponent.h"
 #include "components/render/RenderComponent.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/service/ObjectFactory.h"
@@ -320,6 +324,16 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 		objectManager->markNodeRemInSeconds(muzzleFlash, 0.5f);
 	}
 
+	// Keep a short visual tracer alive independently of the physics object. A
+	// bullet often reaches a nearby actor in only a few frames; attaching every
+	// trail particle to that object made the whole streak disappear on impact.
+	Ogre::SceneNode* tracer = objectManager != nullptr ? SceneFactory::CreateTracerLine(
+		position + forward * 0.2f, position + forward * 7.7f, 0.055f, "debug_draw") : nullptr;
+	if (tracer != nullptr)
+	{
+		objectManager->markNodeRemInSeconds(tracer, 0.22f);
+	}
+
 	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
 	if (tactics != nullptr)
 	{
@@ -335,7 +349,23 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 			false);
 	}
 
-	bullet->applyImpulse(forward * 750);
+	// Use an explicit gameplay velocity. The previous 750 N.s impulse on a
+	// 0.1 kg body produced roughly 7500 m/s, crossing the whole sample between
+	// 30 Hz physics steps and making both the tracer and collisions unreliable.
+	PhysicsComponent* bulletPhysics = bullet->GetPhysicsComponent();
+	if (bulletPhysics != nullptr)
+		bulletPhysics->SetVelocity(forward * 48.0f);
+
+	const char* replayPath = std::getenv("HELLO_INPUT_REPLAY");
+	if (replayPath != nullptr && replayPath[0] != '\0')
+	{
+		Ogre::LogManager::getSingleton().logMessage("[WeaponShot] owner="
+			+ Ogre::StringConverter::toString(owner->GetObjId())
+			+ " team=" + Ogre::StringConverter::toString(owner->GetTeamId())
+			+ " position=" + Ogre::StringConverter::toString(position)
+			+ " forward=" + Ogre::StringConverter::toString(forward)
+			+ " speed=48");
+	}
 }
 
 void WeaponComponent::SetAmmo(int ammo)

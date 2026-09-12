@@ -37,6 +37,7 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 - **TeamBlackboard typed facts（2026-06-20/21）**：`TeamBlackboardService:rememberTeamFact(...)` / `writeBestTeamFactToBlackboard(...)` / `getTeamBlackboardTypedFactCount()` / `getTeamBlackboardTypedReportCount()` 已导出给 Lua；`hasBestTeamFact(...)` 与 `getBestTeamFact*` 字段级 getter 已手术式补入绑定，`TeamBlackboard.lua:GetBestCppFact(...)` 可直接读取最佳 typed fact；`TeamBlackboard.lua` 用它同步 `SupportRequested` / `SupportResponded` / `FocusTarget` / `RetreatPoint` / `FormationSlot`。
 - **TeamBlackboard 自动同步实验开关（2026-09-10）**：`configureTeamBlackboardAgentSync(bool)` / `isTeamBlackboardAgentSyncEnabled()` 已手术式补入 `SandboxToLua.cpp`，供 `TeamBlackboard:ConfigureCppAgentSync(...)` 和 Sandbox12 M3 开/关对照使用；`Reset` 恢复默认开启。未运行 `tolua.bat`。
 - **视觉平面入口（2026-09-12）**：`ObjectFactory::CreateVisualPlane(width, height)` 已通过头文件 tolua 区域与手术式 `SandboxToLua.cpp` 同步导出，供 Sandbox19 创建无刚体的地表旧化、接触阴影和植被平面；未运行 `tolua.bat`。对象由 `ObjectManager` 持有，Lua 不负责删除。
+- **动态窗口入口（2026-09-12）**：`GameManager::RequestWindowSize(width, height)` 已通过 `GameManager.h` tolua 区域与手术式 `GameToLua.cpp` 同步导出，供 Sandbox19 暂停菜单登记下一帧 resize；`GameToLua.pkg` 继续以 `$cfile "GameManager.h"` 引入声明，未运行全量生成器。Lua 使用冒号调用并只接收布尔接受结果；实际尺寸由后续 `EventHandle_WindowResized` 回写。验证覆盖内嵌 Lua 5.1 消费、720p→900p 同进程切换、设置重启读取、macOS Release 与 Sandbox19/6/7/8 回归。
 - **Tactics layer update policy（2026-06-20）**：`TacticalService:configureTacticalInfluenceLayerUpdate(layerName, intervalMs, dirtyOnly)` / `markTacticalInfluenceLayerDirty(layerName)` 已导出给 Lua；`Sandbox18` 用它配置 danger/team/objective 的 interval 与 dirty-only 更新策略。
 - **Tactics query candidate limit（2026-06-20）**：`TacticalService:configureTacticalQueryCandidateLimit(maxCandidates)` / `getTacticalQueryCandidateLimit()` 已导出给 Lua；`chapter9_tactics_cpp_pressure` 用它固定战术查询候选点预算并在 smoke 中检查 `candidateLimit/capped`。
 - **Tactics debug config（2026-06-21）**：`TacticalService:configureTacticalInfluenceLayerDebug(layerName, yOffset, threshold, maxCells, drawNeutralCells, projectToNav, maxProjectionDistance, navMeshName, drawOrder)` 已手术式补入绑定；`setTacticalInfluenceLayerDebugOrder(layerName, drawOrder)` 保留为兼容排序入口。现有 `drawTacticalInfluenceLayer` / `rebuildTacticalInfluenceLayerDebugVisual` 会在 C++ `TacticalDebugDrawService` 记录 per-layer y/threshold/maxCells/drawNeutral/projectToNav/nav/order 配置，并在 `buildTacticalInfluenceDebugSummary()` 输出 `[TacticalDebugDraw]`。
@@ -48,7 +49,7 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 
 ## 7. 验证策略
 
-- 改 .pkg/绑定后：编译 + 跑用到该绑定的 sample（DT/BT 跑 `Sandbox7/8`；影响图跑 `Sandbox17/18`；`SandboxPerception` 跑 `hearing_danger`；`SandboxTeam` typed getter 跑 `team_blackboard`，agent sync 开关跑 `sandbox12-team-sharing` M3）。
+- 改 .pkg/绑定后：编译 + 跑用到该绑定的 sample（DT/BT 跑 `Sandbox7/8`；影响图跑 `Sandbox17/18`；`SandboxPerception` 跑 `hearing_danger`；`SandboxTeam` typed getter 跑 `team_blackboard`，agent sync 开关跑 `sandbox12-team-sharing` M3；`GameManager` 窗口入口跑 Sandbox19 动态尺寸与相关 sample 回归）。
 
 ## 8. 已知 gap / 相关文档
 

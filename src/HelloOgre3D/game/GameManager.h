@@ -49,6 +49,7 @@ public:
 	void SetSimulationPaused(bool paused);
 	bool IsSimulationPaused() const;
 	void RequestQuit();
+	bool RequestWindowSize(int width, int height);
 	//tolua_end
 
 	Ogre::Camera* getCamera();

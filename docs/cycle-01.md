@@ -9,9 +9,13 @@
 
 本轮先完成相机与 HUD 结构收敛：相机拉近并降低到 6.5 米后距/3.2 米相对高度，主角、两名队友、入口敌人和 relay 可同屏；大面积安全区描边改为四角短标记，HUD 缩短并按屏幕居中。随后完成环境深化：专用荒漠六面天空替换通用蓝天，高重复双层墙片改成可见远山的连续低墙，等大方块群改成长条低掩体，relay 改成低翼楼、门厅、屋顶设备和桅杆组成的分层终点；地面/混凝土材质和暖色光照同步收敛。之后补齐项目专用 relay 面板纹理、门面结构框/压顶/信标/设备，增强世界空间曳光、枪口焰和命中火花，并用真实 HP 差分驱动指挥官屏幕边缘与对应队友卡的短暂受伤提示。2026-09-12 继续加入九块低对比地表旧化、24 组定制荒漠 crossed-card 植被、静态设施与七个角色的接触阴影，并将六组掩体内移到正常镜头可读范围；渲染平面不创建刚体，也不进入导航或 AI 视线判定。其后增加只处理三维 scene texture 的 Relay/SceneGrade：轻量对比/饱和度、冷阴影暖高光和低强度暗角统一场景，Gorilla 与 FairyGUI 使用 viewport/visibility 隔离后在最终视图原色绘制。
 
-最终 1920×1080 集火图与 1280×720 下令图均由实机 D3D9 取得。Release x64 构建 0 错误；环境实现与 offscreen 修正后的 40 秒 smoke、导航/真实碰撞和产品 fixture 全部通过，后台日志记录实际位置 `-3264,-864`、`offscreen=true`、`foregroundUnchanged=true` 与物理输入禁用；此前扩展真实输入回放在 99.297 秒自然胜利且 `director=none`。P3 视觉追加又在 Apple M1 Pro / OpenGL 4.1、1280×720 真实窗口完成 macOS arm64 Release 构建、产品 fixture、Sandbox19/6/7/8 smoke 和三类画面抓帧；新 facade 纹理实际加载。2026-09-12 的地表/接地与场景色调追加同样完成 macOS arm64 Release、真实 GL 抓帧、产品 fixture 及 Sandbox19/6/7/8 smoke；overlay/scene-grade shader 与三张 RGBA 纹理实际加载，UI 无倒置重影，内移后的掩体仍通过全部路径与碰撞断言；FairyGUI All 自测 30/30、长循环 3/3。证据和剩余差距见 [视觉收敛复盘](sandbox19-visual-convergence-2026-09-11.md)、[场景色调与 UI 合成隔离](dev-design/plans/2026-09-12-sandbox19-scene-grade.md)、[地表纵深与接地计划](dev-design/plans/2026-09-12-sandbox19-grounding-vegetation.md)、[P3视觉收口计划](dev-design/plans/2026-09-11-sandbox19-p3-visual-finish.md)及[环境深化设计](dev-design/specs/2026-09-11-sandbox19-environment-visual-design.md)。
+最终 1920×1080 集火图与 1280×720 下令图均由实机 D3D9 取得。Release x64 构建 0 错误；环境实现与 offscreen 修正后的 40 秒 smoke、导航/真实碰撞和产品 fixture 全部通过，后台日志记录实际位置 `-3264,-864`、`offscreen=true`、`foregroundUnchanged=true` 与物理输入禁用；此前扩展真实输入回放在 99.297 秒自然胜利且 `director=none`。P3 视觉追加又在 Apple M1 Pro / OpenGL 4.1、1280×720 真实窗口完成 macOS arm64 Release 构建、产品 fixture、Sandbox19/6/7/8 smoke 和三类画面抓帧；新 facade 纹理实际加载。2026-09-12 的地表/接地与场景色调追加同样完成 macOS arm64 Release、真实 GL 抓帧、产品 fixture 及 Sandbox19/6/7/8 smoke；overlay/scene-grade shader 与三张 RGBA 纹理实际加载，UI 无倒置重影，内移后的掩体仍通过全部路径与碰撞断言；FairyGUI All 自测 30/30、长循环 3/3。随后暂停菜单加入 1280×720、1600×900、1920×1080 三档窗口设置；macOS 实机完成 720p→900p 同进程切换、跨进程保存读取、启动覆盖和 1600×900 FairyGUI 适配。1920×1080 请求在本机可见工作区被约束为实际 1920×945，代码与 HUD 均报告实际尺寸。证据和剩余差距见 [视觉收敛复盘](sandbox19-visual-convergence-2026-09-11.md)、[动态窗口与多分辨率](dev-design/plans/2026-09-12-sandbox19-dynamic-window.md)、[场景色调与 UI 合成隔离](dev-design/plans/2026-09-12-sandbox19-scene-grade.md)、[地表纵深与接地计划](dev-design/plans/2026-09-12-sandbox19-grounding-vegetation.md)、[P3视觉收口计划](dev-design/plans/2026-09-11-sandbox19-p3-visual-finish.md)及[环境深化设计](dev-design/specs/2026-09-11-sandbox19-environment-visual-design.md)。
 
-当前结论：当前渲染链内的核心构图、敌我可读性、HUD 层级、远景纵深、relay 门面、地表/植被/接地、场景色调和交火/受伤反馈均有实机证据；macOS arm64 Release、GL 运行和 720p 画面也已验证。旧低多边形角色、非 PBR 高阶材质、最终人工手感/扬声器听感和动态窗口调整仍未达到或尚未验证，因此 P3 总体验保持未完成。
+作者随后指出 crossed-card 草在实机形成刺眼黑纸片、无武器玩家沿用持枪姿势、弹道难辨、锯齿与队友长时间僵持。2026-09-12 的核心体感修正已撤掉全部 24 组草卡，改为持枪指挥官 Space 开火/R 换弹且可边射边移动；物理弹明确为 48 m/s，短时 BillboardChain 曳光可见；无命令队友跟随玩家前方编队并扩大本章视野和接敌半径。macOS 默认 FSAA=4，场景合成纹理不再强制禁用 MSAA。无强化 fixture 的 60 秒内部回放推进两波并于 40.260 秒自然胜利（两队友存活、无 STALEMATE）；这是合成输入，不代表真人操控。实现及画面证据见 [核心战斗体感计划](dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。此前地表/植被的记录是历史阶段，不应再描述当前画面。
+
+当前结论：核心构图、敌我可读性、HUD、远景、relay 门面、地表旧化/接地、场景色调和改进后的交火反馈有实机证据；macOS arm64 Release、GL 多尺寸、动态窗口与设置持久化也已验证。当前画面没有植被。旧低多边形角色与现有枪械资产、非 PBR 高阶材质和构图细节仍明显低于概念图；最终人工手感/扬声器听感和 Windows 普通窗口动态 resize 仍未验证，因此 P3 总体验保持未完成。
+
+随后为缩小参考图的铺地差距，用项目专用混凝土板缝 albedo 统一庭院地面与中路，保留少量路线明度差；最终 1024×1024 图在 macOS GL 实际加载、抓帧验过，未触动 Bullet 与 navmesh。此材料追加的 Windows D3D9 表现、精确平铺缝仍未验，细节见[资源来源](../media/textures/sandbox19/SOURCE.md)和[核心体感记录](dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
 
 ## 已完成实验：M3 团队信息共享对照（2026-09-10）
 
@@ -35,7 +39,7 @@ M2 完成后认领 M3，以 Sandbox12 受控场景回答：A 能直接看到敌�
 
 用户已明确反馈：“这套玩法与视觉都非常棒，就按照这套实施吧”。伴随式小队指挥、中继站短任务、浅暖工业场景与紧凑 HUD 已获批准，P1–P3 持续实施，无需再次等待方向确认。
 
-P1 的玩法设施与游戏内第一版已经落地，P2 玩法闭环也已在独立包通过内部输入回放完成真实战斗：69.267 秒自然胜利，两名队友存活，随后重开并正常退出；较深部署对照出现队友损失和僵持。2026-09-11 根据作者反馈重新审计视觉差距并完成结构、环境和交火反馈收口，不能据 P1/P2 功能完成推断目标画面已经完成。P3 的 Windows 功能/自动验证与 macOS Release/720p GL 运行已收口；角色/植被/PBR 等高阶资产细节、人工持续输入手感、扬声器听感和动态窗口调整仍未验，因此完整 P3 验收保留未勾选。实现、回归结果和限制见 [中继站试玩与验收](playtest-relay-2026-09-10.md)和 [视觉收敛复盘](sandbox19-visual-convergence-2026-09-11.md)。
+P1 的玩法设施与游戏内第一版已经落地，P2 玩法闭环也已在独立包通过内部输入回放完成真实战斗：69.267 秒自然胜利，两名队友存活，随后重开并正常退出；较深部署对照出现队友损失和僵持。2026-09-11 根据作者反馈重新审计视觉差距并完成结构、环境和交火反馈收口，不能据 P1/P2 功能完成推断目标画面已经完成。P3 的 Windows 功能/自动验证与 macOS Release/多尺寸 GL、动态窗口/设置保存已收口；角色/PBR 等高阶资产细节、人工持续输入手感、扬声器听感和 Windows 普通窗口 resize 仍未验，因此完整 P3 验收保留未勾选。实现、回归结果和限制见 [中继站试玩与验收](playtest-relay-2026-09-10.md)、[视觉收敛复盘](sandbox19-visual-convergence-2026-09-11.md)和[动态窗口计划](dev-design/plans/2026-09-12-sandbox19-dynamic-window.md)。
 
 在 P1–P3 体验改版阶段，M2/M3 不作为前置。此前 M1/稳定性结论保持，历史 NaN 同源性及未验证平台不因本轮短时结果关闭。
 
@@ -97,6 +101,8 @@ P0 从未修改的基线源码构建 Windows Release x64，并取得真实 D3D9 
 上轮同时讨论的通用 `Pause / Resume / Reset`、driver 身份、寻路预算/排队和完整输入录制回放不塞进本应用 cycle；它们已回到 `backlog.md`，等技术 cycle 再按真实压力认领。
 
 ### W2/W3 代码完成记录（2026-08-13）
+
+以下为当时的方案和验收，当前 Sandbox19 已改为两段任务、持枪指挥官与 Space 射击；以本页“当前重点”及 [[samples]] 为准。
 
 W2/W3 已提前完成代码落地：`Sandbox19` 现为无武器 commander 指挥两名 AI 友军，
 以头顶 action/reason 卡片、目标标记、雷达意图色和 HUD 指令计数表达 AI 状态；

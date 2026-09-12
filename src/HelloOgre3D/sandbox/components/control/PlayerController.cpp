@@ -133,6 +133,9 @@ bool PlayerController::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 	case OIS::KC_R:
 		m_reloadRequested = true;
 		return true;
+	case OIS::KC_SPACE:
+		m_firePressed = true;
+		return true;
 	default:
 		return false;
 	}
@@ -168,6 +171,9 @@ bool PlayerController::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 	case OIS::KC_LSHIFT:
 	case OIS::KC_RSHIFT:
 		m_sprintPressed = false;
+		break;
+	case OIS::KC_SPACE:
+		m_firePressed = false;
 		break;
 	default:
 		return false;
@@ -304,7 +310,16 @@ void PlayerController::UpdateTurning(int deltaMs)
 	if (angular != 0.0f)
 		m_yaw += angular * (static_cast<Ogre::Real>(deltaMs) / 1000.0f);
 
-	if (!relativeMovement)
+	if (relativeMovement)
+	{
+		// In the tactical follow profile, movement can be lateral while the
+		// weapon keeps aiming down the camera's horizontal forward direction.
+		m_aimDirection = Ogre::Vector3(
+			Ogre::Math::Sin(Ogre::Radian(m_yaw)), 0.0f, Ogre::Math::Cos(Ogre::Radian(m_yaw)));
+		if (m_firePressed || m_combatState == COMBAT_SHOOTING)
+			owner->SetForward(m_aimDirection);
+	}
+	else
 		UpdateFacingForward();
 }
 
@@ -325,11 +340,15 @@ void PlayerController::UpdateMovement()
 	if (owner == nullptr)
 		return;
 
-	if (m_combatState == COMBAT_SHOOTING || m_combatState == COMBAT_RELOADING)
+	// Reloading still commits the player to the presentation, but firing must
+	// not cancel locomotion. The old full stop made sustained fire reduce a
+	// nominal 3 m/s run to a short shuffle between shoot animations.
+	if (m_combatState == COMBAT_RELOADING)
 	{
 		StopHorizontalMovement();
 		return;
 	}
+	const bool shooting = m_combatState == COMBAT_SHOOTING;
 
 	// 默认保持 tank；sample 显式选择相机平面移动时，WASD 位移与镜头偏航分开。
 	Ogre::Vector3 forward = m_aimDirection;
@@ -346,7 +365,7 @@ void PlayerController::UpdateMovement()
 	if (m_backPressed) movement -= forward;
 	if (relativeMovement)
 	{
-		const Ogre::Vector3 right = forward.crossProduct(Ogre::Vector3::UNIT_Y);
+		const Ogre::Vector3 right = Ogre::Vector3::UNIT_Y.crossProduct(forward);
 		if (m_leftPressed) movement -= right;
 		if (m_rightPressed) movement += right;
 	}
@@ -355,15 +374,14 @@ void PlayerController::UpdateMovement()
 	if (movement.squaredLength() <= kDirectionEpsilon)
 	{
 		StopHorizontalMovement();
-		if (anim != nullptr)
+		if (anim != nullptr && !shooting)
 			anim->EnterIdleIntent();
 		return;
 	}
 
 	movement.normalise();
-	if (relativeMovement)
+	if (relativeMovement && !m_firePressed && m_combatState != COMBAT_SHOOTING)
 	{
-		m_aimDirection = movement;
 		owner->SetForward(movement);
 	}
 	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
@@ -373,7 +391,7 @@ void PlayerController::UpdateMovement()
 	velocity.x = movement.x * speed;
 	velocity.z = movement.z * speed;
 	owner->SetVelocity(velocity);
-	if (anim != nullptr)
+	if (anim != nullptr && !shooting)
 		anim->EnterMoveIntent();
 }
 

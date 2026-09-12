@@ -14,6 +14,7 @@
 - [验证窗口后台启动](background-test-windows.md) — 自动验证不抢占当前活动窗口
 
 - [macOS arm64 构建选择](macos-arm64-build.md) — 默认通用构建的 Bullet x86_64 intrinsic 失败与本机 arm64 验证命令
+- [macOS 窗口可见工作区约束](macos-window-visible-frame.md) — 请求 1920×1080 可能被标题栏窗口压缩，验收必须读取实际内容尺寸
 
 - [用户画像与协作偏好](user.md) — code-anchored 真值核对、verify-first、要 observable 验证、方向先看 project-direction
 - [Release 构建跑运行时](build-release-for-runtime.md) — bin 卡顿先查是不是 Debug 构建覆盖了

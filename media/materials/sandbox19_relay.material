@@ -11,13 +11,19 @@ material Relay/Ground : base_material
 	set $diffuseCol "0.68 0.63 0.54 1"
 	set $specularCol "0.02 0.02 0.02"
 	set $shininess "8"
-	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
+	set_texture_alias diffuseMap textures/sandbox19/courtyard_paving_diffuse_v2.png
 	set_texture_alias normalMap textures/base/baseFlatNormal.dds
 }
 
-material Relay/MainRoute : Relay/Ground
+material Relay/MainRoute : base_material
 {
-	set $diffuseCol "0.74 0.69 0.58 1"
+	// Route and perimeter share the slab albedo; a lighter tint guides the eye
+	// without making a hard-edged texture carpet through the middle of the map.
+	set $diffuseCol "0.88 0.84 0.78 1"
+	set $specularCol "0.02 0.02 0.02"
+	set $shininess "8"
+	set_texture_alias diffuseMap textures/sandbox19/courtyard_paving_diffuse_v2.png
+	set_texture_alias normalMap textures/base/baseFlatNormal.dds
 }
 
 material Relay/Concrete : base_material
@@ -125,32 +131,113 @@ material Relay/Accent : base_material
 	set $shininess "4"
 }
 
-material Relay/BeaconCyan
+material Relay/StateOff : base_material
 {
+	set $diffuseCol "0.16 0.18 0.16 1"
+	set $specularCol "0 0 0"
+	set $shininess "1"
+}
+
+material Relay/StateAmberDim : Relay/Accent
+{
+	set $diffuseCol "0.38 0.20 0.07 1"
+}
+
+material Relay/StateAmberMid : Relay/Accent
+{
+	set $diffuseCol "0.68 0.36 0.11 1"
+}
+
+material Relay/StateAmber : Relay/Accent
+{
+	set $diffuseCol "1.00 0.60 0.20 1"
+}
+
+material Relay/StateCyanDim : Relay/Accent
+{
+	set $diffuseCol "0.08 0.30 0.30 1"
+}
+
+material Relay/StateCyanMid : Relay/Accent
+{
+	set $diffuseCol "0.10 0.57 0.56 1"
+}
+
+material Relay/StateCyan : Relay/Accent
+{
+	set $diffuseCol "0.18 0.92 0.88 1"
+}
+
+// State-driven relay feedback uses the same cross-platform overlay shader and
+// project-owned radial mask as the contact layer. It remains render-only.
+material Relay/SignalBase
+{
+	set $signalTint "1 1 1 0"
+
+	receive_shadows off
 	technique
 	{
 		pass
 		{
 			lighting off
-			ambient 0.25 0.95 0.91 1
-			diffuse 0.25 0.95 0.91 1
-			emissive 0.25 0.95 0.91 1
+			cull_hardware none
+			cull_software none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+
+			vertex_program_ref relay_overlay_vs
+			{
+			}
+
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 $signalTint
+			}
+
+			texture_unit overlayMap
+			{
+				texture textures/sandbox19/signal_glow.png
+				tex_address_mode clamp
+				filtering linear linear none
+			}
 		}
 	}
 }
 
-material Relay/BeaconAmber
+material Relay/SignalOff : Relay/SignalBase
 {
-	technique
-	{
-		pass
-		{
-			lighting off
-			ambient 1.00 0.62 0.22 1
-			diffuse 1.00 0.62 0.22 1
-			emissive 1.00 0.62 0.22 1
-		}
-	}
+	set $signalTint "1 1 1 0"
+}
+
+material Relay/SignalAmberDim : Relay/SignalBase
+{
+	set $signalTint "1.00 0.38 0.06 0.070"
+}
+
+material Relay/SignalAmberMid : Relay/SignalBase
+{
+	set $signalTint "1.00 0.44 0.08 0.125"
+}
+
+material Relay/SignalAmber : Relay/SignalBase
+{
+	set $signalTint "1.00 0.52 0.12 0.205"
+}
+
+material Relay/SignalCyanDim : Relay/SignalBase
+{
+	set $signalTint "0.10 0.78 0.78 0.060"
+}
+
+material Relay/SignalCyanMid : Relay/SignalBase
+{
+	set $signalTint "0.12 0.88 0.86 0.105"
+}
+
+material Relay/SignalCyan : Relay/SignalBase
+{
+	set $signalTint "0.18 0.98 0.94 0.175"
 }
 
 // Visual-only layers use ObjectFactory::CreateVisualPlane. They never enter

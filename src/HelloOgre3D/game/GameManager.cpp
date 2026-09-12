@@ -442,6 +442,12 @@ void GameManager::RequestQuit()
 		m_pClientManager->SetShutdown(true);
 }
 
+bool GameManager::RequestWindowSize(int width, int height)
+{
+	return m_pClientManager != nullptr && width > 0 && height > 0
+		&& m_pClientManager->RequestWindowSize(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
+}
+
 long long GameManager::getTimeInMillis()
 {
 	return m_SimulationTime;

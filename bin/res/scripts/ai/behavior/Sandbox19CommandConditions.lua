@@ -52,7 +52,7 @@ function C.CanShootEnemy(agent, bb)
 		if agents[i] == enemy then
 			local d = enemy:GetPosition() - agent:GetPosition()
 			d.y = 0
-			return d:squaredLength() <= 100 and agent:GetAIComponent():CanSeeEnemy(enemy:GetObjId())
+			return d:squaredLength() <= 144 and agent:GetAIComponent():CanSeeEnemy(enemy:GetObjId())
 		end
 	end
 	return false
@@ -63,7 +63,8 @@ function C.HasEnemy(agent, bb)
 	if enemy == nil then return false end
 	local anchor = bb:Has("sandbox19.anchorPos") and bb:GetVec3("sandbox19.anchorPos") or agent:GetPosition()
 	local d = enemy:GetPosition() - anchor
-	local radius = bb:Has("sandbox19.holdPos") and 6 or 14
+	local radius = bb:Has("sandbox19.holdPos") and 6
+		or bb:GetFloat("sandbox19.engagementRadius", 14)
 	if d:squaredLength() > radius * radius then bb:Remove("enemy"); return false end
 	bb:SetAgent("enemy", enemy)
 	return true

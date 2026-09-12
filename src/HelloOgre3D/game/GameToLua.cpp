@@ -6,6 +6,7 @@
 #ifndef __cplusplus
 #include "stdlib.h"
 #endif
+
 #include "string.h"
 
 #include "tolua++.h"
@@ -3652,6 +3653,24 @@ static int tolua_GameToLua_GameManager_RequestQuit00(lua_State* tolua_S)
 	return 0;
 }
 
+/* method: RequestWindowSize of class GameManager; surgical binding */
+static int tolua_GameToLua_GameManager_RequestWindowSize00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"GameManager",0,&error)
+		|| !tolua_isnumber(tolua_S,2,0,&error)
+		|| !tolua_isnumber(tolua_S,3,0,&error)
+		|| !tolua_isnoobj(tolua_S,4,&error))
+		return tolua_error(tolua_S,"#ferror in function 'RequestWindowSize'.",&error), 0;
+	GameManager* self = static_cast<GameManager*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'RequestWindowSize'",nullptr), 0;
+	const int width = static_cast<int>(tolua_tonumber(tolua_S,2,0));
+	const int height = static_cast<int>(tolua_tonumber(tolua_S,3,0));
+	tolua_pushboolean(tolua_S,self->RequestWindowSize(width, height));
+	return 1;
+}
+
 /* method: getIsEnable of class  DebugDrawer */
 #ifndef TOLUA_DISABLE_tolua_GameToLua_DebugDrawer_getIsEnable00
 static int tolua_GameToLua_DebugDrawer_getIsEnable00(lua_State* tolua_S)
@@ -4245,6 +4264,7 @@ TOLUA_API int tolua_GameToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetSimulationPaused",tolua_GameToLua_GameManager_SetSimulationPaused00);
    tolua_function(tolua_S,"IsSimulationPaused",tolua_GameToLua_GameManager_IsSimulationPaused00);
    tolua_function(tolua_S,"RequestQuit",tolua_GameToLua_GameManager_RequestQuit00);
+   tolua_function(tolua_S,"RequestWindowSize",tolua_GameToLua_GameManager_RequestWindowSize00);
    tolua_function(tolua_S,"getScreenWidth",tolua_GameToLua_GameManager_getScreenWidth00);
    tolua_function(tolua_S,"getScreenHeight",tolua_GameToLua_GameManager_getScreenHeight00);
    tolua_function(tolua_S,"getTimeInMillis",tolua_GameToLua_GameManager_getTimeInMillis00);
