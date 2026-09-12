@@ -32,7 +32,7 @@ material Relay/Concrete : base_material
 	set $specularCol "0.03 0.03 0.03"
 	set $shininess "12"
 	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
-	set_texture_alias normalMap textures/base/baseFlatNormal.dds
+	set_texture_alias normalMap textures/sandbox19/courtyard_concrete_normal_v1.png
 	set_texture_alias specMap textures/nobiax_textures/ground2Specular.dds
 }
 
@@ -49,6 +49,11 @@ material Relay/Window : base_material
 	set_texture_alias diffuseMap textures/nobiax_modular/modularDiffuse.dds
 	set_texture_alias normalMap textures/nobiax_modular/modularNormal.dds
 	set_texture_alias specMap textures/nobiax_modular/modularSpecular.dds
+}
+
+material Relay/ServiceWindow : Relay/Window
+{
+	set $diffuseCol "0.72 0.68 0.59 1"
 }
 
 // Project-specific relay facade panels. The albedo is deliberately neutral-lit;
@@ -79,7 +84,7 @@ material Relay/Cover : base_material
 	set $specularCol "0.02 0.02 0.02"
 	set $shininess "8"
 	set_texture_alias diffuseMap textures/sandbox19/courtyard_concrete_diffuse.png
-	set_texture_alias normalMap textures/base/baseFlatNormal.dds
+	set_texture_alias normalMap textures/sandbox19/courtyard_concrete_normal_v1.png
 	set_texture_alias specMap textures/nobiax_textures/ground2Specular.dds
 }
 
@@ -120,6 +125,15 @@ material Relay/GoalMark : base_material
 material Relay/RouteMark : base_material
 {
 	set $diffuseCol "0.64 0.58 0.47 1"
+	set $specularCol "0 0 0"
+	set $shininess "1"
+}
+
+// Muted ochre datum line across the occupied north wings. Kept separate from
+// mission-state amber so the architecture never looks like an objective cue.
+material Relay/BuildingStripe : base_material
+{
+	set $diffuseCol "0.56 0.39 0.19 1"
 	set $specularCol "0 0 0"
 	set $shininess "1"
 }

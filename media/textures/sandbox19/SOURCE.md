@@ -1,5 +1,22 @@
 # Sandbox19 表面资产来源
 
+## courtyard_concrete_normal_v1.png
+
+- 日期：2026-09-12
+- 生成方式：以仓库现有 `courtyard_concrete_diffuse.png` 为唯一编辑参照，使用 Codex 内置 ImageGen 生成 1254×1254 RGB 切线空间法线图；用 `sips -z 1024 1024` 缩为当前 1024×1024 PNG。原始生成图位于本机 Codex 输出目录，不作为游戏运行资源；仓库内最终图为真源。未叠加第三方图像。
+- 用途：`Relay/Concrete` 和 `Relay/Cover` 的 `normalMap`，对应其现有 albedo。`Relay/Ground`、`Relay/MainRoute` 与 `Relay/Facade` 仍使用平法线；不要把此图套到不配对的铺地或门面上。
+- 验收：macOS GL3+ 日志确认加载 1024×1024 RGB 图，实机场景与完整自然对局见 `tmp/sandbox19-normal-final-longrun-20260912/`；Windows D3D9 尚未运行。ImageGen 参照编辑不保证每条裂纹逐像素重合或严格无缝，以上仍以最终 UV 平铺的实机观感为准。
+
+最终提示词：
+
+> Use case: stylized-concept
+> Asset type: tangent-space RGB normal map texture for a 3D tactical game's existing concrete wall and low barrier material.
+> Input images: Image 1 is the edit target, the exact existing square diffuse/albedo concrete texture. Preserve its crack, chip, aggregate and wear positions as closely as possible; convert its surface relief to a matching NORMAL MAP, not to another albedo image.
+> Primary request: output a restrained physically plausible OpenGL-style +Z tangent-space normal map. Mostly neutral violet-blue RGB (128,128,255), with shallow chipped/cracked regions recessed and fine concrete aggregate relief. Keep broad smooth plaster zones nearly flat.
+> Composition/framing: exact square, edge-to-edge orthographic texture, same 1:1 mapping and surface features as Image 1, no borders or central focal point; opposing edges should tile.
+> Lighting/mood: no lighting or shadows are baked into the map; pixels encode only surface normal direction.
+> Constraints: output only the normal-map bitmap; no rendered preview, no sphere/cube, no perspective, no albedo colors, no AO, no vignetting, no typography, logos, watermarks or extra objects. Preserve input image's layout and avoid strong noisy ridges or black line artifacts.
+
 ## courtyard_paving_diffuse_v2.png
 
 - 日期：2026-09-12

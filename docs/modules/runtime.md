@@ -31,6 +31,7 @@
 - `GameManager:RequestWindowSize(width, height)` 接受 640–3840 × 360–2160 的逻辑内容尺寸，由 `ClientManager` 排到下一帧安全点执行；Lua 鼠标回调不直接进入 Cocoa/Win32 resize。启动环境覆盖、后台 Windows 窗口或非法尺寸会拒绝请求。窗口事件继续同步 OIS 鼠标范围、Lua/UIManager、FairyGUI root、viewport 和相机宽高比；FairyGUI 原生 screen/root 必须先于 `FairyGuiManager_HandleWindowResized` 更新，否则 Lua 层会查询到旧尺寸。
 - `SandboxAudio` 为 GameManager 注入的 `RuntimeUiSound`：`IsAvailable`、`Play(path)`、`StopAll`、`SetVolume(0..1)`、`GetVolume`。Lua 负责事件/限频/音量设置；runtime 读取、校验、缓存短 WAV 并持有播放缓冲。Sandbox19 的设置与事件入口见 [sandbox19_audio.lua](../../bin/res/scripts/samples/sandbox19_audio.lua)，自制素材来源记录见 [relay 音效说明](../../bin/res/audio/relay/README.md)。
 - Scene compositor 通过 [[systems-service]] SceneService 按相机 viewport 启停。Sandbox19 的 Relay/SceneGrade 仅处理三维 scene texture；Gorilla active-viewport 守卫和 FairyGUI visibility bit 让两套 UI 留在最终 viewport，不被滤色或重复绘制。macOS 默认选择受支持且不超过 4× 的 FSAA，`HELLO_RENDER_FSAA` 可显式覆盖；Relay/SceneGrade 的 scene RTT 不再使用 `no_fsaa`，以免主窗口抗锯齿仅作用在最终全屏四边形。Windows 保留原有 FSAA=0 条件分支，D3D9 新设置未实机复核。完整设计与实机证据见[场景色调与 UI 合成隔离](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)和[核心战斗体感复核](../dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
+- `base_material` 的 GL3+ `diffuse_vs_glsl` / `diffuse_ps_glsl` 现与 HLSL 路径一样读取模型 tangent 和纹理单元 2 的 `normalMap`；片元阶段正交化切线基，切线退化时回退几何法线。GLSL 的三路 sampler 明确绑定 0/1/2，未使用的自动参数已移除。改变共享基础材质后需检查 Sandbox6/7/8，不能仅凭 Sandbox19 的配对混凝土判断其它网格正确；Windows HLSL 分支未改但 D3D9 仍需单独实机复核。实现与证据见[GL3+ 基础材质法线计划](../dev-design/plans/2026-09-12-sandbox19-normal-lighting.md)。
 
 ## 5. 约束与红线
 

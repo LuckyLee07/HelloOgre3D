@@ -17,6 +17,10 @@
 
 [2026-09-11 环境视觉深化](dev-design/plans/2026-09-11-sandbox19-environment-visual.md) · [深化设计与实机图](dev-design/specs/2026-09-11-sandbox19-environment-visual-design.md) · [P3视觉体验收口](dev-design/plans/2026-09-11-sandbox19-p3-visual-finish.md) · [2026-09-12 地表纵深与接地](dev-design/plans/2026-09-12-sandbox19-grounding-vegetation.md) · [场景色调与 UI 合成隔离](dev-design/plans/2026-09-12-sandbox19-scene-grade.md) · [动态窗口与多分辨率](dev-design/plans/2026-09-12-sandbox19-dynamic-window.md) · [核心战斗体感复核](dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)：荒漠天空、远景纵深、低墙/长掩体、relay 门面、地表旧化/接地、场景后处理、交火反馈和 macOS 动态窗口/设置保存有实机证据。先前植被因黑边纸片感已撤除；新增持枪玩家、可见弹道、队友接敌和抗锯齿路径修正仍不等同目标稿资产品质。
 
+[院区建筑剪影与空间层次](dev-design/plans/2026-09-12-sandbox19-courtyard-silhouette.md)：北侧浅色双翼和后墙扩建的实机前后对照、自然通关与导航/碰撞证据；整体视觉品质仍未达到概念稿。
+
+[GL3+ 基础材质法线与混凝土细节](dev-design/plans/2026-09-12-sandbox19-normal-lighting.md)：修复基础材质 GLSL 未采样法线图的问题，给中继站墙体/掩体配对局部法线；Windows/D3D9 与完整 PBR 仍未验收。
+
 [P0审阅稿与三张目标画面](dev-design/specs/2026-09-10-sandbox19-product-experience-design.md) · [核心玩法一页说明](dev-design/specs/2026-09-10-sandbox19-core-loop.md)：真实Windows截图、概念稿、视觉/资源规范和能力缺口；整体方向已获作者批准；概念稿与实施前历史截图单独保留。
 
 [中继站当前实现与验收](playtest-relay-2026-09-10.md)：实际场景、操作、命令、自然对局与独立包证据；阶段状态仍见 cycle/backlog。

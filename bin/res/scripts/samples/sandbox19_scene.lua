@@ -7,6 +7,7 @@ local ROOF_MESH = "models/nobiax_modular/modular_roof.mesh"
 local BLOCK_MESH = "models/nobiax_modular/modular_block.mesh"
 local COOLING_MESH = "models/nobiax_modular/modular_cooling.mesh"
 local HANGAR_MESH = "models/nobiax_modular/modular_hangar_door.mesh"
+local WINDOW_MESH = "models/nobiax_modular/modular_concrete_small_window_1.mesh"
 local _navMesh = nil
 local _debugVisible = false
 local _sideWallIds = {}
@@ -148,15 +149,17 @@ function Scene.Create()
 	_Box(0.55, 2.4, 64, -23.72, 1.2, 8, 0, "Relay/ConcreteShade")
 	_Box(0.55, 2.4, 64, 23.72, 1.2, 8, 0, "Relay/Concrete")
 	_Box(48, 2.4, 0.55, 0, 1.2, -23.72, 0, "Relay/ConcreteShade")
-	_Box(15.5, 2.4, 0.55, -16.25, 1.2, 39.72, 0, "Relay/Concrete")
-	_Box(15.5, 2.4, 0.55, 16.25, 1.2, 39.72, 0, "Relay/ConcreteShade")
+	-- The north perimeter rises behind the occupied relay frontage. It is still
+	-- the same 0.55 m deep boundary, so neither navigation lane is narrowed.
+	_Box(15.5, 4.2, 0.55, -16.25, 2.1, 39.72, 0, "Relay/Concrete")
+	_Box(15.5, 4.2, 0.55, 16.25, 2.1, 39.72, 0, "Relay/Concrete")
 	-- Dark caps and sparse piers give the perimeter a designed edge while all
 	-- added collision remains embedded in the existing wall volume.
 	_Box(0.76, 0.14, 64, -23.72, 2.47, 8, 0, "Relay/Trim")
 	_Box(0.76, 0.14, 64, 23.72, 2.47, 8, 0, "Relay/Trim")
 	_Box(48, 0.14, 0.76, 0, 2.47, -23.72, 0, "Relay/Trim")
-	_Box(15.5, 0.14, 0.76, -16.25, 2.47, 39.72, 0, "Relay/Trim")
-	_Box(15.5, 0.14, 0.76, 16.25, 2.47, 39.72, 0, "Relay/Trim")
+	_Box(15.5, 0.14, 0.76, -16.25, 4.27, 39.72, 0, "Relay/Trim")
+	_Box(15.5, 0.14, 0.76, 16.25, 4.27, 39.72, 0, "Relay/Trim")
 	for _, z in ipairs({ 0, 16, 32 }) do
 		_Module(PILLAR_MESH, -23.35, 1.28, z, 0, "Relay/Metal")
 		_Module(PILLAR_MESH, 23.35, 1.28, z, 0, "Relay/Metal")
@@ -222,10 +225,27 @@ function Scene.Create()
 		_GroundLayer(1.35, 1.15, prop[1], prop[2], prop[3], "Relay/ContactShadow")
 	end
 
+	-- The courtyard terminates in one compound frontage rather than an isolated
+	-- gatehouse. Outer wings sit inside the existing north boundary footprint and
+	-- leave the central approach and western bypass fully open.
+	for _, x in ipairs({ -16.0, 16.0 }) do
+		_Box(11.6, 3.6, 2.0, x, 1.8, 38.15, 0, "Relay/Concrete")
+		_Box(11.9, 0.24, 2.2, x, 3.72, 38.15, 0, "Relay/ConcreteShade")
+		_Box(11.2, 0.11, 0.12, x, 1.15, 37.04, 0, "Relay/BuildingStripe")
+		_Box(2.3, 1.15, 1.5, x, 4.22, 38.2, 0, "Relay/Equipment")
+		_Box(2.5, 0.12, 1.7, x, 4.86, 38.2, 0, "Relay/Trim")
+	end
+	for _, x in ipairs({ -19.0, -16.0, -13.0, 13.0, 16.0, 19.0 }) do
+		_Module(WINDOW_MESH, x, 1.8, 36.99, 0, "Relay/ServiceWindow")
+	end
+	for _, x in ipairs({ -10.0, 10.0 }) do
+		_Box(0.72, 4.1, 1.4, x, 2.05, 37.55, 0, "Relay/ConcreteShade")
+		_Box(0.88, 0.15, 1.55, x, 4.17, 37.55, 0, "Relay/Trim")
+	end
 	-- A stepped relay building gives the destination a readable silhouette:
-	-- low wings, central gatehouse, rooftop plant and a narrow mast.
-	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Facade")
-	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/Facade")
+	-- pale side volumes, a darker instrumented gatehouse and a narrow mast.
+	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Concrete")
+	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/Concrete")
 	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Facade")
 	_GroundLayer(6.8, 3.8, -5.7, 37.9, 0, "Relay/ContactShadow")
 	_GroundLayer(6.8, 3.8, 5.7, 37.9, 0, "Relay/ContactShadow")

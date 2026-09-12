@@ -3,6 +3,7 @@
 in vec2 vUv;
 in vec3 vWorldPos;
 in vec3 vWorldNormal;
+in vec3 vWorldTangent;
 
 uniform vec3 lightDif0;
 uniform vec4 lightPos0;
@@ -21,6 +22,16 @@ out vec4 fragColor;
 void main()
 {
     vec3 normalDir = normalize(vWorldNormal);
+    vec3 tangentDir = vWorldTangent - normalDir * dot(vWorldTangent, normalDir);
+    // Some legacy meshes have no tangent stream. Leave their old geometric
+    // lighting intact instead of normalising a zero vector.
+    if (dot(tangentDir, tangentDir) > 0.000001)
+    {
+        tangentDir = normalize(tangentDir);
+        vec3 bitangentDir = normalize(cross(tangentDir, normalDir));
+        vec3 texNormal = texture(normalMap, vUv).rgb * 2.0 - 1.0;
+        normalDir = normalize(tangentDir * texNormal.x + bitangentDir * texNormal.y + normalDir * texNormal.z);
+    }
     vec3 lightDir = normalize(lightPos0.xyz - (lightPos0.w * vWorldPos));
     float ndotl = max(dot(normalDir, lightDir), 0.0);
 

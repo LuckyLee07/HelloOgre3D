@@ -125,8 +125,7 @@ vertex_program diffuse_vs_glsl glsl
     {
         param_named_auto wMat world_matrix
         param_named_auto wvpMat worldviewproj_matrix
-        param_named_auto tvpMat texture_viewproj_matrix 0
-        param_named_auto spotlightDir light_direction_object_space 0
+        param_named_auto iTWMat inverse_transpose_world_matrix
     }
 }
 
@@ -145,8 +144,9 @@ fragment_program diffuse_ps_glsl glsl
         param_named_auto matSpec surface_specular_colour
         param_named_auto lightPos0 light_position 0
         param_named_auto lightAtt0 light_attenuation 0
-        param_named_auto iTWMat inverse_transpose_world_matrix
-        param_named_auto spotlightParams spotlight_params 0
+        param_named diffuseMap int 0
+        param_named specMap int 1
+        param_named normalMap int 2
     }
 }
 
