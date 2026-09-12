@@ -12,6 +12,7 @@ namespace Ogre {
 }
 
 class OgreCameraController;
+class RaycastService;
 
 class CameraService //tolua_exports
 { //tolua_exports
@@ -67,6 +68,15 @@ public:
 
 	// 第三人称跟随门面（非 tolua，C++ 内部用；转发到 OgreCameraController CS_FOLLOW）。
 	void EnterFollowMode();
+	void SetRaycastService(RaycastService* raycast) { m_raycast = raycast; }
+	bool IsFollowing() const;
+	bool BeginFollowOrbit();
+	void EndFollowOrbit();
+	bool IsFollowOrbiting() const { return m_followOrbiting; }
+	void DragFollowOrbit(float dx, float dy);
+	Ogre::Vector3 GetFollowForward() const;
+	void SetFollowTurnInput(bool left, bool right);
+	void RenderFollow(const Ogre::Vector3& displayedTarget, float dtSec);
 	bool ZoomFollowCamera(float distanceDelta);
 	void ExitFollowMode();
 	void UpdateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, float dtSec);
@@ -86,6 +96,10 @@ private:
 	float m_followMaxDistance;
 	bool m_followConfigured;
 	bool m_cameraRelativeMovement;
+	RaycastService* m_raycast = nullptr; // non-owning; GameManager supplies the physics query facade
+	float m_followTurnInput = 0.0f;
+	float m_obstructionDistance = 0.0f;
+	bool m_followOrbiting = false;
 }; //tolua_exports
 
 #endif // __CAMERA_SERVICE_H__

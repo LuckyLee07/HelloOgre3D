@@ -1,0 +1,76 @@
+{
+  "control-before-desktop": {
+    "Q_200ms_degrees": 28.393019421383,
+    "Q_release_tail_degrees": 0.0,
+    "Q_max_display_step_degrees": 4.726915474811136,
+    "Q_changed_frames": 5,
+    "Q_sampled_frames": 20,
+    "strafe_fire_body_change_degrees": 90.0,
+    "mouse_100_units_degrees": 18.035219382192196
+  },
+  "control-after": {
+    "Q_200ms_degrees": 15.213584981073618,
+    "Q_release_tail_degrees": 0.0,
+    "Q_max_display_step_degrees": 1.0500035163623238,
+    "Q_changed_frames": 20,
+    "Q_sampled_frames": 20,
+    "strafe_fire_body_change_degrees": 0.0,
+    "mouse_100_units_degrees": 12.014045271511037
+  },
+  "edge_cases": {
+    "status": "PASS",
+    "synthetic": true,
+    "player": "227",
+    "max_body_step_degrees": 17.820036010951355,
+    "first_shot_direction_degrees": 175.92334358659951,
+    "player_shots": 4,
+    "keyboard_400ms_degrees": 30.061812413672897,
+    "checks": [
+      "free-orbit",
+      "180-degree turn",
+      "first-shot alignment",
+      "backpedal fire",
+      "shortest turn",
+      "opposing keys",
+      "pause release",
+      "pitch sign",
+      "selection vs orbit"
+    ]
+  },
+  "binary_sha256": "8e10359ac0f9ce9ec977c4c4db329cb6ae52335ab7273bf591788c03b35e62ee",
+  "staged_source_validation": {
+    "binary_sha256": "d0f720bac9834714d3da7536127a1bb867ced039dc461dc12dcf8e7d840305fa",
+    "main_translation_units": 120,
+    "resources": "current workspace media; not added to this commit",
+    "release_libraries": "existing archives",
+    "control_replay": {
+      "status": "PASS",
+      "synthetic": true,
+      "player": "200",
+      "max_body_step_degrees": 17.820036010951355,
+      "first_shot_direction_degrees": 175.92334358659951,
+      "player_shots": 3,
+      "keyboard_400ms_degrees": 30.061812413672897,
+      "checks": [
+        "free-orbit",
+        "180-degree turn",
+        "first-shot alignment",
+        "backpedal fire",
+        "shortest turn",
+        "opposing keys",
+        "pause release",
+        "pitch sign",
+        "selection vs orbit"
+      ]
+    },
+    "samples_15s": [
+      "Sandbox6",
+      "Sandbox7",
+      "Sandbox8"
+    ],
+    "lua51_syntax": [
+      "Sandbox19.lua",
+      "sandbox19_hud.lua"
+    ]
+  }
+}

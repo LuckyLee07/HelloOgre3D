@@ -33,14 +33,19 @@ namespace
 		{
 			const Ogre::Vector3 p = game.getCamera()->getDerivedPosition();
 			const Ogre::Vector3 f = game.getCamera()->getDerivedDirection();
+			const Ogre::Vector3 r = game.getCamera()->getDerivedRight();
 			stream << " camera=(" << p.x << "," << p.y << "," << p.z << ")"
-				<< " cameraForward=(" << f.x << "," << f.y << "," << f.z << ")";
+				<< " cameraForward=(" << f.x << "," << f.y << "," << f.z << ")"
+				<< " cameraRight=(" << r.x << "," << r.y << "," << r.z << ")";
 		}
 		for (AgentObject* agent : objects->getAllAgents())
 			if (agent != nullptr && agent->FindComponent<PlayerController>() != nullptr)
 			{
 				const Ogre::Vector3 p = agent->GetPosition();
-				stream << " player=(" << p.x << "," << p.y << "," << p.z << ")";
+				const Ogre::Vector3 f = agent->GetForward(), v = agent->GetVelocity();
+				stream << " player=(" << p.x << "," << p.y << "," << p.z << ")"
+					<< " playerForward=(" << f.x << "," << f.y << "," << f.z << ")"
+					<< " velocity=(" << v.x << "," << v.y << "," << v.z << ")";
 				break;
 			}
 		return stream.str();

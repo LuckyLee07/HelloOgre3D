@@ -21,7 +21,7 @@
 | `anim/AnimComponent.{h,cpp}` | 动画 | ASM 容器，见 [[objects-anim]] |
 | `combat/WeaponComponent.{h,cpp}` | 战斗 | 弹药/射击/挂接 |
 | `ai/AIController.{h,cpp}` | AI | 见 [[ai-controller]] |
-| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；把输入转换为 tank 式角色控制意图（A/D 平滑转向、W/S 沿朝向前后、无横移无鼠标转向）、朝向、射击与换弹，并驱动第三人称弹簧跟随相机（`CameraService` FOLLOW，仅 Sandbox19，`onDetach` 退回 FREELOOK）；不新增玩家对象类型 |
+| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；保留默认 tank 控制；Sandbox19 显式启用相机相对移动，WASD 前后/侧移均面向视线，身体按最短角度跟随，处理射击/换弹并提交 FOLLOW 位置（`onDetach` 退回 FREELOOK）；不新增玩家对象类型 |
 | `script/LuaScriptComponent.{h,cpp}` | 脚本 | Lua 绑定 |
 
 ## 4. 公开能力要点
@@ -55,3 +55,7 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：P5 profile 外部数据化与更完整非 Soldier 行为场景、P4 其它缓存裸指针继续审计、P2 继续审计其它对象门面和跨组件语义入口。`docs/design/architecture-improvement-plan.md` P2/P4/P5/P6、`docs/design/cpp-object-model-refactor-roadmap.md`。
+
+### Sandbox19 转向手感
+
+相对移动时，相机持有视线；移动和开火均向同一视线转身，不在侧移/后退开火时切换90°/180°。静止且未开火时保留身体方向，允许自由观察。身体用18/s指数响应与540°/s上限转向现有 Bullet 刚体，RenderComponent 继续插值展示；第一次开火等待朝向误差≤8°，发弹仍由动画通知触发并使用实际枪口，不重定向弹道。默认 tank 的2.5rad/s转向保持不变。详见[改造与验证](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。

@@ -36,3 +36,7 @@
 - [个人项目定位](personal-project-positioning.md) — 用户明确为个人项目，方向讨论不默认以外部玩家或产品交付为前提
 - [Ogre GL3+ 透明叠加材质](ogre-gl3-overlay-material.md) — core profile 不会可靠回退 fixed pipeline；透明 visual plane 需显式 shader，并以实机图和实际 PNG alpha 验强度
 - [macOS Xcode Release 依赖代理](xcode-release-dependency-proxy.md) — 生成的主工程可能在 Release 仍链接 _d 静态库；改 vendored 依赖须核对代理名、重建实际 archive 并确认进入二进制
+
+- [MiniGame 操作体验参考](minigame-control-reference.md) — 用户认可的手感参考、本机路径与实际主线入口
+
+- [多实例共享日志](shared-sandbox-log.md) — Sandbox.log 可能混入其他回放，统计使用子进程隔离输出

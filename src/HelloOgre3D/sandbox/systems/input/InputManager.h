@@ -50,6 +50,9 @@ public:
 	bool isKeyPressed(OIS::KeyCode key) const;
 	bool isKeyReleased(OIS::KeyCode key) const;
 
+	void ResetHeldKeys();
+	bool IsFollowCamera() const;
+
 	void update(int deltaMs); // 每帧调用以清除 KeyDown/KeyUp 状态
 
 #if defined(OIS_APPLE_PLATFORM)
@@ -59,6 +62,7 @@ public:
 
 private:
 #if defined(OIS_APPLE_PLATFORM)
+	void PumpNativeWindowEvents();
 	void InstallNativeMouseBridge();
 	void UninstallNativeMouseBridge();
 #endif

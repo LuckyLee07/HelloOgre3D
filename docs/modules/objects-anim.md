@@ -43,3 +43,7 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：补 SMG reload 动画；更复杂非 Soldier 动画行为样例；AI driver / Blackboard / Lua action 的 Soldier 专属接口继续收口。`docs/design/architecture-improvement-plan.md` P5、`docs/design/cpp-object-model-refactor-roadmap.md`。
+
+## 2026-09-12 移动射击与通知合同
+
+AnimComponent 在每次仿真更新前恢复原 ASM 状态，更新动作后由 `SoldierLocomotionLayer` 组合上身动作与下身步态。分层只读真实水平速度/朝向，以现有脊柱后代骨骼为上身遮罩，按速度累计步相，并在 spine 接缝补偿髋部旋转、避免上身枪向随侧步转走；不推进动作通知、不写回 Bullet。Ogre 使用 CUMULATIVE 混合，避免 AVERAGE 按整条动画权重归一而削弱上下身。

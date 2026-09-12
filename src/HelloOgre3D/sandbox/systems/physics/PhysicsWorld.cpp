@@ -173,3 +173,25 @@ bool PhysicsWorld::rayCastToRigidBody(const btVector3& from, const btVector3& to
 	rigidBody = dynamic_cast<const btRigidBody*>(rayResult.m_collisionObject);
 	return rigidBody != nullptr;
 }
+
+float PhysicsWorld::sweepCamera(const btVector3& from, const btVector3& to, float radius) const
+{
+	if (m_pDynamicsWorld == nullptr || (to - from).length2() < SIMD_EPSILON) return 1.0f;
+	struct StaticCameraSweep : btCollisionWorld::ClosestConvexResultCallback
+	{
+		StaticCameraSweep(const btVector3& a, const btVector3& b) : ClosestConvexResultCallback(a, b) {}
+		virtual bool needsCollision(btBroadphaseProxy* proxy) const override
+		{
+			if (!ClosestConvexResultCallback::needsCollision(proxy)) return false;
+			const btCollisionObject* object = static_cast<const btCollisionObject*>(proxy->m_clientObject);
+			return object != nullptr && object->isStaticOrKinematicObject() && object->hasContactResponse();
+		}
+	};
+	btSphereShape shape(btMax(0.05f, radius));
+	btTransform start, finish;
+	start.setIdentity(); finish.setIdentity();
+	start.setOrigin(from); finish.setOrigin(to);
+	StaticCameraSweep hit(from, to);
+	m_pDynamicsWorld->convexSweepTest(&shape, start, finish, hit);
+	return hit.hasHit() ? btMax(0.0f, float(hit.m_closestHitFraction) - 0.02f / float((to - from).length())) : 1.0f;
+}

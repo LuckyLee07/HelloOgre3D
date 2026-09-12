@@ -2,6 +2,7 @@
 #define __ANIM_COMPONENT_H__
 
 #include "component/IComponent.h"
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -10,6 +11,7 @@ class AgentAnimStateMachine;
 class IAnimContextProvider;
 class IAnimController;
 class SoldierAnimController;
+class SoldierLocomotionLayer;
 namespace Ogre {
 	class Entity;
 }
@@ -28,6 +30,7 @@ public:
 	IAnimController* GetController() const { return m_controller; }
 	SoldierAnimController* GetSoldierController() const;
 
+	void ResetBodyPresentation();
 	void InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent = true);
 	void InitWeaponAnimations(Ogre::Entity* entity, bool canFireEvent = false);
 	void UpdateController(int deltaMs);
@@ -59,6 +62,7 @@ private:
 	void ClearAnimations(std::unordered_map<std::string, AgentAnim*>& animations);
 
 private:
+	std::unique_ptr<SoldierLocomotionLayer> m_locomotionLayer;
 	IAnimController* m_controller;
 	Ogre::Entity* m_bodyEntity; // non-owning; owned by RenderComponent/Ogre scene
 	Ogre::Entity* m_weaponEntity; // non-owning; owned by RenderComponent/Ogre scene

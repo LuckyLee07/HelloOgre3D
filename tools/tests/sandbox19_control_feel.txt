@@ -1,0 +1,31 @@
+0 key_press RETURN
+500 mouse_down 100 400 2
+533 mouse_move 1600 400
+566 mouse_up 1600 400 2
+1000 key_down SPACE
+2000 key_up SPACE
+2400 key_down S
+2800 key_down SPACE
+3300 key_up SPACE
+3700 key_up S
+4100 mouse_down 1600 400 2
+4133 mouse_move 1617 400
+4166 mouse_up 1617 400 2
+4500 key_down W
+4800 key_up W
+5000 key_down Q
+5400 key_down E
+5800 key_up Q
+6200 key_press ESC
+6500 key_up E
+7000 key_press ESC
+7400 mouse_down 600 400 2
+7433 mouse_move 700 600
+7466 mouse_up 700 600 2
+7600 wheel 700 600 120
+7900 mouse_down 400 300 0
+8000 mouse_down 400 300 2
+8200 mouse_move 500 300
+8300 mouse_up 500 300 2
+8400 mouse_up 500 300 0
+9000 quit

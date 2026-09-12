@@ -767,6 +767,13 @@ void ClientManager::FrameRendering(const Ogre::FrameEvent& event)
 
     ApplyPendingWindowSize();
 
+	if (m_pGameManager != nullptr) {
+		static const long long periodMicros = 1000000 / ReadSimulationHz();
+		const float alpha = std::max(0.0f, std::min(1.0f,
+			float(m_Timer.getMicroseconds() - m_lastUpdateTimeInMicro) / float(periodMicros)));
+		m_pGameManager->RenderPresentation(alpha, event.timeSinceLastFrame);
+	}
+
     {
         H3D_PROFILE_SCOPE("CameraController::frameRenderingQueued");
         m_pCameraController->frameRenderingQueued(event);

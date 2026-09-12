@@ -148,3 +148,5 @@ docs/
 - 处理 Chapter9 视觉/行为差异：`design/chapter9-parity-architecture-notes.md`。
 - 做架构解耦：`design/architecture-improvement-plan.md`。
 - 新功能开发：`/hello-develop-design <功能描述>`（见 `skills/`）。
+
+[Sandbox19 转向手感改造](dev-design/plans/2026-09-12-sandbox19-control-feel.md)：参考 MiniGame 的相对输入与视线/身体分离，统一中键尺度、细化 Q/E、消除侧移开火朝向突变；含原生输入探针与前后实测。

@@ -53,6 +53,8 @@ private:
 	void UpdateCameraFollow(int deltaMs);
 	void UpdateTurning(int deltaMs);
 	void UpdateFacingForward();
+	void UpdateFollowTurnInput();
+	bool IsFacingAim() const;
 	void UpdateMovement();
 	void UpdateCombat();
 	void StopHorizontalMovement();
@@ -66,7 +68,7 @@ private:
 	InputManager* m_registeredInput;
 	CombatState m_combatState;
 	Ogre::Vector3 m_aimDirection;
-	Ogre::Real m_yaw;         // 角色偏航（弧度），由 A/D 平滑转向驱动（tank，照搬 code-master）
+	Ogre::Real m_yaw;         // tank 偏航；相机相对模式只读取 FOLLOW 的视线，不回写镜头
 	bool m_hasYaw;
 	bool m_forwardPressed;
 	bool m_backPressed;
@@ -75,7 +77,7 @@ private:
 	bool m_rotateLeftPressed;
 	bool m_rotateRightPressed;
 	bool m_sprintPressed;
-	bool m_firePressed;
+	unsigned char m_fireInputs; // bit 0: Space, bit 1: left mouse
 	bool m_reloadRequested;
 	bool m_deathIntentIssued;
 };

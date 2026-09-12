@@ -53,15 +53,15 @@ InputManager::~InputManager()
 
 void InputManager::Initialize()
 {
-#if defined(OIS_WIN32_PLATFORM)
 	// Background automation renders and accepts internal replay events only. It must
 	// never acquire the user's hardware input while another application is active.
-	if (IsBackgroundWindowRequested())
+	const char* replay = std::getenv("HELLO_INPUT_REPLAY");
+	if (IsBackgroundWindowRequested() || (replay != nullptr && replay[0] != '\0'))
 	{
-		Ogre::LogManager::getSingleton().logMessage("[WindowMode] background=true physical-input=disabled");
+		Ogre::LogManager::getSingleton().logMessage(IsBackgroundWindowRequested()
+			? "[WindowMode] background=true physical-input=disabled" : "[InputReplay] physical-input=disabled");
 		return;
 	}
-#endif
 	std::ostringstream windowHndStr;
 	windowHndStr << m_windowHnd;
 
@@ -114,6 +114,9 @@ void InputManager::Initialize()
 
 void InputManager::capture()
 {
+#if defined(OIS_APPLE_PLATFORM)
+	if (m_pKeyboard == nullptr) PumpNativeWindowEvents();
+#endif
 	if (m_pMouse != nullptr)
 		m_pMouse->capture();
 
@@ -254,6 +257,19 @@ bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonI
 		m_cameraController->injectMouseUp(event, btnId);
 	
 	return true;
+}
+
+bool InputManager::IsFollowCamera() const
+{
+	return m_cameraController != nullptr && m_cameraController->getStyle() == OgreCameraController::CS_FOLLOW;
+}
+
+void InputManager::ResetHeldKeys()
+{
+	std::vector<OIS::KeyCode> held;
+	for (const auto& entry : m_KeyMap)
+		if (entry.second) held.push_back(entry.first);
+	for (OIS::KeyCode key : held) keyReleased(OIS::KeyEvent(nullptr, key, 0));
 }
 
 bool InputManager::isKeyDown(OIS::KeyCode key) const

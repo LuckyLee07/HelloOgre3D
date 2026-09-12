@@ -48,11 +48,14 @@ namespace
 	int _lastRawX;
 	int _lastRawY;
 	BOOL _hasLastPosition;
+	CGFloat _lookRemainderX;
+	CGFloat _lookRemainderY;
 }
 
 - (id)initWithInputManager:(InputManager*)manager view:(NSView*)view;
 - (void)invalidate;
 - (void)handleEvent:(NSEvent*)event;
+- (void)releaseInput:(NSNotification*)notification;
 
 @end
 
@@ -69,9 +72,14 @@ namespace
 		_lastRawX = 0;
 		_lastRawY = 0;
 		_hasLastPosition = NO;
+		_lookRemainderX = _lookRemainderY = 0.0;
 
 		NSWindow* window = [_view window];
 		[window setAcceptsMouseMovedEvents:YES];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(releaseInput:)
+			name:NSWindowDidResignKeyNotification object:window];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(releaseInput:)
+			name:NSApplicationDidResignActiveNotification object:NSApp];
 
 		NSEventMask mask =
 			NSEventMaskMouseMoved |
@@ -104,6 +112,7 @@ namespace
 
 - (void)invalidate
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	if (_monitor != nil)
 	{
 		[NSEvent removeMonitor:_monitor];
@@ -111,6 +120,24 @@ namespace
 		_monitor = nil;
 	}
 	_manager = nullptr;
+}
+
+- (void)releaseInput:(NSNotification*)notification
+{
+	(void)notification;
+	if (_manager != nullptr)
+	{
+		for (int index = 0; index <= OIS::MB_Button7; ++index)
+		{
+			if ((_buttons & (1 << index)) == 0) continue;
+			_buttons &= ~(1 << index);
+			_manager->HandleNativeMouseButton(_lastRawX, _lastRawY, 0, 0,
+				static_cast<OIS::MouseButtonID>(index), false, _buttons);
+		}
+		_manager->ResetHeldKeys();
+	}
+	_lookRemainderX = _lookRemainderY = 0.0;
+	_hasLastPosition = NO;
 }
 
 - (BOOL)getMousePositionFromEvent:(NSEvent*)event rawX:(int*)rawX rawY:(int*)rawY relX:(int*)relX relY:(int*)relY inside:(BOOL*)inside
@@ -193,6 +220,7 @@ namespace
 	{
 		const OIS::MouseButtonID button = ToOisMouseButton(event);
 		_buttons |= GetMouseButtonMask(button);
+		_lookRemainderX = _lookRemainderY = 0.0;
 		_manager->HandleNativeMouseButton(rawX, rawY, relX, relY, button, true, _buttons);
 		break;
 	}
@@ -202,6 +230,7 @@ namespace
 	{
 		const OIS::MouseButtonID button = ToOisMouseButton(event);
 		_buttons &= ~GetMouseButtonMask(button);
+		_lookRemainderX = _lookRemainderY = 0.0;
 		_manager->HandleNativeMouseButton(rawX, rawY, relX, relY, button, false, _buttons);
 		break;
 	}
@@ -209,16 +238,42 @@ namespace
 	{
 		const int wheelDelta = [self wheelDeltaFromEvent:event];
 		if (wheelDelta != 0)
-			_manager->HandleNativeMouseMove(rawX, rawY, relX, relY, wheelDelta, _buttons);
+			_manager->HandleNativeMouseMove(rawX, rawY, 0, 0, wheelDelta, _buttons);
 		break;
 	}
 	default:
+		if (_manager->IsFollowCamera() && (_buttons & GetMouseButtonMask(OIS::MB_Middle)) != 0)
+		{
+			// UI retains backing-pixel absolute coordinates; orbit consumes device
+			// deltas without Retina scaling. Carry fractions across OIS integer events.
+			_lookRemainderX += [event deltaX];
+			_lookRemainderY += [event deltaY];
+			relX = static_cast<int>(_lookRemainderX);
+			relY = static_cast<int>(_lookRemainderY);
+			_lookRemainderX -= relX;
+			_lookRemainderY -= relY;
+		}
+		else
+			_lookRemainderX = _lookRemainderY = 0.0;
 		_manager->HandleNativeMouseMove(rawX, rawY, relX, relY, 0, _buttons);
 		break;
 	}
 }
 
 @end
+
+void InputManager::PumpNativeWindowEvents()
+{
+	// Keep Cocoa windows responsive without installing hardware input listeners
+	// during background automation or internal replay.
+	NSEvent* event = nil;
+	do
+	{
+		event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast]
+			inMode:NSDefaultRunLoopMode dequeue:YES];
+		if (event != nil) [NSApp sendEvent:event];
+	} while (event != nil);
+}
 
 void InputManager::InstallNativeMouseBridge()
 {

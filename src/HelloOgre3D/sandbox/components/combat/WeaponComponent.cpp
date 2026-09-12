@@ -6,6 +6,8 @@
 #include "GameFunction.h"
 #include "SandboxMacros.h"
 #include "OgreParticleSystem.h"
+#include "OgreEntity.h"
+#include "OgreSkeletonInstance.h"
 #include "OgreLogManager.h"
 #include "OgreSceneNode.h"
 #include "OgreStringConverter.h"
@@ -25,6 +27,16 @@
 
 namespace
 {
+	void EvaluateAttachmentPose(Ogre::Entity* entity)
+	{
+		if (entity == nullptr || !entity->hasSkeleton()) return;
+		// Bone queries need the current action pose, but must not consume Ogre's
+		// once-per-render-frame skinning cache before the lower-body layer runs.
+		Ogre::SkeletonInstance* skeleton = entity->getSkeleton();
+		skeleton->setAnimationState(*entity->getAllAnimationStates());
+		skeleton->_updateTransforms();
+	}
+
 	ObjectFactory* ResolveObjectFactory(const WeaponComponent* component)
 	{
 		const SandboxServices* services = component != nullptr ? component->GetSandboxServices() : nullptr;
@@ -136,6 +148,9 @@ void WeaponComponent::SyncToHandBone()
 		return;
 	}
 
+	// Bone queries can precede Ogre render traversal (e.g. a fire notify).
+	// Evaluate the current animation before resolving the visual attachment.
+	EvaluateAttachmentPose(ownerRender->GetEntity());
 	Ogre::Vector3 handPosition;
 	Ogre::Quaternion handOrientation;
 	if (!SceneFactory::GetBonePosition(*soldierNode, "b_RightHand", handPosition))
@@ -188,8 +203,10 @@ void WeaponComponent::ShootBulletAt(const Ogre::Vector3& worldTarget)
 	DoShootBullet(position, orientation);
 }
 
-bool WeaponComponent::ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation) const
+bool WeaponComponent::ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation)
 {
+	SyncToHandBone();
+	if (m_weaponRender != nullptr) EvaluateAttachmentPose(m_weaponRender->GetEntity());
 	RenderComponent* ownerRender = FindOwnerRender(this);
 	if (ownerRender == nullptr)
 	{

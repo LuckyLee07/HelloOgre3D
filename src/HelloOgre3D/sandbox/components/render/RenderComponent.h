@@ -3,6 +3,7 @@
 
 #include "component/IComponent.h"
 #include "OgreVector3.h"
+#include "OgreQuaternion.h"
 #include <string>
 #include <unordered_map>
 
@@ -52,12 +53,19 @@ public:
 	virtual int getUpdateOrder() const override;
 	virtual void update(int deltaInMillis) override;
 	void SyncFromOwnerTransform();
+	void CaptureSimulationTransform();
+	void RenderInterpolated(float alpha);
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 private:
 	Ogre::SceneNode* m_pSceneNode = nullptr;
 	Ogre::Entity* m_pEntity = nullptr;
 	Ogre::Vector3 m_visualOffset = Ogre::Vector3::ZERO;
+	Ogre::Vector3 m_previousPosition = Ogre::Vector3::ZERO;
+	Ogre::Vector3 m_currentPosition = Ogre::Vector3::ZERO;
+	Ogre::Quaternion m_previousOrientation = Ogre::Quaternion::IDENTITY;
+	Ogre::Quaternion m_currentOrientation = Ogre::Quaternion::IDENTITY;
+	bool m_hasSimulationPose = false;
 };
 
 #endif // __RENDER_COMPONENT_H__

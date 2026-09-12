@@ -46,6 +46,7 @@ public:
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
     //tolua_end
 
+    bool RestartState(const std::string& stateName);
     void AddNotify(const std::string& stateName, const std::string& eventName, float normalizedTime, bool fireOnce = true);
     void SetCanFireEvent(bool canFireEvent);
     void FireStateChageEvent(AgentAnimState* pNextState);

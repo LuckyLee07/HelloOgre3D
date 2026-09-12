@@ -5,6 +5,7 @@
 #include "tolua++.h"
 #include "LuaInterface.h"
 #include <algorithm>
+#include <cstdlib>
 #include "GlobalFuncs.h"
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #include <winsock.h>
@@ -40,6 +41,8 @@
 #include "audio/RuntimeUiSound.h"
 #include "components/control/PlayerController.h"
 #include "objects/AgentObject.h"
+#include "components/render/RenderComponent.h"
+#include "components/combat/WeaponComponent.h"
 
 using namespace Ogre;
 
@@ -139,6 +142,7 @@ void GameManager::Initialize()
 				return 0;
 		}
 	});
+	m_pCameraService->SetRaycastService(m_pRaycastService);
 	m_pSceneService = new SceneService(pSceneManager, m_pCameraService);
 	SceneFactory::SetRootSceneNode(pSceneManager != nullptr ? pSceneManager->getRootSceneNode() : nullptr);
 
@@ -250,8 +254,44 @@ void GameManager::Update(int deltaMilliseconds)
 			RuntimeStallProfiler::AddLuaCallbackTiming(perfTiming.sandboxLuaMs);
 		}
 	}
+	if (!m_simulationPaused && m_pCameraService->IsCameraRelativeMovement())
+	{
+		for (AgentObject* agent : m_pObjectManager->getAllAgents())
+			if (agent != nullptr && agent->GetRenderComponent() != nullptr)
+				agent->GetRenderComponent()->CaptureSimulationTransform();
+	}
 	if (perfEnabled)
 		RuntimeStallProfiler::SetGameUpdateTiming(perfTiming);
+}
+
+void GameManager::RenderPresentation(float alpha, float dtSec)
+{
+	if (m_pObjectManager == nullptr || m_pCameraService == nullptr || !m_pCameraService->IsFollowing()) return;
+	H3D_PROFILE_SCOPE("GameManager::RenderPresentation");
+	const bool interpolate = m_pCameraService->IsCameraRelativeMovement();
+	for (AgentObject* agent : m_pObjectManager->getAllAgents())
+	{
+		if (agent == nullptr) continue;
+		RenderComponent* render = agent->GetRenderComponent();
+		if (interpolate && render != nullptr) render->RenderInterpolated(m_simulationPaused ? 1.0f : alpha);
+		WeaponComponent* weapon = agent->GetWeaponComponent();
+		if (weapon != nullptr) weapon->SyncToHandBone();
+		if (agent->FindComponent<PlayerController>() != nullptr)
+		{
+			const Ogre::Vector3 displayed = interpolate && render != nullptr
+				? render->GetDerivedPosition() - render->GetVisualOffset() : agent->GetPosition();
+			m_pCameraService->RenderFollow(displayed, m_simulationPaused ? 0.0f : dtSec);
+			static const bool trace = std::getenv("HELLO_CAMERA_TRACE") != nullptr;
+			if (trace)
+				Ogre::LogManager::getSingleton().logMessage("[PresentationTrace] simMs=" + std::to_string(m_SimulationTime)
+					+ " alpha=" + Ogre::StringConverter::toString(alpha) + " paused=" + Ogre::StringConverter::toString(m_simulationPaused)
+					+ " physics=" + Ogre::StringConverter::toString(agent->GetPosition())
+					+ " displayed=" + Ogre::StringConverter::toString(displayed)
+					+ " bodyForward=" + Ogre::StringConverter::toString(agent->GetForward())
+					+ " displayedForward=" + Ogre::StringConverter::toString(render != nullptr
+						? render->GetOrientation().zAxis() : agent->GetForward()));
+		}
+	}
 }
 
 Ogre::Camera* GameManager::getCamera()
@@ -374,6 +414,11 @@ bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
+	if (!m_simulationPaused && m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting())
+	{
+		m_pCameraService->DragFollowOrbit(static_cast<float>(evt.state.X.rel), static_cast<float>(evt.state.Y.rel));
+		return true;
+	}
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
 	if (fairyGuiSystem != nullptr)
@@ -395,6 +440,7 @@ bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 
 bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
+	if (m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting()) return true;
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseDown(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))
@@ -402,11 +448,18 @@ bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID 
 #endif
 	bool consumed = false;
 	m_pScriptVM->callFunction("EventHandle_Mouse", "iiii>B", 1, evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn), &consumed);
+	if (!consumed && !m_simulationPaused && btn == OIS::MB_Middle && m_pCameraService != nullptr)
+		consumed = m_pCameraService->BeginFollowOrbit();
 	return consumed || m_simulationPaused;
 }
 
 bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
+	if (btn == OIS::MB_Middle && m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting())
+	{
+		m_pCameraService->EndFollowOrbit();
+		return true;
+	}
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectMouseUp(evt.state.X.abs, evt.state.Y.abs, static_cast<int>(btn)))

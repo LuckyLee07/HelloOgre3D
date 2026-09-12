@@ -1,4 +1,5 @@
 ﻿#include "CameraService.h"
+#include "RaycastService.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 #include "OgreCamera.h"
@@ -9,6 +10,9 @@
 #include "ogre/OgreCameraController.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include "OgreLogManager.h"
+#include "OgreStringConverter.h"
 
 CameraService::CameraService(Ogre::Camera* camera, Ogre::SceneManager* sceneManager, OgreCameraController* cameraController, const ProfileTimeGetter& profileTimeGetter)
 	: m_camera(camera), m_sceneManager(sceneManager), m_cameraController(cameraController), m_profileTimeGetter(profileTimeGetter),
@@ -140,6 +144,10 @@ bool CameraService::ConfigureFollowCamera(float distance, float height, float lo
 
 void CameraService::ResetFollowCamera()
 {
+	EndFollowOrbit();
+	m_followTurnInput = 0.0f;
+	m_obstructionDistance = 0.0f;
+	if (m_cameraController != nullptr) m_cameraController->resetFollowView();
 	m_followDistance = 8.0f;
 	m_followHeight = 4.0f;
 	m_followLookAhead = 3.0f;
@@ -155,6 +163,7 @@ void CameraService::ResetFollowCamera()
 void CameraService::SetCameraRelativeMovement(bool enabled)
 {
 	m_cameraRelativeMovement = enabled;
+	if (!enabled) { EndFollowOrbit(); m_followTurnInput = 0.0f; }
 }
 
 bool CameraService::IsCameraRelativeMovement() const
@@ -172,6 +181,8 @@ void CameraService::SnapFollowTarget(const Ogre::Vector3& position, const Ogre::
 	if (!std::isfinite(position.x) || !std::isfinite(position.y) || !std::isfinite(position.z)
 		|| !std::isfinite(forward.x) || !std::isfinite(forward.y) || !std::isfinite(forward.z))
 		return;
+	m_followTurnInput = 0.0f;
+	m_obstructionDistance = 0.0f;
 	UpdateFollow(position, forward, 0.0f);
 }
 
@@ -206,7 +217,83 @@ void CameraService::ExitFollowMode()
 void CameraService::UpdateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, float dtSec)
 {
 	if (m_cameraController != nullptr)
-		m_cameraController->updateFollow(targetPos, forwardXZ, dtSec);
+		m_cameraController->updateFollow(targetPos,
+			m_cameraRelativeMovement && dtSec > 0.0f ? GetFollowForward() : forwardXZ, dtSec);
+}
+
+bool CameraService::IsFollowing() const
+{
+	return m_cameraController != nullptr && m_cameraController->getStyle() == OgreCameraController::CS_FOLLOW;
+}
+
+bool CameraService::BeginFollowOrbit()
+{
+	if (!m_cameraRelativeMovement || m_cameraController == nullptr
+		|| m_cameraController->getStyle() != OgreCameraController::CS_FOLLOW) return false;
+	m_followOrbiting = true;
+	return true;
+}
+
+void CameraService::EndFollowOrbit()
+{
+	m_followOrbiting = false;
+}
+
+void CameraService::DragFollowOrbit(float dx, float dy)
+{
+	if (!m_followOrbiting || m_cameraController == nullptr || !std::isfinite(dx) || !std::isfinite(dy)) return;
+	// Native relative units, independent of Retina backing pixels and window size.
+	const float radiansPerUnit = Ogre::Degree(0.12f).valueRadians();
+	m_cameraController->rotateFollowView(-dx * radiansPerUnit, dy * radiansPerUnit);
+}
+
+Ogre::Vector3 CameraService::GetFollowForward() const
+{
+	return m_cameraController != nullptr ? m_cameraController->getFollowForward() : Ogre::Vector3::UNIT_Z;
+}
+
+void CameraService::SetFollowTurnInput(bool left, bool right)
+{
+	m_followTurnInput = m_cameraRelativeMovement ? static_cast<float>(left) - static_cast<float>(right) : 0.0f;
+}
+
+void CameraService::RenderFollow(const Ogre::Vector3& displayedTarget, float dtSec)
+{
+	if (m_cameraController == nullptr || m_cameraController->getStyle() != OgreCameraController::CS_FOLLOW) return;
+	// Keyboard orbit advances on the display clock, never in 30 Hz simulation steps.
+	// Clamp only stalls; releasing a key sets the rate to zero without a smoothing tail.
+	if (dtSec > 0.0f && m_followTurnInput != 0.0f)
+		m_cameraController->rotateFollowView(m_followTurnInput * Ogre::Degree(75.0f).valueRadians()
+			* std::min(dtSec, 0.1f), 0.0f);
+	m_cameraController->renderFollow(displayedTarget, dtSec);
+	const Ogre::Vector3 look = m_cameraController->getFollowLook();
+	const Ogre::Vector3 ideal = m_cameraController->getFollowIdealPosition();
+	const Ogre::Vector3 pivot = displayedTarget + Ogre::Vector3::UNIT_Y * m_followEyeHeight;
+	const Ogre::Vector3 boom = ideal - pivot;
+	const float fullDistance = boom.length();
+	if (fullDistance < 0.01f) return;
+	const Ogre::Vector3 safe = m_raycast != nullptr ? m_raycast->SweepCamera(pivot, ideal, 0.18f) : ideal;
+	const float clearDistance = (safe - pivot).length();
+	// Retract immediately; ease the return after a wall stops obstructing the view.
+	if (m_obstructionDistance <= 0.0f || clearDistance < m_obstructionDistance)
+		m_obstructionDistance = clearDistance;
+	else if (dtSec > 0.0f)
+		m_obstructionDistance += (clearDistance - m_obstructionDistance) * (1.0f - std::exp(-12.0f * dtSec));
+	m_camera->setPosition(pivot + boom * (std::min(clearDistance, m_obstructionDistance) / fullDistance));
+	// Retraction changes distance only. A filtered look point can fall behind a
+	// fully retracted camera and otherwise flip the view toward the obstacle.
+	const Ogre::Vector3 view = look - ideal;
+	if (!view.isZeroLength()) m_camera->setDirection(view);
+	static const bool trace = std::getenv("HELLO_CAMERA_TRACE") != nullptr;
+	if (trace)
+	{
+		Ogre::LogManager::getSingleton().logMessage("[FollowCameraTrace] pivot=" + Ogre::StringConverter::toString(pivot)
+			+ " ideal=" + Ogre::StringConverter::toString(ideal)
+			+ " actual=" + Ogre::StringConverter::toString(m_camera->getPosition())
+			+ " forward=" + Ogre::StringConverter::toString(m_camera->getDirection())
+			+ " clear=" + Ogre::StringConverter::toString(clearDistance)
+			+ " orbit=" + Ogre::StringConverter::toString(m_followOrbiting));
+	}
 }
 
 long long CameraService::GetRenderTime()

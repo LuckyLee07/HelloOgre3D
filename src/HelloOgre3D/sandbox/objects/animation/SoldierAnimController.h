@@ -11,6 +11,7 @@ class SoldierAnimController : public IAnimController
 {
 public:
 	explicit SoldierAnimController(IAnimContextProvider& context);
+	void ResetBodyPresentation();
 
 	virtual void Update(float deltaTimeInMillis) override;
 	virtual void OnBodyStateChanged(int stateId) override;

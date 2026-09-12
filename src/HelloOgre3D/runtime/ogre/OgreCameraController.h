@@ -270,65 +270,70 @@ public:
         else if (id == OIS::MB_Right) mZooming = false;
     }
 
-    // 第三人称跟随（照搬 code-master FollowCamera：后上方 + 看角色前方 + 弹簧阻尼）。
-    void setFollowParams(Ogre::Real horz, Ogre::Real vert, Ogre::Real target,
-                         Ogre::Real eye, Ogre::Real spring) {
-        mFollowHorzDist = horz;
-        mFollowVertDist = vert;
-        mFollowTargetDist = target;
-        mFollowEyeHeight = eye;
-        mFollowSpring = spring > 1.0f ? spring : 1.0f;
-    }
+    // Follow rotation is immediate; only the displayed target translation is filtered.
+	void setFollowParams(Ogre::Real horz, Ogre::Real vert, Ogre::Real target,
+	                     Ogre::Real eye, Ogre::Real spring) {
+		(void)spring;
+		mFollowHorzDist = horz;
+		mFollowVertDist = vert;
+		mFollowTargetDist = target;
+		mFollowEyeHeight = eye;
+	}
 
-    void enterFollow() { setStyle(CS_FOLLOW); }
-    void exitFollow() { setStyle(CS_FREELOOK); }
+	void enterFollow() { setStyle(CS_FOLLOW); }
+	void exitFollow() { mFollowPitchOffset = 0.0f; setStyle(CS_FREELOOK); }
+	void resetFollowView() { mFollowPitchOffset = 0.0f; mHasFollowState = false; }
 
-    // 由 PlayerController 每帧调用；dtSec = deltaMs / 1000。
-    void updateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, Ogre::Real dtSec) {
-        if (mStyle != CS_FOLLOW || !mCamera) {
-            return;
-        }
+	void rotateFollowView(Ogre::Real yaw, Ogre::Real pitch) {
+		if (mStyle != CS_FOLLOW) return;
+		mFollowForward = Ogre::Quaternion(Ogre::Radian(yaw), Ogre::Vector3::UNIT_Y) * mFollowForward;
+		const Ogre::Real basePitch = Ogre::Math::ATan2(mFollowVertDist - mFollowEyeHeight,
+			mFollowHorzDist + mFollowTargetDist).valueRadians();
+		const Ogre::Real desiredPitch = basePitch + mFollowPitchOffset + pitch;
+		mFollowPitchOffset = Ogre::Math::Clamp(desiredPitch,
+			Ogre::Degree(8).valueRadians(), Ogre::Degree(65).valueRadians()) - basePitch;
+	}
 
-        // 钳制 dt：大帧/变帧会让弹簧发散抖动（code-master 也把 deltaTime 钳到 0.05）。
-        if (dtSec > 0.05f) dtSec = 0.05f;
+	// Simulation submits direction; presentation supplies the interpolated physics position.
+	void updateFollow(const Ogre::Vector3& targetPos, const Ogre::Vector3& forwardXZ, Ogre::Real dtSec) {
+		if (mStyle != CS_FOLLOW || !mCamera) return;
+		if (!forwardXZ.isZeroLength() && !forwardXZ.isNaN()) {
+			mFollowForward = forwardXZ;
+			mFollowForward.y = 0.0f;
+			mFollowForward.normalise();
+		}
+		if (!mHasFollowState || dtSec <= 0.0f) {
+			mHasFollowState = false;
+			renderFollow(targetPos, 0.0f);
+		}
+	}
 
-        if (!forwardXZ.isZeroLength() && !forwardXZ.isNaN()) {
-            mFollowForward = forwardXZ.normalisedCopy();
-        }
+	void renderFollow(const Ogre::Vector3& targetPos, Ogre::Real dtSec) {
+		if (mStyle != CS_FOLLOW || !mCamera || targetPos.isNaN()) return;
+		if (!mHasFollowState || (targetPos - mFollowTargetPos).squaredLength() > 16.0f) {
+			mFollowTargetPos = targetPos;
+			mHasFollowState = true;
+		} else if (dtSec > 0.0f) {
+			const Ogre::Real blend = 1.0f - std::exp(-mFollowTargetSmooth * dtSec);
+			mFollowTargetPos += (targetPos - mFollowTargetPos) * blend;
+		}
+		mFollowLook = mFollowTargetPos + mFollowForward * mFollowTargetDist
+			+ Ogre::Vector3::UNIT_Y * mFollowEyeHeight;
+		const Ogre::Real horizontal = mFollowHorzDist + mFollowTargetDist;
+		const Ogre::Real vertical = mFollowVertDist - mFollowEyeHeight;
+		const Ogre::Real radius = Ogre::Math::Sqrt(horizontal * horizontal + vertical * vertical);
+		const Ogre::Real pitch = Ogre::Math::ATan2(vertical, horizontal).valueRadians() + mFollowPitchOffset;
+		mFollowActualPos = mFollowLook - mFollowForward * (radius * std::cos(pitch))
+			+ Ogre::Vector3::UNIT_Y * (radius * std::sin(pitch));
+		mCamera->setPosition(mFollowActualPos);
+		mCamera->lookAt(mFollowLook);
+	}
 
-        if (!mHasFollowState || dtSec <= 0.0f) {
-            // 初始化：被跟随点与相机都吸附理想位，零速度。
-            mFollowTargetPos = targetPos;
-            mFollowActualPos = computeFollowIdeal();
-            mFollowVelocity = Ogre::Vector3::ZERO;
-            mHasFollowState = true;
-        } else {
-            // 低通平滑被跟随点，滤掉物理胶囊的高频微抖（尤其竖直方向）；player 走物理非运动学。
-            Ogre::Real ts = mFollowTargetSmooth * dtSec;
-            if (ts > 1.0f) ts = 1.0f;
-            mFollowTargetPos += (targetPos - mFollowTargetPos) * ts;
-
-            // 弹簧-阻尼平滑相机位逼近理想位。
-            const Ogre::Vector3 ideal = computeFollowIdeal();
-            const Ogre::Real damp = 2.0f * Ogre::Math::Sqrt(mFollowSpring);
-            const Ogre::Vector3 diff = mFollowActualPos - ideal;
-            const Ogre::Vector3 accel = -mFollowSpring * diff - damp * mFollowVelocity;
-            mFollowVelocity += accel * dtSec;
-            mFollowActualPos += mFollowVelocity * dtSec;
-        }
-
-        const Ogre::Vector3 look = mFollowTargetPos + mFollowForward * mFollowTargetDist
-                                 + Ogre::Vector3::UNIT_Y * mFollowEyeHeight;
-        mCamera->setPosition(mFollowActualPos);
-        mCamera->lookAt(look);
-    }
+	const Ogre::Vector3& getFollowForward() const { return mFollowForward; }
+	const Ogre::Vector3& getFollowLook() const { return mFollowLook; }
+	const Ogre::Vector3& getFollowIdealPosition() const { return mFollowActualPos; }
 
 protected:
-    Ogre::Vector3 computeFollowIdeal() const {
-        return mFollowTargetPos - mFollowForward * mFollowHorzDist
-             + Ogre::Vector3::UNIT_Y * mFollowVertDist;
-    }
-
     void resetMouseSmoothing() {
         mSmoothedMouseDeltaX = 0.0f;
         mSmoothedMouseDeltaY = 0.0f;
@@ -359,12 +364,12 @@ protected:
     Ogre::Vector3 mFollowTargetPos = Ogre::Vector3::ZERO;
     Ogre::Vector3 mFollowForward = Ogre::Vector3::UNIT_Z;
     Ogre::Vector3 mFollowActualPos = Ogre::Vector3::ZERO;
-    Ogre::Vector3 mFollowVelocity = Ogre::Vector3::ZERO;
+	Ogre::Vector3 mFollowLook = Ogre::Vector3::ZERO;
+	Ogre::Real mFollowPitchOffset = 0.0f;
     Ogre::Real mFollowHorzDist = 8.0f;
     Ogre::Real mFollowVertDist = 4.0f;
     Ogre::Real mFollowTargetDist = 3.0f;
     Ogre::Real mFollowEyeHeight = 1.5f;
-    Ogre::Real mFollowSpring = 64.0f;
     Ogre::Real mFollowTargetSmooth = 20.0f; // 被跟随点低通速率（越大越贴、越小越顺）
     bool mHasFollowState = false;
 };

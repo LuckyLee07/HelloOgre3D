@@ -4,6 +4,7 @@
 #include <string>
 #include "OgreFrameListener.h"
 #include "OgreWindowEventUtilities.h"
+#include "profiling/RuntimeProfileCounters.h"
 
 class ClientManager;
 class Application : public Ogre::FrameListener, public Ogre::WindowEventListener
@@ -31,6 +32,7 @@ private:
 
 private:
     ClientManager* m_pClientManager;
+	RuntimeClientFrameTiming m_frameTiming;
 };
 
 #endif  // __APPLICATION_H__

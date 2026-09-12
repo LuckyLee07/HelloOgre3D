@@ -53,18 +53,39 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
     if (m_pClientManager->GetShutdown()) 
         return false;
 
+    if (RuntimeStallProfiler::IsEnabled())
+        RuntimeStallProfiler::FinishFrame(m_frameTiming);
+
+    RuntimeRenderCapture::Update(
+        m_pClientManager->getRenderWindow(),
+        event.timeSinceLastFrame,
+        static_cast<double>(m_pClientManager->GetSimulationTimeInMillis()));
+
+    return true;
+}
+
+bool Application::frameStarted(const Ogre::FrameEvent& event)
+{
+    if (m_pClientManager->GetShutdown()) return false;
+    H3D_PROFILE_FRAME();
+    H3D_PROFILE_SCOPE("Application::frameStarted");
+    H3D_PROFILE_PLOT("FrameTimeMs", event.timeSinceLastFrame * 1000.0f);
+
     const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
-    RuntimeClientFrameTiming frameTiming;
+    if (perfEnabled)
+        RuntimeStallProfiler::BeginFrame(event.timeSinceLastFrame * 1000.0f);
+
+	m_frameTiming = RuntimeClientFrameTiming();
     long long stageStartMicros = 0;
     
-    //Need to capture/update each device
+	// Submit input, simulation and presentation before Ogre draws this frame.
     {
         H3D_PROFILE_SCOPE("Application::InputCapture");
         if (perfEnabled)
             stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->InputCapture();
         if (perfEnabled)
-            frameTiming.inputCaptureMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+            m_frameTiming.inputCaptureMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
     // Cocoa can dispatch the native close event from inside keyboard capture.
@@ -78,7 +99,7 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
             stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->Update();
         if (perfEnabled)
-            frameTiming.updateCallMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+            m_frameTiming.updateCallMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
     {
@@ -87,29 +108,10 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
             stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
         m_pClientManager->FrameRendering(event);
         if (perfEnabled)
-            frameTiming.frameRenderingMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
+            m_frameTiming.frameRenderingMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);
     }
 
-    if (perfEnabled)
-        RuntimeStallProfiler::FinishFrame(frameTiming);
-
-    RuntimeRenderCapture::Update(
-        m_pClientManager->getRenderWindow(),
-        event.timeSinceLastFrame,
-        static_cast<double>(m_pClientManager->GetSimulationTimeInMillis()));
-
-    return true;
-}
-
-bool Application::frameStarted(const Ogre::FrameEvent& event)
-{
-    H3D_PROFILE_FRAME();
-    H3D_PROFILE_SCOPE("Application::frameStarted");
-    H3D_PROFILE_PLOT("FrameTimeMs", event.timeSinceLastFrame * 1000.0f);
-
-    const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
-    if (perfEnabled)
-        RuntimeStallProfiler::BeginFrame(event.timeSinceLastFrame * 1000.0f);
+	if (m_pClientManager->GetShutdown()) return false;
 
     {
         H3D_PROFILE_SCOPE("Application::Draw");

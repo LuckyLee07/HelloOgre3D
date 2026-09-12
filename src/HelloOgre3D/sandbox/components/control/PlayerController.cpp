@@ -1,6 +1,8 @@
 ﻿#include "PlayerController.h"
 
 #include "OgreMath.h"
+#include <algorithm>
+#include <cmath>
 #include "GameDefine.h"
 #include "components/agent/AgentLocomotion.h"
 #include "components/anim/AnimComponent.h"
@@ -31,7 +33,7 @@ PlayerController::PlayerController(BaseObject* owner)
 	, m_rotateLeftPressed(false)
 	, m_rotateRightPressed(false)
 	, m_sprintPressed(false)
-	, m_firePressed(false)
+	, m_fireInputs(0)
 	, m_reloadRequested(false)
 	, m_deathIntentIssued(false)
 {
@@ -87,7 +89,7 @@ void PlayerController::update(int deltaMs)
 		return;
 	}
 
-	// A/D 平滑转向定朝向（含首帧从 owner 初始化 yaw），再战斗/前后移动，最后相机跟随。
+	// 先更新视线和身体朝向，再战斗/移动，最后提交跟随位置。
 	UpdateTurning(deltaMs);
 	UpdateCombat();
 	UpdateMovement();
@@ -121,10 +123,12 @@ bool PlayerController::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 	case OIS::KC_Q:
 		if (!UsesCameraRelativeMovement()) return false;
 		m_rotateLeftPressed = true;
+		UpdateFollowTurnInput();
 		return true;
 	case OIS::KC_E:
 		if (!UsesCameraRelativeMovement()) return false;
 		m_rotateRightPressed = true;
+		UpdateFollowTurnInput();
 		return true;
 	case OIS::KC_LSHIFT:
 	case OIS::KC_RSHIFT:
@@ -134,7 +138,7 @@ bool PlayerController::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 		m_reloadRequested = true;
 		return true;
 	case OIS::KC_SPACE:
-		m_firePressed = true;
+		m_fireInputs |= 1;
 		return true;
 	default:
 		return false;
@@ -164,16 +168,18 @@ bool PlayerController::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 		break;
 	case OIS::KC_Q:
 		m_rotateLeftPressed = false;
+		UpdateFollowTurnInput();
 		return UsesCameraRelativeMovement();
 	case OIS::KC_E:
 		m_rotateRightPressed = false;
+		UpdateFollowTurnInput();
 		return UsesCameraRelativeMovement();
 	case OIS::KC_LSHIFT:
 	case OIS::KC_RSHIFT:
 		m_sprintPressed = false;
 		break;
 	case OIS::KC_SPACE:
-		m_firePressed = false;
+		m_fireInputs &= ~1;
 		break;
 	default:
 		return false;
@@ -186,7 +192,7 @@ bool PlayerController::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButt
 	(void)evt;
 	if (btn != OIS::MB_Left || !IsAlive())
 		return false;
-	m_firePressed = true;
+	m_fireInputs |= 2;
 	return true;
 }
 
@@ -195,7 +201,7 @@ bool PlayerController::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseBut
 	(void)evt;
 	if (btn != OIS::MB_Left)
 		return false;
-	m_firePressed = false;
+	m_fireInputs &= ~2;
 	return IsAlive();
 }
 
@@ -206,7 +212,8 @@ void PlayerController::ExecuteAnimShoot()
 		return;
 
 	weapon->ConsumeAmmo(1);
-	weapon->ShootBulletTowards(m_aimDirection);
+	// Fire along the evaluated muzzle pose, including its authored cant.
+	weapon->ShootBullet();
 }
 
 SoldierObject* PlayerController::GetSoldierOwner() const
@@ -247,6 +254,8 @@ void PlayerController::ResetTransientInput()
 {
 	ResetInputState();
 	StopHorizontalMovement();
+	const SandboxServices* services = GetSandboxServices();
+	if (services != nullptr && services->camera != nullptr) services->camera->EndFollowOrbit();
 }
 
 void PlayerController::ResetInputState()
@@ -257,8 +266,9 @@ void PlayerController::ResetInputState()
 	m_rightPressed = false;
 	m_rotateLeftPressed = false;
 	m_rotateRightPressed = false;
+	UpdateFollowTurnInput();
 	m_sprintPressed = false;
-	m_firePressed = false;
+	m_fireInputs = 0;
 	m_reloadRequested = false;
 }
 
@@ -302,25 +312,46 @@ void PlayerController::UpdateTurning(int deltaMs)
 		m_hasYaw = true;
 	}
 
-	// A/D 平滑角速度转向（非瞬时，故相机 look-at 不会跳变）；A=左、D=右（按当前手性）。
-	Ogre::Real angular = 0.0f;
-	const bool relativeMovement = UsesCameraRelativeMovement();
-	if (relativeMovement ? m_rotateLeftPressed : m_leftPressed) angular += kTurnRate;
-	if (relativeMovement ? m_rotateRightPressed : m_rightPressed) angular -= kTurnRate;
-	if (angular != 0.0f)
-		m_yaw += angular * (static_cast<Ogre::Real>(deltaMs) / 1000.0f);
-
-	if (relativeMovement)
+	if (UsesCameraRelativeMovement())
 	{
-		// In the tactical follow profile, movement can be lateral while the
-		// weapon keeps aiming down the camera's horizontal forward direction.
-		m_aimDirection = Ogre::Vector3(
-			Ogre::Math::Sin(Ogre::Radian(m_yaw)), 0.0f, Ogre::Math::Cos(Ogre::Radian(m_yaw)));
-		if (m_firePressed || m_combatState == COMBAT_SHOOTING)
-			owner->SetForward(m_aimDirection);
+		// The camera owns view yaw. Movement and fire read the same reference.
+		m_aimDirection = GetSandboxServices()->camera->GetFollowForward();
+		m_yaw = Ogre::Math::ATan2(m_aimDirection.x, m_aimDirection.z).valueRadians();
+		const bool moving = m_forwardPressed != m_backPressed || m_leftPressed != m_rightPressed;
+		if (moving || m_fireInputs || m_combatState == COMBAT_SHOOTING)
+		{
+			const Ogre::Vector3 forward = owner->GetForward();
+			const float yaw = Ogre::Math::ATan2(forward.x, forward.z).valueRadians();
+			const float error = std::atan2(std::sin(m_yaw - yaw), std::cos(m_yaw - yaw));
+			const float dt = std::max(0, deltaMs) * 0.001f;
+			const float limit = Ogre::Degree(540.0f).valueRadians() * dt;
+			const float step = std::max(-limit, std::min(limit, error * (1.0f - std::exp(-18.0f * dt))));
+			const float bodyYaw = yaw + step;
+			owner->SetForward(Ogre::Vector3(std::sin(bodyYaw), 0.0f, std::cos(bodyYaw)));
+		}
+		return;
 	}
-	else
-		UpdateFacingForward();
+
+	// Preserve tank controls used by existing samples.
+	Ogre::Real angular = 0.0f;
+	if (m_leftPressed) angular += kTurnRate;
+	if (m_rightPressed) angular -= kTurnRate;
+	m_yaw += angular * (static_cast<Ogre::Real>(deltaMs) / 1000.0f);
+	UpdateFacingForward();
+}
+
+void PlayerController::UpdateFollowTurnInput()
+{
+	const SandboxServices* services = GetSandboxServices();
+	if (services != nullptr && services->camera != nullptr)
+		services->camera->SetFollowTurnInput(m_rotateLeftPressed, m_rotateRightPressed);
+}
+
+bool PlayerController::IsFacingAim() const
+{
+	const SoldierObject* owner = GetSoldierOwner();
+	return !UsesCameraRelativeMovement() || owner == nullptr
+		|| owner->GetForward().dotProduct(m_aimDirection) >= Ogre::Math::Cos(Ogre::Degree(8.0f));
 }
 
 void PlayerController::UpdateFacingForward()
@@ -353,8 +384,7 @@ void PlayerController::UpdateMovement()
 	// 默认保持 tank；sample 显式选择相机平面移动时，WASD 位移与镜头偏航分开。
 	Ogre::Vector3 forward = m_aimDirection;
 	const bool relativeMovement = UsesCameraRelativeMovement();
-	if (relativeMovement)
-		forward = GetSandboxServices()->camera->GetCameraForward();
+	// Camera rotation, movement and the weapon share the same active horizontal view.
 	forward.y = 0.0f;
 	if (forward.isZeroLength())
 		forward = Ogre::Vector3::UNIT_Z;
@@ -365,7 +395,7 @@ void PlayerController::UpdateMovement()
 	if (m_backPressed) movement -= forward;
 	if (relativeMovement)
 	{
-		const Ogre::Vector3 right = Ogre::Vector3::UNIT_Y.crossProduct(forward);
+		const Ogre::Vector3 right = forward.crossProduct(Ogre::Vector3::UNIT_Y);
 		if (m_leftPressed) movement -= right;
 		if (m_rightPressed) movement += right;
 	}
@@ -380,10 +410,7 @@ void PlayerController::UpdateMovement()
 	}
 
 	movement.normalise();
-	if (relativeMovement && !m_firePressed && m_combatState != COMBAT_SHOOTING)
-	{
-		owner->SetForward(movement);
-	}
+	// Strafe/backpedal retain view-facing posture, including when fire starts/stops.
 	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	const Ogre::Real baseSpeed = locomotion != nullptr ? locomotion->GetMaxSpeed() : static_cast<Ogre::Real>(SOLDIER_STAND_SPEED);
 	const Ogre::Real speed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);
@@ -433,10 +460,14 @@ void PlayerController::UpdateCombat()
 		return;
 	}
 
-	if (m_firePressed)
+	if (m_fireInputs)
 	{
 		if (weapon != nullptr && weapon->HasAmmo())
-			BeginShoot();
+		{
+			// A large free-look turn settles before the first shot. Once started,
+			// the action still fires from its evaluated muzzle, with no redirected bullet.
+			if (IsFacingAim()) BeginShoot();
+		}
 		else
 			BeginReload();
 	}

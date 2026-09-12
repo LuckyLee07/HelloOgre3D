@@ -20,7 +20,7 @@
 | `PhysicsFactory.{h,cpp}` | 工厂 | 刚体/形状，见 [[systems-physics]] |
 | `SceneFactory.{h,cpp}` | 工厂 | Ogre SceneNode/ManualObject；root scene node 由 `GameManager::Initialize` 注入 |
 | `AgentConfigService.{h,cpp}` | 服务 | CppFSM flag；Lua 全局 `SandboxAgentConfig` 访问，`AgentObject` 通过 `SandboxServices.agentConfig` 读取 |
-| `CameraService.{h,cpp}` | 服务 | 相机/profile 查询 facade；提供 C++ 侧世界位移平移入口，并新增第三人称 FOLLOW 门面 `EnterFollowMode`/`ExitFollowMode`/`UpdateFollow`（**非 tolua**，转发到注入的 `OgreCameraController`，供 `PlayerController` 驱动 Sandbox19 弹簧跟随）；camera / scene manager / **OgreCameraController** / profile time getter 由 GameManager 注入（均 non-owning），Lua 全局 `SandboxCamera` 访问 |
+| `CameraService.{h,cpp}` | 服务 | 相机/profile 查询 facade；提供 C++ 侧世界位移平移入口，并新增第三人称 FOLLOW 门面 `EnterFollowMode`/`ExitFollowMode`/`UpdateFollow`（**非 tolua**，转发到注入的 `OgreCameraController`，供 `PlayerController` 驱动 Sandbox19 第三人称跟随）；camera / scene manager / **OgreCameraController** / profile time getter 由 GameManager 注入（均 non-owning），Lua 全局 `SandboxCamera` 访问 |
 | `NavigationService.{h,cpp}` | 服务 | Recast config 默认值/agent 设置、navmesh 构建、按 name 以 `unique_ptr` 持有 navmesh map 与 `RandomPoint`/`FindClosestPoint`/`FindPath` 查询；ObjectManager 由应用层注入用于读取 fixed blocks，Lua 全局 `SandboxNav` 访问 |
 | `RaycastService.{h,cpp}` | 服务 | 物理 raycast facade；PhysicsWorld 由应用层注入，Lua 全局 `SandboxRaycast` 访问 |
 | `SceneService.{h,cpp}` | 服务 | skybox、ambient light、directional light、material、scene compositor 与 scene graph 更新 facade；SceneManager / CameraService 由应用层注入，Lua 全局 `SandboxScene` 访问 |
@@ -67,3 +67,9 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：Agent profile 外部数据化、更完整非 Soldier 行为场景与 SoldierFactory 泛化（P5）。`docs/design/architecture-improvement-plan.md` P5。
+
+## 2026-09-12 镜头与发弹边界
+
+CameraService 新增 C++ 专用 `BeginFollowOrbit` / `EndFollowOrbit` / `DragFollowOrbit` / `GetFollowForward` / `SetFollowTurnInput` / `RenderFollow`，通过注入的 RaycastService 做静态球扫掠，不增加 Lua 指针所有权。RenderFollow 保留原视线方向，只改变距离；不再对主动偏航施加位置弹簧。
+
+FOLLOW 相对移动时，视线方向以 OgreCameraController 为唯一真源；鼠标直接旋转，Q/E 在 RenderFollow 使用渲染帧时长以75°/s推进。PlayerController 只读取 GetFollowForward，UpdateFollow 不把仿真方向回写到当前视线；SnapFollowTarget 仍可显式设置初始方向。ResetFollowCamera/禁用相对移动清理转向速率，暂停由 PlayerController::ResetTransientInput 清理。上述增量接口均为 C++ 专用，无 Lua 绑定变更。

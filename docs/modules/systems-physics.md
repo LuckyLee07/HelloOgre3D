@@ -42,3 +42,7 @@ Bullet 物理世界、刚体生命周期、碰撞检测、raycast；为对象提
 ## 8. 已知 gap / 相关文档
 
 - 待：PhysicsFactory 多形状复合、位置真源代码落实校验。`docs/design/architecture-improvement-plan.md` P1。
+
+## 2026-09-12 跟随镜头遮挡
+
+`PhysicsWorld::sweepCamera` 为 C++ CameraService 提供球体扫掠，只接受有碰撞响应的静态/运动学对象；角色和动态子弹不缩短镜头。由 RaycastService 转换 Ogre/Bullet 向量，镜头立即缩距、平滑复位，查询不改变刚体或导航。RenderComponent 在仿真后记录前后物理姿态，只向场景节点输出插值；刚体仍为真源。

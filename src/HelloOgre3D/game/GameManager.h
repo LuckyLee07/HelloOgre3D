@@ -60,6 +60,7 @@ public:
 	PhysicsWorld* getPhysicsWorld() { return m_pPhysicsWorld; }
 
 public:
+	void RenderPresentation(float alpha, float dtSec);
 	void HandleWindowClosed();
 	void HandleWindowResized(unsigned int width, unsigned int height);
 

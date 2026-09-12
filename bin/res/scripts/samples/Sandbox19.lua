@@ -610,13 +610,16 @@ function EventHandle_Mouse(ctype, x, y, button)
 	_mouse.x, _mouse.y = x, y
 	local hit, id = nil, nil
 	if _hud ~= nil then hit, id = _hud:HitTest(x, y) end
-	if ctype == 1 then _mouse.down = true elseif ctype == 2 then _mouse.down = false end
+	if button ~= 2 then
+		if ctype == 1 then _mouse.down = true elseif ctype == 2 then _mouse.down = false end
+	end
 	if hit ~= nil then
 		if ctype == 1 and button == 0 then action(hit, id) end
 		if ctype == 2 then _drag = nil end
 		return true
 	end
 	if not isActive() then return true end
+	if button == 2 then return _drag ~= nil end -- Do not start orbit during a selection drag.
 	if ctype == 1 and button == 0 then _drag = {x = x, y = y}; return true end
 	if ctype == 2 and button == 0 and _drag ~= nil then
 		if math.abs(x - _drag.x) + math.abs(y - _drag.y) < 8 then
@@ -662,7 +665,7 @@ function Sandbox_Initialize()
 		print("[Sandbox19Visual] compositor=Relay/SceneGrade status=unavailable")
 	end
 	GUI_CreateSandboxText(GUI.MarkupColor.White .. GUI.Markup.Medium ..
-		"RELAY OUTPOST\nWASD move | Q/E orbit | Wheel zoom\nSpace fire | R reload\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 250}):setVisible(false)
+		"RELAY OUTPOST\nWASD move | MMB drag / Q/E orbit | Wheel zoom\nSpace fire | R reload\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 250}):setVisible(false)
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = true
 	SandboxAgentConfig:SetUseCppFsmFlag(true)
 	_anchors = Scene.Create()

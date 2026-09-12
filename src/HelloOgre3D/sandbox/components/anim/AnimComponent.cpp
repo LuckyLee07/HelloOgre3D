@@ -13,6 +13,8 @@
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "objects/animation/SoldierAnimController.h"
 #include "objects/animation/SoldierAnimProfile.h"
+#include "objects/animation/SoldierLocomotionLayer.h"
+#include "objects/AgentObject.h"
 #include "profiling/Profile.h"
 #include "OgreEntity.h"
 
@@ -49,6 +51,8 @@ void AnimComponent::onAttach(BaseObject* owner)
 
 void AnimComponent::onDetach()
 {
+	if (m_locomotionLayer) m_locomotionLayer->Release();
+	m_locomotionLayer.reset();
 	UnsubscribeAnimEvents();
 	SAFE_DELETE(m_bodyAsm);
 	SAFE_DELETE(m_weaponAsm);
@@ -73,13 +77,43 @@ IAnimContextProvider* AnimComponent::GetAnimContext() const
 
 void AnimComponent::update(int deltaMs)
 {
+	if (m_locomotionLayer) m_locomotionLayer->Restore();
 	UpdateController(deltaMs);
 	UpdateBodyAnimations(deltaMs);
+	IAnimContextProvider* context = GetAnimContext();
+	AgentObject* agent = dynamic_cast<AgentObject*>(getOwner());
+	if (m_locomotionLayer && context != nullptr && agent != nullptr && m_bodyAsm != nullptr)
+	{
+		const auto supportedState = [](const std::string& name) {
+			return name.empty() || name == "idle_aim" || name == "crouch_idle_aim" ||
+				name == "run_forward" || name == "run_backward" || name == "crouch_forward" ||
+				name == "fire" || name == "crouch_fire" || name == "reload";
+		};
+		const bool allowed = context->IsCppAnimControllerEnabled() && agent->GetHealth() > 0 &&
+			m_controller != nullptr && m_controller->GetActionIntent() != SoldierActionIntent::Death &&
+			m_controller->GetLocomotionIntent() != SoldierLocomotionIntent::Fall &&
+			supportedState(m_bodyAsm->GetCurrStateName()) && supportedState(m_bodyAsm->GetNextStateName());
+		m_locomotionLayer->Apply(agent->GetVelocity(), agent->GetForward(),
+			context->GetAnimStanceType() == SOLDIER_CROUCH, allowed, deltaMs,
+			agent->GetObjId(), m_bodyAsm->GetCurrStateName() + ">" + m_bodyAsm->GetNextStateName());
+	}
+}
+
+void AnimComponent::ResetBodyPresentation()
+{
+	SoldierAnimController* soldierController = dynamic_cast<SoldierAnimController*>(m_controller);
+	if (soldierController != nullptr) soldierController->ResetBodyPresentation();
+	if (m_locomotionLayer) m_locomotionLayer->Release();
+	m_locomotionLayer.reset();
 }
 
 void AnimComponent::InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent)
 {
+	// AgentObject calls ResetBodyPresentation before replacing its render body.
+	ResetBodyPresentation();
 	m_bodyEntity = entity;
+	if (GetAnimContext() != nullptr)
+		m_locomotionLayer.reset(new SoldierLocomotionLayer(entity));
 	SAFE_DELETE(m_bodyAsm);
 	ClearAnimations(m_bodyAnimations);
 	BaseObject* owner = getOwner();
@@ -268,8 +302,14 @@ void AnimComponent::SubscribeAnimEvents()
 		const std::string eventName = context.Get_String("EventName");
 		const int stateId = (int)context.Get_Number("StateId");
 		const float normalizedTime = (float)context.Get_Number("NormalizedTime");
-		if (animContext->IsCppAnimControllerEnabled() && eventName == "shoot_fire")
+		const bool activeShot = m_controller != nullptr &&
+			m_controller->GetActionIntent() == SoldierActionIntent::Shoot &&
+			!m_controller->IsShootPresentationReady();
+		if (animContext->IsCppAnimControllerEnabled() && eventName == "shoot_fire" && activeShot)
 		{
+			if (SoldierAnimationTraceEnabled())
+				CCLOG_INFO("[AnimNotify] id=%u event=shoot_fire state=%d normalized=%.3f timeMs=%lld",
+					getOwner()->GetObjId(), stateId, normalizedTime, m_localTimeMs);
 			animContext->ExecuteAnimShoot();
 		}
 		if (m_controller)

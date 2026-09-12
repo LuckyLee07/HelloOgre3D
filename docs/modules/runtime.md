@@ -19,7 +19,7 @@
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `game/ClientManager.{h,cpp}` | 窗口 | 跨平台启动尺寸、延迟 resize、实际尺寸日志，以及输入/UI/FGUI/viewport 消费链同步 |
-| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称弹簧跟随（后上方+看角色前方+弹簧阻尼），由 `PlayerController → CameraService → updateFollow` 每帧驱动；仍不做 FPS 模式 |
+| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称跟随（主动转向、平移平滑、静态遮挡），相对移动模式由镜头持有视线、PlayerController 读取方向，RenderPresentation 每渲染帧驱动；仍不做 FPS 模式 |
 | `audio/RuntimeUiSound.{h,cpp}` / `RuntimeUiSoundMac.mm` | 声音 | PCM 16-bit WAV 短音单路播放；Windows PlaySound / macOS NSSound 适配，音频缓冲与 native handle 由 runtime 持有 |
 | `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌；渲染几何使用最终视图专用 visibility bit，避免被场景 compositor 采样，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
@@ -66,3 +66,13 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：profiler UI、FairyGUI element inspector。`docs/archive/long-term-iteration-plan.md` §5、`docs/perf/ai-perf-release-baseline-20260612.md`。
+
+## 2026-09-12 战斗反馈与跟随呈现
+
+- FOLLOW 中键拖动控制偏航/俯仰（0.12°/相对输入单位，俯角限制8–65°）；Q/E 为75°/s、逐渲染帧积分，释放立即停。主动方向直接响应，只平滑目标平移；静态球扫掠缩距不改变视线方向，避免平滑注视点越过镜头时翻转。左键框选期间不抢中键，暂停和中键释放清除拖动。
+
+- `Application::frameStarted` 在 Ogre 绘制前依次采集输入、更新仿真、呈现与 UI；queued 回调收集完整帧时序和截图。RenderPresentation 用仿真余量插值 camera-relative 角色节点，同步武器挂点再更新镜头；不写回物理。暂停保持当前物理姿态。
+
+后台或 HELLO_INPUT_REPLAY 存在时，InputManager 在各平台都不创建 OIS 设备或 macOS 鼠标监听；macOS 由独立 Cocoa 事件泵维持窗口响应，内部回放继续走同一 listener 入口。正常交互启动不设这两个变量，物理输入行为保持。PlayerController 分别保存 Space/左键的开火位，释放其中一种不能取消仍按住的另一种。
+
+- FOLLOW 中键在 macOS 使用 NSEvent 相对增量并累计小数余量；不乘 backing scale，UI 绝对坐标仍走原换算，FREELOOK 保持原路径。滚轮事件不附带虚假转向增量；按键/鼠标失焦释放及 observer 卸载已有原生探针。WASD 面向视线，角色朝向短促跟随；证据见[转向手感改造](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。

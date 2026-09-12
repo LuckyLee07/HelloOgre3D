@@ -12,6 +12,7 @@ public:
 	~RaycastService();
 
 	void SetPhysicsWorld(PhysicsWorld* physicsWorld);
+	Ogre::Vector3 SweepCamera(const Ogre::Vector3& from, const Ogre::Vector3& to, float radius) const;
 
 	//tolua_begin
 	int RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vector3& to) const;

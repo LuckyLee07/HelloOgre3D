@@ -60,6 +60,15 @@ void AgentAnimStateMachine::SetStateIdResolver(StateIdResolver resolver)
 	}
 }
 
+bool AgentAnimStateMachine::RestartState(const std::string& stateName)
+{
+	if (!ContainsState(stateName)) return false;
+	m_desiredStateName = stateName;
+	SetCurrentState(stateName);
+	FireStateChageEvent(m_pCurrState);
+	return true;
+}
+
 bool AgentAnimStateMachine::RequestState(int stateId)
 {
 	// 不再依赖全局 state 表：按实例自有 id 反查 state name。

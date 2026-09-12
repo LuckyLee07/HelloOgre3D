@@ -30,6 +30,8 @@ public:
 	void removeRigidBody(btRigidBody* pRigidBody);
 	bool rayCastToRigidBody(const btVector3& from, const btVector3& to, btVector3& hitPoint, const btRigidBody*& rigidBody) const;
 
+	float sweepCamera(const btVector3& from, const btVector3& to, float radius) const;
+
 	bool tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point);
 
 private:

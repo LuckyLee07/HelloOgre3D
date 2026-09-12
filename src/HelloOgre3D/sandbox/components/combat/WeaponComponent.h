@@ -49,7 +49,7 @@ public:
 	const Ogre::Quaternion& GetHandOffsetOrientation() const { return m_handOffsetOrientation; }
 
 private:
-	bool ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation) const;
+	bool ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation);
 
 	RenderComponent* m_weaponRender;
 	int m_ammo;

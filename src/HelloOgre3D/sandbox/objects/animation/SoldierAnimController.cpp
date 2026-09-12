@@ -42,6 +42,16 @@ SoldierAnimController::SoldierAnimController(IAnimContextProvider& context)
 {
 }
 
+void SoldierAnimController::ResetBodyPresentation()
+{
+	// The controller survives body ASM replacement; all presentation state belongs to the old body.
+	m_bodyNotifiesRegistered = false;
+	m_locomotionIntent = SoldierLocomotionIntent::Idle;
+	m_actionIntent = SoldierActionIntent::None;
+	m_forceActionRestart = false;
+	ResetActionRuntime(SoldierActionIntent::None);
+}
+
 void SoldierAnimController::Update(float deltaTimeInMillis)
 {
 	(void)deltaTimeInMillis;
@@ -103,12 +113,12 @@ void SoldierAnimController::OnBodyNotify(const std::string& eventName, int state
 	(void)stateId;
 	(void)normalizedTime;
 
-	if (eventName == "shoot_fire")
+	if (eventName == "shoot_fire" && m_actionIntent == SoldierActionIntent::Shoot && !m_shootPresentationReady)
 	{
 		m_shootPresentationReady = true;
 		m_shootExecutionTriggered = true;
 	}
-	else if (eventName == "shoot_complete")
+	else if (eventName == "shoot_complete" && m_actionIntent == SoldierActionIntent::Shoot)
 	{
 		m_shootPresentationFinished = true;
 	}
@@ -240,7 +250,12 @@ void SoldierAnimController::ApplyBodyState(int stateId, bool forceRestart)
 	{
 		return;
 	}
-
+	if (m_actionIntent == SoldierActionIntent::Death ||
+		(forceRestart && (bodyAsm->IsCurrentState(stateName) || bodyAsm->IsNextState(stateName))))
+	{
+		bodyAsm->RestartState(stateName);
+		return;
+	}
 	bodyAsm->RequestState(stateName);
 }
 

@@ -81,6 +81,7 @@ void AgentObject::Init()
 
 void AgentObject::initBody(const Ogre::String& meshFile)
 {
+	if (m_cachedAnim != nullptr) m_cachedAnim->ResetBodyPresentation();
 	if (m_renderComp != nullptr)
 	{
 		RemoveComponent(ComponentKeys::Render);

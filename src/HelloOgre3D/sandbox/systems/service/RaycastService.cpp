@@ -38,3 +38,11 @@ int RaycastService::RayCastObjectId(const Ogre::Vector3& from, const Ogre::Vecto
 	const BaseObject* object = rigidBody != nullptr ? static_cast<const BaseObject*>(rigidBody->getUserPointer()) : nullptr;
 	return object != nullptr ? static_cast<int>(object->GetObjId()) : -1;
 }
+
+Ogre::Vector3 RaycastService::SweepCamera(const Ogre::Vector3& from, const Ogre::Vector3& to, float radius) const
+{
+	if (m_physicsWorld == nullptr || from.isNaN() || to.isNaN()) return to;
+	const float fraction = m_physicsWorld->sweepCamera(
+		btVector3(from.x, from.y, from.z), btVector3(to.x, to.y, to.z), radius);
+	return from + (to - from) * fraction;
+}
