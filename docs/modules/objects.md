@@ -45,3 +45,7 @@
 ## 8. 已知 gap / 相关文档
 
 - 待：P2 继续审计其它对象门面和跨组件语义入口、P4 其它缓存裸指针继续审计。`docs/design/architecture-improvement-plan.md` P2/P4、`docs/design/cpp-object-model-refactor-roadmap.md`、`docs/archive/SoldierObjectRefactor.md`。
+
+## 2026-09-12 表现生命周期
+
+`AgentObject::initBody` 在释放旧 Entity 前恢复动画显示状态，并保留视觉偏移及现有渲染变换；有刚体时由 RenderComponent 同步真源，避免更换模型后丢失脚下偏移而悬空。Soldier 动画读取 pending stance 作为目标，物理尺寸在过渡完成后按原流程提交；取消/反向切换站蹲不会被旧动作意图覆盖。验证见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

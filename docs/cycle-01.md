@@ -249,3 +249,5 @@ Release macOS 构建已成功；vendored 依赖存在编译 warning，未宣称�
 2026-09-12 下一轮已实现命中渲染、移动射击分层/上身瞄准补偿、枪口方向与镜头/输入修复，并修正 Xcode Release 依赖。实际证据见[体验修复](dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。这是核心战斗与操作修复，P3 美术资产及人工/Windows本轮新增路径验证继续保留，未据此关闭P3。
 
 2026-09-12 继续完成[场景资产与地表升级](dev-design/plans/2026-09-12-sandbox19-scene-assets.md)：六组倒角混凝土掩体、十二个有材质分区的补给箱、米制错缝铺地与涂层磨损。720p 三阶段/900p 多角度、导航/实际碰撞、产品 fixture 和自然通关已验证；同程序 ABBA 测量未见明显新增帧耗时。角色/动画、成套环境资产与高阶光照仍低于概念图，P3 保持未完成。
+
+2026-09-12 参考 MiniGame 完成[Agent 动作连续性改造](dev-design/plans/2026-09-12-agent-animation-smooth.md)：动作取消/替换、公共水平转向、独立逻辑时钟、全相机骨骼插值与步态过渡。macOS Release、三档显示帧率的21项动作检查、Sandbox6/7/8/19、控制回放与画面核对通过。现有侧步素材限制、人工手感和 Windows 验证继续保留，未据此关闭P3。

@@ -88,6 +88,8 @@ void WeaponComponent::onAttach(BaseObject* owner)
 
 void WeaponComponent::onDetach()
 {
+	AnimComponent* anim = FindOwnerAnim(this);
+	if (anim != nullptr) anim->ResetWeaponPresentation();
 	IComponent::onDetach();
 }
 
@@ -112,10 +114,11 @@ void WeaponComponent::update(int deltaMs)
 
 void WeaponComponent::Init(const Ogre::String& meshFile)
 {
+	AnimComponent* anim = FindOwnerAnim(this);
+	if (anim != nullptr) anim->ResetWeaponPresentation();
 	SAFE_DELETE(m_weaponRender);
 
 	m_weaponRender = new RenderComponent(meshFile);
-	AnimComponent* anim = FindOwnerAnim(this);
 	if (anim != nullptr)
 	{
 		anim->InitWeaponAnimations(m_weaponRender->GetEntity(), false);

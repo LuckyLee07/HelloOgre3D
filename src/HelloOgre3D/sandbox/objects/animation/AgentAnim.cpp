@@ -15,8 +15,9 @@ void AgentAnim::Init(float startTime)
 {
 	m_pAnimState->setTimePosition(0.0f);
 	SetEnabled(true);
-	m_pAnimState->setWeight(1.0f);
+	SetWeight(1.0f);
 	m_pAnimState->setTimePosition(startTime);
+	m_time = m_pAnimState->getTimePosition();
 }
 
 void AgentAnim::Clear()
@@ -26,6 +27,7 @@ void AgentAnim::Clear()
 
 void AgentAnim::SetEnabled(bool enable)
 {
+	m_enabled = enable;
 	m_pAnimState->setEnabled(enable);
 }
 
@@ -36,12 +38,14 @@ void AgentAnim::SetLooping(bool looping)
 
 void AgentAnim::AddTime(float deltaTime)
 {
+	m_pAnimState->setTimePosition(m_time);
 	m_pAnimState->addTime(deltaTime);
+	m_time = m_pAnimState->getTimePosition();
 }
 
 float AgentAnim::GetTime()
 {
-	return m_pAnimState->getTimePosition();
+	return m_time;
 }
 
 float AgentAnim::GetLength()
@@ -51,10 +55,16 @@ float AgentAnim::GetLength()
 
 float AgentAnim::GetWeight()
 {
-	return m_pAnimState->getWeight();
+	return m_weight;
 }
 
 void AgentAnim::SetWeight(float weight)
 {
+	m_weight = weight;
 	m_pAnimState->setWeight(weight);
+}
+
+bool AgentAnim::IsEnabled() const
+{
+	return m_enabled;
 }

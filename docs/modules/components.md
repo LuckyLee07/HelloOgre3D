@@ -61,3 +61,9 @@
 ### Sandbox19 转向手感
 
 相对移动时，相机持有视线；移动和开火均向同一视线转身，不在侧移/后退开火时切换90°/180°。静止且未开火时保留身体方向，允许自由观察。身体用18/s指数响应与540°/s上限转向现有 Bullet 刚体，RenderComponent 继续插值展示；第一次开火等待朝向误差≤8°，发弹仍由动画通知触发并使用实际枪口，不重定向弹道。默认 tank 的2.5rad/s转向保持不变。详见[改造与验证](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
+
+## 2026-09-12 公共转向与步态速度
+
+`AgentLocomotion::FaceDirection(direction, deltaTimeInMillis)` 供玩家 FOLLOW、C++ FSM 和 Lua DT/BT 共用：只取水平朝向，以18/s响应、540°/s上限沿最短角转身，误差≤8°返回true。路径切换不再直接跳转身体方向。基础 `SetForward` 仍是底层直接设置接口。
+
+PlayerController 的相对移动采用前向/后向/横向速度组合：前向保留已有冲刺；后退最多2.25m/s、横移最多1.6m/s，并尊重更低的角色 maxSpeed；零速配置不会产生除零。RenderComponent 将视觉偏移与物理姿态一起采样，避免站蹲改变胶囊尺寸时模型跳动。详见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

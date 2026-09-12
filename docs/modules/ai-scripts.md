@@ -49,3 +49,7 @@ Lua 侧 AI 行为库：DT/BT action+condition、知识源、Lua 影响图、团�
 ## 8. 已知 gap / 相关文档
 
 - 待：Lua 重活下沉 C++（PerceptionResultCache/TacticalQueryService/InfluenceMap 二期）、callback 生命周期治理。`docs/archive/ai-technical-iteration-plan.md`、`docs/design/chapter9-parity-architecture-notes.md`。
+
+## 2026-09-12 共享转向和射击预算
+
+`Soldier_FaceDirection` 转调 `agent:GetLocomotionComponent():FaceDirection(direction, deltaTimeInMillis)`；公共 Lua steering 也使用该入口，路径设置不再瞬移身体方向。DT/BT 共用 ShootAction，将等待瞄准的1000ms预算与射击启动后的600ms预算分开，避免背后目标转身占用大部分动作播放预算。通知消费、Blackboard `weapon.actionOwnsFire` 恢复与现有 action 生命周期保持。见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

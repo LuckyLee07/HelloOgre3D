@@ -213,7 +213,7 @@ void SoldierObject::changeStanceType(int stanceType)
 
 	SOLDIER_STATE currState = (SOLDIER_STATE)pAsm->GetCurrStateID();
 	SOLDIER_STATE requestState = (SOLDIER_STATE)ConvertAnimID(currState, stanceType);
-	if (currState == requestState)
+	if (currState == requestState && attrib->GetPendingStanceType() < 0)
 		return;
 
 	if (stanceType == SOLDIER_STAND)
@@ -391,6 +391,10 @@ AgentAnimStateMachine* SoldierObject::GetWeaponAnimStateMachine() const
 
 int SoldierObject::GetAnimStanceType() const
 {
+	// Animation follows the requested stance; collision dimensions commit after
+	// the blend completes in TryApplyPendingStance, without queuing an old intent.
+	const AgentAttrib* attrib = m_cachedAttrib;
+	if (attrib != nullptr && attrib->GetPendingStanceType() >= 0) return attrib->GetPendingStanceType();
 	return getStanceType();
 }
 

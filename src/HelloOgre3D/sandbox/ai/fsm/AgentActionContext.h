@@ -31,7 +31,7 @@ public:
 	void SlowMovement(float rate = 1.0f);
 	void StabilizeStationaryMovement(float damping = 0.65f, float stopSpeed = 0.9f);
 	void TickMovement(float deltaTimeInMillis, bool slowMode);
-	void FaceEnemy();
+	bool FaceEnemy(float deltaTimeInMillis);
 	void DrawPath(const Ogre::ColourValue& color, const Ogre::Vector3& offset, float radius) const;
 
 	bool PlanPathTo(const Ogre::Vector3& target, bool updateMovePos = true);

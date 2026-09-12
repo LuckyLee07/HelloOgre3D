@@ -46,6 +46,10 @@ public:
     void AddTransition(const std::string& fromState, const std::string& toState, float blendOutWindow = 0.0f, float duration = 0.2f, float blendInWindow = 0.0f);
     //tolua_end
 
+	// Controller policy: replace immediately, keeping the current weighted pose.
+	// Outgoing tracks contribute visuals only; the target owns all new notifies.
+	bool BlendToState(const std::string& stateName, bool restart = false, float duration = 0.14f);
+	unsigned int GetPlaybackId() const { return m_playbackId; }
     bool RestartState(const std::string& stateName);
     void AddNotify(const std::string& stateName, const std::string& eventName, float normalizedTime, bool fireOnce = true);
     void SetCanFireEvent(bool canFireEvent);
@@ -91,6 +95,13 @@ private:
     typedef std::unordered_map<std::string, AgentAnimTransition*> TransitionMap;
     std::unordered_map<std::string, TransitionMap> m_animTransitions;
     std::unordered_map<std::string, std::vector<AnimNotify>> m_animNotifies;
+
+	struct BlendSource { AgentAnimState* state; float weight; };
+	std::vector<BlendSource> m_blendSources;
+	bool m_interruptBlend = false;
+	float m_blendElapsed = 0, m_blendDuration = 0.14f, m_targetStartWeight = 0;
+	unsigned int m_playbackId = 0;
+	void UpdateInterruptBlend(float deltaMs);
 
 	AgentAnimState* m_pCurrState = nullptr;
 	AgentAnimState* m_pNextState = nullptr;

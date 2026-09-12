@@ -1,6 +1,7 @@
 #include "AgentLocomotion.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "SandboxMacros.h"
 #include "GameFunction.h"
@@ -144,6 +145,22 @@ void AgentLocomotion::SetForward(const Ogre::Vector3& forward)
 	AgentObject* owner = GetAgentOwner();
 	if (owner != nullptr)
 		owner->SetForward(forward);
+}
+
+bool AgentLocomotion::FaceDirection(const Ogre::Vector3& direction, float deltaTimeInMillis)
+{
+	AgentObject* owner = GetAgentOwner();
+	if (owner == nullptr || direction.isNaN()) return false;
+	if (direction.x * direction.x + direction.z * direction.z < 0.0001f) return true;
+	const Ogre::Vector3 current = owner->GetForward();
+	const float desired = std::atan2(direction.x, direction.z);
+	const float yaw = std::atan2(current.x, current.z);
+	const float error = std::atan2(std::sin(desired - yaw), std::cos(desired - yaw));
+	const float dt = std::max(0.0f, deltaTimeInMillis) * 0.001f;
+	const float limit = Ogre::Degree(540.0f).valueRadians() * dt;
+	const float step = std::max(-limit, std::min(limit, error * (1.0f - std::exp(-18.0f * dt))));
+	owner->SetForward(Ogre::Vector3(std::sin(yaw + step), 0.0f, std::cos(yaw + step)));
+	return std::abs(error - step) <= Ogre::Degree(8.0f).valueRadians();
 }
 
 void AgentLocomotion::SetVelocity(const Ogre::Vector3& velocity)

@@ -105,17 +105,27 @@ public:
 		const float along = velocity.dotProduct(forward);
 		const float sideways = velocity.dotProduct(right);
 		const float sum = std::abs(along) + std::abs(sideways);
-		const float longitudinalWeight = sum > 0.001f ? std::abs(along) / sum : 1.0f;
-		const float lateralWeight = 1.0f - longitudinalWeight;
-		const float movingWeight = std::min(1.0f, speed / 0.65f);
+		const float dt = std::max(0, deltaMs) * 0.001f;
+		const float response = 1.0f - std::exp(-dt / 0.10f);
+		const float targetMoving = speed > 0.03f ? std::min(1.0f, speed / 0.65f) : 0.0f;
+		m_movingWeight += (targetMoving - m_movingWeight) * response;
+		m_crouchWeight += ((crouched ? 1.0f : 0.0f) - m_crouchWeight) * response;
+		if (sum > 0.03f)
+		{
+			const float target[4] = {std::max(0.0f, along) / sum, std::max(0.0f, -along) / sum,
+				std::max(0.0f, -sideways) / sum, std::max(0.0f, sideways) / sum};
+			for (int i = 0; i < 4; ++i) m_direction[i] += (target[i] - m_direction[i]) * response;
+		}
+		const float longitudinalWeight = m_direction[0] + m_direction[1];
+		const float lateralWeight = m_direction[2] + m_direction[3];
+		const float movingWeight = m_movingWeight;
 		const char* longitudinal = crouched ? (along < 0 ? "crouch_backward_aim" : "crouch_forward_aim") :
 			(along < 0 ? "stand_run_backward_aim" : "stand_run_forward_aim");
-		// This asset has no standing strafe clip; use its authored tactical sidestep.
 		const char* lateral = sideways < 0 ? "crouch_left_aim" : "crouch_right_aim";
-		// Reference cycle distances: stand 3 m/s * .75 s; crouch 1 m/s * 1.375 s.
-		const float stride = longitudinalWeight * (crouched ? 1.375f : 2.25f) + lateralWeight * 1.375f;
-		if (speed > 0.03f)
-			m_phase = std::fmod(m_phase + std::max(0, deltaMs) * 0.001f * speed / stride, 1.0f);
+		// Common phase survives starts, stops and sign changes. Cycle distances
+		// remain 2.25 m for standing run and 1.375 m for the authored tactical gait.
+		const float stride = longitudinalWeight * (2.25f * (1.0f - m_crouchWeight) + 1.375f * m_crouchWeight) + lateralWeight * 1.375f;
+		if (speed > 0.03f) m_phase = std::fmod(m_phase + dt * speed / stride, 1.0f);
 
 		Ogre::SkeletonInstance* skeleton = m_entity->getSkeleton();
 		// Preserve the action's model-space upper-body facing. A local spine mask
@@ -133,9 +143,15 @@ public:
 			Ogre::AnimationState* state = states.getNext();
 			if (state->getEnabled()) Capture(state);
 		}
-		AddLower(crouched ? "crouch_idle_aim" : "stand_idle_aim", 1.0f - movingWeight, 0.0f);
-		AddLower(longitudinal, movingWeight * longitudinalWeight, m_phase);
-		AddLower(lateral, movingWeight * lateralWeight, m_phase);
+		const float stand = 1.0f - m_crouchWeight;
+		AddLower("stand_idle_aim", (1.0f - movingWeight) * stand, 0.0f);
+		AddLower("crouch_idle_aim", (1.0f - movingWeight) * m_crouchWeight, 0.0f);
+		AddLower("stand_run_forward_aim", movingWeight * m_direction[0] * stand, m_phase);
+		AddLower("stand_run_backward_aim", movingWeight * m_direction[1] * stand, m_phase);
+		AddLower("crouch_forward_aim", movingWeight * m_direction[0] * m_crouchWeight, m_phase);
+		AddLower("crouch_backward_aim", movingWeight * m_direction[1] * m_crouchWeight, m_phase);
+		AddLower("crouch_left_aim", movingWeight * m_direction[2], m_phase);
+		AddLower("crouch_right_aim", movingWeight * m_direction[3], m_phase);
 
 		// Ogre's AVERAGE mode normalises the sum of whole-state weights, ignoring
 		// masks. CUMULATIVE is required; each bone still has a total weight of one.
@@ -230,6 +246,8 @@ private:
 	bool m_valid = false;
 	bool m_active = false;
 	float m_phase = 0;
+	float m_movingWeight = 0, m_crouchWeight = 0;
+	float m_direction[4] = {1, 0, 0, 0};
 	int m_traceMs = 0;
 	Ogre::SkeletonAnimationBlendMode m_previousBlendMode = Ogre::ANIMBLEND_AVERAGE;
 	std::vector<bool> m_upper;

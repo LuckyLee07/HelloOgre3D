@@ -209,25 +209,13 @@ void AgentActionContext::TickMovement(float deltaTimeInMillis, bool slowMode)
 	}
 }
 
-void AgentActionContext::FaceEnemy()
+bool AgentActionContext::FaceEnemy(float deltaTimeInMillis)
 {
 	AgentObject* agent = GetAgent();
-	if (!agent)
-	{
-		return;
-	}
-
 	AgentObject* enemy = GetEnemy();
-	if (!enemy)
-	{
-		return;
-	}
-
-	const Ogre::Vector3 forwardToEnemy = enemy->GetPosition() - agent->GetPosition();
-	if (!forwardToEnemy.isZeroLength())
-	{
-		agent->SetForward(forwardToEnemy);
-	}
+	AgentLocomotion* locomotion = agent != nullptr ? agent->GetLocomotionComponent() : nullptr;
+	return enemy != nullptr && locomotion != nullptr &&
+		locomotion->FaceDirection(enemy->GetPosition() - agent->GetPosition(), deltaTimeInMillis);
 }
 
 void AgentActionContext::DrawPath(const Ogre::ColourValue& color, const Ogre::Vector3& offset, float radius) const

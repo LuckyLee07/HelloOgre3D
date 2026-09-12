@@ -218,7 +218,8 @@ void RenderComponent::CaptureSimulationTransform()
 	BaseObject* owner = getOwner();
 	const PhysicsComponent* physics = owner != nullptr ? owner->GetPhysicsComponent() : nullptr;
 	if (physics == nullptr || physics->GetRigidBody() == nullptr) { m_hasSimulationPose = false; return; }
-	const Ogre::Vector3 position = physics->GetPosition();
+	// Capture offset with the physical pose: a capsule resize moves both together.
+	const Ogre::Vector3 position = physics->GetPosition() + m_visualOffset;
 	const Ogre::Quaternion orientation = physics->GetOrientation();
 	if (!m_hasSimulationPose || (position - m_currentPosition).squaredLength() > 4.0f)
 	{
@@ -237,6 +238,6 @@ void RenderComponent::RenderInterpolated(float alpha)
 	if (!m_hasSimulationPose || m_pSceneNode == nullptr) return;
 	alpha = Ogre::Math::Clamp(alpha, 0.0f, 1.0f);
 	// Display only. PhysicsComponent remains the position/orientation source for gameplay.
-	m_pSceneNode->_setDerivedPosition(m_previousPosition + (m_currentPosition - m_previousPosition) * alpha + m_visualOffset);
+	m_pSceneNode->_setDerivedPosition(m_previousPosition + (m_currentPosition - m_previousPosition) * alpha);
 	m_pSceneNode->_setDerivedOrientation(Ogre::Quaternion::Slerp(alpha, m_previousOrientation, m_currentOrientation, true));
 }

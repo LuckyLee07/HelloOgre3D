@@ -158,3 +158,7 @@ docs/
 [战斗与操作体验修复](dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)：恢复可见命中粒子、分层移动射击和枪口实际方向，修正镜头/输入状态与完整 Release 依赖；实机短片、回归和性能边界见计划。
 
 [Sandbox19 转向手感改造](dev-design/plans/2026-09-12-sandbox19-control-feel.md)：参考 MiniGame 的相对输入与视线/身体分离，统一中键尺度、细化 Q/E、消除侧移开火朝向突变；含原生输入探针与前后实测。
+
+[Agent 动作与 MiniGame 对照](dev-design/specs/2026-09-12-agent-animation-minigame-audit.md)：动作分层、时钟与优先级分析；含取消换弹延迟和高低目标刚体倾斜的隔离复现，以及建议修复顺序。
+
+[Agent 动作连续性改造](dev-design/plans/2026-09-12-agent-animation-smooth.md)：可中断动作、统一水平转向、独立动画时钟、逐显示帧骨骼插值和步态校准；含三档帧率对拍与复跑脚本。

@@ -16,6 +16,7 @@ public:
 private:
 	float m_elapsedMs;
 	bool m_shotConsumed;
+	bool m_shootRequested;
 };
 
 #endif  // __SHOOT_STATE_H__

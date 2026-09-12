@@ -3,6 +3,7 @@
 
 #include "component/IComponent.h"
 #include <memory>
+#include "OgreVector3.h"
 #include <string>
 #include <unordered_map>
 
@@ -12,6 +13,7 @@ class IAnimContextProvider;
 class IAnimController;
 class SoldierAnimController;
 class SoldierLocomotionLayer;
+class EntityPoseInterpolation;
 namespace Ogre {
 	class Entity;
 }
@@ -31,6 +33,11 @@ public:
 	SoldierAnimController* GetSoldierController() const;
 
 	void ResetBodyPresentation();
+	void ResetWeaponPresentation();
+	void BeginSimulationPose();
+	void CaptureSimulationPose(int deltaMs);
+	void RenderPresentation(float alpha);
+	void FreezePresentation();
 	void InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent = true);
 	void InitWeaponAnimations(Ogre::Entity* entity, bool canFireEvent = false);
 	void UpdateController(int deltaMs);
@@ -64,6 +71,9 @@ private:
 
 private:
 	std::unique_ptr<SoldierLocomotionLayer> m_locomotionLayer;
+	std::unique_ptr<EntityPoseInterpolation> m_bodyPose, m_weaponPose;
+	Ogre::Vector3 m_stepStartPosition = Ogre::Vector3::ZERO;
+	bool m_hasStepStart = false;
 	IAnimController* m_controller;
 	Ogre::Entity* m_bodyEntity; // non-owning; owned by RenderComponent/Ogre scene
 	Ogre::Entity* m_weaponEntity; // non-owning; owned by RenderComponent/Ogre scene

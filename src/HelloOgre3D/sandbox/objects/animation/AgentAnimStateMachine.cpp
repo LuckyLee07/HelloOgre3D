@@ -10,6 +10,7 @@
 #include "event/SandboxEventPayload.h"
 #include "GameDefine.h"
 #include "OgreMath.h"
+#include <algorithm>
 
 AgentAnimStateMachine::AgentAnimStateMachine(BaseObject* owner)
 	: m_owner(owner)
@@ -57,6 +58,73 @@ void AgentAnimStateMachine::SetStateIdResolver(StateIdResolver resolver)
 		{
 			entry.second->SetID(m_stateIdResolver(entry.first));
 		}
+	}
+}
+
+bool AgentAnimStateMachine::BlendToState(const std::string& stateName, bool restart, float duration)
+{
+	if (!ContainsState(stateName)) return false;
+	AgentAnimState* target = m_animStates[stateName];
+	AgentAnimState* active = m_pNextState != nullptr ? m_pNextState : m_pCurrState;
+	if (!restart && target == active && m_desiredStateName.empty()) return true;
+	if (m_pCurrState == nullptr)
+	{
+		SetCurrentState(stateName);
+		FireStateChageEvent(m_pCurrState);
+		return true;
+	}
+
+	const std::vector<BlendSource> previousSources = m_blendSources;
+	m_blendSources.clear();
+	m_targetStartWeight = target->GetAnimation()->IsEnabled() ? target->GetAnimWeight() : 0.0f;
+	const auto capture = [&](AgentAnimState* source) {
+		// Several logical states share one AgentAnim (idle/fall, death variants).
+		// Capture active tracks, never every state alias of the same clip.
+		if (source == nullptr || source->GetAnimation() == target->GetAnimation() || !source->GetAnimation()->IsEnabled()) return;
+		for (const BlendSource& saved : m_blendSources)
+			if (saved.state->GetAnimation() == source->GetAnimation()) return;
+		m_blendSources.push_back({source, source->GetAnimWeight()});
+	};
+	for (const BlendSource& source : previousSources) capture(source.state);
+	capture(m_pCurrState);
+	capture(m_pNextState);
+	// A resumed current pose keeps its clip time. An actual new action/replay starts at zero.
+	if (restart || !target->GetAnimation()->IsEnabled()) target->InitAnim();
+	target->GetAnimation()->SetWeight(m_targetStartWeight);
+	ResetNotifies(stateName);
+	++m_playbackId;
+	m_desiredStateName.clear();
+	m_pNextState = target;
+	m_pCurrTransition = nullptr;
+	m_interruptBlend = true;
+	m_blendElapsed = 0;
+	m_blendDuration = std::max(0.001f, duration);
+	FireStateChageEvent(target);
+	return true;
+}
+
+void AgentAnimStateMachine::UpdateInterruptBlend(float deltaMs)
+{
+	const unsigned int playbackId = m_playbackId;
+	AgentAnimState* target = m_pNextState;
+	m_blendElapsed += std::max(0.0f, deltaMs) * 0.001f;
+	const float linear = std::min(1.0f, m_blendElapsed / m_blendDuration);
+	const float weight = linear * linear * (3.0f - 2.0f * linear);
+	for (const BlendSource& source : m_blendSources)
+	{
+		source.state->GetAnimation()->SetWeight(source.weight * (1.0f - weight));
+		source.state->StepAnim(deltaMs); // cancelled clips must not fire gameplay events
+	}
+	target->GetAnimation()->SetWeight(m_targetStartWeight + (1.0f - m_targetStartWeight) * weight);
+	StepStateAnimation(target, deltaMs);
+	if (playbackId != m_playbackId) return; // an event handler replaced this action
+	if (linear >= 1.0f)
+	{
+		for (const BlendSource& source : m_blendSources) source.state->ClearAnim();
+		m_blendSources.clear();
+		m_pCurrState = target;
+		m_pNextState = nullptr;
+		m_interruptBlend = false;
 	}
 }
 
@@ -254,6 +322,10 @@ void AgentAnimStateMachine::SetCurrentState(const std::string& stateName)
 {
 	if (m_animStates.find(stateName) != m_animStates.end())
 	{
+		for (const BlendSource& source : m_blendSources) source.state->ClearAnim();
+		m_blendSources.clear();
+		m_interruptBlend = false;
+		++m_playbackId;
 		if (m_pCurrState != nullptr)
 			m_pCurrState->ClearAnim();
 		if (m_pNextState != nullptr)
@@ -297,6 +369,7 @@ void AgentAnimStateMachine::FireNotifyEvent(AgentAnimState* state, const AnimNot
 	context.Set_Number("StateId", state->GetID());
 	context.Set_String("StateName", state->GetName());
 	context.Set_String("EventName", notify.eventName);
+	context.Set_Number("PlaybackId", m_playbackId);
 	context.Set_Number("NormalizedTime", notify.normalizedTime);
 	m_owner->Event()->Emit("ASM_NOTIFY", context);
 }
@@ -324,6 +397,7 @@ void AgentAnimStateMachine::EvaluateNotifies(AgentAnimState* state, float previo
 	const float prevProgress = Ogre::Math::Clamp(previousTime / length, 0.0f, 1.0f);
 	const float currProgress = Ogre::Math::Clamp(currentTime / length, 0.0f, 1.0f);
 
+	const unsigned int playbackId = m_playbackId;
 	for (auto& notify : notifyIt->second)
 	{
 		if (notify.fireOnce && notify.fired)
@@ -344,11 +418,9 @@ void AgentAnimStateMachine::EvaluateNotifies(AgentAnimState* state, float previo
 
 		if (crossed)
 		{
+			if (notify.fireOnce) notify.fired = true;
 			FireNotifyEvent(state, notify);
-			if (notify.fireOnce)
-			{
-				notify.fired = true;
-			}
+			if (playbackId != m_playbackId) return;
 		}
 	}
 }
@@ -388,6 +460,11 @@ bool AgentAnimStateMachine::ContainsTransition(const std::string& fromState, con
 
 void AgentAnimStateMachine::Update(float deltaTimeInMillis, long long currTimeInMillis)
 {
+	if (m_interruptBlend)
+	{
+		UpdateInterruptBlend(deltaTimeInMillis);
+		return;
+	}
 	float deltaTimeInSeconds = deltaTimeInMillis / 1000.0f;
 	float currTimeInSeconds = currTimeInMillis / 1000.0f;
 

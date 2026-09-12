@@ -81,6 +81,9 @@ void AgentObject::Init()
 
 void AgentObject::initBody(const Ogre::String& meshFile)
 {
+	const Ogre::Vector3 visualOffset = m_renderComp != nullptr ? m_renderComp->GetVisualOffset() : Ogre::Vector3::ZERO;
+	const Ogre::Vector3 renderPosition = m_renderComp != nullptr ? m_renderComp->GetPosition() : Ogre::Vector3::ZERO;
+	const Ogre::Quaternion renderOrientation = m_renderComp != nullptr ? m_renderComp->GetOrientation() : Ogre::Quaternion::IDENTITY;
 	if (m_cachedAnim != nullptr) m_cachedAnim->ResetBodyPresentation();
 	if (m_renderComp != nullptr)
 	{
@@ -88,9 +91,13 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 		m_renderComp = nullptr;
 	}
 	RenderComponent* renderComp = new RenderComponent(meshFile);
+	renderComp->SetVisualOffset(visualOffset);
+	renderComp->SetPosition(renderPosition);
+	renderComp->SetOrientation(renderOrientation);
 	if (AddComponent(ComponentKeys::Render, renderComp))
 	{
 		m_renderComp = renderComp;
+		m_renderComp->SyncFromOwnerTransform();
 		AnimComponent* anim = m_cachedAnim;
 		if (anim != nullptr)
 		{

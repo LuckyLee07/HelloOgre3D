@@ -9,6 +9,7 @@ ShootState::ShootState(AgentObject* pAgent)
 	: AgentState(pAgent)
 	, m_elapsedMs(0.0f)
 	, m_shotConsumed(false)
+	, m_shootRequested(false)
 {
 	m_stateId = "ShootState";
 }
@@ -22,11 +23,12 @@ void ShootState::OnEnter()
 	SetTerminated(false);
 	m_elapsedMs = 0.0f;
 	m_shotConsumed = false;
+	m_shootRequested = false;
 
 	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
 	if (actions)
 	{
-		actions->EnterShoot();
+		actions->EnterIdle();
 	}
 	else if (m_pAgent)
 	{
@@ -67,7 +69,18 @@ std::string ShootState::OnUpdate(float dt)
 		}
 
 		actions->StopMovement();
-		actions->FaceEnemy();
+		const bool facing = actions->FaceEnemy(dt);
+		if (!m_shootRequested)
+		{
+			if (!facing)
+			{
+				if (m_elapsedMs >= 1000.0f) SetTerminated(true);
+				return "";
+			}
+			actions->EnterShoot();
+			m_shootRequested = true;
+			m_elapsedMs = 0.0f;
+		}
 
 		if (!m_shotConsumed && actions->ConsumeShootExecution())
 		{
@@ -77,22 +90,12 @@ std::string ShootState::OnUpdate(float dt)
 
 		if (actions->IsShootPresentationFinished())
 		{
-			if (!m_shotConsumed)
-			{
-				actions->ConsumeAmmo(1);
-				m_shotConsumed = true;
-			}
 			SetTerminated(true);
 			return "";
 		}
 
 		if (m_elapsedMs >= 800.0f && !actions->HasPendingAnimation())
 		{
-			if (!m_shotConsumed)
-			{
-				actions->ConsumeAmmo(1);
-				m_shotConsumed = true;
-			}
 			SetTerminated(true);
 		}
 		return "";

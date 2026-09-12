@@ -55,6 +55,7 @@ public:
 	void SyncFromOwnerTransform();
 	void CaptureSimulationTransform();
 	void RenderInterpolated(float alpha);
+	void FreezeInterpolation() { m_previousPosition = m_currentPosition; m_previousOrientation = m_currentOrientation; }
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
 
 private:

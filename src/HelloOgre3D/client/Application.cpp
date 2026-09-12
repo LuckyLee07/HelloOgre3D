@@ -4,6 +4,9 @@
 #include "profiling/Profile.h"
 #include "profiling/RuntimeProfileCounters.h"
 #include "diagnostics/RuntimeRenderCapture.h"
+#include <chrono>
+#include <thread>
+#include <cstdlib>
 
 Application::Application(const std::string& appTitle)
 {
@@ -67,6 +70,20 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& event)
 bool Application::frameStarted(const Ogre::FrameEvent& event)
 {
     if (m_pClientManager->GetShutdown()) return false;
+	// Optional capture/diagnostic pacing; default rendering keeps its existing VSync policy.
+	static const int renderLimit = []() {
+		const char* value = std::getenv("HELLO_RENDER_MAX_FPS");
+		const int fps = value != nullptr ? std::atoi(value) : 0;
+		return fps >= 15 && fps <= 240 ? fps : 0;
+	}();
+	if (renderLimit > 0)
+	{
+		using Clock = std::chrono::steady_clock;
+		static Clock::time_point nextFrame = Clock::now();
+		std::this_thread::sleep_until(nextFrame);
+		nextFrame += std::chrono::microseconds(1000000 / renderLimit);
+		if (nextFrame < Clock::now()) nextFrame = Clock::now();
+	}
     H3D_PROFILE_FRAME();
     H3D_PROFILE_SCOPE("Application::frameStarted");
     H3D_PROFILE_PLOT("FrameTimeMs", event.timeSinceLastFrame * 1000.0f);

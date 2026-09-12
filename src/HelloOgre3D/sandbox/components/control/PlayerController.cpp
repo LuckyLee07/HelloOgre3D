@@ -320,14 +320,8 @@ void PlayerController::UpdateTurning(int deltaMs)
 		const bool moving = m_forwardPressed != m_backPressed || m_leftPressed != m_rightPressed;
 		if (moving || m_fireInputs || m_combatState == COMBAT_SHOOTING)
 		{
-			const Ogre::Vector3 forward = owner->GetForward();
-			const float yaw = Ogre::Math::ATan2(forward.x, forward.z).valueRadians();
-			const float error = std::atan2(std::sin(m_yaw - yaw), std::cos(m_yaw - yaw));
-			const float dt = std::max(0, deltaMs) * 0.001f;
-			const float limit = Ogre::Degree(540.0f).valueRadians() * dt;
-			const float step = std::max(-limit, std::min(limit, error * (1.0f - std::exp(-18.0f * dt))));
-			const float bodyYaw = yaw + step;
-			owner->SetForward(Ogre::Vector3(std::sin(bodyYaw), 0.0f, std::cos(bodyYaw)));
+			AgentLocomotion* locomotion = owner->GetLocomotionComponent();
+			if (locomotion != nullptr) locomotion->FaceDirection(m_aimDirection, static_cast<float>(deltaMs));
 		}
 		return;
 	}
@@ -413,7 +407,15 @@ void PlayerController::UpdateMovement()
 	// Strafe/backpedal retain view-facing posture, including when fire starts/stops.
 	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	const Ogre::Real baseSpeed = locomotion != nullptr ? locomotion->GetMaxSpeed() : static_cast<Ogre::Real>(SOLDIER_STAND_SPEED);
-	const Ogre::Real speed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);
+	const Ogre::Real forwardSpeed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);
+	// The available sidestep is authored at 1 m/s; keep tactical movement within
+	// 1.6x playback speed, including Shift, instead of accelerating it to 5.25x.
+	const Ogre::Real along = movement.dotProduct(forward);
+	const Ogre::Real lateral = relativeMovement ? std::sqrt(std::max(0.0f, 1.0f - along * along)) : 0.0f;
+	const Ogre::Real longitudinalSpeed = along < 0 ? std::min(baseSpeed, 2.25f) : forwardSpeed;
+	const Ogre::Real lateralSpeed = std::min(baseSpeed, 1.6f);
+	const Ogre::Real speed = baseSpeed <= kDirectionEpsilon ? 0.0f : relativeMovement ? 1.0f / std::sqrt(
+		along * along / (longitudinalSpeed * longitudinalSpeed) + lateral * lateral / (lateralSpeed * lateralSpeed)) : forwardSpeed;
 	Ogre::Vector3 velocity = owner->GetVelocity();
 	velocity.x = movement.x * speed;
 	velocity.z = movement.z * speed;

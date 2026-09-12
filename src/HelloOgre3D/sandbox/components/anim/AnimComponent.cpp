@@ -17,8 +17,10 @@
 #include "objects/AgentObject.h"
 #include "profiling/Profile.h"
 #include "OgreEntity.h"
+#include "ogre/EntityPoseInterpolation.h"
 
 #include <algorithm>
+#include <chrono>
 
 AnimComponent::AnimComponent(BaseObject* owner)
 	: m_controller(nullptr)
@@ -51,8 +53,8 @@ void AnimComponent::onAttach(BaseObject* owner)
 
 void AnimComponent::onDetach()
 {
-	if (m_locomotionLayer) m_locomotionLayer->Release();
-	m_locomotionLayer.reset();
+	ResetBodyPresentation();
+	ResetWeaponPresentation();
 	UnsubscribeAnimEvents();
 	SAFE_DELETE(m_bodyAsm);
 	SAFE_DELETE(m_weaponAsm);
@@ -75,11 +77,25 @@ IAnimContextProvider* AnimComponent::GetAnimContext() const
 	return dynamic_cast<IAnimContextProvider*>(getOwner());
 }
 
+void AnimComponent::BeginSimulationPose()
+{
+	if (m_bodyPose) m_bodyPose->Restore();
+	if (m_weaponPose) m_weaponPose->Restore();
+	if (m_locomotionLayer) m_locomotionLayer->Restore();
+	AgentObject* agent = dynamic_cast<AgentObject*>(getOwner());
+	m_hasStepStart = agent != nullptr;
+	if (agent != nullptr) m_stepStartPosition = agent->GetPosition();
+}
+
 void AnimComponent::update(int deltaMs)
 {
-	if (m_locomotionLayer) m_locomotionLayer->Restore();
 	UpdateController(deltaMs);
 	UpdateBodyAnimations(deltaMs);
+}
+
+void AnimComponent::CaptureSimulationPose(int deltaMs)
+{
+	H3D_PROFILE_SCOPE("AnimComponent::CaptureSimulationPose");
 	IAnimContextProvider* context = GetAnimContext();
 	AgentObject* agent = dynamic_cast<AgentObject*>(getOwner());
 	if (m_locomotionLayer && context != nullptr && agent != nullptr && m_bodyAsm != nullptr)
@@ -93,18 +109,65 @@ void AnimComponent::update(int deltaMs)
 			m_controller != nullptr && m_controller->GetActionIntent() != SoldierActionIntent::Death &&
 			m_controller->GetLocomotionIntent() != SoldierLocomotionIntent::Fall &&
 			supportedState(m_bodyAsm->GetCurrStateName()) && supportedState(m_bodyAsm->GetNextStateName());
-		m_locomotionLayer->Apply(agent->GetVelocity(), agent->GetForward(),
+		Ogre::Vector3 velocity = agent->GetVelocity();
+		if (m_hasStepStart && deltaMs > 0)
+		{
+			const Ogre::Vector3 displacement = agent->GetPosition() - m_stepStartPosition;
+			// Teleports are not footsteps. Use solved displacement for collisions/walls.
+			if (displacement.squaredLength() < 4.0f) velocity = displacement * (1000.0f / deltaMs);
+		}
+		m_locomotionLayer->Apply(velocity, agent->GetForward(),
 			context->GetAnimStanceType() == SOLDIER_CROUCH, allowed, deltaMs,
 			agent->GetObjId(), m_bodyAsm->GetCurrStateName() + ">" + m_bodyAsm->GetNextStateName());
+	}
+	if (m_bodyPose) m_bodyPose->Capture();
+	if (m_weaponPose) m_weaponPose->Capture();
+	m_hasStepStart = false;
+}
+
+void AnimComponent::FreezePresentation()
+{
+	if (m_bodyPose) m_bodyPose->Freeze();
+	if (m_weaponPose) m_weaponPose->Freeze();
+}
+
+void AnimComponent::RenderPresentation(float alpha)
+{
+	H3D_PROFILE_SCOPE("AnimComponent::RenderPresentation");
+	if (m_bodyPose) m_bodyPose->Display(alpha);
+	if (m_weaponPose) m_weaponPose->Display(alpha);
+	static const char* trace = std::getenv("HELLO_ANIMATION_POSE_TRACE");
+	if (trace != nullptr && std::strcmp(trace, "1") == 0 && m_bodyEntity != nullptr && m_bodyEntity->hasSkeleton())
+	{
+		Ogre::SkeletonInstance* skeleton = m_bodyEntity->getSkeleton();
+		if (skeleton->hasBone("b_RightHand") && skeleton->hasBone("b_LeftFoot"))
+		{
+			const Ogre::Vector3 hand = skeleton->getBone("b_RightHand")->_getDerivedPosition();
+			const Ogre::Vector3 foot = skeleton->getBone("b_LeftFoot")->_getDerivedPosition();
+			const long long micros = std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::steady_clock::now().time_since_epoch()).count();
+			CCLOG_INFO("[AnimPose] id=%u simMs=%lld wallUs=%lld alpha=%.5f clip=%.5f hand=%.5f,%.5f,%.5f foot=%.5f,%.5f,%.5f",
+				getOwner()->GetObjId(), m_localTimeMs, micros, alpha, m_bodyAsm != nullptr ? m_bodyAsm->GetCurrStateTime() : 0.0f,
+				hand.x, hand.y, hand.z, foot.x, foot.y, foot.z);
+		}
 	}
 }
 
 void AnimComponent::ResetBodyPresentation()
 {
+	if (m_bodyPose) m_bodyPose->Release();
+	m_bodyPose.reset();
+	m_hasStepStart = false;
 	SoldierAnimController* soldierController = dynamic_cast<SoldierAnimController*>(m_controller);
 	if (soldierController != nullptr) soldierController->ResetBodyPresentation();
 	if (m_locomotionLayer) m_locomotionLayer->Release();
 	m_locomotionLayer.reset();
+}
+
+void AnimComponent::ResetWeaponPresentation()
+{
+	if (m_weaponPose) m_weaponPose->Release();
+	m_weaponPose.reset();
 }
 
 void AnimComponent::InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent)
@@ -112,6 +175,7 @@ void AnimComponent::InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent)
 	// AgentObject calls ResetBodyPresentation before replacing its render body.
 	ResetBodyPresentation();
 	m_bodyEntity = entity;
+	m_bodyPose.reset(new EntityPoseInterpolation(entity));
 	if (GetAnimContext() != nullptr)
 		m_locomotionLayer.reset(new SoldierLocomotionLayer(entity));
 	SAFE_DELETE(m_bodyAsm);
@@ -127,7 +191,9 @@ void AnimComponent::InitBodyAnimations(Ogre::Entity* entity, bool canFireEvent)
 
 void AnimComponent::InitWeaponAnimations(Ogre::Entity* entity, bool canFireEvent)
 {
+	ResetWeaponPresentation();
 	m_weaponEntity = entity;
+	m_weaponPose.reset(new EntityPoseInterpolation(entity));
 	SAFE_DELETE(m_weaponAsm);
 	ClearAnimations(m_weaponAnimations);
 	BaseObject* owner = getOwner();
@@ -304,6 +370,7 @@ void AnimComponent::SubscribeAnimEvents()
 		IAnimContextProvider* animContext = GetAnimContext();
 		if (animContext == nullptr) return;
 
+		if (m_bodyAsm == nullptr || static_cast<unsigned int>(context.Get_Number("PlaybackId")) != m_bodyAsm->GetPlaybackId()) return;
 		const std::string eventName = context.Get_String("EventName");
 		const int stateId = (int)context.Get_Number("StateId");
 		const float normalizedTime = (float)context.Get_Number("NormalizedTime");

@@ -40,6 +40,7 @@
 #include "diagnostics/InputReplay.h"
 #include "audio/RuntimeUiSound.h"
 #include "components/control/PlayerController.h"
+#include "components/anim/AnimComponent.h"
 #include "objects/AgentObject.h"
 #include "components/render/RenderComponent.h"
 #include "components/combat/WeaponComponent.h"
@@ -200,12 +201,17 @@ void GameManager::InitLuaEnv()
 
 void GameManager::Update(int deltaMilliseconds)
 {
+	// Restore simulation poses before input/Lua/AI can request actions or resolve a muzzle.
+	for (AgentObject* agent : m_pObjectManager->getAllAgents())
+		if (agent != nullptr && agent->GetAnimComponent() != nullptr)
+			agent->GetAnimComponent()->BeginSimulationPose();
 	if (InputReplay::Update(*this, m_pObjectManager, getInputManager(), deltaMilliseconds))
 		return;
 	H3D_PROFILE_SCOPE("GameManager::UpdateStages");
 	const bool perfEnabled = RuntimeStallProfiler::IsEnabled();
 	RuntimeGameUpdateTiming perfTiming;
 	long long stageStartMicros = 0;
+	bool simulationAdvanced = false;
 	if (!m_simulationPaused)
 	{
 		H3D_PROFILE_SCOPE("Lua::__tick__");
@@ -221,6 +227,7 @@ void GameManager::Update(int deltaMilliseconds)
 
 	if (!m_simulationPaused)
 	{
+		simulationAdvanced = true;
 		m_SimulationTime += deltaMilliseconds;
 
 		{
@@ -254,11 +261,14 @@ void GameManager::Update(int deltaMilliseconds)
 			RuntimeStallProfiler::AddLuaCallbackTiming(perfTiming.sandboxLuaMs);
 		}
 	}
-	if (!m_simulationPaused && m_pCameraService->IsCameraRelativeMovement())
+	if (simulationAdvanced)
 	{
 		for (AgentObject* agent : m_pObjectManager->getAllAgents())
-			if (agent != nullptr && agent->GetRenderComponent() != nullptr)
-				agent->GetRenderComponent()->CaptureSimulationTransform();
+		{
+			if (agent == nullptr) continue;
+			if (agent->GetRenderComponent() != nullptr) agent->GetRenderComponent()->CaptureSimulationTransform();
+			if (agent->GetAnimComponent() != nullptr) agent->GetAnimComponent()->CaptureSimulationPose(deltaMilliseconds);
+		}
 	}
 	if (perfEnabled)
 		RuntimeStallProfiler::SetGameUpdateTiming(perfTiming);
@@ -266,19 +276,24 @@ void GameManager::Update(int deltaMilliseconds)
 
 void GameManager::RenderPresentation(float alpha, float dtSec)
 {
-	if (m_pObjectManager == nullptr || m_pCameraService == nullptr || !m_pCameraService->IsFollowing()) return;
+	if (m_pObjectManager == nullptr || m_pCameraService == nullptr) return;
 	H3D_PROFILE_SCOPE("GameManager::RenderPresentation");
-	const bool interpolate = m_pCameraService->IsCameraRelativeMovement();
 	for (AgentObject* agent : m_pObjectManager->getAllAgents())
 	{
 		if (agent == nullptr) continue;
 		RenderComponent* render = agent->GetRenderComponent();
-		if (interpolate && render != nullptr) render->RenderInterpolated(m_simulationPaused ? 1.0f : alpha);
+		if (m_simulationPaused)
+		{
+			if (render != nullptr) render->FreezeInterpolation();
+			if (agent->GetAnimComponent() != nullptr) agent->GetAnimComponent()->FreezePresentation();
+		}
+		if (render != nullptr) render->RenderInterpolated(m_simulationPaused ? 1.0f : alpha);
+		if (agent->GetAnimComponent() != nullptr) agent->GetAnimComponent()->RenderPresentation(m_simulationPaused ? 1.0f : alpha);
 		WeaponComponent* weapon = agent->GetWeaponComponent();
 		if (weapon != nullptr) weapon->SyncToHandBone();
-		if (agent->FindComponent<PlayerController>() != nullptr)
+		if (m_pCameraService->IsFollowing() && agent->FindComponent<PlayerController>() != nullptr)
 		{
-			const Ogre::Vector3 displayed = interpolate && render != nullptr
+			const Ogre::Vector3 displayed = render != nullptr
 				? render->GetDerivedPosition() - render->GetVisualOffset() : agent->GetPosition();
 			m_pCameraService->RenderFollow(displayed, m_simulationPaused ? 0.0f : dtSec);
 			static const bool trace = std::getenv("HELLO_CAMERA_TRACE") != nullptr;

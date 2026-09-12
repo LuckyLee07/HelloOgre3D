@@ -3955,6 +3955,25 @@ static int tolua_SandboxToLua_AgentLocomotion_SetForward00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: FaceDirection of class AgentLocomotion */
+static int tolua_SandboxToLua_AgentLocomotion_FaceDirection00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S, 1, "AgentLocomotion", 0, &error) ||
+		tolua_isvaluenil(tolua_S, 2, &error) ||
+		!tolua_isusertype(tolua_S, 2, "const Ogre::Vector3", 0, &error) ||
+		!tolua_isnumber(tolua_S, 3, 0, &error) || !tolua_isnoobj(tolua_S, 4, &error))
+	{
+		tolua_error(tolua_S, "#ferror in function 'FaceDirection'.", &error);
+		return 0;
+	}
+	AgentLocomotion* self = static_cast<AgentLocomotion*>(tolua_tousertype(tolua_S, 1, nullptr));
+	const Ogre::Vector3* direction = static_cast<const Ogre::Vector3*>(tolua_tousertype(tolua_S, 2, nullptr));
+	if (self == nullptr || direction == nullptr) return 0;
+	tolua_pushboolean(tolua_S, self->FaceDirection(*direction, static_cast<float>(tolua_tonumber(tolua_S, 3, 0))));
+	return 1;
+}
+
 /* method: SetVelocity of class  AgentLocomotion */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_AgentLocomotion_SetVelocity00
 static int tolua_SandboxToLua_AgentLocomotion_SetVelocity00(lua_State* tolua_S)
@@ -17107,6 +17126,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetMaxForce",tolua_SandboxToLua_AgentLocomotion_GetMaxForce00);
    tolua_function(tolua_S,"GetMaxSpeed",tolua_SandboxToLua_AgentLocomotion_GetMaxSpeed00);
    tolua_function(tolua_S,"SetForward",tolua_SandboxToLua_AgentLocomotion_SetForward00);
+   tolua_function(tolua_S,"FaceDirection",tolua_SandboxToLua_AgentLocomotion_FaceDirection00);
    tolua_function(tolua_S,"SetVelocity",tolua_SandboxToLua_AgentLocomotion_SetVelocity00);
    tolua_function(tolua_S,"SetTarget",tolua_SandboxToLua_AgentLocomotion_SetTarget00);
    tolua_function(tolua_S,"SetTargetRadius",tolua_SandboxToLua_AgentLocomotion_SetTargetRadius00);

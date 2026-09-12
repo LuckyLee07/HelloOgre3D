@@ -15,7 +15,6 @@ function Agent_SetPath(agent, path, cyclic)
 
     if forward:dotProduct(agent:GetForward()) < 0 then
         agent:SetVelocity(forward * AgentComponents.GetSpeed(agent));
-        agent:SetForward(forward);
     end
 end
 
@@ -52,12 +51,11 @@ function AgentUtilities_ApplyPhysicsSteeringForce(agent, steeringForce, deltaTim
     local newVelocity = currentVelocity + (acceleration * deltaTimeInSeconds);
 
     -- Zero out any pitch changes to keep the Agent upright.
-    -- NOTE: This implies that agents can immediately turn in any direction.
     newVelocity.y = 0;
 
     -- Point the agent in the direction of movement.
     if (Vector.LengthSquared(newVelocity) > 1e-8) then
-        agent:SetForward(newVelocity);
+        Soldier_FaceDirection(agent, newVelocity, deltaTimeInSeconds * 1000)
     end
 end
 
@@ -106,10 +104,7 @@ function AgentUtilities_ApplySteeringForce2(
     if (Vector.LengthSquared(velocity) > 0.1) then
         velocity.y = 0;
         
-        -- Interpolate to the new forward direction to dampen jitter.
-        local forward = agent:GetForward();
-        forward = forward + (Vector.Normalize(velocity) - forward) * 0.2;
-        agent:SetForward(forward);
+        Soldier_FaceDirection(agent, velocity, deltaTimeInSeconds * 1000)
     end
 end
 
@@ -148,16 +143,8 @@ end
 
 -- Rotate the body toward aim at a bounded angular speed, without changing physics position.
 function Soldier_FaceDirection(agent, direction, deltaTimeInMillis)
-    local current = agent:GetForward()
-    if direction.x * direction.x + direction.z * direction.z < 0.0001 then return true end
-    local desiredYaw = math.atan2(direction.x, direction.z)
-    local currentYaw = math.atan2(current.x, current.z)
-    local delta = (desiredYaw - currentYaw + math.pi) % (2 * math.pi) - math.pi
-    local step = 12 * math.max(0, deltaTimeInMillis) * 0.001
-    local turn = math.max(-step, math.min(step, delta))
-    local yaw = currentYaw + turn
-    agent:SetForward(Vector3(math.sin(yaw), 0, math.cos(yaw)))
-    return math.abs(delta - turn) < 0.15
+    local locomotion = agent ~= nil and agent:GetLocomotionComponent() or nil
+    return locomotion ~= nil and locomotion:FaceDirection(direction, deltaTimeInMillis)
 end
 
 function Soldier_SlowMovement(agent, deltaTimeInMillis, rate)

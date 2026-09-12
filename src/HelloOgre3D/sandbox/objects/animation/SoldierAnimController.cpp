@@ -122,7 +122,7 @@ void SoldierAnimController::OnBodyNotify(const std::string& eventName, int state
 	{
 		m_shootPresentationFinished = true;
 	}
-	else if (eventName == "reload_complete")
+	else if (eventName == "reload_complete" && m_actionIntent == SoldierActionIntent::Reload)
 	{
 		m_reloadPresentationFinished = true;
 	}
@@ -135,6 +135,7 @@ void SoldierAnimController::SetLocomotionIntent(SoldierLocomotionIntent intent)
 
 bool SoldierAnimController::RequestAction(SoldierActionIntent intent, bool forceRestart)
 {
+	if (m_actionIntent == SoldierActionIntent::Death) return false;
 	if (intent == SoldierActionIntent::None)
 	{
 		ClearAllActions();
@@ -154,7 +155,7 @@ bool SoldierAnimController::RequestAction(SoldierActionIntent intent, bool force
 
 void SoldierAnimController::ClearAction(SoldierActionIntent intent)
 {
-	if (intent == SoldierActionIntent::None || m_actionIntent != intent)
+	if (m_actionIntent == SoldierActionIntent::Death || intent == SoldierActionIntent::None || m_actionIntent != intent)
 	{
 		return;
 	}
@@ -246,17 +247,8 @@ void SoldierAnimController::ApplyBodyState(int stateId, bool forceRestart)
 
 	const std::string stateName = SoldierAnimProfile::GetStateNameById(stateId);
 	if (stateName.empty()) return;
-	if (!forceRestart && IsAsmStateQueued(bodyAsm, stateName))
-	{
-		return;
-	}
-	if (m_actionIntent == SoldierActionIntent::Death ||
-		(forceRestart && (bodyAsm->IsCurrentState(stateName) || bodyAsm->IsNextState(stateName))))
-	{
-		bodyAsm->RestartState(stateName);
-		return;
-	}
-	bodyAsm->RequestState(stateName);
+	bodyAsm->BlendToState(stateName, forceRestart,
+		m_actionIntent == SoldierActionIntent::Death ? 0.08f : 0.14f);
 }
 
 void SoldierAnimController::ApplyWeaponState(const std::string& stateName, bool forceRestart)
@@ -267,12 +259,7 @@ void SoldierAnimController::ApplyWeaponState(const std::string& stateName, bool 
 		return;
 	}
 
-	if (!forceRestart && IsAsmStateQueued(weaponAsm, stateName))
-	{
-		return;
-	}
-
-	weaponAsm->RequestState(stateName);
+	weaponAsm->BlendToState(stateName, forceRestart);
 }
 
 void SoldierAnimController::ResetActionRuntime(SoldierActionIntent intent)

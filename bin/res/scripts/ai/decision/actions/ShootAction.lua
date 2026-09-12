@@ -7,6 +7,7 @@ local AgentComponents = require("res.scripts.agent.AgentComponentAccess.lua")
 
 local _elapsedMs = 0
 local _durationMs = 600
+local _shotElapsedMs = 0
 local _hasFired = false
 local _shotStarted = false
 local _previousActionOwnsFire = false
@@ -22,7 +23,7 @@ local function Record(owner, bb, phase, reason)
 end
 
 function OnInitialize(owner, bb)
-    _elapsedMs, _hasFired, _shotStarted = 0, false, false
+    _elapsedMs, _hasFired, _shotStarted, _shotElapsedMs = 0, false, false, 0
     _ownsFireOverride = false
     if owner then
         Soldier_StopMovement(owner)
@@ -40,6 +41,7 @@ end
 
 function OnUpdate(deltaMs, owner, bb)
     _elapsedMs = _elapsedMs + deltaMs
+    if _shotStarted then _shotElapsedMs = _shotElapsedMs + deltaMs end
     if not owner or owner:GetHealth() <= 0 then
         Record(owner, bb, "terminate", "deadOrMissingOwner")
         return ActionStatus.TERMINATED
@@ -79,7 +81,7 @@ function OnUpdate(deltaMs, owner, bb)
     local complete = _hasFired and asm ~= nil and not asm:IsTransitioning()
         and (asm:GetCurrStateName() == "fire" or asm:GetCurrStateName() == "crouch_fire")
         and asm:GetCurrStateProgress() >= 0.9
-    if complete or _elapsedMs >= _durationMs then
+    if complete or (_shotStarted and _shotElapsedMs >= _durationMs) or (not _shotStarted and _elapsedMs >= 1000) then
         AgentComponents.EnterIdleAnim(owner)
         Record(owner, bb, "terminate", complete and "shootComplete" or "durationExpired")
         return ActionStatus.TERMINATED
@@ -97,5 +99,5 @@ function OnCleanUp(owner, bb)
     end
     _ownsFireOverride = false
     Record(owner, bb, "cleanup", "cleanupIdle")
-    _elapsedMs, _hasFired, _shotStarted = 0, false, false
+    _elapsedMs, _hasFired, _shotStarted, _shotElapsedMs = 0, false, false, 0
 end

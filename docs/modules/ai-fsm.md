@@ -42,3 +42,7 @@ FSM 运行时：状态注册、转移（布尔/evaluator）、当前状态驱动
 ## 8. 已知 gap / 相关文档
 
 - 待：RandomMoveState 补全或弃用（行为变更，基线后做）。`docs/archive/ai-technical-iteration-plan.md`。
+
+## 2026-09-12 动作与转向
+
+`ApplySteering` 和 `AgentActionContext::FaceEnemy(dt)` 使用 AgentLocomotion 的公共水平转向；路径对齐不瞬间改写身体朝向。ShootState 先停步并转向，对准后才启动射击，瞄准与射击预算分开；只消费真实 shoot_fire 令牌扣弹，不在超时/结束分支补扣。验证和边界见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

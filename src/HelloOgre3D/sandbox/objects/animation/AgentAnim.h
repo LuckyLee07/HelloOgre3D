@@ -26,8 +26,12 @@ public:
     void SetWeight(float weight);
 
     //tolua_end
+	bool IsEnabled() const;
 private:
     Ogre::AnimationState* m_pAnimState;
+	// Logical track state is independent of temporary Ogre presentation masks/samples.
+	float m_time = 0.0f, m_weight = 0.0f;
+	bool m_enabled = false;
 
 }; //tolua_exports
 

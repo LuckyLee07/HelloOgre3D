@@ -73,7 +73,7 @@
 
 - Particles/Bullet、Impact 显式使用 GLSL/HLSL 顶点色乘纹理程序，Dust 使用程序化柔边透明片元。新粒子出生颜色必须可见，不能依赖下一次 affector 更新后才从黑色变亮。共享 GL 材质恢复后缩减原有粒子尺寸/发射量；Gun stabilization/thrusters 复用 base_material。相关运行证据见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 - FOLLOW 中键拖动控制偏航/俯仰（0.12°/相对输入单位，俯角限制8–65°）；Q/E 为75°/s、逐渲染帧积分，释放立即停。主动方向直接响应，只平滑目标平移；静态球扫掠缩距不改变视线方向，避免平滑注视点越过镜头时翻转。左键框选期间不抢中键，暂停和中键释放清除拖动。
-- `Application::frameStarted` 在 Ogre 绘制前依次采集输入、更新仿真、呈现与 UI；queued 回调收集完整帧时序和截图。RenderPresentation 用仿真余量插值 camera-relative 角色节点，同步武器挂点再更新镜头；不写回物理。暂停保持当前物理姿态。
+- `Application::frameStarted` 在 Ogre 绘制前依次采集输入、更新仿真、呈现与 UI；queued 回调收集完整帧时序和截图。RenderPresentation 在全部相机模式下插值角色节点和骨骼，同步武器挂点；FOLLOW 另更新镜头，不写回物理。暂停固定当前显示快照，恢复不回跳旧帧。
 - Xcode Release 依赖已在 Premake 真源改成配置对应的归档完整路径；不要用 proxy 的显示名判断实际链接。构建和性能核验见[Release 依赖经验](../memory/xcode-release-dependency-proxy.md)。
 
 后台或 HELLO_INPUT_REPLAY 存在时，InputManager 在各平台都不创建 OIS 设备或 macOS 鼠标监听；macOS 由独立 Cocoa 事件泵维持窗口响应，内部回放继续走同一 listener 入口。正常交互启动不设这两个变量，物理输入行为保持。PlayerController 分别保存 Space/左键的开火位，释放其中一种不能取消仍按住的另一种。
@@ -81,3 +81,9 @@
 - FOLLOW 中键在 macOS 使用 NSEvent 相对增量并累计小数余量；不乘 backing scale，UI 绝对坐标仍走原换算，FREELOOK 保持原路径。滚轮事件不附带虚假转向增量；按键/鼠标失焦释放及 observer 卸载已有原生探针。WASD 面向视线，角色朝向短促跟随；证据见[转向手感改造](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
 
 - Sandbox19 地表使用独立 `Relay/Ground` GLSL/HLSL 程序与现有铺地 albedo：按米制世界坐标生成错缝板，窄缝通过 `fwidth` 像素覆盖衰减避免远处深格。单 pass 读取当前 ambient/方向光；沿用已有方向光 shadow receiver，不修改共享 `base_material`。补给箱多 submesh 仍复用 `base_material`，新增灰度涂层 albedo。具体资源和性能见[场景资产与地表升级](../dev-design/plans/2026-09-12-sandbox19-scene-assets.md)。
+
+## 2026-09-12 骨骼显示与仿真隔离
+
+`ogre/EntityPoseInterpolation.h` 借用 Entity，采集前后局部骨骼姿态；显示时暂停 Ogre 动画轨道对骨骼的直接作用，按位置/缩放线性插值及最短弧四元数插值设置手动骨骼。仿真前恢复手动标记与启用状态，替换资源前释放；析构不解引用借用对象。
+
+`GameManager` 在输入回放/Lua/AI 前恢复姿态，仅在实际推进仿真后采样；在全部相机模式呈现。显示采样不推进 ASM 通知。`HELLO_ANIMATION_POSE_TRACE=1` 输出逐帧姿态/逻辑时间，`HELLO_RENDER_MAX_FPS=15..240` 仅作为可选诊断限帧，默认关闭；VSync 仍由原配置控制。帧率对比与暂停证据见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

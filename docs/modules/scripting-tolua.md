@@ -58,3 +58,7 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 ## 2026-09-12 射击通知消费
 
 `AnimComponent::ConsumeShootExecution()` 在头文件 tolua 区域声明，`SandboxToLua.pkg` 已以 `$cfile` 引入该头，绑定 cpp 仅局部添加成员包装与注册。Lua 使用 `anim:ConsumeShootExecution()` 得到并清除一次布尔令牌，不创建 userdata、不改变对象所有权，不持有额外 Lua callback/ref。DT/BT ShootAction 与 Sandbox6/7/8/19 运行验证见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。未运行全量 tolua 生成器。
+
+## 2026-09-12 统一方向入口
+
+`AgentLocomotion::FaceDirection(const Ogre::Vector3&, float deltaTimeInMillis)` 在头文件 tolua 区域声明，`SandboxToLua.pkg` 继续 `$cfile` 引入该头；绑定 cpp 局部添加包装和注册，未运行全量生成。Lua 使用冒号调用并接收“是否已基本对准”的bool结果；Vector3 只在本次调用借用，没有新 userdata 所有权、GC 或 callback/ref。Lua 5.1、Release 和 Sandbox6/7/8/19 证据见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。

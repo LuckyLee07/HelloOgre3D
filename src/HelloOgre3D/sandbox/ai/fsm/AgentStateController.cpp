@@ -67,7 +67,6 @@ namespace
 		if (forward.dotProduct(agent->GetForward()) < 0.0f)
 		{
 			agent->SetVelocity(forward * agent->GetSpeed());
-			agent->SetForward(forward);
 		}
 	}
 }
@@ -292,7 +291,7 @@ void AgentStateController::ApplySteering(float deltaTimeInSeconds, bool slowMode
 	horizontalVelocity.y = 0.0f;
 	if (!horizontalVelocity.isZeroLength())
 	{
-		m_agent->SetForward(horizontalVelocity);
+		locomotion->FaceDirection(horizontalVelocity, deltaTimeInSeconds * 1000.0f);
 	}
 
 	const Ogre::Real maxSpeed = locomotion->GetMaxSpeed() * (slowMode ? 0.6f : 1.0f);

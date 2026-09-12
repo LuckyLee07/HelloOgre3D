@@ -39,6 +39,7 @@ public:
 
 	// 姿态与速度
 	void SetForward(const Ogre::Vector3& forward);
+	bool FaceDirection(const Ogre::Vector3& direction, float deltaTimeInMillis);
 	void SetVelocity(const Ogre::Vector3& velocity);
 
 	void SetTarget(const Ogre::Vector3& targetPos);
