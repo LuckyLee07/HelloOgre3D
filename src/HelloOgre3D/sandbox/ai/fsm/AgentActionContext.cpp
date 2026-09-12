@@ -56,6 +56,7 @@ const std::string& AgentActionContext::GetNavMeshName() const
 
 void AgentActionContext::EnterIdle()
 {
+	StopMovement();
 	IAnimController* animController = GetAnimController();
 	if (animController != nullptr)
 	{
@@ -91,6 +92,7 @@ void AgentActionContext::EnterMove(bool forceUpdate)
 
 void AgentActionContext::EnterShoot()
 {
+	StopMovement();
 	IAnimController* animController = GetAnimController();
 	if (animController != nullptr)
 	{
@@ -140,6 +142,13 @@ void AgentActionContext::ExitReload()
 		animController->ClearAction(SoldierActionIntent::Reload);
 	}
 }
+void AgentActionContext::StopMovement()
+{
+	AgentObject* agent = GetAgent();
+	if (agent != nullptr)
+		agent->SetVelocity(Ogre::Vector3(0.0f, agent->GetVelocity().y, 0.0f));
+}
+
 void AgentActionContext::SlowMovement(float rate)
 {
 	AgentObject* agent = GetAgent();

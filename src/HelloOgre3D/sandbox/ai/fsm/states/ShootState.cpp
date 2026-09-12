@@ -66,8 +66,7 @@ std::string ShootState::OnUpdate(float dt)
 			return "";
 		}
 
-		actions->SlowMovement();
-		actions->StabilizeStationaryMovement(0.65f, 0.95f);
+		actions->StopMovement();
 		actions->FaceEnemy();
 
 		if (!m_shotConsumed && actions->ConsumeShootExecution())
@@ -98,9 +97,9 @@ std::string ShootState::OnUpdate(float dt)
 		}
 		return "";
 	}
-	else if (m_pAgent->IsMoving())
+	else
 	{
-		m_pAgent->SlowMoving();
+		m_pAgent->SetVelocity(Ogre::Vector3(0.0f, m_pAgent->GetVelocity().y, 0.0f));
 	}
 
 	const bool shootReady = m_pAgent->IsAnimReadyForShoot();

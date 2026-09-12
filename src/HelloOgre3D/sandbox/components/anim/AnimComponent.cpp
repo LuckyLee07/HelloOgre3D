@@ -209,6 +209,11 @@ bool AnimComponent::IsAnimReadyForShoot() const
 	return pAsm->IsCurrentState(shootStateName) || pAsm->IsNextState(shootStateName);
 }
 
+bool AnimComponent::ConsumeShootExecution()
+{
+	return m_controller != nullptr && m_controller->ConsumeShootExecution();
+}
+
 bool AnimComponent::EnterIdleIntent()
 {
 	IAnimController* controller = GetController();

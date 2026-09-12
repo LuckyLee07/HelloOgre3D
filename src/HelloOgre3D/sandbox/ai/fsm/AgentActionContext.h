@@ -27,6 +27,7 @@ public:
 	void ExitShoot();
 	void ExitReload();
 
+	void StopMovement();
 	void SlowMovement(float rate = 1.0f);
 	void StabilizeStationaryMovement(float damping = 0.65f, float stopSpeed = 0.9f);
 	void TickMovement(float deltaTimeInMillis, bool slowMode);

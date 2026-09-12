@@ -138,6 +138,28 @@ function AgentUtilities_ClampHorizontalSpeed(agent)
     end
 end
 
+-- Stationary actions own horizontal velocity, independently of IsMoving's heuristic.
+-- Preserve gravity/jump velocity; a Move-to-Move handoff never calls this helper.
+function Soldier_StopMovement(agent)
+    if agent == nil then return end
+    local velocity = agent:GetVelocity()
+    agent:SetVelocity(Vector3(0, velocity.y, 0))
+end
+
+-- Rotate the body toward aim at a bounded angular speed, without changing physics position.
+function Soldier_FaceDirection(agent, direction, deltaTimeInMillis)
+    local current = agent:GetForward()
+    if direction.x * direction.x + direction.z * direction.z < 0.0001 then return true end
+    local desiredYaw = math.atan2(direction.x, direction.z)
+    local currentYaw = math.atan2(current.x, current.z)
+    local delta = (desiredYaw - currentYaw + math.pi) % (2 * math.pi) - math.pi
+    local step = 12 * math.max(0, deltaTimeInMillis) * 0.001
+    local turn = math.max(-step, math.min(step, delta))
+    local yaw = currentYaw + turn
+    agent:SetForward(Vector3(math.sin(yaw), 0, math.cos(yaw)))
+    return math.abs(delta - turn) < 0.15
+end
+
 function Soldier_SlowMovement(agent, deltaTimeInMillis, rate)
     rate = rate or 1;
 

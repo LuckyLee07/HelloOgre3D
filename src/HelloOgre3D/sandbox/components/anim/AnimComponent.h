@@ -45,6 +45,7 @@ public:
 	bool HasNextAnim() const;
 	bool IsAnimReadyForMove() const;
 	bool IsAnimReadyForShoot() const;
+	bool ConsumeShootExecution();
 	bool EnterIdleIntent();
 	bool EnterMoveIntent();
 	bool EnterShootIntent();

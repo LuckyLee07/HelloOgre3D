@@ -2283,6 +2283,20 @@ static int tolua_SandboxToLua_SceneService_CreateDirectionalLight00(lua_State* t
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: ConsumeShootExecution of class AnimComponent; one-shot notify token */
+static int tolua_SandboxToLua_AnimComponent_ConsumeShootExecution00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"AnimComponent",0,&error)
+		|| !tolua_isnoobj(tolua_S,2,&error))
+		return tolua_error(tolua_S,"#ferror in function 'ConsumeShootExecution'.",&error), 0;
+	AnimComponent* self = static_cast<AnimComponent*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'ConsumeShootExecution'",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->ConsumeShootExecution());
+	return 1;
+}
+
 /* method: SetCompositorEnabled of class SceneService; surgical binding */
 static int tolua_SandboxToLua_SceneService_SetCompositorEnabled00(lua_State* tolua_S)
 {
@@ -17110,6 +17124,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"HasNextAnim",tolua_SandboxToLua_AnimComponent_HasNextAnim00);
    tolua_function(tolua_S,"IsAnimReadyForMove",tolua_SandboxToLua_AnimComponent_IsAnimReadyForMove00);
    tolua_function(tolua_S,"IsAnimReadyForShoot",tolua_SandboxToLua_AnimComponent_IsAnimReadyForShoot00);
+   tolua_function(tolua_S,"ConsumeShootExecution",tolua_SandboxToLua_AnimComponent_ConsumeShootExecution00);
    tolua_function(tolua_S,"EnterIdleIntent",tolua_SandboxToLua_AnimComponent_EnterIdleIntent00);
    tolua_function(tolua_S,"EnterMoveIntent",tolua_SandboxToLua_AnimComponent_EnterMoveIntent00);
    tolua_function(tolua_S,"EnterShootIntent",tolua_SandboxToLua_AnimComponent_EnterShootIntent00);

@@ -12,6 +12,7 @@ local _durationMs = 2000
 function OnInitialize(owner, bb)
     _elapsedMs = 0
     if owner then
+        Soldier_StopMovement(owner)
         AgentComponents.EnterIdleAnim(owner)
         ActionIntent.Record(owner, bb, {
             action = "idle",
@@ -28,9 +29,9 @@ end
 function OnUpdate(deltaMs, owner, bb)
     _elapsedMs = _elapsedMs + deltaMs
     local movementIntent = "idle"
-    if owner and owner:IsMoving() then
-        movementIntent = "brake"
-        Soldier_SlowMovement(owner, deltaMs)
+    if owner and owner:GetHealth() > 0 then
+        Soldier_StopMovement(owner)
+        movementIntent = "stopped"
     end
     if _elapsedMs >= _durationMs then
         ActionIntent.Record(owner, bb, {

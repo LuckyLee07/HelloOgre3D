@@ -44,12 +44,11 @@ std::string IdleState::OnUpdate(float dt)
 	AgentActionContext* actions = m_controller ? m_controller->GetActionContext() : nullptr;
 	if (actions)
 	{
-		actions->SlowMovement(2.0f);
-		actions->StabilizeStationaryMovement(0.6f, 0.85f);
+		actions->StopMovement();
 	}
-	else if (m_pAgent->IsMoving())
+	else
 	{
-		m_pAgent->SlowMoving(2.0f);
+		m_pAgent->SetVelocity(Ogre::Vector3(0.0f, m_pAgent->GetVelocity().y, 0.0f));
 	}
 
 	m_elapsedMs += dt;
