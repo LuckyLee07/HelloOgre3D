@@ -47,3 +47,7 @@
 ## 2026-09-12 移动射击与通知合同
 
 AnimComponent 在每次仿真更新前恢复原 ASM 状态，更新动作后由 `SoldierLocomotionLayer` 组合上身动作与下身步态。分层只读真实水平速度/朝向，以现有脊柱后代骨骼为上身遮罩，按速度累计步相，并在 spine 接缝补偿髋部旋转、避免上身枪向随侧步转走；不推进动作通知、不写回 Bullet。Ogre 使用 CUMULATIVE 混合，避免 AVERAGE 按整条动画权重归一而削弱上下身。
+
+玩家与 AI 的发弹都由 `shoot_fire` 通知触发。Lua DT/BT 动作通过 `AnimComponent:ConsumeShootExecution()` 单次消费；`weapon.actionOwnsFire` 在动作期间抑制通用 callback 发弹，退出恢复旧值。取消、死亡和重复通知不能额外扣弹；AI 消费仍比通知晚一个 AI tick。待机/射击停止水平速度并保留竖直分量，碰撞之后仍可推移对象。
+
+分层持借用 Entity/AnimationState；替换 body 或 detach 时先恢复状态、销毁自建 mask，再销毁 Render。body 重建同时清掉 Soldier 控制器通知注册和临时动作状态，下一次更新向新 ASM 注册。站立横移暂复用资源内 crouch 侧步，步频采用参考步长，尚无足底 IK 或滑移量标定。结果与运行边界见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。

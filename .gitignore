@@ -23,3 +23,8 @@ docs/memories/
 
 # 本地临时/诊断输出（parity trace、对拍日志、可视化 HTML、打包等），不入库
 /tmp/
+
+# 本地验收截图、录像、回放与测量原始产物，不入库
+/docs/dev-design/specs/assets/sandbox19-experience-20260912/
+/docs/dev-design/specs/assets/sandbox19-scene-assets-20260912/
+/docs/dev-design/specs/assets/sandbox19-visual-20260912/

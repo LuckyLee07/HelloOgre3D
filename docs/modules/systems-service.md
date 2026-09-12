@@ -39,6 +39,9 @@
 - `SceneService` 已导出给 Lua 全局 `SandboxScene`，skybox/light/material/scene graph 更新不再通过 `SandboxMgr` 纯转发；`SetCompositorEnabled(name, enabled)` 按当前 camera viewport 幂等查找/添加并切换 compositor，缺资源返回 false 并写日志；`SandboxServices.scene` 供后续 C++ 场景门面收口。
 - `ScriptService` 已导出给 Lua 全局 `SandboxScript`，旧 sample 的 `CallFile` 不再通过 `SandboxMgr` 纯转发；`SandboxServices.scriptService` 供后续 C++ 脚本门面收口。
 
+- `CreateBlockBox` 按 PlaneGenerator 实际面轴分配尺寸，避免旧 BoxGenerator 在 ±X 面交换高度/深度；Bullet 继续使用原输入尺寸。`HELLO_SANDBOX_SMOKE_TEST=1` 检查实际 mesh bounds（扣除 Ogre padding），smoke 要求至少一个非等边盒体通过。
+- `SandboxScene:ConfigureDirectionalShadows(light, enabled)` 转发 runtime 阴影适配，返回配置成功布尔值，Light 与渲染目标均不向 Lua 转移所有权；无 callback/ref 或持久裸指针。头文件、`.pkg` 的 `$cfile` 引用与局部 tolua 绑定同步；不全量运行生成器。资源缺失/配置异常返回 false，首次渲染仍需真实窗口验证。
+
 ## 5. 约束与红线
 
 - **P5**：AgentFactory 已给普通 Agent 默认装配 AI/Attrib/Weapon/Anim 这组可复用运行组件，并新增轻量 profile 表；RuntimeDiag 通过 `component_probe` profile 覆盖非 Soldier `anim`/`bodyAsm` 与武器组件，通过 `animated_probe` 覆盖普通 `AgentObject` 挂 animated mesh、配置 body ASM 并请求状态切换；SoldierFactory 已支持 `ai_soldier` / `player_soldier` / `commander_soldier` 控制 profile，后者证明武器可从 Soldier 装配中拿掉；profile 仍是 C++ 内置表且对象类型仍绑死 `SoldierObject`，新 NPC 泛化仍待推进。
@@ -71,5 +74,9 @@
 ## 2026-09-12 镜头与发弹边界
 
 CameraService 新增 C++ 专用 `BeginFollowOrbit` / `EndFollowOrbit` / `DragFollowOrbit` / `GetFollowForward` / `SetFollowTurnInput` / `RenderFollow`，通过注入的 RaycastService 做静态球扫掠，不增加 Lua 指针所有权。RenderFollow 保留原视线方向，只改变距离；不再对主动偏航施加位置弹簧。
+
+SceneFactory 创建粒子仍交给 SceneManager/现有延迟节点清理管理；`HELLO_RENDER_PARTICLES=0` 只跳过效果创建，调用方必须判空，物理弹、命中和伤害继续。BlockObject 用真实接触点/法线创建反馈：Relay 的 Ground/MainRoute/Concrete/ConcreteShade/Cover 用 Dust，其余表面含装甲用 Spark；这是有限材质覆盖，未实现通用表面标签系统。
+
+玩家发弹沿发射当帧的 `b_muzzle` 三维朝向，不再用独立水平向量覆盖枪口；查询前求值当前骨骼并同步手部挂点，显示插值后也同步武器。48m/s 物理弹保持重力与碰撞；AI 的 `ShootBulletAt` 仍按目标点瞄准。验证见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 
 FOLLOW 相对移动时，视线方向以 OgreCameraController 为唯一真源；鼠标直接旋转，Q/E 在 RenderFollow 使用渲染帧时长以75°/s推进。PlayerController 只读取 GetFollowForward，UpdateFollow 不把仿真方向回写到当前视线；SnapFollowTarget 仍可显式设置初始方向。ResetFollowCamera/禁用相对移动清理转向速率，暂停由 PlayerController::ResetTransientInput 清理。上述增量接口均为 C++ 专用，无 Lua 绑定变更。

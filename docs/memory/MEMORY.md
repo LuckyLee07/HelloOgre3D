@@ -11,7 +11,8 @@
 
 ## 索引
 
-- [验证窗口后台启动](background-test-windows.md) — 自动验证不抢占当前活动窗口
+- [验收产物仅本地保留](local-validation-artifacts.md) — 截图、录像、回放与原始测量数据不随代码提交，仓库保留验证结果汇总
+- [验证窗口后台启动](background-test-windows.md) — 自动验证不抢占当前活动窗口；后台/回放禁硬件输入
 
 - [macOS arm64 构建选择](macos-arm64-build.md) — 默认通用构建的 Bullet x86_64 intrinsic 失败与本机 arm64 验证命令
 - [macOS 窗口可见工作区约束](macos-window-visible-frame.md) — 请求 1920×1080 可能被标题栏窗口压缩，验收必须读取实际内容尺寸
@@ -35,7 +36,7 @@
 - [macOS 启动卡顿修复的实测结果](macos-startup-loading-fix.md) — OBF 回退缓存消除 zzip_seek 放大；NavMesh 收紧到 920×840 后冷构建约 1.07 秒、缓存命中约 1.16 毫秒
 - [个人项目定位](personal-project-positioning.md) — 用户明确为个人项目，方向讨论不默认以外部玩家或产品交付为前提
 - [Ogre GL3+ 透明叠加材质](ogre-gl3-overlay-material.md) — core profile 不会可靠回退 fixed pipeline；透明 visual plane 需显式 shader，并以实机图和实际 PNG alpha 验强度
-- [macOS Xcode Release 依赖代理](xcode-release-dependency-proxy.md) — 生成的主工程可能在 Release 仍链接 _d 静态库；改 vendored 依赖须核对代理名、重建实际 archive 并确认进入二进制
+- [macOS Xcode Release 依赖代理](xcode-release-dependency-proxy.md) — 静态依赖按配置从 OTHER_LDFLAGS 选归档；旧 _d 代理仅为元数据，验收须读真实链接命令
 
 - [MiniGame 操作体验参考](minigame-control-reference.md) — 用户认可的手感参考、本机路径与实际主线入口
 

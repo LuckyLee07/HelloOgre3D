@@ -33,6 +33,8 @@
 - Scene compositor 通过 [[systems-service]] SceneService 按相机 viewport 启停。Sandbox19 的 Relay/SceneGrade 仅处理三维 scene texture；Gorilla active-viewport 守卫和 FairyGUI visibility bit 让两套 UI 留在最终 viewport，不被滤色或重复绘制。macOS 默认选择受支持且不超过 4× 的 FSAA，`HELLO_RENDER_FSAA` 可显式覆盖；Relay/SceneGrade 的 scene RTT 不再使用 `no_fsaa`，以免主窗口抗锯齿仅作用在最终全屏四边形。Windows 保留原有 FSAA=0 条件分支，D3D9 新设置未实机复核。完整设计与实机证据见[场景色调与 UI 合成隔离](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)和[核心战斗体感复核](../dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
 - `base_material` 的 GL3+ `diffuse_vs_glsl` / `diffuse_ps_glsl` 现与 HLSL 路径一样读取模型 tangent 和纹理单元 2 的 `normalMap`；片元阶段正交化切线基，切线退化时回退几何法线。GLSL 的三路 sampler 明确绑定 0/1/2，未使用的自动参数已移除。改变共享基础材质后需检查 Sandbox6/7/8，不能仅凭 Sandbox19 的配对混凝土判断其它网格正确；Windows HLSL 分支未改但 D3D9 仍需单独实机复核。实现与证据见[GL3+ 基础材质法线计划](../dev-design/plans/2026-09-12-sandbox19-normal-lighting.md)。
 
+- `RuntimeOgre::ConfigureDirectionalShadows` 由 SceneService 调用，Sandbox19 显式使用单张方向光 R32F 深度图与 receiver-plane bias、PCF 接收。Light 为借用指针，阴影纹理由 SceneManager 管理；关闭清空 caster/receiver 和纹理，其他 sample 不主动启用。GL/HLSL 分别处理 -1..1 / 0..1 clip Z；modulative 会同时压低 ambient，尚非 PBR 光照。基础 ambient samplers 显式绑定 diffuse/AO/emissive 0/1/2，既有头盔/武器发光图只加一次，默认黑图无额外颜色。详见[本轮实机记录](../dev-design/plans/2026-09-12-sandbox19-visual-goal.md)。
+
 ## 5. 约束与红线
 
 - 引擎/中间件耦合逻辑收口在 runtime（AGENTS.md 依赖流）。
@@ -69,10 +71,13 @@
 
 ## 2026-09-12 战斗反馈与跟随呈现
 
+- Particles/Bullet、Impact 显式使用 GLSL/HLSL 顶点色乘纹理程序，Dust 使用程序化柔边透明片元。新粒子出生颜色必须可见，不能依赖下一次 affector 更新后才从黑色变亮。共享 GL 材质恢复后缩减原有粒子尺寸/发射量；Gun stabilization/thrusters 复用 base_material。相关运行证据见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 - FOLLOW 中键拖动控制偏航/俯仰（0.12°/相对输入单位，俯角限制8–65°）；Q/E 为75°/s、逐渲染帧积分，释放立即停。主动方向直接响应，只平滑目标平移；静态球扫掠缩距不改变视线方向，避免平滑注视点越过镜头时翻转。左键框选期间不抢中键，暂停和中键释放清除拖动。
-
 - `Application::frameStarted` 在 Ogre 绘制前依次采集输入、更新仿真、呈现与 UI；queued 回调收集完整帧时序和截图。RenderPresentation 用仿真余量插值 camera-relative 角色节点，同步武器挂点再更新镜头；不写回物理。暂停保持当前物理姿态。
+- Xcode Release 依赖已在 Premake 真源改成配置对应的归档完整路径；不要用 proxy 的显示名判断实际链接。构建和性能核验见[Release 依赖经验](../memory/xcode-release-dependency-proxy.md)。
 
 后台或 HELLO_INPUT_REPLAY 存在时，InputManager 在各平台都不创建 OIS 设备或 macOS 鼠标监听；macOS 由独立 Cocoa 事件泵维持窗口响应，内部回放继续走同一 listener 入口。正常交互启动不设这两个变量，物理输入行为保持。PlayerController 分别保存 Space/左键的开火位，释放其中一种不能取消仍按住的另一种。
 
 - FOLLOW 中键在 macOS 使用 NSEvent 相对增量并累计小数余量；不乘 backing scale，UI 绝对坐标仍走原换算，FREELOOK 保持原路径。滚轮事件不附带虚假转向增量；按键/鼠标失焦释放及 observer 卸载已有原生探针。WASD 面向视线，角色朝向短促跟随；证据见[转向手感改造](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
+
+- Sandbox19 地表使用独立 `Relay/Ground` GLSL/HLSL 程序与现有铺地 albedo：按米制世界坐标生成错缝板，窄缝通过 `fwidth` 像素覆盖衰减避免远处深格。单 pass 读取当前 ambient/方向光；沿用已有方向光 shadow receiver，不修改共享 `base_material`。补给箱多 submesh 仍复用 `base_material`，新增灰度涂层 albedo。具体资源和性能见[场景资产与地表升级](../dev-design/plans/2026-09-12-sandbox19-scene-assets.md)。

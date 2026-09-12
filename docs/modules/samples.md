@@ -34,15 +34,17 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 - Sandbox12 的 `team_sharing_experiment` preset 固定 A/B/敌人和一处实体遮挡，使用最小 BT 隔离发布、消费、移动与 TTL 清理。它只在 manifest 提供实验 run id 时启用，不改变默认 `team_blackboard` 教学场景。
 
-- Sandbox19 场地为约 48×64 米单层中继站，中央直路与西侧遮挡路线汇入前方院区；复用 Nobiax 墙体/设备与士兵资源，材质入口为 `media/materials/sandbox19_relay.material`。relay 主体使用项目专用 `textures/sandbox19/relay_facade_diffuse.png`；庭院地面与中路共用项目专用 `courtyard_paving_diffuse_v2.png` 混凝土板缝贴图，以轻微 tint 区分路线。北边界后墙与浅色双翼连成院区立面，中门保留较深设备门面，翼楼使用六块 Nobiax 小窗实体网格和独立中性材质，压顶/屋顶设备不进入主路；另有结构框、信标和路线外设备。九块地表旧化及静态/角色接触阴影由无刚体 visual plane 承载，不进入 navmesh 或 AI 视线判定。此前 24 组 crossed-card 植被在实机形成黑边纸片，现已全部移除。六组长掩体位于约 `x=±8`，保留中央与西侧路线；其它装饰碰撞嵌入既有实体或位于非行走区。`sandbox19_scene.lua` 分别检查出生点/两条路线/终点的完整路径，以及真实 Bullet 墙体和地面射线；导航与路径 debug 默认关闭，F3 按需打开。
+- Sandbox19 场地为约 48×64 米单层中继站，中央直路与西侧遮挡路线汇入前方院区；复用 Nobiax 墙体/设备与士兵资源，材质入口为 `media/materials/sandbox19_relay.material`。relay 主体使用项目专用 `textures/sandbox19/relay_facade_diffuse.png`；庭院地面与中路共用项目专用 `courtyard_paving_diffuse_v3.png`；`Relay/Ground` 按世界坐标生成 2.4×3.2 米错缝板，接缝按屏幕像素覆盖衰减，轻微 tint 区分路线。北边界后墙与浅色双翼连成院区立面，中门保留较深设备门面，翼楼使用六块 Nobiax 小窗实体网格和独立中性材质，压顶/屋顶设备不进入主路；另有结构框、信标和路线外设备。九块地表旧化及静态/角色接触阴影由无刚体 visual plane 承载，不进入 navmesh 或 AI 视线判定。此前 24 组 crossed-card 植被在实机形成黑边纸片，现已全部移除。六组长掩体位于约 `x=±8`，保留中央与西侧路线；其它装饰碰撞嵌入既有实体或位于非行走区。`sandbox19_scene.lua` 分别检查出生点/两条路线/终点的完整路径，以及真实 Bullet 墙体和地面射线；导航与路径 debug 默认关闭，F3 按需打开。
 - 浅色混凝土墙与掩体的 `Relay/Concrete` / `Relay/Cover` 使用与现有 albedo 配对的 `courtyard_concrete_normal_v1.png`；地面板缝、路线和金属门面仍用平法线，避免不配对的裂纹方向。法线在 GL3+ 基础材质修复后才实际参与光照，细节幅度刻意较小；材质来源见[资源说明](../../media/textures/sandbox19/SOURCE.md)，共享 shader 与跨 sample 约束见 [[runtime]]。
 
 - 对局为 `PREPARE → WAVE(门前两名守卫) → ADVANCE → WAVE(院区两名守卫) → REGROUP → VICTORY/DEFEAT`。准备阶段冻结，点击 START MISSION 或 Enter 主动开始；清除首段敌人后，指挥官或存活队友越过院区入口才产生第二段前方守卫。全部清敌后仍需指挥官与至少一名存活队友到达集合区；指挥官死亡或两名队友都阵亡即失败。普通流程没有 FORCE_CONTACT 传送或自动清敌，45 秒接敌无进展只报告 STALEMATE 与调整提示。
 
 - 当前流程由 `Sandbox19.lua` 和 scene anchors 编排，preset 提供出生点、AI 配置及两段敌人数/出生槽位；旧 `prepareMs` / `intermissionMs` / `criticalRetreatMs` 已移除，不再存在自动开始、波间恢复或低血量回避计时。
-- 当前 `commanderMatch` 为指挥官 160 HP、每名队友 240 HP、每名守卫 100 HP。AI 在 12 米内且可见时射击，追击到达距离为 9 米；队友/守卫视野分别为 24/20 米、默认接敌半径为 26/16 米。无命令且非 hold 的队友每 250ms 更新玩家前方左右编队锚点；显式命令仍优先。sample 启用 `sandbox19.aimedFire`，从真实枪口向目标位置发射 `ShootBulletAt`，伤害仍依赖 Bullet 子弹碰撞。物理弹明确以 48 m/s 发射，短时世界空间曳光由 BillboardChain 显示；`weapon.actionOwnsFire` 避免动画事件重复发射，其他章节未启用开关时保持原路径。
+- 当前 `commanderMatch` 为指挥官 160 HP、每名队友 240 HP、每名守卫 100 HP。AI 在 12 米内且可见时射击，追击到达距离为 9 米；队友/守卫视野分别为 24/20 米、默认接敌半径为 26/16 米。无命令且非 hold 的队友每 250ms 更新玩家前方左右编队锚点；显式命令仍优先。sample 启用 `sandbox19.aimedFire`，从真实枪口向目标位置发射 `ShootBulletAt`，伤害仍依赖 Bullet 子弹碰撞。物理弹明确以 48 m/s 发射，弹道、枪口焰与命中由已修复的粒子材质呈现；`weapon.actionOwnsFire` 避免动画事件重复发射，其他章节未启用开关时保持原路径。
 
 - 各 sample `Sandbox_Initialize` + 键盘/鼠标事件；是 AI 行为回归基线。
+
+- 2026-09-12 实机视觉迭代修复非等边盒体的巨柱/长条，Sandbox19 现使用中性日光、方向光深度投影、低对比铺地 v3 与连接棚架。`HELLO_RENDER_SHADOWS=0/false/off/no` 可关闭作对照。材质与资源不代表概念稿品质，性能、自然战斗和 fixture 分开记录，见[实机收敛](../dev-design/plans/2026-09-12-sandbox19-visual-goal.md)。
 
 ## 5. 约束与红线
 
@@ -85,3 +87,7 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 
 - [2026-09-06 Computer Use 试玩与改进](../playtest-2026-09-06.md)、[第二轮视野与接敌布局](../playtest-visibility-2026-09-06.md)、[稳定性记录](../stability-2026-09-06.md)与[僵持修复](../stalemate-2026-09-06.md)保留为旧三波版本的历史证据；其中 RMB 选择、8 秒 TTL、tank 控制、雷达、自动波间恢复和 FORCE_CONTACT 不再是现行合同。
 - `tools/run_sandbox19_stability.py` 已迁为显式 `--product-fixture` 入口；旧 `--rounds/--probe/--scripted-victory/--low-health` 会立即报迁移说明，不启动游戏。`sandbox19_stability_selftest.lua` / `sandbox19_retreat*.lua` 仅保留历史实现，当前 sample 不挂载；runner 终止自身子进程不构成正常窗口关闭证据。
+
+2026-09-12 核心修复接入共享粒子程序、上下身分层与真实枪口发弹；MMB/QE 跟随旋转、静态遮挡和显示插值已接入。后台/回放禁硬件输入，Space 与点选释放互不干扰。自然对局68.508秒胜利、集合与重开证据及剩余资产差距见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
+
+- 2026-09-12 场景资产追加：六组掩体改用自制倒角实体，外侧配置十二个高/低补给箱；三张原生 Ogre 网格由 `tools/generate_relay_meshes.py` 重建，保留 submesh 材质，碰撞仍由同一网格构造。产品自测新增低箱实体/上方净空和高箱实体射线，原主路/绕行不变。来源与实机见[场景资产与地表升级](../dev-design/plans/2026-09-12-sandbox19-scene-assets.md)。

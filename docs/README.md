@@ -11,6 +11,10 @@
 >
 > 2026-08-04 收敛：原 `planning/` 下 5 份规划文档（long-term-iteration-plan / ai-technical-iteration-plan / ai-roadmap / high-priority-todo / playable-vertical-slice-todolist）已全部归档到 `archive/`——其中 ai-roadmap 的 P0/P1 七项已全部完成、可玩切片已有阶段成果。保留「方向 + 当前 cycle + 候选池」三份入口。2026-09-05 按个人项目定位修订：长期能力地图与详细阶段设计在方向文档中维护，取消外部试玩和固定周期交付的硬门槛。
 
+[实机几何、日光投影与铺地收敛](dev-design/plans/2026-09-12-sandbox19-visual-goal.md)：修复非等边盒体渲染与 Bullet 尺寸不一致，补齐 GL ambient 采样/既有发光贴图、局部方向光深度阴影和连接棚架；包含失败实验、性能成本及实机回归边界。
+
+[Sandbox19 场景资产与地表升级](dev-design/plans/2026-09-12-sandbox19-scene-assets.md)：自制倒角掩体、多材质补给箱、世界尺度铺地，包含三阶段前后实机、导航/碰撞与性能证据。
+
 ## 0. 目录结构
 
 [2026-09-10 玩法收敛与整体视觉设计](dev-design/plans/2026-09-10-sandbox19-product-experience.md)：当前体验改版的目标、首批设计产物、实施依赖与联合验收；具体状态见 cycle/backlog。
@@ -20,6 +24,8 @@
 [院区建筑剪影与空间层次](dev-design/plans/2026-09-12-sandbox19-courtyard-silhouette.md)：北侧浅色双翼和后墙扩建的实机前后对照、自然通关与导航/碰撞证据；整体视觉品质仍未达到概念稿。
 
 [GL3+ 基础材质法线与混凝土细节](dev-design/plans/2026-09-12-sandbox19-normal-lighting.md)：修复基础材质 GLSL 未采样法线图的问题，给中继站墙体/掩体配对局部法线；Windows/D3D9 与完整 PBR 仍未验收。
+
+[视觉与操作体验复核](dev-design/specs/2026-09-12-sandbox19-experience-audit.md)：针对命中特效缺失、Agent滑步/动作时序与镜头拖手的源码和当前二进制取证，包含目标图差距、已确认根因、修复顺序及验证边界。
 
 [P0审阅稿与三张目标画面](dev-design/specs/2026-09-10-sandbox19-product-experience-design.md) · [核心玩法一页说明](dev-design/specs/2026-09-10-sandbox19-core-loop.md)：真实Windows截图、概念稿、视觉/资源规范和能力缺口；整体方向已获作者批准；概念稿与实施前历史截图单独保留。
 
@@ -148,5 +154,7 @@ docs/
 - 处理 Chapter9 视觉/行为差异：`design/chapter9-parity-architecture-notes.md`。
 - 做架构解耦：`design/architecture-improvement-plan.md`。
 - 新功能开发：`/hello-develop-design <功能描述>`（见 `skills/`）。
+
+[战斗与操作体验修复](dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)：恢复可见命中粒子、分层移动射击和枪口实际方向，修正镜头/输入状态与完整 Release 依赖；实机短片、回归和性能边界见计划。
 
 [Sandbox19 转向手感改造](dev-design/plans/2026-09-12-sandbox19-control-feel.md)：参考 MiniGame 的相对输入与视线/身体分离，统一中键尺度、细化 Q/E、消除侧移开火朝向突变；含原生输入探针与前后实测。

@@ -13,3 +13,5 @@ type: feedback
 2026-09-11 在用户允许续跑后，修正后的 10 秒与 40 秒 Windows Release smoke 均为 PASS；实际 1280×800 窗口位于 `-3264,-864`，日志确认 `offscreen=true`、`foregroundUnchanged=true` 与物理输入禁用。
 
 同日进一步确认：窗口完全处于虚拟桌面外时，`MonitorFromWindow(..., MONITOR_DEFAULTTONULL)` 返回空；旧 `D3D9Device::validateDisplayMonitor` 因此让 Ogre 跳过 render target 更新，Lua 和 smoke 仍继续但 RenderCapture 只得到黑帧。仅对带 `noActivate` 的自动化窗口允许这个空 monitor，普通窗口仍要求与显示器相交。后台 smoke 只能证明逻辑链；涉及视觉结论时还要读取 RenderCapture 并确认是有效画面。
+
+2026-09-12 修复 macOS 后台仍创建 OIS 键盘/本地鼠标监听的问题。当前后台或 `HELLO_INPUT_REPLAY` 启用时均不创建硬件设备，macOS 另泵 Cocoa 窗口事件保持渲染/resize；正常启动不受影响。旧回放未记录硬件输入来源，不能仅凭合成事件日志证明输入完全隔离。

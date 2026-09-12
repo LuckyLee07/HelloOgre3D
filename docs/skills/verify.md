@@ -45,11 +45,13 @@ python3 tools/run_m1_smoke.py --help
 python3 tools/run_m1_smoke.py --samples Sandbox19
 ```
 
-macOS 自动验证启动设置 `HELLO_WINDOW_BACKGROUND=1`：窗口置于后方，不主动激活应用；`run_m1_smoke.py` 和 `run_sandbox19_stability.py` 已默认设置。手工直接启动验证也应设置此变量，遵守 [后台启动偏好](../memory/background-test-windows.md)。普通交互启动不设置该变量。
+macOS 自动验证启动设置 `HELLO_WINDOW_BACKGROUND=1`：窗口置于后方，不主动激活应用、不创建硬件输入监听；检查 `physical-input=disabled`。`HELLO_INPUT_REPLAY` 也独立禁用硬件输入，内部事件仍走正常分发链；`run_m1_smoke.py` 和 `run_sandbox19_stability.py` 已默认设置。手工直接启动验证也应设置此变量，遵守 [后台启动偏好](../memory/background-test-windows.md)。普通交互启动不设置该变量。
 
 该脚本运行 `bin/HelloOgre3D` 并检查 marker/错误，支持的 sample 以实际 `--help` 为准；其他 sample 用原生程序和仓库现有环境变量启动，观察相应成功证据。不要把 M1 smoke 等同于 Windows Chapter9/FGUI 全套 gate。
 
 ## 日志与失败
+
+验收截图、录像、逐次回放和原始测量数据默认只保留在本地已忽略目录，后续优先使用 `tmp/`；提交保留验证方法、结果汇总及必要限制。引用本地产物时明确标注不入库，具体约定见[验收产物仅本地保留](../memory/local-validation-artifacts.md)。
 
 自行读取 stderr、`bin/Sandbox.log`（Debug 为 `Sandbox_d.log`）和脚本输出。smoke 必须有目标 PASS marker 且无相关错误，进程仍存活或 timeout 本身不是通过证据。性能看 `[FramePerf]` 的 updateCall/perceptionSystem，并核对渲染开销和配置。
 

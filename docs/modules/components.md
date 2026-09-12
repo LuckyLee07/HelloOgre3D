@@ -56,6 +56,8 @@
 
 - 待：P5 profile 外部数据化与更完整非 Soldier 行为场景、P4 其它缓存裸指针继续审计、P2 继续审计其它对象门面和跨组件语义入口。`docs/design/architecture-improvement-plan.md` P2/P4/P5/P6、`docs/design/cpp-object-model-refactor-roadmap.md`。
 
+2026-09-12 PlayerController 将 Space/左键的开火状态分开保存；玩家发弹通过 WeaponComponent 当前骨骼枪口，渲染插值后同步手部挂点。RenderComponent 缓存仿真前后姿态，只插值显示节点，不回写刚体；AnimComponent 分层与生命周期见 [[objects-anim]]。实现证据见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
+
 ### Sandbox19 转向手感
 
 相对移动时，相机持有视线；移动和开火均向同一视线转身，不在侧移/后退开火时切换90°/180°。静止且未开火时保留身体方向，允许自由观察。身体用18/s指数响应与540°/s上限转向现有 Bullet 刚体，RenderComponent 继续插值展示；第一次开火等待朝向误差≤8°，发弹仍由动画通知触发并使用实际枪口，不重定向弹道。默认 tank 的2.5rad/s转向保持不变。详见[改造与验证](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
