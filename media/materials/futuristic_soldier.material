@@ -1,27 +1,16 @@
+// These untextured weapon submeshes still require GPU programs on GL3+.
+import base_material from "materials/base.material"
 
-material SF_Weapon_Stabilization
+material SF_Weapon_Stabilization : base_material
 {
-	technique
-	{
-		pass
-		{
-			ambient 0 0 0 1
-			diffuse 0.5 0.5 0.5 1
-			specular 0.5 0.5 0.5 1 2.6368
-		}
-	}
+	set $diffuseCol "0.5 0.5 0.5 1"
+	set $specularCol "0.5 0.5 0.5"
+	set $shininess "2.6368"
 }
 
-material SF_Weapon_Thursters
+material SF_Weapon_Thursters : base_material
 {
-	technique
-	{
-		pass
-		{
-			ambient 0 0 0 1
-			diffuse 0 0 0 1
-			specular 0.2 0.2 0.2 1 330.24
-		}
-	}
-
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0.2 0.2 0.2"
+	set $shininess "330.24"
 }

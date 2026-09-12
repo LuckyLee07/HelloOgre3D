@@ -1,6 +1,7 @@
 #include "BlockObject.h"
 #include "OgreSceneNode.h"
 #include "OgreEntity.h"
+#include "OgreSubEntity.h"
 #include "OgreSceneManager.h"
 #include "btBulletDynamicsCommon.h"
 #include "GameDefine.h"
@@ -18,6 +19,8 @@
 #include "event/SandboxEventPayload.h"
 #include "systems/service/SceneFactory.h"
 #include "systems/service/PhysicsFactory.h"
+#include "LogSystem.h"
+#include <cstdlib>
 
 using namespace Ogre;
 
@@ -239,8 +242,15 @@ namespace
 {
 void SpawnBulletImpactWithServices(const Collision& collision, const SandboxServices* services)
 {
-	// 创建射击碰撞效果
-	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle("BulletImpact");
+	BaseObject* receiver = collision.objectA_ != nullptr ? static_cast<BaseObject*>(collision.objectA_->getUserPointer()) : nullptr;
+	BlockObject* block = dynamic_cast<BlockObject*>(receiver);
+	const Ogre::Entity* entity = block != nullptr ? block->GetEntity() : nullptr;
+	const Ogre::String material = entity != nullptr && entity->getNumSubEntities() > 0
+		? entity->getSubEntity(0)->getMaterialName() : Ogre::String();
+	const bool dust = material == "Relay/Ground" || material == "Relay/MainRoute"
+		|| material == "Relay/Concrete" || material == "Relay/ConcreteShade" || material == "Relay/Cover";
+	Ogre::SceneNode* particleImpact = SceneFactory::CreateParticle(dust ? "BulletImpactDust" : "BulletImpact");
+	if (particleImpact == nullptr) return;
 
 	// 2秒后清掉该粒子效果
 	ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
@@ -248,7 +258,16 @@ void SpawnBulletImpactWithServices(const Collision& collision, const SandboxServ
 		objectManager->markNodeRemInSeconds(particleImpact, 2.0f);
 
 	// 获取父节点的世界位置和旋转
-	particleImpact->setPosition(collision.pointA_);
+	// A small outward offset keeps the billboard out of the receiving surface.
+	particleImpact->setPosition(collision.pointA_ - collision.normalOnB_ * 0.02f);
+	static const bool trace = std::getenv("HELLO_FX_TRACE") != nullptr;
+	if (trace)
+	{
+		CCLOG_INFO("[ImpactTrace] receiver=%u type=%d surface=%s point=(%.3f,%.3f,%.3f) normal=(%.3f,%.3f,%.3f)",
+			receiver != nullptr ? receiver->GetObjId() : 0, receiver != nullptr ? int(receiver->GetObjType()) : -1, dust ? "dust" : "spark",
+			collision.pointA_.x, collision.pointA_.y, collision.pointA_.z,
+			-collision.normalOnB_.x, -collision.normalOnB_.y, -collision.normalOnB_.z);
+	}
 
 	const unsigned short numAttachedObjects = particleImpact->numAttachedObjects();
 	for (unsigned short index = 0; index < numAttachedObjects; ++index)

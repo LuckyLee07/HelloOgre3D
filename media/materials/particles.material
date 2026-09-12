@@ -8,6 +8,13 @@ material Particles/Bullet
 			lighting off
 			depth_write off
 			scene_blend add
+			// Fixed-function-only passes are skipped by the GL3+ core renderer.
+			vertex_program_ref particle_billboard_vs
+			{
+			}
+			fragment_program_ref particle_billboard_fs
+			{
+			}
 
 			texture_unit
 			{
@@ -26,11 +33,34 @@ material Particles/Impact
 			lighting off
 			depth_write off
 			scene_blend add
+			// Fixed-function-only passes are skipped by the GL3+ core renderer.
+			vertex_program_ref particle_billboard_vs
+			{
+			}
+			fragment_program_ref particle_billboard_fs
+			{
+			}
 
 			texture_unit
 			{
 				texture textures/particles/impact.tga
 			}
+		}
+	}
+}
+
+// A soft, alpha-blended concrete/dirt puff; no emissive texture or external asset.
+material Particles/Dust
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+			scene_blend alpha_blend
+			vertex_program_ref particle_billboard_vs {}
+			fragment_program_ref particle_dust_fs {}
 		}
 	}
 }

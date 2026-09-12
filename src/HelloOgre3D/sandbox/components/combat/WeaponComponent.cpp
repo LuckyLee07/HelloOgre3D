@@ -299,6 +299,10 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 		forward = ownerRender != nullptr ? ownerRender->GetDerivedOrientation() * Ogre::Vector3::UNIT_X : Ogre::Vector3::UNIT_X;
 	}
 	forward.normalise();
+	if (std::getenv("HELLO_FX_TRACE") != nullptr)
+		Ogre::LogManager::getSingleton().logMessage("[ShotTrace] owner=" + Ogre::StringConverter::toString(owner->GetObjId())
+			+ " muzzle=" + Ogre::StringConverter::toString(position)
+			+ " direction=" + Ogre::StringConverter::toString(forward));
 	if (up.isNaN() || up.isZeroLength())
 	{
 		up = Ogre::Vector3::UNIT_Y;
@@ -341,15 +345,8 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 		objectManager->markNodeRemInSeconds(muzzleFlash, 0.5f);
 	}
 
-	// Keep a short visual tracer alive independently of the physics object. A
-	// bullet often reaches a nearby actor in only a few frames; attaching every
-	// trail particle to that object made the whole streak disappear on impact.
-	Ogre::SceneNode* tracer = objectManager != nullptr ? SceneFactory::CreateTracerLine(
-		position + forward * 0.2f, position + forward * 7.7f, 0.055f, "debug_draw") : nullptr;
-	if (tracer != nullptr)
-	{
-		objectManager->markNodeRemInSeconds(tracer, 0.22f);
-	}
+	// The Bullet particle follows the physical projectile and ends on impact.
+	// A separate fixed-length debug streak could cross nearby hit surfaces.
 
 	TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
 	if (tactics != nullptr)

@@ -4,6 +4,8 @@
 #include "AppConfig.h"
 
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
 
 Ogre::SceneNode* SceneFactory::s_rootSceneNode = nullptr;
 Ogre::NameGenerator SceneFactory::s_nameGenerator("UnnamedParticle_");
@@ -92,6 +94,13 @@ Ogre::SceneNode* SceneFactory::CreateParticle(Ogre::SceneNode* parentNode, const
 	{
 		return nullptr;
 	}
+
+	// Diagnostic A/B: disable visual particle creation while keeping physical shots and damage.
+	static const bool enabled = []() {
+		const char* value = std::getenv("HELLO_RENDER_PARTICLES");
+		return value == nullptr || std::strcmp(value, "0") != 0;
+	}();
+	if (!enabled) return nullptr;
 
 	Ogre::SceneNode* particle = parentNode->createChildSceneNode();
 

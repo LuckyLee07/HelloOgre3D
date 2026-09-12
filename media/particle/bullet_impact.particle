@@ -1,9 +1,9 @@
 particle_system BulletImpact
 {
 	material Particles/Impact
-	particle_width 0.11
-	particle_height 0.11
-	quota 96
+	particle_width 0.075
+	particle_height 0.075
+	quota 32
 	cull_each false
 	sorted false
 	local_space false
@@ -20,13 +20,13 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 26.4
-		emission_rate 620
+		emission_rate 100
 		velocity_min 0.5
 		velocity_max 1.0
-		time_to_live_min 0.4
-		time_to_live_max 0.75
-		duration_min 0.1
-		duration_max 0.1
+		time_to_live_min 0.12
+		time_to_live_max 0.28
+		duration_min 0.06
+		duration_max 0.06
 		repeat_delay_min 0
 		repeat_delay_max 0
 		colour_range_start 1 0.92 0.58 1
@@ -38,13 +38,13 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 45
-		emission_rate 180
+		emission_rate 100
 		velocity_min 1
 		velocity_max 2
-		time_to_live_min 0.5
-		time_to_live_max 1.5
-		duration_min 0.1
-		duration_max 0.1
+		time_to_live_min 0.18
+		time_to_live_max 0.28
+		duration_min 0.06
+		duration_max 0.06
 		repeat_delay_min 0
 		repeat_delay_max 0
 		colour_range_start 1 0.78 0.30 1
@@ -56,13 +56,13 @@ particle_system BulletImpact
 		position 0.0 0.0 0.0
 		direction 0 0 -1
 		angle 60
-		emission_rate 60
+		emission_rate 80
 		velocity_min 3
 		velocity_max 5
-		time_to_live_min 1
-		time_to_live_max 2
-		duration_min 0.1
-		duration_max 0.1
+		time_to_live_min 0.18
+		time_to_live_max 0.38
+		duration_min 0.06
+		duration_max 0.06
 		repeat_delay_min 0
 		repeat_delay_max 0
 		colour_range_start 1 0.68 0.22 1
@@ -71,28 +71,70 @@ particle_system BulletImpact
 
 	affector LinearForce
 	{
-		force_vector 0.0 -2.5 0.0
+		force_vector 0.0 -4.0 0.0
 		force_application add
 	}
 
 	affector ColourInterpolator
 	{
 		time0 0
-		colour0 1 1 1 1
+		colour0 1 0.92 0.58 1
 		time1 0.2
-		colour1 1 1 1 1
+		colour1 1 0.78 0.30 1
 		time2 0.4
-		colour2 1 1 1 1
+		colour2 1 0.58 0.16 1
 		time3 0.6
-		colour3 1 1 1 1
+		colour3 0.70 0.30 0.06 1
 		time4 0.8
-		colour4 0.5 0.5 0.5 1
+		colour4 0.25 0.07 0.01 1
 		time5 1
 		colour5 0 0 0 1
 	}
 
 	affector Scaler
 	{
-		rate 0.035
+		rate -0.04
+	}
+}
+
+particle_system BulletImpactDust
+{
+	material Particles/Dust
+	particle_width 0.26
+	particle_height 0.26
+	quota 16
+	local_space false
+	billboard_type point
+	emitter Point
+	{
+		direction 0 1 0
+		angle 55
+		emission_rate 100
+		velocity_min 0.3
+		velocity_max 1.0
+		time_to_live_min 0.35
+		time_to_live_max 0.55
+		duration_min 0.065
+		duration_max 0.065
+		repeat_delay_min 0
+		repeat_delay_max 0
+		colour_range_start 0.70 0.66 0.57 0.85
+		colour_range_end 0.82 0.76 0.65 0.70
+	}
+	affector ColourFader
+	{
+		red 0
+		green 0
+		blue 0
+		alpha -1.5
+	}
+	affector Scaler
+	{
+		rate 1.6
+	}
+	affector LinearForce
+	{
+		force_vector 0 -0.8 0
+		force_application add
 	}
 }

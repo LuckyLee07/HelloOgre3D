@@ -1,9 +1,9 @@
 particle_system Bullet
 {
 	material Particles/Bullet
-	particle_width 0.12
-	particle_height 0.38
-	quota 128
+	particle_width 0.06
+	particle_height 0.06
+	quota 16
 	cull_each false
 	sorted false
 	// Leave emitted particles in world space while the physics bullet advances;
@@ -24,30 +24,30 @@ particle_system Bullet
 		angle 0
 		width 0
 		height 0
-		depth 0.75
-		emission_rate 720
+		depth 0.10
+		emission_rate 90
 		velocity_min 0
 		velocity_max 0
-		time_to_live_min 0.10
-		time_to_live_max 0.20
+		time_to_live_min 0.045
+		time_to_live_max 0.070
 		duration_min 0
 		duration_max 0
 		repeat_delay_min 0
 		repeat_delay_max 0
-		colour_range_start 0 0 0 1
-		colour_range_end 0 0 0 1
+		colour_range_start 0.85 0.85 0.85 1
+		colour_range_end 0.85 0.85 0.85 1
 	}
 
 	affector ColourInterpolator
 	{
 		time0 0
-		colour0 1 1 1 1
+		colour0 0.85 0.85 0.85 1
 		time1 0.2
-		colour1 1 1 1 1
+		colour1 0.85 0.85 0.85 1
 		time2 0.4
-		colour2 1 1 1 1
+		colour2 0.70 0.70 0.70 1
 		time3 0.6
-		colour3 1 1 1 1
+		colour3 0.55 0.55 0.55 1
 		time4 0.8
 		colour4 0.5 0.5 0.5 1
 		time5 1
@@ -58,9 +58,9 @@ particle_system Bullet
 particle_system MuzzleFlash
 {
 	material Particles/Impact
-	particle_width 0.42
-	particle_height 0.42
-	quota 48
+	particle_width 0.16
+	particle_height 0.16
+	quota 8
 	cull_each false
 	sorted false
 	local_space false
@@ -70,21 +70,21 @@ particle_system MuzzleFlash
 		position 0 0 0
 		direction 1 0 0
 		angle 10
-		emission_rate 320
+		emission_rate 100
 		velocity_min 1.2
 		velocity_max 2.2
-		time_to_live_min 0.12
-		time_to_live_max 0.20
-		duration_min 0.16
-		duration_max 0.18
+		time_to_live_min 0.035
+		time_to_live_max 0.065
+		duration_min 0.035
+		duration_max 0.040
 		repeat_delay_min 0
 		repeat_delay_max 0
-		colour_range_start 1 0.96 0.72 1
-		colour_range_end 1 0.42 0.08 1
+		colour_range_start 0.85 0.72 0.42 1
+		colour_range_end 0.70 0.35 0.08 1
 	}
 
 	affector Scaler
 	{
-		rate 0.65
+		rate -0.8
 	}
 }

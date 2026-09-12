@@ -1,0 +1,68 @@
+// Billboards need vertex colour as well as UVs: particle affectors fade RGB.
+// Reuse the existing unlit textured-colour shaders on both GL3+ and D3D9.
+vertex_program particle_billboard_vs_glsl glsl
+{
+	source shaders/gui3d_vs.glsl
+	syntax glsl150
+	default_params
+	{
+		param_named_auto worldViewProj worldviewproj_matrix
+	}
+}
+
+fragment_program particle_billboard_fs_glsl glsl
+{
+	source shaders/gui3d_fs.glsl
+	syntax glsl150
+	default_params
+	{
+		param_named atlas int 0
+	}
+}
+
+vertex_program particle_billboard_vs_hlsl hlsl
+{
+	source shaders/gui3d.hlsl
+	entry_point main_vp
+	target vs_2_0
+	default_params
+	{
+		param_named_auto worldViewProj worldviewproj_matrix
+	}
+}
+
+fragment_program particle_billboard_fs_hlsl hlsl
+{
+	source shaders/gui3d.hlsl
+	entry_point main_fp
+	target ps_2_0
+}
+
+vertex_program particle_billboard_vs unified
+{
+	delegate particle_billboard_vs_glsl
+	delegate particle_billboard_vs_hlsl
+}
+
+fragment_program particle_billboard_fs unified
+{
+	delegate particle_billboard_fs_glsl
+	delegate particle_billboard_fs_hlsl
+}
+
+fragment_program particle_dust_fs_glsl glsl
+{
+	source shaders/particle_dust_fs.glsl
+	syntax glsl150
+}
+fragment_program particle_dust_fs_hlsl hlsl
+{
+	source shaders/particle_dust.hlsl
+	entry_point main_fp
+	target ps_2_0
+}
+fragment_program particle_dust_fs unified
+{
+	delegate particle_dust_fs_glsl
+	delegate particle_dust_fs_hlsl
+}
