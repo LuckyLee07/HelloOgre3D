@@ -13,7 +13,8 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = {
-    'Sandbox19': ['[Sandbox19ProductSelfTest] PASS all=true',
+    'Sandbox19': ['[BlockBoxGeometrySelfTest] PASS nonCubic=1',
+                  '[Sandbox19ProductSelfTest] PASS all=true',
                   '[Sandbox19ArenaSelfTest] PASS all-spawns-connected',
                   '[Sandbox19ArenaSelfTest] PASS relay-static-collision'],
     'Sandbox6': ['[ConfigManager] preset=Sandbox6 sample=Sandbox6'],

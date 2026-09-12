@@ -12,6 +12,7 @@
 #include "AppConfig.h"
 
 #include <algorithm>
+#include <cstdlib>
 
 ObjectFactory::ObjectFactory(ObjectManager* pMananger)
 	: m_objectManager(pMananger)
@@ -71,14 +72,54 @@ BlockObject* ObjectFactory::CreateBlockObject(const Ogre::String& meshFilePath)
 
 BlockObject* ObjectFactory::CreateBlockBox(float width, float height, float length, float uTile, float vTile)
 {
-	Procedural::BoxGenerator boxGenerator;
-	boxGenerator.setSizeX(width);
-	boxGenerator.setSizeY(height);
-	boxGenerator.setSizeZ(length);
-	boxGenerator.setUTile(uTile);
-	boxGenerator.setVTile(vTile);
+	assert(width > 0 && height > 0 && length > 0);
+	const Ogre::Vector3 size(width, height, length);
+	const Ogre::Vector3 normals[] = {
+		Ogre::Vector3::NEGATIVE_UNIT_Z, Ogre::Vector3::UNIT_Z,
+		Ogre::Vector3::NEGATIVE_UNIT_Y, Ogre::Vector3::UNIT_Y,
+		Ogre::Vector3::NEGATIVE_UNIT_X, Ogre::Vector3::UNIT_X,
+	};
+	Procedural::TriangleBuffer buffer;
+	for (const Ogre::Vector3& normal : normals)
+	{
+		// Match PlaneGenerator's current Ogre basis. The legacy BoxGenerator
+		// assumes a different perpendicular axis on X faces, swapping their
+		// height and depth and making non-cubic visuals disagree with Bullet.
+		const Ogre::Vector3 axisU = normal.perpendicular();
+		const Ogre::Vector3 axisV = normal.crossProduct(axisU);
+		const Ogre::Vector3 extentU(Ogre::Math::Abs(axisU.x), Ogre::Math::Abs(axisU.y), Ogre::Math::Abs(axisU.z));
+		const Ogre::Vector3 extentV(Ogre::Math::Abs(axisV.x), Ogre::Math::Abs(axisV.y), Ogre::Math::Abs(axisV.z));
+		const Ogre::Real faceWidth = extentU.dotProduct(size);
+		const Ogre::Real faceHeight = extentV.dotProduct(size);
 
-	const Ogre::MeshPtr meshPtr = boxGenerator.realizeMesh();
+		Procedural::PlaneGenerator planeGenerator;
+		planeGenerator.setNormal(normal);
+		planeGenerator.setSizeX(faceWidth);
+		planeGenerator.setSizeY(faceHeight);
+		planeGenerator.setPosition(normal * size * 0.5f);
+		// Interpret tiling as density along the supplied width/depth. Cubes
+		// retain their original UVs; wall faces no longer stretch a floor UV.
+		planeGenerator.setUTile((faceWidth / width) * uTile);
+		planeGenerator.setVTile((faceHeight / length) * vTile);
+		planeGenerator.addToTriangleBuffer(buffer);
+	}
+	const Ogre::MeshPtr meshPtr = buffer.transformToMesh(Procedural::Utils::getName());
+
+	// Check the realised render mesh, including Ogre's culling padding, against
+	// the physical box contract. Long thin boxes exposed a regression cubes hid.
+	const char* smoke = std::getenv("HELLO_SANDBOX_SMOKE_TEST");
+	if (smoke != nullptr && Ogre::String(smoke) == "1")
+	{
+		const Ogre::AxisAlignedBox& bounds = meshPtr->getBounds();
+		const Ogre::Real padding = 1.0f + 2.0f * Ogre::MeshManager::getSingleton().getBoundsPaddingFactor();
+		const Ogre::Vector3 actual = bounds.getSize() / padding;
+		const bool valid = actual.positionEquals(size, 0.0001f) && bounds.getCenter().isZeroLength();
+		Ogre::LogManager::getSingleton().logMessage(
+			Ogre::String("[BlockBoxGeometrySelfTest] ") + (valid ? "PASS" : "FAIL")
+			+ " nonCubic=" + ((width != height || height != length) ? "1" : "0")
+			+ " expected=" + Ogre::StringConverter::toString(size)
+			+ " actual=" + Ogre::StringConverter::toString(actual));
+	}
 
 	btRigidBody* planeRigidBody = PhysicsFactory::CreateRigidBodyBox(width, height, length);
 
