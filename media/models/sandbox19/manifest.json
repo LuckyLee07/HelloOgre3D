@@ -1,0 +1,67 @@
+[
+  {
+    "file": "relay_barrier.mesh",
+    "vertices": 480,
+    "triangles": 220,
+    "materials": [
+      "Relay/Cover",
+      "Relay/CrateRubber"
+    ],
+    "bounds_min": [
+      -2.1,
+      -0.625,
+      -0.577
+    ],
+    "bounds_max": [
+      2.1,
+      0.625,
+      0.577
+    ]
+  },
+  {
+    "file": "relay_supply_crate.mesh",
+    "vertices": 2016,
+    "triangles": 924,
+    "materials": [
+      "Relay/CrateBody",
+      "Relay/CrateFrame",
+      "Relay/CrateRubber",
+      "Relay/CratePanel",
+      "Relay/CrateLatch",
+      "Relay/CrateMark"
+    ],
+    "bounds_min": [
+      -0.825,
+      -0.525,
+      -0.552
+    ],
+    "bounds_max": [
+      0.825,
+      0.525,
+      0.552
+    ]
+  },
+  {
+    "file": "relay_supply_crate_tall.mesh",
+    "vertices": 2016,
+    "triangles": 924,
+    "materials": [
+      "Relay/CrateBody",
+      "Relay/CrateFrame",
+      "Relay/CrateRubber",
+      "Relay/CratePanel",
+      "Relay/CrateLatch",
+      "Relay/CrateMark"
+    ],
+    "bounds_min": [
+      -0.825,
+      -0.825,
+      -0.552
+    ],
+    "bounds_max": [
+      0.825,
+      0.825,
+      0.552
+    ]
+  }
+]

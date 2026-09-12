@@ -13,6 +13,7 @@ local _debugVisible = false
 local _sideWallIds = {}
 local _floorIds = {}
 local _coverIds = {}
+local _supplyIds = {}
 local _relayFeedback = {}
 
 local function _Box(width, height, length, x, y, z, yaw, material)
@@ -42,6 +43,16 @@ local function _Module(mesh, x, y, z, yaw, material)
 	block:setPosition(Vector3(x, y, z))
 	block:setRotation(Vector3(0, yaw or 0, 0))
 	block:setMaterial(material or "Relay/Concrete")
+	block:SetMass(0)
+	return block
+end
+
+local function _Asset(mesh, x, y, z, yaw)
+	-- Preserve the authored submesh materials; CreateBlockObject derives its
+	-- solid Bullet hull from these same vertices and ObjectManager owns it.
+	local block = SandboxObjects:CreateBlockObject("models/sandbox19/" .. mesh)
+	block:setPosition(Vector3(x, y, z))
+	block:setRotation(Vector3(0, yaw or 0, 0))
 	block:SetMass(0)
 	return block
 end
@@ -111,18 +122,23 @@ end
 
 function Scene.Create()
 	_G.SandboxLevelBoxes = {}
-	_sideWallIds, _floorIds, _coverIds = {}, {}, {}
+	_sideWallIds, _floorIds, _coverIds, _supplyIds = {}, {}, {}, {}
 	_relayFeedback = {beacons = {}, strips = {}, beam = {}, door = {}, goal = {}, threshold = {}, phase = "", mode = "off"}
 	_navMesh, _debugVisible = nil, false
 
 	-- Pitch raises the generated mountain belt behind the relay silhouette.
 	SandboxScene:SetSkyBox("Relay/Sky", Vector3(-12, 180, 0))
-	SandboxScene:SetAmbientLight(Vector3(0.29, 0.28, 0.26))
+	SandboxScene:SetAmbientLight(Vector3(0.31, 0.32, 0.34))
 	-- Light travels toward the relay so the front elevation and combatants keep
 	-- readable form instead of becoming silhouettes against the bright sky.
 	local sunlight = SandboxScene:CreateDirectionalLight(Vector3(0.42, -1, 0.52))
-	sunlight:setDiffuseColour(ColourValue(1.10, 1.02, 0.86))
+	sunlight:setDiffuseColour(ColourValue(1.05, 1.03, 0.98))
 	sunlight:setSpecularColour(ColourValue(0.18, 0.16, 0.13))
+	local shadowOverride = os.getenv and os.getenv("HELLO_RENDER_SHADOWS")
+	local shadowEnabled = shadowOverride ~= "0" and shadowOverride ~= "false"
+		and shadowOverride ~= "off" and shadowOverride ~= "no"
+	local shadowConfigured = SandboxScene:ConfigureDirectionalShadows(sunlight, shadowEnabled)
+	print("[Sandbox19Scene] directional-shadows=" .. tostring(shadowEnabled and shadowConfigured))
 
 	-- 48 x 64 m floor; all visible surfaces have matching static Bullet bodies.
 	for _, x in ipairs({ -16, 0, 16 }) do
@@ -196,24 +212,53 @@ function Scene.Create()
 		{ -7.9, 5.5, 3 }, { 7.9, 5.5, -3 },
 		{ -7.7, 23.5, -5 }, { 7.7, 23.5, 5 },
 	}) do
-		local barrier = _Box(4.2, 1.25, 1.15, cover[1], 0.625, cover[2], cover[3], "Relay/Cover")
+		local barrier = _Asset("relay_barrier.mesh", cover[1], 0.625, cover[2], cover[3])
 		_coverIds[barrier:GetObjId()] = true
-		_Box(4.28, 0.10, 1.22, cover[1], 1.30, cover[2], cover[3], "Relay/Trim")
 		_GroundLayer(4.7, 1.7, cover[1] + 0.12, cover[2] - 0.08, cover[3], "Relay/ContactShadow")
 	end
 
-	-- Open service canopies frame the near lane. Their posts stay outside both
-	-- validated routes; the roof collision remains above actor height.
-	for _, x in ipairs({ -18.0 }) do
-		for _, z in ipairs({ -7.0, -3.8, -0.6 }) do
-			_Module(ROOF_MESH, x, 2.68, z, 0, "Relay/Equipment")
-		end
-		for _, px in ipairs({ x - 2.4, x + 2.4 }) do
-			for _, pz in ipairs({ -8.6, 1.0 }) do
-				_Module(PILLAR_MESH, px, 1.28, pz, 0, "Relay/Metal")
-			end
+	-- Supply clusters attach to the outer shoulders of existing cover. The
+	-- central lane (x=-5..5) and the x=-18 bypass stay clear at every stage.
+	for _, supply in ipairs({
+		{-10.9, -6.9, -4}, {10.9, -6.9, 4},
+		{-10.5, 6.1, 3}, {10.5, 6.1, -3},
+		{-10.3, 24.1, -5}, {10.3, 24.1, 5},
+	}) do
+		local crate = _Asset("relay_supply_crate_tall.mesh", supply[1], 0.825, supply[2], supply[3])
+		_supplyIds[crate:GetObjId()] = true
+		_GroundLayer(2.0, 1.45, supply[1], supply[2], supply[3], "Relay/ContactShadow")
+	end
+	for _, supply in ipairs({
+		{-7.0, -11.0, -7}, {7.6, -11.6, 8},
+		{-9.9, 2.0, 0}, {10.0, 2.2, 90},
+		{-8.8, 29.0, 0}, {9.0, 30.1, 12},
+	}) do
+		local crate = _Asset("relay_supply_crate.mesh", supply[1], 0.525, supply[2], supply[3])
+		_supplyIds[crate:GetObjId()] = true
+		_GroundLayer(2.0, 1.45, supply[1], supply[2], supply[3], "Relay/ContactShadow")
+	end
+
+	-- A connected, full-width canopy gives the first encounter an overhead edge.
+	-- Posts remain outside the central corridor and x=-18 bypass; the roof is
+	-- above standing actors and each native panel stays below the nav cutoff.
+	for _, x in ipairs({ -11.60, -8.44 }) do
+		for _, z in ipairs({ -0.70, 2.46 }) do
+			_Module(ROOF_MESH, x, 3.65, z, 0, "Relay/Canopy")
 		end
 	end
+	for _, x in ipairs({ -12.90, -7.14 }) do
+		for _, z in ipairs({ -2.15, 3.45 }) do
+			_Box(0.24, 3.49, 0.24, x, 1.745, z, 0, "Relay/Trim")
+		end
+		_Box(0.20, 0.20, 6.40, x, 3.43, 0.88, 0, "Relay/Trim")
+	end
+	for _, z in ipairs({ -2.15, 3.45 }) do
+		_Box(6.20, 0.20, 0.20, -10.02, 3.43, z, 0, "Relay/Trim")
+	end
+	for _, x in ipairs({ -10.2, -9.35, -8.5 }) do
+		_Module(BLOCK_MESH, x, 0.32, 2.5, 0, "Relay/Equipment")
+	end
+	_Module(BLOCK_MESH, -9.35, 0.96, 2.5, 0, "Relay/Equipment")
 	for _, prop in ipairs({
 		{ -20.2, -10.2, 0 }, { -20.2, -9.2, 90 }, { -15.8, -5.0, 0 },
 		{ 20.2, -10.2, 0 }, { 20.2, -9.2, 90 }, { 15.8, -5.0, 0 },
@@ -232,7 +277,7 @@ function Scene.Create()
 		_Box(11.6, 3.6, 2.0, x, 1.8, 38.15, 0, "Relay/Concrete")
 		_Box(11.9, 0.24, 2.2, x, 3.72, 38.15, 0, "Relay/ConcreteShade")
 		_Box(11.2, 0.11, 0.12, x, 1.15, 37.04, 0, "Relay/BuildingStripe")
-		_Box(2.3, 1.15, 1.5, x, 4.22, 38.2, 0, "Relay/Equipment")
+		_Box(2.3, 1.15, 1.5, x, 4.22, 38.2, 0, "Relay/EquipmentBox")
 		_Box(2.5, 0.12, 1.7, x, 4.86, 38.2, 0, "Relay/Trim")
 	end
 	for _, x in ipairs({ -19.0, -16.0, -13.0, 13.0, 16.0, 19.0 }) do
@@ -250,7 +295,7 @@ function Scene.Create()
 	_GroundLayer(6.8, 3.8, -5.7, 37.9, 0, "Relay/ContactShadow")
 	_GroundLayer(6.8, 3.8, 5.7, 37.9, 0, "Relay/ContactShadow")
 	_GroundLayer(5.8, 4.1, 0, 37.8, 0, "Relay/ContactShadow")
-	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/Trim")
+	_Box(4.4, 2.4, 3.0, 0, 6.0, 39.25, 0, "Relay/ConcreteShade")
 	-- A mounted front kit turns the composite boxes into one authored facade.
 	-- It is entirely inside the non-walkable relay footprint.
 	_Box(17.6, 0.36, 0.24, 0, 0.18, 37.34, 0, "Relay/Trim")
@@ -298,7 +343,7 @@ function Scene.Create()
 	end
 
 	SandboxScene:UpdateSceneGraph()
-	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p4-depth-contact vegetation=0")
+	print("[Sandbox19Scene] relay-station size=48x64 routes=2 floor=0 side-wall=solid composition=p5-authored-props vegetation=0")
 	return _Anchors()
 end
 
@@ -435,6 +480,18 @@ function Scene.ValidateCollision()
 	local coverSolid = _coverIds[coverHit] == true
 	print("[Sandbox19ArenaSelfTest] " .. (coverSolid and "PASS" or "FAIL") .. " rectangular-cover-ray")
 	pass = coverSolid and pass
+	local crateHit = SandboxRaycast:RayCastObjectId(Vector3(-7, 0.6, -13), Vector3(-7, 0.6, -10))
+	local crateSolid = _supplyIds[crateHit] == true
+	local overCrate = SandboxRaycast:RayCastObjectId(Vector3(-7, 1.3, -13), Vector3(-7, 1.3, -10))
+	local crateHeight = overCrate == 0
+	local tallHit = SandboxRaycast:RayCastObjectId(Vector3(-10.9, 1.4, -7.6), Vector3(-10.9, 1.4, -6.2))
+	local tallSolid = _supplyIds[tallHit] == true
+	local supplyPass = crateSolid and crateHeight and tallSolid
+	print("[Sandbox19ArenaSelfTest] " .. (supplyPass and "PASS" or "FAIL") .. " supply-mesh-hulls"
+		.. " short=" .. tostring(crateSolid) .. " above-short=" .. tostring(crateHeight)
+		.. " tall=" .. tostring(tallSolid))
+	pass = supplyPass and pass
+
 	local floorHit = SandboxRaycast:RayCastObjectId(Vector3(2, 3, 2), Vector3(2, -2, 2))
 	local floorSolid = _floorIds[floorHit] == true
 	print("[Sandbox19ArenaSelfTest] " .. (floorSolid and "PASS" or "FAIL") .. " floor-collision")

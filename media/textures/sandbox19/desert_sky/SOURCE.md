@@ -16,4 +16,6 @@ Color palette: sand, ochre, muted brown, pale cyan-blue, warm off-white cloud
 Constraints: sky and far mountains only; no buildings, antennas, roads, people, vehicles, text, logos, borders, watermark, duplicated sun, close foreground objects, or visible panorama seam; preserve enough low-frequency detail for a real-time D3D9 skybox
 ```
 
-The generated 1774×887 panorama was blended across its horizontal wrap boundary and saved as `desert_panorama.png`. The six `DesertRelay*1024.png` faces were sampled from that panorama with a 90-degree cubemap projection. `sandbox19_relay.material` consumes the faces in Ogre's front, back, right, left, up, down order.
+The generated 1774×887 panorama was blended across its horizontal wrap boundary and saved as `desert_panorama.png`. The six `DesertRelay*1024.png` faces were sampled from that panorama with a 90-degree cubemap projection. `sandbox19_relay.material` consumes the faces in Ogre's front, back, left, right, up, down order (SceneManager::BoxPlane for separateUV).
+
+2026-09-12: corrected the material’s previously reversed left/right slots after rotated in-game views exposed discontinuities. Source panorama and face pixels are unchanged. Both GL and fallback techniques use the same order.

@@ -1,5 +1,14 @@
 # Sandbox19 表面资产来源
 
+## supply_case_wear_v1.png
+
+- 日期：2026-09-12。内置 ImageGen 全新生成，实际 1254×1254 RGB，原样复制到本目录；没有额外裁切/绘图或第三方输入图。
+- 用途：自制补给箱的涂层磨损 albedo，乘以各 submesh 的橄榄色 tint；不是 normal/roughness 图，也不作为完整 PBR 材质。
+- 原始输出：`exec-5bd163d4-8b1b-4f83-aa7e-c4e0548800f3.png`。生成图不保证严格数学无缝，按近/远实机检查接缝及尺度。
+- 最终提示词：
+
+> Use case: photorealistic-natural. Asset type: seamless square neutral-grey wear/albedo texture for painted steel supply cases in a real-time 3D desert relay outpost. Create a new 1024x1024 texture that fills the entire square, perfectly orthographic, flat diffuse illumination, no lighting baked in. This will be multiplied by an olive-green material tint, so keep the texture monochrome light grey with average sRGB approximately 0.78 and VERY LOW contrast. Fine powder-coat grain, gentle rubbed areas, sparse tiny shallow scratches, a few small paint chips exposing slightly darker grey primer, subtle dusty scuffs. Physical coverage about 2 metres. Detail should look maintained but used, not rusty or ruined. Uniform brightness, seamless horizontal and vertical edges, no distinctive large scratches, no directional highlights, no shadows, no vignette, no panels, seams, bolts, vents, borders, lettering, logos or objects. Surface material texture only, not a render of a crate.
+
 ## courtyard_concrete_normal_v1.png
 
 - 日期：2026-09-12
@@ -89,3 +98,13 @@
 - 生成方式：用 ImageMagick 6 的 `convert -size 256x256 radial-gradient:'rgba(255,255,255,0.96)-rgba(255,255,255,0)' -depth 8 PNG32:signal_glow.png` 直接生成 256×256 RGBA 径向渐变；命令即完整可复现来源。
 - 用途：中继站门面、桅杆、庭院入口与集合区的状态光晕；白色径向亮度与 alpha 只提供软遮罩，最终琥珀/青色及强度由 `Relay/Signal*` 材质控制。
 - 约束：不含第三方素材，不提供灯光、碰撞、导航或 AI 语义；只作为现有任务状态的克制渲染反馈。
+
+## 2026-09-12 视觉 goal：克制铺地 v3
+
+- 文件：`courtyard_paving_diffuse_v3.png`。通过内置 ImageGen 为本项目生成，保留原始输出，未覆盖 v2；实际尺寸为 1254×1254 RGB（请求1024×1024，工具返回原生尺寸不同），需以实际运行日志验证加载。无外部品牌/照片/授权素材。
+- 用途：中继站庭院与中路共用低对比混凝土 albedo，减少旧铺地的重复深格和黄色底色；不修改物理或导航。法线继续平法线，不将 albedo 当作高度或 PBR 完整材质。
+- 工具：内置 `image_gen`；原始输出 `exec-607d920a-aa88-4cc6-b0b4-5d0dc79f6a95.png`。视觉取舍、三阶段实机和验证见 [视觉 goal 计划](../../../docs/dev-design/plans/2026-09-12-sandbox19-visual-goal.md)。
+
+生成提示词：
+
+> Use case: photorealistic-natural. Asset type: square seamless repeating base-color/albedo texture for a real-time 3D tactical game courtyard, covering a physical 6 metre by 6 metre area. Generate a new 1024 x 1024 image, perfectly orthographic top-down scanned surface, fills entire square, uniform flat neutral illumination without directional shadows or AO baked in. Material: weathered pale warm-grey poured concrete paving in a dry industrial desert outpost; fine matte aggregate and restrained pores, a few tiny chips and hairline cracks, light irregular dusty deposits that are subtle rather than dirty stains. Four large concrete panels in a simple 2x2 arrangement, extremely thin desaturated expansion joints, edges seamlessly tile horizontally and vertically. Keep brightness even across the whole image and low overall contrast. Palette approximately neutral limestone grey/beige, average albedo sRGB around 0.66 0.65 0.61, NO strong orange/yellow tint. Panel joints should not form dark thick grids when repeated. Realistic understated physically plausible surface detail, no repeating decorative motif, no large distinctive cracks or blobs, no bricks, no cobblestones, no grass, no objects, no scene perspective, no highlights, no vignetting, no text or watermark. This is a texture asset only, not a rendered scene or concept illustration.
