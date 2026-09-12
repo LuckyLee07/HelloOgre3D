@@ -3,11 +3,13 @@
 1500 key_press 1
 1800 key_press 2
 2100 key_press TAB
+2300 key_down LMENU
 2400 mouse_down 400 300 0
 2600 mouse_move 850 530
 2800 mouse_up 850 530 0
 3200 mouse_down 640 330 1
 3250 mouse_up 640 330 1
+3300 key_up LMENU
 3600 key_press F
 4500 key_down W
 5300 key_press ESC

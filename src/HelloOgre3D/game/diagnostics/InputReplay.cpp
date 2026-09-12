@@ -66,6 +66,7 @@ namespace
 		{"RETURN", OIS::KC_RETURN, 13}, {"ENTER", OIS::KC_RETURN, 13},
 		{"ESC", OIS::KC_ESCAPE, 27}, {"ESCAPE", OIS::KC_ESCAPE, 27}, {"TAB", OIS::KC_TAB, 9},
 		{"SPACE", OIS::KC_SPACE, 32}, {"LSHIFT", OIS::KC_LSHIFT, 0}, {"RSHIFT", OIS::KC_RSHIFT, 0},
+		{"LMENU", OIS::KC_LMENU, 0}, {"RMENU", OIS::KC_RMENU, 0},
 		{"UP", OIS::KC_UP, 0}, {"DOWN", OIS::KC_DOWN, 0}, {"LEFT", OIS::KC_LEFT, 0}, {"RIGHT", OIS::KC_RIGHT, 0},
 		{"F1", OIS::KC_F1, 0}, {"F2", OIS::KC_F2, 0}, {"F3", OIS::KC_F3, 0},
 		{"F4", OIS::KC_F4, 0}, {"F5", OIS::KC_F5, 0}, {"F6", OIS::KC_F6, 0}

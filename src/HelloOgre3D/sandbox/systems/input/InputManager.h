@@ -31,6 +31,9 @@ public:
 	void capture();
 	void closeWindow();
 	void resizeMouseState(int width, int height);
+	void SetGameplayMouseLook(bool enabled);
+	bool IsGameplayMouseLookActive() const;
+	void SuspendGameplayMouseLook();
 
 	void registerHandler(IInputHandler* handler);
 	void unregisterHandler(IInputHandler* handler);
@@ -65,7 +68,9 @@ private:
 	void PumpNativeWindowEvents();
 	void InstallNativeMouseBridge();
 	void UninstallNativeMouseBridge();
+	bool ApplyNativeMouseCapture(bool captured);
 #endif
+	bool SetNativeMouseCapture(bool captured);
 
 	size_t m_windowHnd;
 	Ogre::RenderWindow* m_renderWindow;
@@ -77,6 +82,10 @@ private:
 	OIS::Mouse* m_pMouse;
 	OIS::Keyboard* m_pKeyboard;
 	OIS::InputManager * m_pOISInputMgr;
+	bool m_gameplayMouseLookEnabled;
+	bool m_mouseCaptured;
+	bool m_capturePendingClick;
+	int m_captureClickButton;
 #if defined(OIS_APPLE_PLATFORM)
 	void* m_nativeMouseBridge;
 	OIS::MouseState m_nativeMouseState;

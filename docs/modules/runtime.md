@@ -19,7 +19,7 @@
 | `profiling/Profile.h` | 采样 | 时序宏 |
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `game/ClientManager.{h,cpp}` | 窗口 | 跨平台启动尺寸、延迟 resize、实际尺寸日志，以及输入/UI/FGUI/viewport 消费链同步 |
-| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称跟随（主动转向、平移平滑、静态遮挡），相对移动模式由镜头持有视线、PlayerController 读取方向，RenderPresentation 每渲染帧驱动；仍不做 FPS 模式 |
+| `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称跟随（主动转向、平移平滑、静态遮挡），Sandbox19 鼠标先转镜、身体跟随水平视线、W/S 沿身体朝向；RenderPresentation 每渲染帧驱动；仍不做 FPS 模式 |
 | `audio/RuntimeUiSound.{h,cpp}` / `RuntimeUiSoundMac.mm` | 声音 | PCM 16-bit WAV 短音单路播放；Windows PlaySound / macOS NSSound 适配，音频缓冲与 native handle 由 runtime 持有 |
 | `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌；渲染几何使用最终视图专用 visibility bit，避免被场景 compositor 采样，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
@@ -27,7 +27,7 @@
 ## 4. 公开能力要点
 
 - 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、既有相机模式、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
-- [CameraService](../../src/HelloOgre3D/sandbox/systems/service/CameraService.h) 导出 `ConfigureFollowCamera` / `ResetFollowCamera` / `SetCameraRelativeMovement` / `SnapFollowTarget` / `GetFollowDistance`。sample 配置参数与范围，控制器统一驱动镜头；Sandbox19 使用距离 6.5、高 3.2、前视 0、眼高 1.5 和距离范围 5.5–11，WASD 沿相机平面移动、Q/E 调整偏航，未被 UI 消费的滚轮调整跟随距离。退出 FOLLOW 重置配置及相对移动开关，其他 sample 默认 tank 控制保持原语义。
+- [CameraService](../../src/HelloOgre3D/sandbox/systems/service/CameraService.h) 导出 `ConfigureFollowCamera` / `ResetFollowCamera` / `SetCameraRelativeMovement` / `SnapFollowTarget` / `GetFollowDistance`。sample 配置参数与范围，控制器统一驱动镜头；Sandbox19 使用距离 6.5、高 3.2、前视 0、眼高 1.5 和距离范围 5.5–11，鼠标相对位移或 Q/E 调整镜头方向，W/S 沿角色朝向、A/D 相对角色侧移，滚轮调整跟随距离。退出 FOLLOW 重置配置及控制开关，其他 sample 默认 tank 控制保持原语义。
 - `GameManager:RequestWindowSize(width, height)` 接受 640–3840 × 360–2160 的逻辑内容尺寸，由 `ClientManager` 排到下一帧安全点执行；Lua 鼠标回调不直接进入 Cocoa/Win32 resize。启动环境覆盖、后台 Windows 窗口或非法尺寸会拒绝请求。窗口事件继续同步 OIS 鼠标范围、Lua/UIManager、FairyGUI root、viewport 和相机宽高比；FairyGUI 原生 screen/root 必须先于 `FairyGuiManager_HandleWindowResized` 更新，否则 Lua 层会查询到旧尺寸。
 - `SandboxAudio` 为 GameManager 注入的 `RuntimeUiSound`：`IsAvailable`、`Play(path)`、`StopAll`、`SetVolume(0..1)`、`GetVolume`。Lua 负责事件/限频/音量设置；runtime 读取、校验、缓存短 WAV 并持有播放缓冲。Sandbox19 的设置与事件入口见 [sandbox19_audio.lua](../../bin/res/scripts/samples/sandbox19_audio.lua)，自制素材来源记录见 [relay 音效说明](../../bin/res/audio/relay/README.md)。
 - Scene compositor 通过 [[systems-service]] SceneService 按相机 viewport 启停。Sandbox19 的 Relay/SceneGrade 仅处理三维 scene texture；Gorilla active-viewport 守卫和 FairyGUI visibility bit 让两套 UI 留在最终 viewport，不被滤色或重复绘制。macOS 默认选择受支持且不超过 4× 的 FSAA，`HELLO_RENDER_FSAA` 可显式覆盖；Relay/SceneGrade 的 scene RTT 不再使用 `no_fsaa`，以免主窗口抗锯齿仅作用在最终全屏四边形。Windows 保留原有 FSAA=0 条件分支，D3D9 新设置未实机复核。完整设计与实机证据见[场景色调与 UI 合成隔离](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)和[核心战斗体感复核](../dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
@@ -78,7 +78,7 @@
 
 后台或 HELLO_INPUT_REPLAY 存在时，InputManager 在各平台都不创建 OIS 设备或 macOS 鼠标监听；macOS 由独立 Cocoa 事件泵维持窗口响应，内部回放继续走同一 listener 入口。正常交互启动不设这两个变量，物理输入行为保持。PlayerController 分别保存 Space/左键的开火位，释放其中一种不能取消仍按住的另一种。
 
-- FOLLOW 中键在 macOS 使用 NSEvent 相对增量并累计小数余量；不乘 backing scale，UI 绝对坐标仍走原换算，FREELOOK 保持原路径。滚轮事件不附带虚假转向增量；按键/鼠标失焦释放及 observer 卸载已有原生探针。WASD 面向视线，角色朝向短促跟随；证据见[转向手感改造](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
+- Sandbox19 活跃玩法在 macOS 先把指针移到窗口中心，再用 `CGAssociateMouseAndMouseCursorPosition(false)` 隐藏并捕获光标，NSEvent 相对位移累计小数余量后转 FOLLOW 镜头；按住 Alt、暂停、失焦或退出时释放。Windows 先移到客户区中心，再裁剪并隐藏光标；背景/回放仍禁用物理输入。指针模式保持原 UI 绝对坐标。滚轮事件不附带虚假转向增量，FREELOOK 保持原路径。证据见[鼠标与镜头控制](../dev-design/plans/2026-09-12-sandbox19-mouse-camera-control.md)。
 
 - Sandbox19 地表使用独立 `Relay/Ground` GLSL/HLSL 程序与现有铺地 albedo：按米制世界坐标生成错缝板，窄缝通过 `fwidth` 像素覆盖衰减避免远处深格。单 pass 读取当前 ambient/方向光；沿用已有方向光 shadow receiver，不修改共享 `base_material`。补给箱多 submesh 仍复用 `base_material`，新增灰度涂层 albedo。具体资源和性能见[场景资产与地表升级](../dev-design/plans/2026-09-12-sandbox19-scene-assets.md)。
 

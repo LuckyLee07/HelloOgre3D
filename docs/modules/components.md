@@ -21,7 +21,7 @@
 | `anim/AnimComponent.{h,cpp}` | 动画 | ASM 容器，见 [[objects-anim]] |
 | `combat/WeaponComponent.{h,cpp}` | 战斗 | 弹药/射击/挂接 |
 | `ai/AIController.{h,cpp}` | AI | 见 [[ai-controller]] |
-| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；保留默认 tank 控制；Sandbox19 显式启用相机相对移动，WASD 前后/侧移均面向视线，身体按最短角度跟随，处理射击/换弹并提交 FOLLOW 位置（`onDetach` 退回 FREELOOK）；不新增玩家对象类型 |
+| `control/IAgentController.h` / `PlayerController.{h,cpp}` | 控制 | AI/玩家 driver 共同类型边界；保留默认 tank 控制；Sandbox19 启用 FOLLOW、身体/枪口追随镜头水平朝向，W/S 沿身体当前朝向而 A/D 相对身体侧移，处理射击/换弹并提交 FOLLOW 位置（`onDetach` 退回 FREELOOK）；不新增玩家对象类型 |
 | `script/LuaScriptComponent.{h,cpp}` | 脚本 | Lua 绑定 |
 
 ## 4. 公开能力要点
@@ -58,9 +58,11 @@
 
 2026-09-12 PlayerController 将 Space/左键的开火状态分开保存；玩家发弹通过 WeaponComponent 当前骨骼枪口，渲染插值后同步手部挂点。RenderComponent 缓存仿真前后姿态，只插值显示节点，不回写刚体；AnimComponent 分层与生命周期见 [[objects-anim]]。实现证据见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 
+Sandbox19 活跃玩法的鼠标相对位移经 InputManager / GameManager 先旋转 FOLLOW 镜头；PlayerController 每个仿真步读取镜头水平视线，经既有 FaceDirection 平滑转动刚体与枪口。W/S 读取本帧刚体的实际 `GetForward()`，A/D 相对该朝向侧移；发弹继续取真实骨骼枪口。按住 Alt 临时恢复指针，可操作 HUD、框选和世界指令；暂停或失焦释放鼠标捕获。默认 tank sample 不启用此模式。验证见[鼠标与镜头控制](../dev-design/plans/2026-09-12-sandbox19-mouse-camera-control.md)。
+
 ### Sandbox19 转向手感
 
-相对移动时，相机持有视线；移动和开火均向同一视线转身，不在侧移/后退开火时切换90°/180°。静止且未开火时保留身体方向，允许自由观察。身体用18/s指数响应与540°/s上限转向现有 Bullet 刚体，RenderComponent 继续插值展示；第一次开火等待朝向误差≤8°，发弹仍由动画通知触发并使用实际枪口，不重定向弹道。默认 tank 的2.5rad/s转向保持不变。详见[改造与验证](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
+相对移动时，相机持有视线，身体持续追随镜头水平朝向；侧移/后退时不切换90°/180°。身体用18/s指数响应与540°/s上限转向现有 Bullet 刚体，RenderComponent 继续插值展示；第一次开火等待朝向误差≤8°，发弹仍由动画通知触发并使用实际枪口，不重定向弹道。快速甩镜时身体和移动方向可短暂落后镜头。默认 tank 的2.5rad/s转向保持不变。详见[改造与验证](../dev-design/plans/2026-09-12-sandbox19-control-feel.md)。
 
 ## 2026-09-12 公共转向与步态速度
 

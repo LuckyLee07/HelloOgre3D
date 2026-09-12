@@ -16,6 +16,7 @@ local _allyIds, _enemyIds, _selection, _profiles = {}, {}, {}, {}
 local _state, _wave, _startedMs, _endedMs, _endReason = "PREPARE", 0, 0, nil, ""
 local _hint, _hintKind, _hintUntil = "", "info", 0
 local _drag, _dragFrame, _mouse = nil, nil, {x = 0, y = 0, down = false}
+local _tacticalCursor, _crosshairHorizontal, _crosshairVertical = false, nil, nil
 local _allyHeadMarks, _targetMark, _goalLabel = {}, nil, nil
 local _enemyMarks = {}
 local _matchConfig = nil
@@ -569,6 +570,14 @@ local function updateHud()
 		displayWidth = _audio.windowWidth, displayHeight = _audio.windowHeight, displayAvailable = not _audio.windowLocked,
 		mouseX = _mouse.x, mouseY = _mouse.y, mouseDown = _mouse.down, orders = _commands.stats, endReason = _endReason},
 		GameManager:getScreenWidth(), GameManager:getScreenHeight())
+	local showCrosshair = isActive() and not _tacticalCursor
+	_crosshairHorizontal:setVisible(showCrosshair)
+	_crosshairVertical:setVisible(showCrosshair)
+	if showCrosshair then
+		local cx, cy = GameManager:getScreenWidth() * 0.5, GameManager:getScreenHeight() * 0.5
+		_crosshairHorizontal:setPosition(Vector2(cx - 7, cy - 1))
+		_crosshairVertical:setPosition(Vector2(cx - 1, cy - 7))
+	end
 	_observer:Update(_selection, find, now(), 2147483647, _profiles)
 	_observerPanel:setVisible(_observer.enabled)
 	if _observer.enabled then
@@ -580,6 +589,10 @@ end
 
 function EventHandle_Keyboard(keycode, pressed)
 	GUI_HandleKeyEvent(keycode, pressed)
+	if keycode == OIS.KC_LMENU or keycode == OIS.KC_RMENU then
+		_tacticalCursor = pressed
+		return false
+	end
 	if not pressed then return false end
 	if keycode == OIS.KC_ESCAPE then
 		if _state == "PREPARE" then return true end
@@ -665,7 +678,7 @@ function Sandbox_Initialize()
 		print("[Sandbox19Visual] compositor=Relay/SceneGrade status=unavailable")
 	end
 	GUI_CreateSandboxText(GUI.MarkupColor.White .. GUI.Markup.Medium ..
-		"RELAY OUTPOST\nWASD move | MMB drag / Q/E orbit | Wheel zoom\nSpace fire | R reload\nLMB / drag select | 1/2 / Tab squad\nRMB ground: move | enemy: focus\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 250}):setVisible(false)
+		"RELAY OUTPOST\nWASD move | Mouse look | LMB / Space fire\nHold Alt: cursor, HUD, drag select, orders\nAlt + RMB ground: move | enemy: focus\nWheel zoom | R reload | 1/2 / Tab squad\nF focus | T fallback + hold | G gather\nX cancel | Esc pause | I observer\nF3 paths | F5 performance | Enter start", {w = 450, h = 265}):setVisible(false)
 	_G.HELLO_SUPPRESS_AI_PATH_DRAW = true
 	SandboxAgentConfig:SetUseCppFsmFlag(true)
 	_anchors = Scene.Create()
@@ -701,6 +714,12 @@ function Sandbox_Initialize()
 	_dragFrame:setBackgroundColor(ColourValue(0.20, 0.80, 0.85, 0.18))
 	_dragFrame:setVisible(false)
 	_hud = Hud.New()
+	_crosshairHorizontal = SandboxUI:CreateUIFrame()
+	_crosshairHorizontal:setDimension(Vector2(14, 2))
+	_crosshairHorizontal:setBackgroundColor(ColourValue(0.84, 0.98, 0.97, 0.88))
+	_crosshairVertical = SandboxUI:CreateUIFrame()
+	_crosshairVertical:setDimension(Vector2(2, 14))
+	_crosshairVertical:setBackgroundColor(ColourValue(0.84, 0.98, 0.97, 0.88))
 	_audio = Audio.New()
 	_observerPanel = SandboxUI:CreateUIFrame()
 	_observerPanel:setDimension(Vector2(480, 310)); _observerPanel:setTextMargin(8, 8)

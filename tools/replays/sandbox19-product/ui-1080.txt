@@ -7,8 +7,10 @@
 4550 mouse_up 960 525 0
 5200 mouse_down 750 690 0
 5250 mouse_up 750 690 0
+5700 key_down LMENU
 5800 mouse_down 960 510 1
 5850 mouse_up 960 510 1
+5900 key_up LMENU
 6200 key_press F3
 8000 key_press F3
 9000 key_down E

@@ -8,6 +8,12 @@
 #include <cctype>
 #include <cstdlib>
 #include <string>
+#if defined(OIS_WIN32_PLATFORM)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace
 {
@@ -37,7 +43,8 @@ InputManager::InputManager(Ogre::RenderWindow* renderWindow, OgreCameraControlle
 	const WindowStateSetter& shutdownSetter, const WindowStateSetter& windowActiveSetter)
 	: m_windowHnd(0), m_renderWindow(renderWindow), m_cameraController(cameraController),
 	m_shutdownSetter(shutdownSetter), m_windowActiveSetter(windowActiveSetter),
-	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr)
+	m_pMouse(nullptr), m_pKeyboard(nullptr), m_pOISInputMgr(nullptr),
+	m_gameplayMouseLookEnabled(false), m_mouseCaptured(false), m_capturePendingClick(false), m_captureClickButton(-1)
 #if defined(OIS_APPLE_PLATFORM)
 	, m_nativeMouseBridge(nullptr), m_nativeMouseState()
 #endif
@@ -114,6 +121,8 @@ void InputManager::Initialize()
 
 void InputManager::capture()
 {
+	if (m_mouseCaptured && m_renderWindow != nullptr && !m_renderWindow->isActive())
+		SuspendGameplayMouseLook();
 #if defined(OIS_APPLE_PLATFORM)
 	if (m_pKeyboard == nullptr) PumpNativeWindowEvents();
 #endif
@@ -126,6 +135,7 @@ void InputManager::capture()
 
 void InputManager::closeWindow()
 {
+	SetGameplayMouseLook(false);
 #if defined(OIS_APPLE_PLATFORM)
 	UninstallNativeMouseBridge();
 #endif
@@ -145,11 +155,92 @@ void InputManager::closeWindow()
 	m_pKeyboard = nullptr;
 }
 
+void InputManager::SetGameplayMouseLook(bool enabled)
+{
+	if (m_gameplayMouseLookEnabled == enabled && (m_mouseCaptured || !enabled || m_capturePendingClick))
+		return;
+	m_gameplayMouseLookEnabled = enabled;
+	if (!enabled)
+	{
+		if (m_mouseCaptured)
+		{
+			SetNativeMouseCapture(false);
+			Ogre::LogManager::getSingleton().logMessage("[MouseLook] capture=off reason=mode-change");
+		}
+		m_mouseCaptured = false;
+		return;
+	}
+	if (m_capturePendingClick || m_pOISInputMgr == nullptr ||
+		(m_renderWindow != nullptr && !m_renderWindow->isActive()))
+		return;
+	m_mouseCaptured = SetNativeMouseCapture(true);
+	if (m_mouseCaptured)
+		Ogre::LogManager::getSingleton().logMessage("[MouseLook] capture=on");
+}
+
+bool InputManager::IsGameplayMouseLookActive() const
+{
+	return m_gameplayMouseLookEnabled &&
+		(m_pOISInputMgr == nullptr || m_mouseCaptured);
+}
+
+void InputManager::SuspendGameplayMouseLook()
+{
+	if (m_mouseCaptured)
+	{
+		SetNativeMouseCapture(false);
+		Ogre::LogManager::getSingleton().logMessage("[MouseLook] capture=off reason=focus-lost");
+	}
+	m_mouseCaptured = false;
+	m_capturePendingClick = true;
+	ResetHeldKeys();
+}
+
+bool InputManager::SetNativeMouseCapture(bool captured)
+{
+#if defined(OIS_APPLE_PLATFORM)
+	return ApplyNativeMouseCapture(captured);
+#elif defined(OIS_WIN32_PLATFORM)
+	if (!captured)
+	{
+		ClipCursor(nullptr);
+		ShowCursor(TRUE);
+		return true;
+	}
+	HWND window = reinterpret_cast<HWND>(m_windowHnd);
+	RECT bounds;
+	if (window == nullptr || !GetClientRect(window, &bounds)) return false;
+	POINT topLeft = {bounds.left, bounds.top};
+	POINT bottomRight = {bounds.right, bounds.bottom};
+	if (!ClientToScreen(window, &topLeft) || !ClientToScreen(window, &bottomRight)) return false;
+	bounds.left = topLeft.x;
+	bounds.top = topLeft.y;
+	bounds.right = bottomRight.x;
+	bounds.bottom = bottomRight.y;
+	if (!ClipCursor(&bounds)) return false;
+	if (!SetCursorPos((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2))
+	{
+		ClipCursor(nullptr);
+		return false;
+	}
+	ShowCursor(FALSE);
+	return true;
+#else
+	return !captured;
+#endif
+}
+
 void InputManager::resizeMouseState(int width, int height)
 {
 #if defined(OIS_APPLE_PLATFORM)
 	m_nativeMouseState.width = width;
 	m_nativeMouseState.height = height;
+#elif defined(OIS_WIN32_PLATFORM)
+	if (m_mouseCaptured)
+	{
+		SetNativeMouseCapture(false);
+		m_mouseCaptured = SetNativeMouseCapture(true);
+	}
 #endif
 	if (m_pMouse == nullptr)
 		return;
@@ -231,6 +322,15 @@ bool InputManager::mouseMoved(const OIS::MouseEvent& event)
 
 bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
+	if (m_capturePendingClick && m_gameplayMouseLookEnabled)
+	{
+		m_mouseCaptured = SetNativeMouseCapture(true);
+		m_capturePendingClick = !m_mouseCaptured;
+		if (m_mouseCaptured)
+			Ogre::LogManager::getSingleton().logMessage("[MouseLook] capture=on reason=resume-click");
+		m_captureClickButton = static_cast<int>(btnId);
+		return true;
+	}
 	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
 	{
@@ -249,6 +349,11 @@ bool InputManager::mousePressed(const OIS::MouseEvent& event, OIS::MouseButtonID
 
 bool InputManager::mouseReleased(const OIS::MouseEvent& event, OIS::MouseButtonID btnId)
 {
+	if (m_captureClickButton == static_cast<int>(btnId))
+	{
+		m_captureClickButton = -1;
+		return true;
+	}
 	bool consumed = false;
 	for (auto* handler : m_inputHandlers)
 		consumed = handler->OnMouseReleased(event, btnId) || consumed;

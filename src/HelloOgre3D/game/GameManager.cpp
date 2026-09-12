@@ -18,6 +18,7 @@
 #include "ui/fairygui/FairyGuiSystem.h"
 #endif
 #include "systems/ui/UIManager.h"
+#include "systems/input/InputManager.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/service/ObjectFactory.h"
 #include "systems/service/AgentConfigService.h"
@@ -81,6 +82,7 @@ GameManager::GameManager(ClientManager* pClientMgr)
 
 GameManager::~GameManager()
 {
+	if (getInputManager() != nullptr) getInputManager()->SetGameplayMouseLook(false);
 	SAFE_DELETE(m_pObjectManager);
 	SceneFactory::SetRootSceneNode(nullptr);
 
@@ -276,6 +278,7 @@ void GameManager::Update(int deltaMilliseconds)
 
 void GameManager::RenderPresentation(float alpha, float dtSec)
 {
+	UpdateMouseLookState();
 	if (m_pObjectManager == nullptr || m_pCameraService == nullptr) return;
 	H3D_PROFILE_SCOPE("GameManager::RenderPresentation");
 	for (AgentObject* agent : m_pObjectManager->getAllAgents())
@@ -379,7 +382,18 @@ InputManager* GameManager::getInputManager()
 
 void GameManager::HandleWindowClosed()
 {
+	if (getInputManager() != nullptr) getInputManager()->SetGameplayMouseLook(false);
 	//m_pScriptVM->callFunction("EventHandle_WindowClosed", "");
+}
+
+void GameManager::UpdateMouseLookState()
+{
+	InputManager* input = getInputManager();
+	if (input == nullptr) return;
+	const bool tacticalCursor = input->isKeyDown(OIS::KC_LMENU) || input->isKeyDown(OIS::KC_RMENU);
+	input->SetGameplayMouseLook(!m_simulationPaused && !tacticalCursor
+		&& m_pCameraService != nullptr && m_pCameraService->IsCameraRelativeMovement()
+		&& m_pCameraService->IsFollowing());
 }
 
 void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
@@ -392,6 +406,11 @@ void GameManager::HandleWindowResized(unsigned int width, unsigned int height)
 
 bool GameManager::OnKeyPressed(OIS::KeyCode keycode, unsigned int key)
 {
+	if (keycode == OIS::KC_LMENU || keycode == OIS::KC_RMENU)
+	{
+		InputManager* input = getInputManager();
+		if (input != nullptr) input->SetGameplayMouseLook(false);
+	}
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
 	if (fairyGuiSystem != nullptr && fairyGuiSystem->InjectKeyPressed(static_cast<int>(keycode), static_cast<int>(key)))
@@ -429,6 +448,15 @@ bool GameManager::OnKeyReleased(OIS::KeyCode keycode, unsigned int key)
 
 bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 {
+	UpdateMouseLookState();
+	InputManager* input = getInputManager();
+	if (input != nullptr && input->IsGameplayMouseLookActive())
+	{
+		m_pCameraService->RotateFollowView(static_cast<float>(evt.state.X.rel), static_cast<float>(evt.state.Y.rel));
+		if (evt.state.Z.rel != 0)
+			m_pCameraService->ZoomFollowCamera(-static_cast<float>(evt.state.Z.rel) / 120.0f);
+		return true;
+	}
 	if (!m_simulationPaused && m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting())
 	{
 		m_pCameraService->DragFollowOrbit(static_cast<float>(evt.state.X.rel), static_cast<float>(evt.state.Y.rel));
@@ -455,6 +483,10 @@ bool GameManager::OnMouseMoved(const OIS::MouseEvent& evt)
 
 bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
+	UpdateMouseLookState();
+	InputManager* input = getInputManager();
+	if (input != nullptr && input->IsGameplayMouseLookActive())
+		return btn != OIS::MB_Left;
 	if (m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting()) return true;
 #if defined(HELLO_ENABLE_FGUI)
 	FairyGuiSystem* fairyGuiSystem = ResolveFairyGuiSystem(m_pClientManager);
@@ -470,6 +502,10 @@ bool GameManager::OnMousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID 
 
 bool GameManager::OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn)
 {
+	UpdateMouseLookState();
+	InputManager* input = getInputManager();
+	if (input != nullptr && input->IsGameplayMouseLookActive())
+		return btn != OIS::MB_Left;
 	if (btn == OIS::MB_Middle && m_pCameraService != nullptr && m_pCameraService->IsFollowOrbiting())
 	{
 		m_pCameraService->EndFollowOrbit();
@@ -497,6 +533,7 @@ void GameManager::SetSimulationPaused(bool paused)
 		}
 	}
 	m_simulationPaused = paused;
+	UpdateMouseLookState();
 }
 
 bool GameManager::IsSimulationPaused() const

@@ -72,6 +72,8 @@ public:
 	virtual bool OnMouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID btn);
 
 private:
+	void UpdateMouseLookState();
+
 	ClientManager* m_pClientManager;
 
 	ScriptLuaVM* m_pScriptVM;

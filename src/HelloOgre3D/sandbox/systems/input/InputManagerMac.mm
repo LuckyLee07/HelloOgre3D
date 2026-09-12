@@ -3,9 +3,11 @@
 #if defined(OIS_APPLE_PLATFORM)
 
 #include "OgreRenderWindow.h"
+#include "OgreLogManager.h"
 
 #import <AppKit/AppKit.h>
 #include <math.h>
+#include <string>
 
 namespace
 {
@@ -50,12 +52,15 @@ namespace
 	BOOL _hasLastPosition;
 	CGFloat _lookRemainderX;
 	CGFloat _lookRemainderY;
+	BOOL _captured;
+	BOOL _cursorHidden;
 }
 
 - (id)initWithInputManager:(InputManager*)manager view:(NSView*)view;
 - (void)invalidate;
 - (void)handleEvent:(NSEvent*)event;
 - (void)releaseInput:(NSNotification*)notification;
+- (BOOL)setCaptured:(BOOL)captured;
 
 @end
 
@@ -73,6 +78,8 @@ namespace
 		_lastRawY = 0;
 		_hasLastPosition = NO;
 		_lookRemainderX = _lookRemainderY = 0.0;
+		_captured = NO;
+		_cursorHidden = NO;
 
 		NSWindow* window = [_view window];
 		[window setAcceptsMouseMovedEvents:YES];
@@ -112,6 +119,7 @@ namespace
 
 - (void)invalidate
 {
+	[self setCaptured:NO];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	if (_monitor != nil)
 	{
@@ -127,6 +135,7 @@ namespace
 	(void)notification;
 	if (_manager != nullptr)
 	{
+		_manager->SuspendGameplayMouseLook();
 		for (int index = 0; index <= OIS::MB_Button7; ++index)
 		{
 			if ((_buttons & (1 << index)) == 0) continue;
@@ -134,16 +143,68 @@ namespace
 			_manager->HandleNativeMouseButton(_lastRawX, _lastRawY, 0, 0,
 				static_cast<OIS::MouseButtonID>(index), false, _buttons);
 		}
-		_manager->ResetHeldKeys();
 	}
 	_lookRemainderX = _lookRemainderY = 0.0;
 	_hasLastPosition = NO;
+}
+
+- (BOOL)setCaptured:(BOOL)captured
+{
+	if (_captured == captured) return YES;
+	if (captured && (![[_view window] isKeyWindow] || ![NSApp isActive])) return NO;
+	if (captured)
+	{
+		NSWindow* window = [_view window];
+		NSScreen* mainScreen = [NSScreen mainScreen];
+		if (window == nil || mainScreen == nil) return NO;
+		const NSRect bounds = [_view bounds];
+		const NSPoint center = NSMakePoint(NSMidX(bounds), NSMidY(bounds));
+		const NSPoint screenPoint = [window convertPointToScreen:[_view convertPoint:center toView:nil]];
+		const CGPoint quartzPoint = CGPointMake(screenPoint.x, NSMaxY([mainScreen frame]) - screenPoint.y);
+		const CGError warpResult = CGWarpMouseCursorPosition(quartzPoint);
+		if (warpResult != kCGErrorSuccess)
+		{
+			if (Ogre::LogManager::getSingletonPtr() != nullptr)
+				Ogre::LogManager::getSingleton().logMessage("[MouseLook] center cursor failed result=" + std::to_string((int)warpResult));
+			return NO;
+		}
+	}
+	const CGError result = CGAssociateMouseAndMouseCursorPosition(captured ? false : true);
+	if (result != kCGErrorSuccess)
+	{
+		if (Ogre::LogManager::getSingletonPtr() != nullptr)
+			Ogre::LogManager::getSingleton().logMessage("[MouseLook] native capture failed result=" + std::to_string((int)result));
+		if (captured) return NO;
+	}
+	if (captured && !_cursorHidden)
+	{
+		[NSCursor hide];
+		_cursorHidden = YES;
+	}
+	else if (!captured && _cursorHidden)
+	{
+		[NSCursor unhide];
+		_cursorHidden = NO;
+	}
+	_captured = captured;
+	_hasLastPosition = NO;
+	_lookRemainderX = _lookRemainderY = 0.0;
+	return result == kCGErrorSuccess;
 }
 
 - (BOOL)getMousePositionFromEvent:(NSEvent*)event rawX:(int*)rawX rawY:(int*)rawY relX:(int*)relX relY:(int*)relY inside:(BOOL*)inside
 {
 	if (_view == nil || [_view window] == nil || [event window] != [_view window])
 		return NO;
+	if (_captured)
+	{
+		const NSSize size = [_view convertSizeToBacking:[_view bounds].size];
+		*rawX = static_cast<int>(lround(size.width * 0.5));
+		*rawY = static_cast<int>(lround(size.height * 0.5));
+		*relX = *relY = 0;
+		*inside = YES;
+		return YES;
+	}
 
 	NSRect bounds = [_view bounds];
 	NSPoint point = [_view convertPoint:[event locationInWindow] fromView:nil];
@@ -242,7 +303,7 @@ namespace
 		break;
 	}
 	default:
-		if (_manager->IsFollowCamera() && (_buttons & GetMouseButtonMask(OIS::MB_Middle)) != 0)
+		if (_captured || (_manager->IsFollowCamera() && (_buttons & GetMouseButtonMask(OIS::MB_Middle)) != 0))
 		{
 			// UI retains backing-pixel absolute coordinates; orbit consumes device
 			// deltas without Retina scaling. Carry fractions across OIS integer events.
@@ -301,6 +362,13 @@ void InputManager::UninstallNativeMouseBridge()
 	[bridge invalidate];
 	[bridge release];
 	m_nativeMouseBridge = nullptr;
+}
+
+bool InputManager::ApplyNativeMouseCapture(bool captured)
+{
+	if (m_nativeMouseBridge == nullptr) return !captured;
+	HelloOgreNativeMouseBridge* bridge = static_cast<HelloOgreNativeMouseBridge*>(m_nativeMouseBridge);
+	return [bridge setCaptured:captured ? YES : NO] == YES;
 }
 
 #endif

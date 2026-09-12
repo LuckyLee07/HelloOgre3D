@@ -241,7 +241,15 @@ void CameraService::EndFollowOrbit()
 
 void CameraService::DragFollowOrbit(float dx, float dy)
 {
-	if (!m_followOrbiting || m_cameraController == nullptr || !std::isfinite(dx) || !std::isfinite(dy)) return;
+	if (!m_followOrbiting) return;
+	RotateFollowView(dx, dy);
+}
+
+void CameraService::RotateFollowView(float dx, float dy)
+{
+	if (!m_cameraRelativeMovement || m_cameraController == nullptr
+		|| m_cameraController->getStyle() != OgreCameraController::CS_FOLLOW
+		|| !std::isfinite(dx) || !std::isfinite(dy)) return;
 	// Native relative units, independent of Retina backing pixels and window size.
 	const float radiansPerUnit = Ogre::Degree(0.12f).valueRadians();
 	m_cameraController->rotateFollowView(-dx * radiansPerUnit, dy * radiansPerUnit);

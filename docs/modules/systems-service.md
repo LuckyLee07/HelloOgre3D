@@ -79,4 +79,4 @@ SceneFactory 创建粒子仍交给 SceneManager/现有延迟节点清理管理�
 
 玩家发弹沿发射当帧的 `b_muzzle` 三维朝向，不再用独立水平向量覆盖枪口；查询前求值当前骨骼并同步手部挂点，显示插值后也同步武器。48m/s 物理弹保持重力与碰撞；AI 的 `ShootBulletAt` 仍按目标点瞄准。验证见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 
-FOLLOW 相对移动时，视线方向以 OgreCameraController 为唯一真源；鼠标直接旋转，Q/E 在 RenderFollow 使用渲染帧时长以75°/s推进。PlayerController 只读取 GetFollowForward，UpdateFollow 不把仿真方向回写到当前视线；SnapFollowTarget 仍可显式设置初始方向。ResetFollowCamera/禁用相对移动清理转向速率，暂停由 PlayerController::ResetTransientInput 清理。上述增量接口均为 C++ 专用，无 Lua 绑定变更。
+FOLLOW 的镜头视线方向以 OgreCameraController 为唯一真源；活跃玩法的鼠标相对位移直接经 `CameraService::RotateFollowView` 转镜，Q/E 仍按渲染帧时长推进，中键拖动只在临时指针模式使用。PlayerController 持续从 `GetFollowForward` 取得水平瞄准方向并让身体追随，W/S 读取本帧刚体朝向、A/D 相对身体侧移。UpdateFollow 不把身体方向回写镜头，SnapFollowTarget 仍可显式设置初始方向。ResetFollowCamera/禁用相对移动清理转向速率，暂停由 PlayerController::ResetTransientInput 清理。上述增量接口均为 C++ 专用，无 Lua 绑定变更。

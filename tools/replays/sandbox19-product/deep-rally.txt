@@ -1,12 +1,16 @@
 0 key_press RETURN
+500 key_down LMENU
 600 mouse_down 640 366 1
 650 mouse_up 640 366 1
+700 key_up LMENU
 5500 key_press F
 10000 key_press F
 24000 key_down W
 35000 key_up W
+35050 key_down LMENU
 35100 mouse_down 640 366 1
 35150 mouse_up 640 366 1
+35200 key_up LMENU
 40000 key_press F
 48000 key_press F
 57000 key_press F

@@ -314,15 +314,11 @@ void PlayerController::UpdateTurning(int deltaMs)
 
 	if (UsesCameraRelativeMovement())
 	{
-		// The camera owns view yaw. Movement and fire read the same reference.
+		// The mouse turns the camera first; body and weapon follow its horizontal view.
 		m_aimDirection = GetSandboxServices()->camera->GetFollowForward();
 		m_yaw = Ogre::Math::ATan2(m_aimDirection.x, m_aimDirection.z).valueRadians();
-		const bool moving = m_forwardPressed != m_backPressed || m_leftPressed != m_rightPressed;
-		if (moving || m_fireInputs || m_combatState == COMBAT_SHOOTING)
-		{
-			AgentLocomotion* locomotion = owner->GetLocomotionComponent();
-			if (locomotion != nullptr) locomotion->FaceDirection(m_aimDirection, static_cast<float>(deltaMs));
-		}
+		AgentLocomotion* locomotion = owner->GetLocomotionComponent();
+		if (locomotion != nullptr) locomotion->FaceDirection(m_aimDirection, static_cast<float>(deltaMs));
 		return;
 	}
 
@@ -375,10 +371,12 @@ void PlayerController::UpdateMovement()
 	}
 	const bool shooting = m_combatState == COMBAT_SHOOTING;
 
-	// 默认保持 tank；sample 显式选择相机平面移动时，WASD 位移与镜头偏航分开。
-	Ogre::Vector3 forward = m_aimDirection;
+	// 默认保持 tank；相机相对模式的 W/S 沿身体当前朝向，A/D 相对身体侧移。
 	const bool relativeMovement = UsesCameraRelativeMovement();
-	// Camera rotation, movement and the weapon share the same active horizontal view.
+	// Movement uses the same physics-facing yaw that is chasing the camera.
+	Ogre::Vector3 forward = relativeMovement
+		? owner->GetForward()
+		: m_aimDirection;
 	forward.y = 0.0f;
 	if (forward.isZeroLength())
 		forward = Ogre::Vector3::UNIT_Z;
@@ -404,7 +402,7 @@ void PlayerController::UpdateMovement()
 	}
 
 	movement.normalise();
-	// Strafe/backpedal retain view-facing posture, including when fire starts/stops.
+	// Strafe/backpedal retain body-facing posture, including when fire starts/stops.
 	AgentLocomotion* locomotion = owner->GetLocomotionComponent();
 	const Ogre::Real baseSpeed = locomotion != nullptr ? locomotion->GetMaxSpeed() : static_cast<Ogre::Real>(SOLDIER_STAND_SPEED);
 	const Ogre::Real forwardSpeed = baseSpeed * (m_sprintPressed ? kSprintMultiplier : 1.0f);

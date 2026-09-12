@@ -74,6 +74,7 @@ public:
 	void EndFollowOrbit();
 	bool IsFollowOrbiting() const { return m_followOrbiting; }
 	void DragFollowOrbit(float dx, float dy);
+	void RotateFollowView(float dx, float dy);
 	Ogre::Vector3 GetFollowForward() const;
 	void SetFollowTurnInput(bool left, bool right);
 	void RenderFollow(const Ogre::Vector3& displayedTarget, float dtSec);

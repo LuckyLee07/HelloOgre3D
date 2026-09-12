@@ -1,0 +1,15 @@
+0 mouse_move 640 400
+50 key_press RETURN
+500 mouse_move 740 400
+700 key_down W
+1700 key_up W
+1900 key_down SPACE
+2250 key_up SPACE
+2400 key_down LMENU
+2500 mouse_move 500 430
+2600 mouse_down 500 430 1
+2650 mouse_up 500 430 1
+2750 key_up LMENU
+3000 mouse_move 650 430
+3200 key_press ESC
+3400 quit
