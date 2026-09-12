@@ -2297,6 +2297,24 @@ static int tolua_SandboxToLua_AnimComponent_ConsumeShootExecution00(lua_State* t
 	return 1;
 }
 
+/* method: ConfigureDirectionalShadows of class SceneService; borrowed light */
+static int tolua_SandboxToLua_SceneService_ConfigureDirectionalShadows00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"SceneService",0,&error)
+		|| !tolua_isusertype(tolua_S,2,"Ogre::Light",0,&error)
+		|| !tolua_isboolean(tolua_S,3,0,&error)
+		|| !tolua_isnoobj(tolua_S,4,&error))
+		return tolua_error(tolua_S,"#ferror in function 'ConfigureDirectionalShadows'.",&error), 0;
+	SceneService* self = static_cast<SceneService*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'ConfigureDirectionalShadows'",nullptr), 0;
+	Ogre::Light* light = static_cast<Ogre::Light*>(tolua_tousertype(tolua_S,2,0));
+	const bool enabled = tolua_toboolean(tolua_S,3,0) != 0;
+	tolua_pushboolean(tolua_S,self->ConfigureDirectionalShadows(light, enabled));
+	return 1;
+}
+
 /* method: SetCompositorEnabled of class SceneService; surgical binding */
 static int tolua_SandboxToLua_SceneService_SetCompositorEnabled00(lua_State* tolua_S)
 {
@@ -17023,6 +17041,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SetSkyBox",tolua_SandboxToLua_SceneService_SetSkyBox00);
    tolua_function(tolua_S,"SetAmbientLight",tolua_SandboxToLua_SceneService_SetAmbientLight00);
    tolua_function(tolua_S,"CreateDirectionalLight",tolua_SandboxToLua_SceneService_CreateDirectionalLight00);
+   tolua_function(tolua_S,"ConfigureDirectionalShadows",tolua_SandboxToLua_SceneService_ConfigureDirectionalShadows00);
    tolua_function(tolua_S,"SetCompositorEnabled",tolua_SandboxToLua_SceneService_SetCompositorEnabled00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SceneService_setMaterial00);
    tolua_function(tolua_S,"setMaterial",tolua_SandboxToLua_SceneService_setMaterial01);

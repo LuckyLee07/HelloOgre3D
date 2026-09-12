@@ -29,6 +29,7 @@ public:
 	void SetSkyBox(const Ogre::String materialName, const Ogre::Vector3& rotation);
 	void SetAmbientLight(const Ogre::Vector3& colourValue);
 	Ogre::Light* CreateDirectionalLight(const Ogre::Vector3& direction);
+	bool ConfigureDirectionalShadows(Ogre::Light* light, bool enabled);
 	bool SetCompositorEnabled(const Ogre::String& compositorName, bool enabled);
 	void setMaterial(Ogre::SceneNode* pNode, const Ogre::String& materialName);
 	void setMaterial(BlockObject* pObject, const Ogre::String& materialName);

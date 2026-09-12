@@ -76,11 +76,15 @@ void ambient_vs(VIn IN,
 float4 ambient_ps(in float2 uv : TEXCOORD0,
     uniform float3 ambient,
     uniform float4 matDif,
-    uniform sampler2D dMap,
-    uniform sampler2D aoMap): COLOR0
+    uniform sampler2D dMap : TEXUNIT0,
+    uniform sampler2D aoMap : TEXUNIT1,
+    uniform sampler2D emissiveMap : TEXUNIT2): COLOR0
 {
-    return tex2D(dMap, uv) * tex2D(aoMap, uv) *
+    float4 colour = tex2D(dMap, uv) * tex2D(aoMap, uv) *
         float4(ambient, 1) * float4(matDif.rgb, 1);
+    // Add once per surface, independent of scene lighting and diffuse tint.
+    colour.rgb += tex2D(emissiveMap, uv).rgb;
+    return colour;
 }
  
 VOut diffuse_vs(VIn IN,

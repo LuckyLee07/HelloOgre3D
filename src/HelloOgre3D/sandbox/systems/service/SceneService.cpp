@@ -1,4 +1,5 @@
 #include "SceneService.h"
+#include "../../../runtime/ogre/DirectionalShadows.h"
 #include "GameFunction.h"
 #include "objects/BlockObject.h"
 #include "systems/service/CameraService.h"
@@ -97,6 +98,11 @@ Ogre::Light* SceneService::CreateDirectionalLight(const Ogre::Vector3& direction
 	lightNode->attachObject(lightEntity);
 
 	return lightEntity;
+}
+
+bool SceneService::ConfigureDirectionalShadows(Ogre::Light* light, bool enabled)
+{
+	return RuntimeOgre::ConfigureDirectionalShadows(GetSceneManager(), light, enabled);
 }
 
 bool SceneService::SetCompositorEnabled(const Ogre::String& compositorName, bool enabled)

@@ -68,6 +68,14 @@ material base_material
                 texture textures/base/baseWhite.dds
                 filtering linear linear linear
             }
+
+            // Existing soldier/weapon aliases supply authored indicator masks.
+            // Black keeps materials without an emissive map unchanged.
+            texture_unit emissiveMap
+            {
+                texture textures/base/baseBlack.dds
+                filtering linear linear linear
+            }
         }
  
         pass

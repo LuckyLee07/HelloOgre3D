@@ -1,0 +1,38 @@
+// Runtime-generated shadow maps; shaders authored for this project, no external assets.
+material Relay/ShadowCaster
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_check on
+			depth_write on
+			scene_blend one zero
+			vertex_program_ref Relay/Shadow/caster_vs {}
+			fragment_program_ref Relay/Shadow/caster_fs {}
+		}
+	}
+}
+material Relay/ShadowReceiver
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_check on
+			depth_write off
+			depth_func less_equal
+			scene_blend modulate
+			vertex_program_ref Relay/Shadow/receiver_vs {}
+			fragment_program_ref Relay/Shadow/receiver_fs {}
+			texture_unit
+			{
+				tex_address_mode border
+				tex_border_colour 1 1 1 1
+				filtering none
+			}
+		}
+	}
+}

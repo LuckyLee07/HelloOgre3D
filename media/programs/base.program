@@ -113,6 +113,9 @@ fragment_program ambient_ps_glsl glsl
     {
         param_named_auto ambient ambient_light_colour
         param_named_auto matDif surface_diffuse_colour
+        param_named diffuseMap int 0
+        param_named aoMap int 1
+        param_named emissiveMap int 2
     }
 }
 

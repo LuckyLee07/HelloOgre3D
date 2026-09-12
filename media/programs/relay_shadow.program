@@ -1,0 +1,106 @@
+vertex_program Relay/Shadow/caster_vs_glsl glsl
+{
+	source shaders/relay_shadow_caster_vs.glsl
+	syntax glsl150
+	default_params
+	{
+		param_named_auto wvpMat worldviewproj_matrix
+	}
+}
+
+vertex_program Relay/Shadow/caster_vs_hlsl hlsl
+{
+	source shaders/relay_shadow.hlsl
+	target vs_3_0
+	entry_point caster_vs
+	default_params
+	{
+		param_named_auto wvpMat worldviewproj_matrix
+	}
+}
+
+vertex_program Relay/Shadow/caster_vs unified
+{
+	delegate Relay/Shadow/caster_vs_glsl
+	delegate Relay/Shadow/caster_vs_hlsl
+}
+
+fragment_program Relay/Shadow/caster_fs_glsl glsl
+{
+	source shaders/relay_shadow_caster_fs.glsl
+	syntax glsl150
+}
+
+fragment_program Relay/Shadow/caster_fs_hlsl hlsl
+{
+	source shaders/relay_shadow.hlsl
+	target ps_3_0
+	entry_point caster_ps
+}
+
+fragment_program Relay/Shadow/caster_fs unified
+{
+	delegate Relay/Shadow/caster_fs_glsl
+	delegate Relay/Shadow/caster_fs_hlsl
+}
+
+vertex_program Relay/Shadow/receiver_vs_glsl glsl
+{
+	source shaders/relay_shadow_receiver_vs.glsl
+	syntax glsl150
+	default_params
+	{
+		param_named_auto wvpMat worldviewproj_matrix
+		param_named_auto shadowMat texture_worldviewproj_matrix 0
+	}
+}
+
+vertex_program Relay/Shadow/receiver_vs_hlsl hlsl
+{
+	source shaders/relay_shadow.hlsl
+	target vs_3_0
+	entry_point receiver_vs
+	default_params
+	{
+		param_named_auto wvpMat worldviewproj_matrix
+		param_named_auto shadowMat texture_worldviewproj_matrix 0
+	}
+}
+
+vertex_program Relay/Shadow/receiver_vs unified
+{
+	delegate Relay/Shadow/receiver_vs_glsl
+	delegate Relay/Shadow/receiver_vs_hlsl
+}
+
+fragment_program Relay/Shadow/receiver_fs_glsl glsl
+{
+	source shaders/relay_shadow_receiver_fs.glsl
+	syntax glsl150
+	default_params
+	{
+		param_named shadowMap int 0
+		param_named shadowBias float 0.0005
+		param_named shadowFloor float 0.62
+		param_named texelSize float 0.000651041667
+	}
+}
+
+fragment_program Relay/Shadow/receiver_fs_hlsl hlsl
+{
+	source shaders/relay_shadow.hlsl
+	target ps_3_0
+	entry_point receiver_ps
+	default_params
+	{
+		param_named shadowBias float 0.0005
+		param_named shadowFloor float 0.62
+		param_named texelSize float 0.000651041667
+	}
+}
+
+fragment_program Relay/Shadow/receiver_fs unified
+{
+	delegate Relay/Shadow/receiver_fs_glsl
+	delegate Relay/Shadow/receiver_fs_hlsl
+}
