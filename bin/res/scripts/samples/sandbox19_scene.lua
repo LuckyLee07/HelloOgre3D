@@ -290,9 +290,12 @@ function Scene.Create()
 		_Box(2.3, 1.15, 1.5, x, 4.22, 38.2, 0, "Relay/EquipmentBox")
 		_Box(2.5, 0.12, 1.7, x, 4.86, 38.2, 0, "Relay/Trim")
 	end
-	for _, x in ipairs({ -19.0, -16.0, -13.0, 13.0, 16.0, 19.0 }) do
+	for _, x in ipairs({ -19.0, -16.0, -13.0, 13.0, 19.0 }) do
 		_Module(WINDOW_MESH, x, 1.8, 36.99, 0, "Relay/ServiceWindow")
 	end
+	-- Replace one repeated window with the compound's painted sector code.
+	-- It sits just forward of the existing solid wing, without a new collider.
+	_VisualPlane(1.8, 3.6, 16.0, 2.22, 37.0, 90, 0, "Relay/ZoneStencil")
 	for _, x in ipairs({ -10.0, 10.0 }) do
 		_Box(0.72, 4.1, 1.4, x, 2.05, 37.55, 0, "Relay/ConcreteShade")
 		_Box(0.88, 0.15, 1.55, x, 4.17, 37.55, 0, "Relay/Trim")

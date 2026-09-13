@@ -426,6 +426,36 @@ material Relay/GroundDust
 	}
 }
 
+// Stencilled wayfinding on the solid relay frontage; alpha comes from the
+// project-authored glyph texture, with no independent collision surface.
+material Relay/ZoneStencil
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.78
+			}
+			texture_unit overlayMap
+			{
+				texture textures/sandbox19/zone_a1_stencil.png
+				tex_address_mode clamp
+				filtering linear linear none
+			}
+		}
+	}
+}
+
 // Project-specific desert panorama generated on 2026-09-11 and converted to
 // cubemap faces. Prompt and conversion notes: textures/sandbox19/desert_sky/SOURCE.md.
 material Relay/Sky
