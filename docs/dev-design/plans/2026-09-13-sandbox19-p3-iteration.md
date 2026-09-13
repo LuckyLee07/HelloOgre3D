@@ -118,3 +118,9 @@
 同一当前 macOS arm64 Release 的后台真实 GL 抓帧确认 1600×900 与 1280×720 准备页的三行说明完整显示，1600×900 战斗中 `Hold Alt + RMB` 提示完整可读；原始图和进程日志在本地 `tmp/goal-p3-briefing-20260913/{after-900,after-720,combat-900}/`。这些截图使用 `HELLO_INPUT_REPLAY`，后台物理输入被禁用，只证明渲染布局与合成事件链，不证明真人操作手感。
 
 验证：仓库 Lua 5.1.4 `luac -p`、`git diff --check`、Sandbox19 产品夹具均 PASS。同一二进制 SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c` 未变；内部输入自然对局在 77.055 秒进入 VICTORY，第二波、集火/集合、重开、暂停和正常退出均通过，错误列表为空，摘要在本地 `tmp/relay-natural-20260913-144247-i5sszddc/summary.json`。本地新包 `tmp/goal-p3-playtest-briefing-20260913/HelloOgre3D.app` 与同名 ZIP 签名、ZIP 完整性、包内二进制及 Lua 哈希一致；从包内 launcher 启动的后台 GL 准备页抓帧和正常退出通过，日志在 `tmp/goal-p3-briefing-20260913/package-launch/`。本轮无 C++/绑定/构建配置变更，未重编程序。真人持续键鼠、扬声器听感及 Windows D3D9 仍为 NOT RUN，P3 不关闭。
+
+## 2026-09-13 地面旧化强度试验，未保留实现
+
+对照已批准目标图和当前 1600×900 入口/推进/近门 GL 图，院区中央地面纹理层次仍偏弱。现有 `Relay/GroundDust` 已放置九块宽幅软贴层，材质 alpha 为 0.065。只试改该 tint 为 0.09：同一 71 秒 `short-replay.txt` 的 8000/30000/65000ms 画面和正常退出均取得，入口地面抽样区域比原版约差 2–4 RGB 级，正常观看几乎不能改善层次。再试 0.14 的 8 秒短回放：地面抽样区域约差 8–11 RGB 级，但两侧前景出现可辨的圆形暗斑边界，形成贴片感。原始日志及图在本地 `tmp/goal-p3-ground-dust-20260913/`，对照旧图为 `tmp/goal-p3-service-bay-20260913/stages/`；动作与 AI 帧间细节可能波动，像素统计仅取静态地面区域。
+
+`ground_dust.png` 的 alpha 约 59.36% 非零、58.83% 为 255，较宽的不透明区解释了加深后先显露边界。两档试验均撤回，材质恢复 0.065，`git diff --check` 通过；没有代码或资源行为进入产品，本轮不重跑自然战斗/构建，也不更新试玩包。后续若要填补目标稿的地面层次，应先改善图案的局部细节和羽化，不能靠统一提高 tint alpha。真人键鼠/听感及 Windows D3D9 仍为 NOT RUN，P3 开放。
