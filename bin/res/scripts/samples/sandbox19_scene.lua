@@ -322,6 +322,13 @@ function Scene.Create()
 	for _, x in ipairs({ -8.55, -2.70, 2.70, 8.55 }) do
 		_Box(0.26, 3.55, 0.24, x, 1.78, 37.30, 0, "Relay/Trim")
 	end
+	-- The shallow portal frames the existing solid door without reaching the
+	-- rally point. Its soffit throws a readable line of shade on the entrance.
+	_Box(3.78, 0.34, 0.52, 0, 2.93, 37.02, 0, "Relay/ConcreteShade")
+	_Box(3.48, 0.10, 0.55, 0, 2.69, 36.99, 0, "Relay/EquipmentBox")
+	for _, x in ipairs({ -1.78, 1.78 }) do
+		_Box(0.24, 2.56, 0.38, x, 1.36, 37.04, 0, "Relay/Trim")
+	end
 	_Box(5.75, 0.30, 0.28, 0, 4.35, 37.27, 0, "Relay/Trim")
 	_TrackFeedback("strips", _Box(5.45, 0.14, 0.28, -5.75, 2.67, 37.25, 0, "Relay/StateOff"))
 	_TrackFeedback("strips", _Box(5.45, 0.14, 0.28, 5.75, 2.67, 37.25, 0, "Relay/StateOff"))
