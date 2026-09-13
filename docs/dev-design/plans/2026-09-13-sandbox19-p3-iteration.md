@@ -132,3 +132,11 @@
 同一 macOS GL、1600×900、回放与渲染时钟的旧版 8000/30000/65000ms 图在本地 `tmp/goal-p3-service-bay-20260913/stages/`，新版 0.25 的入口/推进图在 `tmp/goal-p3-ground-patina-20260913/v2-alpha025/`，院区 61000/65000ms 图在同目录 `v2-courtyard/`。另用上一轮独立试玩包的旧资源与当前资源各跑相同 1280×720、8000ms 回放，对照 `baseline-720/` 与 `v2-720/`：新图在指挥官两侧和院区前景增加细碎磨痕，未见旧版 0.14 alpha 试验的圆形暗板；角色、目标、补给物和 HUD 保持可读。曾试的新图 0.40 tint 在 900p 过于抢眼，未保留；该次 65 秒画面因正常战斗提前失败而出现结算面板，不作为近门构图证据。战斗调度会变动 HP，图像只评价静态场景层次。
 
 验证：SVG XML、PNG RGBA/alpha 统计、Lua 5.1.4 `luac -p`、`git diff --check` PASS；程序仍为已验证的 macOS arm64 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮无 C++ 或工程配置改动。Sandbox19 产品夹具的出生点、双路线与真实静态碰撞 PASS；无夹具内部输入自然对局在 78.903 秒胜利，完成第二波、集火/集合、重开、暂停和正常退出，错误列表为空，原始摘要在 `tmp/relay-natural-20260913-150706-_a1fbee4/summary.json`。最新包 `tmp/goal-p3-playtest-ground-patina-20260913/HelloOgre3D.app` 与同名 ZIP 的签名、压缩完整性、程序/材质/PNG/SVG 哈希一致，包内 launcher 的 720p GL 抓帧与正常退出通过，原始结果在 `tmp/goal-p3-ground-patina-20260913/package-launch/`。真人持续键鼠、扬声器听感及 Windows D3D9 仍为 NOT RUN，P3 保持开放；磨痕改善属于局部地表层次，不等于整体材质达到目标稿。
+
+## 2026-09-13 无敌人阶段集火提示切片
+
+可观察问题：旧版 1600×900、65 秒院区画面已经显示 `REGROUP AT THE RELAY` 和 `Hostiles 0`，F 集火仍可按，实际返回 `No visible target. Move the squad into contact.`，与当前“带一名队友集合”的目标冲突。旧图在本地 `tmp/goal-p3-ground-patina-20260913/v2-courtyard/capture_65000ms.png`。本轮只修改 `Sandbox19.lua`：`ADVANCE`/`REGROUP` 阶段让 F 集火按钮禁用，按键给出对应阶段原因，底部常驻提示用更短的推进/集合指引；`WAVE` 阶段的集火与 AI 指令链不变。
+
+同一 macOS arm64 Release 二进制、回放和真实 GL 窗口，新 1600×900 推进/集合画面在本地 `tmp/goal-p3-focus-phase-20260913/final-900/` 的 30000/65000ms 抓帧。推进时 F 置灰且指向院区；集合时 F 置灰，62 秒 F 按键横幅明确要求带队友集合，常驻短指引没有重复横幅。1280×720 同回放的 30000ms 推进提示无溢出；该次 65000ms 仍在第二波，F 保持可用，说明不同运行批次的战斗时点会波动，截图不作为逐帧战斗确定性证据。该尺寸原始图在 `tmp/goal-p3-focus-phase-20260913/final-720/`，全部原始产物仅本地保留。
+
+验证：仓库 Lua 5.1.4 `luac -p`、`git diff --check`、产品夹具 PASS（路线/碰撞、两波阶段与真实 BT 指令生命周期，错误列表为空）；无夹具内部输入自然对局 78.903 秒胜利，完成第二波、集合、重开、暂停和退出，错误列表为空，摘要在本地 `tmp/relay-natural-20260913-152709-wegx6sdg/summary.json`。本轮没有 C++、绑定或工程配置改动；二进制 SHA-256 仍为 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，无需重编。新版试玩包 `tmp/goal-p3-playtest-focus-phase-20260913/HelloOgre3D.app` 与同名 ZIP 的签名、ZIP 完整性、程序/Lua 哈希一致；包内 launcher 的 720p 后台 GL 8 秒抓帧与正常退出通过，记录在 `tmp/goal-p3-focus-phase-20260913/package-launch/`。后台回放禁用物理输入；真人持续键鼠、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 不关闭。

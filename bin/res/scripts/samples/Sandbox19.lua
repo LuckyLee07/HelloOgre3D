@@ -314,7 +314,14 @@ local function issue(kind, targetId, base)
 		.. (accepted == 1 and "" or " units") .. (failed > 0 and (" | " .. lastReason) or ""),
 		accepted > 0 and "accepted" or "failed")
 end
+local function focusUnavailableReason()
+	if _state == "ADVANCE" then return "Gate secure. Advance to the courtyard.", "ADVANCE  /  Move squad into the courtyard" end
+	if _state == "REGROUP" then return "All guards clear. Regroup at the relay with an ally.", "REGROUP  /  Bring one surviving ally into the relay zone" end
+	return nil
+end
 local function focus()
+	local unavailable = focusUnavailableReason()
+	if unavailable ~= nil then hint(unavailable, "info"); return end
 	local target = find(_lastEnemy)
 	if target == nil or target:GetHealth() <= 0 or not visibleToSelection(_lastEnemy) then
 		_lastEnemy = 0
@@ -548,6 +555,7 @@ local function updateHud()
 	updateDamageFeedback()
 	updateActorShadows()
 	for id in pairs(_selection) do local a = find(id); if a == nil or a:GetHealth() <= 0 then _selection[id] = nil end end
+	local focusReason, phaseContext = focusUnavailableReason()
 	local allies = {}
 	for index, id in ipairs(_allyIds) do
 		local a = find(id)
@@ -566,6 +574,8 @@ local function updateHud()
 		allyAlive = living(_allyIds), selectedCount = selectedCount(), commanderHp = _player:GetHealth(), commanderMaxHp = _matchConfig.commanderHealth,
 		commanderDamaged = isDamaged(_player:GetObjId()),
 		allies = allies, hint = now() <= _hintUntil and _hint or "", hintKind = _hintKind,
+		commands = focusReason ~= nil and {focus = {enabled = false, reason = focusReason}} or nil,
+		context = phaseContext,
 		audioVolume = _audio.volume, audioMuted = _audio.muted, audioAvailable = _audio.available,
 		displayWidth = _audio.windowWidth, displayHeight = _audio.windowHeight, displayAvailable = not _audio.windowLocked,
 		mouseX = _mouse.x, mouseY = _mouse.y, mouseDown = _mouse.down, orders = _commands.stats, endReason = _endReason},
