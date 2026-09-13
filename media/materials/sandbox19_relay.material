@@ -466,8 +466,8 @@ material Relay/GroundDust
 
 			fragment_program_ref relay_overlay_fs
 			{
-				// Floor breakup should register as patina, never as a decal plate.
-				param_named tint float4 1 1 1 0.065
+				// Sparse, transparent floor wear reads without a broad decal edge.
+				param_named tint float4 1 1 1 0.25
 			}
 
 			texture_unit overlayMap

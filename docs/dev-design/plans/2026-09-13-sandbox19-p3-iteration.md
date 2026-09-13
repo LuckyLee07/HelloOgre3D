@@ -124,3 +124,11 @@
 对照已批准目标图和当前 1600×900 入口/推进/近门 GL 图，院区中央地面纹理层次仍偏弱。现有 `Relay/GroundDust` 已放置九块宽幅软贴层，材质 alpha 为 0.065。只试改该 tint 为 0.09：同一 71 秒 `short-replay.txt` 的 8000/30000/65000ms 画面和正常退出均取得，入口地面抽样区域比原版约差 2–4 RGB 级，正常观看几乎不能改善层次。再试 0.14 的 8 秒短回放：地面抽样区域约差 8–11 RGB 级，但两侧前景出现可辨的圆形暗斑边界，形成贴片感。原始日志及图在本地 `tmp/goal-p3-ground-dust-20260913/`，对照旧图为 `tmp/goal-p3-service-bay-20260913/stages/`；动作与 AI 帧间细节可能波动，像素统计仅取静态地面区域。
 
 `ground_dust.png` 的 alpha 约 59.36% 非零、58.83% 为 255，较宽的不透明区解释了加深后先显露边界。两档试验均撤回，材质恢复 0.065，`git diff --check` 通过；没有代码或资源行为进入产品，本轮不重跑自然战斗/构建，也不更新试玩包。后续若要填补目标稿的地面层次，应先改善图案的局部细节和羽化，不能靠统一提高 tint alpha。真人键鼠/听感及 Windows D3D9 仍为 NOT RUN，P3 开放。
+
+## 2026-09-13 稀疏地面磨痕切片
+
+针对上一轮“仅调高旧 `GroundDust` tint 会显出圆形贴片边界”的问题，重新制作同一 `ground_dust.svg`/PNG，不增场景实体。旧 SVG 渐变经本机 ImageMagick 6 栅格化后，512² PNG 非透明像素约 59.36%，其中约 58.83% 全不透明；新版改为分散 `rgba(...)` 路径、细磨痕和小缺口，非透明约 4.85%、全不透明为 0，四周留透明空白。既有九块仅渲染贴层继续复用，材质 tint 从 0.065 调至 0.25；不创建刚体，不改导航、AI、光照或任务规则。`source/ground_dust.svg` 保持 CRLF；ImageMagick 6 用 `-strip` 重建两次 PNG SHA-256 均为 `901e6cfbc36b47095b68be88282b8dd0c04e5857952b265ca7db2d2e95ab8e78`，消除了时间戳导致的字节差异。来源与命令见 [纹理来源](../../../media/textures/sandbox19/SOURCE.md)。
+
+同一 macOS GL、1600×900、回放与渲染时钟的旧版 8000/30000/65000ms 图在本地 `tmp/goal-p3-service-bay-20260913/stages/`，新版 0.25 的入口/推进图在 `tmp/goal-p3-ground-patina-20260913/v2-alpha025/`，院区 61000/65000ms 图在同目录 `v2-courtyard/`。另用上一轮独立试玩包的旧资源与当前资源各跑相同 1280×720、8000ms 回放，对照 `baseline-720/` 与 `v2-720/`：新图在指挥官两侧和院区前景增加细碎磨痕，未见旧版 0.14 alpha 试验的圆形暗板；角色、目标、补给物和 HUD 保持可读。曾试的新图 0.40 tint 在 900p 过于抢眼，未保留；该次 65 秒画面因正常战斗提前失败而出现结算面板，不作为近门构图证据。战斗调度会变动 HP，图像只评价静态场景层次。
+
+验证：SVG XML、PNG RGBA/alpha 统计、Lua 5.1.4 `luac -p`、`git diff --check` PASS；程序仍为已验证的 macOS arm64 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮无 C++ 或工程配置改动。Sandbox19 产品夹具的出生点、双路线与真实静态碰撞 PASS；无夹具内部输入自然对局在 78.903 秒胜利，完成第二波、集火/集合、重开、暂停和正常退出，错误列表为空，原始摘要在 `tmp/relay-natural-20260913-150706-_a1fbee4/summary.json`。最新包 `tmp/goal-p3-playtest-ground-patina-20260913/HelloOgre3D.app` 与同名 ZIP 的签名、压缩完整性、程序/材质/PNG/SVG 哈希一致，包内 launcher 的 720p GL 抓帧与正常退出通过，原始结果在 `tmp/goal-p3-ground-patina-20260913/package-launch/`。真人持续键鼠、扬声器听感及 Windows D3D9 仍为 NOT RUN，P3 保持开放；磨痕改善属于局部地表层次，不等于整体材质达到目标稿。

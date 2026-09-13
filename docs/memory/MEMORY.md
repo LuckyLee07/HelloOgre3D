@@ -44,4 +44,4 @@
 - [足底姿态采样点](foot-pose-sampling.md) — 侧移脚滑必须在最终显示层后读取两脚世界位置，Lua Update 骨骼点会误导
 - [单关节脚锁的边界](foot-lock-single-joint-limit.md) — 只转大腿锁低脚会改变输出接触高度，滑移中位数下降仍可能伴随大滑移和脚高变差
 - [双关节脚锁的收益边界](foot-plant-two-bone-limit.md) — 两关节求解加接触淡出仍有起步/稳态指标取舍，现有素材缺可靠接触窗口
-- [地面旧化透明度边界](ground-dust-alpha-boundary.md) — 现有宽 alpha 场调强后露出圆形贴片边界，需先改图案结构和羽化
+- [地面旧化透明度边界](ground-dust-alpha-boundary.md) — 旧图宽 alpha 场调强后露出圆形边界；改用稀疏磨痕源图

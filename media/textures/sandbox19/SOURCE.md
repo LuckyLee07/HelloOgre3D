@@ -87,10 +87,10 @@
 
 ## contact_shadow.png / ground_dust.png
 
-- 日期：2026-09-11 至 2026-09-12
-- 生成方式：仓库自制 SVG 源位于 `source/contact_shadow.svg` 与 `source/ground_dust.svg`，用 ImageMagick 6 的 `convert -background none ... -depth 8 PNG32:...` 栅格化为 RGBA PNG。
+- 日期：2026-09-11 至 2026-09-13
+- 生成方式：两张图的仓库自制 SVG 源位于 `source/`。`contact_shadow.png` 继续用 ImageMagick 6 的 `convert -background none source/contact_shadow.svg -depth 8 PNG32:contact_shadow.png`；`ground_dust.png` 用 `convert -background none source/ground_dust.svg -depth 8 -strip PNG32:ground_dust.png`。`-strip` 去除时间戳等元数据，重复生成字节相同。
 - 用途：`Relay/ContactShadow` 提供角色、掩体、设备和 relay 的低强度接地；`Relay/GroundDust` 提供不改变几何的地面旧化。
-- 约束：两张图不含第三方素材，不提供物理、导航或视线语义。ImageMagick 6 对当前 SVG 渐变生成较宽的 alpha 场，最终强度由材质 tint 明确压低；验收以 GL 实机场景为准。
+- 约束：两张图不含第三方素材，不提供物理、导航或视线语义。ImageMagick 6 对旧版 `ground_dust.svg` 渐变生成了宽且不透明的 alpha 场；新版只用明确的 `rgba(...)` 路径和小块磨痕，非透明像素约 4.85%、无全不透明像素，并由 `Relay/GroundDust` 的 tint 约束最终强度。`contact_shadow.png` 的既有宽渐变仍由单独材质限制，以 GL 实机场景判断。
 
 ## signal_glow.png
 
