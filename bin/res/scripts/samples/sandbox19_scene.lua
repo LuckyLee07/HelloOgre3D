@@ -304,6 +304,11 @@ function Scene.Create()
 	-- pale side volumes, a darker instrumented gatehouse and a narrow mast.
 	_Box(6.2, 3.4, 3.0, -5.7, 1.7, 39.0, 0, "Relay/Concrete")
 	_Box(6.2, 3.4, 3.0, 5.7, 1.7, 39.0, 0, "Relay/Concrete")
+	-- Shallow solid crowns give the two connecting volumes a visible roof edge.
+	-- Their lowest point stays above the approach and central doorway.
+	for _, x in ipairs({ -5.7, 5.7 }) do
+		_Asset("relay_frontage_hood.mesh", x, 3.57, 37.16, 0)
+	end
 	_Box(5.4, 4.8, 3.4, 0, 2.4, 39.1, 0, "Relay/Facade")
 	_GroundLayer(6.8, 3.8, -5.7, 37.9, 0, "Relay/ContactShadow")
 	_GroundLayer(6.8, 3.8, 5.7, 37.9, 0, "Relay/ContactShadow")
