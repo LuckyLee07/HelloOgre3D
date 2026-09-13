@@ -144,14 +144,18 @@ public:
 			if (state->getEnabled()) Capture(state);
 		}
 		const float stand = 1.0f - m_crouchWeight;
-		AddLower("stand_idle_aim", (1.0f - movingWeight) * stand, 0.0f);
+		// The authored side-step is crouched. Keep its foot cycle while blending
+		// in a standing lower-body pose for standing lateral movement.
+		const float standingLateralPose = 0.35f * stand;
+		AddLower("stand_idle_aim", (1.0f - movingWeight) * stand +
+			movingWeight * lateralWeight * standingLateralPose, 0.0f);
 		AddLower("crouch_idle_aim", (1.0f - movingWeight) * m_crouchWeight, 0.0f);
 		AddLower("stand_run_forward_aim", movingWeight * m_direction[0] * stand, m_phase);
 		AddLower("stand_run_backward_aim", movingWeight * m_direction[1] * stand, m_phase);
 		AddLower("crouch_forward_aim", movingWeight * m_direction[0] * m_crouchWeight, m_phase);
 		AddLower("crouch_backward_aim", movingWeight * m_direction[1] * m_crouchWeight, m_phase);
-		AddLower("crouch_left_aim", movingWeight * m_direction[2], m_phase);
-		AddLower("crouch_right_aim", movingWeight * m_direction[3], m_phase);
+		AddLower("crouch_left_aim", movingWeight * m_direction[2] * (1.0f - standingLateralPose), m_phase);
+		AddLower("crouch_right_aim", movingWeight * m_direction[3] * (1.0f - standingLateralPose), m_phase);
 
 		// Ogre's AVERAGE mode normalises the sum of whole-state weights, ignoring
 		// masks. CUMULATIVE is required; each bone still has a total weight of one.

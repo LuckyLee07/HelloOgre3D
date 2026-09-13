@@ -52,6 +52,8 @@ AnimComponent 在每次仿真更新前恢复原 ASM 状态，更新动作后由 
 
 分层持借用 Entity/AnimationState；替换 body 或 detach 时先恢复状态、销毁自建 mask，再销毁 Render。body 重建同时清掉 Soldier 控制器通知注册和临时动作状态，下一次更新向新 ASM 注册。站立横移暂复用资源内 crouch 侧步，步频采用参考步长，尚无足底 IK 或滑移量标定。结果与运行边界见[体验修复](../dev-design/plans/2026-09-12-sandbox19-experience-fixes.md)。
 
+2026-09-13 的站立横移修正只改显示步态权重：站立侧移时将 35% 下身权重交给站立待机姿态，其余保留原左右侧步片段和步相；蹲姿侧移不变。这样缓解复用蹲姿片段造成的过度屈膝，不改变 Bullet 位移、方向或射击通知。仍缺专用站立侧步资源和足底滑移标定，实机对照见[分轮体验记录](../dev-design/plans/2026-09-13-sandbox19-p3-iteration.md)。
+
 ## 2026-09-12 可中断动作与独立时钟
 
 Soldier 控制器使用 C++ 内部 `BlendToState`：保持同一目标不重启；替换/取消从当前有效轨道权重开始，默认140ms smoothstep混合，死亡80ms且拒绝普通动作覆盖。逻辑状态共用同一 AgentAnim 时只计算一次轨道。退出轨道继续贡献姿态，但不再触发 gameplay notify；通知含 PlaybackId，替换后的旧通知不被消费。通用 `RequestState` 的配置过渡仍用于 Sandbox3 等显式动画图。
