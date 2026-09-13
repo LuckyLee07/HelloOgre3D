@@ -43,3 +43,4 @@
 - [多实例共享日志](shared-sandbox-log.md) — Sandbox.log 可能混入其他回放，统计使用子进程隔离输出
 - [足底姿态采样点](foot-pose-sampling.md) — 侧移脚滑必须在最终显示层后读取两脚世界位置，Lua Update 骨骼点会误导
 - [单关节脚锁的边界](foot-lock-single-joint-limit.md) — 只转大腿锁低脚会改变输出接触高度，滑移中位数下降仍可能伴随大滑移和脚高变差
+- [双关节脚锁的收益边界](foot-plant-two-bone-limit.md) — 两关节求解加接触淡出仍有起步/稳态指标取舍，现有素材缺可靠接触窗口
