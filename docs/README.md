@@ -15,6 +15,8 @@
 
 [Sandbox19 场景资产与地表升级](dev-design/plans/2026-09-12-sandbox19-scene-assets.md)：自制倒角掩体、多材质补给箱、世界尺度铺地，包含三阶段前后实机、导航/碰撞与性能证据。
 
+[Sandbox19 构图与院区层次续办](dev-design/plans/2026-09-13-sandbox19-visual-composition.md)：短掩体、院区外肩补给物、西绕行墙明度及 900p 任务文案的实机对照与玩法回归。
+
 [Sandbox19 鼠标、镜头与角色控制](dev-design/plans/2026-09-12-sandbox19-mouse-camera-control.md)：MiniGame 式相对鼠标转镜、角色追随、身体朝向前进及 Alt 临时指针模式，含构建和回放证据。
 
 ## 0. 目录结构

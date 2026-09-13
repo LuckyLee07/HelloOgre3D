@@ -90,6 +90,13 @@ material Relay/ConcreteShade : Relay/Concrete
 	set $diffuseCol "0.84 0.85 0.80 1"
 }
 
+// The long bypass wall sits under the western canopy. Its inward-facing
+// plane needs enough value to read as masonry while staying in shade.
+material Relay/BypassWall : Relay/Concrete
+{
+	set $diffuseCol "1.35 1.32 1.21 1"
+}
+
 material Relay/Window : base_material
 {
 	set $diffuseCol "1.55 1.40 1.15 1"

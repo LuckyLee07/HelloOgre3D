@@ -257,7 +257,7 @@ function Hud:_Combat(model, width, height, state)
 	self:_Text("mission_kicker", 39, 30, 309, 22, "RELAY OUTPOST", 14)
 	self:_Text("mission_title", 39, 54, 307, objectiveLines * objectiveStep + 2, objective, 14)
 	local detail = model.phase and tostring(model.phase) .. "  /  " or ""
-	detail = detail .. "Hostiles remaining  " .. tostring(Count(model.enemyAlive))
+	detail = detail .. "Hostiles  " .. tostring(Count(model.enemyAlive))
 	self:_Text("mission_detail", 39, detailY, 307, 21, detail, self.smallFont)
 	self:_Region(24, 24, 340, missionHeight)
 	self:_Frame("clock", width - 184, 24, 98, 44, "panel")

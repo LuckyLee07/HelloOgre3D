@@ -120,14 +120,14 @@ def supply_crate(height):
     return m
 
 
-def barrier():
+def barrier(length=4.2, tie_x=1.42):
     m = Mesh()
-    # One solid chamfered barrier, replacing the old green overhanging lid.
-    m.box((4.20, 1.25, 1.15), (0, 0, 0), 0.085, "Relay/Cover", 0.25)
+    # Solid chamfered barriers share one silhouette at two courtyard scales.
+    m.box((length, 1.25, 1.15), (0, 0, 0), 0.085, "Relay/Cover", 0.25)
     # Recess-like dark tie holes stay inside the
     # former cap envelope. Small details are part of the same convex solid.
     for z in (-0.571, 0.571):
-        for x in (-1.42, 1.42):
+        for x in (-tie_x, tie_x):
             m.box((0.045, 0.045, 0.012), (x, 0.24, z), 0.013, "Relay/CrateRubber")
     return m
 
@@ -135,6 +135,7 @@ def barrier():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = [barrier().write("relay_barrier.mesh"),
+                barrier(2.4, 0.78).write("relay_barrier_short.mesh"),
                 supply_crate(1.05).write("relay_supply_crate.mesh"),
                 supply_crate(1.65).write("relay_supply_crate_tall.mesh")]
     (OUT / "manifest.json").write_bytes((json.dumps(manifest, indent=2) + "\n").replace("\n", "\r\n").encode())

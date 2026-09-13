@@ -19,6 +19,25 @@
     ]
   },
   {
+    "file": "relay_barrier_short.mesh",
+    "vertices": 480,
+    "triangles": 220,
+    "materials": [
+      "Relay/Cover",
+      "Relay/CrateRubber"
+    ],
+    "bounds_min": [
+      -1.2,
+      -0.625,
+      -0.577
+    ],
+    "bounds_max": [
+      1.2,
+      0.625,
+      0.577
+    ]
+  },
+  {
     "file": "relay_supply_crate.mesh",
     "vertices": 2016,
     "triangles": 924,

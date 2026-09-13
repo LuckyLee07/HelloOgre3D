@@ -183,7 +183,7 @@ function Scene.Create()
 
 	-- The western bypass is a real line-of-sight break, open at both ends.
 	-- Main route remains x=-8..8; both join the north yard before the relay.
-	local bypassWall = _Box(0.55, 2.6, 25.6, -12, 1.3, 4.8, 0, "Relay/ConcreteShade")
+	local bypassWall = _Box(0.55, 2.6, 25.6, -12, 1.3, 4.8, 0, "Relay/BypassWall")
 	_sideWallIds[bypassWall:GetObjId()] = true
 	_Box(0.75, 0.14, 25.6, -12, 2.67, 4.8, 0, "Relay/Trim")
 	-- Service bay to the east and two pillars identify the courtyard threshold.
@@ -217,12 +217,21 @@ function Scene.Create()
 		_GroundLayer(4.7, 1.7, cover[1] + 0.12, cover[2] - 0.08, cover[3], "Relay/ContactShadow")
 	end
 
+	-- Short low barriers sit behind the courtyard guards. They close neither
+	-- the direct x=0 path nor the western bypass, and leave the relay door open.
+	for _, x in ipairs({ -6.2, 6.2 }) do
+		local barrier = _Asset("relay_barrier_short.mesh", x, 0.625, 33.9, x < 0 and -4 or 4)
+		_coverIds[barrier:GetObjId()] = true
+		_GroundLayer(2.8, 1.6, x, 33.9, 0, "Relay/ContactShadow")
+	end
+
 	-- Supply clusters attach to the outer shoulders of existing cover. The
 	-- central lane (x=-5..5) and the x=-18 bypass stay clear at every stage.
 	for _, supply in ipairs({
 		{-10.9, -6.9, -4}, {10.9, -6.9, 4},
 		{-10.5, 6.1, 3}, {10.5, 6.1, -3},
 		{-10.3, 24.1, -5}, {10.3, 24.1, 5},
+		{-8.6, 34.6, -7},
 	}) do
 		local crate = _Asset("relay_supply_crate_tall.mesh", supply[1], 0.825, supply[2], supply[3])
 		_supplyIds[crate:GetObjId()] = true
@@ -232,6 +241,7 @@ function Scene.Create()
 		{-7.0, -11.0, -7}, {7.6, -11.6, 8},
 		{-9.9, 2.0, 0}, {10.0, 2.2, 90},
 		{-8.8, 29.0, 0}, {9.0, 30.1, 12},
+		{8.5, 34.7, 8},
 	}) do
 		local crate = _Asset("relay_supply_crate.mesh", supply[1], 0.525, supply[2], supply[3])
 		_supplyIds[crate:GetObjId()] = true
@@ -480,6 +490,14 @@ function Scene.ValidateCollision()
 	local coverSolid = _coverIds[coverHit] == true
 	print("[Sandbox19ArenaSelfTest] " .. (coverSolid and "PASS" or "FAIL") .. " rectangular-cover-ray")
 	pass = coverSolid and pass
+	local courtyardCoverHit = SandboxRaycast:RayCastObjectId(Vector3(-6.2, 0.8, 31), Vector3(-6.2, 0.8, 35.5))
+	local courtyardCoverSolid = _coverIds[courtyardCoverHit] == true
+	print("[Sandbox19ArenaSelfTest] " .. (courtyardCoverSolid and "PASS" or "FAIL") .. " courtyard-short-cover-ray")
+	pass = courtyardCoverSolid and pass
+	local doorApproachHit = SandboxRaycast:RayCastObjectId(Vector3(0, 0.8, 24), Vector3(0, 0.8, 36))
+	local doorApproachClear = doorApproachHit == 0
+	print("[Sandbox19ArenaSelfTest] " .. (doorApproachClear and "PASS" or "FAIL") .. " courtyard-door-approach-clear")
+	pass = doorApproachClear and pass
 	local crateHit = SandboxRaycast:RayCastObjectId(Vector3(-7, 0.6, -13), Vector3(-7, 0.6, -10))
 	local crateSolid = _supplyIds[crateHit] == true
 	local overCrate = SandboxRaycast:RayCastObjectId(Vector3(-7, 1.3, -13), Vector3(-7, 1.3, -10))
