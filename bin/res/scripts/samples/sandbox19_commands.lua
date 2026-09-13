@@ -2,6 +2,13 @@
 local Commands = {}
 Commands.__index = Commands
 
+local failureMessages = {
+	["owner-down"] = "Squadmate down. Select a surviving ally.",
+	["target-lost"] = "Target lost. Reposition and focus again.",
+	["path-failed"] = "Could not find a route. Choose another point.",
+	["no-progress"] = "Squadmate cannot reach that point. Try a nearer one.",
+}
+
 local function flatDistance(a, b)
 	local dx, dz = a.x - b.x, a.z - b.z
 	return math.sqrt(dx * dx + dz * dz)
@@ -34,7 +41,7 @@ function Commands:Finish(id, result, reason)
 	self.stats.active = self.stats.active - 1
 	print(string.format("[Sandbox19Order] serial=%d agent=%d kind=%s result=%s reason=%s",
 		order.serial, id, order.kind, result, reason))
-	if result == "failed" then self.host.hint("Order failed: " .. reason, "failed") end
+	if result == "failed" then self.host.hint(failureMessages[reason] or "Order failed. Try another command.", "failed") end
 end
 
 function Commands:Issue(agent, kind, targetId, position, nowMs)

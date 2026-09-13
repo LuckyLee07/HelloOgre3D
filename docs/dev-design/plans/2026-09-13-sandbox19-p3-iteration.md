@@ -140,3 +140,11 @@
 同一 macOS arm64 Release 二进制、回放和真实 GL 窗口，新 1600×900 推进/集合画面在本地 `tmp/goal-p3-focus-phase-20260913/final-900/` 的 30000/65000ms 抓帧。推进时 F 置灰且指向院区；集合时 F 置灰，62 秒 F 按键横幅明确要求带队友集合，常驻短指引没有重复横幅。1280×720 同回放的 30000ms 推进提示无溢出；该次 65000ms 仍在第二波，F 保持可用，说明不同运行批次的战斗时点会波动，截图不作为逐帧战斗确定性证据。该尺寸原始图在 `tmp/goal-p3-focus-phase-20260913/final-720/`，全部原始产物仅本地保留。
 
 验证：仓库 Lua 5.1.4 `luac -p`、`git diff --check`、产品夹具 PASS（路线/碰撞、两波阶段与真实 BT 指令生命周期，错误列表为空）；无夹具内部输入自然对局 78.903 秒胜利，完成第二波、集合、重开、暂停和退出，错误列表为空，摘要在本地 `tmp/relay-natural-20260913-152709-wegx6sdg/summary.json`。本轮没有 C++、绑定或工程配置改动；二进制 SHA-256 仍为 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，无需重编。新版试玩包 `tmp/goal-p3-playtest-focus-phase-20260913/HelloOgre3D.app` 与同名 ZIP 的签名、ZIP 完整性、程序/Lua 哈希一致；包内 launcher 的 720p 后台 GL 8 秒抓帧与正常退出通过，记录在 `tmp/goal-p3-focus-phase-20260913/package-launch/`。后台回放禁用物理输入；真人持续键鼠、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 不关闭。
+
+## 2026-09-13 指令失败提示可操作性切片
+
+可观察问题：集火目标丢失时 HUD 直接显示 `Order failed: target-lost`，把内部原因码交给玩家且未说明下一步。此轮仅在 `sandbox19_commands.lua` 把 `owner-down`、`target-lost`、`path-failed`、`no-progress` 映射为简短操作建议，并给未知失败原因提供通用文案。日志和 Blackboard 仍记录原始原因码；指令接受、BT 执行、终态和任务规则不变。
+
+同一 1600×900、GL、产品夹具和渲染时钟 8000ms 的旧包/新版截图位于本地 `tmp/goal-p3-order-hints-20260913/{baseline-fixture,final-fixture}/`：旧版为 `Order failed: target-lost`，新版为 `Target lost. Reposition and focus again.`，提示完整可读。另用同一回放在 8000/30000/65000ms 对照 `tmp/goal-p3-focus-phase-20260913/after-900/` 与 `tmp/goal-p3-order-hints-20260913/after-900/`；入口、推进、院区的设施、中央通道、HUD 与角色构图未见退化。交火帧的队友 HP 和最终存活者有调度差异，画面不作为逐帧战斗等价证据。
+
+验证：从仓库 Lua 5.1.4 源码在本地 `tmp/` 编译的 `luac -p`、`git diff --check` PASS；Sandbox19 产品夹具 PASS，含真实导航、实体碰撞、BT 指令生命周期、目标丢失与队友阵亡终态，摘要在 `tmp/relay-product-fixture-20260913-154251-99sxziqc/summary.json`。无夹具内部输入自然对局在 78.012 秒胜利，完成第二波、集合、重开、暂停、正常退出且错误列表为空，摘要在 `tmp/relay-natural-20260913-162724-h3n16f3d/summary.json`。真实 GL 三阶段与新包 launcher 的 8 秒启动抓帧、正常退出均通过，原始日志在 `tmp/goal-p3-order-hints-20260913/`。最新本地包 `tmp/goal-p3-playtest-order-hints-20260913/HelloOgre3D.app` 与同名 ZIP 签名和压缩完整性通过，包内 Lua SHA-256 `25c379f7d9ac96dceb0e1cc7fdcb8d3b03b9d3b39fec31ab3e5ddf402a3d2c06` 与工作区相同。仅修改 Sandbox19 Lua 文案，复用已验证的 arm64 Release 二进制 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮不重编或重跑未受影响的 Sandbox6/7/8。后台输入为 synthetic，真人持续键鼠、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 不关闭。
