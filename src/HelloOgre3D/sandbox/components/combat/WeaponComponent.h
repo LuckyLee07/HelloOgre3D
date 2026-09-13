@@ -24,6 +24,8 @@ public:
 
 	void Init(const Ogre::String& meshFile);
 	RenderComponent* GetRenderComponent() const { return m_weaponRender; }
+	// Factory configuration; call before Init. The original mesh keeps animation and muzzle ownership.
+	void SetCommanderRifleShellEnabled(bool enabled) { m_commanderRifleShellEnabled = enabled; }
 	void SetRenderVisible(bool visible);
 
 	//tolua_begin
@@ -52,10 +54,12 @@ private:
 	bool ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation);
 
 	RenderComponent* m_weaponRender;
+	RenderComponent* m_weaponShellRender;
 	int m_ammo;
 	int m_maxAmmo;
 	Ogre::Vector3 m_handOffsetPos;
 	Ogre::Quaternion m_handOffsetOrientation;
+	bool m_commanderRifleShellEnabled;
 }; //tolua_exports
 
 REGISTER_LUA_CLASS_NAME(WeaponComponent);

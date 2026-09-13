@@ -70,7 +70,11 @@ namespace
 		AgentAttrib* attrib = new AgentAttrib(soldier->GetHealth(), std::max<Ogre::Real>(soldier->GetHealth(), 1.0f), SOLDIER_STAND, -1);
 		AddSoldierComponent(soldier, ComponentKeys::Attrib, attrib);
 		if (profile.attachWeapon)
-			AddSoldierComponent(soldier, ComponentKeys::Weapon, new WeaponComponent());
+		{
+			WeaponComponent* weapon = new WeaponComponent();
+			weapon->SetCommanderRifleShellEnabled(std::strcmp(profile.name, "commander_soldier") == 0);
+			AddSoldierComponent(soldier, ComponentKeys::Weapon, weapon);
+		}
 
 		if (profile.attachAI)
 			AddSoldierComponent(soldier, ComponentKeys::AI, new AIController());

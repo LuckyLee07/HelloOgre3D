@@ -32,4 +32,16 @@
 
 验证：macOS arm64 Release 构建 PASS（初次沙箱 Xcode 模块缓存写入失败，允许系统缓存写入后重跑成功）；60Hz 动作探针 21/21，4 发/余弹 6，逻辑时钟未被显示采样推进；Sandbox6/7/8 各 15 秒 smoke PASS；Sandbox19 产品夹具的路线、真实碰撞与任务门禁 PASS；同一新二进制的内部输入自然对局在 77.484 秒胜利，并完成重开、暂停和正常退出。截图、构建、探针及运行原始日志均在本地 `tmp/goal-p3-strafe-20260913/`、`tmp/m1-smoke-20260913-111548/`、`tmp/relay-product-fixture-20260913-111525-am8wfndc/`、`tmp/relay-natural-20260913-111649-d6nczbfm/`，不入库。静态 `git diff --check` 通过；本轮没有修改 Lua、绑定或工程配置。
 
-最新本地试玩包为 `tmp/goal-p3-playtest-strafe-20260913/HelloOgre3D.app`，ZIP 为同名 `.zip`。包内二进制与当前 Release 哈希一致；签名、ZIP 完整性、A1 资源及包内 launcher 后台 GL 启动抓帧通过。实际键鼠、扬声器与 Windows D3D9 仍为 NOT RUN。此次只是现有素材的姿态缓和，专用站立侧步、骨盆/步幅校正、足底 IK 或滑移量标定及中心角色/枪械资产品质仍列后续工作，P3 不关闭。
+站立侧移轮的本地试玩包为 `tmp/goal-p3-playtest-strafe-20260913/HelloOgre3D.app`，ZIP 为同名 `.zip`。包内二进制与当前 Release 哈希一致；签名、ZIP 完整性、A1 资源及包内 launcher 后台 GL 启动抓帧通过。实际键鼠、扬声器与 Windows D3D9 仍为 NOT RUN。此次只是现有素材的姿态缓和，专用站立侧步、骨盆/步幅校正、足底 IK 或滑移量标定及中心角色/枪械资产品质仍列后续工作，P3 不关闭。
+
+## 2026-09-13 指挥官枪械轮廓切片
+
+可观察问题：正常跟随视角中的原枪主要是手边细黑线，换弹举枪时也只有狭窄直杆，难以读出机匣和前段。原资源已包含 sniper 换弹动作和真实 `b_muzzle`；开火消耗弹药后按 R 的 1600×900 旧版回放在 3000/3600/4000ms 确认身体与枪械都随换弹运动，问题不在动作未触发。
+
+新增项目自制 `commander_rifle_shell.mesh`（528 三角形，生成器可逐字节重建）和四种低饱和金属/标记材质。只有 `commander_soldier` 在工厂装配时启用外壳；`WeaponComponent` 持有独立 RenderComponent，与原枪在仿真和显示同步时共用右手骨骼解算后的位姿。原枪 mesh/skeleton、ASM、`b_muzzle` 与子弹生成链没有替换，也不新建刚体或 Lua 导出。外壳随武器可见性与重建/析构清理，保留原枪枪口段外露。
+
+同一 `reload-replay.txt` 在旧版 `59f440f5598616270c31d86d17fb0427bfaa39c4fee284cb4e62b470924370e2` 与新版 `26839ab81b3cc9a78331f3dc45d072ef73a7eafc06604127974ef2d4153ff2e4` 上运行；1600×900 仿真时钟 2600/3000/3300/3600/4000/4500ms 的图在本地 `tmp/goal-p3-weapon-20260913/{reload-shot-baseline,shell-reload}/`。新版换弹时机匣和前段宽度更清楚，枪身跟手且没有遮住原枪口。前三发 `[WeaponShot]` 坐标/方向与旧版逐项相同到日志精度，仅第一发 Y 记录相差 0.00001m。普通背后瞄准时枪仍被右臂遮挡，不能把这一显示外壳说成高质量重制武器或角色完成。
+
+用相同 71 秒短回放在 1600×900 渲染时钟 8000/30000/65000ms 对照入口、推进、院区；旧图来自上一检查点 `tmp/goal-p3-strafe-20260913/after-stages/`，新图在 `tmp/goal-p3-weapon-20260913/shell-stages/`，主构图与 HUD 未见退化。战斗 HP 在重复运行间有波动，画面对照只证明主要布局和枪身表现，不宣称逐帧确定性。
+
+验证：仅清理主目标 Release 中间目录后 macOS arm64 完整重编 PASS；60Hz 动作合同 21/21（含武器重建、换弹、发弹与暂停），Sandbox6/7/8 各 15 秒 smoke PASS；Sandbox19 产品夹具含路线、实体碰撞和重开 PASS；未用夹具的自然对局在 78.045 秒胜利、重开/暂停/退出成功且无相关错误。最新包 `tmp/goal-p3-playtest-weapon-20260913/HelloOgre3D.app` 和同名 ZIP 的签名、压缩完整性、二进制/网格/材质哈希及包内 launcher 后台 GL 资源加载/抓帧通过。上述构建、截图、探针和原始运行数据在本地 `tmp/goal-p3-weapon-20260913/`、`tmp/m1-smoke-20260913-115055/`、`tmp/relay-product-fixture-20260913-115021-7c28k2gv/` 与 `tmp/relay-natural-20260913-115224-wgv1ejpn/`，不入库。没有修改 Lua、绑定或 Premake；真人操作/扬声器和 Windows D3D9 仍为 NOT RUN，P3 不关闭。

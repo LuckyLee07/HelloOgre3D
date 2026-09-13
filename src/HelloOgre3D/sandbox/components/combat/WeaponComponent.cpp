@@ -68,16 +68,19 @@ namespace
 
 WeaponComponent::WeaponComponent(BaseObject* owner)
 	: m_weaponRender(nullptr)
+	, m_weaponShellRender(nullptr)
 	, m_ammo(10)
 	, m_maxAmmo(10)
 	, m_handOffsetPos(Ogre::Vector3::ZERO)
 	, m_handOffsetOrientation(Ogre::Quaternion::IDENTITY)
+	, m_commanderRifleShellEnabled(false)
 {
 	(void)owner;
 }
 
 WeaponComponent::~WeaponComponent()
 {
+	SAFE_DELETE(m_weaponShellRender);
 	SAFE_DELETE(m_weaponRender);
 }
 
@@ -116,9 +119,14 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 {
 	AnimComponent* anim = FindOwnerAnim(this);
 	if (anim != nullptr) anim->ResetWeaponPresentation();
+	SAFE_DELETE(m_weaponShellRender);
 	SAFE_DELETE(m_weaponRender);
 
 	m_weaponRender = new RenderComponent(meshFile);
+	if (m_commanderRifleShellEnabled)
+	{
+		m_weaponShellRender = new RenderComponent("models/sandbox19/commander_rifle_shell.mesh");
+	}
 	if (anim != nullptr)
 	{
 		anim->InitWeaponAnimations(m_weaponRender->GetEntity(), false);
@@ -134,6 +142,10 @@ void WeaponComponent::SetRenderVisible(bool visible)
 	if (m_weaponRender != nullptr)
 	{
 		m_weaponRender->SetVisible(visible);
+	}
+	if (m_weaponShellRender != nullptr)
+	{
+		m_weaponShellRender->SetVisible(visible);
 	}
 }
 
@@ -165,8 +177,15 @@ void WeaponComponent::SyncToHandBone()
 		return;
 	}
 
-	m_weaponRender->SetPosition(handPosition + (handOrientation * m_handOffsetPos));
-	m_weaponRender->SetOrientation(handOrientation * m_handOffsetOrientation);
+	const Ogre::Vector3 weaponPosition = handPosition + (handOrientation * m_handOffsetPos);
+	const Ogre::Quaternion weaponOrientation = handOrientation * m_handOffsetOrientation;
+	m_weaponRender->SetPosition(weaponPosition);
+	m_weaponRender->SetOrientation(weaponOrientation);
+	if (m_weaponShellRender != nullptr)
+	{
+		m_weaponShellRender->SetPosition(weaponPosition);
+		m_weaponShellRender->SetOrientation(weaponOrientation);
+	}
 }
 
 void WeaponComponent::ShootBullet()

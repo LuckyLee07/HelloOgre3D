@@ -75,6 +75,33 @@ material Relay/CrateMark : base_material
 	set $shininess "8"
 }
 
+// A narrow static shell follows the commander's animated rifle. The original
+// weapon and its muzzle bone remain visible and authoritative for shots.
+material Relay/CommanderRifleArmor : base_material
+{
+	set $diffuseCol "0.29 0.34 0.31 1"
+	set $specularCol "0.15 0.17 0.15"
+	set $shininess "35"
+}
+material Relay/CommanderRifleMetal : base_material
+{
+	set $diffuseCol "0.56 0.58 0.52 1"
+	set $specularCol "0.22 0.24 0.22"
+	set $shininess "48"
+}
+material Relay/CommanderRifleDark : base_material
+{
+	set $diffuseCol "0.10 0.13 0.13 1"
+	set $specularCol "0.07 0.08 0.08"
+	set $shininess "16"
+}
+material Relay/CommanderRifleMark : base_material
+{
+	set $diffuseCol "0.26 0.67 0.65 1"
+	set $specularCol "0.15 0.28 0.27"
+	set $shininess "36"
+}
+
 material Relay/Concrete : base_material
 {
 	set $diffuseCol "0.98 0.96 0.89 1"
