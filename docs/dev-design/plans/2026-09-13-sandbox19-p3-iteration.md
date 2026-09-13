@@ -45,3 +45,13 @@
 用相同 71 秒短回放在 1600×900 渲染时钟 8000/30000/65000ms 对照入口、推进、院区；旧图来自上一检查点 `tmp/goal-p3-strafe-20260913/after-stages/`，新图在 `tmp/goal-p3-weapon-20260913/shell-stages/`，主构图与 HUD 未见退化。战斗 HP 在重复运行间有波动，画面对照只证明主要布局和枪身表现，不宣称逐帧确定性。
 
 验证：仅清理主目标 Release 中间目录后 macOS arm64 完整重编 PASS；60Hz 动作合同 21/21（含武器重建、换弹、发弹与暂停），Sandbox6/7/8 各 15 秒 smoke PASS；Sandbox19 产品夹具含路线、实体碰撞和重开 PASS；未用夹具的自然对局在 78.045 秒胜利、重开/暂停/退出成功且无相关错误。最新包 `tmp/goal-p3-playtest-weapon-20260913/HelloOgre3D.app` 和同名 ZIP 的签名、压缩完整性、二进制/网格/材质哈希及包内 launcher 后台 GL 资源加载/抓帧通过。上述构建、截图、探针和原始运行数据在本地 `tmp/goal-p3-weapon-20260913/`、`tmp/m1-smoke-20260913-115055/`、`tmp/relay-product-fixture-20260913-115021-7c28k2gv/` 与 `tmp/relay-natural-20260913-115224-wgv1ejpn/`，不入库。没有修改 Lua、绑定或 Premake；真人操作/扬声器和 Windows D3D9 仍为 NOT RUN，P3 不关闭。
+
+## 2026-09-13 指挥官背部识别切片
+
+可观察问题：1600×900 常用跟随镜头中，指挥官上背几乎是一整块浅色护甲，缺少目标稿中能识别主角的背甲与青色显示屏。旧版入口图在 `tmp/goal-p3-weapon-20260913/shell-stages/capture_08000ms.png`；本轮同条件入口、推进、院区新图在本地 `tmp/goal-p3-pack-20260913/stages/`，另有 1280×800 左右侧移 6100/7600ms 图。新背甲在三阶段与两侧侧移中保持在上背，显示屏可辨；主构图、HUD 与行进路线未见退化。不同回放交火的 HP 会波动，图像对照不代表逐帧战斗确定性。
+
+新增项目自制 `commander_backpack.mesh`（484 三角形、四种低饱和材质；脚本逐字节重建通过），只给 `commander_soldier` 使用。直接把 Ogre Entity 挂在此模型的 `b_Spine` 后，首张 GL 图出现附件漂在场景中；诊断证实脊柱局部轴随瞄准姿态明显偏离人物上下/前后。因此最终由 `RenderComponent` 持有独立显示节点，在每帧动画显示后读取脊柱世界位置，并用身体当前物理朝向放置刚性背甲。主角身体网格/骨骼、枪械真枪口、AI、Bullet 和 Lua 导出未改。显隐同步，`initBody` 替换身体时复制附件配置并保留显隐，旧附件先于旧身体销毁。附件没有独立碰撞体。
+
+验证：macOS arm64 Release 在清理主目标中间文件后完整重编成功，最终二进制 SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`。60Hz 动作合同 21/21、4 发/余弹 6；隔离 Lua 运行另外覆盖指挥官身体两次替换、显隐切换和延迟销毁，合同仍 PASS。Sandbox6/7/8 各 15 秒 smoke、Sandbox19 产品夹具路线/实体碰撞/门禁均 PASS。最终二进制自然对局在 76.626 秒胜利，完成集火、集合、重开及正常退出，无相关错误。原始结果在本地 `tmp/goal-p3-pack-20260913/`、`tmp/m1-smoke-20260913-124034/`、`tmp/relay-product-fixture-20260913-124008-k4114ivr/`、`tmp/relay-natural-20260913-123640-3sfcqd45/`，不入库。
+
+最新 macOS 试玩包为 `tmp/goal-p3-playtest-pack-20260913/HelloOgre3D.app` 和同名 ZIP；包内二进制/背甲网格/材质哈希与工作区一致，签名、ZIP 完整性和从包内 launcher 后台 GL 启动的 8 秒抓帧通过。背甲仍是小型显示附件，不等于完整定制角色；它采用身体朝向稳定姿态，极端上身扭转时不保证逐骨骼贴合。真人持续键鼠、扬声器听感及 Windows D3D9 仍为 NOT RUN，P3 不关闭。

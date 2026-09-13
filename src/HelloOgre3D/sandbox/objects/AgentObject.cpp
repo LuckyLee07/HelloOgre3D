@@ -1,6 +1,7 @@
 #include "AgentObject.h"
 #include "OgreSceneNode.h"
 #include "OgreSceneManager.h"
+#include "OgreEntity.h"
 #include "btBulletDynamicsCommon.h"
 #include "BlockObject.h"
 #include "ai/common/AICommand.h"
@@ -21,6 +22,7 @@
 #include "systems/physics/Collision.h"
 #include "LogSystem.h"
 #include <algorithm>
+#include <memory>
 
 using namespace Ogre;
 
@@ -84,13 +86,17 @@ void AgentObject::initBody(const Ogre::String& meshFile)
 	const Ogre::Vector3 visualOffset = m_renderComp != nullptr ? m_renderComp->GetVisualOffset() : Ogre::Vector3::ZERO;
 	const Ogre::Vector3 renderPosition = m_renderComp != nullptr ? m_renderComp->GetPosition() : Ogre::Vector3::ZERO;
 	const Ogre::Quaternion renderOrientation = m_renderComp != nullptr ? m_renderComp->GetOrientation() : Ogre::Quaternion::IDENTITY;
+	const bool renderVisible = m_renderComp == nullptr || m_renderComp->GetEntity() == nullptr || m_renderComp->GetEntity()->isVisible();
+	std::unique_ptr<RenderComponent> replacement(new RenderComponent(meshFile));
+	replacement->SetVisible(renderVisible);
+	if (m_renderComp != nullptr) m_renderComp->CopyOwnedBoneAttachmentsTo(*replacement);
 	if (m_cachedAnim != nullptr) m_cachedAnim->ResetBodyPresentation();
 	if (m_renderComp != nullptr)
 	{
 		RemoveComponent(ComponentKeys::Render);
 		m_renderComp = nullptr;
 	}
-	RenderComponent* renderComp = new RenderComponent(meshFile);
+	RenderComponent* renderComp = replacement.release();
 	renderComp->SetVisualOffset(visualOffset);
 	renderComp->SetPosition(renderPosition);
 	renderComp->SetOrientation(renderOrientation);

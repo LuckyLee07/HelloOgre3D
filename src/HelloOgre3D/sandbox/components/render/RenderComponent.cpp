@@ -1,6 +1,7 @@
 #include "RenderComponent.h"
 #include "OgreSceneNode.h"
 #include "OgreEntity.h"
+#include "OgreSkeletonInstance.h"
 #include "OgreSceneManager.h"
 #include "GameFunction.h"
 #include "OgreManualObject.h"
@@ -9,6 +10,7 @@
 #include "objects/animation/AgentAnim.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "systems/service/SceneFactory.h"
+#include <memory>
 
 using namespace Ogre;
 
@@ -44,9 +46,14 @@ RenderComponent::RenderComponent(Ogre::SceneNode* pSceneNode)
 
 RenderComponent::~RenderComponent()
 {
+	SceneManager* pSceneMananger = m_pSceneNode != nullptr ? m_pSceneNode->getCreator() : nullptr;
+	for (const OwnedBoneAttachment& attachment : m_ownedBoneAttachments)
+	{
+		delete attachment.render;
+	}
+	m_ownedBoneAttachments.clear();
 	if (m_pEntity != nullptr)
 	{
-		SceneManager* pSceneMananger = m_pSceneNode != nullptr ? m_pSceneNode->getCreator() : nullptr;
 		if (pSceneMananger != nullptr)
 		{
 			pSceneMananger->destroyEntity(m_pEntity);
@@ -104,6 +111,10 @@ void RenderComponent::SetVisible(bool visible)
 	if (m_pEntity != nullptr)
 	{
 		m_pEntity->setVisible(visible);
+	}
+	for (const OwnedBoneAttachment& attachment : m_ownedBoneAttachments)
+	{
+		attachment.render->SetVisible(visible);
 	}
 }
 
@@ -172,6 +183,52 @@ void RenderComponent::AttachToBone(const Ogre::String& boneName, Ogre::Entity* e
 {
 	Ogre::Quaternion orientationOffset = QuaternionFromRotationDegrees(rotationOffset.x, rotationOffset.y, rotationOffset.z);
 	m_pEntity->attachObjectToBone(boneName, entity, orientationOffset, positionOffset);
+}
+
+bool RenderComponent::AttachOwnedMeshToBone(const Ogre::String& meshFile, const Ogre::String& boneName, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
+{
+	if (m_pEntity == nullptr || !m_pEntity->hasSkeleton() || !m_pEntity->getSkeleton()->hasBone(boneName))
+		return false;
+
+	std::unique_ptr<RenderComponent> attachment(new RenderComponent(meshFile));
+	attachment->SetVisible(m_pEntity->isVisible());
+	m_ownedBoneAttachments.push_back({ meshFile, boneName, positionOffset, rotationOffset, attachment.get() });
+	attachment.release();
+	SyncOwnedBoneAttachments();
+	return true;
+}
+
+void RenderComponent::CopyOwnedBoneAttachmentsTo(RenderComponent& target) const
+{
+	for (const OwnedBoneAttachment& attachment : m_ownedBoneAttachments)
+	{
+		target.AttachOwnedMeshToBone(attachment.meshFile, attachment.boneName, attachment.positionOffset, attachment.rotationOffset);
+	}
+}
+
+void RenderComponent::SyncOwnedBoneAttachments()
+{
+	if (m_ownedBoneAttachments.empty() || m_pEntity == nullptr || m_pSceneNode == nullptr)
+		return;
+
+	// Mirror the weapon's pose query: do not consume Ogre's render-frame skinning
+	// cache before the locomotion layer has applied its displayed bone pose.
+	Ogre::SkeletonInstance* skeleton = m_pEntity->getSkeleton();
+	skeleton->setAnimationState(*m_pEntity->getAllAnimationStates());
+	skeleton->_updateTransforms();
+	for (const OwnedBoneAttachment& attachment : m_ownedBoneAttachments)
+	{
+		Ogre::Vector3 bonePosition;
+		if (!SceneFactory::GetBonePosition(*m_pSceneNode, attachment.boneName, bonePosition))
+			continue;
+		// The imported spine's local axes rotate sharply during aiming. Anchor
+		// translation to its animated position, but keep a rigid pack aligned to
+		// the body's physical facing so it does not swing off the back.
+		const Ogre::Quaternion bodyOrientation = m_pSceneNode->_getDerivedOrientation();
+		attachment.render->SetPosition(bonePosition + bodyOrientation * attachment.positionOffset);
+		const Ogre::Vector3& rotation = attachment.rotationOffset;
+		attachment.render->SetOrientation(bodyOrientation * QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z));
+	}
 }
 
 void RenderComponent::Update(int deltaInMillis)

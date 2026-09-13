@@ -294,6 +294,7 @@ void GameManager::RenderPresentation(float alpha, float dtSec)
 		if (agent->GetAnimComponent() != nullptr) agent->GetAnimComponent()->RenderPresentation(m_simulationPaused ? 1.0f : alpha);
 		WeaponComponent* weapon = agent->GetWeaponComponent();
 		if (weapon != nullptr) weapon->SyncToHandBone();
+		if (render != nullptr) render->SyncOwnedBoneAttachments();
 		if (m_pCameraService->IsFollowing() && agent->FindComponent<PlayerController>() != nullptr)
 		{
 			const Ogre::Vector3 displayed = render != nullptr

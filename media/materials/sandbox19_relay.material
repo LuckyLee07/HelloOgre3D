@@ -102,6 +102,33 @@ material Relay/CommanderRifleMark : base_material
 	set $shininess "36"
 }
 
+// Bone-mounted commander radio pack. The small cyan screen reads as a squad
+// identity mark in the normal third-person view without adding scene lights.
+material Relay/CommanderPackBody : base_material
+{
+	set $diffuseCol "0.37 0.43 0.41 1"
+	set $specularCol "0.10 0.13 0.12"
+	set $shininess "28"
+}
+material Relay/CommanderPackArmor : base_material
+{
+	set $diffuseCol "0.77 0.79 0.74 1"
+	set $specularCol "0.18 0.19 0.18"
+	set $shininess "36"
+}
+material Relay/CommanderPackDark : base_material
+{
+	set $diffuseCol "0.10 0.14 0.15 1"
+	set $specularCol "0.06 0.08 0.08"
+	set $shininess "18"
+}
+material Relay/CommanderPackDisplay : base_material
+{
+	set $diffuseCol "0.23 0.74 0.73 1"
+	set $specularCol "0.09 0.22 0.21"
+	set $shininess "24"
+}
+
 material Relay/Concrete : base_material
 {
 	set $diffuseCol "0.98 0.96 0.89 1"

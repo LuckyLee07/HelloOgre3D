@@ -18,6 +18,7 @@
 #include "scripting/LuaPluginMgr.h"
 #include "systems/manager/ObjectManager.h"
 #include "systems/service/PhysicsFactory.h"
+#include "LogSystem.h"
 
 namespace
 {
@@ -97,6 +98,12 @@ SoldierObject* SoldierFactory::CreateSoldierWithProfile(ObjectManager* objectMan
 {
 	const SoldierAssemblyProfile& profile = ResolveSoldierAssemblyProfile(profileName);
 	RenderComponent* renderComp = CreateSoldierRender(meshFile);
+	if (std::strcmp(profile.name, "commander_soldier") == 0)
+	{
+		if (!renderComp->AttachOwnedMeshToBone("models/sandbox19/commander_backpack.mesh", "b_Spine",
+			Ogre::Vector3(0.0f, 0.44f, -0.24f), Ogre::Vector3(0.0f, 180.0f, 0.0f)))
+			CCLOG_ERROR("commander_soldier mesh has no b_Spine bone; backpack omitted");
+	}
 	btRigidBody* capsuleRigidBody = CreateSoldierRigidBody();
 
 	SoldierObject* soldier = new SoldierObject(renderComp, capsuleRigidBody);
