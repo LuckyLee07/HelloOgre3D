@@ -283,7 +283,7 @@ function Hud:_Combat(model, width, height, state)
 			cfg.reason or (selected == 0 and "Select a squadmate with 1 / 2 / Tab" or "Order unavailable"))
 		commandX = commandX + def.w + 8
 	end
-	local context = self.disabledReason or model.context or (selected > 0 and (tostring(selected) .. " SELECTED  /  Right-click target or ground") or "1 / 2 select   |   Tab selects squad")
+	local context = self.disabledReason or model.context or (selected > 0 and (tostring(selected) .. " SELECTED  /  Hold Alt + RMB: enemy focus, ground move") or "1 / 2 select   |   Tab selects squad")
 	local contextText, contextLines = self:_Wrap("context", context, commandWidth, self.smallFont, 2)
 	local contextHeight = contextLines * (self.smallFont == 14 and 22 or 14) / self.scale + 2
 	self:_Text("context", (width - commandWidth) * 0.5, bottom - 53 - contextHeight, commandWidth, contextHeight, contextText, self.smallFont)
@@ -329,9 +329,9 @@ function Hud:_Prepare(model, width, height)
 	self:_Text("modal_detail3", x + 32, y + 227, 576, 25, "02   REGROUP AT THE RELAY", 14)
 	self:_Text("modal_detail4", x + 69, y + 257, 539, 23, "Reach the marked zone with at least one surviving squadmate.", self.smallFont)
 	self:_Frame("modal_line2", x + 32, y + 292, 576, 1, "muted")
-	self:_Text("modal_detail5", x + 32, y + 306, 576, 24, model.controls or "WASD move  |  MMB drag / Q/E orbit  |  Space fire  |  R reload", self.smallFont)
-	self:_Text("modal_detail6", x + 32, y + 332, 576, 24, "Right-click to order  |  F focus  |  T fall back  |  G rally", self.smallFont)
-	self:_Text("modal_detail7", x + 32, y + 358, 576, 24, "X cancel  |  Esc pause", self.smallFont)
+	self:_Text("modal_detail5", x + 32, y + 306, 576, 24, model.controls or "WASD move  |  Mouse look  |  LMB / Space fire  |  R reload", self.smallFont)
+	self:_Text("modal_detail6", x + 32, y + 332, 576, 24, "Hold Alt: cursor, HUD, drag select, orders  |  RMB: move / focus", self.smallFont)
+	self:_Text("modal_detail7", x + 32, y + 358, 576, 24, "1 / 2 / Tab select  |  F focus  |  T fall back  |  G rally  |  X cancel  |  Esc pause", self.smallFont)
 	self:_Button("primary", x + 32, y + 384, 366, 44, "START MISSION", "start", true, true)
 	self:_Button("secondary", x + 410, y + 384, 198, 44, "QUIT", "quit", true, false)
 end
