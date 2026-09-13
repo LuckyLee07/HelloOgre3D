@@ -41,3 +41,4 @@
 - [MiniGame 操作体验参考](minigame-control-reference.md) — 用户认可的手感参考、本机路径与实际主线入口
 
 - [多实例共享日志](shared-sandbox-log.md) — Sandbox.log 可能混入其他回放，统计使用子进程隔离输出
+- [足底姿态采样点](foot-pose-sampling.md) — 侧移脚滑必须在最终显示层后读取两脚世界位置，Lua Update 骨骼点会误导
