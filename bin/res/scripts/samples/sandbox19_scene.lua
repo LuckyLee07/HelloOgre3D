@@ -290,9 +290,11 @@ function Scene.Create()
 		_Box(2.3, 1.15, 1.5, x, 4.22, 38.2, 0, "Relay/EquipmentBox")
 		_Box(2.5, 0.12, 1.7, x, 4.86, 38.2, 0, "Relay/Trim")
 	end
-	for _, x in ipairs({ -19.0, -16.0, -13.0, 13.0, 19.0 }) do
+	for _, x in ipairs({ -19.0, -13.0, 13.0, 19.0 }) do
 		_Module(WINDOW_MESH, x, 1.8, 36.99, 0, "Relay/ServiceWindow")
 	end
+	-- A solid service intake breaks up the repeated windows opposite sector A1.
+	_Asset("relay_service_bay.mesh", -16.0, 1.8, 36.99, 0)
 	-- Replace one repeated window with the compound's painted sector code.
 	-- It sits just forward of the existing solid wing, without a new collider.
 	_VisualPlane(1.8, 3.6, 16.0, 2.22, 37.0, 90, 0, "Relay/ZoneStencil")
