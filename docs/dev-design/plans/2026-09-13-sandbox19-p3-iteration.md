@@ -223,3 +223,11 @@ Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] pau
 验证：生成器 Python 语法与两次网格重建 PASS，弹匣 SHA-256 均为 `cf10e83ac16eee254cc0cb91e0df5029ac2c6bc2671804a168eb70712feda001`，原枪身网格哈希保持 `6c34193ea0567ae6933773b9fd944a3ad8bca9f974d4940a9a4aa923b8b966b3`。macOS arm64 Release 主目标清理中间目录后完整构建 PASS，二进制 SHA-256 为 `94f7cd811fbf8397b8df558ceabb0bd6cae71c413c3537d99494b81f775c97df`；60Hz 动作合同 21/21，四发枪口坐标/方向与上次枪械合同逐项一致。Sandbox6/7/8/19 各 15 秒 smoke PASS；产品夹具的全部出生点、中央/西绕行、真实碰撞、BT 与重开 PASS，摘要在 `tmp/relay-product-fixture-20260917-002741-gvqruu27/summary.json`。无夹具内部输入自然对局在 78.969 秒胜利，随后重开、暂停并正常退出，错误列表为空，摘要在 `tmp/relay-natural-20260917-002805-l8qxaa3f/summary.json`。
 
 最新本地试玩包为 `tmp/goal-p3-playtest-reload-magazine-20260917/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、包内程序/枪身/弹匣哈希一致，从包内 launcher 的 1280×720 GL 换弹帧确认弹匣资源实际加载并正常退出。ZIP SHA-256 为 `7fdaf5f2aff4163f085ef598922e0963c2b4d6ebdea0c3aa8eaa89d2bd26197d`。本轮没有 Lua 或绑定变更。真人持续键鼠、Alt+右键、移动射击与换弹手感、扬声器听感、专用站立侧步/足底约束和 Windows D3D9 仍为 NOT RUN，P3 保持开放；该弹匣只补足已有动作的可读事件，不等于完整武器或角色资产重制。
+
+## 2026-09-17 最新版本阴影成本复测
+
+可观察问题：门厅、翼楼、近中景设施和指挥官附件连续更新后，`9dfc39f` 的旧阴影测量已不是最新场景；需要确认当前 1536² R32F、PCF4 方向光阴影是否仍值得保留。本轮使用 `a77d01e` 的 macOS arm64 Release 二进制 SHA-256 `94f7cd811fbf8397b8df558ceabb0bd6cae71c413c3537d99494b81f775c97df`，固定 1600×900、FSAA 4、同一 Enter→18 秒退出回放 `c1de8b6b1435c115ea8b573ca631cfe71c8122656b87c0f1f9af504b59d09ebc`、静音和物理输入禁用，按开/关/关/开运行。四轮日志分别确认 `texture modulative 1536 R32F PCF4` 或 `disabled`、实际 1600×900、回放正常退出且错误列表为空。
+
+当前机器同时有其它工作区构建、索引和媒体分析负载；第一批无限帧率轮次的墙钟和原始均值被数百毫秒调度尖峰污染，不能直接比较。按与旧记录相同的玩法段剔除前 16 个快照，再排除 `frameDelta>=50ms`、`cpuFrame>=50ms` 或 `updateCall>=20ms` 的受抢占样本，开阴影两轮合计 98 帧、关阴影两轮合计 101 帧：`cpuFrame` 中位数为 6.035 / 5.210ms，`engineGap` 中位数为 4.845 / 4.310ms，即约 +0.825 / +0.535ms。补充的 60Hz 上限组剔除前 8 个快照后仅剩开 19、关 41 个干净样本，CPU 均值为 4.823 / 4.829ms，`engineGap` 中位数为 3.730 / 3.510ms。两批都受系统负载影响，且没有 GPU timer，因此只能说明当前成本较小且未出现稳定的大幅回退，不能把差值当作精确 GPU 开销；原始日志和解析结果分别在本地 `tmp/goal-p3-shadow-final-20260917/` 与 `tmp/goal-p3-shadow-final-60hz-20260917/`。
+
+同一最新二进制另做 1600×900、5000ms、真实 GL 开关画面对照，位于 `tmp/goal-p3-shadow-final-20260917/visual/{on,off}/`；两张图逐像素 RGB 绝对差均值为 4.209/3.759/3.580。开启时指挥官、队友、掩体、棚架、门框和设施投影清楚，关闭后院区层次明显变平。相对这一可见收益，现有证据不支持调整 1536² 深度图、PCF、Tracy 或接收链，本轮保留实现且没有产品代码/资源改动。首次沙箱内启动因无 OpenGL 3 上下文失败，不计入结果；尝试前台计时又因窗口未成为活动应用而使输入回放不能在 70 秒内完成，也已舍弃。后台合成回放不代表真人前台性能或手感，真人持续键鼠、扬声器和 Windows D3D9 仍为 NOT RUN，P3 保持开放。
