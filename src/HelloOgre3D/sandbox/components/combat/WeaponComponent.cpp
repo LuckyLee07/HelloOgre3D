@@ -113,6 +113,10 @@ void WeaponComponent::update(int deltaMs)
 	{
 		anim->UpdateWeaponAnimations(deltaMs);
 	}
+	if (m_weaponRender != nullptr)
+	{
+		m_weaponRender->SyncOwnedBoneAttachments();
+	}
 }
 
 void WeaponComponent::Init(const Ogre::String& meshFile)
@@ -130,6 +134,11 @@ void WeaponComponent::Init(const Ogre::String& meshFile)
 	if (anim != nullptr)
 	{
 		anim->InitWeaponAnimations(m_weaponRender->GetEntity(), false);
+	}
+	if (m_commanderRifleShellEnabled)
+	{
+		m_weaponRender->AttachOwnedMeshToBone("models/sandbox19/commander_rifle_magazine.mesh", "b_Clip",
+			Ogre::Vector3::ZERO, Ogre::Vector3::ZERO, true);
 	}
 
 	m_handOffsetPos = Ogre::Vector3(0.04f, 0.05f, -0.01f);

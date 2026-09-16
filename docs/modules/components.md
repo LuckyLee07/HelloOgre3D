@@ -60,6 +60,8 @@
 
 2026-09-13 `commander_soldier` 在工厂装配时启用枪身显示外壳；`WeaponComponent` 在 `Init` 创建并持有独立 `RenderComponent`，与原枪共享手部位置/朝向，切换可见性、重建和析构时一起处理。外壳来自项目自制 `commander_rifle_shell.mesh`，只改善指挥官正常镜头及换弹时的枪身轮廓；原武器骨骼、动画和 `b_muzzle` 仍是发弹真源，不新增 Lua 接口或物理体。验证与未覆盖边界见[分轮体验记录](../dev-design/plans/2026-09-13-sandbox19-p3-iteration.md)。
 
+2026-09-17 指挥官枪械再增加 `commander_rifle_magazine.mesh` 显示附件。`RenderComponent::AttachOwnedMeshToBone` 可按附件选择跟随骨骼朝向；默认关闭以保持背甲的身体朝向策略，弹匣单独启用并在武器 ASM 更新后同步原枪 `b_Clip`。附件只放大已有换弹轨迹的轮廓，不接管换弹时钟、弹药恢复或 `b_muzzle`。
+
 同日为 `commander_soldier` 增加自制背甲显示件。`RenderComponent` 持有独立的附件渲染节点，显示阶段用当前脊柱骨骼位置与身体物理朝向求位姿；本模型的脊柱局部轴不适合直接作背甲前后方向。`AgentObject::initBody` 更换身体时复制附件配置和原显隐状态，旧附件先于旧身体销毁。背甲无刚体、不改骨骼动画和枪口；其他 soldier profile 保持原装配。证据见同一[分轮体验记录](../dev-design/plans/2026-09-13-sandbox19-p3-iteration.md)。
 
 Sandbox19 活跃玩法的鼠标相对位移经 InputManager / GameManager 先旋转 FOLLOW 镜头；PlayerController 每个仿真步读取镜头水平视线，经既有 FaceDirection 平滑转动刚体与枪口。W/S 读取本帧刚体的实际 `GetForward()`，A/D 相对该朝向侧移；发弹继续取真实骨骼枪口。按住 Alt 临时恢复指针，可操作 HUD、框选和世界指令；暂停或失焦释放鼠标捕获。默认 tank sample 不启用此模式。验证见[鼠标与镜头控制](../dev-design/plans/2026-09-12-sandbox19-mouse-camera-control.md)。

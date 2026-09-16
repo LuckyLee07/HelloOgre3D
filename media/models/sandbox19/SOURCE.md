@@ -1,6 +1,6 @@
 # Sandbox19 自制实体资产
 
-日期：2026-09-12；2026-09-13 追加短掩体、指挥官枪身、背甲、中继站侧体浅檐与百叶舱；2026-09-16 追加入口场地发电机与中段配电柜。场景实体生成器：[generate_relay_meshes.py](../../../tools/generate_relay_meshes.py)。
+日期：2026-09-12；2026-09-13 追加短掩体、指挥官枪身、背甲、中继站侧体浅檐与百叶舱；2026-09-16 追加入口场地发电机与中段配电柜；2026-09-17 追加换弹弹匣外壳。场景实体生成器：[generate_relay_meshes.py](../../../tools/generate_relay_meshes.py)。
 
 四张掩体/箱体网格均由本项目脚本直接构造顶点、法线、切线、UV 和三角形，未使用外部模型或品牌。运行 `python3 tools/generate_relay_meshes.py` 可重建；`manifest.json` 记录三角形数、材质和实际边界。Ogre v1.100 二进制格式依据仓库 vendored `OgreMeshFileFormat.h`，无运行时生成依赖。
 
@@ -13,6 +13,7 @@
 - `relay_field_generator.mesh`：项目自制入口场地发电机，由 [generate_relay_field_generator.py](../../../tools/generate_relay_field_generator.py) 重建；低矮横向机身、进气百叶与青色状态屏替换首屏右肩的一只重复低补给箱。真实 Bullet 凸包位于中央路线外，左侧原低箱与两侧高箱继续保留给既有碰撞自测。
 - `relay_switchgear.mesh`：项目自制中段配电柜，由 [generate_relay_switchgear.py](../../../tools/generate_relay_switchgear.py) 重建；竖向双门、散热槽和状态面板分别替换入口战斗与院区前肩画面的一只重复高补给箱，两处在不同镜头阶段成为近中景。真实 Bullet 凸包均位于中央路线外，对侧原高箱继续保留给既有碰撞自测。
 - `commander_rifle_shell.mesh`：项目自制 528 三角形枪身显示外壳，由 [generate_commander_rifle.py](../../../tools/generate_commander_rifle.py) 重建；跟随原枪手部位姿，不替换枪口或换弹骨骼。
+- `commander_rifle_magazine.mesh`：项目自制 220 三角形弹匣显示外壳，由同一生成器重建；完整跟随原枪 `b_Clip` 的换弹位置/朝向，不接管动画、弹药或枪口。
 - `commander_backpack.mesh`：项目自制 484 三角形背甲/识别屏，由 [generate_commander_backpack.py](../../../tools/generate_commander_backpack.py) 重建；仅 `commander_soldier` 的可视附件，不参与刚体或导航。
 
-场景实体 Y 向上、米制、中心 pivot。Lua 保留多 submesh 材质；既有 `CreateBlockObject` 从场景网格顶点生成 Bullet 简化凸包，作为封闭箱体/掩体的碰撞体；细小凹缝不具有独立可穿透语义。枪身和背甲是显示附件，没有独立 Bullet 刚体。场景与 navmesh 按真实变换读取，ObjectManager 负责销毁。初版运行验收见 [场景资产计划](../../../docs/dev-design/plans/2026-09-12-sandbox19-scene-assets.md)，短掩体与院区布局验收见 [构图续办](../../../docs/dev-design/plans/2026-09-13-sandbox19-visual-composition.md)。
+场景实体 Y 向上、米制、中心 pivot。Lua 保留多 submesh 材质；既有 `CreateBlockObject` 从场景网格顶点生成 Bullet 简化凸包，作为封闭箱体/掩体的碰撞体；细小凹缝不具有独立可穿透语义。枪身、弹匣和背甲是显示附件，没有独立 Bullet 刚体。场景与 navmesh 按真实变换读取，ObjectManager 负责销毁。初版运行验收见 [场景资产计划](../../../docs/dev-design/plans/2026-09-12-sandbox19-scene-assets.md)，短掩体与院区布局验收见 [构图续办](../../../docs/dev-design/plans/2026-09-13-sandbox19-visual-composition.md)。

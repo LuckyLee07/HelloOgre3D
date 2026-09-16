@@ -211,3 +211,15 @@ Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] pau
 验证：仓库 Lua 5.1.4 `luac -p` 和 `git diff --check` PASS；本轮只改场景 Lua 与文档，继续使用 Release 二进制 SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，不重复构建或未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，新增 `courtyard-switchgear-hull` 与原 `switchgear-hull`、`field-generator-hull`、全部出生点、中央/西绕行和任务/BT 生命周期均通过，摘要在本地 `tmp/relay-product-fixture-20260917-000113-0g9p3_f3/summary.json`。无夹具内部输入自然对局在 76.989 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260917-000204-d173z1jj/summary.json`。
 
 最新本地试玩包为 `tmp/goal-p3-playtest-courtyard-switchgear-20260917/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性和包内程序/网格/场景 Lua 哈希一致，从包内 launcher 的 1280×720 GL/F3 抓帧确认最新布局并正常退出，记录在 `tmp/goal-p3-playtest-courtyard-switchgear-20260917-launch/`。ZIP SHA-256 为 `d59cd49bd598cb768a1897495c1cffbe3b4642c405332d24565a8d4e7bffcb9f`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感、专用站立侧步/足底约束和 Windows D3D9 仍为 NOT RUN，P3 保持开放。
+
+## 2026-09-17 换弹弹匣骨骼可读性切片
+
+可观察问题：上一轮枪身外壳让竖起的机匣和前段可读，但 1600×900 后视换弹序列中仍看不到明确的弹匣交换；旧图在本地 `tmp/goal-p3-weapon-20260913/shell-reload/`。检查原 `soldier_weapon.skeleton` 后确认 `sniper_reload` 已有 `b_Clip` 轨迹：约 0.46–1.79 秒把弹匣从枪身移到左手侧再插回，最大平移约 0.68m，缺口是原弹匣轮廓过细，不是动作、通知或计时未触发。
+
+本轮新增项目自制 `commander_rifle_magazine.mesh`（220 三角形，生成器可逐字节重建），复用既有深色金属与青色标记材质。`RenderComponent` 的自有骨骼附件增加可选的骨骼朝向跟随；默认仍用身体朝向，保持背甲行为，只有指挥官原枪的弹匣附件启用完整 `b_Clip` 位置/朝向。`WeaponComponent` 在原武器 ASM 更新后同步附件，原 mesh/skeleton、`sniper_reload`、`reload_complete`、弹药恢复和 `b_muzzle` 发弹链均保持真源，不新增 Lua 接口、计时器或刚体。
+
+同一 1600×900 GL、`reload-replay.txt` 和仿真时钟 2600/3000/3300/3600/4000/4500ms 对照旧 `shell-reload/` 与本地 `tmp/goal-p3-reload-followup-20260917/reload-final/`：新版 4000ms 能看到弹匣离开竖起枪身并转到左手旁，4500ms 回到枪身；其余姿态和枪身轮廓保持。当前版本的入口/推进/院区 8000/30000/65000ms 画面在同目录 `stages/`，与上一轮 `tmp/goal-p3-courtyard-switchgear-20260916/final/` 对照未见中轴、设施、HUD 或角色构图退化。截图和输入均为后台合成回放，只证明真实 GL 呈现与事件链，不代表真人手感。
+
+验证：生成器 Python 语法与两次网格重建 PASS，弹匣 SHA-256 均为 `cf10e83ac16eee254cc0cb91e0df5029ac2c6bc2671804a168eb70712feda001`，原枪身网格哈希保持 `6c34193ea0567ae6933773b9fd944a3ad8bca9f974d4940a9a4aa923b8b966b3`。macOS arm64 Release 主目标清理中间目录后完整构建 PASS，二进制 SHA-256 为 `94f7cd811fbf8397b8df558ceabb0bd6cae71c413c3537d99494b81f775c97df`；60Hz 动作合同 21/21，四发枪口坐标/方向与上次枪械合同逐项一致。Sandbox6/7/8/19 各 15 秒 smoke PASS；产品夹具的全部出生点、中央/西绕行、真实碰撞、BT 与重开 PASS，摘要在 `tmp/relay-product-fixture-20260917-002741-gvqruu27/summary.json`。无夹具内部输入自然对局在 78.969 秒胜利，随后重开、暂停并正常退出，错误列表为空，摘要在 `tmp/relay-natural-20260917-002805-l8qxaa3f/summary.json`。
+
+最新本地试玩包为 `tmp/goal-p3-playtest-reload-magazine-20260917/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、包内程序/枪身/弹匣哈希一致，从包内 launcher 的 1280×720 GL 换弹帧确认弹匣资源实际加载并正常退出。ZIP SHA-256 为 `7fdaf5f2aff4163f085ef598922e0963c2b4d6ebdea0c3aa8eaa89d2bd26197d`。本轮没有 Lua 或绑定变更。真人持续键鼠、Alt+右键、移动射击与换弹手感、扬声器听感、专用站立侧步/足底约束和 Windows D3D9 仍为 NOT RUN，P3 保持开放；该弹匣只补足已有动作的可读事件，不等于完整武器或角色资产重制。

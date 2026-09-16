@@ -58,7 +58,7 @@ public:
 	void RenderInterpolated(float alpha);
 	void FreezeInterpolation() { m_previousPosition = m_currentPosition; m_previousOrientation = m_currentOrientation; }
 	void AttachToBone(const Ogre::String& boneName, Ogre::Entity* entityObj, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
-	bool AttachOwnedMeshToBone(const Ogre::String& meshFile, const Ogre::String& boneName, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset);
+	bool AttachOwnedMeshToBone(const Ogre::String& meshFile, const Ogre::String& boneName, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset, bool followBoneOrientation = false);
 	void CopyOwnedBoneAttachmentsTo(RenderComponent& target) const;
 	void SyncOwnedBoneAttachments();
 
@@ -69,6 +69,7 @@ private:
 		Ogre::String boneName;
 		Ogre::Vector3 positionOffset;
 		Ogre::Vector3 rotationOffset;
+		bool followBoneOrientation;
 		RenderComponent* render;
 	};
 	std::vector<OwnedBoneAttachment> m_ownedBoneAttachments;

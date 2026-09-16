@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build the small, static commander rifle shell used over the existing animated gun.
+"""Build commander rifle presentation meshes over the existing animated gun.
 
-The original weapon skeleton remains the muzzle and reload authority. This
-mesh improves the visible receiver/stock silhouette at Sandbox19 camera scale.
+The original weapon skeleton remains the muzzle and reload authority. The shell
+improves the receiver/stock silhouette, while the magazine follows b_Clip.
 """
 
 from generate_relay_meshes import Mesh
@@ -29,6 +29,14 @@ def main():
         rifle.box((0.012, 0.030, 0.165), (x, 0.070, 0.096), 0.004, mark)
         rifle.box((0.012, 0.038, 0.098), (x, 0.012, 0.327), 0.004, dark)
     print(rifle.write("commander_rifle_shell.mesh"))
+
+    magazine = Mesh()
+    magazine.box((0.125, 0.235, 0.075), (0.0, -0.095, 0.0), 0.016, dark)
+    magazine.box((0.140, 0.035, 0.088), (0.0, 0.012, 0.0), 0.008, metal)
+    magazine.box((0.142, 0.038, 0.090), (0.0, -0.205, 0.0), 0.010, metal)
+    for z in (-0.040, 0.040):
+        magazine.box((0.064, 0.050, 0.010), (0.0, -0.090, z), 0.003, mark)
+    print(magazine.write("commander_rifle_magazine.mesh"))
 
 
 if __name__ == "__main__":

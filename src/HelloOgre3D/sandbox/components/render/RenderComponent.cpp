@@ -185,14 +185,14 @@ void RenderComponent::AttachToBone(const Ogre::String& boneName, Ogre::Entity* e
 	m_pEntity->attachObjectToBone(boneName, entity, orientationOffset, positionOffset);
 }
 
-bool RenderComponent::AttachOwnedMeshToBone(const Ogre::String& meshFile, const Ogre::String& boneName, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset)
+bool RenderComponent::AttachOwnedMeshToBone(const Ogre::String& meshFile, const Ogre::String& boneName, const Ogre::Vector3& positionOffset, const Ogre::Vector3& rotationOffset, bool followBoneOrientation)
 {
 	if (m_pEntity == nullptr || !m_pEntity->hasSkeleton() || !m_pEntity->getSkeleton()->hasBone(boneName))
 		return false;
 
 	std::unique_ptr<RenderComponent> attachment(new RenderComponent(meshFile));
 	attachment->SetVisible(m_pEntity->isVisible());
-	m_ownedBoneAttachments.push_back({ meshFile, boneName, positionOffset, rotationOffset, attachment.get() });
+	m_ownedBoneAttachments.push_back({ meshFile, boneName, positionOffset, rotationOffset, followBoneOrientation, attachment.get() });
 	attachment.release();
 	SyncOwnedBoneAttachments();
 	return true;
@@ -202,7 +202,7 @@ void RenderComponent::CopyOwnedBoneAttachmentsTo(RenderComponent& target) const
 {
 	for (const OwnedBoneAttachment& attachment : m_ownedBoneAttachments)
 	{
-		target.AttachOwnedMeshToBone(attachment.meshFile, attachment.boneName, attachment.positionOffset, attachment.rotationOffset);
+		target.AttachOwnedMeshToBone(attachment.meshFile, attachment.boneName, attachment.positionOffset, attachment.rotationOffset, attachment.followBoneOrientation);
 	}
 }
 
@@ -221,13 +221,14 @@ void RenderComponent::SyncOwnedBoneAttachments()
 		Ogre::Vector3 bonePosition;
 		if (!SceneFactory::GetBonePosition(*m_pSceneNode, attachment.boneName, bonePosition))
 			continue;
-		// The imported spine's local axes rotate sharply during aiming. Anchor
-		// translation to its animated position, but keep a rigid pack aligned to
-		// the body's physical facing so it does not swing off the back.
-		const Ogre::Quaternion bodyOrientation = m_pSceneNode->_getDerivedOrientation();
-		attachment.render->SetPosition(bonePosition + bodyOrientation * attachment.positionOffset);
+		// Body equipment can stay aligned to physical facing, while articulated
+		// parts such as a weapon magazine need the bone's animated orientation.
+		Ogre::Quaternion attachmentOrientation = m_pSceneNode->_getDerivedOrientation();
+		if (attachment.followBoneOrientation && !SceneFactory::GetBoneOrientation(*m_pSceneNode, attachment.boneName, attachmentOrientation))
+			continue;
+		attachment.render->SetPosition(bonePosition + attachmentOrientation * attachment.positionOffset);
 		const Ogre::Vector3& rotation = attachment.rotationOffset;
-		attachment.render->SetOrientation(bodyOrientation * QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z));
+		attachment.render->SetOrientation(attachmentOrientation * QuaternionFromRotationDegrees(rotation.x, rotation.y, rotation.z));
 	}
 }
 
