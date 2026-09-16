@@ -14,6 +14,7 @@ local _sideWallIds = {}
 local _floorIds = {}
 local _coverIds = {}
 local _supplyIds = {}
+local _facilityIds = {}
 local _relayFeedback = {}
 
 local function _Box(width, height, length, x, y, z, yaw, material)
@@ -122,7 +123,7 @@ end
 
 function Scene.Create()
 	_G.SandboxLevelBoxes = {}
-	_sideWallIds, _floorIds, _coverIds, _supplyIds = {}, {}, {}, {}
+	_sideWallIds, _floorIds, _coverIds, _supplyIds, _facilityIds = {}, {}, {}, {}, {}
 	_relayFeedback = {beacons = {}, strips = {}, beam = {}, door = {}, goal = {}, threshold = {}, phase = "", mode = "off"}
 	_navMesh, _debugVisible = nil, false
 
@@ -237,8 +238,13 @@ function Scene.Create()
 		_supplyIds[crate:GetObjId()] = true
 		_GroundLayer(2.0, 1.45, supply[1], supply[2], supply[3], "Relay/ContactShadow")
 	end
+	-- One low field generator replaces the mirrored short case on the eastern
+	-- approach shoulder. Its hull stays outside the x=-5..5 central route.
+	local generator = _Asset("relay_field_generator.mesh", 7.6, 0.61, -11.6, 8)
+	_facilityIds[generator:GetObjId()] = true
+	_GroundLayer(2.5, 1.55, 7.6, -11.6, 8, "Relay/ContactShadow")
 	for _, supply in ipairs({
-		{-7.0, -11.0, -7}, {7.6, -11.6, 8},
+		{-7.0, -11.0, -7},
 		{-9.9, 2.0, 0}, {10.0, 2.2, 90},
 		{-8.8, 29.0, 0}, {9.0, 30.1, 12},
 		{8.5, 34.7, 8},
@@ -526,6 +532,10 @@ function Scene.ValidateCollision()
 		.. " short=" .. tostring(crateSolid) .. " above-short=" .. tostring(crateHeight)
 		.. " tall=" .. tostring(tallSolid))
 	pass = supplyPass and pass
+	local generatorHit = SandboxRaycast:RayCastObjectId(Vector3(7.6, 0.8, -12.3), Vector3(7.6, 0.8, -10.9))
+	local generatorSolid = _facilityIds[generatorHit] == true
+	print("[Sandbox19ArenaSelfTest] " .. (generatorSolid and "PASS" or "FAIL") .. " field-generator-hull")
+	pass = generatorSolid and pass
 
 	local floorHit = SandboxRaycast:RayCastObjectId(Vector3(2, 3, 2), Vector3(2, -2, 2))
 	local floorSolid = _floorIds[floorHit] == true

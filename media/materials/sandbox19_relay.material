@@ -75,6 +75,38 @@ material Relay/CrateMark : base_material
 	set $shininess "8"
 }
 
+// A low field generator breaks up the repeated green supply-case silhouette.
+material Relay/GeneratorBody : base_material
+{
+	set $diffuseCol "0.55 0.52 0.42 1"
+	set $specularCol "0.08 0.08 0.06"
+	set $shininess "22"
+}
+material Relay/GeneratorFrame : base_material
+{
+	set $diffuseCol "0.17 0.20 0.18 1"
+	set $specularCol "0.09 0.10 0.09"
+	set $shininess "24"
+}
+material Relay/GeneratorCap : base_material
+{
+	set $diffuseCol "0.42 0.46 0.38 1"
+	set $specularCol "0.10 0.11 0.09"
+	set $shininess "28"
+}
+material Relay/GeneratorVent : base_material
+{
+	set $diffuseCol "0.08 0.10 0.10 1"
+	set $specularCol "0.02 0.02 0.02"
+	set $shininess "8"
+}
+material Relay/GeneratorMark : base_material
+{
+	set $diffuseCol "0.24 0.67 0.64 1"
+	set $specularCol "0.08 0.18 0.17"
+	set $shininess "24"
+}
+
 // A narrow static shell follows the commander's animated rifle. The original
 // weapon and its muzzle bone remain visible and authoritative for shots.
 material Relay/CommanderRifleArmor : base_material

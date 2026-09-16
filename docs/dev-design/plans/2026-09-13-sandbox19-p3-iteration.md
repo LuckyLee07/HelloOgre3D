@@ -181,3 +181,13 @@
 Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] paused=true`，随后由玩家 `241` 重建为 `326`，并重新进入 `[Sandbox19Match] phase=WAVE wave=1 enemies=2 director=none elapsedMs=0`；前台画面同步显示计时 00:00、敌人 2、指挥官 160 HP、两名队友各 140 HP。最后再次 Escape 并点击 Quit，日志完整到达 `OGRE Shutdown`。原始日志及提取事件保存在本地 `tmp/goal-p3-native-ui-20260916/{Sandbox.log,events.log}`，不入库。
 
 本轮没有产品代码、Lua、资源或工程配置改动，因此不重复构建、Lua 语法、Sandbox6/7/8、产品夹具和自然通关；继续沿用同一二进制此前已通过的对应证据。桌面 UI 自动化不能持续按住 W/A/D、鼠标键或 Alt 并同时点击右键，亦不能评价音质，因此连续转镜、持续移动、移动射击、Alt+右键地面/敌人下令、真人主观手感与扬声器听感仍为 NOT RUN。Windows D3D9 和普通窗口 resize 同样未运行。此轮只缩小前台原生事件链缺口，不关闭 P3。
+
+## 2026-09-16 入口场地发电机切片
+
+可观察问题：最新 1600×900 入口画面在中央路线两侧仍以同系列绿色补给箱近似镜像，首屏前景缺少能说明设施用途的横向轮廓。此轮只把世界坐标 `(7.6, 0.61, -11.6)` 的一只低补给箱一对一替换为项目自制 `relay_field_generator.mesh`，不增加实体数量。发电机实际边界约 2.10×1.12×1.103m、616 三角形，使用暖灰机身、深色端架/进气格栅和青色状态屏五种专用材质；[生成器](../../../tools/generate_relay_field_generator.py)连续两次重建 SHA-256 均为 `e21730ab4d2849400c5eba7279787b0d74c6f252e657240106bc02589e04a827`。网格由同一顶点建立真实 Bullet 凸包；旋转后最内侧仍在 `x>6.48m`，不占 `x=-5..5m` 中央路线，西侧 `x=-18m` 绕行未改。
+
+同一 macOS arm64 Release、1600×900 GL、`short-replay.txt` 和渲染时钟 8000/30000/65000ms 的基线与最终图分别在本地 `tmp/goal-p3-generator-20260916/{baseline,final}/`。入口图中原左右同款绿色短箱改为一侧横向格栅设施，状态屏与指挥官背甲同属克制青色识别点；角色、敌我轮廓、中轴门厅和 HUD 仍保持主次。推进与院区图中该设施已离开视野，原构图未见退化；战斗 HP 随调度变化，不作为逐帧等价证据。1280×720 F3 图在同目录 `nav-debug/`，青色可走区域绕开发电机实体并保持中央、西侧路线连续。
+
+验证：仓库 Lua 5.1.4 `luac -p`、生成器执行、网格逐字节重建和 `git diff --check` PASS；程序仍为已验证的 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮没有 C++、绑定或工程配置改动，不重复构建及未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，包含全部出生点、中央/西绕行、原补给箱 hull、新 `field-generator-hull` 和真实任务/BT 生命周期，摘要在本地 `tmp/relay-product-fixture-20260916-232408-dia61zvn/summary.json`。无夹具内部输入自然对局在 78.705 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260916-232453-249o34wl/summary.json`。
+
+最新本地试玩包为 `tmp/goal-p3-playtest-generator-20260916/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、程序/场景 Lua/材质/新网格哈希一致，从包内 launcher 的 1280×720 GL 抓帧和正常退出通过。ZIP SHA-256 为 `40e31f2c7151b3ed3f9f055bc83b9385257eeca7e3cffa183bee6fad4965099a`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 保持开放；本轮是局部入口设施去重复，不等于整体环境或角色资产达到概念稿。
