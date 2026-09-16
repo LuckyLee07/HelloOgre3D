@@ -171,3 +171,13 @@
 720p 四轮每轮保留 14 帧，开启组 `cpuFrame` 均值为 8.574/9.352ms，关闭组为 8.829/9.401ms，最后采样帧号分别为开启 2051/2041、关闭 2058/2061。900p 开启组采样均值约 9.05ms、关闭组约 8.76ms，差约 0.29ms；720p 采样均值方向相反。最后采样帧号受 250/1000ms 采样相位影响，不能当作精确总帧数或稳定 FPS。`updateCall` 多个快照为 0，`engineGap` 含未细分的渲染/调度时间；这些数据不能给出可靠 GPU 阴影成本。
 
 另外在最新场景用相同 1600×900、5 秒真实 GL 画面开/关对照 `visual/{on,off}/`：开启时角色脚下、掩体和棚架投影可见，关闭后明显变平。相对可见画质收益，现有采样只支持至多较小且未精确归因的成本；本轮不改 1536² 深度图、PCF、Tracy 或 modulative 接收链。若真人前台或 Windows D3D9 后续出现稳定卡顿，再用该环境下连续帧/GPU 计时定位。无产品代码或资源改动，此轮只记录测量；真人持续键鼠、扬声器和 Windows D3D9 仍为 NOT RUN，P3 保持开放。
+
+## 2026-09-16 前台 macOS 原生输入链复核
+
+可观察问题：截至上一轮，最新试玩包只有后台 InputReplay、包内启动抓帧和真人检查清单，没有前台 macOS 原生窗口事件链证据。本轮从 `tmp/goal-p3-playtest-portal-20260913/HelloOgre3D.app` 启动 1280×720 前台窗口，不设置 `HELLO_WINDOW_BACKGROUND` 或 `HELLO_INPUT_REPLAY`，通过桌面 UI 自动化向实际应用窗口发送按键与点击。该方式经过 macOS 窗口和输入桥，但不是人手持续操作，证据边界与后台合成回放不同。
+
+启动日志记录 `[WindowMode] platform=mac background=false requestedLogical=1280x720 pixels=1280x720`，没有 InputReplay marker；包内 `bin/HelloOgre3D` 与工作区 Release 的 SHA-256 均为 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`。前台 Return 进入第一波，任务随后从 `WAVE` 到 `ADVANCE`。切到 Finder 使应用失焦后，再点击游戏窗口中心，日志出现 `[MouseLook] capture=on reason=resume-click`；这覆盖了 `InputManager` 的待重捕首击路径。Alt+数字键时编队选择环发生变化，日志在同一轮记录 `capture=off reason=mode-change` 后重新 `capture=on`，说明前台 Alt 模式切换到达游戏输入链。
+
+Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] paused=true`，随后由玩家 `241` 重建为 `326`，并重新进入 `[Sandbox19Match] phase=WAVE wave=1 enemies=2 director=none elapsedMs=0`；前台画面同步显示计时 00:00、敌人 2、指挥官 160 HP、两名队友各 140 HP。最后再次 Escape 并点击 Quit，日志完整到达 `OGRE Shutdown`。原始日志及提取事件保存在本地 `tmp/goal-p3-native-ui-20260916/{Sandbox.log,events.log}`，不入库。
+
+本轮没有产品代码、Lua、资源或工程配置改动，因此不重复构建、Lua 语法、Sandbox6/7/8、产品夹具和自然通关；继续沿用同一二进制此前已通过的对应证据。桌面 UI 自动化不能持续按住 W/A/D、鼠标键或 Alt 并同时点击右键，亦不能评价音质，因此连续转镜、持续移动、移动射击、Alt+右键地面/敌人下令、真人主观手感与扬声器听感仍为 NOT RUN。Windows D3D9 和普通窗口 resize 同样未运行。此轮只缩小前台原生事件链缺口，不关闭 P3。
