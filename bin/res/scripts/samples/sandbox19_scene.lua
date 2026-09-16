@@ -230,7 +230,7 @@ function Scene.Create()
 	-- central lane (x=-5..5) and the x=-18 bypass stay clear at every stage.
 	for _, supply in ipairs({
 		{-10.9, -6.9, -4}, {10.9, -6.9, 4},
-		{-10.5, 6.1, 3}, {10.5, 6.1, -3},
+		{10.5, 6.1, -3},
 		{-10.3, 24.1, -5}, {10.3, 24.1, 5},
 		{-8.6, 34.6, -7},
 	}) do
@@ -238,6 +238,11 @@ function Scene.Create()
 		_supplyIds[crate:GetObjId()] = true
 		_GroundLayer(2.0, 1.45, supply[1], supply[2], supply[3], "Relay/ContactShadow")
 	end
+	-- A vertical switchgear cabinet replaces the mirrored tall case at the
+	-- middle western shoulder without changing the central or western routes.
+	local switchgear = _Asset("relay_switchgear.mesh", -10.5, 0.87, 6.1, 3)
+	_facilityIds[switchgear:GetObjId()] = true
+	_GroundLayer(1.95, 1.35, -10.5, 6.1, 3, "Relay/ContactShadow")
 	-- One low field generator replaces the mirrored short case on the eastern
 	-- approach shoulder. Its hull stays outside the x=-5..5 central route.
 	local generator = _Asset("relay_field_generator.mesh", 7.6, 0.61, -11.6, 8)
@@ -536,6 +541,10 @@ function Scene.ValidateCollision()
 	local generatorSolid = _facilityIds[generatorHit] == true
 	print("[Sandbox19ArenaSelfTest] " .. (generatorSolid and "PASS" or "FAIL") .. " field-generator-hull")
 	pass = generatorSolid and pass
+	local switchgearHit = SandboxRaycast:RayCastObjectId(Vector3(-10.5, 1.3, 5.5), Vector3(-10.5, 1.3, 6.7))
+	local switchgearSolid = _facilityIds[switchgearHit] == true
+	print("[Sandbox19ArenaSelfTest] " .. (switchgearSolid and "PASS" or "FAIL") .. " switchgear-hull")
+	pass = switchgearSolid and pass
 
 	local floorHit = SandboxRaycast:RayCastObjectId(Vector3(2, 3, 2), Vector3(2, -2, 2))
 	local floorSolid = _floorIds[floorHit] == true

@@ -191,3 +191,13 @@ Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] pau
 验证：仓库 Lua 5.1.4 `luac -p`、生成器执行、网格逐字节重建和 `git diff --check` PASS；程序仍为已验证的 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮没有 C++、绑定或工程配置改动，不重复构建及未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，包含全部出生点、中央/西绕行、原补给箱 hull、新 `field-generator-hull` 和真实任务/BT 生命周期，摘要在本地 `tmp/relay-product-fixture-20260916-232408-dia61zvn/summary.json`。无夹具内部输入自然对局在 78.705 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260916-232453-249o34wl/summary.json`。
 
 最新本地试玩包为 `tmp/goal-p3-playtest-generator-20260916/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、程序/场景 Lua/材质/新网格哈希一致，从包内 launcher 的 1280×720 GL 抓帧和正常退出通过。ZIP SHA-256 为 `40e31f2c7151b3ed3f9f055bc83b9385257eeca7e3cffa183bee6fad4965099a`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 保持开放；本轮是局部入口设施去重复，不等于整体环境或角色资产达到概念稿。
+
+## 2026-09-16 中段配电柜切片
+
+可观察问题：最新入口战斗画面右肩仍并列两只同系列绿色补给箱，中段掩体两侧也重复高箱轮廓，设施用途和层次不足。此轮只把世界坐标 `(-10.5, 0.87, 6.1)` 的一只高补给箱一对一替换为项目自制 `relay_switchgear.mesh`，不增加实体数量。配电柜实际边界约 1.56×1.745×0.926m、704 三角形，复用现有发电机/箱体材质形成双门、散热槽、深色框架和青色状态面板；[生成器](../../../tools/generate_relay_switchgear.py)连续两次重建 SHA-256 均为 `5e0cf4b28f9c5e678243bad2042e8a9c17d21279dd124956b62c53f37ad292e9`。网格顶点同时建立真实 Bullet 凸包；占位沿用原高箱且最内侧仍约在 `x=-9.7m`，不占 `x=-5..5m` 中央路线，`x=-18m` 西绕行未改。
+
+同一 macOS arm64 Release、1600×900 GL、`short-replay.txt` 和渲染时钟 8000/30000/65000ms 的基线与最终图分别在本地 `tmp/goal-p3-generator-20260916/final/` 与 `tmp/goal-p3-switchgear-20260916/final/`。入口图中原高箱的平顶储物轮廓改为带百叶和状态灯的竖向设备，画面右肩与前景发电机形成横/竖两种设施语言；中轴、敌我轮廓、HUD 与门厅仍保持主次。推进和院区阶段该占位退出近景，构图未见退化；交火 HP 随调度变化，不作为逐帧等价证据。1280×720 F3 图在同目录 `nav-debug/`，青色可走区域保持中央与两侧连续。
+
+验证：仓库 Lua 5.1.4 `luac -p`、生成器执行、两次确定性网格重建和 `git diff --check` PASS；程序仍为已验证的 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮没有 C++、绑定或工程配置改动，不重复构建或未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，包含全部出生点、中央/西绕行、原补给箱、`field-generator-hull`、新 `switchgear-hull` 和真实任务/BT 生命周期，摘要在本地 `tmp/relay-product-fixture-20260916-234535-3ohqtsxn/summary.json`。无夹具内部输入自然对局在 78.210 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260916-234615-kxyaldi8/summary.json`。
+
+最新本地试玩包为 `tmp/goal-p3-playtest-switchgear-20260916/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、程序与新网格哈希一致，从包内 launcher 的 1280×720 GL/F3 抓帧确认资源实际加载并正常退出，记录在 `tmp/goal-p3-playtest-switchgear-20260916-launch/`。ZIP SHA-256 为 `845757682c891908df0f3450750f08759209fff74959a64e7ec5b24ce4d7fc15`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 保持开放；专用站立侧步/足底约束也仍受现有动画资源限制。
