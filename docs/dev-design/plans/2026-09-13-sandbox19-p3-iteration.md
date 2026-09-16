@@ -201,3 +201,13 @@ Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] pau
 验证：仓库 Lua 5.1.4 `luac -p`、生成器执行、两次确定性网格重建和 `git diff --check` PASS；程序仍为已验证的 Release SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，本轮没有 C++、绑定或工程配置改动，不重复构建或未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，包含全部出生点、中央/西绕行、原补给箱、`field-generator-hull`、新 `switchgear-hull` 和真实任务/BT 生命周期，摘要在本地 `tmp/relay-product-fixture-20260916-234535-3ohqtsxn/summary.json`。无夹具内部输入自然对局在 78.210 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260916-234615-kxyaldi8/summary.json`。
 
 最新本地试玩包为 `tmp/goal-p3-playtest-switchgear-20260916/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性、程序与新网格哈希一致，从包内 launcher 的 1280×720 GL/F3 抓帧确认资源实际加载并正常退出，记录在 `tmp/goal-p3-playtest-switchgear-20260916-launch/`。ZIP SHA-256 为 `845757682c891908df0f3450750f08759209fff74959a64e7ec5b24ce4d7fc15`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感和 Windows D3D9 仍为 NOT RUN，P3 保持开放；专用站立侧步/足底约束也仍受现有动画资源限制。
+
+## 2026-09-17 院区前肩配电柜复用切片
+
+可观察问题：30 秒推进画面中，院区前肩两道掩体外侧仍各立一只同系列绿色高补给箱，形成明显镜像。此轮只把世界坐标 `(10.3, 0.87, 24.1)` 的一只高箱一对一替换为上一轮已验证的 `relay_switchgear.mesh`；资源、实体总数、任务规则和材质均未增加。入口右肩与院区前肩两台柜体分别在 8 秒和 30 秒视角成为近中景，避免同一画面再次形成设施重复。新占位沿用原高箱位置，最内侧仍约在 `x=9.5m`，不占 `x=-5..5m` 中央路线或 `x=-18m` 西绕行。
+
+同一 macOS arm64 Release、1600×900 GL、`short-replay.txt` 和渲染时钟 8000/30000/65000ms 的基线与最终图分别在本地 `tmp/goal-p3-switchgear-20260916/final/` 与 `tmp/goal-p3-courtyard-switchgear-20260916/final/`。推进图左肩原绿色高箱改为深色百叶柜和青色状态点，与右肩保留高箱形成清楚差异；入口图只把新柜体作为远景预示，院区近门图则不再显示该占位。中轴、门厅、敌我轮廓与 HUD 未见退化。1280×720 F3 图在同目录 `nav-debug/`，中央与两侧青色可走区域连续。
+
+验证：仓库 Lua 5.1.4 `luac -p` 和 `git diff --check` PASS；本轮只改场景 Lua 与文档，继续使用 Release 二进制 SHA-256 `b13b94745614b5c101472fcbaf17f625fb58b281492d1479a601e86b52b7ca9c`，不重复构建或未受影响的 Sandbox6/7/8。Sandbox19 产品夹具 PASS，新增 `courtyard-switchgear-hull` 与原 `switchgear-hull`、`field-generator-hull`、全部出生点、中央/西绕行和任务/BT 生命周期均通过，摘要在本地 `tmp/relay-product-fixture-20260917-000113-0g9p3_f3/summary.json`。无夹具内部输入自然对局在 76.989 秒胜利，随后重开、暂停并正常退出，错误列表为空；摘要在 `tmp/relay-natural-20260917-000204-d173z1jj/summary.json`。
+
+最新本地试玩包为 `tmp/goal-p3-playtest-courtyard-switchgear-20260917/HelloOgre3D.app` 与同名 ZIP；临时签名、ZIP 完整性和包内程序/网格/场景 Lua 哈希一致，从包内 launcher 的 1280×720 GL/F3 抓帧确认最新布局并正常退出，记录在 `tmp/goal-p3-playtest-courtyard-switchgear-20260917-launch/`。ZIP SHA-256 为 `d59cd49bd598cb768a1897495c1cffbe3b4642c405332d24565a8d4e7bffcb9f`。真人持续键鼠、Alt+右键、移动射击手感、扬声器听感、专用站立侧步/足底约束和 Windows D3D9 仍为 NOT RUN，P3 保持开放。
