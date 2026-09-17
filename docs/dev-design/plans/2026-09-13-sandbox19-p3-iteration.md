@@ -231,3 +231,11 @@ Escape 打开暂停菜单后点击 Retry，日志先记录 `[Sandbox19Pause] pau
 当前机器同时有其它工作区构建、索引和媒体分析负载；第一批无限帧率轮次的墙钟和原始均值被数百毫秒调度尖峰污染，不能直接比较。按与旧记录相同的玩法段剔除前 16 个快照，再排除 `frameDelta>=50ms`、`cpuFrame>=50ms` 或 `updateCall>=20ms` 的受抢占样本，开阴影两轮合计 98 帧、关阴影两轮合计 101 帧：`cpuFrame` 中位数为 6.035 / 5.210ms，`engineGap` 中位数为 4.845 / 4.310ms，即约 +0.825 / +0.535ms。补充的 60Hz 上限组剔除前 8 个快照后仅剩开 19、关 41 个干净样本，CPU 均值为 4.823 / 4.829ms，`engineGap` 中位数为 3.730 / 3.510ms。两批都受系统负载影响，且没有 GPU timer，因此只能说明当前成本较小且未出现稳定的大幅回退，不能把差值当作精确 GPU 开销；原始日志和解析结果分别在本地 `tmp/goal-p3-shadow-final-20260917/` 与 `tmp/goal-p3-shadow-final-60hz-20260917/`。
 
 同一最新二进制另做 1600×900、5000ms、真实 GL 开关画面对照，位于 `tmp/goal-p3-shadow-final-20260917/visual/{on,off}/`；两张图逐像素 RGB 绝对差均值为 4.209/3.759/3.580。开启时指挥官、队友、掩体、棚架、门框和设施投影清楚，关闭后院区层次明显变平。相对这一可见收益，现有证据不支持调整 1536² 深度图、PCF、Tracy 或接收链，本轮保留实现且没有产品代码/资源改动。首次沙箱内启动因无 OpenGL 3 上下文失败，不计入结果；尝试前台计时又因窗口未成为活动应用而使输入回放不能在 70 秒内完成，也已舍弃。后台合成回放不代表真人前台性能或手感，真人持续键鼠、扬声器和 Windows D3D9 仍为 NOT RUN，P3 保持开放。
+
+## 2026-09-17 最新产品包前台输入链复核
+
+可观察问题：2026-09-16 的前台原生输入证据来自门框版本，晚于它的设施、枪械外壳和换弹弹匣已更新产品包；需要确认当前 `a77d01e` 二进制仍能经过真实 macOS 前台窗口完成关键输入与重开链。本轮启动 `tmp/goal-p3-playtest-reload-magazine-20260917/HelloOgre3D.app` 的 1280×720 窗口，不设置 `HELLO_WINDOW_BACKGROUND` 或 `HELLO_INPUT_REPLAY`。包内二进制 SHA-256 为 `94f7cd811fbf8397b8df558ceabb0bd6cae71c413c3537d99494b81f775c97df`，ZIP SHA-256 为 `7fdaf5f2aff4163f085ef598922e0963c2b4d6ebdea0c3aa8eaa89d2bd26197d`。
+
+重开运行中，前台 Return 进入第一波；`Alt+1` 把画面中的选择环从两名队友收为一名，日志同步记录 `[MouseLook] capture=off reason=mode-change` 后恢复捕获。Escape 打开暂停页，点击 Retry 后玩家由 `241` 重建为 `326`，画面恢复计时 `00:00`、敌人 2、两名队友 240 HP 和指挥官 160 HP，日志重新进入 `WAVE wave=1 enemies=2 director=none elapsedMs=0`。第二次专项运行先建立鼠标捕获，再把 SourceTree 实际置前；游戏进入暂停，返回窗口后点击 `RESUME MISSION`，再点击画面中心，日志出现 `[MouseLook] capture=on reason=resume-click`。两次运行均由窗口关闭按钮结束并完整到达 `OGRE Shutdown`，未发现 `ERROR`、`Exception` 或 `Assertion`。原始日志保存在本地 `tmp/goal-p3-native-ui-latest-20260917/{Sandbox-restart.log,Sandbox-focus.log}`，不入库。
+
+本轮没有产品代码、Lua、资源、绑定或工程配置改动，因此不重复已在同一二进制通过的 Release 构建、动作合同、Sandbox6/7/8/19、产品夹具和自然通关。桌面 UI 自动化只能发送离散键或点击，不能持续按住 W/A/D 或鼠标键，也不能同时保持 Alt 并点击右键；接口实际拒绝 `alt+button3`，没有生成下令证据。因此持续移动、移动射击、Alt+右键地面/敌人下令、真人主观手感、换弹手感和扬声器听感仍为 NOT RUN；Windows D3D9 同样未运行。此轮只把前台原生事件链证据更新到当前产品包，不关闭 P3。
