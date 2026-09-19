@@ -22,6 +22,7 @@
 - [x] Crossfire 首个联合样段：双机暂停规划与方向盾实弹、原创机器人/庭院、HUD/视听、Release 与相关回归；详见[实施记录](dev-design/plans/2026-09-19-crossfire-first-room.md)。
 - [x] Crossfire 三场遭遇与衔接：作者追加“继续后续的升级”后完成遮挡/双塔关、设施构图、标题选关/引导/设置/记录与包内连续通关；详见[第二轮记录](dev-design/plans/2026-09-19-crossfire-three-encounters.md)。
 - [x] Crossfire 实玩问题首轮收敛：实际射界/首个阻挡者、持续引导、真实表面落点与范围、放大镜头、两机识别、护盾/残骸和中文上手已联合升级；原生第三关按阻挡提示换位后 12.243 s、两机存活通关。证据与保留项见[可读性升级](dev-design/plans/2026-09-19-crossfire-readable-combat.md)，不覆盖作者主观验收。
+- [x] Crossfire 场景与节奏升级：三关表面/供电状态、两秒推进、点击受阻定位与复盘；原生第三关 13.860 s 两机存活，三关/小窗口/查询回归通过。见[实施证据](dev-design/plans/2026-09-19-crossfire-scene-rhythm.md)。
 - [ ] Crossfire 作者体验复核：分别评价场景/模型、指挥操作与声音；三关功能通过不等于整体主观品质验收。Windows和人工扬声器分项仍未完成。
 
 M2 与 M3 可重复对照实验均已完成，结果见 `cycle-01.md`、[M2 记录](sandbox19-focus-order-experiment-2026-09-10.md)和 [M3 记录](sandbox12-team-sharing-experiment-2026-09-10.md)。P1/P2 的玩法设施与闭环已有自然通关和重开证据；2026-09-11 的相机/HUD、荒漠环境、relay 专用门面和战斗/受伤反馈已完成实机收口，2026-09-12 又补齐地表旧化、接触阴影、场景色调与 UI 合成隔离，以及暂停菜单动态窗口与设置保存。曾加入的 24 组 crossed-card 植被因黑边纸片感已全部移除；核心体感切片新增持枪指挥官、可见短曳光、队友编队接敌和 macOS FSAA 路径修复。P3 的 Windows 独立包、多尺寸、设置、连续回放、后台窗口以及 macOS arm64 Release、720p→900p 同进程 resize、保存值重启和多尺寸 GL 运行已验；定制角色与 PBR 高阶材质、人工手感/扬声器听感，以及 Windows 普通窗口动态 resize 实机复核仍待完成。M1 与稳定性保留历史证据。

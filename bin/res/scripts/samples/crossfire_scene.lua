@@ -5,8 +5,12 @@ local keyLight=nil
 local moduleCount=0
 local surfaceKinds={}
 local cameraCache=nil
+local statusVisuals={}
+local corePositions={}
+local coolingPositions={}
+local visualOutcome="uninitialised"
 local equipmentNames={
- tile="floor",base="floor",deck_marks="floor",deck_marks_08="floor",deck_marks_09="floor",service_trench="floor",
+ tile="floor",tile_service="floor",tile_coolant="floor",tile_interlock="floor",base="floor",deck_marks="floor",deck_marks_08="floor",deck_marks_09="floor",service_trench="floor",
  core="中继核心",cover="掩体",wall="围墙",edge="场地护栏",gate="门厅",
  console="控制台",vent="通风设备",dock="检修台",pipe="管线",service_elbow="管线",
  relay_tower="中继塔",cooling_stack="冷却设备",rear_plinth="维护平台",
@@ -24,12 +28,64 @@ local function asset(mesh,x,z,yaw,y)
  a:setPosition(Vector3(x,y or 0,z)); a:setRotation(Vector3(0,yaw or 0,0)); a:SetMass(0)
  moduleCount=moduleCount+1
  surfaceKinds[a:GetObjId()]=equipmentNames[mesh]
+ if mesh=="core" then corePositions[#corePositions+1]={x=x,y=y or 0,z=z} end
+ if mesh=="cooling_stack" then coolingPositions[#coolingPositions+1]={x=x,y=y or 0,z=z} end
  return a
+end
+local function floorTile(index,x,z)
+ -- Broad service zones break the repeated floor grid. These variants only
+ -- remap the material: all vertices, triangle indices and physical bounds match.
+ if index==1 and ((x==-4 and (z==-2 or z==2)) or (x==4 and z==6)) then return "tile_service" end
+ if index==2 and ((x==-8 and (z==2 or z==6)) or (x==4 and (z==-2 or z==2)) or (x==8 and z==-2)) then return "tile_coolant" end
+ if index==3 and (x==-4 or x==4) and (z==-2 or z==2) then return "tile_interlock" end
+ return "tile"
+end
+local function visual(width,depth,x,y,z,yaw,material,pitch)
+ local a=SandboxObjects:CreateVisualPlane(width,depth)
+ a:setPosition(Vector3(x,y,z));a:setRotation(Vector3(pitch or 0,yaw or 0,0))
+ a:setMaterial("Crossfire/"..material)
+ return a
+end
+local function status(width,depth,x,y,z,yaw,family,pitch)
+ local a=visual(width,depth,x,y,z,yaw,family.."Idle",pitch)
+ statusVisuals[#statusVisuals+1]={object=a,family=family}
+end
+function Scene.SetOutcome(outcome)
+ local nextOutcome=(outcome=="VICTORY" or outcome=="DEFEAT") and outcome or nil
+ if visualOutcome==nextOutcome then return end
+ visualOutcome=nextOutcome
+ local suffix=outcome=="VICTORY" and "Online" or (outcome=="DEFEAT" and "Offline" or "Idle")
+ for _,entry in ipairs(statusVisuals) do entry.object:setMaterial("Crossfire/"..entry.family..suffix) end
+ print("[CrossfireSceneState] outcome="..(nextOutcome or "idle"))
+end
+local function surfaceDetails(index)
+ -- Every added surface is a no-body plane, below deck markings or mounted on
+ -- existing equipment. No new object contributes to Bullet or navigation.
+ if index==1 then
+  visual(3.45,5.25,-4,.009,.9,0,"ServicePad")
+  visual(3.15,3.4,5.1,.009,6.1,90,"ServicePad")
+ elseif index==2 then
+  visual(3.25,3.25,-7.4,.009,2.6,0,"CoolantPad")
+  visual(3.25,3.25,5.6,.009,-.7,90,"CoolantPad")
+ else
+  visual(7.8,2.0,0,.009,-2.45,0,"InterlockBus")
+  visual(7.8,2.0,0,.009,2.45,180,"InterlockBus")
+ end
+ -- The circuit remains visible beside a central result panel. It is a physical
+ -- indicator strip, not a movement path or an invented emissive light pool.
+ for _,x in ipairs({-9.25,9.25}) do
+  for z=-9,9,3 do status(1.4,.16,x,.055,z,90,"Power") end
+ end
+ for _,x in ipairs({-7.5,-4.5,-1.5,1.5,4.5,7.5}) do status(1.4,.16,x,.055,-11.17,0,"Power") end
+ for _,x in ipairs({-7.5,-4.5,4.5,7.5}) do status(1.4,.16,x,.055,10.78,0,"Power") end
+ for _,x in ipairs({-1.90,1.90}) do status(.16,1.70,x,1.61,10.79,0,"Column",-90) end
+ for _,p in ipairs(corePositions) do status(1.90,1.90,p.x,p.y+3.195,p.z,0,"Core") end
+ for _,p in ipairs(coolingPositions) do status(2.14,2.14,p.x,p.y+2.845,p.z,0,"Core") end
 end
 local function commonCourt(index)
  -- All three encounters keep the same single walking layer and deployment area.
  asset("base",0,0)
- for x=-8,8,4 do for z=-10,10,4 do asset("tile",x,z) end end
+ for x=-8,8,4 do for z=-10,10,4 do asset(floorTile(index,x,z),x,z) end end
  for x=-8,8,4 do asset("wall",x,12,180); asset("edge",x,-12) end
  for z=-10,10,4 do asset("edge",-10,z,90); asset("edge",10,z,-90) end
  -- Four separate thin solids avoid turning a ring-shaped visual into a convex
@@ -106,6 +162,9 @@ function Scene.Create(index)
  index=math.max(1,math.min(#Encounters,math.floor(tonumber(index) or 1)))
  moduleCount=0
  surfaceKinds={}
+ -- The caller has destroyed the previous court's blocks before Create. Drop
+ -- every manager-owned visual reference now; same-court retries use SetOutcome.
+ statusVisuals={};corePositions={};coolingPositions={};visualOutcome="uninitialised"
  SandboxScene:SetAmbientLight(Vector3(.38,.43,.47))
  -- Blocks are recreated on level changes; this one scene-manager-owned light is
  -- deliberately reused so repeated selection does not accumulate illumination.
@@ -125,6 +184,8 @@ function Scene.Create(index)
  -- with clearAllObjects(MGR_OBJ_BLOCK,true) before creating the next court.
  local backdrop=SandboxObjects:CreateVisualPlane(180,180)
  backdrop:setMaterial("Crossfire/Slate"); backdrop:setPosition(Vector3(0,-1.05,0))
+ surfaceDetails(index)
+ Scene.SetOutcome(nil)
  print("[CrossfireScene] level="..index.." sector="..Encounters[index].id.." modules="..moduleCount.." nav="..tostring(nav~=nil))
  return nav
 end

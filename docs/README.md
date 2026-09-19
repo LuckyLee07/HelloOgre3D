@@ -1,5 +1,7 @@
 # docs 索引
 
+[2026-09-19 Crossfire 场景与战斗节奏](dev-design/plans/2026-09-19-crossfire-scene-rhythm.md)：三关表面细节与收复供电状态、两秒推进、受阻定位和结算复盘。
+
 [2026-09-19 Crossfire 射界与美术精修](dev-design/plans/2026-09-19-crossfire-readable-combat.md)：真实枪口/首阻挡查询、设备表面拾取、持续中文策略、近景双机识别与残骸表现的实施与分项验证。
 
 [2026-09-19 Crossfire 实际试玩评审](dev-design/reviews/2026-09-19-crossfire-computer-use-review.md)：Computer Use 原生窗口前两关通关、第三关两次失败，记录射线遮挡、关键提示丢失、点击范围和镜头/角色可读性问题及优化顺序。

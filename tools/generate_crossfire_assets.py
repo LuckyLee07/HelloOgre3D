@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build Crossfire's original, texture-independent industrial miniature kit.
+"""Build Crossfire's original industrial miniature kit and authored surface maps.
 
 Run from any directory with Python 3.10+. Uses the project's Ogre v1.100 mesh
-serializer only; no DCC, downloaded asset, image generation or runtime builder.
+serializer only; deterministic raster primitives use the standard library.
+No DCC, downloaded asset, generative image service or runtime builder is needed.
 Metres, Y up, +Z forward. Environments stand on Y=0; tile top is Y=0.
 Combat actors are centred near their physics origin, with authored muzzle data.
 """
@@ -11,12 +12,15 @@ import argparse
 import hashlib
 import json
 import math
+import struct
+import zlib
 
 import generate_relay_meshes as serializer
 from generate_relay_meshes import Mesh, cross, dot, unit
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "media/models/crossfire"
+TEXTURES = ROOT / "media/textures/crossfire"
 
 # Linear material inputs. Quiet panels, dark joints and sparse status colours.
 PALETTE = {
@@ -24,7 +28,7 @@ PALETTE = {
     "Ivory": ((0.90, 0.86, 0.73), (0.18, 0.17, 0.14), 48),
     "Slate": ((0.16, 0.23, 0.27), (0.12, 0.16, 0.19), 34),
     "Floor": ((0.115, 0.17, 0.205), (0.035, 0.05, 0.06), 24),
-    "FloorPanel": ((0.14, 0.20, 0.235), (0.04, 0.055, 0.07), 24),
+    "FloorPanel": ((0.185, 0.255, 0.295), (0.04, 0.055, 0.07), 24),
     "Graphite": ((0.055, 0.080, 0.096), (0.10, 0.12, 0.14), 36),
     "Rubber": ((0.025, 0.039, 0.047), (0.005, 0.005, 0.005), 8),
     "Steel": ((0.35, 0.42, 0.44), (0.35, 0.40, 0.42), 72),
@@ -41,6 +45,9 @@ PALETTE = {
     "Wreck": ((0.19, 0.215, 0.225), (0.015, 0.018, 0.02), 8),
     "ShieldHit": ((1.0, 0.70, 0.22), (0.08, 0.05, 0.01), 12),
     "HullHit": ((0.75, 1.0, 0.91), (0.03, 0.05, 0.04), 12),
+    "DeckService": ((0.34, 0.335, 0.285), (0.035, 0.04, 0.04), 18),
+    "DeckCoolant": ((0.125, 0.29, 0.30), (0.035, 0.06, 0.065), 24),
+    "DeckInterlock": ((0.235, 0.26, 0.335), (0.04, 0.05, 0.07), 22),
 }
 
 
@@ -266,6 +273,14 @@ def tile():
     for x in (-0.982, 0.982):
         for z in (-0.982, 0.982):
             box(m, (1.935, 0.085, 1.935), (x, -0.0425, z), 0.02, "FloorPanel")
+    return m
+
+
+def tile_variant(material):
+    # Material grouping alone changes: positions/indices remain identical to the
+    # established tile, so Bullet hulls and Recast input are exactly preserved.
+    m = tile()
+    m.groups[mat(material)] = m.groups.pop(mat("FloorPanel"))
     return m
 
 
@@ -613,6 +628,9 @@ BUILDERS = [
     ("sentinel.mesh", sentinel, {"pivot": "physics centre", "forward": "+Z",
                                  "muzzle": [0, 0.20, 1.12]}),
     ("tile.mesh", tile, {"pivot": "top surface", "top_y": 0}),
+    ("tile_service.mesh", lambda: tile_variant("DeckService"), {"pivot": "top surface", "top_y": 0, "geometry_source": "tile.mesh"}),
+    ("tile_coolant.mesh", lambda: tile_variant("DeckCoolant"), {"pivot": "top surface", "top_y": 0, "geometry_source": "tile.mesh"}),
+    ("tile_interlock.mesh", lambda: tile_variant("DeckInterlock"), {"pivot": "top surface", "top_y": 0, "geometry_source": "tile.mesh"}),
     ("wall.mesh", wall, {"pivot": "ground", "front": "+Z"}),
     ("cover.mesh", cover, {"pivot": "ground"}),
     ("core.mesh", core, {"pivot": "ground"}),
@@ -660,15 +678,166 @@ def validate(m, name):
             assert dot(face, a[3:6]) > 0, (name, material, offset, "winding")
 
 
+class Surface:
+    """Small deterministic RGBA raster for technical paint/stencil source art."""
+    def __init__(self, width, height, colour=(0, 0, 0, 0)):
+        self.width, self.height = width, height
+        self.pixels = bytearray(colour) * (width * height)
+
+    def pixel(self, x, y, colour):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            index = (y * self.width + x) * 4
+            self.pixels[index:index+4] = bytes(colour)
+
+    def rect(self, left, top, right, bottom, colour):
+        row = bytes(colour) * max(0, min(self.width, right)-max(0, left))
+        for y in range(max(0, top), min(self.height, bottom)):
+            start = (y*self.width+max(0, left))*4
+            self.pixels[start:start+len(row)] = row
+
+    def line(self, a, b, width, colour):
+        ax, ay = a
+        bx, by = b
+        length2 = (bx-ax)**2 + (by-ay)**2
+        for y in range(max(0, int(min(ay, by)-width)), min(self.height, int(max(ay, by)+width+1))):
+            for x in range(max(0, int(min(ax, bx)-width)), min(self.width, int(max(ax, bx)+width+1))):
+                t = max(0, min(1, ((x-ax)*(bx-ax)+(y-ay)*(by-ay))/max(1, length2)))
+                if (x-ax-t*(bx-ax))**2+(y-ay-t*(by-ay))**2 <= width*width/4:
+                    self.pixel(x, y, colour)
+
+    def ring(self, cx, cy, radius, width, colour, segments=0):
+        for y in range(max(0, int(cy-radius-width)), min(self.height, int(cy+radius+width+1))):
+            for x in range(max(0, int(cx-radius-width)), min(self.width, int(cx+radius+width+1))):
+                r = math.hypot(x-cx, y-cy)
+                if abs(r-radius) <= width/2:
+                    angle = (math.atan2(y-cy, x-cx)+math.pi)/(2*math.pi)
+                    if not segments or (angle*segments) % 1 < 0.79:
+                        self.pixel(x, y, colour)
+
+    def png(self):
+        def chunk(tag, data):
+            return struct.pack('>I', len(data))+tag+data+struct.pack('>I', zlib.crc32(tag+data) & 0xffffffff)
+        stride = self.width*4
+        raw = b''.join(b'\0'+self.pixels[y*stride:(y+1)*stride] for y in range(self.height))
+        return (b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR', struct.pack('>IIBBBBB', self.width, self.height, 8, 6, 0, 0, 0))
+                +chunk(b'IDAT', zlib.compress(raw, 9))+chunk(b'IEND', b''))
+
+
+def surface_maps():
+    # The floor is painted metal, not simulated PBR: broad polish/wear fields and
+    # inset service-panel paint sit in albedo; existing geometry supplies depth.
+    # No random noise or fine scratches: marks must survive the fixed 720p view.
+    panel = Surface(512, 512)
+    for y in range(512):
+        for x in range(512):
+            wave = 4*math.cos((x-y*.21)*math.pi/256)
+            polish = 18*math.exp(-((x-167)/180)**2-((y-296)/225)**2)
+            inset = 7 if min(x, y, 511-x, 511-y) < 20 else 0
+            value = int(max(0, min(255, 226+wave+polish-inset)))
+            panel.pixel(x, y, (value, value, value, 255))
+    # Offset broad transfer/scuff strokes, visible as quiet value changes.
+    for a,b,w in (((85,344),(223,318),18),((263,114),(362,101),12),((285,415),(393,395),10)):
+        panel.line(a,b,w,(214,214,214,255))
+    for x,y in ((40,40),(472,472)):
+        panel.ring(x,y,7,4,(181,181,181,255))
+    panel.rect(27,81,32,214,(248,248,248,255))
+    panel.rect(82,477,209,482,(208,208,208,255))
+
+    coat = Surface(256, 256)
+    for y in range(256):
+        for x in range(256):
+            value = round(246+5*math.sin((x+y*.27)*math.pi/128))
+            coat.pixel(x,y,(value,value,value,255))
+
+    service = Surface(512, 512)
+    ink=(176,173,141,145)
+    for x in (32,480):
+        service.line((x,38),(x,138),12,ink)
+        service.line((x,374),(x,474),12,ink)
+    for y in (38,474):
+        service.line((32,y),(140,y),12,ink)
+        service.line((372,y),(480,y),12,ink)
+    # A bolted repair patch and two broad tyre traces give the bay a purpose.
+    service.rect(134,146,358,342,(128,132,119,72))
+    for x in (151,341):
+        for y in (163,325): service.ring(x,y,7,4,(167,167,146,140))
+    service.line((174,79),(198,434),27,(16,25,29,67))
+    service.line((324,65),(348,421),27,(16,25,29,67))
+    for i in range(3): service.rect(210+i*33,50,230+i*33,72,(194,172,104,167))
+
+    coolant = Surface(512, 512)
+    coolant.ring(256,256,210,13,(91,143,143,140))
+    coolant.ring(256,256,187,5,(92,121,124,110),12)
+    for x in (222,290): coolant.line((x,24),(x,110),13,(120,167,163,170))
+    for y in (416,445,474): coolant.rect(231,y,281,y+10,(122,160,151,150))
+    for x in (46,446):
+        coolant.line((x,194),(x,318),10,(177,188,168,145))
+
+    interlock = Surface(768, 256)
+    ink=(155,169,187,145)
+    for y in (87,169):
+        interlock.line((30,y),(291,y),10,ink)
+        interlock.line((477,y),(738,y),10,ink)
+    for x in (290,478):
+        interlock.line((x,62),(x,194),12,ink)
+    for x in (326,384,442): interlock.rect(x-12,102,x+12,154,(137,155,177,148))
+    for x in (65,705): interlock.ring(x,128,47,8,(162,172,177,120))
+
+    strip = Surface(512,64)
+    # A dark housing is deliberately visible in every state; the four broad
+    # segments change colour without adding a fake light pool on the floor.
+    strip.rect(6,5,506,59,(13,24,28,230))
+    for x in (17,140,263,386): strip.rect(x,14,x+109,50,(255,255,255,255))
+    column = Surface(64,512)
+    for y in range(512):
+        for x in range(64):
+            start=(x*512+y)*4
+            column.pixel(x,y,strip.pixels[start:start+4])
+    ring_map=Surface(256,256)
+    ring_map.ring(128,128,112,20,(255,255,255,255),12)
+    return {'deck_panel.png':panel, 'coating.png':coat, 'service_pad.png':service,
+            'coolant_pad.png':coolant, 'interlock_bus.png':interlock,
+            'power_strip.png':strip, 'power_column.png':column, 'power_ring.png':ring_map}
+
+
+OVERLAYS = {
+    'ServicePad': ('service_pad.png', (1,1,1,1)),
+    'CoolantPad': ('coolant_pad.png', (1,1,1,1)),
+    'InterlockBus': ('interlock_bus.png', (1,1,1,1)),
+    'PowerIdle': ('power_strip.png', (.47,.34,.16,1)),
+    'PowerOnline': ('power_strip.png', (.18,.92,.73,1)),
+    'PowerOffline': ('power_strip.png', (.12,.16,.18,1)),
+    'ColumnIdle': ('power_column.png', (.47,.34,.16,1)),
+    'ColumnOnline': ('power_column.png', (.18,.92,.73,1)),
+    'ColumnOffline': ('power_column.png', (.12,.16,.18,1)),
+    'CoreIdle': ('power_ring.png', (.43,.32,.15,1)),
+    'CoreOnline': ('power_ring.png', (.19,.89,.72,1)),
+    'CoreOffline': ('power_ring.png', (.10,.14,.16,1)),
+}
+
+
 def material_text():
-    lines = ["// Original Crossfire palette; no external images or mesh material aliases.",
-             "// All surfaces use the existing GL3+/D3D9 base shader and flat normal map.",
+    lines = ["// Original Crossfire palette and deterministic project-authored surface maps.",
+             "// Lit albedo uses base_material; visual-only stencils/status use relay_overlay.",
              'import base_material from "materials/base.material"', ""]
     for name, (colour, specular, shininess) in PALETTE.items():
         lines += ["material " + mat(name) + " : base_material", "{",
                   '\tset $diffuseCol "' + " ".join(str(x) for x in colour) + ' 1"',
                   '\tset $specularCol "' + " ".join(str(x) for x in specular) + '"',
-                  '\tset $shininess "' + str(shininess) + '"', "}", ""]
+                  '\tset $shininess "' + str(shininess) + '"']
+        if name in ("FloorPanel", "DeckService", "DeckCoolant", "DeckInterlock"):
+            lines += ['\tset_texture_alias diffuseMap textures/crossfire/deck_panel.png']
+        elif name in ("Porcelain", "Ivory"):
+            lines += ['\tset_texture_alias diffuseMap textures/crossfire/coating.png']
+        lines += ["}", ""]
+    for name, (texture, tint) in OVERLAYS.items():
+        lines += ["material " + mat(name), "{", "\treceive_shadows off", "\ttechnique", "\t{", "\t\tpass", "\t\t{",
+                  "\t\t\tlighting off", "\t\t\tcull_hardware none", "\t\t\tscene_blend alpha_blend",
+                  "\t\t\tdepth_check on", "\t\t\tdepth_write off", "\t\t\tvertex_program_ref relay_overlay_vs {}",
+                  "\t\t\tfragment_program_ref relay_overlay_fs", "\t\t\t{",
+                  "\t\t\t\tparam_named tint float4 " + " ".join(str(x) for x in tint), "\t\t\t}",
+                  "\t\t\ttexture_unit overlayMap", "\t\t\t{", "\t\t\t\ttexture textures/crossfire/"+texture,
+                  "\t\t\t\ttex_address_mode clamp", "\t\t\t\tfiltering trilinear", "\t\t\t}", "\t\t}", "\t}", "}", ""]
     return "\n".join(lines)
 
 
@@ -698,11 +867,29 @@ def main():
             if args.check:
                 assert (OUT / filename).read_bytes() == (serializer.OUT / filename).read_bytes(), filename
             print(f"{filename}: {info['size']} m, {info['triangles']} triangles")
-        manifest_text = json.dumps({"generator": "tools/generate_crossfire_assets.py", "units": "metres", "assets": manifest}, indent=2) + "\n"
+        textures = []
+        if not args.check:
+            TEXTURES.mkdir(parents=True, exist_ok=True)
+        for filename, surface in surface_maps().items():
+            data = surface.png()
+            if args.check:
+                assert (TEXTURES/filename).read_bytes() == data, filename
+            else:
+                (TEXTURES/filename).write_bytes(data)
+            textures.append({"file": "textures/crossfire/"+filename, "width": surface.width,
+                             "height": surface.height, "sha256": hashlib.sha256(data).hexdigest()})
+        # Verify material-only floor variants cannot alter the collision source.
+        original = tile()
+        for name in ("DeckService", "DeckCoolant", "DeckInterlock"):
+            variant = tile_variant(name)
+            assert variant.vertices == original.vertices
+            assert list(variant.groups.values()) == list(original.groups.values())
+        manifest_text = json.dumps({"generator": "tools/generate_crossfire_assets.py", "units": "metres",
+                                    "assets": manifest, "surfaces": textures}, indent=2) + "\n"
         if args.check:
             assert (OUT / "manifest.json").read_text() == manifest_text, "manifest.json"
             assert (ROOT / "media/materials/crossfire.material").read_text() == material_text(), "crossfire.material"
-            print("PASS: finite geometry, normals, tangents, winding, palette references and deterministic files.")
+            print("PASS: geometry, winding, material references, unchanged tile collision geometry and deterministic meshes/surface PNGs.")
         else:
             write_text(OUT / "manifest.json", manifest_text)
             write_text(ROOT / "media/materials/crossfire.material", material_text())

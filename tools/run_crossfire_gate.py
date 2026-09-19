@@ -17,7 +17,7 @@ ERROR = re.compile(r'call_func error|call_string error|lua_pcall error|Assertion
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mode', choices=('all', 'natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries'), default='all')
+    parser.add_argument('--mode', choices=('all', 'natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing'), default='all')
     parser.add_argument('--executable', type=Path, default=ROOT / 'bin' /
                         ('HelloOgre3D.exe' if os.name == 'nt' else 'HelloOgre3D'))
     parser.add_argument('--cwd', type=Path, default=ROOT / 'bin')
@@ -28,7 +28,7 @@ def main():
     output = Path(tempfile.mkdtemp(prefix='crossfire-gate-' + time.strftime('%Y%m%d-%H%M%S') + '-', dir=ROOT / 'tmp'))
     all_ok = True
     summary = {'executable': str(args.executable.resolve()), 'runs': {}}
-    for mode in (('natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries') if args.mode == 'all' else (args.mode,)):
+    for mode in (('natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing') if args.mode == 'all' else (args.mode,)):
         dest = output / mode
         dest.mkdir()
         replay = ROOT / 'tools/replays/crossfire/flank-and-retry.txt'
@@ -37,7 +37,7 @@ def main():
         if mode in ('physics', 'queries'):
             replay = dest / 'fixture-quit.txt'
             replay.write_text('8000 quit\n' if mode == 'queries' else '12000 key_press R\n12500 key_press SPACE\n13500 key_press R\n14000 quit\n')
-        if mode in ('campaign', 'interface', 'controls'):
+        if mode in ('campaign', 'interface', 'controls', 'pacing'):
             replay = ROOT / 'tools/replays/crossfire' / (('campaign' if mode == 'controls' else mode) + '.txt')
         if mode == 'interface' and (args.width, args.height) != (1280, 800):
             contents = replay.read_text()
@@ -56,6 +56,11 @@ def main():
             contents = re.sub(r'(mouse_(?:down|up) \d+ \d+) 1', r'\1 0', contents)
             replay = dest / 'left-click-campaign.txt'
             replay.write_text(contents)
+        if mode == 'pacing':
+            sized = dest / 'pacing-sized.txt'
+            sized.write_text(replay.read_text().replace('718 29', f'{args.width // 2 + 78} 29')
+                             .replace('1060 81', f'{args.width - 220} 81'))
+            replay = sized
         previous_ms = -1
         for line_number, line in enumerate(replay.read_text().splitlines(), 1):
             line = line.split('#', 1)[0].strip()
@@ -78,6 +83,10 @@ def main():
             env['HELLO_CROSSFIRE_QUICKSTART'] = '1'
         if mode in ('campaign', 'controls'):
             env['HELLO_RENDER_CAPTURE_MS'] = '300,12000,17000,28000,39000,50000,65000,70000'
+        if mode == 'pacing':
+            env['HELLO_RENDER_CAPTURE_MS'] = '3700,5500,10400,15000,24800,26000'
+        if mode == 'front':
+            env['HELLO_RENDER_CAPTURE_MS'] = '6500,37000,39000'
         if mode == 'interface':
             env['HELLO_RENDER_CAPTURE_MS'] = '500,2300,5300,7300,9000,12300,16800'
         if args.launcher_default:
@@ -89,7 +98,7 @@ def main():
             env['HELLO_CROSSFIRE_QUERY_TEST'] = '1'
         # Coordinates come from the actual viewport/camera, then still travel
         # through the ordinary mouse input path. Never infer a win from a probe.
-        if mode in ('natural', 'front', 'campaign', 'controls'):
+        if mode in ('natural', 'front', 'campaign', 'controls', 'pacing'):
             probe_replay = dest / 'layout-probe.txt'
             probe_replay.write_text('1200 quit\n')
             probe_env = dict(env, HELLO_CROSSFIRE_LAYOUT_PROBE='1',
@@ -160,6 +169,26 @@ def main():
                 restart='[CrossfireRestart] cleared=true' in text,
                 routes_reachable='reachable=false' not in text,
             )
+        elif mode == 'pacing':
+            starts = [tuple(map(int, m)) for m in re.findall(r'\[CrossfireStep\] event=started tick=(\d+) until=(\d+)', text)]
+            stops = [tuple(map(int, m)) for m in re.findall(r'\[CrossfireStep\] event=finished tick=(\d+) until=(\d+)', text)]
+            menus = re.findall(r'\[CrossfireMenu\] overlay=(settings|help|closed) tick=(\d+)', text)
+            restart_tail = text.rsplit('[CrossfireRestart] cleared=true', 1)[-1]
+            modal_chunks = re.findall(r'\[CrossfireMenu\] overlay=(?:settings|help)[^\n]*\n(.*?)\[CrossfireMenu\] overlay=closed', text, re.S)
+            checks.update(
+                step_keyboard_and_button=len(starts) == 4 and all(b-a == 2000 for a,b in starts),
+                two_second_stop=len(stops) == 2 and len(starts) == 4 and all(
+                    deadline == starts[i][1] and 0 <= tick-deadline <= 34
+                    for (tick,deadline),i in zip(stops, (0,2))),
+                pause_clock_frozen=len(menus) == 8 and all(menus[i][1] == menus[i+1][1] for i in range(0,8,2)),
+                modal_blocks_shortcut=len(modal_chunks) == 4 and all('[CrossfireStep] event=started' not in c for c in modal_chunks),
+                empty_execute_guard=text.count('execute=blocked reason=no_plan') == 2,
+                retry_cancels_step=text.count('[CrossfireRestart] cleared=true') == 2 and '[CrossfireStep]' not in restart_tail,
+                continuous_after_retry=text.count('[CrossfireMatch] result=VICTORY') == 1,
+                restored_then_reset='[CrossfireSceneState] outcome=VICTORY' in text and 'outcome=idle' in text.split('[CrossfireSceneState] outcome=VICTORY')[-1],
+                fixture_absent='[CrossfirePhysics]' not in text and '[CrossfireQueries]' not in text,
+                routes_reachable='reachable=false' not in text,
+            )
         elif mode == 'queries':
             checks['physical_queries'] = re.search(r'\[CrossfireQueries\] result=PASS synthetic=true passed=\d+ failed=0', text) is not None
         elif mode == 'physics':
@@ -167,6 +196,7 @@ def main():
             checks['fixture_retry'] = text.count('[CrossfireRestart] cleared=true') == 2
         elif mode == 'front':
             checks.update(front_defeat='[CrossfireMatch] result=DEFEAT' in text,
+                          offline_then_reset='[CrossfireSceneState] outcome=DEFEAT' in text and 'outcome=idle' in text.split('[CrossfireSceneState] outcome=DEFEAT')[-1],
                           two_drones_lost=text.count('[CrossfireDestroyed] slot=') == 2,
                           retry=text.count('[CrossfireRestart] cleared=true') == 1,
                           no_flank_damage='blocked=0 damage=10.0' not in text)

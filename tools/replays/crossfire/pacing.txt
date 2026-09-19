@@ -1,0 +1,38 @@
+400 key_press RETURN
+500 key_press E
+600 key_press 1
+800 mouse_down 675 284 0
+850 mouse_up 675 284 0
+1000 key_press 2
+1200 mouse_down 489 342 0
+1250 mouse_up 489 342 0
+1400 key_down E
+1450 key_down E
+1550 key_up E
+4000 mouse_down 1060 81 0
+4050 mouse_up 1060 81 0
+4300 key_press RETURN
+4500 mouse_down 718 29 0
+4550 mouse_up 718 29 0
+5000 key_press ESCAPE
+5200 key_press E
+5400 key_press RETURN
+8000 key_press E
+10100 mouse_down 1060 81 0
+10150 mouse_up 1060 81 0
+10300 key_press RETURN
+10500 key_press E
+11000 key_press R
+11500 key_press E
+12000 mouse_down 1060 81 0
+12050 mouse_up 1060 81 0
+12200 key_press RETURN
+12300 key_press 1
+12500 mouse_down 675 284 0
+12550 mouse_up 675 284 0
+12800 key_press 2
+13000 mouse_down 489 342 0
+13050 mouse_up 489 342 0
+13400 key_press SPACE
+25000 key_press R
+27000 quit

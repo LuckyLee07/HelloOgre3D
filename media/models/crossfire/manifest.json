@@ -142,6 +142,90 @@
       "sha256": "fdcaec5180fc428b050f70f5cf32369ecfb666a19e92c5939abeb283b8760cd6"
     },
     {
+      "file": "tile_service.mesh",
+      "vertices": 480,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/DeckService"
+      ],
+      "bounds_min": [
+        -2.0,
+        -0.24,
+        -2.0
+      ],
+      "bounds_max": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "pivot": "top surface",
+      "top_y": 0,
+      "geometry_source": "tile.mesh",
+      "size": [
+        4.0,
+        0.24,
+        4.0
+      ],
+      "sha256": "ea6632aff8f550dcf75e1fde4df2b95fb692e6808dc29fccffbfcf77d665e41d"
+    },
+    {
+      "file": "tile_coolant.mesh",
+      "vertices": 480,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/DeckCoolant"
+      ],
+      "bounds_min": [
+        -2.0,
+        -0.24,
+        -2.0
+      ],
+      "bounds_max": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "pivot": "top surface",
+      "top_y": 0,
+      "geometry_source": "tile.mesh",
+      "size": [
+        4.0,
+        0.24,
+        4.0
+      ],
+      "sha256": "206b92ee8e1497e7e8304b043494805f1694f6df52acc0d2d309b0015d86f13d"
+    },
+    {
+      "file": "tile_interlock.mesh",
+      "vertices": 480,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/DeckInterlock"
+      ],
+      "bounds_min": [
+        -2.0,
+        -0.24,
+        -2.0
+      ],
+      "bounds_max": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "pivot": "top surface",
+      "top_y": 0,
+      "geometry_source": "tile.mesh",
+      "size": [
+        4.0,
+        0.24,
+        4.0
+      ],
+      "sha256": "7ddee562ea0d98c313d9a5670cc7e9a84defefafc750adb473422f9650763c1c"
+    },
+    {
       "file": "wall.mesh",
       "vertices": 960,
       "triangles": 440,
@@ -847,6 +931,56 @@
         1.5
       ],
       "sha256": "5baf2937677e7e05fc55b1a67aae4d4ef50750b6c60476acf4a52d9e1bbd0003"
+    }
+  ],
+  "surfaces": [
+    {
+      "file": "textures/crossfire/deck_panel.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "d342ae4b4a87cdc8ddf2214769fa3a3a5460abb5e5ad59ee57eec307bee4b9b7"
+    },
+    {
+      "file": "textures/crossfire/coating.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "da543134a335942ef69768bf558934b64eb6878ac0575d7f55664a1fdeb0ef48"
+    },
+    {
+      "file": "textures/crossfire/service_pad.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "91629ce12eb28138a2d08c6eebd8345ba6698a64212a7bb64eb083e3fef622ed"
+    },
+    {
+      "file": "textures/crossfire/coolant_pad.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "cc9773c149dc61e8e537fad853aa5f9d49d60f499ad171c9d485171c286ddade"
+    },
+    {
+      "file": "textures/crossfire/interlock_bus.png",
+      "width": 768,
+      "height": 256,
+      "sha256": "d536274cfc3ede581b7d798c5b19085bcb27cd7c8fd70ebf6a0ceac1c7a8c2ff"
+    },
+    {
+      "file": "textures/crossfire/power_strip.png",
+      "width": 512,
+      "height": 64,
+      "sha256": "d457a6c097b071e165de3727037157dd9bf897febdd7565f4c0ad35fc0f7ff1d"
+    },
+    {
+      "file": "textures/crossfire/power_column.png",
+      "width": 64,
+      "height": 512,
+      "sha256": "51e8bee9668e65488d8392d083059a8db55a548ddf5ecf5c1a478b8d88d3d326"
+    },
+    {
+      "file": "textures/crossfire/power_ring.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "3cc0743c8c0b1af15c8935aaa5bdb937e30086be17692ae112ece272cbfeb6aa"
     }
   ]
 }

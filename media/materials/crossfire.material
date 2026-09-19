@@ -1,5 +1,5 @@
-// Original Crossfire palette; no external images or mesh material aliases.
-// All surfaces use the existing GL3+/D3D9 base shader and flat normal map.
+// Original Crossfire palette and deterministic project-authored surface maps.
+// Lit albedo uses base_material; visual-only stencils/status use relay_overlay.
 import base_material from "materials/base.material"
 
 material Crossfire/Porcelain : base_material
@@ -7,6 +7,7 @@ material Crossfire/Porcelain : base_material
 	set $diffuseCol "0.76 0.72 0.62 1"
 	set $specularCol "0.14 0.13 0.11"
 	set $shininess "44"
+	set_texture_alias diffuseMap textures/crossfire/coating.png
 }
 
 material Crossfire/Ivory : base_material
@@ -14,6 +15,7 @@ material Crossfire/Ivory : base_material
 	set $diffuseCol "0.9 0.86 0.73 1"
 	set $specularCol "0.18 0.17 0.14"
 	set $shininess "48"
+	set_texture_alias diffuseMap textures/crossfire/coating.png
 }
 
 material Crossfire/Slate : base_material
@@ -32,9 +34,10 @@ material Crossfire/Floor : base_material
 
 material Crossfire/FloorPanel : base_material
 {
-	set $diffuseCol "0.14 0.2 0.235 1"
+	set $diffuseCol "0.185 0.255 0.295 1"
 	set $specularCol "0.04 0.055 0.07"
 	set $shininess "24"
+	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
 }
 
 material Crossfire/Graphite : base_material
@@ -147,4 +150,352 @@ material Crossfire/HullHit : base_material
 	set $diffuseCol "0.75 1.0 0.91 1"
 	set $specularCol "0.03 0.05 0.04"
 	set $shininess "12"
+}
+
+material Crossfire/DeckService : base_material
+{
+	set $diffuseCol "0.34 0.335 0.285 1"
+	set $specularCol "0.035 0.04 0.04"
+	set $shininess "18"
+	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
+}
+
+material Crossfire/DeckCoolant : base_material
+{
+	set $diffuseCol "0.125 0.29 0.3 1"
+	set $specularCol "0.035 0.06 0.065"
+	set $shininess "24"
+	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
+}
+
+material Crossfire/DeckInterlock : base_material
+{
+	set $diffuseCol "0.235 0.26 0.335 1"
+	set $specularCol "0.04 0.05 0.07"
+	set $shininess "22"
+	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
+}
+
+material Crossfire/ServicePad
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/service_pad.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/CoolantPad
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/coolant_pad.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/InterlockBus
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/interlock_bus.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/PowerIdle
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.47 0.34 0.16 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_strip.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/PowerOnline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.18 0.92 0.73 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_strip.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/PowerOffline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.12 0.16 0.18 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_strip.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/ColumnIdle
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.47 0.34 0.16 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_column.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/ColumnOnline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.18 0.92 0.73 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_column.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/ColumnOffline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.12 0.16 0.18 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_column.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/CoreIdle
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.43 0.32 0.15 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_ring.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/CoreOnline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.19 0.89 0.72 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_ring.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/CoreOffline
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 0.1 0.14 0.16 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/power_ring.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
 }

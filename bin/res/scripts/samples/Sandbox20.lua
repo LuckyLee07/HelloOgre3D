@@ -3,6 +3,7 @@ local Scene=require("res.scripts.samples.crossfire_scene.lua")
 local Hud=require("res.scripts.samples.crossfire_hud.lua")
 local Levels=require("res.scripts.samples.crossfire_encounters.lua")
 local Feedback=require("res.scripts.samples.crossfire_feedback.lua")
+local Review=require("res.scripts.samples.crossfire_review.lua")
 local Profile=require("res.scripts.samples.crossfire_profile.lua")
 local ids,planned,shadows,observed,effects={},{},{},{},{}
 local hud,selected,paused,result,serial,restart= nil,1,true,nil,0,false
@@ -21,6 +22,9 @@ local zoom=1
 local started=nil
 local physicsTest=nil
 local heldKeys={}
+local stepUntil=nil
+local review,alert,inspection,reviewSummary=nil,nil,nil,nil
+local alertKey=""
 local function now() return GameManager:getTimeInMillis() end
 local function find(id)
  local all=ObjectManager:getAllAgents()
@@ -35,7 +39,7 @@ local function sound(name,pos,gain,priority)
 end
 local function selectUnit(index)
  local a=find(ids[index]); if not a or a:GetHealth()<=0 then return end
- selected=index; sound("select",nil,.35,2)
+ selected=index; inspection=nil; sound("select",nil,.35,2)
  hint=(index==1 and "VEGA" or "ROOK").." 已选中 · 点地面移动，点哨卫指定攻击"
  print("[CrossfireSelect] slot="..index)
 end
@@ -74,6 +78,7 @@ local function apply(index,order)
 end
 local function order(index,value)
  local a=find(ids[index]); if not a or a:GetHealth()<=0 or result or screen~="battle" or overlay then return end
+ inspection=nil
  if paused then
   planned[index]=value
   hint=(index==1 and "VEGA" or "ROOK").." · "..({move="移动",attack="指定攻击",hold="原地待命"})[value.kind].."已规划 · 按空格执行"
@@ -85,9 +90,10 @@ local function order(index,value)
 end
 local function togglePause()
  if result or screen~="battle" or overlay then return end
+ stepUntil=nil;inspection=nil
  if paused then
   if started==nil and not planned[1] and not planned[2] and not physicsTest then
-   hint="先点一处地面规划路线，再按空格执行"
+   hint="先点地面规划路线，再按空格执行或 E 推进"
    print("[CrossfireInput] execute=blocked reason=no_plan")
    return
   end
@@ -102,10 +108,20 @@ local function togglePause()
  GameManager:SetSimulationPaused(paused)
  print("[CrossfirePause] paused="..tostring(paused).." tick="..now())
 end
+local function stepExecution()
+ if result or screen~="battle" or overlay then return end
+ if paused then togglePause() end
+ if paused then return end
+ stepUntil=now()+2000
+ hint="推进 2 秒后自动暂停 · 随时按空格提前暂停"
+ print("[CrossfireStep] event=started tick="..now().." until="..stepUntil.." level="..level)
+end
 local function spawn()
  GameManager:SetSimulationPaused(false)
  ids,planned,observed,effects={},{},{},{}
  selected,paused,result,serial,started=1,true,nil,0,nil
+ stepUntil=nil;review=Review.New();alert=nil;inspection=nil;reviewSummary=nil;alertKey=""
+ Scene.SetOutcome(nil)
  medal,medalText,newBest=0,"",false
  hoverCache=nil;hoverCacheKey=""
  local encounter=Levels[level]
@@ -157,10 +173,12 @@ local function spawn()
  end
 end
 local function queueLevel(index,targetScreen,reason)
+ stepUntil=nil;inspection=nil
  paused=true; overlay=nil; GameManager:SetSimulationPaused(true)
  transition={level=index,screen=targetScreen,reason=reason}
 end
 local function openOverlay(name)
+ stepUntil=nil;inspection=nil
  if not paused then paused=true; GameManager:SetSimulationPaused(true) end
  overlay=name
  print("[CrossfireMenu] overlay="..name.." tick="..now())
@@ -173,11 +191,18 @@ local function saveSettings()
 end
 local function action(name)
  if name=="pause" then togglePause()
+ elseif name=="step" then stepExecution()
+ elseif name=="inspect" and alert and screen=="battle" and not result and not overlay then
+  local inspected=alert
+  stepUntil=nil;paused=true;GameManager:SetSimulationPaused(true)
+  selectUnit(inspected.slot);inspection=inspected
+  hint=inspected.detail
+  print("[CrossfireInspect] slot="..inspected.slot.." reason="..inspected.state.." target="..inspected.target.." first="..inspected.first.." tick="..now())
  elseif name=="start" and screen=="title" then
   screen="battle"; overlay=nil; if transition then transition.screen="battle" end
   sound("start",nil,.4,2)
   print("[CrossfireScreen] screen=battle level="..level.." tick="..now())
- elseif name=="restart" then restart=true; overlay=nil
+ elseif name=="restart" then restart=true; overlay=nil;stepUntil=nil;inspection=nil
  elseif name=="next" and result=="VICTORY" then
   queueLevel(level<#Levels and level+1 or 1,level<#Levels and "battle" or "title","next")
  elseif name=="menu" then queueLevel(level,"title","menu")
@@ -215,6 +240,7 @@ local function presentation()
   screen=screen,overlay=overlay,saveError=saveError,level=level,levels=Levels,records=profile.records,settings=profile,
   completedCount=profile:CompletedCount(),hoverX=hoverX,hoverY=hoverY}
  local living,damage,enemiesAlive,flankHits,blockedShots=0,0,0,0,0
+ local reviewActors={}
  for i,id in ipairs(ids) do
   local a=find(id)
   if a then
@@ -295,11 +321,32 @@ local function presentation()
      old.stalledAt=nil
      if moving then item.fireState=paused and "按空格执行移动 · 抵达后自动开火" or "移动中 · 抵达后自动开火";item.targetName=nil end
     end
+    reviewActors[#reviewActors+1]={slot=i,name=item.name,hp=hp,moving=moving,shots=shot,report=report}
     item.order=planned[i] and (planned[i].kind=="move" and "MOVE / QUEUED" or (planned[i].kind=="attack" and "TARGET / QUEUED" or "HOLD / QUEUED")) or nil
     ctx.allies[#ctx.allies+1]=item
    end
    ctx.actors[#ctx.actors+1]=item
   end
+ end
+ alert=review:Update(now(),screen=="battle" and not paused and not overlay and not result and not physicsTest,reviewActors)
+ local nextAlertKey=alert and (alert.slot..":"..alert.state..":"..alert.target..":"..alert.first) or ""
+ if nextAlertKey~=alertKey then
+  alertKey=nextAlertKey
+  if alert and screen=="battle" and not result and not physicsTest then
+   print("[CrossfireAlert] slot="..alert.slot.." reason="..alert.state.." target="..alert.target.." first="..alert.first.." tick="..now())
+  end
+ end
+ if inspection then
+  local inspected=reviewActors[inspection.slot]
+  if not inspected or inspected.hp<=0 or inspected.moving or not inspected.report
+   or inspected.report.target~=inspection.target or inspected.report.first~=inspection.first
+   or inspected.report.state~=inspection.state then inspection=nil end
+ end
+ if inspection and paused and screen=="battle" and not overlay and not result and inspection.pos then
+  local p=inspection.pos;local point=Vector3(p.x,p.y,p.z)
+  DebugDrawer:drawCircle(Vector3(p.x,.12,p.z),.75,36,amber,false)
+  DebugDrawer:drawCircle(Vector3(p.x,.12,p.z),.48,28,amber,false)
+  drawLine(Vector3(p.x,.12,p.z),point+Vector3(0,.55,0),amber)
  end
  for i=#effects,1,-1 do
   local e=effects[i];local t=(now()-e.at)/300
@@ -323,9 +370,11 @@ local function presentation()
   if enemiesAlive==0 then result="VICTORY"
   elseif living==0 then result="DEFEAT" end
   if result then
-   paused=true;GameManager:SetSimulationPaused(true);planned={};effects={}
+   paused=true;GameManager:SetSimulationPaused(true);planned={};effects={};stepUntil=nil;inspection=nil
+   Scene.SetOutcome(result)
    sound(result=="VICTORY" and "win" or "lose",nil,.65,4)
    local elapsed=now()-(started or now())
+   reviewSummary=review:Summary({result=result,living=living,damage=damage,flankHits=flankHits,blockedShots=blockedShots,elapsedMs=elapsed})
    if result=="VICTORY" then
     local saved
     medal,newBest,saved=profile:Record(level,elapsed,damage,living,Levels[level].parMs)
@@ -354,15 +403,17 @@ local function presentation()
   end
  end
  ctx.result=result;ctx.paused=paused;ctx.hint=hint;ctx.selected=selected
+ ctx.stepRemaining=stepUntil and math.max(0,stepUntil-now()) or nil
+ ctx.alert=not result and alert or nil;ctx.inspection=inspection;ctx.review=reviewSummary
  ctx.medal,ctx.medalText,ctx.newBest=medal,result=="DEFEAT" and "FIND A NEW ANGLE" or medalText,newBest
  ctx.completedCount=profile:CompletedCount();ctx.enemiesAlive=enemiesAlive;ctx.saveError=saveError
  ctx.nextLabel=level<#Levels and "ENTER / NEXT RELAY" or "ENTER / BACK TO OPERATIONS"
- ctx.resultDetail=string.format("%d 次有效侧击 · %d 次正面挡弹",flankHits,blockedShots)..(result=="DEFEAT" and "。检查红色射线，绕开护盾与残骸再攻击。" or (newBest and " · 新纪录" or ""))
+ ctx.resultDetail=string.format("%d 次有效侧击 · %d 次正面挡弹",flankHits,blockedShots)..(result=="DEFEAT" and "\n检查红色射线，绕开护盾与残骸再攻击。" or (newBest and " · 新纪录" or ""))
  if profile.hints and not started and screen=="battle" and not result then
   local first,second=planned[1]~=nil,planned[2]~=nil
   ctx.tutorial={step=not first and 1 or (not second and 2 or 3),done1=first,done2=second,
    title=not first and "1 · 给 VEGA 规划路线" or (not second and "2 · 给 ROOK 另一条路线" or "3 · 两机同时执行"),
-   detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格或点执行。无人机抵达后自动开火。")}
+   detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格持续执行，或按 E 推进 2 秒。抵达后自动开火。")}
  end
  ctx.stats=string.format("%d / 2 台存活 · %.1f 秒 · 承受 %d 损伤",living,(now()-(started or now()))/1000,damage)
  hud:Update(ctx)
@@ -419,6 +470,11 @@ function Sandbox_Update(deltaMs)
   else print("[CrossfireRestart] cleared=true level="..level) end
  end
  if physicsTest then physicsTest:Update(deltaMs) end
+ if stepUntil and not paused and now()>=stepUntil and not result then
+  local deadline=stepUntil;stepUntil=nil;paused=true;GameManager:SetSimulationPaused(true)
+  hint="2 秒已结束 · 调整计划，或按 E 继续推进"
+  print("[CrossfireStep] event=finished tick="..now().." until="..deadline.." level="..level)
+ end
  Scene.Camera(zoom)
  presentation()
 end
@@ -441,6 +497,7 @@ function EventHandle_Keyboard(keycode,pressed)
   elseif keycode==OIS.KC_2 then action("level2")
   elseif keycode==OIS.KC_3 then action("level3") end
  elseif keycode==OIS.KC_SPACE then action("pause")
+ elseif keycode==OIS.KC_E then action("step")
  elseif keycode==OIS.KC_1 then action("select1")
  elseif keycode==OIS.KC_2 then action("select2")
  elseif keycode==OIS.KC_R then action("restart")

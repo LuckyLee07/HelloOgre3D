@@ -108,7 +108,8 @@ function Hud:Header(ctx,title)
  local zeroVolume=ctx.settings and number(ctx.settings.volume,.65)<=0
  self:Button("mute",w-148,58,124,30,ctx.muted and "M  已静音" or (zeroVolume and "M  音量为零" or "M  声音开"),"mute")
  if not title then
-  self:Button("phase",w/2-88,10,176,38,ctx.result and "本关已结束" or (ctx.paused and "空格  执行 >" or "空格  暂停"),"pause",ctx.paused,4,not ctx.result)
+  self:Button("phase",w/2-146,10,150,38,ctx.result and "本关已结束" or (ctx.paused and "空格  执行" or "空格  暂停"),"pause",ctx.paused,4,not ctx.result)
+  self:Button("step",w/2+12,10,132,38,ctx.stepRemaining and string.format("%.1f 秒后停",ctx.stepRemaining/1000) or "E  推进 2 秒","step",false,4,not ctx.result)
   local critical=ctx.critical or "两机分路，从没有护盾的侧面进攻。"
   self:Frame("critical_background",20,58,w-328,42,"panel")
   self:Frame("critical_edge",20,63,3,32,"amber")
@@ -231,10 +232,16 @@ function Hud:Battle(ctx)
  self:Text("fire_reason",x+14,y+5,w-28,fireLines*20,self:Wrap("fire_reason",fire,w-28,9,fireLines),9)
  local tutorial=(not ctx.settings or ctx.settings.hints~=false) and ctx.tutorial or nil
  local detail=tutorial and ((tutorial.title or "规划路线").." · "..(tutorial.detail or "")) or ctx.hint or "点地面移动，点哨卫指定攻击。"
- local detailLines=tutorial and 2 or 1
- self:Text("feedback",x+14,y+9+fireLines*20,w-28,detailLines*20,self:Wrap("feedback",detail,w-28,9,detailLines),9)
- if fireLines+detailLines<4 then
-  self:Text("cursor_hint",x+14,y+77,w-28,22,self:Wrap("cursor_hint",ctx.cursorHint or "1 / 2 选机   空格 暂停 / 执行   X 原地待命",w-28,9,1),9,5,true)
+ local detailLines=tutorial and not ctx.alert and 2 or 1
+ if not ctx.alert then
+  self:Text("feedback",x+14,y+9+fireLines*20,w-28,detailLines*20,self:Wrap("feedback",detail,w-28,9,detailLines),9)
+ end
+ if ctx.alert then
+  self:Frame("alert_accent",x+14,y+65,3,29,"amber")
+  self:Text("alert_title",x+23,y+68,w-173,22,self:Wrap("alert_title",ctx.alert.title,w-173,9,1),9)
+  self:Button("inspect",x+w-136,y+63,122,32,ctx.inspection and "已定位受阻" or "查看受阻","inspect",false,4)
+ elseif fireLines+detailLines<4 then
+  self:Text("cursor_hint",x+14,y+77,w-28,22,self:Wrap("cursor_hint",ctx.cursorHint or "1 / 2 选机   空格 暂停 / 执行   E 推进 2 秒",w-28,9,1),9,5,true)
  end
 end
 function Hud:Endpoints(ctx)
@@ -257,7 +264,7 @@ function Hud:Result(ctx)
  local level,index=levelInfo(ctx)
  local victory=ctx.result=="VICTORY"
  local complete=victory and index==3 and collection(ctx)==3
- local w,h=584,442
+ local w,h=584,500
  local x,y=math.floor((self.width-w)/2),math.floor((self.height-h)/2)
  self:Frame("result_shade",0,0,self.width,self.height,"resultShade",nil,nil,8)
  self:Region(0,0,self.width,self.height,"block")
@@ -272,14 +279,18 @@ function Hud:Result(ctx)
  self:Text("result_medal",x+30,y+216,w-135,32,victory and (({[1]="中继站已收复",[2]="配合默契",[3]="精确协同"})[ctx.medal or 1]) or "寻找新的进攻角度",14,11)
  self:Medal("result_medal_pip",x+w-88,y+224,victory and ctx.medal or 0,11)
  self:Text("result_stats",x+30,y+260,w-60,24,self:Wrap("result_stats",ctx.stats or "",w-60,9,1),9,11)
- self:Text("result_collection",x+30,y+295,w-60,23,"收复进度  "..collection(ctx).." / 3",9,11)
+ self:Frame("review_rule",x+30,y+290,w-60,1,"rule",nil,nil,10)
+ local review=ctx.review or {}
+ self:Text("review_title",x+30,y+305,w-60,24,self:Wrap("review_title",review.title or "行动复盘",w-60,9,1),9,11)
+ self:Text("review_detail",x+30,y+331,w-60,43,self:Wrap("review_detail",review.detail or "两机分路，绕到侧面攻击。",w-60,9,2),9,11)
+ self:Text("result_collection",x+30,y+382,w-60,23,"收复进度  "..collection(ctx).." / 3",9,11)
  for i=1,3 do
   local record=(ctx.records or {})[i]
-  self:Frame("result_progress"..i,x+w-150+(i-1)*40,y+300,30,5,record and "cyan" or "track",nil,nil,11)
+  self:Frame("result_progress"..i,x+w-150+(i-1)*40,y+387,30,5,record and "cyan" or "track",nil,nil,11)
  end
- self:Button("result_next",x+30,y+335,w-60,46,victory and (index<3 and "ENTER  /  前往下一关" or "ENTER  /  返回选关") or "R  /  重试本关",victory and "next" or "restart",true,10)
- self:Button("result_retry",x+30,y+393,(w-72)/2,32,victory and "R  重玩本关" or "H  操作说明",victory and "restart" or "help",false,10)
- self:Button("result_menu",x+42+(w-72)/2,y+393,(w-72)/2,32,"返回选关","menu",false,10)
+ self:Button("result_next",x+30,y+412,w-60,40,victory and (index<3 and "ENTER  /  前往下一关" or "ENTER  /  返回选关") or "R  /  重试本关",victory and "next" or "restart",true,10)
+ self:Button("result_retry",x+30,y+460,(w-72)/2,30,victory and "R  重玩本关" or "H  操作说明",victory and "restart" or "help",false,10)
+ self:Button("result_menu",x+42+(w-72)/2,y+460,(w-72)/2,30,"返回选关","menu",false,10)
 end
 function Hud:Modal(ctx)
  local help=ctx.overlay=="help"
@@ -294,9 +305,9 @@ function Hud:Modal(ctx)
  self:Text("overlay_title",x+30,y+54,w-60,44,help and "操作说明" or "设置",24,15)
  if help then
   local guidance={
-   {"先规划，再同步执行","点无人机或底部卡片选择，再点亮色边线内的地面规划路线。按空格或点上方执行，让两机同步出发。"},
+   {"先规划，再同步执行","点无人机或底部卡片选择，再点亮色边线内的地面规划路线。按空格持续执行，或按 E 推进 2 秒后停下观察。"},
    {"绕过正面，留意射线","橙色扇面保护哨卫正面。两机从不同方向接近，抵达后自动开火。点哨卫指定攻击；红色射线表示设备或残骸挡住弹丸。"},
-   {"趁蓄力换位，必要时换目标","橙色长线是哨卫的瞄准方向，及时离开。联锁区需要两机分别点对侧哨卫；遇到残骸阻挡，先换位再攻击。"}
+   {"趁蓄力换位，必要时换目标","橙色长线是哨卫的瞄准方向，及时离开。点击“查看受阻”会暂停并标出挡弹处；换位后再指定目标。"}
   }
   for i,entry in ipairs(guidance) do
    local ry=y+119+(i-1)*91
@@ -305,7 +316,7 @@ function Hud:Modal(ctx)
    self:Text("guide_detail"..i,x+77,ry+34,w-107,44,self:Wrap("guide_detail"..i,entry[2],w-107,9,2),9,15)
   end
   self:Frame("guide_rule",x+30,y+395,w-60,1,"rule",nil,nil,14)
-  self:Text("guide_controls",x+30,y+409,w-60,42,"空格 暂停 / 执行   X 原地待命   R 重试\n1 / 2 选机   鼠标点击 移动 / 目标   M 静音",9,15)
+  self:Text("guide_controls",x+30,y+409,w-60,42,"空格 暂停 / 执行   E 推进 2 秒   R 重试\n1 / 2 选机   X 原地待命   鼠标点击 移动 / 目标",9,15)
   self:Button("guide_return",x+30,y+459,w-60,36,ctx.screen=="title" and "关闭说明 / 返回选关" or "关闭说明 / 返回规划","close",true,14)
  else
   local settings=ctx.settings or {}
