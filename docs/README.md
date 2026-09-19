@@ -1,8 +1,10 @@
 # docs 索引
 
+[2026-09-19 Crossfire 战术窗口与重试反馈](dev-design/plans/2026-09-19-crossfire-tactical-decisions.md)：锁定对象提示、开局附近射界、具体单机复盘与奖章目标；保留现有战斗规则，补普通输入路线对照和原生鼠标换位验证。
+
 [2026-09-19 Crossfire 首关联合精修](dev-design/plans/2026-09-19-crossfire-court-polish.md)：机器人顶面/设施材料层级、紧凑 HUD、真实攻击阶段与炮口信号、音量和碰撞反馈修正。
 
-[2026-09-19 Crossfire 后续迭代评估](dev-design/plans/2026-09-19-crossfire-next-iterations.md)：以 `46d7fd2` 为基线，先联合精修首关画面与战斗表达，再核对三关策略节奏，最后统一品质与平台验证；第一轮已落地，实机证据与保留项见[实施记录](dev-design/plans/2026-09-19-crossfire-court-polish.md)。
+[2026-09-19 Crossfire 后续迭代评估](dev-design/plans/2026-09-19-crossfire-next-iterations.md)：以 `46d7fd2` 为基线，先联合精修首关画面与战斗表达，再核对三关策略节奏，最后统一品质与平台验证；前两轮实现与技术验证已落地；分别见[首关精修](dev-design/plans/2026-09-19-crossfire-court-polish.md)和[战术窗口](dev-design/plans/2026-09-19-crossfire-tactical-decisions.md)。
 
 [2026-09-19 Crossfire 动态场景与战斗演出](dev-design/plans/2026-09-19-crossfire-motion-finish.md)：冷却风扇、事件特效池、收复供电序列与战场结算过渡。
 

@@ -112,7 +112,7 @@ function Hud:Header(ctx,title)
   self:Button("step",w/2+12,10,132,38,ctx.stepRemaining and string.format("%.1f 秒后停",ctx.stepRemaining/1000) or "E  推进 2 秒","step",false,4,not ctx.result)
   local critical=ctx.critical or "两机分路，从没有护盾的侧面进攻。"
   self:Frame("critical_background",20,58,w-328,32,"panel")
-  self:Frame("critical_edge",20,63,3,22,"amber")
+  self:Frame("critical_edge",20,63,3,22,ctx.criticalColor or "amber")
   self:Text("critical",30,64,w-348,22,self:Wrap("critical",critical,w-348,9,1),9)
   for i=1,3 do self:Frame("progress"..i,20+(i-1)*23,94,17,2,i==index and "cyan" or ((ctx.records or {})[i] and "amber" or "track")) end
  end
@@ -145,10 +145,13 @@ function Hud:Title(ctx)
  self:Button("start",x+24,y+407,w-48,48,"ENTER  /  开始行动 "..(level.id or string.format("%02d",index)),"start",true,6)
  local captionX=math.max(x+w+44,self.width-350)
  local captionW=self.width-captionX-24
- self:Frame("scene_caption_panel",captionX-12,self.height-178,captionW+24,146,"panel",nil,nil,4)
- self:Text("scene_kicker",captionX,self.height-165,captionW,22,"中继站 "..(level.id or "07").." / "..string.format("第 %02d / 03 关",index),9,5)
- self:Text("scene_name",captionX,self.height-135,captionW,34,self:Wrap("scene_name",level.name or "维修庭院",captionW,14,1),14,5)
- self:Text("scene_description",captionX,self.height-92,captionW,42,self:Wrap("scene_description",level.description or "一座哨卫，两条路线，寻找侧翼。",captionW,9,2),9,5)
+ self:Frame("scene_caption_panel",captionX-12,self.height-210,captionW+24,178,"panel",nil,nil,4)
+ self:Text("scene_kicker",captionX,self.height-197,captionW,22,"中继站 "..(level.id or "07").." / "..string.format("第 %02d / 03 关",index),9,5)
+ self:Text("scene_name",captionX,self.height-167,captionW,34,self:Wrap("scene_name",level.name or "维修庭院",captionW,14,1),14,5)
+ self:Text("scene_description",captionX,self.height-125,captionW,42,self:Wrap("scene_description",level.description or "一座哨卫，两条路线，寻找侧翼。",captionW,9,2),9,5)
+ local goal=ctx.precision or {damageLimit=60,timeLimitMs=level.parMs or 22000}
+ local goalText=string.format("精确协同：双机存活\n损伤不超过 %d · %g 秒内",goal.damageLimit,goal.timeLimitMs/1000)
+ self:Text("scene_goal",captionX,self.height-78,captionW,42,self:Wrap("scene_goal",goalText,captionW,9,2),9,5,true)
  self:Text("title_footer",24,self.height-36,420,22,"1 / 2 / 3 选关   ENTER 开始   "..collection(ctx).." / 3 已收复",9,7)
 end
 -- Enemy phases describe the real firing cycle; shield feedback is independent.
@@ -239,7 +242,7 @@ function Hud:Actors(ctx)
    self:Frame(key.."_identity",x,y,selected and 4 or 2,lh,identity,nil,nil,3)
    self:Text(key.."_name",x+8,y+1,lw-(a.enemy and a.blocked and 53 or 14),21,
     self:Wrap(key.."_name",name,lw-(a.enemy and a.blocked and 53 or 14),9,1),9,4)
-   if selected then self:Frame(key.."_selected",x,y,lw,2,identity,nil,nil,4) end
+   if selected or a.threat then self:Frame(key.."_selected",x,y,lw,a.threat and 3 or 2,a.threat and "amber" or identity,nil,nil,4) end
    if a.enemy then
     local phase,color,progress=enemyPhase(a)
     self:Text(key.."_state",x+8,y+21,lw-14,20,phase,9,4)
@@ -277,6 +280,7 @@ function Hud:Battle(ctx)
   state=states[state] or state
   self:Text(key.."_status",x+12,y+26,cardW-22,20,self:Wrap(key.."_status",state,cardW-22,9,1),9,5,not alive)
   local detail=not alive and "本关无法继续指挥" or (a.targetName and ("目标 "..a.targetName) or (selected and "点地面规划路线" or "点击 / 按 "..i.." 选择"))
+  if alive and a.threat then detail=a.threat.sourceName..(a.threat.state=="FIRING" and " 连发中" or " 正在锁定") end
   self:Text(key.."_detail",x+12,y+46,cardW-22,20,self:Wrap(key.."_detail",detail,cardW-22,9,1),9,5,not alive)
   self:Frame(key.."_track",x+12,y+69,cardW-24,3,"track")
   if alive then self:Frame(key.."_hp",x+12,y+69,(cardW-24)*clamp(hp/math.max(1,number(a.maxHp,120)),0,1),3,a.damaged and "white" or (hp>40 and identity or "amber")) end
@@ -341,7 +345,9 @@ function Hud:Result(ctx)
  local detail=ctx.resultDetail or (complete and "三处中继站已收复，重新挑战可以改进你的路线。" or (victory and "从侧面打开了局面。" or "两机分路，趁哨卫蓄力时换位。"))
  self:Text("result_detail",x+30,y+118,w-60,42,self:Wrap("result_detail",detail,w-60,9,2),9,11)
  self:Frame("result_rule",x+30,y+169,w-60,1,"rule",nil,nil,10)
- self:Text("result_medal_label",x+30,y+191,300,21,victory and (ctx.newBest and "刷新个人纪录" or "本关表现") or "下一次尝试",9,11)
+ local goal=ctx.precision or {damageLimit=60,timeLimitMs=level.parMs or 22000}
+ local goalText=string.format("精确协同：双机存活 · 损伤不超过 %d · %g 秒内",goal.damageLimit,goal.timeLimitMs/1000)
+ self:Text("result_medal_label",x+30,y+191,w-60,21,self:Wrap("result_medal_label",goalText,w-60,9,1),9,11)
  self:Text("result_medal",x+30,y+216,w-135,32,victory and (({[1]="中继站已收复",[2]="配合默契",[3]="精确协同"})[ctx.medal or 1]) or "寻找新的进攻角度",14,11)
  self:Medal("result_medal_pip",x+w-88,y+224,victory and ctx.medal or 0,11)
  self:Text("result_stats",x+30,y+260,w-60,24,self:Wrap("result_stats",ctx.stats or "",w-60,9,1),9,11)
@@ -372,7 +378,7 @@ function Hud:Modal(ctx)
  if help then
   local guidance={
    {"先规划，再同步执行","点无人机或底部卡片选择，再点亮色边线内的地面规划路线。按空格持续执行，或按 E 推进 2 秒后停下观察。"},
-   {"绕过正面，留意射线","橙色扇面保护哨卫正面。两机从不同方向接近，抵达后自动开火。点哨卫指定攻击；红色射线表示设备或残骸挡住弹丸。"},
+   {"绕过正面，留意射线","橙色扇面保护正面。蓄力时瞄点固定，可换位躲开；冷却时护盾仍有效。两机抵达后自动开火，红线表示中途受阻。"},
    {"趁蓄力换位，必要时换目标","橙色长线是哨卫的瞄准方向，及时离开。点击“查看受阻”会暂停并标出挡弹处；换位后再指定目标。"}
   }
   for i,entry in ipairs(guidance) do

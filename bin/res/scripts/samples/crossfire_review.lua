@@ -3,6 +3,8 @@
 -- decides where to display it. No engine access, callbacks or retained userdata.
 -- Durations sum per-ally query intervals, not real projectile impacts. Two allies
 -- can contribute during the same interval, so totals may exceed match elapsed time.
+-- The longest qualified episode survives movement/death for the final suggestion;
+-- its emittedShots are observed counter increments, never inferred impacts.
 local Review={}
 Review.__index=Review
 local THRESHOLD_MS, UNKNOWN_GRACE_MS=1200,250
@@ -48,8 +50,29 @@ local function better(a,b)
  if a.durationMs~=b.durationMs then return a.durationMs>b.durationMs end
  return a.slot<b.slot
 end
+local function remember(self,track)
+ local old=self._focus
+ if old then
+  -- A review addresses the longest observed episode. Live alerts keep their
+  -- separate urgency-first ordering above; equal reviews use stable value ties.
+  if track.durationMs~=old.queryMs then
+   if track.durationMs<old.queryMs then return end
+  elseif priority[track.state]~=priority[old.state] then
+   if priority[track.state]<priority[old.state] then return end
+  elseif track.slot~=old.slot then
+   if track.slot>old.slot then return end
+  elseif track.target~=old.target then
+   if track.target>old.target then return end
+  elseif track.first~=old.first then
+   if track.first>old.first then return end
+  else return end
+ end
+ self._focus={slot=track.slot,name=track.name,state=track.state,target=track.target,
+  targetName=track.targetName,first=track.first,queryMs=track.durationMs,
+  emittedShots=track.shots,scope="single_ally_query_time"}
+end
 function Review.New()
- return setmetatable({_allies={},_now=nil,_active=false,
+ return setmetatable({_allies={},_now=nil,_active=false,_focus=nil,
   _totals={shieldMs=0,obstructedMs=0,wreckMs=0}},Review)
 end
 
@@ -105,8 +128,12 @@ function Review:Update(nowMs,active,allies)
       end
       old.lastShots=a.shots;old.lastValidAt=nowMs;old.sampled=true
       old.name=text(a.name,slot==1 and "VEGA" or "ROOK")
+      old.targetName=text(report.name,"目标")
       old.text=text(report.text,fallback[state]);old.pos=hit
-      if old.durationMs>=THRESHOLD_MS and old.shots>=2 and better(old,candidate) then candidate=old end
+      if old.durationMs>=THRESHOLD_MS and old.shots>=2 then
+       if advancing then remember(self,old) end
+       if better(old,candidate) then candidate=old end
+      end
      end
     end
    end
@@ -120,6 +147,29 @@ local function count(value,maximum)
  if not finite(value) then return 0 end
  return math.floor(math.max(0,math.min(maximum or 1000000000,value)))
 end
+local focusTitle={shield="先绕到侧后方",obstructed="先换站位",wreck="先绕开残骸"}
+local focusReason={shield="盾前",obstructed="实体遮挡",wreck="残骸遮挡"}
+local focusAction={shield="下次先绕到侧后方，再指定原目标。",
+ obstructed="下次先向侧面换位，再指定原目标。",wreck="下次先绕开残骸，再指定原目标。"}
+local function shortName(value,otherwise)
+ -- Keep the two-line presentation bounded without importing UI/font services.
+ -- Full labels remain in metrics; current drone/sentry names fit unchanged.
+ local valueText=text(value,otherwise):gsub("[%c]","")
+ local chars={}
+ for c in valueText:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+  if #chars==12 then return table.concat(chars).."..." end
+  chars[#chars+1]=c
+ end
+ return #chars>0 and table.concat(chars) or otherwise
+end
+local function focusedSummary(focus)
+ local name=shortName(focus.name,focus.slot==1 and "VEGA" or "ROOK")
+ local targetName=shortName(focus.targetName,"目标")
+ local seconds=focus.queryMs/1000
+ local duration=seconds>9999 and "9999+" or string.format("%.1f",seconds)
+ local detail=string.format("对%s的射界：%s %s 秒。\n%s",targetName,focusReason[focus.state],duration,focusAction[focus.state])
+ return name.."："..focusTitle[focus.state],detail
+end
 function Review:Summary(outcome)
  outcome=type(outcome)=="table" and outcome or {}
  local metrics={shieldMs=self._totals.shieldMs,obstructedMs=self._totals.obstructedMs,
@@ -127,6 +177,13 @@ function Review:Summary(outcome)
   flankHits=count(outcome.flankHits),blockedShots=count(outcome.blockedShots),
   elapsedMs=count(outcome.elapsedMs,1000000000000),scope="per_ally_query_time"}
  metrics.entityMs=metrics.obstructedMs+metrics.wreckMs
+ if self._focus then
+  -- Only strings/numbers are copied out; callers cannot mutate our history.
+  local focus={};for key,value in pairs(self._focus) do focus[key]=value end
+  metrics.focus=focus
+  local title,detail=focusedSummary(focus)
+  return {title=title,detail=detail,metrics=metrics}
+ end
  local title
  if metrics.living<2 then title="先保住双机，再寻找侧面"
  elseif metrics.entityMs>=THRESHOLD_MS and metrics.entityMs>=metrics.shieldMs then

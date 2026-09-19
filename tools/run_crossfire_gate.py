@@ -237,6 +237,15 @@ def main():
             checks['real_attack_phases'] = {'LOCKING', 'FIRING', 'COOLING'} <= {p[0] for p in phases} and all(
                 0 <= float(progress) <= 1 and int(remaining) <= 1700 for _, remaining, progress in phases)
             checks['signals_per_scene'] = len(signals) == text.count('[CrossfireScene]') and all(n in (1, 2) for n in signals)
+            tactics = re.findall(r'\[CrossfireTactic\] kind=(\w+) source=(\d+) target=(\d+)', text)
+            checks['tactical_windows'] = {'lock', 'burst', 'cooling'} <= {t[0] for t in tactics} and all(
+                (int(source) in (3, 4) and int(target) in (1, 2)) if kind in ('lock', 'burst') else True
+                for kind, source, target in tactics)
+            reviews = re.findall(r'\[CrossfireReview\] shieldMs=(\d+) entityMs=(\d+) focusSlot=(\d+) focusState=(\w+) focusQueryMs=(\d+) emittedShots=(\d+) scope=per_ally_query_time', text)
+            checks['review_evidence'] = len(reviews) == text.count('[CrossfireMatch]') and all(
+                (int(slot) in (1, 2) and state in ('shield', 'obstructed', 'wreck') and int(duration) >= 1200 and int(shots) >= 2)
+                if int(slot) else state == 'none'
+                for _, _, slot, state, duration, shots in reviews)
         if mode == 'controls':
             checks['empty_execute_blocked'] = '[CrossfireInput] execute=blocked reason=no_plan' in text
         if mode in ('campaign', 'interface', 'controls'):

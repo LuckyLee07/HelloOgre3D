@@ -4,6 +4,7 @@ local Hud=require("res.scripts.samples.crossfire_hud.lua")
 local Levels=require("res.scripts.samples.crossfire_encounters.lua")
 local Feedback=require("res.scripts.samples.crossfire_feedback.lua")
 local Review=require("res.scripts.samples.crossfire_review.lua")
+local Tactics=require("res.scripts.samples.crossfire_tactics.lua")
 local Effects=require("res.scripts.samples.crossfire_effects.lua")
 local Signals=require("res.scripts.samples.crossfire_signals.lua")
 local Profile=require("res.scripts.samples.crossfire_profile.lua")
@@ -29,6 +30,7 @@ local heldKeys={}
 local stepUntil=nil
 local review,alert,inspection,reviewSummary=nil,nil,nil,nil
 local alertKey=""
+local tacticKey=""
 local function now() return GameManager:getTimeInMillis() end
 local function find(id)
  local all=ObjectManager:getAllAgents()
@@ -137,7 +139,7 @@ local function spawn()
  if effects then effects:Reset();logEffects("reset") end
  if signals then signals:HideAll() end
  selected,paused,result,serial,started=1,true,nil,0,nil
- stepUntil=nil;review=Review.New();alert=nil;inspection=nil;reviewSummary=nil;alertKey=""
+ stepUntil=nil;review=Review.New();alert=nil;inspection=nil;reviewSummary=nil;alertKey="";tacticKey=""
  Scene.SetOutcome(nil)
  medal,medalText,newBest=0,"",false
  hoverCache=nil;hoverCacheKey=""
@@ -328,7 +330,7 @@ local function presentation()
      end
     end
    end
-   local item={pos=pos,hp=hp,maxHp=old.maxHp,enemy=i>2,name=Feedback.Name(id,ids),state=hp<=0 and "OFFLINE" or bb:GetString("crossfire.state"),
+   local item={id=id,lockId=bb:GetInt("crossfire.lockId",-1),pos=pos,hp=hp,maxHp=old.maxHp,enemy=i>2,name=Feedback.Name(id,ids),state=hp<=0 and "OFFLINE" or bb:GetString("crossfire.state"),
     charge=bb:GetFloat("crossfire.charge",0),phaseProgress=bb:GetFloat("crossfire.phaseProgress",0),
     phaseRemainingMs=bb:GetFloat("crossfire.phaseRemainingMs",0),
     damaged=not bb:GetBool("crossfire.lastBlocked",true) and now()-bb:GetInt("crossfire.lastImpactMs",-10000)<350,
@@ -347,9 +349,9 @@ local function presentation()
     local requested=planned[i] and planned[i].kind=="attack" and planned[i].target or bb:GetInt("crossfire.target",-1)
     if requested<=0 then requested=bb:GetInt("crossfire.lockId",-1) end
     local target=requested>0 and find(requested) or a:GetAIComponent():GetEnemy()
-    local report=Feedback.Target(a,target,ids,find)
+    local report=target and Feedback.Target(a,target,ids,find) or Feedback.Reference(a,ids,find)
     item.fireState=report and report.text or "抵达后自动寻找目标"
-    item.targetName=report and report.name or nil
+    item.targetName=report and not report.reference and report.name or nil
     local moving=planned[i] and planned[i].kind=="move" or (not planned[i] and bb:Has("movePos"))
     if report and not moving then
      if report.state~="clear" then old.stalledAt=old.stalledAt or now() else old.stalledAt=nil end
@@ -357,16 +359,16 @@ local function presentation()
       ((i==selected and (paused or report.state~="clear")) or (inspection and inspection.slot==i)) then
       Feedback.Draw(report,Feedback.colors[i])
      end
-     if i==selected then ctx.fireHint=(paused and "当前射界 · " or "")..report.name.."："..report.text end
+     if i==selected then ctx.fireHint=(report.reference and "附近射界 · " or (paused and "当前射界 · " or ""))..report.name.."："..report.text end
      if old.stalledAt and now()-old.stalledAt>1800 and old.reportState~=report.state then
-      print("[CrossfireObstruction] slot="..i.." target="..report.target.." first="..report.first.." reason="..report.state.." tick="..now())
+      print("[CrossfireObstruction] slot="..i.." target="..report.target.." first="..report.first.." reason="..report.state.." reference="..tostring(report.reference==true).." tick="..now())
       old.reportState=report.state
      elseif report.state=="clear" then old.reportState=nil end
     else
      old.stalledAt=nil
      if moving then item.fireState=paused and "路线已规划 · 按空格执行" or "移动中";item.targetName=nil end
     end
-    reviewActors[#reviewActors+1]={slot=i,name=item.name,hp=hp,moving=moving,shots=shot,report=report}
+    reviewActors[#reviewActors+1]={slot=i,name=item.name,hp=hp,moving=moving,shots=shot,report=report and not report.reference and report or nil}
     item.order=planned[i] and (planned[i].kind=="move" and "MOVE / QUEUED" or (planned[i].kind=="attack" and "TARGET / QUEUED" or "HOLD / QUEUED")) or nil
     ctx.allies[#ctx.allies+1]=item
    end
@@ -405,6 +407,11 @@ local function presentation()
    sound(result=="VICTORY" and "win" or "lose",nil,.65,4)
    local elapsed=now()-(started or now())
    reviewSummary=review:Summary({result=result,living=living,damage=damage,flankHits=flankHits,blockedShots=blockedShots,elapsedMs=elapsed})
+   local metrics=reviewSummary.metrics
+   local focus=metrics.focus
+   print(string.format("[CrossfireReview] shieldMs=%d entityMs=%d focusSlot=%d focusState=%s focusQueryMs=%d emittedShots=%d scope=per_ally_query_time",
+    metrics.shieldMs,metrics.entityMs,focus and focus.slot or 0,focus and focus.state or "none",
+    focus and focus.queryMs or 0,focus and focus.emittedShots or 0))
    if result=="VICTORY" then
     local saved
     medal,newBest,saved=profile:Record(level,elapsed,damage,living,Levels[level].parMs)
@@ -416,8 +423,18 @@ local function presentation()
    if result=="VICTORY" and profile:CompletedCount()==3 then print("[CrossfireCampaign] completed=3") end
   end
  end
+ local tactics=Tactics.Read(ctx.actors,selected)
+ if screen=="battle" and not overlay and not result then
+  for i,a in ipairs(ctx.allies) do a.threat=tactics.byAlly[i] end
+  local key=tactics.kind..":"..(tactics.sourceSlot or 0)..":"..(tactics.slot or 0)
+  if key~=tacticKey then
+   tacticKey=key
+   print(string.format("[CrossfireTactic] kind=%s source=%d target=%d tick=%d",tactics.kind,tactics.sourceSlot or 0,tactics.slot or 0,now()))
+  end
+ end
  if screen=="battle" and not result then
-  ctx.critical=level==3 and "两机拉开，分别点对侧哨卫；红线受阻时换位。" or (level==2 and "设备会挡弹；绕过设备，从侧面开火。" or "橙弧是护盾正面；两机分路，抵达后自动开火。")
+  ctx.criticalColor=tactics.color
+  ctx.critical=tactics.text or (level==3 and "两机拉开，分别点对侧哨卫；红线受阻时换位。" or (level==2 and "设备会挡弹；绕过设备，从侧面开火。" or "橙弧是护盾正面；两机分路，抵达后自动开火。"))
   if not overlay and hoverX>=0 and not hud:Hit(hoverX,hoverY) then
    local actorIndex=hud:PickActor(hoverX,hoverY)
    local source=find(ids[selected])
@@ -445,6 +462,7 @@ local function presentation()
    title=not first and "1 · 给 VEGA 规划路线" or (not second and "2 · 给 ROOK 另一条路线" or "3 · 两机同时执行"),
    detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格持续执行，或按 E 推进 2 秒。")}
  end
+ ctx.precision=Profile.Precision(now()-(started or now()),damage,living,Levels[level].parMs)
  ctx.stats=string.format("%d / 2 台存活 · %.1f 秒 · 承受 %d 损伤",living,(now()-(started or now()))/1000,damage)
  hud:Update(ctx)
 end

@@ -43,6 +43,22 @@ function Feedback.Target(source,target,ids,find)
  end
  return r
 end
+-- When perception has no target, explain the nearest visible-on-the-board
+-- sentry's current physical obstruction. This never selects an AI target.
+function Feedback.Reference(source,ids,find)
+ if not source or source:GetHealth()<=0 then return nil end
+ local nearest,distance=nil,math.huge
+ for i=3,#ids do
+  local candidate=find(ids[i])
+  if candidate and candidate:GetHealth()>0 then
+   local d=(candidate:GetPosition()-source:GetPosition()):squaredLength()
+   if d<distance then nearest,distance=candidate,d end
+  end
+ end
+ local report=Feedback.Target(source,nearest,ids,find)
+ if report then report.reference=true end
+ return report
+end
 function Feedback.Draw(r,color)
  if not r or not finite(r.from) then return end
  color=r.state=="clear" and (color or r.color) or r.color

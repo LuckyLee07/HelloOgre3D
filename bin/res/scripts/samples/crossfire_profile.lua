@@ -111,12 +111,18 @@ function Profile:Save()
  return saved
 end
 
+-- The UI and saved medal share these criteria; a live match is not a victory.
+function Profile.Precision(timeMs,damage,living,parMs)
+ if not finite(timeMs,0,MAX_TIME_MS) or not finite(damage,0,MAX_DAMAGE)
+  or not finite(living,0,2,true) or not finite(parMs,0,MAX_TIME_MS) then return nil end
+ return {damageLimit=60,timeLimitMs=parMs,fullTeam=living==2,
+  withinDamage=damage<=60,withinTime=timeMs<=parMs}
+end
 function Profile:Record(level,timeMs,damage,living,parMs)
- if not finite(level,1,3,true) or not finite(timeMs,0,MAX_TIME_MS)
-  or not finite(damage,0,MAX_DAMAGE) or not finite(living,0,2,true)
-  or not finite(parMs,0,MAX_TIME_MS) then return nil,false,false end
- local medal=1+(living==2 and 1 or 0)
- if living==2 and damage<=60 and timeMs<=parMs then medal=medal+1 end
+ local precision=Profile.Precision(timeMs,damage,living,parMs)
+ if not finite(level,1,3,true) or not precision then return nil,false,false end
+ local medal=1+(precision.fullTeam and 1 or 0)
+ if precision.fullTeam and precision.withinDamage and precision.withinTime then medal=medal+1 end
  local current=self.records[level]
  local better=not validRecord(current) or medal>current.medal
   or (medal==current.medal and (timeMs<current.timeMs or (timeMs==current.timeMs and damage<current.damage)))
