@@ -4,14 +4,15 @@
   "assets": [
     {
       "file": "drone.mesh",
-      "vertices": 4804,
-      "triangles": 2412,
+      "vertices": 4340,
+      "triangles": 2208,
       "materials": [
         "Crossfire/Graphite",
-        "Crossfire/Vega",
-        "Crossfire/Signal",
-        "Crossfire/Rubber",
         "Crossfire/ActorMetal",
+        "Crossfire/Vega",
+        "Crossfire/ActorCeramic",
+        "Crossfire/Rubber",
+        "Crossfire/Signal",
         "Crossfire/ActorTrim",
         "Crossfire/Slate"
       ],
@@ -37,21 +38,22 @@
         0.6835,
         1.47
       ],
-      "sha256": "1ca7a4e266aba84945dda825ef8a2d6bb5b4527717e7231f1b9fe4e6da2fdad5",
-      "geometry_sha256": "e5e9fea708558e0d4ff1a54f47a6a2dc4fe1e6f0e46fb784ec2f654a27eaced6"
+      "sha256": "01ef4c992701998d3fd18dc61da18ba1c9f4204b44ca1b9ef710cc1e33e59733",
+      "geometry_sha256": "92019e9f9c2141d7d6a550b0d2de5807477a637398fdac87a3261a79146354b7"
     },
     {
       "file": "drone_b.mesh",
-      "vertices": 4968,
-      "triangles": 2488,
+      "vertices": 4368,
+      "triangles": 2224,
       "materials": [
         "Crossfire/Graphite",
-        "Crossfire/Rook",
-        "Crossfire/RookLight",
-        "Crossfire/Rubber",
         "Crossfire/ActorMetal",
-        "Crossfire/ActorTrim",
-        "Crossfire/Slate"
+        "Crossfire/Rook",
+        "Crossfire/ActorCeramic",
+        "Crossfire/Rubber",
+        "Crossfire/RookLight",
+        "Crossfire/Slate",
+        "Crossfire/ActorTrim"
       ],
       "bounds_min": [
         -0.71,
@@ -75,23 +77,23 @@
         0.6835,
         1.47
       ],
-      "sha256": "9fa2e0ae48b55c272adda63129e464f51e7e3b281f5ee198b947a018241a1f89",
-      "geometry_sha256": "73adf342181600f5179e0d288fc82fc20ab8a5f5b6bc9e9ec2001f5c1416af2b"
+      "sha256": "68d8c15049a393f273b2c487d15398051e011490dfd569bfd3c647d99beaba47",
+      "geometry_sha256": "ce91ae6577f6b3eb27ad4fdf38528f902e1796cc26ea3cd4dc15cabcfe53e8b5"
     },
     {
       "file": "sentinel.mesh",
-      "vertices": 3610,
-      "triangles": 1848,
+      "vertices": 3620,
+      "triangles": 1856,
       "materials": [
         "Crossfire/Graphite",
         "Crossfire/ActorMetal",
         "Crossfire/Slate",
         "Crossfire/EnemyCeramic",
+        "Crossfire/EnemyArmor",
         "Crossfire/Enemy",
         "Crossfire/EnemyLight",
-        "Crossfire/EnemyArmor",
         "Crossfire/Rubber",
-        "Crossfire/ActorTrim"
+        "Crossfire/ActorCeramic"
       ],
       "bounds_min": [
         -0.88,
@@ -115,8 +117,8 @@
         1.478854,
         1.8865
       ],
-      "sha256": "3635b80fe0381fe94435a57c84c5728d856153dd81fae72a85d8bc78edfb631e",
-      "geometry_sha256": "0bd81e0a8449c1a0ccabaea28aeb069a2d09c71ff5470c8674d6f945ae235d6b"
+      "sha256": "3f9d8952946036bafd2078b2aae86274eed2f140313a2ffbc9aaed7c6a6a9156",
+      "geometry_sha256": "c034211cd1f92ce57da70bf7119f04243735426ae6abea750919c0474a1c2fc7"
     },
     {
       "file": "tile.mesh",
@@ -463,7 +465,7 @@
       "triangles": 440,
       "materials": [
         "Crossfire/Slate",
-        "Crossfire/Structure",
+        "Crossfire/RailTop",
         "Crossfire/Graphite",
         "Crossfire/FacilitySignal"
       ],
@@ -484,7 +486,7 @@
         0.65,
         0.756
       ],
-      "sha256": "ea38a7f35686650a45ce5e9cd15c2dec9f2efccea56c2a2c65061454336fe336",
+      "sha256": "819e3882ff08a2ee34c4ca98522842507a910a0a3fed080d3e4417ccbce8ac96",
       "geometry_sha256": "5a19fed17f644e6808d2285cfc927344a6ab9c508836300dc67e2f81bbd5c609"
     },
     {
@@ -1086,6 +1088,12 @@
       "width": 256,
       "height": 256,
       "sha256": "3cc0743c8c0b1af15c8935aaa5bdb937e30086be17692ae112ece272cbfeb6aa"
+    },
+    {
+      "file": "textures/crossfire/stage_backdrop.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "c6c5fdde4afe38cc873478c5b030420fd5ddd59fd4a0a151899b0142b81f83b6"
     },
     {
       "file": "textures/crossfire/fx_muzzle.png",

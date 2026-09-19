@@ -1,5 +1,7 @@
 # docs 索引
 
+[2026-09-19 Crossfire 三轮体验定稿](dev-design/plans/2026-09-19-crossfire-final-three-rounds.md)：场景模型、操作交火、完整试玩三轮连续实施，最多一次针对性返修；首轮已完成。
+
 [2026-09-19 Crossfire 连续切关资源回收](dev-design/plans/2026-09-19-crossfire-resource-lifetime.md)：独占视觉网格/子凸包释放、原版负对照和 15 次切关/2 次重试稳定性 gate。
 
 [2026-09-19 Crossfire 切关响应优化](dev-design/plans/2026-09-19-crossfire-transition-latency.md)：批量凸包创建保留碰撞语义，同机三关切换长帧约降 86%；[性能对照](perf/crossfire-transition-20260919.md)与实机/旧样例证据。

@@ -240,12 +240,12 @@ function Scene.Create(index)
  -- every manager-owned visual reference now; same-court retries use SetOutcome.
  statusVisuals={};corePositions={};coolingPositions={};rotorVisuals={}
  visualOutcome="uninitialised";restoreElapsed=0;restoreComplete=false
- SandboxScene:SetAmbientLight(Vector3(.38,.43,.47))
+ SandboxScene:SetAmbientLight(Vector3(.34,.40,.48))
  -- Blocks are recreated on level changes; this one scene-manager-owned light is
  -- deliberately reused so repeated selection does not accumulate illumination.
- if not keyLight then keyLight=SandboxScene:CreateDirectionalLight(Vector3(-.45,-1,.65)) end
- keyLight:setDiffuseColour(ColourValue(.88,.87,.80))
- keyLight:setSpecularColour(ColourValue(.3,.28,.23))
+ if not keyLight then keyLight=SandboxScene:CreateDirectionalLight(Vector3(-.65,-1,.48)) end
+ keyLight:setDiffuseColour(ColourValue(.96,.88,.76))
+ keyLight:setSpecularColour(ColourValue(.34,.31,.27))
  SandboxScene:ConfigureDirectionalShadows(keyLight,true,65)
  commonCourt(index)
  if index==1 then maintenance() elseif index==2 then coolantWorks() else relayInterlock() end
@@ -258,7 +258,7 @@ function Scene.Create(index)
  -- Visual planes never enter navigation or collide. The caller destroys them
  -- with clearAllObjects(MGR_OBJ_BLOCK,true) before creating the next court.
  local backdrop=SandboxObjects:CreateVisualPlane(180,180)
- backdrop:setMaterial("Crossfire/Slate"); backdrop:setPosition(Vector3(0,-1.05,0))
+ backdrop:setMaterial("Crossfire/StageBackdrop"); backdrop:setPosition(Vector3(0,-1.05,0))
  surfaceDetails(index)
  Scene.SetOutcome(nil)
  print("[CrossfireScene] level="..index.." sector="..Encounters[index].id.." modules="..moduleCount.." nav="..tostring(nav~=nil))

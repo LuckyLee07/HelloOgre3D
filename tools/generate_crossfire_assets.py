@@ -38,8 +38,8 @@ PALETTE = {
     "Enemy": ((0.69, 0.18, 0.105), (0.18, 0.07, 0.035), 44),
     "EnemyLight": ((1.0, 0.41, 0.16), (0.10, 0.035, 0.01), 32),
     "Mark": ((0.65, 0.68, 0.62), (0.015, 0.015, 0.015), 12),
-    "Vega": ((0.105, 0.65, 0.53), (0.15, 0.28, 0.23), 64),
-    "Rook": ((0.19, 0.39, 0.74), (0.16, 0.22, 0.34), 64),
+    "Vega": ((0.075, 0.52, 0.415), (0.15, 0.28, 0.23), 64),
+    "Rook": ((0.12, 0.29, 0.58), (0.16, 0.22, 0.34), 64),
     "RookLight": ((0.38, 0.64, 0.95), (0.07, 0.12, 0.20), 24),
     "ServiceBand": ((0.065, 0.088, 0.10), (0.01, 0.015, 0.02), 12),
     "Wreck": ((0.19, 0.215, 0.225), (0.015, 0.018, 0.02), 8),
@@ -50,32 +50,34 @@ PALETTE = {
     "DeckInterlock": ((0.205, 0.23, 0.275), (0.04, 0.05, 0.07), 22),
     # Architecture is deliberately separated from actor enamel/metal: changing
     # the court hierarchy must never accidentally desaturate or darken a unit.
-    "Structure": ((0.36, 0.42, 0.425), (0.045, 0.055, 0.055), 18),
-    "StructureTrim": ((0.47, 0.52, 0.49), (0.075, 0.085, 0.08), 24),
+    "Structure": ((0.28, 0.35, 0.37), (0.045, 0.055, 0.055), 18),
+    "StructureTrim": ((0.38, 0.44, 0.43), (0.075, 0.085, 0.08), 24),
     "FacilityTeal": ((0.10, 0.30, 0.31), (0.045, 0.075, 0.075), 24),
     "FacilitySignal": ((0.16, 0.51, 0.46), (0.015, 0.04, 0.035), 16),
-    "SafetyPaint": ((0.48, 0.37, 0.19), (0.02, 0.015, 0.01), 12),
-    "Wayfinding": ((0.43, 0.49, 0.46), (0.01, 0.015, 0.01), 12),
-    "DeckJoint": ((0.105, 0.155, 0.180), (0.015, 0.02, 0.025), 16),
+    "SafetyPaint": ((0.33, 0.29, 0.19), (0.02, 0.015, 0.01), 12),
+    "Wayfinding": ((0.285, 0.35, 0.34), (0.01, 0.015, 0.01), 12),
+    "DeckJoint": ((0.151, 0.199, 0.222), (0.015, 0.02, 0.025), 16),
+    "RailTop": ((0.145, 0.215, 0.245), (0.065, 0.085, 0.10), 28),
+    "ActorCeramic": ((0.80, 0.81, 0.73), (0.24, 0.25, 0.23), 72),
     "ActorTrim": ((0.82, 0.85, 0.79), (0.22, 0.24, 0.22), 64),
     "ActorMetal": ((0.30, 0.38, 0.41), (0.46, 0.50, 0.52), 96),
     "EnemyArmor": ((0.68, 0.155, 0.065), (0.24, 0.09, 0.04), 56),
     "EnemyCeramic": ((0.29, 0.34, 0.35), (0.08, 0.10, 0.11), 32),
-    "CoreCasing": ((0.40, 0.47, 0.47), (0.08, 0.10, 0.10), 28),
-    "CoreCrown": ((0.57, 0.64, 0.61), (0.18, 0.21, 0.20), 52),
+    "CoreCasing": ((0.32, 0.40, 0.41), (0.08, 0.10, 0.10), 28),
+    "CoreCrown": ((0.36, 0.45, 0.45), (0.18, 0.21, 0.20), 52),
     "CoreMetal": ((0.28, 0.35, 0.37), (0.24, 0.29, 0.31), 72),
     # Facility finishes never remap actor materials. Broad colour blocks and
     # a restrained metal crown distinguish machinery at the fixed game scale.
     "FacilityFrame": ((0.068, 0.102, 0.12), (0.075, 0.10, 0.12), 32),
     "FacilityMetal": ((0.33, 0.42, 0.45), (0.25, 0.30, 0.32), 64),
     "CoolantCasing": ((0.25, 0.39, 0.45), (0.075, 0.12, 0.14), 32),
-    "CoolantCrown": ((0.48, 0.57, 0.58), (0.27, 0.31, 0.32), 64),
+    "CoolantCrown": ((0.38, 0.48, 0.51), (0.27, 0.31, 0.32), 64),
     "CoolantPipe": ((0.115, 0.33, 0.35), (0.08, 0.15, 0.16), 32),
     "CoolantSignal": ((0.20, 0.49, 0.47), (0.02, 0.055, 0.05), 20),
     "DishCeramic": ((0.60, 0.64, 0.60), (0.14, 0.16, 0.15), 44),
     "RelayCasing": ((0.29, 0.35, 0.37), (0.06, 0.08, 0.09), 28),
     "InterlockCasing": ((0.35, 0.39, 0.48), (0.10, 0.12, 0.17), 36),
-    "InterlockCrown": ((0.50, 0.54, 0.62), (0.22, 0.25, 0.30), 56),
+    "InterlockCrown": ((0.38, 0.44, 0.54), (0.22, 0.25, 0.30), 56),
     "InterlockBand": ((0.205, 0.275, 0.37), (0.065, 0.09, 0.13), 32),
     "InterlockSignal": ((0.35, 0.47, 0.58), (0.04, 0.055, 0.075), 20),
 }
@@ -199,27 +201,43 @@ def hull(m, w, d, h, center, bevel, material, cut=0.18):
                    (h/2-h*0.22, 1), (h/2, 1-bevel)], center, material)
 
 
+def carapace(m, profile, levels, center, bands, top_material):
+    """Closed broad armour surfaces, with each physical bevel band explicit.
+
+    Faceted shoulders carry light across a continuous shell; these are material
+    regions of the shell, not a stack of strips or floating glyph polygons.
+    """
+    rings = [[(x*scale+center[0], y+center[1], z*scale+center[2])
+              for x,z in profile] for y,scale in levels]
+    for band,(a,b) in enumerate(zip(rings,rings[1:])):
+        for i in range(len(profile)):
+            j=(i+1)%len(profile)
+            normal=cross(tuple(b[i][k]-a[i][k] for k in range(3)),
+                         tuple(a[j][k]-a[i][k] for k in range(3)))
+            m.face([a[i],a[j],b[j],b[i]],normal,mat(bands[band]),.5)
+    m.face(rings[0],(0,-1,0),mat(bands[0]),.5)
+    m.face(rings[-1],(0,1,0),mat(top_material),.5)
+
+
 def drone(identity=1):
     m = Mesh()
-    # Armoured carapace narrows towards the sensor nose; a separate dark belly
-    # exposes the two real duct rings and their motor hubs from the game camera.
-    shape = ([(-0.27, -0.56), (0.27, -0.56), (0.38, -0.31),
-              (0.31, 0.34), (0.17, 0.60), (-0.17, 0.60),
-              (-0.31, 0.34), (-0.38, -0.31)] if identity == 1 else
-             [(-0.35, -0.56), (0.35, -0.56), (0.42, -0.35),
-              (0.42, 0.28), (0.29, 0.60), (-0.29, 0.60),
-              (-0.42, 0.28), (-0.42, -0.35)])
     identity_material = "Vega" if identity == 1 else "Rook"
     light_material = "Signal" if identity == 1 else "RookLight"
-    polygon_shell(m, shape, [(-0.25, 0.76), (-0.17, 1.02), (0.03, 1.0),
-                            (0.13, 0.80)], (0, 0, 0), "Graphite")
-    polygon_shell(m, shape, [(0.10, 0.86), (0.18, 1.0), (0.32, 0.96),
-                            (0.38, 0.83 if identity == 1 else 0.90)], (0, 0, -0.015), identity_material)
-    # Rear thermal spine and front polarised sensor strip.
-    box(m, (0.19, 0.07, 0.40), (0, 0.354, -0.20), 0.025, "Graphite")
-    box(m, (0.12, 0.02, 0.15), (0, 0.396, -0.20), 0.009, light_material)
-    box(m, (0.40, 0.10, 0.095), (0, 0.213, 0.565), 0.025, "Rubber")
-    box(m, (0.22, 0.026, 0.016), (0, 0.229, 0.619), 0.006, light_material)
+    # A tapered lifting-body shell for VEGA and a blunt armoured wedge for ROOK.
+    # The rising transverse bevel replaces the old flat lid, raised stencil and
+    # scattered vents. Identity is now a broad enamel roof inside neutral armour.
+    shape = ([(-.27,-.56),(.27,-.56),(.38,-.31),(.31,.34),
+              (.17,.60),(-.17,.60),(-.31,.34),(-.38,-.31)] if identity == 1 else
+             [(-.35,-.56),(.35,-.56),(.42,-.35),(.42,.28),
+              (.29,.60),(-.29,.60),(-.42,.28),(-.42,-.35)])
+    polygon_shell(m, shape, [(-.25,.76),(-.17,1.02),(.03,1),(.13,.80)],
+                  (0,0,0),"Graphite")
+    carapace(m,shape,[(.10,.88),(.19,1),(.29,.99),(.406,.67 if identity==1 else .73)],
+             (0,0,-.015),["ActorMetal",identity_material,"ActorCeramic"],identity_material)
+    # The broad dark nose is directly above the unchanged gun; a recessed front
+    # sensor supplies one clear forward edge instead of a roof full of glyphs.
+    box(m,(.38,.10,.10),(0,.213,.562),.025,"Rubber")
+    box(m,(.24,.033,.018),(0,.229,.619),.007,light_material)
     for side in (-1, 1):
         x = side*0.485
         beam(m, (side*0.24, -0.045, -0.14), (x, -0.045, -0.14),
@@ -232,18 +250,17 @@ def drone(identity=1):
             dx, dz = math.cos(angle), math.sin(angle)
             beam(m, (x+dx*0.06, -0.08, -0.18+dz*0.06),
                  (x+dx*0.157, -0.08, -0.18+dz*0.157), 0.025, 0.035, "ActorMetal")
-        # Forward shoulder fairings have a directional pentagonal silhouette.
-        shoulder = ([(-0.13, -0.23), (0.13, -0.23), (0.12, 0.18),
-                     (0, 0.31), (-0.12, 0.18)] if identity == 1 else
-                    [(-0.21, -0.24), (0.21, -0.24), (0.21, 0.17),
-                     (0.13, 0.29), (-0.13, 0.29), (-0.21, 0.17)])
-        polygon_shell(m, shoulder, [(-0.02, 0.76), (0.075, 1), (0.20, 0.88)],
-                      (side*0.43, 0, 0.21), "ActorTrim" if identity == 1 else "Rook")
-        box(m, (0.08, 0.028, 0.15), (side*0.43, 0.202, 0.23), 0.008,
-            "Vega" if identity == 1 else "ActorTrim")
-        # One broad intake on each shoulder reads at 720p; remove the old
-        # repeated tiny fins rather than accumulating more detail.
-        box(m, (0.10, 0.012, 0.20), (side*0.19, 0.393, -0.235), 0.004, "Graphite")
+        # Continuous neutral prow cheeks rise out of the exposed rear ducts.
+        # VEGA's long curved-plan sweep differs from ROOK's broad clipped pad.
+        shoulder = ([(-.13,-.23),(.13,-.23),(.12,.18),(0,.31),(-.12,.18)]
+                    if identity==1 else
+                    [(-.21,-.24),(.21,-.24),(.21,.17),(.13,.29),(-.13,.29),(-.21,.17)])
+        carapace(m,shoulder,[(-.02,.76),(.09,1),(.21,.90),(.275,.64)],
+                 (side*.43,0,.21),["Graphite","ActorCeramic","ActorCeramic"],identity_material)
+        # Rear motor cowl is one solid band; the visible ring below remains real.
+        cover = [(-.13,-.16),(.13,-.16),(.16,.07),(.10,.16),(-.10,.16),(-.16,.07)]
+        carapace(m,cover,[(.015,.8),(.09,1),(.15,.76)],
+                 (side*.485,0,-.18),["ActorMetal","ActorCeramic"],"ActorMetal")
     # Single forward gun: exposed receiver, collar, recessed bore, upper rail.
     box(m, (0.28, 0.18, 0.34), (0, -0.045, 0.51), 0.035, "Slate")
     lathe(m, [(0.60, 0.085), (0.65, 0.072), (0.81, 0.060)],
@@ -251,14 +268,6 @@ def drone(identity=1):
     ring(m, 0.098, 0.046, 0.13, (0, -0.02, 0.83), "Graphite", 12, axis="z")
     lathe(m, [(0.786, 0.043), (0.794, 0.043)], (0, -0.02, 0), "Rubber", 12, axis="z")
     box(m, (0.080, 0.042, 0.28), (0, 0.077, 0.56), 0.009, "ActorTrim")
-    # Strong monochrome glyphs reinforce body colour: VEGA chevron / ROOK twin
-    # bars. All new detail remains inside the previous authored mesh bounds.
-    if identity == 1:
-        for x in (-0.19, 0.19):
-            beam(m, (x, 0.393, -0.005), (0, 0.393, 0.29), 0.014, 0.088, "ActorTrim")
-    else:
-        for x in (-0.105, 0.105):
-            box(m, (0.100, 0.014, 0.32), (x, 0.391, 0.075), 0.004, "ActorTrim")
     return m
 
 
@@ -270,7 +279,10 @@ def sentinel():
           (0, 0, 0), "Graphite", 16)
     ring(m, 0.52, 0.43, 0.13, (0, -0.43, 0), "ActorMetal", 24)
     hull(m, 1.14, 1.12, 0.76, (0, 0.035, -0.12), 0.13, "Slate", 0.28)
-    hull(m, 0.99, 0.93, 0.18, (0, 0.48, -0.10), 0.12, "EnemyCeramic", 0.25)
+    roof=[(-.39,-.46),(.39,-.46),(.49,-.24),(.40,.30),(.20,.47),
+          (-.20,.47),(-.40,.30),(-.49,-.24)]
+    carapace(m,roof,[(.37,1),(.48,.99),(.61,.76)],(0,0,-.10),
+             ["Graphite","EnemyCeramic"],"EnemyArmor")
     for a in (0, 2*math.pi/3, 4*math.pi/3):
         dx, dz = math.sin(a), math.cos(a)
         beam(m, (dx*0.36, -0.55, dz*0.36), (dx*0.74, -0.73, dz*0.74),
@@ -299,18 +311,20 @@ def sentinel():
         if side == -1:
             shoulder.reverse()
         polygon_shell(m, shoulder, [(.41,.82),(.47,1),(.615,.88)],
-                      (side*.58,0,.26), "Graphite", cap_material="EnemyArmor")
+                      (side*.58,0,.26), "EnemyArmor", cap_material="ActorMetal")
         beam(m, (side*0.32, 0, 0.17), (side*0.66, 0, 0.37), 0.16, 0.16, "ActorMetal")
     box(m, (0.40, 0.26, 0.52), (0, 0.20, 0.42), 0.045, "EnemyCeramic")
     lathe(m, [(0.62, 0.13), (0.70, 0.11), (0.95, 0.11)],
           (0, 0.20, 0), "ActorMetal", 12, axis="z")
     ring(m, 0.175, 0.075, 0.22, (0, 0.20, 1.00), "Graphite", 12, axis="z")
     lathe(m, [(0.884, 0.07), (0.895, 0.07)], (0, 0.20, 0), "Rubber", 12, axis="z")
-    box(m, (0.35, 0.075, 0.18), (0, 0.573, 0.14), 0.015, "Rubber")
-    box(m, (0.24, 0.028, 0.022), (0, 0.595, 0.24), 0.007, "EnemyLight")
-    # A broad top-plane arrow makes shield direction legible from the game camera.
-    polygon_shell(m, [(-0.28, -0.30), (0.28, -0.30), (0, 0.10)],
-                  [(0.578, 1), (0.623, 1)], (0, 0, 0), "ActorTrim")
+    # A long ivory gun saddle bridges roof to the exposed barrel. Its forward
+    # taper reads as a physical cannon direction from overhead, without an arrow.
+    saddle=[(-.17,-.30),(.17,-.30),(.17,.25),(.105,.69),(-.105,.69),(-.17,.25)]
+    carapace(m,saddle,[(.42,1),(.56,.91),(.635,.71)],(0,0,0),
+             ["Graphite","ActorCeramic"],"ActorCeramic")
+    box(m,(.115,.050,.25),(0,.585,.70),.012,"EnemyArmor")
+    box(m,(.21,.035,.030),(0,.465,.625),.008,"EnemyLight")
     ring(m, 0.28, 0.21, 0.07, (0, 0.02, -0.702), "ActorMetal", 20, axis="z")
     lathe(m, [(-0.742, 0.195), (-0.711, 0.195)], (0, 0.02, 0), "EnemyLight", 20, axis="z")
     for x in (-0.11, 0, 0.11):
@@ -443,7 +457,7 @@ def pipe():
 def edge():
     m = Mesh()
     box(m, (4.0, 0.55, 0.70), (0, 0.275, 0), 0.055, "Slate")
-    box(m, (4.0, 0.10, 0.58), (0, 0.60, 0), 0.025, "Porcelain")
+    box(m, (4.0, 0.10, 0.58), (0, 0.60, 0), 0.025, "RailTop")
     for x in (-1.5, -0.5, 0.5, 1.5):
         box(m, (0.38, 0.10, 0.035), (x, 0.32, 0.37), 0.008, "Graphite")
         box(m, (0.20, 0.03, 0.02), (x, 0.32, 0.396), 0.005, "Signal")
@@ -947,6 +961,26 @@ def region_sign_maps():
     return maps
 
 
+def stage_backdrop():
+    # PlaneGenerator covers the complete 180 m square with one UV interval.
+    # A broad superellipse avoids a round spotlight; the softly expanded plinth
+    # footprint anchors the court without drawing a second arena or tactical mark.
+    # Texture U follows plane +Z and V follows +X, so the long footprint axis is U.
+    surface=Surface(1024,1024)
+    for y in range(1024):
+        z=((y+.5)/1024-.5)*180
+        for x in range(1024):
+            px=((x+.5)/1024-.5)*180
+            ambient=math.exp(-((px/23)**4+(z/25)**4)*.65)
+            dx=max(0,abs(px)-12.2)
+            dz=max(0,abs(z)-10.2)
+            contact=math.exp(-(dx*dx+dz*dz)/(2*1.05**2))
+            colour=tuple(round(base+rise*ambient-dark*contact)
+                         for base,rise,dark in ((12,16,12),(20,24,17),(28,25,18)))
+            surface.pixel(x,y,(*colour,255))
+    return surface
+
+
 def surface_maps():
     # The floor is painted metal, not simulated PBR: broad polish/wear fields and
     # inset service-panel paint sit in albedo; existing geometry supplies depth.
@@ -1023,6 +1057,7 @@ def surface_maps():
     maps = {'deck_panel.png':panel, 'coating.png':coat, 'structure_coating.png':structure_coat, 'service_pad.png':service,
             'coolant_pad.png':coolant, 'interlock_bus.png':interlock,
             'power_strip.png':strip, 'power_column.png':column, 'power_ring.png':ring_map}
+    maps['stage_backdrop.png']=stage_backdrop()
     maps.update(effect_maps())
     maps.update(weapon_signal_maps())
     maps.update(region_sign_maps())
@@ -1030,9 +1065,10 @@ def surface_maps():
 
 
 OVERLAYS = {
-    'ServicePad': ('service_pad.png', (1,1,1,1)),
-    'CoolantPad': ('coolant_pad.png', (1,1,1,1)),
-    'InterlockBus': ('interlock_bus.png', (1,1,1,1)),
+    'StageBackdrop': ('stage_backdrop.png', (1,1,1,1)),
+    'ServicePad': ('service_pad.png', (1,1,1,.68)),
+    'CoolantPad': ('coolant_pad.png', (1,1,1,.78)),
+    'InterlockBus': ('interlock_bus.png', (1,1,1,.78)),
     'PowerIdle': ('power_strip.png', (.47,.34,.16,1)),
     'PowerOnline': ('power_strip.png', (.18,.92,.73,1)),
     'PowerOffline': ('power_strip.png', (.12,.16,.18,1)),
@@ -1077,7 +1113,7 @@ def material_text():
         elif name in ("Structure", "StructureTrim", "CoreCasing", "CoreCrown",
                       "CoolantCasing", "RelayCasing", "DishCeramic", "InterlockCasing"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/structure_coating.png']
-        elif name in ("Porcelain", "Ivory"):
+        elif name in ("Porcelain", "Ivory", "ActorCeramic", "Vega", "Rook"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/coating.png']
         lines += ["}", ""]
     for name, (texture, tint) in OVERLAYS.items():
@@ -1138,6 +1174,9 @@ def main():
                     for x in range(surface.width):
                         if min(x,y,surface.width-1-x,surface.height-1-y)<4:
                             assert surface.pixels[(y*surface.width+x)*4+3]==0, filename
+            if filename == "stage_backdrop.png":
+                assert (surface.width,surface.height)==(1024,1024)
+                assert all(a==255 for a in surface.pixels[3::4]), filename
             data = surface.png()
             if args.check:
                 assert (TEXTURES/filename).read_bytes() == data, filename
