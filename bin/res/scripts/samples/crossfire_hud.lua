@@ -102,24 +102,51 @@ end
 function Hud:Medal(key,x,y,value,layer)
  for i=1,3 do self:Frame(key..i,x+(i-1)*16,y,11,5,i<=number(value) and "amber" or "track",nil,nil,layer) end
 end
+-- Preserve the phase/action boundary instead of leaving a short orphan tail.
+-- Keep every authored character: the dot becomes the action-line bullet.
+local function criticalLines(value,width)
+ local text=plain(value)
+ if text:find("\n",1,true) then return text end
+ for _,separator in ipairs({" · ","；"}) do
+  local offset=1
+  while true do
+   local first,last=text:find(separator,offset,true)
+   if not first then break end
+   local split=separator==" · " and first-1 or last
+   local head=text:sub(1,split):gsub(" +$","")
+   local tail=text:sub(split+1):gsub("^ +","")
+   if head~="" and tail~="" and Text.Width(head,9)<=width-2 and Text.Width(tail,9)<=width-2 then
+    return head.."\n"..tail
+   end
+   offset=last+1
+  end
+ end
+ return text
+end
 function Hud:Header(ctx,title)
+ self.noticeRect=nil
  local w=self.width
  local level,index=levelInfo(ctx)
  self:Text("brand",20,8,260,30,"CROSS / FIRE",14)
  self:Text("edition",20,35,290,22,title and "双机协同 / 三处中继站" or (string.format("%02d / 03  ",index)..(level.name or "维修庭院")),9)
+ if ctx.result then return end
  self:Button("settings",w-282,14,124,34,"ESC  设置","settings")
  self:Button("retry",w-148,14,124,34,title and "退出游戏" or "R  重试",title and "quit" or "restart")
  self:Button("help",w-282,58,124,30,"H  操作说明","help")
  local zeroVolume=ctx.settings and number(ctx.settings.volume,.65)<=0
  self:Button("mute",w-148,58,124,30,ctx.muted and "M  已静音" or (zeroVolume and "M  音量为零" or "M  声音开"),"mute")
  if not title then
-  self:Button("phase",w/2-146,10,150,38,ctx.result and "本关已结束" or (ctx.paused and "空格  执行" or "空格  暂停"),"pause",ctx.paused,4,not ctx.result)
-  self:Button("step",w/2+12,10,132,38,ctx.stepRemaining and string.format("%.1f 秒后停",ctx.stepRemaining/1000) or "E  推进 2 秒","step",false,4,not ctx.result)
+  self:Button("phase",w/2-146,10,150,38,ctx.paused and "空格  执行" or "空格  暂停","pause",ctx.paused,4)
+  self:Button("step",w/2+12,10,132,38,ctx.stepRemaining and string.format("%.1f 秒后停",ctx.stepRemaining/1000) or "E  推进 2 秒","step",false,4)
   local critical=ctx.critical or "两机分路，从没有护盾的侧面进攻。"
-  self:Frame("critical_background",20,58,w-328,32,"panel")
-  self:Frame("critical_edge",20,63,3,22,ctx.criticalColor or "amber")
-  self:Text("critical",30,64,w-348,22,self:Wrap("critical",critical,w-348,9,1),9)
-  for i=1,3 do self:Frame("progress"..i,20+(i-1)*23,94,17,2,i==index and "cyan" or ((ctx.records or {})[i] and "amber" or "track")) end
+  -- Keep the central play field clear, and reserve the notice from picking
+  -- and actor-name placement. Real bodies remain selected outside this panel.
+  self.noticeRect={x=20,y=58,w=388,h=50}
+  self:Frame("critical_background",20,58,388,50,"panel")
+  self:Frame("critical_edge",20,63,3,40,ctx.criticalColor or "amber")
+  self:Text("critical",30,63,368,42,self:Wrap("critical",criticalLines(critical,368),368,9,2),9)
+  self:Region(20,58,388,50,"block")
+  for i=1,3 do self:Frame("progress"..i,20+(i-1)*23,105,17,2,i==index and "cyan" or ((ctx.records or {})[i] and "amber" or "track")) end
  end
 end
 function Hud:Title(ctx)
@@ -130,7 +157,7 @@ function Hud:Title(ctx)
  self:Frame("title_accent",x,y,3,h,"cyan",nil,nil,6)
  self:Region(x,y,w,h,"block")
  self:Text("title_heading",x+24,y+22,w-48,32,collection(ctx)==3 and "三处中继站已收复" or "选择中继站",14,7)
- self:Text("title_detail",x+24,y+59,w-48,20,ctx.saveError and "本次进度暂时无法保存。" or (collection(ctx)==3 and "三关已完成，可以重访并改进路线。" or "三场遭遇，自由选择，从侧翼打开局面。"),9,7)
+ self:Text("title_detail",x+24,y+59,w-48,20,ctx.saveError and "本次进度暂时无法保存。" or (collection(ctx)==3 and "三关已完成，可以重访并改进路线。" or "先规划，再执行；抵达后自动开火。"),9,7)
  for i=1,3 do
   local entry=(ctx.levels or {})[i] or {}
   local record=(ctx.records or {})[i]
@@ -192,6 +219,7 @@ function Hud:ActorLabelPosition(hit,w,h,top,bottom,count)
  local desiredX=hit.anchorX-w/2
  local desiredY=hit.enemy and (hit.anchorY-h-10) or (hit.y+hit.radius+7)
  local function available(x,y)
+  if self.noticeRect and labelsOverlap(x,y,w,h,self.noticeRect) then return false end
   for i=1,self.actorCount do
    if coversBody(x,y,w,h,self.actorHits[i]) then return false end
   end
@@ -334,6 +362,7 @@ function Hud:Endpoints(ctx)
   if point and not nearby then
    local p=SandboxCamera:WorldToScreen(point)
    local x,y=clamp(p.x+13,20,self.width-48),clamp(p.y-12,96,self.height-128)
+   if self.noticeRect and labelsOverlap(x,y,30,24,self.noticeRect) then y=self.noticeRect.y+self.noticeRect.h+6 end
    local identity=i==1 and "cyan" or "blue"
    -- Endpoint numbers use the same identity stripe as cards and actor labels.
    self:Frame("endpoint"..i,x,y,30,24,"panel",nil,nil,2)
@@ -362,7 +391,8 @@ function Hud:Result(ctx)
  self:Region(0,0,self.width,self.height,"block")
  self:Frame("result_panel",x,y,w,h,"solid",nil,nil,9)
  self:Frame("result_accent",x,y,w,3,victory and "cyan" or "amber",nil,nil,10)
- self:Text("result_kicker",x+30,y+24,w-60,24,"中继站 "..(level.id or "07").." / 行动报告",9,11)
+ self:Text("result_kicker",x+30,y+24,w-214,24,"中继站 "..(level.id or "07").." / 行动报告",9,11)
+ self:Button("result_settings",x+w-154,y+18,124,30,"ESC  设置","settings",false,10)
  self:Text("result_title",x+30,y+58,w-60,46,complete and "三站联通" or (victory and "中继站已收复" or "小队已失联"),24,11)
  local detail=ctx.resultDetail or (complete and "三处中继站已收复，重新挑战可以改进你的路线。" or (victory and "从侧面打开了局面。" or "两机分路，趁哨卫蓄力时换位。"))
  self:Text("result_detail",x+30,y+118,w-60,42,self:Wrap("result_detail",detail,w-60,9,2),9,11)
@@ -395,7 +425,9 @@ function Hud:Result(ctx)
   local record=(ctx.records or {})[i]
   self:Frame("result_progress"..i,x+w-150+(i-1)*40,y+387,30,5,record and "cyan" or "track",nil,nil,11)
  end
- self:Button("result_next",x+30,y+412,w-60,40,victory and (index<3 and "ENTER  /  前往下一关" or "ENTER  /  返回选关") or "R  /  重试本关",victory and "next" or "restart",true,10)
+ local nextLevel=(ctx.levels or {})[index+1]
+ local nextLabel="ENTER  /  前往 "..(nextLevel and nextLevel.name or "下一关")
+ self:Button("result_next",x+30,y+412,w-60,40,victory and (index<3 and nextLabel or "ENTER  /  返回选关") or "R  /  重试本关",victory and "next" or "restart",true,10)
  self:Button("result_retry",x+30,y+460,(w-72)/2,30,victory and "R  重玩本关" or "H  操作说明",victory and "restart" or "help",false,10)
  local finalVictory=victory and index==3
  self:Button("result_menu",x+42+(w-72)/2,y+460,(w-72)/2,30,finalVictory and "H  操作说明" or "返回选关",finalVictory and "help" or "menu",false,10)

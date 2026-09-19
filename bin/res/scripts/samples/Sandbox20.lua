@@ -403,12 +403,12 @@ local function presentation()
    if hp>0 then
     if i<3 then
      living=living+1
-     if i==selected and screen=="battle" and not overlay then DebugDrawer:drawCircle(Vector3(pos.x,.06,pos.z),.95,40,Feedback.colors[i],false) end
+     if i==selected and screen=="battle" and not overlay and not result then DebugDrawer:drawCircle(Vector3(pos.x,.06,pos.z),.95,40,Feedback.colors[i],false) end
      local destination=nil
      if planned[i] then destination=planned[i].pos
      elseif bb:Has("movePos") then destination=bb:GetVec3("movePos") end
-     if destination and screen=="battle" and not overlay then pathPreview(a,destination,Feedback.colors[i]); ctx["endpoint"..i]=destination end
-    else
+     if destination and screen=="battle" and not overlay and not result then pathPreview(a,destination,Feedback.colors[i]); ctx["endpoint"..i]=destination end
+    elseif screen=="battle" and not overlay and not result then
      -- This arc is the same 120-degree cone used by physical impact damage.
      local center=Vector3(pos.x,.10,pos.z)
      Scene.DrawShield(pos,front,bb:GetBool("crossfire.lastBlocked",false) and now()-bb:GetInt("crossfire.lastImpactMs",-10000)<350)
