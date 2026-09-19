@@ -14,6 +14,30 @@
 #include <algorithm>
 #include <cstdlib>
 
+namespace
+{
+	class VisualPlaneBlock final : public BlockObject
+	{
+	public:
+		VisualPlaneBlock(Ogre::SceneNode* node, const Ogre::MeshPtr& mesh)
+			: BlockObject(node, nullptr), m_ownedMesh(mesh)
+		{
+		}
+
+		~VisualPlaneBlock() override
+		{
+			// This factory creates a unique procedural mesh for this object.
+			// Remove only its registration. The entity keeps the MeshPtr alive
+			// until the base destructor releases the render component.
+			Ogre::MeshManager* manager = Ogre::MeshManager::getSingletonPtr();
+			if (manager != nullptr) manager->remove(m_ownedMesh->getHandle());
+		}
+
+	private:
+		Ogre::MeshPtr m_ownedMesh;
+	};
+}
+
 ObjectFactory::ObjectFactory(ObjectManager* pMananger)
 	: m_objectManager(pMananger)
 {
@@ -51,7 +75,7 @@ BlockObject* ObjectFactory::CreateVisualPlane(float width, float height)
 	planeEntity->setCastShadows(false);
 	planeNode->attachObject(planeEntity);
 
-	BlockObject* pObject = new BlockObject(planeNode, nullptr);
+	BlockObject* pObject = new VisualPlaneBlock(planeNode, mesh);
 	// Visual planes participate in normal object ownership and cleanup. The plane
 	// type excludes them from navmesh; no rigid body keeps them out of sight rays.
 	pObject->SetObjType(BaseObject::OBJ_TYPE_PLANE);

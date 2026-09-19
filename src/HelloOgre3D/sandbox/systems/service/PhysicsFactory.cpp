@@ -3,6 +3,30 @@
 #include "btBulletCollisionCommon.h"
 #include "BulletCollision/CollisionShapes/btShapeHull.h"
 #include "SceneFactory.h"
+#include <memory>
+#include <utility>
+
+namespace
+{
+	class MeshHullCompoundShape final : public btCompoundShape
+	{
+	public:
+		explicit MeshHullCompoundShape(std::unique_ptr<btConvexHullShape> hull)
+			: m_ownedHull(std::move(hull))
+		{
+			btAssert(m_ownedHull.get() != nullptr);
+			// Keep the original authored coordinates, without a centre-of-mass offset.
+			addChildShape(btTransform(btQuaternion::getIdentity()), m_ownedHull.get());
+		}
+
+		~MeshHullCompoundShape() override = default;
+
+	private:
+		// Bullet borrows child pointers. Own only the hull explicitly transferred
+		// by this factory, never other children attached through the Bullet API.
+		std::unique_ptr<btConvexHullShape> m_ownedHull;
+	};
+}
 
 btRigidBody* PhysicsFactory::CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btScalar btmass)
 {
@@ -10,7 +34,7 @@ btRigidBody* PhysicsFactory::CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btSca
 	const btScalar mass = btmass;
 
 	// 从网格数据创建一个简化的凸包形状。
-	btConvexHullShape * hullShape = CreateSimplifiedConvexHull(meshPtr);
+	std::unique_ptr<btConvexHullShape> hullShape(CreateSimplifiedConvexHull(meshPtr));
 
 	// 定义AABB（轴对齐边界盒）的最小和最大点。
 	btVector3 aabbMin;
@@ -20,22 +44,8 @@ btRigidBody* PhysicsFactory::CreateRigidBodyBox(Ogre::Mesh* meshPtr, const btSca
 	hullShape->getAabb(
 		btTransform(btQuaternion::getIdentity()), aabbMin, aabbMax);
 
-	// 计算质心，将其设为AABB的中心。适用于对称物体，非对称物体可能出现问题。
-	const btVector3 centerOfMass = (aabbMax + aabbMin) / 2.0f;
-
-	// 创建一个复合形状用于组合多个形状，这里暂时只包含一个形状。
-	btCompoundShape* compoundShape = new btCompoundShape();
-
-	// 为了修正质心偏移问题的代码被注释掉了，该代码可以改变形状的图形表示。
-	/*
-	compoundShape->addChildShape(
-		btTransform(btQuaternion::getIdentity(), -centerOfMass),
-		hullShape);
-	*/
-
-	// 添加形状到复合形状中，未调整质心位置。
-	compoundShape->addChildShape(
-		btTransform(btQuaternion::getIdentity()), hullShape);
+	// Preserve the single identity child while making its ownership explicit.
+	btCompoundShape* compoundShape = new MeshHullCompoundShape(std::move(hullShape));
 
 	// 创建运动状态对象，包含物体的初始位置。
 	btDefaultMotionState* const motionState = new btDefaultMotionState(

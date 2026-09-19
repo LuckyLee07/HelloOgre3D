@@ -32,7 +32,7 @@
 
 - 对象工厂链 ObjectFactory→AgentFactory/SoldierFactory 分层装配组件。
 - `ObjectFactory` 已导出给 Lua 全局 `SandboxObjects`，对象创建不再通过 `SandboxMgr` 纯转发；`CreateAgentWithProfile` 可按命名 profile 创建普通 `AgentObject`，`CreateSoldierWithProfile` 通过 `ai_soldier` / `player_soldier` / `commander_soldier` 选择互斥 controller 与可选武器；`SandboxServices.objectFactory` 供组件侧创建 bullet 等运行时对象。
-- `CreateVisualPlane(width, height)` 创建 ObjectManager 持有的 `BlockObject` 与 Ogre plane/entity，但不创建 Bullet 刚体；`OBJ_TYPE_PLANE` 使其不进入 navmesh 固定几何，无刚体使其不进入物理射线和 AI 视线阻挡。Lua 返回值是 non-owning userdata，Sandbox19 用它承载地表旧化、接触阴影与 crossed-card 植被。
+- `CreateVisualPlane(width, height)` 创建 ObjectManager 持有的 `BlockObject` 与 Ogre plane/entity，但不创建 Bullet 刚体；`OBJ_TYPE_PLANE` 使其不进入 navmesh 固定几何，无刚体使其不进入物理射线和 AI 视线阻挡。Lua 返回值是 non-owning userdata。每个视觉面的唯一 procedural Mesh 由工厂局部 VisualPlaneBlock 跟随对象回收：析构只移除该网格注册，RenderComponent 的 Entity 持 MeshPtr 直至随后销毁，不卸载仍被实体使用的网格，不删除文件资源。Sandbox19 用它承载地表旧化、接触阴影等，Crossfire 用它承载供电、区域标牌与固定效果池。
 - `AgentConfigService` 已导出给 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 `SandboxMgr` 持有；`SandboxServices.agentConfig` 供 `AgentObject` 读取。
 - `NavigationService` 已导出给 Lua 全局 `SandboxNav`，导航配置/构建/查询和 navmesh 所有权不再通过 `SandboxMgr` / `ObjectManager` 主路径；`SandboxServices.navigation` 供 AI/FSM/感知侧查询路径和随机点。
 - `RaycastService` 已导出给 Lua 全局 `SandboxRaycast`，raycast 不再由 `SandboxMgr` 直接访问 `ObjectManager`/`PhysicsWorld`；`SandboxServices.raycast` 供后续 C++ 侧查询。

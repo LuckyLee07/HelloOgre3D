@@ -17,7 +17,7 @@ ERROR = re.compile(r'call_func error|call_string error|lua_pcall error|Assertion
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mode', choices=('all', 'natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing'), default='all')
+    parser.add_argument('--mode', choices=('all', 'natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing', 'lifecycle'), default='all')
     parser.add_argument('--executable', type=Path, default=ROOT / 'bin' /
                         ('HelloOgre3D.exe' if os.name == 'nt' else 'HelloOgre3D'))
     parser.add_argument('--cwd', type=Path, default=ROOT / 'bin')
@@ -31,7 +31,7 @@ def main():
     output = Path(tempfile.mkdtemp(prefix='crossfire-gate-' + time.strftime('%Y%m%d-%H%M%S') + '-', dir=ROOT / 'tmp'))
     all_ok = True
     summary = {'executable': str(args.executable.resolve()), 'runs': {}}
-    for mode in (('natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing') if args.mode == 'all' else (args.mode,)):
+    for mode in (('natural', 'front', 'physics', 'campaign', 'interface', 'controls', 'queries', 'pacing', 'lifecycle') if args.mode == 'all' else (args.mode,)):
         dest = output / mode
         dest.mkdir()
         replay = ROOT / 'tools/replays/crossfire/flank-and-retry.txt'
@@ -42,6 +42,20 @@ def main():
             replay.write_text('8000 quit\n' if mode == 'queries' else '12000 key_press R\n12500 key_press SPACE\n13500 key_press R\n14000 quit\n')
         if mode in ('campaign', 'interface', 'controls', 'pacing'):
             replay = ROOT / 'tools/replays/crossfire' / (('campaign' if mode == 'controls' else mode) + '.txt')
+        if mode == 'lifecycle':
+            replay = dest / 'lifecycle-input.txt'
+            events = []
+            third_card_y = max(142, int(args.height * .20)) + 306
+            # Five complete title cycles; the last four compare warm courts.
+            for cycle in range(5):
+                start = 1000 + cycle * 3000
+                events += [f'{start} key_press 2',
+                           f'{start+1000} mouse_down 200 {third_card_y} 0', f'{start+1050} mouse_up 200 {third_card_y} 0',
+                           f'{start+2000} key_press 1']
+            # Enter court 1 and retry twice through normal keyboard handling.
+            events += ['16500 key_press RETURN', '17500 key_press R',
+                       '18500 key_press R', '20000 quit']
+            replay.write_text('\n'.join(events) + '\n')
         if mode == 'interface' and (args.width, args.height) != (1280, 800):
             contents = replay.read_text()
             for old, point in {
@@ -101,6 +115,9 @@ def main():
             env['HELLO_CROSSFIRE_PHYSICS_TEST'] = '1'
         if mode == 'queries':
             env['HELLO_CROSSFIRE_QUERY_TEST'] = '1'
+        if mode == 'lifecycle':
+            env['HELLO_CROSSFIRE_LIFECYCLE_TEST'] = '1'
+            env['HELLO_RENDER_CAPTURE'] = '0'
         # Coordinates come from the actual viewport/camera, then still travel
         # through the ordinary mouse input path. Never infer a win from a probe.
         if mode in ('natural', 'front', 'campaign', 'controls', 'pacing'):
@@ -193,6 +210,21 @@ def main():
                 restored_then_reset='[CrossfireSceneState] outcome=VICTORY' in text and 'outcome=idle' in text.split('[CrossfireSceneState] outcome=VICTORY')[-1],
                 fixture_absent='[CrossfirePhysics]' not in text and '[CrossfireQueries]' not in text,
                 routes_reachable='reachable=false' not in text,
+            )
+        elif mode == 'lifecycle':
+            samples = [dict(re.findall(r'(\w+)=([^ ]+)', line)) for line in text.splitlines()
+                       if '[CrossfireLifecycle] sample=' in line]
+            comparisons = [s for s in samples if s.get('compared') == 'true']
+            previews = re.findall(r'\[CrossfireTransition\] reason=preview level=(\d+)', text)
+            checks.update(
+                all_switches=previews == ['2', '3', '1'] * 5,
+                all_snapshots=len(samples) == 18,
+                warm_comparisons=len(comparisons) == 13,
+                stable_resources=bool(comparisons) and all(s.get('result') == 'PASS' for s in samples),
+                all_courts_checked={s.get('level') for s in comparisons} == {'1', '2', '3'},
+                retry_stable=len([s for s in comparisons if s.get('reason') == 'retry']) == 2,
+                retry_complete=text.count('[CrossfireRestart] cleared=true') == 2,
+                fixture_absent='[CrossfirePhysics]' not in text and '[CrossfireQueries]' not in text,
             )
         elif mode == 'queries':
             checks['physical_queries'] = re.search(r'\[CrossfireQueries\] result=PASS synthetic=true passed=\d+ failed=0', text) is not None

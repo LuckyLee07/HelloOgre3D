@@ -27,8 +27,8 @@ Bullet 物理世界、刚体生命周期、碰撞检测、raycast；为对象提
 
 - **位置真源**：有刚体则 Bullet 权威、RenderComponent 从刚体同步（勿直改 scenenode）。
 - PhysicsComponent 通过 `IComponent::onSandboxServicesChanged` 延迟接入 PhysicsWorld，不再直接回退到 `g_GameManager`。
-- PhysicsFactory 创建刚体；PhysicsComponent 析构先从 PhysicsWorld 注销，再删除 motion state、顶层 collision shape 与 body。PhysicsWorld 只注册/模拟，不接管组件的刚体；compound 子形状的递归释放仍是待核对的既有 gap。
-- **PhysicsFactory 复合形状当前只支持单个子形状**（多形状代码注释掉）。
+- PhysicsFactory 创建刚体；PhysicsComponent 析构先从 PhysicsWorld 注销，再删除 motion state、顶层 collision shape 与 body。PhysicsWorld 只注册/模拟，不接管组件的刚体。mesh 工厂的局部 MeshHullCompoundShape 用 unique_ptr 独占所创建的 hull，顶层虚析构随之回收；Bullet 通用 child 仍是借用关系，不递归删除其他 shared/borrowed child。
+- **PhysicsFactory 的 mesh 复合形状当前只装一个 identity 子形状**，不做质心偏移。
 - 碰撞经 `BaseObject::CollideWithObject` 虚回调分发。
 
 ## 6. 数据流 / 与其他模块关系

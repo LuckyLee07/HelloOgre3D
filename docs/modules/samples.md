@@ -41,6 +41,8 @@ Sandbox1-19 是 AI 学习章节 + 回归面：每个隔离场景演示一个 AI 
 - 重开先释放夹具/计划/观察引用，再清弹、Agent、团队状态；切关额外 `clearAllObjects(MGR_OBJ_BLOCK,true)` 清视觉平面与实体，重建 shadows 并替换同名导航。Scene 只复用一盏 Light，避免累计照明。图元/按键沿锁存继续复用，失焦由 InputManager 发 key-up。
 - `python3 tools/run_crossfire_gate.py` 分自然胜负、物理夹具、独立查询夹具（`--mode queries`）、三关交叉目标与标题/设置/记录重启；自然/三关回放另核对结果收尾时钟、特效过期/复用和供电序列；`--capture-ms` 可指定连续画面时刻。界面另用 `--mode interface --width 960 --height 720`；`--mode pacing` 覆盖两秒推进、菜单/重试取消、恢复持续执行及收复状态复位。镜头适配有效战场，VEGA 青绿尖头、ROOK 钢蓝宽肩；中文字库、双色路径、落点表面反馈和持续战术提示见[可读性升级](../dev-design/plans/2026-09-19-crossfire-readable-combat.md)。原创地砖表面、三种区域装饰和 `Scene.SetOutcome` 供电指示全部保持原碰撞/导航；新增透明面无刚体，重试复位、切关清引用，见[场景与节奏升级](../dev-design/plans/2026-09-19-crossfire-scene-rhythm.md)。技术与作者主观验收分开，详见[三关实施记录](../dev-design/plans/2026-09-19-crossfire-three-encounters.md)。
 
+- `--mode lifecycle` 用普通输入切关 15 次并重试 2 次；`crossfire_lifecycle_selftest.lua` 只在 `HELLO_CROSSFIRE_LIFECYCLE_TEST=1` 时调用既有资源诊断。三关预热后比较同关 Mesh 计数/占用及对象/Agent 数，18 个快照、13 次比较必须稳定；不操纵世界，不等于进程 RSS 或全引擎泄漏扫描。见[资源回收记录](../dev-design/plans/2026-09-19-crossfire-resource-lifetime.md)。
+
 - `python3 tools/run_crossfire_tactics.py --cases l1_split,l1_evade --repeat 2` 是普通输入的路线诊断，支持独立包 `--executable/--cwd/--launcher-default`。逐局隔离成绩/日志、禁硬件输入、静音，按实际相机投影并以额外地面点校准，保留输入/二进制/Lua 指纹。技术执行与 VICTORY/DEFEAT/INCOMPLETE 分列；没有终局的观察窗不算胜利，技术失败/超时返回非零。不传送或改血、不改战斗规则，也不替代原生鼠标试玩。
 
 - ConfigManager 分层合并时，`spawnPoints`、`waveEnemyCounts`、`waveSpawnIndices` 整表替换（空表可清空）；其他配置表递归继承，包括按 agent id 索引的数值键 map。纯 Lua 回归入口 `lua5.1 tools/test_config_presets.lua`；详见 [配置修复与后台验证](../config-presets-2026-09-10.md)。

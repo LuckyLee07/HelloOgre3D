@@ -2,6 +2,8 @@
 
 ## 最新作者反馈（2026-09-19）
 
+切关耗时优化已提交 `9983f8c`。本轮收回独占视觉面网格和碰撞子凸包，原版 15 次切关 Mesh 96→1194，新版预热后各关稳定 104/115/110；三关、物理/查询、旧样例入口与原生冷却区通关通过。见[资源回收与验证](dev-design/plans/2026-09-19-crossfire-resource-lifetime.md)。后续回到场景/交火体验的可见弱项，作者主观、Windows 和听感项仍保留。
+
 三关品质已提交 `1b4598d`。本轮继续处理已测得的切关停顿：PhysicsFactory 批量构造凸包，保持顶点、margin/AABB 和碰撞语义；同机三关过关切换从约 547/434/376 ms 降至 68/57/54 ms，三关回放结果逐字段一致。实现、形状等价及平台边界见[切关优化](dev-design/plans/2026-09-19-crossfire-transition-latency.md)与[对照测量](perf/crossfire-transition-20260919.md)。
 
 上一轮已提交 `f0bbb9a`。本轮按持续授权统一冷却/联锁设施材料与区域标识、突出选关编号、结算逐项反馈目标达成，三关既有碰撞与战斗规则保持。同一 Release 的 macOS 三关/小窗口回归与无截图运行测量见[本轮实施](dev-design/plans/2026-09-19-crossfire-three-court-quality.md)及[性能基线](perf/crossfire-three-court-baseline-20260919.md)。测量区分热缓存、日志开销与切关尖峰；继续保留作者主观、Windows 和扬声器听感项。

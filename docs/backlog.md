@@ -28,7 +28,8 @@
 - [x] Crossfire 战术窗口与重试反馈实现及技术回归：锁定对象/附近射界、具体单机复盘、奖章目标与可重跑路线诊断；首关两组重复换位均减少损伤，冷却区绕行解除僵持，联锁区两种安排均双机存活。原生首关与三关/小窗口回归通过，见[本轮证据与限制](dev-design/plans/2026-09-19-crossfire-tactical-decisions.md)。
 - [x] Crossfire 三关品质实现：冷却/联锁核心与设施材料、无碰撞区域标识、选关编号和结算三项目标逐项反馈；macOS 三关/小窗口与同路线无截图测量见[本轮证据](dev-design/plans/2026-09-19-crossfire-three-court-quality.md)。
 - [x] Crossfire 切关停顿优化：凸包批量构造，42 组形状等价；同机三关切换长帧约降 86%，三关玩法结果逐字段保持。见[实施与验证](dev-design/plans/2026-09-19-crossfire-transition-latency.md)及[性能对照](perf/crossfire-transition-20260919.md)。
-- [ ] Crossfire 后续迭代：按作者评价修正最弱表现项；反复切关的视觉面网格资源增长与 compound 子壳释放单列下一次生命周期核对，声音与平台分项继续收口。详见[评估与依赖/验收](dev-design/plans/2026-09-19-crossfire-next-iterations.md)，技术通过不等于主观品质与全部平台验收。
+- [x] Crossfire 连续切关资源回收：独占网格/子凸包正确释放，原版负对照和新版 15 次切关/2 次重试通过；三关及原生冷却区通关正常，见[本轮记录](dev-design/plans/2026-09-19-crossfire-resource-lifetime.md)。
+- [ ] Crossfire 后续迭代：回到场景与交火体验，按作者评价和实际操作修正可见弱项，声音与平台分项继续收口。详见[评估与依赖/验收](dev-design/plans/2026-09-19-crossfire-next-iterations.md)，技术通过不等于主观品质与全部平台验收。
 - [ ] Crossfire 作者体验复核：分别评价场景/模型、指挥操作与声音；三关功能通过不等于整体主观品质验收。Windows和人工扬声器分项仍未完成。
 
 M2 与 M3 可重复对照实验均已完成，结果见 `cycle-01.md`、[M2 记录](sandbox19-focus-order-experiment-2026-09-10.md)和 [M3 记录](sandbox12-team-sharing-experiment-2026-09-10.md)。P1/P2 的玩法设施与闭环已有自然通关和重开证据；2026-09-11 的相机/HUD、荒漠环境、relay 专用门面和战斗/受伤反馈已完成实机收口，2026-09-12 又补齐地表旧化、接触阴影、场景色调与 UI 合成隔离，以及暂停菜单动态窗口与设置保存。曾加入的 24 组 crossed-card 植被因黑边纸片感已全部移除；核心体感切片新增持枪指挥官、可见短曳光、队友编队接敌和 macOS FSAA 路径修复。P3 的 Windows 独立包、多尺寸、设置、连续回放、后台窗口以及 macOS arm64 Release、720p→900p 同进程 resize、保存值重启和多尺寸 GL 运行已验；定制角色与 PBR 高阶材质、人工手感/扬声器听感，以及 Windows 普通窗口动态 resize 实机复核仍待完成。M1 与稳定性保留历史证据。

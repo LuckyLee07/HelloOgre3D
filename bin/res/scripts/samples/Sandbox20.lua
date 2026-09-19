@@ -26,6 +26,7 @@ local silent=os.getenv("HELLO_AUDIO_SILENT")=="1"
 local zoom=1
 local started=nil
 local physicsTest=nil
+local lifecycleTest=nil
 local heldKeys={}
 local stepUntil=nil
 local review,alert,inspection,reviewSummary=nil,nil,nil,nil
@@ -467,6 +468,9 @@ local function presentation()
  hud:Update(ctx)
 end
 function Sandbox_Initialize()
+ if os.getenv("HELLO_CROSSFIRE_LIFECYCLE_TEST")=="1" then
+  lifecycleTest=require("res.scripts.samples.crossfire_lifecycle_selftest.lua").New()
+ end
  SandboxUI:SetBuildInfoVisible(false)
  _G.HELLO_SUPPRESS_AI_PATH_DRAW=true
  profile=Profile.Load(); muted=profile.muted
@@ -493,6 +497,7 @@ function Sandbox_Initialize()
  end
  print("[CrossfireScreen] screen="..screen.." level="..level.." completed="..profile:CompletedCount())
  presentation()
+ if lifecycleTest then lifecycleTest:Snapshot(level,"initial") end
 end
 function Sandbox_Update(deltaMs,uiDeltaMs)
  if not hud or #ids<3 then return end
@@ -523,6 +528,7 @@ function Sandbox_Update(deltaMs,uiDeltaMs)
   if requested then
    print("[CrossfireTransition] reason="..requested.reason.." level="..level.." screen="..screen.." agents="..ObjectManager:getAiAgentCount().." objects="..ObjectManager:getObjectCount())
   else print("[CrossfireRestart] cleared=true level="..level) end
+  if lifecycleTest then lifecycleTest:Snapshot(level,requested and requested.reason or "retry") end
  end
  if physicsTest then physicsTest:Update(deltaMs) end
  if stepUntil and not paused and now()>=stepUntil and not result then
