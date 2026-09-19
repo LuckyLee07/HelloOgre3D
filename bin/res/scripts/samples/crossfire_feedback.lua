@@ -47,7 +47,11 @@ function Feedback.Draw(r,color)
  if not r or not finite(r.from) then return end
  color=r.state=="clear" and (color or r.color) or r.color
  local stop=(r.state=="obstructed" or r.state=="wreck") and r.hit or r.to
- DebugDrawer:drawLine(r.from,stop,color)
+ if r.state=="clear" or r.state=="aiming" then
+  -- A broken preview distinguishes current line of fire from an actual tracer.
+  local delta=stop-r.from
+  for i=0,14,2 do DebugDrawer:drawLine(r.from+delta*(i/16),r.from+delta*((i+1)/16),color) end
+ else DebugDrawer:drawLine(r.from,stop,color) end
  DebugDrawer:drawCircle(stop,.25,20,color,false)
  if r.state=="obstructed" or r.state=="wreck" then
   -- The muted, dashed remainder makes the intended target distinct from impact.
@@ -72,7 +76,7 @@ function Feedback.Ground(x,y,source)
  if not source or offset:length()>=.65 or not SandboxNav:FindPath("default",source:GetPosition(),projected,path) then
   return {ok=false,pos=hit,text="路线不可达 · 请避开设备和围栏"}
  end
- return {ok=true,pos=Vector3(projected.x,projected.y,projected.z),path=path,text="点击移动到这里 · 抵达后自动开火"}
+ return {ok=true,pos=Vector3(projected.x,projected.y,projected.z),path=path,text="点击移动到这里"}
 end
 function Feedback.DrawGround(r,color)
  if not r or not r.pos or not finite(r.pos) then return end

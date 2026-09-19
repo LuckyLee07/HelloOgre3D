@@ -28,7 +28,7 @@ PALETTE = {
     "Ivory": ((0.90, 0.86, 0.73), (0.18, 0.17, 0.14), 48),
     "Slate": ((0.16, 0.23, 0.27), (0.12, 0.16, 0.19), 34),
     "Floor": ((0.115, 0.17, 0.205), (0.035, 0.05, 0.06), 24),
-    "FloorPanel": ((0.185, 0.255, 0.295), (0.04, 0.055, 0.07), 24),
+    "FloorPanel": ((0.165, 0.222, 0.250), (0.04, 0.055, 0.07), 24),
     "Graphite": ((0.055, 0.080, 0.096), (0.10, 0.12, 0.14), 36),
     "Rubber": ((0.025, 0.039, 0.047), (0.005, 0.005, 0.005), 8),
     "Steel": ((0.35, 0.42, 0.44), (0.35, 0.40, 0.42), 72),
@@ -38,16 +38,32 @@ PALETTE = {
     "Enemy": ((0.69, 0.18, 0.105), (0.18, 0.07, 0.035), 44),
     "EnemyLight": ((1.0, 0.41, 0.16), (0.10, 0.035, 0.01), 32),
     "Mark": ((0.65, 0.68, 0.62), (0.015, 0.015, 0.015), 12),
-    "Vega": ((0.17, 0.61, 0.49), (0.10, 0.21, 0.17), 38),
-    "Rook": ((0.24, 0.40, 0.71), (0.12, 0.17, 0.27), 38),
+    "Vega": ((0.105, 0.65, 0.53), (0.15, 0.28, 0.23), 64),
+    "Rook": ((0.19, 0.39, 0.74), (0.16, 0.22, 0.34), 64),
     "RookLight": ((0.38, 0.64, 0.95), (0.07, 0.12, 0.20), 24),
     "ServiceBand": ((0.065, 0.088, 0.10), (0.01, 0.015, 0.02), 12),
     "Wreck": ((0.19, 0.215, 0.225), (0.015, 0.018, 0.02), 8),
     "ShieldHit": ((1.0, 0.70, 0.22), (0.08, 0.05, 0.01), 12),
     "HullHit": ((0.75, 1.0, 0.91), (0.03, 0.05, 0.04), 12),
-    "DeckService": ((0.34, 0.335, 0.285), (0.035, 0.04, 0.04), 18),
-    "DeckCoolant": ((0.125, 0.29, 0.30), (0.035, 0.06, 0.065), 24),
-    "DeckInterlock": ((0.235, 0.26, 0.335), (0.04, 0.05, 0.07), 22),
+    "DeckService": ((0.245, 0.255, 0.234), (0.035, 0.04, 0.04), 18),
+    "DeckCoolant": ((0.12, 0.25, 0.26), (0.035, 0.06, 0.065), 24),
+    "DeckInterlock": ((0.205, 0.23, 0.275), (0.04, 0.05, 0.07), 22),
+    # Architecture is deliberately separated from actor enamel/metal: changing
+    # the court hierarchy must never accidentally desaturate or darken a unit.
+    "Structure": ((0.36, 0.42, 0.425), (0.045, 0.055, 0.055), 18),
+    "StructureTrim": ((0.47, 0.52, 0.49), (0.075, 0.085, 0.08), 24),
+    "FacilityTeal": ((0.10, 0.30, 0.31), (0.045, 0.075, 0.075), 24),
+    "FacilitySignal": ((0.16, 0.51, 0.46), (0.015, 0.04, 0.035), 16),
+    "SafetyPaint": ((0.48, 0.37, 0.19), (0.02, 0.015, 0.01), 12),
+    "Wayfinding": ((0.43, 0.49, 0.46), (0.01, 0.015, 0.01), 12),
+    "DeckJoint": ((0.105, 0.155, 0.180), (0.015, 0.02, 0.025), 16),
+    "ActorTrim": ((0.82, 0.85, 0.79), (0.22, 0.24, 0.22), 64),
+    "ActorMetal": ((0.30, 0.38, 0.41), (0.46, 0.50, 0.52), 96),
+    "EnemyArmor": ((0.68, 0.155, 0.065), (0.24, 0.09, 0.04), 56),
+    "EnemyCeramic": ((0.29, 0.34, 0.35), (0.08, 0.10, 0.11), 32),
+    "CoreCasing": ((0.40, 0.47, 0.47), (0.08, 0.10, 0.10), 28),
+    "CoreCrown": ((0.57, 0.64, 0.61), (0.18, 0.21, 0.20), 52),
+    "CoreMetal": ((0.28, 0.35, 0.37), (0.24, 0.29, 0.31), 72),
 }
 
 
@@ -57,6 +73,22 @@ def mat(name):
 
 def box(m, size, center, bevel, material):
     m.box(size, center, bevel, mat(material))
+
+
+def remap_materials(mesh, replacements):
+    # Material-only regrouping: all vertices and triangle order stay untouched.
+    groups = type(mesh.groups)(list)
+    for name, indices in mesh.groups.items():
+        source = name.removeprefix("Crossfire/")
+        groups[mat(replacements.get(source, source))].extend(indices)
+    mesh.groups = groups
+    return mesh
+
+
+ENVIRONMENT_MATERIALS = {
+    "Porcelain": "Structure", "Ivory": "StructureTrim", "Teal": "FacilityTeal",
+    "Signal": "FacilitySignal", "Amber": "SafetyPaint", "Mark": "Wayfinding",
+}
 
 
 def transform(p, center, axis="y", angle=0.0):
@@ -167,52 +199,52 @@ def drone(identity=1):
     light_material = "Signal" if identity == 1 else "RookLight"
     polygon_shell(m, shape, [(-0.25, 0.76), (-0.17, 1.02), (0.03, 1.0),
                             (0.13, 0.80)], (0, 0, 0), "Graphite")
-    polygon_shell(m, shape, [(0.10, 0.86), (0.18, 1.0), (0.33, 0.82),
-                            (0.38, 0.58)], (0, 0, -0.015), identity_material)
+    polygon_shell(m, shape, [(0.10, 0.86), (0.18, 1.0), (0.32, 0.96),
+                            (0.38, 0.83 if identity == 1 else 0.90)], (0, 0, -0.015), identity_material)
     # Rear thermal spine and front polarised sensor strip.
     box(m, (0.19, 0.07, 0.40), (0, 0.354, -0.20), 0.025, "Graphite")
     box(m, (0.12, 0.02, 0.15), (0, 0.396, -0.20), 0.009, light_material)
-    box(m, (0.36, 0.10, 0.095), (0, 0.213, 0.565), 0.025, "Rubber")
+    box(m, (0.40, 0.10, 0.095), (0, 0.213, 0.565), 0.025, "Rubber")
     box(m, (0.22, 0.026, 0.016), (0, 0.229, 0.619), 0.006, light_material)
     for side in (-1, 1):
         x = side*0.485
         beam(m, (side*0.24, -0.045, -0.14), (x, -0.045, -0.14),
-             0.14, 0.14, "Steel")
-        ring(m, 0.225, 0.151, 0.235, (x, -0.09, -0.18), "Porcelain" if identity == 1 else "Slate", 24)
+             0.14, 0.14, "ActorMetal")
+        ring(m, 0.225, 0.151, 0.235, (x, -0.09, -0.18), "ActorTrim" if identity == 1 else "ActorMetal", 24)
         ring(m, 0.190, 0.158, 0.075, (x, -0.24, -0.18), identity_material, 24)
         lathe(m, [(-0.15, 0.09), (-0.11, 0.118), (-0.05, 0.10), (0, 0.052)],
               (x, -0.055, -0.18), "Graphite", 16)
         for angle in (0, math.pi*0.5, math.pi, math.pi*1.5):
             dx, dz = math.cos(angle), math.sin(angle)
             beam(m, (x+dx*0.06, -0.08, -0.18+dz*0.06),
-                 (x+dx*0.157, -0.08, -0.18+dz*0.157), 0.025, 0.035, "Steel")
+                 (x+dx*0.157, -0.08, -0.18+dz*0.157), 0.025, 0.035, "ActorMetal")
         # Forward shoulder fairings have a directional pentagonal silhouette.
         shoulder = ([(-0.13, -0.23), (0.13, -0.23), (0.12, 0.18),
                      (0, 0.31), (-0.12, 0.18)] if identity == 1 else
-                    [(-0.18, -0.18), (0.18, -0.18), (0.18, 0.18),
-                     (0.10, 0.28), (-0.10, 0.28), (-0.18, 0.18)])
-        polygon_shell(m, shoulder, [(-0.02, 0.76), (0.045, 1), (0.13, 0.75)],
-                      (side*0.43, 0, 0.21), "Ivory" if identity == 1 else "Rook")
-        box(m, (0.08, 0.028, 0.15), (side*0.43, 0.132, 0.23), 0.008,
-            "Vega" if identity == 1 else "Ivory")
-        for i in range(3):
-            box(m, (0.10, 0.033, 0.033), (side*0.19, 0.274, -0.33+i*0.056),
-                0.005, "Graphite")
+                    [(-0.21, -0.24), (0.21, -0.24), (0.21, 0.17),
+                     (0.13, 0.29), (-0.13, 0.29), (-0.21, 0.17)])
+        polygon_shell(m, shoulder, [(-0.02, 0.76), (0.075, 1), (0.20, 0.88)],
+                      (side*0.43, 0, 0.21), "ActorTrim" if identity == 1 else "Rook")
+        box(m, (0.08, 0.028, 0.15), (side*0.43, 0.202, 0.23), 0.008,
+            "Vega" if identity == 1 else "ActorTrim")
+        # One broad intake on each shoulder reads at 720p; remove the old
+        # repeated tiny fins rather than accumulating more detail.
+        box(m, (0.10, 0.012, 0.20), (side*0.19, 0.393, -0.235), 0.004, "Graphite")
     # Single forward gun: exposed receiver, collar, recessed bore, upper rail.
-    box(m, (0.22, 0.18, 0.34), (0, -0.045, 0.51), 0.035, "Slate")
+    box(m, (0.28, 0.18, 0.34), (0, -0.045, 0.51), 0.035, "Slate")
     lathe(m, [(0.60, 0.085), (0.65, 0.072), (0.81, 0.060)],
-          (0, -0.02, 0), "Steel", 12, axis="z")
-    ring(m, 0.086, 0.046, 0.13, (0, -0.02, 0.83), "Graphite", 12, axis="z")
+          (0, -0.02, 0), "ActorMetal", 12, axis="z")
+    ring(m, 0.098, 0.046, 0.13, (0, -0.02, 0.83), "Graphite", 12, axis="z")
     lathe(m, [(0.786, 0.043), (0.794, 0.043)], (0, -0.02, 0), "Rubber", 12, axis="z")
-    box(m, (0.043, 0.042, 0.28), (0, 0.077, 0.56), 0.009, "Ivory")
+    box(m, (0.080, 0.042, 0.28), (0, 0.077, 0.56), 0.009, "ActorTrim")
     # Strong monochrome glyphs reinforce body colour: VEGA chevron / ROOK twin
     # bars. All new detail remains inside the previous authored mesh bounds.
     if identity == 1:
-        for x in (-0.14, 0.14):
-            beam(m, (x, 0.393, 0.00), (0, 0.393, 0.20), 0.014, 0.075, "Ivory")
+        for x in (-0.19, 0.19):
+            beam(m, (x, 0.393, -0.005), (0, 0.393, 0.29), 0.014, 0.088, "ActorTrim")
     else:
         for x in (-0.105, 0.105):
-            box(m, (0.075, 0.014, 0.26), (x, 0.391, 0.075), 0.004, "Ivory")
+            box(m, (0.100, 0.014, 0.32), (x, 0.391, 0.075), 0.004, "ActorTrim")
     return m
 
 
@@ -222,13 +254,13 @@ def sentinel():
     # rotation readable while leaving an exposed engine weak point to the rear.
     lathe(m, [(-0.80, 0.52), (-0.73, 0.66), (-0.56, 0.66), (-0.46, 0.45)],
           (0, 0, 0), "Graphite", 16)
-    ring(m, 0.52, 0.43, 0.13, (0, -0.43, 0), "Steel", 24)
+    ring(m, 0.52, 0.43, 0.13, (0, -0.43, 0), "ActorMetal", 24)
     hull(m, 1.14, 1.12, 0.76, (0, 0.035, -0.12), 0.13, "Slate", 0.28)
-    hull(m, 0.91, 0.83, 0.18, (0, 0.48, -0.10), 0.12, "Porcelain", 0.25)
+    hull(m, 0.99, 0.93, 0.18, (0, 0.48, -0.10), 0.12, "EnemyCeramic", 0.25)
     for a in (0, 2*math.pi/3, 4*math.pi/3):
         dx, dz = math.sin(a), math.cos(a)
         beam(m, (dx*0.36, -0.55, dz*0.36), (dx*0.74, -0.73, dz*0.74),
-             0.22, 0.16, "Steel")
+             0.22, 0.16, "ActorMetal")
         lathe(m, [(-0.80, 0.16), (-0.73, 0.21), (-0.67, 0.17)],
               (dx*0.73, 0, dz*0.73), "Graphite", 8)
     # A split shield exposes a central gun channel. Plates have tapered six-edge
@@ -245,19 +277,27 @@ def sentinel():
                       (side*0.58, 0.055, 0.42), "Graphite", axis="z")
         polygon_shell(m, p, [(0.117, 0.84), (0.148, 0.78)],
                       (side*0.58, 0.055, 0.42), "Enemy", axis="z")
-        box(m, (0.11, 0.69, 0.035), (side*0.62, 0.025, 0.586), 0.022, "EnemyLight")
-        beam(m, (side*0.32, 0, 0.17), (side*0.66, 0, 0.37), 0.16, 0.16, "Steel")
-    box(m, (0.36, 0.26, 0.52), (0, 0.20, 0.42), 0.045, "Porcelain")
+        box(m, (0.055, 0.69, 0.035), (side*0.62, 0.025, 0.586), 0.022, "EnemyLight")
+        # Broad forward shoulder caps expose the red armour on the top plane;
+        # the former vertical-only plates disappeared at the tactical camera.
+        shoulder=[(-.19,-.25),(.19,-.25),(.225,-.06),(.19,.28),(-.12,.30),(-.21,.10)]
+        shoulder=[(x*side,z) for x,z in shoulder]
+        if side == -1:
+            shoulder.reverse()
+        polygon_shell(m, shoulder, [(.41,.82),(.47,1),(.615,.88)],
+                      (side*.58,0,.26), "Graphite", cap_material="EnemyArmor")
+        beam(m, (side*0.32, 0, 0.17), (side*0.66, 0, 0.37), 0.16, 0.16, "ActorMetal")
+    box(m, (0.40, 0.26, 0.52), (0, 0.20, 0.42), 0.045, "EnemyCeramic")
     lathe(m, [(0.62, 0.13), (0.70, 0.11), (0.95, 0.11)],
-          (0, 0.20, 0), "Steel", 12, axis="z")
-    ring(m, 0.155, 0.075, 0.22, (0, 0.20, 1.00), "Graphite", 12, axis="z")
+          (0, 0.20, 0), "ActorMetal", 12, axis="z")
+    ring(m, 0.175, 0.075, 0.22, (0, 0.20, 1.00), "Graphite", 12, axis="z")
     lathe(m, [(0.884, 0.07), (0.895, 0.07)], (0, 0.20, 0), "Rubber", 12, axis="z")
     box(m, (0.35, 0.075, 0.18), (0, 0.573, 0.14), 0.015, "Rubber")
     box(m, (0.24, 0.028, 0.022), (0, 0.595, 0.24), 0.007, "EnemyLight")
     # A broad top-plane arrow makes shield direction legible from the game camera.
-    polygon_shell(m, [(-0.25, -0.29), (0.25, -0.29), (0, 0.025)],
-                  [(0.578, 1), (0.623, 1)], (0, 0, 0), "EnemyLight")
-    ring(m, 0.28, 0.21, 0.07, (0, 0.02, -0.702), "Steel", 20, axis="z")
+    polygon_shell(m, [(-0.28, -0.30), (0.28, -0.30), (0, 0.10)],
+                  [(0.578, 1), (0.623, 1)], (0, 0, 0), "ActorTrim")
+    ring(m, 0.28, 0.21, 0.07, (0, 0.02, -0.702), "ActorMetal", 20, axis="z")
     lathe(m, [(-0.742, 0.195), (-0.711, 0.195)], (0, 0.02, 0), "EnemyLight", 20, axis="z")
     for x in (-0.11, 0, 0.11):
         box(m, (0.032, 0.28, 0.025), (x, 0.02, -0.764), 0.006, "Graphite")
@@ -266,7 +306,7 @@ def sentinel():
 
 def tile():
     m = Mesh()
-    box(m, (4, 0.165, 4), (0, -0.1575, 0), 0.035, "Graphite")
+    box(m, (4, 0.165, 4), (0, -0.1575, 0), 0.035, "DeckJoint")
     # Four inset slabs sit above the structural base, retaining narrow service
     # seams. The original base at Y=0 hid panels only 0.5 mm below it, causing
     # depth fighting at the courtyard camera distance; keep 75 mm separation.
@@ -295,7 +335,7 @@ def wall():
     box(m, (1.1, 0.05, 0.035), (0, 1.84, 0.28), 0.01, "Signal")
     for x in (-1.70, 1.70):
         box(m, (0.20, 0.06, 0.03), (x, 0.43, 0.28), 0.008, "Amber")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def cover():
@@ -308,16 +348,16 @@ def cover():
         for x in (-1.06, 1.06):
             box(m, (0.12, 0.47, 0.06), (x, 0.56, z), 0.015, "Steel")
         box(m, (0.44, 0.038, 0.032), (0, 0.58, z*1.04), 0.006, "Mark")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def core():
     m = Mesh()
     hull(m, 3.4, 3.4, 0.30, (0, 0.15, 0), 0.07, "Graphite", 0.50)
-    hull(m, 2.94, 2.94, 0.20, (0, 0.38, 0), 0.05, "Steel", 0.54)
+    hull(m, 2.94, 2.94, 0.20, (0, 0.38, 0), 0.05, "CoreMetal", 0.54)
     lathe(m, [(0.48, 1.10), (0.70, 1.29), (1.10, 1.29), (1.22, 1.06)],
           (0, 0, 0), "Slate", 12)
-    ring(m, 1.24, 1.04, 0.14, (0, 1.15, 0), "Porcelain", 24)
+    ring(m, 1.24, 1.04, 0.14, (0, 1.15, 0), "CoreCasing", 24)
     lathe(m, [(1.15, 0.85), (1.42, 0.71), (2.80, 0.71), (3.03, 0.91)],
           (0, 0, 0), "Graphite", 12)
     # Six luminous conduits live inside the structural ribs; dark wells keep the
@@ -326,22 +366,22 @@ def core():
         a = i*math.pi/3
         dx, dz = math.sin(a), math.cos(a)
         beam(m, (dx*0.80, 1.31, dz*0.80), (dx*0.80, 2.91, dz*0.80),
-             0.17, 0.23, "Porcelain")
+             0.17, 0.23, "CoreCasing")
         sx, sz = math.sin(a+math.pi/6), math.cos(a+math.pi/6)
         beam(m, (sx*0.73, 1.49, sz*0.73), (sx*0.73, 2.74, sz*0.73),
-             0.065, 0.065, "Signal")
-    ring(m, 1.05, 0.71, 0.25, (0, 2.98, 0), "Porcelain", 24)
-    ring(m, 0.92, 0.68, 0.08, (0, 3.145, 0), "Teal", 24)
+             0.065, 0.065, "FacilitySignal")
+    ring(m, 1.05, 0.71, 0.25, (0, 2.98, 0), "CoreCrown", 24)
+    ring(m, 0.92, 0.68, 0.08, (0, 3.145, 0), "FacilityTeal", 24)
     lathe(m, [(3.17, 0.68), (3.27, 0.53), (3.31, 0.53)],
           (0, 0, 0), "Slate", 16)
     lathe(m, [(3.29, 0.20), (3.63, 0.20), (3.70, 0.12)],
-          (0, 0, 0), "Steel", 12)
+          (0, 0, 0), "CoreMetal", 12)
     for a in (0, math.pi/2, math.pi, 3*math.pi/2):
         dx, dz = math.sin(a), math.cos(a)
         beam(m, (dx*1.02, 0.84, dz*1.02), (dx*1.43, 0.32, dz*1.43),
-             0.22, 0.20, "Teal")
+             0.22, 0.20, "FacilityTeal")
         lathe(m, [(0.33, 0.13), (0.44, 0.13)],
-              (dx*1.43, 0, dz*1.43), "Steel", 12)
+              (dx*1.43, 0, dz*1.43), "CoreMetal", 12)
     return m
 
 
@@ -360,7 +400,7 @@ def gate():
     for x in (-0.25, 0, 0.25):
         box(m, (0.12, 0.095, 0.035), (x, 3.42, 0.801), 0.016, "Signal")
     box(m, (3.35, 0.14, 0.92), (0, 3.02, 0), 0.04, "Slate")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def pipe():
@@ -371,7 +411,7 @@ def pipe():
             ring(m, 0.15, 0.111, 0.10, (x, 0.22, z), "Steel", 12, axis="x")
     for x in (-1.75, 1.75):
         box(m, (0.23, 0.12, 0.64), (x, 0.06, 0), 0.03, "Graphite")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def edge():
@@ -381,7 +421,7 @@ def edge():
     for x in (-1.5, -0.5, 0.5, 1.5):
         box(m, (0.38, 0.10, 0.035), (x, 0.32, 0.37), 0.008, "Graphite")
         box(m, (0.20, 0.03, 0.02), (x, 0.32, 0.396), 0.005, "Signal")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def console():
@@ -397,7 +437,7 @@ def console():
     box(m, (0.67, 0.48, 0.03), (0, 0.63, 0.361), 0.022, "Slate")
     for h in (0.46, 0.56, 0.66, 0.76):
         box(m, (0.48, 0.033, 0.026), (0, h, 0.386), 0.007, "Graphite")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def dock():
@@ -410,7 +450,7 @@ def dock():
         box(m, (0.036, 0.01, 0.51), (x, 0.357, 0), 0.004, "Signal")
     for z in (-0.87, 0.87):
         box(m, (0.42, 0.016, 0.10), (0, 0.276, z), 0.007, "Amber")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def vent():
@@ -422,7 +462,7 @@ def vent():
     for x in (-0.32, -0.16, 0, 0.16, 0.32):
         length = 2*math.sqrt(0.455**2-x*x)
         box(m, (0.037, 0.035, length), (x, 0.745, 0), 0.005, "Slate")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def deck_marks(sector=7):
@@ -458,7 +498,7 @@ def deck_marks(sector=7):
             stripe(-x-sx, -0.91+sz, w, d, "Ivory")
     for x in (-0.54, 0.54):
         stripe(x, -0.92, 0.045, 0.39, "Amber")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def base():
@@ -476,7 +516,7 @@ def base():
                 0.01, "Slate")
             box(m, (0.11, 0.026, 0.014), (x-0.12, -0.58, z+math.copysign(0.031, z)),
                 0.004, "Signal")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def relay_tower():
@@ -508,7 +548,7 @@ def relay_tower():
     box(m, (0.24, 0.10, 0.022), (-0.79, 0.75, -1.19), 0.009, "Signal")
     for x in (0.29, 0.48, 0.67, 0.86):
         box(m, (0.08, 0.36, 0.055), (x, 0.63, -1.15), 0.015, "Graphite")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def cooling_stack():
@@ -535,7 +575,7 @@ def cooling_stack():
         ring(m,0.16,0.112,0.09,(x,0.83,0),"Steel",12)
     box(m,(0.56,0.19,0.09),(0,0.52,-1.02),0.025,"Graphite")
     box(m,(0.32,0.055,0.025),(0,0.53,-1.075),0.008,"Teal")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def service_trench():
@@ -549,7 +589,7 @@ def service_trench():
         box(m,(0.51,0.014,0.09),(0,0.012,-2.875+i*0.25),0.003,"Slate")
     for z in (-2.70,2.70):
         box(m,(0.14,0.010,0.08),(0,0.025,z),0.002,"Amber")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def service_elbow():
@@ -569,7 +609,7 @@ def service_elbow():
             x,z=math.cos(a)*radius,math.sin(a)*radius
             ring(m,0.14,0.095,0.10,(x,0.22,z),"Steel",12,axis="z" if a==0 else "x")
     box(m,(1.18,0.12,1.18),(0.55,0.06,0.55),0.04,"Graphite")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def sector_sign(sector):
@@ -586,7 +626,7 @@ def sector_sign(sector):
             box(m,(w,h,0.026),(-x-sx,0.46+sy,-0.076),0.005,"Ivory")
     for h in (0.33,0.43,0.53,0.63):
         box(m,(0.20,0.035,0.025),(0.73,h,-0.076),0.005,"Amber" if h==0.63 else "Slate")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def rear_plinth():
@@ -597,7 +637,7 @@ def rear_plinth():
     box(m,(20.0,0.12,3.50),(0,-0.20,0),0.035,"Slate")
     for x in (-8,-4,0,4,8):
         box(m,(0.40,0.05,0.035),(x,-0.49,1.92),0.008,"Teal")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 def court_margin(kind):
@@ -617,7 +657,7 @@ def court_margin(kind):
         for x in [i*1.5 for i in range(-5,6)]:
             profile=[(x-0.16,-0.20),(x-0.16,-0.08),(x+0.16,0.25),(x+0.16,0.13)]
             polygon_shell(m,profile,[(0.028,1),(0.042,1)],(0,0,0),"Amber")
-    return m
+    return remap_materials(m, ENVIRONMENT_MATERIALS)
 
 
 BUILDERS = [
@@ -801,6 +841,31 @@ def effect_maps():
     return maps
 
 
+def weapon_signal_maps():
+    charge, cooling = Surface(256,256), Surface(256,256)
+    for y in range(256):
+        for x in range(256):
+            u,v=(x-127.5)/128,(y-127.5)/128
+            radius=math.hypot(u,v)
+            angle=math.atan2(v,u)
+            phase=(angle+math.pi/4)%(math.pi/2)-math.pi/4
+            ring_alpha=max(0,1-abs(radius-.74)/.14)
+            ring_alpha*=min(1,max(0,(.64-abs(phase))/.07))
+            inner=max(0,1-abs(radius-.37)/.045)*max(0,1-abs(phase)/.15)
+            point=math.exp(-(radius/.19)**2)
+            edge=max(0,min(1,(.92-radius)/.045))
+            alpha=min(1,max(ring_alpha,inner*.85,point))*edge
+            warm=math.exp(-(radius/.22)**2)
+            charge.pixel(x,y,(255,round(183+68*warm),round(61+151*warm),round(alpha*255)))
+            # Three quiet horizontal bars distinguish the post-burst cooldown
+            # from the circular orange charging signal, without a new shader.
+            a=0
+            for offset,width in ((-.36,.55),(0,.75),(.36,.55)):
+                a=max(a,min(1,max(0,(.12-abs(v-offset))/.025))*min(1,max(0,(width-abs(u))/.055)))
+            cooling.pixel(x,y,(182,232,230,round(a*255)))
+    return {'fx_charge.png':charge,'fx_cooling.png':cooling}
+
+
 def surface_maps():
     # The floor is painted metal, not simulated PBR: broad polish/wear fields and
     # inset service-panel paint sit in albedo; existing geometry supplies depth.
@@ -808,24 +873,25 @@ def surface_maps():
     panel = Surface(512, 512)
     for y in range(512):
         for x in range(512):
-            wave = 4*math.cos((x-y*.21)*math.pi/256)
-            polish = 18*math.exp(-((x-167)/180)**2-((y-296)/225)**2)
-            inset = 7 if min(x, y, 511-x, 511-y) < 20 else 0
+            wave = 1.4*math.cos((x-y*.21)*math.pi/256)
+            polish = 5*math.exp(-((x-167)/180)**2-((y-296)/225)**2)
+            inset = 2 if min(x, y, 511-x, 511-y) < 20 else 0
             value = int(max(0, min(255, 226+wave+polish-inset)))
             panel.pixel(x, y, (value, value, value, 255))
-    # Offset broad transfer/scuff strokes, visible as quiet value changes.
-    for a,b,w in (((85,344),(223,318),18),((263,114),(362,101),12),((285,415),(393,395),10)):
-        panel.line(a,b,w,(214,214,214,255))
-    for x,y in ((40,40),(472,472)):
-        panel.ring(x,y,7,4,(181,181,181,255))
-    panel.rect(27,81,32,214,(248,248,248,255))
-    panel.rect(82,477,209,482,(208,208,208,255))
+    # No repeated bolt/scratch stencil on every slab. Unique repair pads supply
+    # local wear; the walking field stays quiet under paths and moving actors.
 
     coat = Surface(256, 256)
     for y in range(256):
         for x in range(256):
             value = round(246+5*math.sin((x+y*.27)*math.pi/128))
             coat.pixel(x,y,(value,value,value,255))
+
+    structure_coat = Surface(256, 256)
+    for y in range(256):
+        for x in range(256):
+            value=round(242+3*math.sin((x+y*.18)*math.pi/128))
+            structure_coat.pixel(x,y,(value,value,value,255))
 
     service = Surface(512, 512)
     ink=(176,173,141,145)
@@ -873,10 +939,11 @@ def surface_maps():
             column.pixel(x,y,strip.pixels[start:start+4])
     ring_map=Surface(256,256)
     ring_map.ring(128,128,112,20,(255,255,255,255),12)
-    maps = {'deck_panel.png':panel, 'coating.png':coat, 'service_pad.png':service,
+    maps = {'deck_panel.png':panel, 'coating.png':coat, 'structure_coating.png':structure_coat, 'service_pad.png':service,
             'coolant_pad.png':coolant, 'interlock_bus.png':interlock,
             'power_strip.png':strip, 'power_column.png':column, 'power_ring.png':ring_map}
     maps.update(effect_maps())
+    maps.update(weapon_signal_maps())
     return maps
 
 
@@ -894,6 +961,7 @@ OVERLAYS = {
     'CoreOnline': ('power_ring.png', (.19,.89,.72,1)),
     'CoreOffline': ('power_ring.png', (.10,.14,.16,1)),
     'FxRotor': ('fx_rotor.png', (1,1,1,1)),
+    'Cooling': ('fx_cooling.png', (1,1,1,1)),
 }
 
 
@@ -902,6 +970,11 @@ OVERLAYS = {
 for effect in ("Muzzle", "Shield", "Hit", "Burst"):
     for stage, alpha in enumerate((1.0, .64, .30, .10), 1):
         OVERLAYS["Fx"+effect+str(stage)] = ("fx_"+effect.lower()+".png", (1,1,1,alpha))
+
+# Charge follows progress (1 faint -> 4 bright), unlike the transient Fx decay
+# stages above. Keeping this distinction explicit avoids reversed threat cues.
+for stage, alpha in enumerate((.25, .50, .75, 1.0), 1):
+    OVERLAYS["Charge"+str(stage)] = ("fx_charge.png", (1,1,1,alpha))
 
 
 def material_text():
@@ -915,6 +988,8 @@ def material_text():
                   '\tset $shininess "' + str(shininess) + '"']
         if name in ("FloorPanel", "DeckService", "DeckCoolant", "DeckInterlock"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/deck_panel.png']
+        elif name in ("Structure", "StructureTrim", "CoreCasing", "CoreCrown"):
+            lines += ['\tset_texture_alias diffuseMap textures/crossfire/structure_coating.png']
         elif name in ("Porcelain", "Ivory"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/coating.png']
         lines += ["}", ""]

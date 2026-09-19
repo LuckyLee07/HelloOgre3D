@@ -271,7 +271,7 @@ function Scene.Camera(zoom)
  local up=Vector3(math.sin(yaw)*math.sin(pitch),math.cos(pitch),math.cos(yaw)*math.sin(pitch))
  local right=Vector3(math.cos(yaw),0,-math.sin(yaw))
  local target=Vector3(0,0,-.25)
- local left,top,rightEdge,bottom=28,108,width-28,height-132
+ local left,top,rightEdge,bottom=28,96,width-28,height-104
  local centerX,centerY=(left+rightEdge)/2,(top+bottom)/2
  local points={}
  -- Ground is [-9,9] x [-11,10.5]; this extra envelope protects a complete unit
@@ -310,7 +310,7 @@ function Scene.Camera(zoom)
  local distance=(high+.08)*zoom
  local position=fitAt(distance)
  cameraCache={width=width,height=height,zoom=zoom,orientation=q,position=position,distance=distance}
- print(string.format("[CrossfireCamera] width=%d height=%d distance=%.3f yaw=178 pitch=-42 safe=28,108,%d,%d",width,height,distance,rightEdge,bottom))
+ print(string.format("[CrossfireCamera] width=%d height=%d distance=%.3f yaw=178 pitch=-42 safe=28,96,%d,%d",width,height,distance,rightEdge,bottom))
 end
 function Scene.DrawShield(position,forward,flash)
  local yaw=math.atan2(forward.x,forward.z)

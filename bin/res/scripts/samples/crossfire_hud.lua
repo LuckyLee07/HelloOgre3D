@@ -111,10 +111,10 @@ function Hud:Header(ctx,title)
   self:Button("phase",w/2-146,10,150,38,ctx.result and "本关已结束" or (ctx.paused and "空格  执行" or "空格  暂停"),"pause",ctx.paused,4,not ctx.result)
   self:Button("step",w/2+12,10,132,38,ctx.stepRemaining and string.format("%.1f 秒后停",ctx.stepRemaining/1000) or "E  推进 2 秒","step",false,4,not ctx.result)
   local critical=ctx.critical or "两机分路，从没有护盾的侧面进攻。"
-  self:Frame("critical_background",20,58,w-328,42,"panel")
-  self:Frame("critical_edge",20,63,3,32,"amber")
-  self:Text("critical",30,59,w-338,40,self:Wrap("critical",critical,w-338,9,2),9)
-  for i=1,3 do self:Frame("progress"..i,20+(i-1)*23,98,17,2,i==index and "cyan" or ((ctx.records or {})[i] and "amber" or "track")) end
+  self:Frame("critical_background",20,58,w-328,32,"panel")
+  self:Frame("critical_edge",20,63,3,22,"amber")
+  self:Text("critical",30,64,w-348,22,self:Wrap("critical",critical,w-348,9,1),9)
+  for i=1,3 do self:Frame("progress"..i,20+(i-1)*23,94,17,2,i==index and "cyan" or ((ctx.records or {})[i] and "amber" or "track")) end
  end
 end
 function Hud:Title(ctx)
@@ -151,10 +151,65 @@ function Hud:Title(ctx)
  self:Text("scene_description",captionX,self.height-92,captionW,42,self:Wrap("scene_description",level.description or "一座哨卫，两条路线，寻找侧翼。",captionW,9,2),9,5)
  self:Text("title_footer",24,self.height-36,420,22,"1 / 2 / 3 选关   ENTER 开始   "..collection(ctx).." / 3 已收复",9,7)
 end
--- Stable actor names stay visible; status is a separate line, never a rename.
+-- Enemy phases describe the real firing cycle; shield feedback is independent.
+local function enemyPhase(a)
+ local state=a.state
+ local text,color,progress="待命","rule",nil
+ if state=="LOCKING" or state=="CHARGING" then
+  text,color,progress="蓄力","amber",clamp(a.phaseProgress or a.charge,0,1)
+ elseif state=="COOLING" then
+  text,color,progress="冷却","blue",clamp(a.phaseProgress,0,1)
+ elseif state=="FIRING" then
+  text,color,progress="连发中","amber",clamp(a.phaseProgress,0,1)
+ elseif state=="TRACKING" then text,color="瞄准中","amber" end
+ if (state=="LOCKING" or state=="COOLING") and a.phaseRemainingMs~=nil then
+  -- Round up: a positive remaining time must not read as already complete.
+  local remaining=math.ceil(clamp(a.phaseRemainingMs,0,99900)/100)/10
+  text=text..string.format(" 约%.1f秒",remaining)
+ end
+ return text,color,progress
+end
+local function labelsOverlap(x,y,w,h,b)
+ return x<b.x+b.w+6 and x+w+6>b.x and y<b.y+b.h+5 and y+h+5>b.y
+end
+local function coversBody(x,y,w,h,hit)
+ local dx=hit.x-clamp(hit.x,x,x+w)
+ local dy=hit.y-clamp(hit.y,y,y+h)
+ return dx*dx+dy*dy<(hit.radius+5)^2
+end
+function Hud:ActorLabelPosition(hit,w,h,top,bottom,count)
+ local desiredX=hit.anchorX-w/2
+ local desiredY=hit.enemy and (hit.anchorY-h-10) or (hit.y+hit.radius+7)
+ local function available(x,y)
+  for i=1,self.actorCount do
+   if coversBody(x,y,w,h,self.actorHits[i]) then return false end
+  end
+  for i=1,count do
+   if labelsOverlap(x,y,w,h,self.labelRects[i]) then return false end
+  end
+  return true
+ end
+ local xs={desiredX,hit.x+hit.radius+8,hit.x-hit.radius-w-8}
+ local ys={desiredY,hit.y-hit.radius-h-8,hit.y+hit.radius+8,desiredY-h-10,desiredY+h+10}
+ for _,rawY in ipairs(ys) do
+  for _,rawX in ipairs(xs) do
+   local x,y=clamp(rawX,20,self.width-w-20),clamp(rawY,top,bottom-h)
+   if available(x,y) then return x,y end
+  end
+ end
+ -- Crowded units retain discoverable names; use the nearest free safe-area cell.
+ local bestX,bestY,bestDistance=nil,nil,math.huge
+ for y=top,bottom-h,h+7 do
+  for x=20,self.width-w-20,w+8 do
+   local distance=(x-desiredX)^2+(y-desiredY)^2
+   if distance<bestDistance and available(x,y) then bestX,bestY,bestDistance=x,y,distance end
+  end
+ end
+ return bestX or clamp(desiredX,20,self.width-w-20),bestY or clamp(desiredY,top,bottom-h)
+end
 function Hud:Actors(ctx)
- local top,bottom=104,self.height-130
- local count=0
+ local top,bottom=96,self.height-104
+ -- Collect every body first, so a name never steals another unit's visible body.
  for i,a in ipairs(ctx.actors or {}) do
   if a.pos and number(a.hp)>0 then
    local p=SandboxCamera:WorldToScreen(a.pos+Vector3(0,1.15,0))
@@ -163,86 +218,87 @@ function Hud:Actors(ctx)
    local hit=self.actorHits[self.actorCount] or {};self.actorHits[self.actorCount]=hit
    hit.slot,hit.x,hit.y,hit.label=i,body.x,body.y,nil
    hit.radius=a.enemy and 24 or 20
-   if p.x>0 and p.x<self.width and p.y>top-40 and p.y<bottom+40 then
-    local lw,lh=a.enemy and 130 or 100,a.enemy and 42 or 25
-    local x=clamp(p.x-lw/2,20,self.width-lw-20)
-    local y=clamp(a.enemy and (p.y-lh-10) or (body.y+18),top,bottom-lh)
-    -- Four actors at most: try fixed nearby lanes without allocating native UI.
-    for attempt=0,7 do
-     local clash=false
-     for j=1,count do
-      local other=self.labelRects[j]
-      if x<other.x+other.w+6 and x+lw+6>other.x and y<other.y+other.h+5 and y+lh+5>other.y then clash=true;break end
-     end
-     if not clash then break end
-     if attempt<3 then y=clamp(y-lh-7,top,bottom-lh)
-     elseif attempt<6 then x=clamp(p.x+24,20,self.width-lw-20);y=clamp(p.y+(attempt-4)*(lh+7),top,bottom-lh)
-     else x=clamp(p.x-lw-30,20,self.width-lw-20) end
+   hit.anchorX,hit.anchorY,hit.enemy=p.x,p.y,a.enemy
+  end
+ end
+ local count=0
+ for i=1,self.actorCount do
+  local hit=self.actorHits[i];local a=ctx.actors[hit.slot]
+  if hit.anchorX>0 and hit.anchorX<self.width and hit.anchorY>top-40 and hit.anchorY<bottom+40 then
+   local lw,lh=a.enemy and 136 or 96,a.enemy and 49 or 26
+   local x,y=self:ActorLabelPosition(hit,lw,lh,top,bottom,count)
+   count=count+1
+   local rect=self.labelRects[count] or {};self.labelRects[count]=rect
+   rect.x,rect.y,rect.w,rect.h=x,y,lw,lh;hit.label=rect
+   local key="actor"..hit.slot
+   local selected=not a.enemy and ctx.selected==hit.slot
+   local identity=a.enemy and "amber" or (a.identityColor or (hit.slot==2 and "blue" or "cyan"))
+   local name=a.name or (a.enemy and "哨卫" or (hit.slot==2 and "ROOK" or "VEGA"))
+   if not a.enemy then name=(hit.slot==2 and "02 " or "01 ")..name end
+   self:Frame(key.."_label",x,y,lw,lh,selected and "selected" or "panel",nil,nil,3)
+   self:Frame(key.."_identity",x,y,selected and 4 or 2,lh,identity,nil,nil,3)
+   self:Text(key.."_name",x+8,y+1,lw-(a.enemy and a.blocked and 53 or 14),21,
+    self:Wrap(key.."_name",name,lw-(a.enemy and a.blocked and 53 or 14),9,1),9,4)
+   if selected then self:Frame(key.."_selected",x,y,lw,2,identity,nil,nil,4) end
+   if a.enemy then
+    local phase,color,progress=enemyPhase(a)
+    self:Text(key.."_state",x+8,y+21,lw-14,20,phase,9,4)
+    self:Frame(key.."_phase_track",x+8,y+42,lw-16,2,"track",nil,nil,3)
+    if progress and progress>0 then self:Frame(key.."_phase",x+8,y+42,(lw-16)*progress,2,color,nil,nil,4) end
+    if a.blocked then
+     self:Frame(key.."_shield",x+lw-39,y+2,35,19,"selected",nil,nil,4)
+     self:Text(key.."_shield_text",x+lw-38,y+1,34,20,"盾挡",9,5)
+     self:Frame(key.."_shield_flash",x,y,lw,2,"amber",nil,nil,4)
     end
-    count=count+1
-    local rect=self.labelRects[count] or {};self.labelRects[count]=rect
-    rect.x,rect.y,rect.w,rect.h=x,y,lw,lh;hit.label=rect
-    local key="actor"..i
-    local identity=a.enemy and "amber" or (a.identityColor or (i==2 and "blue" or "cyan"))
-    local name=a.name or (a.enemy and "哨卫" or (i==2 and "ROOK" or "VEGA"))
-    if not a.enemy then name=(i==2 and "02  " or "01  ")..name end
-    self:Frame(key.."_label",x,y,lw,lh,"panel",nil,nil,3)
-    self:Frame(key.."_identity",x,y,3,lh,identity,nil,nil,3)
-    self:Text(key.."_name",x+8,y+1,lw-14,22,self:Wrap(key.."_name",name,lw-14,9,1),9,4)
-    if a.enemy then
-     self:Text(key.."_state",x+8,y+21,lw-14,21,a.blocked and "护盾挡弹" or "橙弧 / 护盾正面",9,4,true)
-    end
-    self:Frame(key.."_track",x,y+lh,lw,3,"track",nil,nil,3)
-    self:Frame(key.."_hp",x,y+lh,lw*clamp(number(a.hp)/math.max(1,number(a.maxHp,120)),0,1),3,a.damaged and "white" or identity,nil,nil,3)
    end
+   self:Frame(key.."_track",x,y+lh-3,lw,3,"track",nil,nil,3)
+   self:Frame(key.."_hp",x,y+lh-3,lw*clamp(number(a.hp)/math.max(1,number(a.maxHp,120)),0,1),3,a.damaged and "white" or identity,nil,nil,3)
   end
  end
 end
 local states={OFFLINE="已失联",READY="待命",MOVING="移动中",MOVE="移动中",ATTACK="交战中",FIRING="开火中",IDLE="待命",CHARGING="蓄力中",TRACKING="瞄准中",LOCKING="蓄力中",COOLING="冷却中",COVERING="寻找射界",["OUT OF RANGE"]="超出射程",
- ["MOVE / QUEUED"]="移动路线已规划",["TARGET / QUEUED"]="攻击目标已规划",["HOLD / QUEUED"]="原地待命已规划"}
+ ["MOVE / QUEUED"]="已规划移动",["TARGET / QUEUED"]="已指定目标",["HOLD / QUEUED"]="已规划待命"}
 function Hud:Battle(ctx)
- local y=self.height-120
- local cardW=self.width>=1100 and 208 or 184
+ local y=self.height-96
+ local cardW=self.width>=1100 and 196 or 176
  for i=1,2 do
   local a=(ctx.allies or {})[i] or {}
   local hp=math.max(0,number(a.hp));local alive=hp>0
   local x=20+(i-1)*(cardW+12)
   local key="ally"..i;local selected=ctx.selected==i and alive
   local identity=a.identityColor or (i==1 and "cyan" or "blue")
-  local hovered=alive and self:Hovered(x,y,cardW,100,4)
-  self:Frame(key,x,y,cardW,100,hovered and "hover" or (selected and "selected" or "panel"))
-  self:Frame(key.."_accent",x,y,4,100,identity)
+  local hovered=alive and self:Hovered(x,y,cardW,76,4)
+  self:Frame(key,x,y,cardW,76,hovered and "hover" or (selected and "selected" or "panel"))
+  self:Frame(key.."_accent",x,y,selected and 4 or 2,76,identity)
   self:Frame(key.."_selected",x+4,y,cardW-4,selected and 3 or 1,selected and identity or "rule")
-  self:Text(key.."_name",x+14,y+8,cardW-22,28,i==1 and "01  VEGA" or "02  ROOK",14,5,not alive)
+  self:Text(key.."_name",x+12,y+5,90,21,i==1 and "01 VEGA" or "02 ROOK",9,5,not alive)
+  if selected then self:Text(key.."_selection",x+cardW-61,y+5,52,21,"已选中",9,5) end
   local state=not alive and "已失联" or (a.order or a.state or "READY")
   state=states[state] or state
-  self:Text(key.."_status",x+14,y+37,cardW-24,22,self:Wrap(key.."_status",state,cardW-24,9,1),9,5,not alive)
-  local detail=not alive and "本关无法继续指挥" or (a.targetName and ("目标 / "..a.targetName) or (selected and "已选中 · 点地面下令" or "点击 / 按 "..i.." 选择"))
-  self:Text(key.."_detail",x+14,y+60,cardW-24,22,self:Wrap(key.."_detail",detail,cardW-24,9,1),9,5,not alive)
-  self:Frame(key.."_track",x+14,y+88,cardW-28,4,"track")
-  if alive then self:Frame(key.."_hp",x+14,y+88,(cardW-28)*clamp(hp/math.max(1,number(a.maxHp,120)),0,1),4,a.damaged and "white" or (hp>40 and identity or "amber")) end
-  self:Region(x,y,cardW,100,alive and ("select"..i) or "block")
+  self:Text(key.."_status",x+12,y+26,cardW-22,20,self:Wrap(key.."_status",state,cardW-22,9,1),9,5,not alive)
+  local detail=not alive and "本关无法继续指挥" or (a.targetName and ("目标 "..a.targetName) or (selected and "点地面规划路线" or "点击 / 按 "..i.." 选择"))
+  self:Text(key.."_detail",x+12,y+46,cardW-22,20,self:Wrap(key.."_detail",detail,cardW-22,9,1),9,5,not alive)
+  self:Frame(key.."_track",x+12,y+69,cardW-24,3,"track")
+  if alive then self:Frame(key.."_hp",x+12,y+69,(cardW-24)*clamp(hp/math.max(1,number(a.maxHp,120)),0,1),3,a.damaged and "white" or (hp>40 and identity or "amber")) end
+  self:Region(x,y,cardW,76,alive and ("select"..i) or "block")
  end
  local x=20+2*(cardW+12);local w=self.width-x-20
- self:Frame("command_panel",x,y,w,100,"panel")
- self:Region(x,y,w,100,"block")
+ self:Frame("command_panel",x,y,w,76,"panel")
+ self:Region(x,y,w,76,"block")
  local selected=(ctx.allies or {})[ctx.selected or 1] or {}
- local fire=ctx.fireHint or selected.fireState or "抵达后自动寻找目标"
- local fireLines=ctx.fireHint and 2 or 1
- self:Text("fire_reason",x+14,y+5,w-28,fireLines*20,self:Wrap("fire_reason",fire,w-28,9,fireLines),9)
  local tutorial=(not ctx.settings or ctx.settings.hints~=false) and ctx.tutorial or nil
- local detail=tutorial and ((tutorial.title or "规划路线").." · "..(tutorial.detail or "")) or ctx.hint or "点地面移动，点哨卫指定攻击。"
- local detailLines=tutorial and not ctx.alert and 2 or 1
- if not ctx.alert then
-  self:Text("feedback",x+14,y+9+fireLines*20,w-28,detailLines*20,self:Wrap("feedback",detail,w-28,9,detailLines),9)
- end
+ local first=tutorial and (tutorial.title or "规划路线") or ctx.fireHint or selected.fireState or "点地面移动，点哨卫指定攻击。"
+ local detail=tutorial and (tutorial.detail or "点地面规划路线，再按空格执行。") or ctx.cursorHint or ctx.hint or "1 / 2 选机 · 空格 执行 / 暂停"
+ self:Text("fire_reason",x+12,y+5,w-24,21,self:Wrap("fire_reason",first,w-24,9,1),9)
  if ctx.alert then
-  self:Frame("alert_accent",x+14,y+65,3,29,"amber")
-  self:Text("alert_title",x+23,y+68,w-173,22,self:Wrap("alert_title",ctx.alert.title,w-173,9,1),9)
-  self:Button("inspect",x+w-136,y+63,122,32,ctx.inspection and "已定位受阻" or "查看受阻","inspect",false,4)
- elseif fireLines+detailLines<4 then
-  self:Text("cursor_hint",x+14,y+77,w-28,22,self:Wrap("cursor_hint",ctx.cursorHint or "1 / 2 选机   空格 暂停 / 执行   E 推进 2 秒",w-28,9,1),9,5,true)
+  self:Frame("alert_accent",x+12,y+28,3,20,"amber")
+  self:Text("alert_title",x+21,y+27,w-158,21,self:Wrap("alert_title",ctx.alert.title,w-158,9,1),9)
+  self:Button("inspect",x+w-124,y+24,112,28,ctx.inspection and "已定位受阻" or "查看受阻","inspect",false,4)
+ else
+  self:Text("feedback",x+12,y+27,w-24,21,self:Wrap("feedback",detail,w-24,9,1),9)
  end
+ -- Keep the automatic-fire contract visible even while teaching or inspecting.
+ self:Text("cursor_hint",x+12,y+51,w-24,21,"抵达后自动开火 · 点哨卫指定目标",9,5,true)
 end
 function Hud:Endpoints(ctx)
  for i=1,2 do
@@ -251,7 +307,7 @@ function Hud:Endpoints(ctx)
   local nearby=point and actor and actor.pos and (actor.pos-point):squaredLength()<4
   if point and not nearby then
    local p=SandboxCamera:WorldToScreen(point)
-   local x,y=clamp(p.x+13,20,self.width-48),clamp(p.y-12,104,self.height-157)
+   local x,y=clamp(p.x+13,20,self.width-48),clamp(p.y-12,96,self.height-128)
    local identity=i==1 and "cyan" or "blue"
    -- Endpoint numbers use the same identity stripe as cards and actor labels.
    self:Frame("endpoint"..i,x,y,30,24,"panel",nil,nil,2)

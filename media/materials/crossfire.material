@@ -34,7 +34,7 @@ material Crossfire/Floor : base_material
 
 material Crossfire/FloorPanel : base_material
 {
-	set $diffuseCol "0.185 0.255 0.295 1"
+	set $diffuseCol "0.165 0.222 0.25 1"
 	set $specularCol "0.04 0.055 0.07"
 	set $shininess "24"
 	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
@@ -105,16 +105,16 @@ material Crossfire/Mark : base_material
 
 material Crossfire/Vega : base_material
 {
-	set $diffuseCol "0.17 0.61 0.49 1"
-	set $specularCol "0.1 0.21 0.17"
-	set $shininess "38"
+	set $diffuseCol "0.105 0.65 0.53 1"
+	set $specularCol "0.15 0.28 0.23"
+	set $shininess "64"
 }
 
 material Crossfire/Rook : base_material
 {
-	set $diffuseCol "0.24 0.4 0.71 1"
-	set $specularCol "0.12 0.17 0.27"
-	set $shininess "38"
+	set $diffuseCol "0.19 0.39 0.74 1"
+	set $specularCol "0.16 0.22 0.34"
+	set $shininess "64"
 }
 
 material Crossfire/RookLight : base_material
@@ -154,7 +154,7 @@ material Crossfire/HullHit : base_material
 
 material Crossfire/DeckService : base_material
 {
-	set $diffuseCol "0.34 0.335 0.285 1"
+	set $diffuseCol "0.245 0.255 0.234 1"
 	set $specularCol "0.035 0.04 0.04"
 	set $shininess "18"
 	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
@@ -162,7 +162,7 @@ material Crossfire/DeckService : base_material
 
 material Crossfire/DeckCoolant : base_material
 {
-	set $diffuseCol "0.125 0.29 0.3 1"
+	set $diffuseCol "0.12 0.25 0.26 1"
 	set $specularCol "0.035 0.06 0.065"
 	set $shininess "24"
 	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
@@ -170,10 +170,112 @@ material Crossfire/DeckCoolant : base_material
 
 material Crossfire/DeckInterlock : base_material
 {
-	set $diffuseCol "0.235 0.26 0.335 1"
+	set $diffuseCol "0.205 0.23 0.275 1"
 	set $specularCol "0.04 0.05 0.07"
 	set $shininess "22"
 	set_texture_alias diffuseMap textures/crossfire/deck_panel.png
+}
+
+material Crossfire/Structure : base_material
+{
+	set $diffuseCol "0.36 0.42 0.425 1"
+	set $specularCol "0.045 0.055 0.055"
+	set $shininess "18"
+	set_texture_alias diffuseMap textures/crossfire/structure_coating.png
+}
+
+material Crossfire/StructureTrim : base_material
+{
+	set $diffuseCol "0.47 0.52 0.49 1"
+	set $specularCol "0.075 0.085 0.08"
+	set $shininess "24"
+	set_texture_alias diffuseMap textures/crossfire/structure_coating.png
+}
+
+material Crossfire/FacilityTeal : base_material
+{
+	set $diffuseCol "0.1 0.3 0.31 1"
+	set $specularCol "0.045 0.075 0.075"
+	set $shininess "24"
+}
+
+material Crossfire/FacilitySignal : base_material
+{
+	set $diffuseCol "0.16 0.51 0.46 1"
+	set $specularCol "0.015 0.04 0.035"
+	set $shininess "16"
+}
+
+material Crossfire/SafetyPaint : base_material
+{
+	set $diffuseCol "0.48 0.37 0.19 1"
+	set $specularCol "0.02 0.015 0.01"
+	set $shininess "12"
+}
+
+material Crossfire/Wayfinding : base_material
+{
+	set $diffuseCol "0.43 0.49 0.46 1"
+	set $specularCol "0.01 0.015 0.01"
+	set $shininess "12"
+}
+
+material Crossfire/DeckJoint : base_material
+{
+	set $diffuseCol "0.105 0.155 0.18 1"
+	set $specularCol "0.015 0.02 0.025"
+	set $shininess "16"
+}
+
+material Crossfire/ActorTrim : base_material
+{
+	set $diffuseCol "0.82 0.85 0.79 1"
+	set $specularCol "0.22 0.24 0.22"
+	set $shininess "64"
+}
+
+material Crossfire/ActorMetal : base_material
+{
+	set $diffuseCol "0.3 0.38 0.41 1"
+	set $specularCol "0.46 0.5 0.52"
+	set $shininess "96"
+}
+
+material Crossfire/EnemyArmor : base_material
+{
+	set $diffuseCol "0.68 0.155 0.065 1"
+	set $specularCol "0.24 0.09 0.04"
+	set $shininess "56"
+}
+
+material Crossfire/EnemyCeramic : base_material
+{
+	set $diffuseCol "0.29 0.34 0.35 1"
+	set $specularCol "0.08 0.1 0.11"
+	set $shininess "32"
+}
+
+material Crossfire/CoreCasing : base_material
+{
+	set $diffuseCol "0.4 0.47 0.47 1"
+	set $specularCol "0.08 0.1 0.1"
+	set $shininess "28"
+	set_texture_alias diffuseMap textures/crossfire/structure_coating.png
+}
+
+material Crossfire/CoreCrown : base_material
+{
+	set $diffuseCol "0.57 0.64 0.61 1"
+	set $specularCol "0.18 0.21 0.2"
+	set $shininess "52"
+	set_texture_alias diffuseMap textures/crossfire/structure_coating.png
+}
+
+material Crossfire/CoreMetal : base_material
+{
+	set $diffuseCol "0.28 0.35 0.37 1"
+	set $specularCol "0.24 0.29 0.31"
+	set $shininess "72"
 }
 
 material Crossfire/ServicePad
@@ -520,6 +622,33 @@ material Crossfire/FxRotor
 			texture_unit overlayMap
 			{
 				texture textures/crossfire/fx_rotor.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/Cooling
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_cooling.png
 				tex_address_mode clamp
 				filtering trilinear
 			}
@@ -952,6 +1081,114 @@ material Crossfire/FxBurst4
 			texture_unit overlayMap
 			{
 				texture textures/crossfire/fx_burst.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/Charge1
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.25
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_charge.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/Charge2
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.5
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_charge.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/Charge3
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.75
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_charge.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/Charge4
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1.0
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_charge.png
 				tex_address_mode clamp
 				filtering trilinear
 			}

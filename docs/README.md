@@ -1,5 +1,9 @@
 # docs 索引
 
+[2026-09-19 Crossfire 首关联合精修](dev-design/plans/2026-09-19-crossfire-court-polish.md)：机器人顶面/设施材料层级、紧凑 HUD、真实攻击阶段与炮口信号、音量和碰撞反馈修正。
+
+[2026-09-19 Crossfire 后续迭代评估](dev-design/plans/2026-09-19-crossfire-next-iterations.md)：以 `46d7fd2` 为基线，先联合精修首关画面与战斗表达，再核对三关策略节奏，最后统一品质与平台验证；第一轮已落地，实机证据与保留项见[实施记录](dev-design/plans/2026-09-19-crossfire-court-polish.md)。
+
 [2026-09-19 Crossfire 动态场景与战斗演出](dev-design/plans/2026-09-19-crossfire-motion-finish.md)：冷却风扇、事件特效池、收复供电序列与战场结算过渡。
 
 [2026-09-19 Crossfire 场景与战斗节奏](dev-design/plans/2026-09-19-crossfire-scene-rhythm.md)：三关表面细节与收复供电状态、两秒推进、受阻定位和结算复盘。

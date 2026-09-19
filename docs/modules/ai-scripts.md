@@ -29,6 +29,8 @@ Lua 侧 AI 行为库：DT/BT action+condition、知识源、Lua 影响图、团�
 - DT/BT 树装配、condition/action、知识源→Blackboard、Lua 影响图层、团队 fact、AI event table 规范化、agent 生命周期。
 - `TeamSharingExperimentBT` 是 Sandbox12 M3 专用最小树，只执行显式 `movePos` 或待机；共享 `MoveAction` 在 `movePos` 被外部删除时，无论进入下一次更新还是先被重评估抢占，都会清空 locomotion 的 path/target/velocity 与转向缓存。相同目标重入时若 path 已空也会重新寻路，避免复用失效路径。
 
+- Sandbox20 的专用 `crossfire/Guard.lua` 在真实蓄力和冷却过程中发布 `crossfire.phaseProgress`（0–1）与 `crossfire.phaseRemainingMs`，重置/抢占时清零；二者只供 HUD/炮口信号使用，不反向参与决策。与原动作 720 tick 对拍确认状态、锁定和每次发弹不变，三关运行见[首关联合精修](../dev-design/plans/2026-09-19-crossfire-court-polish.md)。
+
 ## 5. 约束与红线
 
 - **Lua 仍干重活**（待下沉 C++）：`InfluenceMap.lua` 逐格 radial 扩散、Sandbox11 视线双重 for；`Chapter7Knowledge` 已改读 C++ perception/cache 结果。

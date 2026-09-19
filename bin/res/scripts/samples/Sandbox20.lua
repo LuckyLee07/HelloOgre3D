@@ -5,9 +5,10 @@ local Levels=require("res.scripts.samples.crossfire_encounters.lua")
 local Feedback=require("res.scripts.samples.crossfire_feedback.lua")
 local Review=require("res.scripts.samples.crossfire_review.lua")
 local Effects=require("res.scripts.samples.crossfire_effects.lua")
+local Signals=require("res.scripts.samples.crossfire_signals.lua")
 local Profile=require("res.scripts.samples.crossfire_profile.lua")
 local ids,planned,shadows,observed={},{},{},{}
-local effects=nil
+local effects,signals=nil,nil
 local visualClock,outcomeAge,reportOpen=0,0,false
 local hud,selected,paused,result,serial,restart= nil,1,true,nil,0,false
 local hint="Assign VEGA and ROOK opposite routes. Orange arc = the protected front."
@@ -40,11 +41,14 @@ local function logEffects(event)
  print(string.format("[CrossfireEffects] event=%s capacity=%d active=%d peak=%d emitted=%d reused=%d evicted=%d visualMs=%d tick=%d",
   event,state.capacity,state.active,state.peak,state.emitted,state.reused,state.evicted,visualClock,now()))
 end
+local function applyVolume()
+ if SandboxAudio then SandboxAudio:SetVolume((silent or muted) and 0 or .65*(profile and profile.volume or .75)) end
+end
 local function sound(name,pos,gain,priority)
  if silent or muted or not SandboxAudio then return end
  local pan=0
  if pos then local p=SandboxCamera:WorldToScreen(pos); pan=math.max(-.75,math.min(.75,(p.x/GameManager:getScreenWidth()-.5)*1.4)) end
- SandboxAudio:PlayLayer("res/audio/crossfire/"..name..".wav",(gain or .5)*(profile and profile.volume or .75),pan,priority or 1)
+ SandboxAudio:PlayLayer("res/audio/crossfire/"..name..".wav",gain or .5,pan,priority or 1)
 end
 local function selectUnit(index)
  local a=find(ids[index]); if not a or a:GetHealth()<=0 then return end
@@ -93,7 +97,8 @@ local function order(index,value)
   hint=(index==1 and "VEGA" or "ROOK").." · "..({move="移动",attack="指定攻击",hold="原地待命"})[value.kind].."已规划 · 按空格执行"
   print("[CrossfirePlan] slot="..index.." kind="..value.kind.." tick="..now())
  else
-  if apply(index,value) then hint="指令已执行 · 按空格暂停，调整下一步" end
+  if not apply(index,value) then return end
+  hint="指令已执行 · 按空格暂停，调整下一步"
  end
  sound("order",value.pos,.4,2)
 end
@@ -112,7 +117,7 @@ local function togglePause()
   planned={}; paused=false
   if started==nil then started=now() end
   sound("start",nil,.45,2)
-  if accepted then hint="正在执行 · 抵达后自动开火，随时按空格暂停" end
+  if accepted then hint="正在执行 · 随时按空格暂停" end
  else paused=true; hint="时间已暂停 · 可调整两机路线或目标，再按空格同时执行" end
  GameManager:SetSimulationPaused(paused)
  print("[CrossfirePause] paused="..tostring(paused).." tick="..now())
@@ -130,6 +135,7 @@ local function spawn()
  ids,planned,observed={},{},{}
  visualClock,outcomeAge,reportOpen=0,0,false
  if effects then effects:Reset();logEffects("reset") end
+ if signals then signals:HideAll() end
  selected,paused,result,serial,started=1,true,nil,0,nil
  stepUntil=nil;review=Review.New();alert=nil;inspection=nil;reviewSummary=nil;alertKey=""
  Scene.SetOutcome(nil)
@@ -196,6 +202,7 @@ local function openOverlay(name)
 end
 local function saveSettings()
  profile.muted=muted
+ applyVolume()
  saveError=not profile:Save()
  if saveError then hint="设置已生效，本次未能写入保存文件" end
  print(string.format("[CrossfireSettings] volume=%.2f muted=%s hints=%s",profile.volume,tostring(muted),tostring(profile.hints)))
@@ -269,8 +276,12 @@ local function presentation()
     effects:Emit("muzzle",a:GetWeaponComponent():GetMuzzlePosition(),a:GetForward(),visualClock)
    end
    if blocked>old.blocked or hit>old.hit then
-    sound(blocked>old.blocked and "shield" or "hit",pos,.55,2)
-    effects:Emit(blocked>old.blocked and "shield" or "hit",bb:GetVec3("crossfire.lastImpactPosition"),nil,visualClock)
+    -- Counts may both change in one simulation step; kind and contact point
+    -- must describe the same latest physical event.
+    local impactKind=bb:GetBool("crossfire.lastBlocked",false) and "shield" or "hit"
+    local impact=bb:GetVec3("crossfire.lastImpactPosition")
+    sound(impactKind,impact,.55,2)
+    effects:Emit(impactKind,impact,nil,visualClock)
    end
    if hp<=0 and old.hp>0 then
     if i==selected and i<3 then
@@ -309,14 +320,28 @@ local function presentation()
      local charge=bb:GetFloat("crossfire.charge",0)
      if charge>0 then
       local aim=bb:GetVec3("crossfire.aim");aim.y=.06
-      drawLine(center,aim,amber)
-      DebugDrawer:drawCircle(aim,.3+charge*.5,32,amber,false)
+      -- Dashed ground warning is the recorded lock point, not a live projectile.
+      local span=aim-center
+      for segment=0,10,2 do drawLine(center+span*(segment/12),center+span*((segment+1)/12),amber) end
+      DebugDrawer:drawCircle(aim,.55,32,amber,false)
+      DebugDrawer:drawCircle(aim,.55*(1-charge)+.08,24,amber,false)
      end
     end
    end
    local item={pos=pos,hp=hp,maxHp=old.maxHp,enemy=i>2,name=Feedback.Name(id,ids),state=hp<=0 and "OFFLINE" or bb:GetString("crossfire.state"),
+    charge=bb:GetFloat("crossfire.charge",0),phaseProgress=bb:GetFloat("crossfire.phaseProgress",0),
+    phaseRemainingMs=bb:GetFloat("crossfire.phaseRemainingMs",0),
     damaged=not bb:GetBool("crossfire.lastBlocked",true) and now()-bb:GetInt("crossfire.lastImpactMs",-10000)<350,
     blocked=bb:GetBool("crossfire.lastBlocked",false) and now()-bb:GetInt("crossfire.lastImpactMs",-10000)<550}
+   if i>2 then
+    signals:Set(i-2,a:GetWeaponComponent():GetMuzzlePosition(),item.state,item.phaseProgress,
+     hp>0 and screen=="battle" and not overlay and not result)
+    if old.phase~=item.state then
+     old.phase=item.state
+     print(string.format("[CrossfirePhase] slot=%d state=%s remainingMs=%d progress=%.3f tick=%d",
+      i,item.state,item.phaseRemainingMs,item.phaseProgress,now()))
+    end
+   end
    if i<3 then
     item.identityColor=Feedback.colors[i]
     local requested=planned[i] and planned[i].kind=="attack" and planned[i].target or bb:GetInt("crossfire.target",-1)
@@ -328,7 +353,10 @@ local function presentation()
     local moving=planned[i] and planned[i].kind=="move" or (not planned[i] and bb:Has("movePos"))
     if report and not moving then
      if report.state~="clear" then old.stalledAt=old.stalledAt or now() else old.stalledAt=nil end
-     if screen=="battle" and not overlay and not result then Feedback.Draw(report,Feedback.colors[i]) end
+     if screen=="battle" and not overlay and not result and
+      ((i==selected and (paused or report.state~="clear")) or (inspection and inspection.slot==i)) then
+      Feedback.Draw(report,Feedback.colors[i])
+     end
      if i==selected then ctx.fireHint=(paused and "当前射界 · " or "")..report.name.."："..report.text end
      if old.stalledAt and now()-old.stalledAt>1800 and old.reportState~=report.state then
       print("[CrossfireObstruction] slot="..i.." target="..report.target.." first="..report.first.." reason="..report.state.." tick="..now())
@@ -336,7 +364,7 @@ local function presentation()
      elseif report.state=="clear" then old.reportState=nil end
     else
      old.stalledAt=nil
-     if moving then item.fireState=paused and "按空格执行移动 · 抵达后自动开火" or "移动中 · 抵达后自动开火";item.targetName=nil end
+     if moving then item.fireState=paused and "路线已规划 · 按空格执行" or "移动中";item.targetName=nil end
     end
     reviewActors[#reviewActors+1]={slot=i,name=item.name,hp=hp,moving=moving,shots=shot,report=report}
     item.order=planned[i] and (planned[i].kind=="move" and "MOVE / QUEUED" or (planned[i].kind=="attack" and "TARGET / QUEUED" or "HOLD / QUEUED")) or nil
@@ -372,6 +400,7 @@ local function presentation()
    paused=true;GameManager:SetSimulationPaused(true);planned={};stepUntil=nil;inspection=nil
    outcomeAge=0;reportOpen=false
    print("[CrossfireOutcome] phase=reveal result="..result.." tick="..now())
+   signals:HideAll()
    Scene.SetOutcome(result)
    sound(result=="VICTORY" and "win" or "lose",nil,.65,4)
    local elapsed=now()-(started or now())
@@ -388,7 +417,7 @@ local function presentation()
   end
  end
  if screen=="battle" and not result then
-  ctx.critical=level==3 and "联锁区：两机拉开后，分别点对侧哨卫；红线表示中途受阻，需再换位。" or (level==2 and "冷却区：设备会挡弹；先绕开设备，再从侧面开火。" or "橙色扇面是护盾正面；两机从不同方向接近，抵达后自动开火。")
+  ctx.critical=level==3 and "两机拉开，分别点对侧哨卫；红线受阻时换位。" or (level==2 and "设备会挡弹；绕过设备，从侧面开火。" or "橙弧是护盾正面；两机分路，抵达后自动开火。")
   if not overlay and hoverX>=0 and not hud:Hit(hoverX,hoverY) then
    local actorIndex=hud:PickActor(hoverX,hoverY)
    local source=find(ids[selected])
@@ -414,7 +443,7 @@ local function presentation()
   local first,second=planned[1]~=nil,planned[2]~=nil
   ctx.tutorial={step=not first and 1 or (not second and 2 or 3),done1=first,done2=second,
    title=not first and "1 · 给 VEGA 规划路线" or (not second and "2 · 给 ROOK 另一条路线" or "3 · 两机同时执行"),
-   detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格持续执行，或按 E 推进 2 秒。抵达后自动开火。")}
+   detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格持续执行，或按 E 推进 2 秒。")}
  end
  ctx.stats=string.format("%d / 2 台存活 · %.1f 秒 · 承受 %d 损伤",living,(now()-(started or now()))/1000,damage)
  hud:Update(ctx)
@@ -423,6 +452,7 @@ function Sandbox_Initialize()
  SandboxUI:SetBuildInfoVisible(false)
  _G.HELLO_SUPPRESS_AI_PATH_DRAW=true
  profile=Profile.Load(); muted=profile.muted
+ applyVolume()
  print(string.format("[CrossfireSettings] loaded=true volume=%.2f muted=%s hints=%s completed=%d",profile.volume,tostring(muted),tostring(profile.hints),profile:CompletedCount()))
  -- Test launches opt into direct battle; ordinary play always gets the title.
  local initial=tonumber(os.getenv("HELLO_CROSSFIRE_LEVEL") or "1")
@@ -433,6 +463,7 @@ function Sandbox_Initialize()
  for i=1,4 do shadows[i]=Scene.Shadow() end
  hud=Hud.New()
  effects=Effects.New()
+ signals=Signals.New(#Levels[level].enemies)
  spawn()
  if os.getenv("HELLO_CROSSFIRE_PHYSICS_TEST")=="1" then
   physicsTest=require("res.scripts.samples.crossfire_physics_selftest.lua").New({ids=ids,find=find})
@@ -459,11 +490,13 @@ function Sandbox_Update(deltaMs,uiDeltaMs)
   if requested and requested.level~=level then
    shadows={}
    effects:Release();effects=nil
+   signals:Release();signals=nil
    ObjectManager:clearAllObjects(MGR_OBJ_BLOCK,true)
    level=requested.level
    Scene.Create(level)
    for i=1,4 do shadows[i]=Scene.Shadow() end
    effects=Effects.New()
+   signals=Signals.New(#Levels[level].enemies)
   end
   for _,shadow in ipairs(shadows) do shadow:setPosition(Vector3(0,-10,0)) end
   if requested then screen=requested.screen end

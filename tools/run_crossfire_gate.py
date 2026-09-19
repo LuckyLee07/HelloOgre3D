@@ -231,6 +231,12 @@ def main():
                     for capacity,active,peak,emitted,reused,evicted in pools),
                 power_sequence=('result=VICTORY' not in text or text.count('[CrossfireScenePower] elapsedMs=900')==text.count('[CrossfireMatch] result=VICTORY')),
             )
+        if mode in ('controls', 'campaign', 'front', 'natural', 'pacing'):
+            phases = re.findall(r'\[CrossfirePhase\] slot=\d+ state=(\w+) remainingMs=(\d+) progress=([\d.]+)', text)
+            signals = [int(n) for n in re.findall(r'\[CrossfireSignals\] allocated=(\d+)', text)]
+            checks['real_attack_phases'] = {'LOCKING', 'FIRING', 'COOLING'} <= {p[0] for p in phases} and all(
+                0 <= float(progress) <= 1 and int(remaining) <= 1700 for _, remaining, progress in phases)
+            checks['signals_per_scene'] = len(signals) == text.count('[CrossfireScene]') and all(n in (1, 2) for n in signals)
         if mode == 'controls':
             checks['empty_execute_blocked'] = '[CrossfireInput] execute=blocked reason=no_plan' in text
         if mode in ('campaign', 'interface', 'controls'):

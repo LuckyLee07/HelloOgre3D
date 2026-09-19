@@ -8,12 +8,16 @@ end
 local function reset(bb)
  phase,elapsed,lockId,aim,bursts="ready",0,-1,nil,0
  bb:SetFloat("crossfire.charge",0)
+ bb:SetFloat("crossfire.phaseProgress",0)
+ bb:SetFloat("crossfire.phaseRemainingMs",0)
  bb:SetInt("crossfire.lockId",-1)
 end
 function OnInitialize(owner,bb) reset(bb) end
 function OnUpdate(dt,owner,bb)
  if bb:GetBool("crossfire.fixture",false) then owner:SetVelocity(Vector3(0,owner:GetVelocity().y,0)); return ActionStatus.RUNNING end
  owner:SetVelocity(Vector3(0,owner:GetVelocity().y,0))
+ bb:SetFloat("crossfire.phaseProgress",0)
+ bb:SetFloat("crossfire.phaseRemainingMs",0)
  if owner:GetHealth()<=0 then bb:SetString("crossfire.state","OFFLINE"); return ActionStatus.RUNNING end
  local command=bb:GetInt("command.serial",0)
  if command~=commandSerial then reset(bb); commandSerial=command end
@@ -22,7 +26,10 @@ function OnUpdate(dt,owner,bb)
  elapsed=elapsed+dt
  if phase=="cooldown" then
   bb:SetString("crossfire.state","COOLING")
-  if elapsed >= (sentinel and bb:GetFloat("crossfire.cooldownMs",1400) or 330) then reset(bb) end
+  local duration=sentinel and bb:GetFloat("crossfire.cooldownMs",1400) or 330
+  bb:SetFloat("crossfire.phaseProgress",math.min(1,elapsed/duration))
+  bb:SetFloat("crossfire.phaseRemainingMs",math.max(0,duration-elapsed))
+  if elapsed >= duration then reset(bb) end
   return ActionStatus.RUNNING
  end
  local target=lockId>0 and find(lockId) or nil
@@ -58,6 +65,8 @@ function OnUpdate(dt,owner,bb)
   local delay=sentinel and bb:GetFloat("crossfire.chargeMs",1100) or 180
   bb:SetString("crossfire.state","LOCKING")
   bb:SetFloat("crossfire.charge",math.min(1,elapsed/delay))
+  bb:SetFloat("crossfire.phaseProgress",math.min(1,elapsed/delay))
+  bb:SetFloat("crossfire.phaseRemainingMs",math.max(0,delay-elapsed))
   if not sentinel then
    owner:GetLocomotionComponent():FaceDirection(direction,dt)
    aim=target:GetPosition()
