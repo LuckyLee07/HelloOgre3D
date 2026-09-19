@@ -1,0 +1,44 @@
+400 key_press RETURN
+600 key_press 1
+800 mouse_down 675 284 1
+850 mouse_up 675 284 1
+1100 key_press 2
+1300 mouse_down 489 342 1
+1350 mouse_up 489 342 1
+1700 key_press SPACE
+15000 key_press RETURN
+16400 key_press 1
+16600 mouse_down 666 272 1
+16650 mouse_up 666 272 1
+16900 key_press 2
+17100 mouse_down 455 368 1
+17150 mouse_up 455 368 1
+17500 key_press SPACE
+38000 key_press RETURN
+39400 key_press 1
+39600 mouse_down 701 261 1
+39650 mouse_up 701 261 1
+39900 key_press 2
+40100 mouse_down 455 368 1
+40150 mouse_up 455 368 1
+40500 key_press SPACE
+48000 key_press SPACE
+48200 key_press 1
+48400 mouse_down 508 287 1
+48450 mouse_up 508 287 1
+48700 key_press 2
+48900 mouse_down 638 281 1
+48950 mouse_up 638 281 1
+49300 key_press SPACE
+50500 key_press SPACE
+50700 key_press 1
+50900 mouse_down 735 158 1
+50950 mouse_up 735 158 1
+51200 key_press SPACE
+54400 key_press SPACE
+54600 key_press 1
+54800 mouse_down 508 287 1
+54850 mouse_up 508 287 1
+55100 key_press SPACE
+68000 key_press RETURN
+71000 quit

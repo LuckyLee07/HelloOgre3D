@@ -199,6 +199,13 @@ SamplePresets.Sandbox7 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox8 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox10 = SamplePresets.chapter8_perception
 
+SamplePresets.Sandbox20 = cloneTable(chapter6To8AiConfig)
+SamplePresets.Sandbox20.aiScheduler.enabled = true
+SamplePresets.Sandbox20.aiScheduler.tickMs = 33
+SamplePresets.Sandbox20.aiScheduler.maxPerFrame = 4
+SamplePresets.Sandbox20.agentCount = 4
+SamplePresets.Sandbox20.lightTeamCount = 2
+
 SamplePresets.Sandbox19 = cloneTable(chapter6To8AiConfig)
 SamplePresets.Sandbox19.seed = 20260710
 SamplePresets.Sandbox19.agentCount = 7

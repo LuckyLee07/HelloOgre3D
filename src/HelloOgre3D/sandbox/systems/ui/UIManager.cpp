@@ -3,6 +3,8 @@
 #include "UIPolygon.h"
 #include "AppConfig.h"
 #include "OgreCamera.h"
+#include <cstdlib>
+#include <cstring>
 
 UIManager::UIManager(Ogre::Camera* camera)
 	: m_pUIScene(nullptr), m_pMarkupText(nullptr), m_pCamera(camera)
@@ -35,7 +37,11 @@ void UIManager::InitConfig()
 	Gorilla::Silverback* pSilverback = Gorilla::Silverback::getSingletonPtr();
 	if (pSilverback == nullptr || m_pCamera == nullptr)
 		return;
-	m_pUIScene = pSilverback->createScreen(m_pCamera->getViewport(), DEFAULT_ATLAS);
+	const char* sample = std::getenv("HELLO_SANDBOX_SAMPLE");
+	const bool crossfire = sample != nullptr && (std::strcmp(sample, "Sandbox20") == 0 || std::strcmp(sample, "20") == 0);
+	const char* atlas = crossfire ? "fonts/crossfire/crossfire" : DEFAULT_ATLAS;
+	if (crossfire) pSilverback->loadAtlas(atlas);
+	m_pUIScene = pSilverback->createScreen(m_pCamera->getViewport(), atlas);
 	if (m_pUIScene == nullptr)
 		return;
 

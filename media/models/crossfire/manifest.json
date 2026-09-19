@@ -1,0 +1,852 @@
+{
+  "generator": "tools/generate_crossfire_assets.py",
+  "units": "metres",
+  "assets": [
+    {
+      "file": "drone.mesh",
+      "vertices": 5188,
+      "triangles": 2588,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Vega",
+        "Crossfire/Signal",
+        "Crossfire/Rubber",
+        "Crossfire/Steel",
+        "Crossfire/Porcelain",
+        "Crossfire/Ivory",
+        "Crossfire/Slate"
+      ],
+      "bounds_min": [
+        -0.71,
+        -0.2775,
+        -0.575
+      ],
+      "bounds_max": [
+        0.71,
+        0.406,
+        0.895
+      ],
+      "pivot": "physics centre",
+      "forward": "+Z",
+      "muzzle": [
+        0,
+        -0.02,
+        0.9
+      ],
+      "size": [
+        1.42,
+        0.6835,
+        1.47
+      ],
+      "sha256": "b8614e69624d41168c43114bfd1b93688e7cac3af81642034a9b85b8daff0339"
+    },
+    {
+      "file": "drone_b.mesh",
+      "vertices": 5352,
+      "triangles": 2664,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Rook",
+        "Crossfire/RookLight",
+        "Crossfire/Rubber",
+        "Crossfire/Steel",
+        "Crossfire/Slate",
+        "Crossfire/Ivory"
+      ],
+      "bounds_min": [
+        -0.71,
+        -0.2775,
+        -0.575
+      ],
+      "bounds_max": [
+        0.71,
+        0.406,
+        0.895
+      ],
+      "pivot": "physics centre",
+      "forward": "+Z",
+      "muzzle": [
+        0,
+        -0.02,
+        0.9
+      ],
+      "size": [
+        1.42,
+        0.6835,
+        1.47
+      ],
+      "sha256": "7075f7577bea4b659e640cf86e3b0fdc6dc04af93b7a84cb321d4010808b46e4"
+    },
+    {
+      "file": "sentinel.mesh",
+      "vertices": 3490,
+      "triangles": 1784,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Steel",
+        "Crossfire/Slate",
+        "Crossfire/Porcelain",
+        "Crossfire/Enemy",
+        "Crossfire/EnemyLight",
+        "Crossfire/Rubber"
+      ],
+      "bounds_min": [
+        -0.88,
+        -0.843854,
+        -0.7765
+      ],
+      "bounds_max": [
+        0.88,
+        0.635,
+        1.11
+      ],
+      "pivot": "physics centre",
+      "forward": "+Z",
+      "muzzle": [
+        0,
+        0.2,
+        1.12
+      ],
+      "size": [
+        1.76,
+        1.478854,
+        1.8865
+      ],
+      "sha256": "0efe0665f6206e369bf477670c32d7cf9af26edcfed06d51b89ba5d7a641c572"
+    },
+    {
+      "file": "tile.mesh",
+      "vertices": 480,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/FloorPanel"
+      ],
+      "bounds_min": [
+        -2.0,
+        -0.24,
+        -2.0
+      ],
+      "bounds_max": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "pivot": "top surface",
+      "top_y": 0,
+      "size": [
+        4.0,
+        0.24,
+        4.0
+      ],
+      "sha256": "fdcaec5180fc428b050f70f5cf32369ecfb666a19e92c5939abeb283b8760cd6"
+    },
+    {
+      "file": "wall.mesh",
+      "vertices": 960,
+      "triangles": 440,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Ivory",
+        "Crossfire/Slate",
+        "Crossfire/Steel",
+        "Crossfire/Signal",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -2.0,
+        0.0,
+        -0.4
+      ],
+      "bounds_max": [
+        2.0,
+        2.39,
+        0.4
+      ],
+      "pivot": "ground",
+      "front": "+Z",
+      "size": [
+        4.0,
+        2.39,
+        0.8
+      ],
+      "sha256": "6040ba9564a237aebfcc098dd72e776e40b019bc396abb09f926b91fdb46319f"
+    },
+    {
+      "file": "cover.mesh",
+      "vertices": 1088,
+      "triangles": 516,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Ivory",
+        "Crossfire/Slate",
+        "Crossfire/Steel",
+        "Crossfire/Mark"
+      ],
+      "bounds_min": [
+        -1.4,
+        0.0,
+        -0.49
+      ],
+      "bounds_max": [
+        1.4,
+        0.95,
+        0.49
+      ],
+      "pivot": "ground",
+      "size": [
+        2.8,
+        0.95,
+        0.98
+      ],
+      "sha256": "78ea60397f2243f00cdea08b67cd7baf1758a2a377092b96e5c946041b1e0776"
+    },
+    {
+      "file": "core.mesh",
+      "vertices": 3240,
+      "triangles": 1696,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Steel",
+        "Crossfire/Slate",
+        "Crossfire/Porcelain",
+        "Crossfire/Signal",
+        "Crossfire/Teal"
+      ],
+      "bounds_min": [
+        -1.7,
+        0.0,
+        -1.7
+      ],
+      "bounds_max": [
+        1.7,
+        3.7,
+        1.7
+      ],
+      "pivot": "ground",
+      "size": [
+        3.4,
+        3.7,
+        3.4
+      ],
+      "sha256": "03757ab123aeec00b09b7623154d605a39400b4bd003229e0facce26b185421b"
+    },
+    {
+      "file": "gate.mesh",
+      "vertices": 1920,
+      "triangles": 880,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Slate",
+        "Crossfire/Signal",
+        "Crossfire/Steel",
+        "Crossfire/Ivory"
+      ],
+      "bounds_min": [
+        -2.75,
+        0.0,
+        -0.75
+      ],
+      "bounds_max": [
+        2.75,
+        3.7,
+        0.8185
+      ],
+      "pivot": "ground",
+      "front": "+Z",
+      "collision_note": "Open passage; do not use one convex hull as a traversable gate.",
+      "size": [
+        5.5,
+        3.7,
+        1.5685
+      ],
+      "sha256": "d24e18df39c2d6f91f5307a10c70e064d758911ef27ef54bb729673ac3fa6365"
+    },
+    {
+      "file": "pipe.mesh",
+      "vertices": 2064,
+      "triangles": 1040,
+      "materials": [
+        "Crossfire/Teal",
+        "Crossfire/Steel",
+        "Crossfire/Graphite"
+      ],
+      "bounds_min": [
+        -2,
+        0.0,
+        -0.32
+      ],
+      "bounds_max": [
+        2,
+        0.37,
+        0.32
+      ],
+      "pivot": "ground",
+      "length_axis": "X",
+      "size": [
+        4,
+        0.37,
+        0.64
+      ],
+      "sha256": "6589d7ececa63e39f752f200780a60894daa76fb5d6cfd8e3ca57476ba1c6f24"
+    },
+    {
+      "file": "edge.mesh",
+      "vertices": 960,
+      "triangles": 440,
+      "materials": [
+        "Crossfire/Slate",
+        "Crossfire/Porcelain",
+        "Crossfire/Graphite",
+        "Crossfire/Signal"
+      ],
+      "bounds_min": [
+        -2.0,
+        0.0,
+        -0.35
+      ],
+      "bounds_max": [
+        2.0,
+        0.65,
+        0.406
+      ],
+      "pivot": "ground",
+      "front": "+Z",
+      "size": [
+        4.0,
+        0.65,
+        0.756
+      ],
+      "sha256": "d56d48bbd22112289fdd9875a3eb5dcad6c011eff14a93c356d0147901620e6b"
+    },
+    {
+      "file": "console.mesh",
+      "vertices": 1280,
+      "triangles": 604,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Slate",
+        "Crossfire/Rubber",
+        "Crossfire/Teal",
+        "Crossfire/Signal"
+      ],
+      "bounds_min": [
+        -0.6,
+        0.0,
+        -0.45
+      ],
+      "bounds_max": [
+        0.6,
+        1.314,
+        0.45
+      ],
+      "pivot": "ground",
+      "front": "+Z",
+      "size": [
+        1.2,
+        1.314,
+        0.9
+      ],
+      "sha256": "b23a768af08f1a63ff9d4dfceae92aaa50e2125f3da04fbe713682099477d75b"
+    },
+    {
+      "file": "dock.mesh",
+      "vertices": 1568,
+      "triangles": 768,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Slate",
+        "Crossfire/Teal",
+        "Crossfire/Porcelain",
+        "Crossfire/Signal",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -1.2,
+        0.0,
+        -1.2
+      ],
+      "bounds_max": [
+        1.2,
+        0.362,
+        1.2
+      ],
+      "pivot": "ground",
+      "size": [
+        2.4,
+        0.362,
+        2.4
+      ],
+      "sha256": "5eed83e18517830d8bd2b94ddb1945d22d7e540c35981299d87ac0b265e98b13"
+    },
+    {
+      "file": "vent.mesh",
+      "vertices": 1424,
+      "triangles": 720,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Steel",
+        "Crossfire/Rubber",
+        "Crossfire/Slate"
+      ],
+      "bounds_min": [
+        -0.81,
+        0.0,
+        -0.8
+      ],
+      "bounds_max": [
+        0.81,
+        0.7625,
+        0.8
+      ],
+      "pivot": "ground",
+      "size": [
+        1.62,
+        0.7625,
+        1.6
+      ],
+      "sha256": "9c38ee2ae2f716594fd8353b7e545fe38a01d219150d087b355163eedc8bed5c"
+    },
+    {
+      "file": "deck_marks.mesh",
+      "vertices": 498,
+      "triangles": 248,
+      "materials": [
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -0.8,
+        0,
+        -1.5
+      ],
+      "bounds_max": [
+        0.8,
+        0.006,
+        1.5
+      ],
+      "pivot": "ground",
+      "forward": "+Z",
+      "collision_note": "Stencil only, with empty space; prefer a visual module and disable shadow casting.",
+      "size": [
+        1.6,
+        0.006,
+        3.0
+      ],
+      "sha256": "ae6f075f92c879c79a56bbedbb411420549daed21ce975b7f73bdd10ec3794b8"
+    },
+    {
+      "file": "base.mesh",
+      "vertices": 2016,
+      "triangles": 924,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Slate",
+        "Crossfire/Signal"
+      ],
+      "bounds_min": [
+        -10.2,
+        -0.79,
+        -12.2
+      ],
+      "bounds_max": [
+        10.2,
+        -0.24,
+        12.2
+      ],
+      "pivot": "tile origin",
+      "top_y": -0.24,
+      "size": [
+        20.4,
+        0.55,
+        24.4
+      ],
+      "sha256": "08a7fefc0770da6f441587f1d366ebd2039222e0ba701b27eef6bde40aa40bfe"
+    },
+    {
+      "file": "deck_marks_08.mesh",
+      "vertices": 594,
+      "triangles": 296,
+      "materials": [
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -0.8,
+        0,
+        -1.5
+      ],
+      "bounds_max": [
+        0.8,
+        0.006,
+        1.5
+      ],
+      "pivot": "ground",
+      "forward": "+Z",
+      "size": [
+        1.6,
+        0.006,
+        3.0
+      ],
+      "sha256": "23f3c5e4d366f9360a1193e3f19ec78ebe2aff81be2031ce9320091a838dc726"
+    },
+    {
+      "file": "deck_marks_09.mesh",
+      "vertices": 570,
+      "triangles": 284,
+      "materials": [
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -0.8,
+        0,
+        -1.5
+      ],
+      "bounds_max": [
+        0.8,
+        0.006,
+        1.5
+      ],
+      "pivot": "ground",
+      "forward": "+Z",
+      "size": [
+        1.6,
+        0.006,
+        3.0
+      ],
+      "sha256": "d7dc1e62eb08977c7161e59b0fe295a18facfc930a2c521fd1cb2c396b309765"
+    },
+    {
+      "file": "relay_tower.mesh",
+      "vertices": 4272,
+      "triangles": 2108,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Porcelain",
+        "Crossfire/Slate",
+        "Crossfire/Ivory",
+        "Crossfire/Steel",
+        "Crossfire/Signal",
+        "Crossfire/Teal"
+      ],
+      "bounds_min": [
+        -1.6,
+        0.0,
+        -1.4
+      ],
+      "bounds_max": [
+        1.6,
+        5.965,
+        1.4
+      ],
+      "pivot": "ground",
+      "front": "-Z",
+      "collision_note": "Place behind the court wall; dish convex hull fills the bowl.",
+      "size": [
+        3.2,
+        5.965,
+        2.8
+      ],
+      "sha256": "c97ee151159ca9d0a4a970c35968864784bbdcdfa14300af3ad69aeda0c88faa"
+    },
+    {
+      "file": "cooling_stack.mesh",
+      "vertices": 4640,
+      "triangles": 2404,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Slate",
+        "Crossfire/Porcelain",
+        "Crossfire/Steel",
+        "Crossfire/Ivory",
+        "Crossfire/Rubber",
+        "Crossfire/Teal"
+      ],
+      "bounds_min": [
+        -1.25,
+        0.0,
+        -1.25
+      ],
+      "bounds_max": [
+        1.25,
+        2.93,
+        1.25
+      ],
+      "pivot": "ground",
+      "size": [
+        2.5,
+        2.93,
+        2.5
+      ],
+      "sha256": "f4b14259e661955c6833056666592cf9b155aa0e6f3b174e0384b02d01e1b44f"
+    },
+    {
+      "file": "service_trench.mesh",
+      "vertices": 2784,
+      "triangles": 1276,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Steel",
+        "Crossfire/Slate",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -0.325,
+        -0.019,
+        -3.0
+      ],
+      "bounds_max": [
+        0.325,
+        0.03,
+        3.0
+      ],
+      "pivot": "floor",
+      "length_axis": "Z",
+      "size": [
+        0.65,
+        0.049,
+        6.0
+      ],
+      "sha256": "edc3145b3dae5576d850409dbbb26e3850571252b55c24e3e80f6cdec891021a"
+    },
+    {
+      "file": "service_elbow.mesh",
+      "vertices": 1824,
+      "triangles": 908,
+      "materials": [
+        "Crossfire/Teal",
+        "Crossfire/Steel",
+        "Crossfire/Graphite"
+      ],
+      "bounds_min": [
+        -0.05,
+        0.0,
+        -0.05
+      ],
+      "bounds_max": [
+        1.14,
+        0.36,
+        1.14
+      ],
+      "pivot": "ground",
+      "bend": "+X to +Z",
+      "size": [
+        1.19,
+        0.36,
+        1.19
+      ],
+      "sha256": "1304a14fb6c43b8ce26ac8e7beff17f16b2b7e80c130c35e2e782094442139d4"
+    },
+    {
+      "file": "sector_07.mesh",
+      "vertices": 1440,
+      "triangles": 660,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Slate",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -1.075,
+        0.0,
+        -0.089
+      ],
+      "bounds_max": [
+        1.075,
+        0.92,
+        0.06
+      ],
+      "pivot": "sign bottom",
+      "front": "-Z",
+      "size": [
+        2.15,
+        0.92,
+        0.149
+      ],
+      "sha256": "49b66740b4884573d9ce94f2a310d390bf8dba00b102186a2b0073bf32d4cb79"
+    },
+    {
+      "file": "sector_08.mesh",
+      "vertices": 1824,
+      "triangles": 836,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Slate",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -1.075,
+        0.0,
+        -0.089
+      ],
+      "bounds_max": [
+        1.075,
+        0.92,
+        0.06
+      ],
+      "pivot": "sign bottom",
+      "front": "-Z",
+      "size": [
+        2.15,
+        0.92,
+        0.149
+      ],
+      "sha256": "6eb0c23d6d8e1e26c719dd4ab2320747d9d4eaf27b5a444cf154401ec6f9cc74"
+    },
+    {
+      "file": "sector_09.mesh",
+      "vertices": 1728,
+      "triangles": 792,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Teal",
+        "Crossfire/Ivory",
+        "Crossfire/Slate",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -1.075,
+        0.0,
+        -0.089
+      ],
+      "bounds_max": [
+        1.075,
+        0.92,
+        0.06
+      ],
+      "pivot": "sign bottom",
+      "front": "-Z",
+      "size": [
+        2.15,
+        0.92,
+        0.149
+      ],
+      "sha256": "06af28fa2ba71c6b06385a0c4d8c9a47cdfdf27dd34358b2d7faa0b76ed19b78"
+    },
+    {
+      "file": "rear_plinth.mesh",
+      "vertices": 672,
+      "triangles": 308,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/Slate",
+        "Crossfire/Teal"
+      ],
+      "bounds_min": [
+        -10.2,
+        -0.79,
+        -1.9
+      ],
+      "bounds_max": [
+        10.2,
+        -0.14,
+        1.9375
+      ],
+      "pivot": "court origin",
+      "top_y": -0.14,
+      "size": [
+        20.4,
+        0.65,
+        3.8375
+      ],
+      "sha256": "d2ac59406632b0b53c9196adb8b0e9703428f5faf7d595278a8df1e100dde450"
+    },
+    {
+      "file": "court_margin_side.mesh",
+      "vertices": 552,
+      "triangles": 268,
+      "materials": [
+        "Crossfire/ServiceBand",
+        "Crossfire/Mark",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -0.5,
+        0.0,
+        -12.0
+      ],
+      "bounds_max": [
+        0.5,
+        0.042,
+        12.0
+      ],
+      "pivot": "ground",
+      "inner_edge_x": -0.5,
+      "size": [
+        1.0,
+        0.042,
+        24.0
+      ],
+      "sha256": "93758a1417f8a5f69de9983349694c2064cf94cf8f258c0325d69f96b4657f19"
+    },
+    {
+      "file": "court_margin_front.mesh",
+      "vertices": 456,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/ServiceBand",
+        "Crossfire/Mark",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -9.0,
+        0.0,
+        -0.5
+      ],
+      "bounds_max": [
+        9.0,
+        0.042,
+        0.5
+      ],
+      "pivot": "ground",
+      "inner_edge_z": 0.5,
+      "size": [
+        18.0,
+        0.042,
+        1.0
+      ],
+      "sha256": "ed391344d7b417a96bb51b37a442303350940607747f739089268377315a5510"
+    },
+    {
+      "file": "court_margin_rear.mesh",
+      "vertices": 456,
+      "triangles": 220,
+      "materials": [
+        "Crossfire/ServiceBand",
+        "Crossfire/Mark",
+        "Crossfire/Amber"
+      ],
+      "bounds_min": [
+        -9.0,
+        0.0,
+        -0.75
+      ],
+      "bounds_max": [
+        9.0,
+        0.042,
+        0.75
+      ],
+      "pivot": "ground",
+      "inner_edge_z": -0.75,
+      "size": [
+        18.0,
+        0.042,
+        1.5
+      ],
+      "sha256": "5baf2937677e7e05fc55b1a67aae4d4ef50750b6c60476acf4a52d9e1bbd0003"
+    }
+  ]
+}

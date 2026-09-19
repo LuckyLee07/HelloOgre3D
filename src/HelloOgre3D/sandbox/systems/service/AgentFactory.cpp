@@ -40,6 +40,8 @@ namespace
 		{ "component_probe", true, true, true, true, true, nullptr, false },
 		{ "movement_only", false, false, false, false, false, nullptr, false },
 		{ "animated_probe", true, true, true, true, true, "models/futuristic_soldier/futuristic_soldier_anim.mesh", true },
+		{ "crossfire_drone", true, true, true, false, false, "models/crossfire/drone.mesh", false },
+		{ "crossfire_sentinel", true, true, true, false, false, "models/crossfire/sentinel.mesh", false },
 	};
 
 	const AgentAssemblyProfile& ResolveAgentAssemblyProfile(const char* profileName)
@@ -130,11 +132,40 @@ AgentObject* AgentFactory::CreateAgentWithProfile(ObjectManager* objectManager, 
 {
 	const AgentAssemblyProfile& profile = ResolveAgentAssemblyProfile(profileName);
 	RenderComponent* renderComp = profile.meshFile != nullptr ? CreateAgentMeshRender(profile) : CreateAgentRender();
-	btRigidBody* rigidBody = CreateAgentRigidBody();
+	const bool drone = std::strcmp(profile.name, "crossfire_drone") == 0;
+	const bool sentinel = std::strcmp(profile.name, "crossfire_sentinel") == 0;
+	btRigidBody* rigidBody = drone ? PhysicsFactory::CreateRigidBodyBox(1.3f, 1.4f, 1.5f)
+		: sentinel ? PhysicsFactory::CreateRigidBodyBox(1.8f, 1.6f, 1.9f) : CreateAgentRigidBody();
 
 	AgentObject* agent = new AgentObject(renderComp, rigidBody);
 	agent->setAgentType(agentType);
 	AttachAgentComponents(agent, profile);
+	if (drone || sentinel)
+	{
+		rigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+		rigidBody->setFriction(0.15f);
+		agent->SetMass(sentinel ? 80.0f : 25.0f);
+		AgentLocomotion* locomotion = agent->GetLocomotionComponent();
+		if (locomotion != nullptr)
+		{
+			// Configure navigation dimensions without rebuilding the box collider.
+			locomotion->SetHeight(sentinel ? 1.6f : 1.4f);
+			locomotion->SetRadius(sentinel ? 0.95f : 0.75f);
+		}
+		if (drone && renderComp != nullptr)
+			renderComp->SetVisualOffset(Ogre::Vector3(0.0f, 0.25f, 0.0f));
+		AIController* ai = agent->GetAIComponent();
+		if (ai != nullptr)
+		{
+			Blackboard* blackboard = ai->GetBlackboard();
+			blackboard->SetBool("crossfire.enabled", true);
+			blackboard->SetBool("crossfire.sentinel", sentinel);
+			blackboard->SetBool("crossfire.shield", sentinel);
+			blackboard->SetFloat("crossfire.shieldCos", 0.5f);
+			blackboard->SetFloat("crossfire.damage", sentinel ? 12.0f : 10.0f);
+			blackboard->SetVec3("crossfire.muzzle", sentinel ? Ogre::Vector3(0.0f, 0.2f, 1.12f) : Ogre::Vector3(0.0f, -0.02f, 0.90f));
+		}
+	}
 
 	if (filepath != nullptr)
 	{

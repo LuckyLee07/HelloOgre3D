@@ -40,11 +40,16 @@
 - `ScriptService` 已导出给 Lua 全局 `SandboxScript`，旧 sample 的 `CallFile` 不再通过 `SandboxMgr` 纯转发；`SandboxServices.scriptService` 供后续 C++ 脚本门面收口。
 
 - `CreateBlockBox` 按 PlaneGenerator 实际面轴分配尺寸，避免旧 BoxGenerator 在 ±X 面交换高度/深度；Bullet 继续使用原输入尺寸。`HELLO_SANDBOX_SMOKE_TEST=1` 检查实际 mesh bounds（扣除 Ogre padding），smoke 要求至少一个非等边盒体通过。
-- `SandboxScene:ConfigureDirectionalShadows(light, enabled)` 转发 runtime 阴影适配，返回配置成功布尔值，Light 与渲染目标均不向 Lua 转移所有权；无 callback/ref 或持久裸指针。头文件、`.pkg` 的 `$cfile` 引用与局部 tolua 绑定同步；不全量运行生成器。资源缺失/配置异常返回 false，首次渲染仍需真实窗口验证。
+- `SandboxScene:ConfigureDirectionalShadows(light, enabled, farDistance=32)` 转发 runtime 阴影适配，返回配置成功布尔值，可选范围需为有限的 1–200 m，Sandbox20 使用 65 m；Light 与渲染目标均不向 Lua 转移所有权；无 callback/ref 或持久裸指针。头文件、`.pkg` 的 `$cfile` 引用与局部 tolua 绑定同步；不全量运行生成器。资源缺失/配置异常返回 false，首次渲染仍需真实窗口验证。
+
+- `SandboxRaycast:TraceProjectile(from,to,ignoreObjectId,hitPoint)` 使用与实弹共用的 capsule 尺寸和枪口出生偏移，忽略自己及所有弹丸，保留设备、友军和残骸；检测初始重叠。`PickSurface(from,to,hitPoint)` 用精确射线拾取实体表面，忽略单位和弹丸。两者返回首个对象 ID（0 清晰，-1 无效/未知），输出借用的 Vector3 就地更新，清晰时为终点；允许输入/输出别名，不持有 userdata。查询前刷新 Bullet AABB，暂停规划也反映新关卡位置；结果是当前物理快照，不保证动态单位在飞行期间不进入弹道。接口由现有 `.pkg` 的头文件引用与局部绑定同步。
+
+- `UIManager` 仅在 `HELLO_SANDBOX_SAMPLE=Sandbox20` / `20` 时选择独立 Crossfire atlas，其他 sample 保留原 DejaVu atlas。Lua 将 UTF-8 转为 Gorilla 字体 bank 标记，图元由 UIManager 持有；不改第三方渲染器或借用 FGUI 裸指针。字库、生成方式与 OFL/DejaVu 授权见[字库说明](../../media/fonts/crossfire/README.md)。
 
 ## 5. 约束与红线
 
-- **P5**：AgentFactory 已给普通 Agent 默认装配 AI/Attrib/Weapon/Anim 这组可复用运行组件，并新增轻量 profile 表；RuntimeDiag 通过 `component_probe` profile 覆盖非 Soldier `anim`/`bodyAsm` 与武器组件，通过 `animated_probe` 覆盖普通 `AgentObject` 挂 animated mesh、配置 body ASM 并请求状态切换；SoldierFactory 已支持 `ai_soldier` / `player_soldier` / `commander_soldier` 控制 profile，后者证明武器可从 Soldier 装配中拿掉；profile 仍是 C++ 内置表且对象类型仍绑死 `SoldierObject`，新 NPC 泛化仍待推进。
+- Crossfire 新增 `crossfire_drone` / `crossfire_sentinel` 普通 Agent profile，装 AI/Attrib/Weapon 与真实盒体，不装骨骼 Anim；保留 mesh 的 submesh 材质、配置非骨骼枪口，悬浮/后座只作用于 RenderInterpolated 显示层。独立消费入口 Sandbox20，普通 sample 不走该 opt-in 分支。
+- **P5**：AgentFactory 已给普通 Agent 默认装配 AI/Attrib/Weapon/Anim 这组可复用运行组件，并新增轻量 profile 表；RuntimeDiag 通过 `component_probe` profile 覆盖非 Soldier `anim`/`bodyAsm` 与武器组件，通过 `animated_probe` 覆盖普通 `AgentObject` 挂 animated mesh、配置 body ASM 并请求状态切换；SoldierFactory 已支持 `ai_soldier` / `player_soldier` / `commander_soldier` 控制 profile，后者证明武器可从 Soldier 装配中拿掉；profile 仍是 C++ 内置表，SoldierFactory 仍产 `SoldierObject`；Crossfire 已补普通 Agent 战斗实例，外部数据化与更多 NPC 泛化仍待推进。
 - **C1/C2 进展**：UIService 空壳已删除；UIManager 由应用层构造并导出为 Lua 全局 `SandboxUI`，Gorilla UI frame/color API 不再通过 SandboxMgr 转发（2026-07-11 另加 `CreatePolygon`→`UIPolygon` 封装 `Gorilla::Polygon` 矢量多边形，供 Sandbox19 圆盘雷达画浅蓝圆盘/圆点 blip/三角箭头，手术式补 tolua 绑定、C++ 持所有权）；AgentConfigService 由 GameManager 持有并导出为 Lua 全局 `SandboxAgentConfig`，CppFSM flag 不再由 SandboxMgr 持有；CameraService 由 GameManager 持有并导出为 Lua 全局 `SandboxCamera`，相机/profile 查询不再通过 SandboxMgr 转发；NavigationService 由 GameManager 持有并导出为 Lua 全局 `SandboxNav`，导航配置/构建/查询不再通过 SandboxMgr 转发；RaycastService 由 GameManager 持有并导出为 Lua 全局 `SandboxRaycast`，raycast 不再由 SandboxMgr 实现；SceneService 由 GameManager 持有并导出为 Lua 全局 `SandboxScene`，场景/light/material API 不再通过 SandboxMgr 纯转发；ScriptService 由 GameManager 持有并导出为 Lua 全局 `SandboxScript`，CallFile 不再通过 SandboxMgr 纯转发。SandboxMgr class/global 已删除。
 - SceneFactory 不应 include `GameManager.h`；root scene node 通过 `SetRootSceneNode` 注入。
 - UIManager 不应 include `GameManager.h`；camera 通过构造注入。

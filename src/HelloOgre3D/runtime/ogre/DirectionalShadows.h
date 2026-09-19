@@ -1,7 +1,9 @@
 #ifndef HELLO_RUNTIME_DIRECTIONAL_SHADOWS_H
 #define HELLO_RUNTIME_DIRECTIONAL_SHADOWS_H
 
+#include <cmath>
 #include "OgreException.h"
+#include "OgreStringConverter.h"
 #include "OgreLight.h"
 #include "OgreLogManager.h"
 #include "OgreMaterial.h"
@@ -11,9 +13,9 @@
 namespace RuntimeOgre
 {
 // The light and shadow render targets remain owned by SceneManager.
-inline bool ConfigureDirectionalShadows(Ogre::SceneManager* scene, Ogre::Light* light, bool enabled)
+inline bool ConfigureDirectionalShadows(Ogre::SceneManager* scene, Ogre::Light* light, bool enabled, float farDistance = 32.0f)
 {
-	if (scene == nullptr)
+	if (scene == nullptr || !std::isfinite(farDistance) || farDistance < 1.0f || farDistance > 200.0f)
 		return false;
 	if (!enabled)
 	{
@@ -44,14 +46,14 @@ inline bool ConfigureDirectionalShadows(Ogre::SceneManager* scene, Ogre::Light* 
 		scene->setShadowTextureReceiverMaterial("Relay/ShadowReceiver");
 		scene->setShadowTextureSelfShadow(true);
 		scene->setShadowCasterRenderBackFaces(false);
-		scene->setShadowFarDistance(32.0f);
+		scene->setShadowFarDistance(farDistance);
 		scene->setShadowDirectionalLightExtrusionDistance(100.0f);
 		light->setCastShadows(true);
 		light->setShadowNearClipDistance(0.1f);
 		light->setShadowFarClipDistance(220.0f);
 		scene->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);
 		Ogre::LogManager::getSingleton().logMessage(
-			"[DirectionalShadows] texture modulative 1536 R32F PCF4 far=32 clip=0.1:220");
+			"[DirectionalShadows] texture modulative 1536 R32F PCF4 far=" + Ogre::StringConverter::toString(farDistance) + " clip=0.1:220");
 		return true;
 	}
 	catch (const Ogre::Exception& error)

@@ -15,6 +15,8 @@ TOLUA_API int  tolua_SandboxToLua_open (lua_State* tolua_S);
 
 #include <string>
 #include <vector>
+#include <limits>
+#include <cmath>
 #include "Ogre.h"
 #include "ois/includes/OISKeyboard.h"
 #include "recast/include/Recast.h"
@@ -2181,6 +2183,52 @@ static int tolua_SandboxToLua_RaycastService_RayCastObjectId00(lua_State* tolua_
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* methods: read-only physical queries of class RaycastService */
+static int tolua_SandboxToLua_RaycastService_TraceProjectile00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S, 1, "const RaycastService", 0, &error)
+		|| !tolua_isusertype(tolua_S, 2, "const Ogre::Vector3", 0, &error)
+		|| !tolua_isusertype(tolua_S, 3, "const Ogre::Vector3", 0, &error)
+		|| !tolua_isnumber(tolua_S, 4, 0, &error)
+		|| !tolua_isusertype(tolua_S, 5, "Ogre::Vector3", 0, &error)
+		|| !tolua_isnoobj(tolua_S, 6, &error))
+		return tolua_error(tolua_S, "#ferror in function 'TraceProjectile'.", &error), 0;
+	const RaycastService* self = static_cast<const RaycastService*>(tolua_tousertype(tolua_S, 1, nullptr));
+	const Ogre::Vector3* from = static_cast<const Ogre::Vector3*>(tolua_tousertype(tolua_S, 2, nullptr));
+	const Ogre::Vector3* to = static_cast<const Ogre::Vector3*>(tolua_tousertype(tolua_S, 3, nullptr));
+	Ogre::Vector3* point = static_cast<Ogre::Vector3*>(tolua_tousertype(tolua_S, 5, nullptr));
+	const lua_Number ignored = tolua_tonumber(tolua_S, 4, -1);
+	int result = -1;
+	if (self != nullptr && from != nullptr && to != nullptr && point != nullptr
+		&& ignored >= 0 && ignored <= std::numeric_limits<int>::max() && std::floor(ignored) == ignored)
+		result = self->TraceProjectile(*from, *to, static_cast<int>(ignored), *point);
+	else if (point != nullptr) *point = Ogre::Vector3::ZERO;
+	tolua_pushnumber(tolua_S, result);
+	return 1;
+}
+
+static int tolua_SandboxToLua_RaycastService_PickSurface00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S, 1, "const RaycastService", 0, &error)
+		|| !tolua_isusertype(tolua_S, 2, "const Ogre::Vector3", 0, &error)
+		|| !tolua_isusertype(tolua_S, 3, "const Ogre::Vector3", 0, &error)
+		|| !tolua_isusertype(tolua_S, 4, "Ogre::Vector3", 0, &error)
+		|| !tolua_isnoobj(tolua_S, 5, &error))
+		return tolua_error(tolua_S, "#ferror in function 'PickSurface'.", &error), 0;
+	const RaycastService* self = static_cast<const RaycastService*>(tolua_tousertype(tolua_S, 1, nullptr));
+	const Ogre::Vector3* from = static_cast<const Ogre::Vector3*>(tolua_tousertype(tolua_S, 2, nullptr));
+	const Ogre::Vector3* to = static_cast<const Ogre::Vector3*>(tolua_tousertype(tolua_S, 3, nullptr));
+	Ogre::Vector3* point = static_cast<Ogre::Vector3*>(tolua_tousertype(tolua_S, 4, nullptr));
+	int result = -1;
+	if (self != nullptr && from != nullptr && to != nullptr && point != nullptr)
+		result = self->PickSurface(*from, *to, *point);
+	else if (point != nullptr) *point = Ogre::Vector3::ZERO;
+	tolua_pushnumber(tolua_S, result);
+	return 1;
+}
+
 /* method: SetSkyBox of class  SceneService */
 #ifndef TOLUA_DISABLE_tolua_SandboxToLua_SceneService_SetSkyBox00
 static int tolua_SandboxToLua_SceneService_SetSkyBox00(lua_State* tolua_S)
@@ -2304,14 +2352,15 @@ static int tolua_SandboxToLua_SceneService_ConfigureDirectionalShadows00(lua_Sta
 	if (!tolua_isusertype(tolua_S,1,"SceneService",0,&error)
 		|| !tolua_isusertype(tolua_S,2,"Ogre::Light",0,&error)
 		|| !tolua_isboolean(tolua_S,3,0,&error)
-		|| !tolua_isnoobj(tolua_S,4,&error))
+		|| !tolua_isnumber(tolua_S,4,1,&error)
+		|| !tolua_isnoobj(tolua_S,5,&error))
 		return tolua_error(tolua_S,"#ferror in function 'ConfigureDirectionalShadows'.",&error), 0;
 	SceneService* self = static_cast<SceneService*>(tolua_tousertype(tolua_S,1,0));
 	if (self == nullptr)
 		return tolua_error(tolua_S,"invalid 'self' in function 'ConfigureDirectionalShadows'",nullptr), 0;
 	Ogre::Light* light = static_cast<Ogre::Light*>(tolua_tousertype(tolua_S,2,0));
 	const bool enabled = tolua_toboolean(tolua_S,3,0) != 0;
-	tolua_pushboolean(tolua_S,self->ConfigureDirectionalShadows(light, enabled));
+	tolua_pushboolean(tolua_S,self->ConfigureDirectionalShadows(light, enabled, static_cast<float>(tolua_tonumber(tolua_S,4,32.0f))));
 	return 1;
 }
 
@@ -7358,6 +7407,20 @@ static int tolua_SandboxToLua_WeaponComponent_ShootBullet00(lua_State* tolua_S)
 #endif
 }
 #endif //#ifndef TOLUA_DISABLE
+
+/* method: GetMuzzlePosition of class WeaponComponent */
+static int tolua_SandboxToLua_WeaponComponent_GetMuzzlePosition00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S, 1, "WeaponComponent", 0, &error) || !tolua_isnoobj(tolua_S, 2, &error))
+		return tolua_error(tolua_S, "#ferror in function 'GetMuzzlePosition'.", &error), 0;
+	WeaponComponent* self = static_cast<WeaponComponent*>(tolua_tousertype(tolua_S, 1, nullptr));
+	if (self == nullptr) return tolua_error(tolua_S, "invalid 'self' in function 'GetMuzzlePosition'", nullptr), 0;
+	Ogre::Vector3* position = Mtolua_new((Ogre::Vector3)(self->GetMuzzlePosition()));
+	tolua_pushusertype(tolua_S, position, "Ogre::Vector3");
+	tolua_register_gc(tolua_S, lua_gettop(tolua_S));
+	return 1;
+}
 
 /* method: ShootBulletAt of class WeaponComponent */
 static int tolua_SandboxToLua_WeaponComponent_ShootBulletAt00(lua_State* tolua_S)
@@ -17054,6 +17117,8 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
   tolua_cclass(tolua_S,"RaycastService","RaycastService","",NULL);
   tolua_beginmodule(tolua_S,"RaycastService");
    tolua_function(tolua_S,"RayCastObjectId",tolua_SandboxToLua_RaycastService_RayCastObjectId00);
+   tolua_function(tolua_S,"TraceProjectile",tolua_SandboxToLua_RaycastService_TraceProjectile00);
+   tolua_function(tolua_S,"PickSurface",tolua_SandboxToLua_RaycastService_PickSurface00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"SceneService","SceneService","",NULL);
   tolua_beginmodule(tolua_S,"SceneService");
@@ -17240,6 +17305,7 @@ TOLUA_API int tolua_SandboxToLua_open (lua_State* tolua_S)
    tolua_function(tolua_S,"SyncToHandBone",tolua_SandboxToLua_WeaponComponent_SyncToHandBone00);
    tolua_function(tolua_S,"ShootBullet",tolua_SandboxToLua_WeaponComponent_ShootBullet00);
    tolua_function(tolua_S,"ShootBulletAt",tolua_SandboxToLua_WeaponComponent_ShootBulletAt00);
+   tolua_function(tolua_S,"GetMuzzlePosition",tolua_SandboxToLua_WeaponComponent_GetMuzzlePosition00);
    tolua_function(tolua_S,"SetAmmo",tolua_SandboxToLua_WeaponComponent_SetAmmo00);
    tolua_function(tolua_S,"GetAmmo",tolua_SandboxToLua_WeaponComponent_GetAmmo00);
    tolua_function(tolua_S,"SetMaxAmmo",tolua_SandboxToLua_WeaponComponent_SetMaxAmmo00);

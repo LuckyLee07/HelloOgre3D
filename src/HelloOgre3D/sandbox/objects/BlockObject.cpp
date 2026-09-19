@@ -15,6 +15,7 @@
 #include "OgreParticleEmitter.h"
 #include "components/ComponentKeys.h"
 #include "components/physics/PhysicsComponent.h"
+#include "components/combat/WeaponComponent.h"
 #include "components/render/RenderComponent.h"
 #include "event/SandboxEventPayload.h"
 #include "systems/service/SceneFactory.h"
@@ -97,7 +98,8 @@ void BlockObject::Init()
 
 void BlockObject::Update(int deltaMsec)
 {
-	(void)deltaMsec;
+	CrossfireProjectileComponent* projectile = GetComponentAs<CrossfireProjectileComponent>("crossfire.projectile");
+	if (projectile != nullptr) projectile->update(deltaMsec);
 	this->updateWorldTransform();
 }
 
@@ -200,6 +202,8 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	int objType = pCollideObj->GetObjType();
 	if (objType == OBJ_TYPE_BULLET) // 子弹类型
 	{
+		CrossfireProjectileComponent* projectile = pCollideObj->GetComponentAs<CrossfireProjectileComponent>("crossfire.projectile");
+		if (projectile != nullptr && !projectile->Consume()) return;
 		pCollideObj->SetNeedClear(); // 标记为清理
 		SpawnBulletImpactWithServices(collision, GetSandboxServices());
 		BlockObject* bullet = dynamic_cast<BlockObject*>(pCollideObj);
@@ -211,9 +215,9 @@ void BlockObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 			BaseObject* bulletOwner = bullet->GetOwner();
 			tactics->publishTacticalEvent(
 				SandboxEventTypes::BulletImpact(),
-				bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
+				projectile != nullptr ? static_cast<int>(projectile->sourceId) : bulletOwner != nullptr ? static_cast<int>(bulletOwner->GetObjId()) : -1,
 				static_cast<int>(GetObjId()),
-				bulletOwner != nullptr ? bulletOwner->GetTeamId() : -1,
+				projectile != nullptr ? static_cast<int>(projectile->sourceTeam) : bulletOwner != nullptr ? bulletOwner->GetTeamId() : -1,
 				GetTeamId(),
 				collision.pointA_,
 				0,

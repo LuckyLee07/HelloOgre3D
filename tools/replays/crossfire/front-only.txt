@@ -1,0 +1,9 @@
+400 key_press 1
+600 mouse_down 675 284 1
+650 mouse_up 675 284 1
+1000 key_press 2
+1200 mouse_down 643 233 1
+1250 mouse_up 643 233 1
+2000 key_press SPACE
+38000 key_press R
+39500 quit

@@ -29,6 +29,7 @@
 - `AgentLocomotion::ForceToSeparate` 保留 OpenSteer 邻域与常规 1/d 权重；距离小于 1mm 时限制权重，完全重合时按对象 id 选择相反水平力，避免 0/0。`HELLO_LOCOMOTION_SELF_TEST=1` 在 Sandbox19 验证真实绑定的边界行为，见 [稳定性记录](../stability-2026-09-06.md)。
 
 - `IComponent`：onAttach/onDetach/update；`getUpdateOrder()` 显式声明组件更新顺序；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
+- Crossfire 实弹的 `CrossfireProjectileComponent` 保存来源 ID/队伍/伤害/射向快照，不持射手裸指针。墙体与 Agent 共用一次性消费、友军无伤、4 秒 TTL；仅 crossfire 弹禁重力。被击刚体朝向判断正面 120° 盾，命中沿 SetHealth 并写 Blackboard 反馈。RenderComponent 的机器人微动只改最终显示，不改变物理真源。验证入口 `python3 tools/run_crossfire_gate.py --mode physics`。
 - 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。`WeaponComponent::DoShootBullet` 在真实发射入口创建短寿命 `MuzzleFlash`，并继续通过原有 ObjectFactory 生成物理子弹；粒子节点登记到 ObjectManager 的延迟清理队列，重开时和 `BulletImpact` 一并清除。该反馈作用于所有武器路径，不能由 Sandbox19 HUD 伪造。
 
 ## 5. 约束与红线
@@ -75,3 +76,5 @@ Sandbox19 活跃玩法的鼠标相对位移经 InputManager / GameManager 先旋
 `AgentLocomotion::FaceDirection(direction, deltaTimeInMillis)` 供玩家 FOLLOW、C++ FSM 和 Lua DT/BT 共用：只取水平朝向，以18/s响应、540°/s上限沿最短角转身，误差≤8°返回true。路径切换不再直接跳转身体方向。基础 `SetForward` 仍是底层直接设置接口。
 
 PlayerController 的相对移动采用前向/后向/横向速度组合：前向保留已有冲刺；后退最多2.25m/s、横移最多1.6m/s，并尊重更低的角色 maxSpeed；零速配置不会产生除零。RenderComponent 将视觉偏移与物理姿态一起采样，避免站蹲改变胶囊尺寸时模型跳动。详见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。
+
+- Crossfire 射界显示使用 `WeaponComponent:GetMuzzlePosition()`，复用实际 `ResolveMuzzleTransform`，返回 GC 管理的独立 Vector3；枪口无效返回非有限值，查询方必须按无效处理。`WeaponProjectileGeometry` 共用弹丸长度、半径和出生偏移，避免查询/开火尺寸分叉。死亡时仅 crossfire.enabled 的模型统一切换熄灯残骸材质，物理碰撞体保留；友军/残骸实际消耗弹丸时记录 CrossfireOccluded。

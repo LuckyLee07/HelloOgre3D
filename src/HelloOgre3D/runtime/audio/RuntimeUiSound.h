@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
-// Local, single-channel UI feedback. Playback replaces the preceding short sound.
-// PCM is owned here until StopAll; Lua owns no native audio pointers.
+// Local short sounds. Play replaces all voices; PlayLayer mixes up to eight.
+// PCM and platform voices are owned here; Lua owns no native audio pointers.
 class RuntimeUiSound //tolua_exports
 { //tolua_exports
 public:
@@ -16,6 +16,7 @@ public:
 	//tolua_begin
 	bool IsAvailable() const;
 	bool Play(const char* path);
+	bool PlayLayer(const char* path, float gain, float pan, int priority);
 	void StopAll();
 	void SetVolume(float volume);
 	float GetVolume() const;
@@ -24,6 +25,7 @@ public:
 private:
 	RuntimeUiSound(const RuntimeUiSound&) = delete;
 	RuntimeUiSound& operator=(const RuntimeUiSound&) = delete;
+	bool PlayInternal(const char* path, float gain, float pan, int priority, bool replace);
 	void* m_platformHandle;
 	float m_volume;
 	std::unordered_map<std::string, std::vector<unsigned char>> m_waveCache;

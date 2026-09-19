@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 
 #include "GameFunction.h"
 #include "SandboxMacros.h"
@@ -12,6 +13,8 @@
 #include "OgreSceneNode.h"
 #include "OgreStringConverter.h"
 #include "ai/tactics/TacticalService.h"
+#include "components/ai/AIController.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "core/SandboxServices.h"
 #include "core/object/BaseObject.h"
 #include "objects/BlockObject.h"
@@ -64,6 +67,30 @@ namespace
 		BaseObject* owner = component != nullptr ? component->getOwner() : nullptr;
 		return owner != nullptr ? owner->GetAnimComponent() : nullptr;
 	}
+}
+
+CrossfireProjectileComponent::CrossfireProjectileComponent(unsigned int source, unsigned int team, float shotDamage, const Ogre::Vector3& shotDirection)
+	: sourceId(source)
+	, sourceTeam(team)
+	, damage(shotDamage)
+	, direction(shotDirection)
+	, m_consumed(false)
+	, m_remainingMs(4000)
+{
+}
+
+bool CrossfireProjectileComponent::Consume()
+{
+	if (m_consumed) return false;
+	m_consumed = true;
+	if (getOwner() != nullptr) getOwner()->SetNeedClear(0, true);
+	return true;
+}
+
+void CrossfireProjectileComponent::update(int deltaMs)
+{
+	m_remainingMs -= std::max(0, deltaMs);
+	if (m_remainingMs <= 0) Consume();
 }
 
 WeaponComponent::WeaponComponent(BaseObject* owner)
@@ -197,6 +224,15 @@ void WeaponComponent::SyncToHandBone()
 	}
 }
 
+Ogre::Vector3 WeaponComponent::GetMuzzlePosition()
+{
+	Ogre::Vector3 position;
+	Ogre::Quaternion orientation;
+	if (ResolveMuzzleTransform(position, orientation)) return position;
+	const float invalid = std::numeric_limits<float>::quiet_NaN();
+	return Ogre::Vector3(invalid, invalid, invalid);
+}
+
 void WeaponComponent::ShootBullet()
 {
 	Ogre::Vector3 position;
@@ -236,6 +272,24 @@ void WeaponComponent::ShootBulletAt(const Ogre::Vector3& worldTarget)
 
 bool WeaponComponent::ResolveMuzzleTransform(Ogre::Vector3& position, Ogre::Quaternion& orientation)
 {
+	BaseObject* owner = getOwner();
+	AIController* ai = owner != nullptr ? owner->GetAIComponent() : nullptr;
+	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+	if (blackboard != nullptr && blackboard->GetBool("crossfire.enabled"))
+	{
+		RenderComponent* render = FindOwnerRender(this);
+		PhysicsComponent* physics = owner->GetPhysicsComponent();
+		if (render == nullptr || physics == nullptr || physics->GetRigidBody() == nullptr)
+			return false;
+		const Ogre::Vector3 muzzle = blackboard->Has("crossfire.muzzle")
+			? blackboard->GetVec3("crossfire.muzzle") : Ogre::Vector3(0.0f, -0.02f, 0.90f);
+		const Ogre::Quaternion bodyOrientation = physics->GetOrientation();
+		position = physics->GetPosition() + render->GetVisualOffset() + bodyOrientation * muzzle;
+		// Legacy weapons fire along local +X; these mesh profiles face +Z.
+		orientation = Ogre::Vector3::UNIT_X.getRotationTo(bodyOrientation * Ogre::Vector3::UNIT_Z, Ogre::Vector3::UNIT_Y);
+		return !position.isNaN();
+	}
+
 	SyncToHandBone();
 	if (m_weaponRender != nullptr) EvaluateAttachmentPose(m_weaponRender->GetEntity());
 	RenderComponent* ownerRender = FindOwnerRender(this);
@@ -346,15 +400,35 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	}
 	left.normalise();
 
-	BlockObject* bullet = objectFactory->CreateBullet(0.3f, 0.01f);
+	BlockObject* bullet = objectFactory->CreateBullet(WeaponProjectileGeometry::Height, WeaponProjectileGeometry::Radius);
 	if (bullet == nullptr)
 	{
 		return;
 	}
 
-	bullet->SetOwner(owner);
+	AIController* ai = owner->GetAIComponent();
+	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+	const bool crossfire = blackboard != nullptr && blackboard->GetBool("crossfire.enabled");
+	if (crossfire)
+	{
+		const float defaultDamage = blackboard->GetBool("crossfire.sentinel") ? 12.0f : 10.0f;
+		CrossfireProjectileComponent* projectile = new CrossfireProjectileComponent(owner->GetObjId(), owner->GetTeamId(),
+			std::max(0.0f, blackboard->GetFloat("crossfire.damage", defaultDamage)), forward);
+		if (!bullet->AddComponent("crossfire.projectile", projectile))
+		{
+			delete projectile;
+			bullet->SetNeedClear(0, true);
+			return;
+		}
+		bullet->SetTeamId(owner->GetTeamId());
+		bullet->SetOwner(nullptr);
+	}
+	else
+	{
+		bullet->SetOwner(owner);
+	}
 	bullet->SetMass(0.1f);
-	bullet->setPosition(position + forward * 0.2f);
+	bullet->setPosition(position + forward * WeaponProjectileGeometry::SpawnOffset);
 	Ogre::Quaternion axisRot = Ogre::Quaternion(left, -forward, up);
 	bullet->setOrientation(axisRot);
 
@@ -399,7 +473,14 @@ void WeaponComponent::DoShootBullet(const Ogre::Vector3& position, const Ogre::Q
 	// 30 Hz physics steps and making both the tracer and collisions unreliable.
 	PhysicsComponent* bulletPhysics = bullet->GetPhysicsComponent();
 	if (bulletPhysics != nullptr)
+	{
+		if (crossfire && bulletPhysics->GetRigidBody() != nullptr)
+		{
+			bulletPhysics->GetRigidBody()->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+			bulletPhysics->GetRigidBody()->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+		}
 		bulletPhysics->SetVelocity(forward * 48.0f);
+	}
 
 	const char* replayPath = std::getenv("HELLO_INPUT_REPLAY");
 	if (replayPath != nullptr && replayPath[0] != '\0')

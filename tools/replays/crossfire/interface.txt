@@ -1,0 +1,26 @@
+1500 key_press 2
+3500 mouse_down 200 450 0
+3550 mouse_up 200 450 0
+5700 key_press 1
+6200 key_press ESCAPE
+6300 key_press SPACE
+6500 mouse_down 675 284 1
+6550 mouse_up 675 284 1
+7500 mouse_down 848 380 0
+7550 mouse_up 848 380 0
+8000 mouse_down 808 449 0
+8050 mouse_up 808 449 0
+8500 key_press ESCAPE
+9000 mouse_down 1060 81 0
+9050 mouse_up 1060 81 0
+9500 key_press SPACE
+10000 key_press ESCAPE
+11000 key_press RETURN
+11500 key_press ESCAPE
+12500 mouse_down 522 589 0
+12550 mouse_up 522 589 0
+13500 mouse_down 200 450 0
+13550 mouse_up 200 450 0
+14500 key_press RETURN
+15500 key_press R
+17500 quit

@@ -1,0 +1,150 @@
+// Original Crossfire palette; no external images or mesh material aliases.
+// All surfaces use the existing GL3+/D3D9 base shader and flat normal map.
+import base_material from "materials/base.material"
+
+material Crossfire/Porcelain : base_material
+{
+	set $diffuseCol "0.76 0.72 0.62 1"
+	set $specularCol "0.14 0.13 0.11"
+	set $shininess "44"
+}
+
+material Crossfire/Ivory : base_material
+{
+	set $diffuseCol "0.9 0.86 0.73 1"
+	set $specularCol "0.18 0.17 0.14"
+	set $shininess "48"
+}
+
+material Crossfire/Slate : base_material
+{
+	set $diffuseCol "0.16 0.23 0.27 1"
+	set $specularCol "0.12 0.16 0.19"
+	set $shininess "34"
+}
+
+material Crossfire/Floor : base_material
+{
+	set $diffuseCol "0.115 0.17 0.205 1"
+	set $specularCol "0.035 0.05 0.06"
+	set $shininess "24"
+}
+
+material Crossfire/FloorPanel : base_material
+{
+	set $diffuseCol "0.14 0.2 0.235 1"
+	set $specularCol "0.04 0.055 0.07"
+	set $shininess "24"
+}
+
+material Crossfire/Graphite : base_material
+{
+	set $diffuseCol "0.055 0.08 0.096 1"
+	set $specularCol "0.1 0.12 0.14"
+	set $shininess "36"
+}
+
+material Crossfire/Rubber : base_material
+{
+	set $diffuseCol "0.025 0.039 0.047 1"
+	set $specularCol "0.005 0.005 0.005"
+	set $shininess "8"
+}
+
+material Crossfire/Steel : base_material
+{
+	set $diffuseCol "0.35 0.42 0.44 1"
+	set $specularCol "0.35 0.4 0.42"
+	set $shininess "72"
+}
+
+material Crossfire/Teal : base_material
+{
+	set $diffuseCol "0.075 0.41 0.42 1"
+	set $specularCol "0.14 0.22 0.22"
+	set $shininess "42"
+}
+
+material Crossfire/Signal : base_material
+{
+	set $diffuseCol "0.17 0.88 0.82 1"
+	set $specularCol "0.05 0.12 0.12"
+	set $shininess "24"
+}
+
+material Crossfire/Amber : base_material
+{
+	set $diffuseCol "0.88 0.56 0.19 1"
+	set $specularCol "0.14 0.09 0.04"
+	set $shininess "32"
+}
+
+material Crossfire/Enemy : base_material
+{
+	set $diffuseCol "0.69 0.18 0.105 1"
+	set $specularCol "0.18 0.07 0.035"
+	set $shininess "44"
+}
+
+material Crossfire/EnemyLight : base_material
+{
+	set $diffuseCol "1.0 0.41 0.16 1"
+	set $specularCol "0.1 0.035 0.01"
+	set $shininess "32"
+}
+
+material Crossfire/Mark : base_material
+{
+	set $diffuseCol "0.65 0.68 0.62 1"
+	set $specularCol "0.015 0.015 0.015"
+	set $shininess "12"
+}
+
+material Crossfire/Vega : base_material
+{
+	set $diffuseCol "0.17 0.61 0.49 1"
+	set $specularCol "0.1 0.21 0.17"
+	set $shininess "38"
+}
+
+material Crossfire/Rook : base_material
+{
+	set $diffuseCol "0.24 0.4 0.71 1"
+	set $specularCol "0.12 0.17 0.27"
+	set $shininess "38"
+}
+
+material Crossfire/RookLight : base_material
+{
+	set $diffuseCol "0.38 0.64 0.95 1"
+	set $specularCol "0.07 0.12 0.2"
+	set $shininess "24"
+}
+
+material Crossfire/ServiceBand : base_material
+{
+	set $diffuseCol "0.065 0.088 0.1 1"
+	set $specularCol "0.01 0.015 0.02"
+	set $shininess "12"
+}
+
+material Crossfire/Wreck : base_material
+{
+	set $diffuseCol "0.19 0.215 0.225 1"
+	set $specularCol "0.015 0.018 0.02"
+	set $shininess "8"
+}
+
+material Crossfire/ShieldHit : base_material
+{
+	set $diffuseCol "1.0 0.7 0.22 1"
+	set $specularCol "0.08 0.05 0.01"
+	set $shininess "12"
+}
+
+material Crossfire/HullHit : base_material
+{
+	set $diffuseCol "0.75 1.0 0.91 1"
+	set $specularCol "0.03 0.05 0.04"
+	set $shininess "12"
+}

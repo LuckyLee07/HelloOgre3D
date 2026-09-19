@@ -7,9 +7,12 @@
 #include "OgreManualObject.h"
 #include "object/BaseObject.h"
 #include "components/physics/PhysicsComponent.h"
+#include "components/ai/AIController.h"
+#include "objects/AgentObject.h"
 #include "objects/animation/AgentAnim.h"
 #include "objects/animation/AgentAnimStateMachine.h"
 #include "systems/service/SceneFactory.h"
+#include <cmath>
 #include <memory>
 
 using namespace Ogre;
@@ -296,6 +299,43 @@ void RenderComponent::RenderInterpolated(float alpha)
 	if (!m_hasSimulationPose || m_pSceneNode == nullptr) return;
 	alpha = Ogre::Math::Clamp(alpha, 0.0f, 1.0f);
 	// Display only. PhysicsComponent remains the position/orientation source for gameplay.
-	m_pSceneNode->_setDerivedPosition(m_previousPosition + (m_currentPosition - m_previousPosition) * alpha);
-	m_pSceneNode->_setDerivedOrientation(Ogre::Quaternion::Slerp(alpha, m_previousOrientation, m_currentOrientation, true));
+	Ogre::Vector3 position = m_previousPosition + (m_currentPosition - m_previousPosition) * alpha;
+	Ogre::Quaternion orientation = Ogre::Quaternion::Slerp(alpha, m_previousOrientation, m_currentOrientation, true);
+	BaseObject* owner = getOwner();
+	AIController* ai = owner != nullptr ? owner->GetAIComponent() : nullptr;
+	Blackboard* blackboard = ai != nullptr ? ai->GetBlackboard() : nullptr;
+	if (blackboard != nullptr && blackboard->GetBool("crossfire.enabled"))
+	{
+		AgentObject* agent = dynamic_cast<AgentObject*>(owner);
+		if (agent != nullptr && agent->GetHealth() <= 0.0f)
+		{
+			orientation = orientation * Ogre::Quaternion(Ogre::Degree(12.0f), Ogre::Vector3::UNIT_Z);
+		}
+		else if (agent != nullptr)
+		{
+			const int clockMs = blackboard->GetInt("crossfire.clockMs");
+			if (!blackboard->GetBool("crossfire.sentinel"))
+			{
+				// The sample clock freezes while planning. Never advance cosmetic motion from wall time.
+				position.y += 0.025f * std::sin(static_cast<float>(clockMs) * 0.0035f + owner->GetObjId() * 0.7f);
+				Ogre::Vector3 velocity = orientation.Inverse() * agent->GetVelocity();
+				velocity.y = 0.0f;
+				const float speed = velocity.length();
+				if (speed > 3.2f) velocity *= 3.2f / speed;
+				orientation = orientation * Ogre::Quaternion(Ogre::Degree(velocity.z * (3.4f / 3.2f)), Ogre::Vector3::UNIT_X)
+					* Ogre::Quaternion(Ogre::Degree(-velocity.x * (3.4f / 3.2f)), Ogre::Vector3::UNIT_Z);
+			}
+			if (blackboard->Has("crossfire.lastShotMs"))
+			{
+				const int shotAgeMs = clockMs - blackboard->GetInt("crossfire.lastShotMs");
+				if (shotAgeMs >= 0 && shotAgeMs < 130)
+				{
+					const float recovery = 1.0f - static_cast<float>(shotAgeMs) / 130.0f;
+					position -= agent->GetForward() * (0.055f * recovery * recovery);
+				}
+			}
+		}
+	}
+	m_pSceneNode->_setDerivedPosition(position);
+	m_pSceneNode->_setDerivedOrientation(orientation);
 }

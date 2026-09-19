@@ -1,5 +1,10 @@
 # docs 索引
 
+[2026-09-19 Crossfire 射界与美术精修](dev-design/plans/2026-09-19-crossfire-readable-combat.md)：真实枪口/首阻挡查询、设备表面拾取、持续中文策略、近景双机识别与残骸表现的实施与分项验证。
+
+[2026-09-19 Crossfire 实际试玩评审](dev-design/reviews/2026-09-19-crossfire-computer-use-review.md)：Computer Use 原生窗口前两关通关、第三关两次失败，记录射线遮挡、关键提示丢失、点击范围和镜头/角色可读性问题及优化顺序。
+[2026-09-19 作者试玩与小玩法重设计](dev-design/specs/2026-09-19-relay-microgame-design.md)：场景/模型/射击仍有 Demo 感后的方向建议，推荐固定斜俯视双机器人协同，先用一个精修战斗房间同步验证玩法、角色/场景资产、材质光照及视听交互，包含资产替换与制作验收；作者已授权实施，首个 Sandbox20 联合样段已落地，验证与试玩入口见[首轮实施记录](dev-design/plans/2026-09-19-crossfire-first-room.md)。作者随后授权继续，三关、场景扩充与选关/设置/记录见[第二轮实施记录](dev-design/plans/2026-09-19-crossfire-three-encounters.md)。
+
 > 目的：让阅读和施工先找对文档，避免被历史路线图带偏。
 >
 > 治理规则：方向取舍先看 `project-direction.md`；当前在做什么看 `cycle-01.md`；想做什么看 `backlog.md`；具体实现看对应模块文档 `modules/<alias>.md` 或专项文档。历史文档（`archive/`）只看证据和具体条目，不看旧排期。

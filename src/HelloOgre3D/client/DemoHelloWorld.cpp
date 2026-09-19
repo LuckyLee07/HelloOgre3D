@@ -2,9 +2,21 @@
 #include "DemoHelloWorld.h"
 #include "ScriptLuaVM.h"
 #include "LogSystem.h"
+#include <cstdlib>
+#include <cstring>
+
+namespace
+{
+	const char* SampleWindowTitle()
+	{
+		const char* sample = std::getenv("HELLO_SANDBOX_SAMPLE");
+		return sample != nullptr && (std::strcmp(sample, "Sandbox20") == 0 || std::strcmp(sample, "20") == 0)
+			? "CROSS / FIRE - Relay Operations" : "Learning Game AI Programming";
+	}
+}
 
 DemoHelloWorld::DemoHelloWorld()
-	: Application("Learning Game AI Programming")
+	: Application(SampleWindowTitle())
     , m_sceneInitDone(false)
 {
 }

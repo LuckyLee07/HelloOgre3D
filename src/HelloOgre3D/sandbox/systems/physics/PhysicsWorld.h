@@ -31,6 +31,9 @@ public:
 	bool rayCastToRigidBody(const btVector3& from, const btVector3& to, btVector3& hitPoint, const btRigidBody*& rigidBody) const;
 
 	float sweepCamera(const btVector3& from, const btVector3& to, float radius) const;
+	int traceProjectile(const btVector3& from, const btVector3& to, unsigned int ignoreObjectId,
+		float height, float radius, float spawnOffset, btVector3& hitPoint) const;
+	int pickSurface(const btVector3& from, const btVector3& to, btVector3& hitPoint) const;
 
 	bool tiggerCollideEvent(btPersistentManifold* pManifold, btManifoldPoint& point);
 

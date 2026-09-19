@@ -11,6 +11,33 @@ class AgentAnim;
 class AgentAnimStateMachine;
 class RenderComponent;
 
+// Shared by firing and read-only projectile queries; capsule height includes caps.
+namespace WeaponProjectileGeometry
+{
+	const float Height = 0.30f;
+	const float Radius = 0.01f;
+	const float SpawnOffset = 0.20f;
+}
+
+// Immutable shot data is owned by the projectile, not by the firing agent.
+// Crossfire projectiles never retain a raw pointer to an agent that can despawn.
+class CrossfireProjectileComponent : public IComponent
+{
+public:
+	CrossfireProjectileComponent(unsigned int sourceId, unsigned int sourceTeam, float damage, const Ogre::Vector3& direction);
+	bool Consume();
+	virtual void update(int deltaMs) override;
+
+	const unsigned int sourceId;
+	const unsigned int sourceTeam;
+	const float damage;
+	const Ogre::Vector3 direction;
+
+private:
+	bool m_consumed;
+	int m_remainingMs;
+};
+
 class WeaponComponent : public IComponent //tolua_exports
 { //tolua_exports
 public:
@@ -34,6 +61,8 @@ public:
 	void SyncToHandBone();
 	void ShootBullet();
 	void ShootBulletAt(const Ogre::Vector3& worldTarget);
+	// A value snapshot, with non-finite components if no muzzle can be resolved.
+	Ogre::Vector3 GetMuzzlePosition();
 
 	void SetAmmo(int ammo);
 	int GetAmmo() const { return m_ammo; }

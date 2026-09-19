@@ -1,0 +1,24 @@
+400 key_press 1
+600 mouse_down 675 284 1
+650 mouse_up 675 284 1
+950 key_press X
+1100 mouse_down 675 284 1
+1150 mouse_up 675 284 1
+1400 key_press 2
+1600 mouse_down 489 342 1
+1650 mouse_up 489 342 1
+2000 key_press SPACE
+4000 key_down SPACE
+4200 key_down SPACE
+4500 key_up SPACE
+5200 mouse_down 1180 80 0
+5250 mouse_up 1180 80 0
+5400 mouse_down 1180 80 0
+5450 mouse_up 1180 80 0
+6000 key_press SPACE
+18000 key_down R
+18200 key_down R
+18500 key_up R
+20000 key_press SPACE
+22000 key_press R
+23000 quit

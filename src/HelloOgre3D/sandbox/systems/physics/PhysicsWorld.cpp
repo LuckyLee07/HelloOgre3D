@@ -5,6 +5,7 @@
 #endif
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
@@ -12,6 +13,7 @@
 #include "object/BaseObject.h"
 #include "systems/physics/Collision.h"
 #include "SandboxMacros.h"
+#include <cmath>
 
 PhysicsWorld::PhysicsWorld() : m_pBroadPhase(nullptr), m_pCollisionConfig(nullptr),
 	m_pDispatcher(nullptr), m_pSolver(nullptr), m_pDynamicsWorld(nullptr)
@@ -194,4 +196,150 @@ float PhysicsWorld::sweepCamera(const btVector3& from, const btVector3& to, floa
 	StaticCameraSweep hit(from, to);
 	m_pDynamicsWorld->convexSweepTest(&shape, start, finish, hit);
 	return hit.hasHit() ? btMax(0.0f, float(hit.m_closestHitFraction) - 0.02f / float((to - from).length())) : 1.0f;
+}
+
+namespace
+{
+	bool QueryAllowsBody(const btBroadphaseProxy* proxy, unsigned int ignoreObjectId, bool surfaceOnly)
+	{
+		const btCollisionObject* body = proxy != nullptr
+			? static_cast<const btCollisionObject*>(proxy->m_clientObject) : nullptr;
+		if (body == nullptr || btRigidBody::upcast(body) == nullptr || !body->hasContactResponse()) return false;
+		BaseObject* object = static_cast<BaseObject*>(body->getUserPointer());
+		// Unknown physical bodies still obstruct the query and return -1 to callers.
+		if (object == nullptr) return true;
+		if (ignoreObjectId != 0 && object->GetObjId() == ignoreObjectId) return false;
+		const BaseObject::ObjectType type = object->GetObjType();
+		if (type == BaseObject::OBJ_TYPE_BULLET) return false;
+		return !surfaceOnly || (type != BaseObject::OBJ_TYPE_AGENT && type != BaseObject::OBJ_TYPE_SOLDIER);
+	}
+
+	int QueryObjectId(const btCollisionObject* body)
+	{
+		const BaseObject* object = body != nullptr ? static_cast<const BaseObject*>(body->getUserPointer()) : nullptr;
+		return object != nullptr && object->GetObjId() > 0 ? static_cast<int>(object->GetObjId()) : -1;
+	}
+
+	bool IsFinitePhysicsPoint(const btVector3& point)
+	{
+		return std::isfinite(point.x()) && std::isfinite(point.y()) && std::isfinite(point.z());
+	}
+
+	struct ProjectileSweep : btCollisionWorld::ClosestConvexResultCallback
+	{
+		unsigned int ignoreId;
+		ProjectileSweep(const btVector3& from, const btVector3& to, unsigned int ignored)
+			: ClosestConvexResultCallback(from, to), ignoreId(ignored) {}
+		bool needsCollision(btBroadphaseProxy* proxy) const override
+		{
+			return ClosestConvexResultCallback::needsCollision(proxy) && QueryAllowsBody(proxy, ignoreId, false);
+		}
+	};
+
+	struct ProjectileOverlap : btCollisionWorld::ContactResultCallback
+	{
+		const btCollisionObject* probe;
+		const btCollisionObject* hitBody;
+		unsigned int ignoreId;
+		btVector3 hitPoint;
+		btScalar nearestDistance2;
+		ProjectileOverlap(const btCollisionObject* shape, unsigned int ignored)
+			: probe(shape), hitBody(nullptr), ignoreId(ignored), hitPoint(0, 0, 0), nearestDistance2(BT_LARGE_FLOAT) {}
+		bool needsCollision(btBroadphaseProxy* proxy) const override
+		{
+			return ContactResultCallback::needsCollision(proxy) && QueryAllowsBody(proxy, ignoreId, false);
+		}
+		btScalar addSingleResult(btManifoldPoint& contact, const btCollisionObjectWrapper* a, int, int,
+			const btCollisionObjectWrapper* b, int, int) override
+		{
+			if (contact.getDistance() > 0) return 0;
+			const bool probeIsA = a->getCollisionObject() == probe;
+			const btCollisionObject* body = probeIsA ? b->getCollisionObject() : a->getCollisionObject();
+			const btVector3 point = probeIsA ? contact.getPositionWorldOnB() : contact.getPositionWorldOnA();
+			const btScalar distance2 = (point - probe->getWorldTransform().getOrigin()).length2();
+			// Initial overlaps occur at the same time; use the nearest surface deterministically.
+			if (hitBody == nullptr || distance2 < nearestDistance2
+				|| (distance2 == nearestDistance2 && QueryObjectId(body) < QueryObjectId(hitBody)))
+			{
+				hitBody = body;
+				hitPoint = point;
+				nearestDistance2 = distance2;
+			}
+			return 0;
+		}
+	};
+
+	struct SurfaceRay : btCollisionWorld::ClosestRayResultCallback
+	{
+		SurfaceRay(const btVector3& from, const btVector3& to) : ClosestRayResultCallback(from, to) {}
+		bool needsCollision(btBroadphaseProxy* proxy) const override
+		{
+			return ClosestRayResultCallback::needsCollision(proxy) && QueryAllowsBody(proxy, 0, true);
+		}
+	};
+}
+
+int PhysicsWorld::traceProjectile(const btVector3& from, const btVector3& to, unsigned int ignoreObjectId,
+	float height, float radius, float spawnOffset, btVector3& hitPoint) const
+{
+	hitPoint = btVector3(0, 0, 0);
+	const btVector3 delta = to - from;
+	const btScalar distance2 = delta.length2();
+	if (m_pDynamicsWorld == nullptr || !IsFinitePhysicsPoint(from) || !IsFinitePhysicsPoint(to)
+		|| !std::isfinite(distance2) || !std::isfinite(height) || !std::isfinite(radius) || !std::isfinite(spawnOffset)
+		|| radius <= 0 || height < radius * 2 || spawnOffset < 0
+		|| distance2 <= btMax(SIMD_EPSILON, btScalar(spawnOffset * spawnOffset))) return -1;
+	// Lua can reposition bodies while simulation is paused. Refresh query bounds
+	// without integrating physics or emitting contact events (including static bodies).
+	m_pDynamicsWorld->updateAabbs();
+	const btVector3 direction = delta / btSqrt(distance2);
+	const btVector3 startPoint = from + direction * spawnOffset;
+	btCapsuleShape shape(radius, height - radius * 2);
+	btTransform start, finish;
+	start.setIdentity();
+	start.setRotation(shortestArcQuat(btVector3(0, 1, 0), -direction));
+	start.setOrigin(startPoint);
+	finish = start;
+	finish.setOrigin(to);
+
+	// A convex sweep alone can miss a projectile that starts embedded in a body.
+	// The temporary probe is never inserted in the world and cannot emit collisions.
+	btCollisionObject probe;
+	probe.setCollisionShape(&shape);
+	probe.setWorldTransform(start);
+	ProjectileOverlap overlap(&probe, ignoreObjectId);
+	m_pDynamicsWorld->contactTest(&probe, overlap);
+	if (overlap.hitBody != nullptr)
+	{
+		hitPoint = overlap.hitPoint;
+		return QueryObjectId(overlap.hitBody);
+	}
+	ProjectileSweep result(startPoint, to, ignoreObjectId);
+	m_pDynamicsWorld->convexSweepTest(&shape, start, finish, result);
+	if (!result.hasHit())
+	{
+		hitPoint = to;
+		return 0;
+	}
+	hitPoint = result.m_hitPointWorld;
+	return QueryObjectId(result.m_hitCollisionObject);
+}
+
+int PhysicsWorld::pickSurface(const btVector3& from, const btVector3& to, btVector3& hitPoint) const
+{
+	hitPoint = btVector3(0, 0, 0);
+	const btScalar distance2 = (to - from).length2();
+	if (m_pDynamicsWorld == nullptr || !IsFinitePhysicsPoint(from) || !IsFinitePhysicsPoint(to)
+		|| !std::isfinite(distance2) || distance2 <= SIMD_EPSILON) return -1;
+	// Picking must be current even before the first unpaused simulation tick.
+	m_pDynamicsWorld->updateAabbs();
+	SurfaceRay result(from, to);
+	m_pDynamicsWorld->rayTest(from, to, result);
+	if (!result.hasHit())
+	{
+		hitPoint = to;
+		return 0;
+	}
+	hitPoint = result.m_hitPointWorld;
+	return QueryObjectId(result.m_collisionObject);
 }

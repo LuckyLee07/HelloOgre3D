@@ -100,9 +100,9 @@ Ogre::Light* SceneService::CreateDirectionalLight(const Ogre::Vector3& direction
 	return lightEntity;
 }
 
-bool SceneService::ConfigureDirectionalShadows(Ogre::Light* light, bool enabled)
+bool SceneService::ConfigureDirectionalShadows(Ogre::Light* light, bool enabled, float farDistance)
 {
-	return RuntimeOgre::ConfigureDirectionalShadows(GetSceneManager(), light, enabled);
+	return RuntimeOgre::ConfigureDirectionalShadows(GetSceneManager(), light, enabled, farDistance);
 }
 
 bool SceneService::SetCompositorEnabled(const Ogre::String& compositorName, bool enabled)

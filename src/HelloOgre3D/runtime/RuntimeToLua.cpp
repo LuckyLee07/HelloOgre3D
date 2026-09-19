@@ -52,6 +52,29 @@ static int tolua_RuntimeToLua_RuntimeUiSound_Play00(lua_State* tolua_S)
 	return 1;
 }
 
+/* method: PlayLayer of class RuntimeUiSound; surgical binding */
+static int tolua_RuntimeToLua_RuntimeUiSound_PlayLayer00(lua_State* tolua_S)
+{
+	tolua_Error error;
+	if (!tolua_isusertype(tolua_S,1,"RuntimeUiSound",0,&error)
+		|| !tolua_isstring(tolua_S,2,0,&error)
+		|| !tolua_isnumber(tolua_S,3,0,&error)
+		|| !tolua_isnumber(tolua_S,4,0,&error)
+		|| !tolua_isnumber(tolua_S,5,0,&error)
+		|| !tolua_isnoobj(tolua_S,6,&error))
+		return tolua_error(tolua_S,"#ferror in function 'PlayLayer'.",&error), 0;
+	RuntimeUiSound* self = static_cast<RuntimeUiSound*>(tolua_tousertype(tolua_S,1,0));
+	if (self == nullptr)
+		return tolua_error(tolua_S,"invalid 'self' in function 'PlayLayer'",nullptr), 0;
+	const double priority = tolua_tonumber(tolua_S,5,0);
+	if (!(priority >= 0 && priority <= 100))
+		return tolua_error(tolua_S,"PlayLayer priority must be between 0 and 100",nullptr), 0;
+	tolua_pushboolean(tolua_S,self->PlayLayer(tolua_tostring(tolua_S,2,nullptr),
+		static_cast<float>(tolua_tonumber(tolua_S,3,1)),
+		static_cast<float>(tolua_tonumber(tolua_S,4,0)), static_cast<int>(priority)));
+	return 1;
+}
+
 /* method: StopAll of class RuntimeUiSound; surgical binding */
 static int tolua_RuntimeToLua_RuntimeUiSound_StopAll00(lua_State* tolua_S)
 {
@@ -4091,6 +4114,7 @@ TOLUA_API int tolua_RuntimeToLua_open (lua_State* tolua_S)
   tolua_beginmodule(tolua_S,"RuntimeUiSound");
    tolua_function(tolua_S,"IsAvailable",tolua_RuntimeToLua_RuntimeUiSound_IsAvailable00);
    tolua_function(tolua_S,"Play",tolua_RuntimeToLua_RuntimeUiSound_Play00);
+   tolua_function(tolua_S,"PlayLayer",tolua_RuntimeToLua_RuntimeUiSound_PlayLayer00);
    tolua_function(tolua_S,"StopAll",tolua_RuntimeToLua_RuntimeUiSound_StopAll00);
    tolua_function(tolua_S,"SetVolume",tolua_RuntimeToLua_RuntimeUiSound_SetVolume00);
    tolua_function(tolua_S,"GetVolume",tolua_RuntimeToLua_RuntimeUiSound_GetVolume00);

@@ -6,6 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef HELLO_DEFAULT_SAMPLE
+#define HELLO_DEFAULT_SAMPLE "Sandbox19"
+#endif
+
 int main(int argc, char** argv)
 {
 	(void)argc;
@@ -34,6 +38,10 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	if (getenv("HELLO_SANDBOX_SAMPLE") == NULL)
+		setenv("HELLO_SANDBOX_SAMPLE", HELLO_DEFAULT_SAMPLE, 0);
+	if (strcmp(HELLO_DEFAULT_SAMPLE, "Sandbox20") == 0 && getenv("HELLO_RENDER_FSAA") == NULL)
+		setenv("HELLO_RENDER_FSAA", "4", 0);
 	argv[0] = (char*)"./HelloOgre3D";
 	execv(argv[0], argv);
 	fprintf(stderr, "HelloOgre3D launcher cannot start the game: %s\n", strerror(errno));

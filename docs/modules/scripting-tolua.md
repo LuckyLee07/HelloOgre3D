@@ -62,3 +62,7 @@ C++↔Lua 绑定：tolua++ 生成导出、手工钩子捕获 Lua 回调、对象
 ## 2026-09-12 统一方向入口
 
 `AgentLocomotion::FaceDirection(const Ogre::Vector3&, float deltaTimeInMillis)` 在头文件 tolua 区域声明，`SandboxToLua.pkg` 继续 `$cfile` 引入该头；绑定 cpp 局部添加包装和注册，未运行全量生成。Lua 使用冒号调用并接收“是否已基本对准”的bool结果；Vector3 只在本次调用借用，没有新 userdata 所有权、GC 或 callback/ref。Lua 5.1、Release 和 Sandbox6/7/8/19 证据见[动作连续性改造](../dev-design/plans/2026-09-12-agent-animation-smooth.md)。
+
+## 2026-09-19 Crossfire 射界查询
+
+WeaponComponent:GetMuzzlePosition、RaycastService:TraceProjectile/PickSurface 由现有头文件 tolua 区域与 `.pkg` 的 `$cfile` 链声明，局部添加 SandboxToLua 包装/注册。枪口返回独立 GC Vector3；hitPoint 为仅本次借用的可变引用，可与输入共享 userdata；方法使用冒号调用，无新增 callback/ref 或 ABI 字段。完整物理夹具与暂停规划验证见[战斗可读性实施](../dev-design/plans/2026-09-19-crossfire-readable-combat.md)。

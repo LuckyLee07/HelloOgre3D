@@ -13,6 +13,8 @@
 #include "animation/AgentAnimStateMachine.h"
 #include "components/agent/AgentAttrib.h"
 #include "components/agent/AgentLocomotion.h"
+#include "components/ai/AIController.h"
+#include "components/combat/WeaponComponent.h"
 #include "components/anim/AnimComponent.h"
 #include "components/ComponentKeys.h"
 #include "components/physics/PhysicsComponent.h"
@@ -380,6 +382,10 @@ void AgentObject::SetHealth(Ogre::Real health)
 
 	if (currentHealth > 0.0f && GetHealth() <= 0.0f)
 	{
+		// Wrecks retain the same collision body; extinguish their visual material.
+		Blackboard* deathBoard = m_cachedAI != nullptr ? m_cachedAI->GetBlackboard() : nullptr;
+		if (deathBoard != nullptr && deathBoard->GetBool("crossfire.enabled") && m_renderComp != nullptr)
+			m_renderComp->SetMaterial("Crossfire/Wreck");
 		const SandboxServices* services = GetSandboxServices();
 		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
 		TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
@@ -516,6 +522,55 @@ void AgentObject::CollideWithObject(BaseObject* pCollideObj, const Collision& co
 	BlockObject* pBullet = dynamic_cast<BlockObject*>(pCollideObj);
 	if (pBullet == nullptr)
 	{
+		return;
+	}
+
+	CrossfireProjectileComponent* projectile = pBullet->GetComponentAs<CrossfireProjectileComponent>("crossfire.projectile");
+	if (projectile != nullptr)
+	{
+		if (projectile->sourceId == GetObjId() || !projectile->Consume()) return;
+		const SandboxServices* services = GetSandboxServices();
+		BlockObject::SpawnBulletImpact(collision, services);
+		if (projectile->sourceTeam == GetTeamId() || GetHealth() <= 0.0f)
+		{
+			CCLOG_INFO("[CrossfireOccluded] source=%u first=%u reason=%s", projectile->sourceId, GetObjId(),
+				GetHealth() <= 0.0f ? "wreck" : "friendly");
+			return;
+		}
+
+		Blackboard* blackboard = m_cachedAI != nullptr ? m_cachedAI->GetBlackboard() : nullptr;
+		Ogre::Vector3 incoming = -projectile->direction;
+		Ogre::Vector3 forward = GetForward();
+		incoming.y = 0.0f;
+		forward.y = 0.0f;
+		bool blocked = false;
+		if (blackboard != nullptr && blackboard->GetBool("crossfire.enabled")
+			&& blackboard->GetBool("crossfire.shield") && !incoming.isZeroLength() && !forward.isZeroLength())
+		{
+			incoming.normalise();
+			forward.normalise();
+			const float shieldCos = std::max(-1.0f, std::min(1.0f, blackboard->GetFloat("crossfire.shieldCos", 0.5f)));
+			blocked = forward.dotProduct(incoming) >= shieldCos;
+		}
+		if (blackboard != nullptr)
+		{
+			const char* counter = blocked ? "crossfire.blockedCount" : "crossfire.hitCount";
+			blackboard->SetInt(counter, blackboard->GetInt(counter) + 1);
+			blackboard->SetInt("crossfire.lastImpactMs", blackboard->GetInt("crossfire.clockMs"));
+			blackboard->SetBool("crossfire.lastBlocked", blocked);
+			blackboard->SetVec3("crossfire.lastImpactPosition", collision.pointA_);
+		}
+		ObjectManager* objectManager = services != nullptr ? services->objects : nullptr;
+		TacticalService* tactics = objectManager != nullptr ? objectManager->GetTacticalService() : nullptr;
+		if (tactics != nullptr)
+		{
+			tactics->publishTacticalEvent(SandboxEventTypes::BulletImpact(), static_cast<int>(projectile->sourceId),
+				static_cast<int>(GetObjId()), static_cast<int>(projectile->sourceTeam), static_cast<int>(GetTeamId()),
+				collision.pointA_, blackboard != nullptr ? blackboard->GetInt("crossfire.clockMs") : 0, "global", false);
+		}
+		if (!blocked) SetHealth(std::max<Ogre::Real>(0.0f, GetHealth() - projectile->damage));
+		CCLOG_INFO("[CrossfireImpact] source=%u target=%u blocked=%d damage=%.1f health=%.1f",
+			projectile->sourceId, GetObjId(), blocked ? 1 : 0, blocked ? 0.0f : projectile->damage, GetHealth());
 		return;
 	}
 

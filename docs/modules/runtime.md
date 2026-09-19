@@ -20,7 +20,7 @@
 | `diagnostics/RuntimeResourceDiagnostics.{h,cpp}` | 诊断 | `BuildResourceDump` texture/mesh/buffer 清单 |
 | `game/ClientManager.{h,cpp}` | 窗口 | 跨平台启动尺寸、延迟 resize、实际尺寸日志，以及输入/UI/FGUI/viewport 消费链同步 |
 | `ogre/OgreCameraController.h` | 相机 | FREELOOK/ORBIT/MANUAL/FOLLOW 相机控制；FOLLOW 为第三人称跟随（主动转向、平移平滑、静态遮挡），Sandbox19 鼠标先转镜、身体跟随水平视线、W/S 沿身体朝向；RenderPresentation 每渲染帧驱动；仍不做 FPS 模式 |
-| `audio/RuntimeUiSound.{h,cpp}` / `RuntimeUiSoundMac.mm` | 声音 | PCM 16-bit WAV 短音单路播放；Windows PlaySound / macOS NSSound 适配，音频缓冲与 native handle 由 runtime 持有 |
+| `audio/RuntimeUiSound.{h,cpp}` / `RuntimeUiSoundMac.mm` | 声音 | PCM 16-bit WAV；Play 独占、PlayLayer 最多 8 路，Windows waveOut / macOS NSSound 适配，音频缓冲与 native handle 由 runtime 持有 |
 | `ui/fairygui/FairyGuiSystem.*` | UI | cocoslite 内嵌；渲染几何使用最终视图专用 visibility bit，避免被场景 compositor 采样，见 [[fgui]] |
 | `RuntimeToLua.{cpp,pkg}` | 绑定 | runtime 层 tolua |
 
@@ -29,11 +29,11 @@
 - 性能上报（AI/UI/帧分项/Lua callback count）、资源快照、既有相机模式、FairyGUI 栈；FGUI `AiDebugPanel` 可读取统一 `[AIRuntimeDiag]` 并按 `focusAgentId` / `filterText` 参数化筛选。
 - [CameraService](../../src/HelloOgre3D/sandbox/systems/service/CameraService.h) 导出 `ConfigureFollowCamera` / `ResetFollowCamera` / `SetCameraRelativeMovement` / `SnapFollowTarget` / `GetFollowDistance`。sample 配置参数与范围，控制器统一驱动镜头；Sandbox19 使用距离 6.5、高 3.2、前视 0、眼高 1.5 和距离范围 5.5–11，鼠标相对位移或 Q/E 调整镜头方向，W/S 沿角色朝向、A/D 相对角色侧移，滚轮调整跟随距离。退出 FOLLOW 重置配置及控制开关，其他 sample 默认 tank 控制保持原语义。
 - `GameManager:RequestWindowSize(width, height)` 接受 640–3840 × 360–2160 的逻辑内容尺寸，由 `ClientManager` 排到下一帧安全点执行；Lua 鼠标回调不直接进入 Cocoa/Win32 resize。启动环境覆盖、后台 Windows 窗口或非法尺寸会拒绝请求。窗口事件继续同步 OIS 鼠标范围、Lua/UIManager、FairyGUI root、viewport 和相机宽高比；FairyGUI 原生 screen/root 必须先于 `FairyGuiManager_HandleWindowResized` 更新，否则 Lua 层会查询到旧尺寸。
-- `SandboxAudio` 为 GameManager 注入的 `RuntimeUiSound`：`IsAvailable`、`Play(path)`、`StopAll`、`SetVolume(0..1)`、`GetVolume`。Lua 负责事件/限频/音量设置；runtime 读取、校验、缓存短 WAV 并持有播放缓冲。Sandbox19 的设置与事件入口见 [sandbox19_audio.lua](../../bin/res/scripts/samples/sandbox19_audio.lua)，自制素材来源记录见 [relay 音效说明](../../bin/res/audio/relay/README.md)。
+- `SandboxAudio` 为 GameManager 注入的 `RuntimeUiSound`：`IsAvailable`、`Play(path)`、`PlayLayer(path,gain,pan,priority)`、`StopAll`、`SetVolume(0..1)`、`GetVolume`。Play 保持替换全部声部的旧语义；PlayLayer 支持单音增益、左右声像与优先级抢占，同优先级淘汰最老声部，满声部拒绝不等于后端失效。Lua 负责事件/限频/音量设置与 HELLO_AUDIO_SILENT 静音短路；runtime 读取、校验、缓存短 WAV 并持有播放缓冲。Sandbox19 的设置与事件入口见 [sandbox19_audio.lua](../../bin/res/scripts/samples/sandbox19_audio.lua)，自制素材来源记录见 [relay 音效说明](../../bin/res/audio/relay/README.md)。
 - Scene compositor 通过 [[systems-service]] SceneService 按相机 viewport 启停。Sandbox19 的 Relay/SceneGrade 仅处理三维 scene texture；Gorilla active-viewport 守卫和 FairyGUI visibility bit 让两套 UI 留在最终 viewport，不被滤色或重复绘制。macOS 默认选择受支持且不超过 4× 的 FSAA，`HELLO_RENDER_FSAA` 可显式覆盖；Relay/SceneGrade 的 scene RTT 不再使用 `no_fsaa`，以免主窗口抗锯齿仅作用在最终全屏四边形。Windows 保留原有 FSAA=0 条件分支，D3D9 新设置未实机复核。完整设计与实机证据见[场景色调与 UI 合成隔离](../dev-design/plans/2026-09-12-sandbox19-scene-grade.md)和[核心战斗体感复核](../dev-design/plans/2026-09-12-sandbox19-core-combat-feel.md)。
 - `base_material` 的 GL3+ `diffuse_vs_glsl` / `diffuse_ps_glsl` 现与 HLSL 路径一样读取模型 tangent 和纹理单元 2 的 `normalMap`；片元阶段正交化切线基，切线退化时回退几何法线。GLSL 的三路 sampler 明确绑定 0/1/2，未使用的自动参数已移除。改变共享基础材质后需检查 Sandbox6/7/8，不能仅凭 Sandbox19 的配对混凝土判断其它网格正确；Windows HLSL 分支未改但 D3D9 仍需单独实机复核。实现与证据见[GL3+ 基础材质法线计划](../dev-design/plans/2026-09-12-sandbox19-normal-lighting.md)。
 
-- `RuntimeOgre::ConfigureDirectionalShadows` 由 SceneService 调用，Sandbox19 显式使用单张方向光 R32F 深度图与 receiver-plane bias、PCF 接收。Light 为借用指针，阴影纹理由 SceneManager 管理；关闭清空 caster/receiver 和纹理，其他 sample 不主动启用。GL/HLSL 分别处理 -1..1 / 0..1 clip Z；modulative 会同时压低 ambient，尚非 PBR 光照。基础 ambient samplers 显式绑定 diffuse/AO/emissive 0/1/2，既有头盔/武器发光图只加一次，默认黑图无额外颜色。详见[本轮实机记录](../dev-design/plans/2026-09-12-sandbox19-visual-goal.md)。
+- `RuntimeOgre::ConfigureDirectionalShadows` 由 SceneService 调用，Sandbox19 显式使用单张方向光 R32F 深度图与 receiver-plane bias、PCF 接收。Light 为借用指针，阴影纹理由 SceneManager 管理；关闭清空 caster/receiver 和纹理，其他 sample 不主动启用。GL/HLSL 分别处理 -1..1 / 0..1 clip Z；modulative 会同时压低 ambient，尚非 PBR 光照。基础 ambient samplers 显式绑定 diffuse/AO/emissive 0/1/2，既有头盔/武器发光图只加一次，默认黑图无额外颜色。Sandbox20 按远景镜头传入 65 m 阴影范围，默认 32 m 保持兼容。详见[本轮实机记录](../dev-design/plans/2026-09-12-sandbox19-visual-goal.md)。
 
 ## 5. 约束与红线
 

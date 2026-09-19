@@ -3,6 +3,9 @@
 /bin/*.exe
 /bin/*.pdb
 /bin/relay_settings.cfg
+/bin/crossfire_settings.cfg
+/bin/crossfire_settings.cfg.tmp
+/bin/crossfire_settings.cfg.bak
 /bin/HelloOgre3D
 /bin/HelloOgre3D.dSYM/
 /libs/*
