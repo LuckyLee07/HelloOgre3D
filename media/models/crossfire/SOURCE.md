@@ -23,7 +23,7 @@
 | `tile.mesh` / `tile_service.mesh` / `tile_coolant.mesh` / `tile_interlock.mesh` | 4×0.24×4 | 顶面 Y=0，基体向下；四块嵌板和窄服务缝。后 3 种只改材质分组，顶点与三角索引逐项相同 |
 | `wall.mesh` | 4×2.39×0.8 | 底部 Y=0；+Z 为装饰面；适合背景侧墙 |
 | `cover.mesh` | 2.8×0.95×0.98 | 底部 Y=0；低掩体，前后均有结构细节 |
-| `core.mesh` | 3.4×3.7×3.4 | 底部 Y=0；主视觉中继核心/中央遮挡体 |
+| `core.mesh` / `core_coolant.mesh` / `core_interlock.mesh` | 3.4×3.7×3.4 | 底部 Y=0；主视觉中继核心/中央遮挡体。后两种仅映射材质，顶点与三角索引不变 |
 | `gate.mesh` | 5.5×3.7×1.5685 | 底部 Y=0；+Z 为入口装饰面；门洞实际中空 |
 | `pipe.mesh` | 4×0.37×0.64 | 底部 Y=0；沿 X 的双管线与束环 |
 | `edge.mesh` | 4×0.65×0.756 | 底部 Y=0；+Z 为灯带面；场地外围厚边 |
@@ -111,6 +111,25 @@
 
 离线比较已核对全部 bounds、28 个静态网格顶点/三角形、角色枪口元数据及材质引用。CPU 深度预览只用于查看主体大色块和方向轮廓，不能作为最终 GL、720p 主次或用户美术验收。
 
+## 冷却与联锁设施材质、区域牌（f0bbb9a 之后）
+
+本轮只重新划分现有设备的材质，不移动、缩放或增加静态几何。`cooling_stack.mesh` 的筒身使用灰蓝 `CoolantCasing`，纵向支架与风机叶片使用深色 `FacilityFrame`，顶冠与金属束环分别使用 `CoolantCrown` / `FacilityMetal`，外管使用低饱和 `CoolantPipe`。`relay_tower.mesh` 的接收碟使用浅灰 `DishCeramic`，支撑桁架为深色 `FacilityFrame`，底部机柜为中灰 `RelayCasing`，金属圈与基座关节使用 `FacilityMetal`。陶瓷碟与设备顶冠均低于单位浅釉面的亮度输入；没有修改任何单位材质、枪口、光源或共享 shader。
+
+新增 `core_coolant.mesh` / `core_interlock.mesh` 直接调用 `core()` 并重映射材质：灰蓝冷却立柱与金属冠、冷蓝灰联锁立柱与上冠，管线颜色随所属设施轻微区别。两者均为 1696 个三角形，bounds 为 `(-1.7,0,-1.7)` 至 `(1.7,3.7,1.7)`，全部顶点属性及各组索引和 `core.mesh` 逐项相同。可在场景原核心位置替换网格，不需要更改碰撞、导航或状态环挂点。
+
+四张区域牌 PNG 由生成器中的 `region_sign_maps()` 使用 `Surface.rect/line` 明确几何构造；源代码就是可编辑源图，不经过 AI 图片、字体或外部矢量栅格服务。冷却符号为带外接管口的封闭换热回路和三根宽翅片；联锁符号为两个带键槽的实心节点和双横梁闭合连接。暗色切角底牌、宽实线和低饱和青灰/蓝灰区分于战术路径、护盾橙光及供电状态；图案不表达额外玩法状态。
+
+| 材质 | PNG / 比例 | 建议显示尺寸 |
+|---|---|---|
+| `Crossfire/ZoneCoolantWide` | `zone_coolant_wide.png`，768×256，3:1 | 背墙横牌 3.6×1.2 m |
+| `Crossfire/ZoneCoolantBadge` | `zone_coolant_badge.png`，256×256，1:1 | 设备侧牌 .8×.8 m |
+| `Crossfire/ZoneInterlockWide` | `zone_interlock_wide.png`，768×256，3:1 | 背墙横牌 3.6×1.2 m |
+| `Crossfire/ZoneInterlockBadge` | `zone_interlock_badge.png`，256×256，1:1 | 设备侧牌 .8×.8 m |
+
+PNG 的 U 为阅读横向，V 为纵向。当前 `PlaneGenerator` 的 U 沿局部 +Z、V 沿局部 +X，因此 Wide 平面的生成尺寸应使局部 Z 为长轴（1.2×3.6 m 的 X×Z），`CreateVisualPlane(3.6,1.2)` 的第一参数正好沿 U，场景欧拉角 `(0,90,-90)` 将 U 放到墙面的横向；不要把默认 X 长轴平面直接套用到横版 PNG。上述尺寸是阅读方向的宽×高；方形 Badge 不受长宽互换影响。使用无碰撞、无投影的 `CreateVisualPlane`，贴在真实表面外约 .006～.012 m，当前后两关在 `(±4.4,1.35,11.625)` 各装一张 3.6×1.2 m 横牌；核心牌实际缩为 .36×.36 m，置于各核心局部 `(-.3246,.90,-1.2113)` 的十二边筒体平面上，避开下方斜撑。横牌使用欧拉角 `(0,90,-90)`，小牌为 `(0,105,-90)`，现有核心状态环保持 `(0,3.195,0)`。区域牌使用现有 `relay_overlay` shader，双面、深度检测开启、深度写入关闭；透明边界至少四像素，固定暗底不制造照明光池。
+
+生成前后的 31 个旧网格全部顶点属性、保留绕序的三角形集合和各轴 bounds 完全相同；仅 `cooling_stack.mesh` / `relay_tower.mesh` 的材质分组改变，其他 29 个旧 mesh 字节不变。新增两种核心的几何签名和原核心相同。manifest 的 `geometry_sha256` 不计材质名称和组间顺序，包含完整顶点属性与保留绕序的三角形集合，用来独立区分几何变化与着色变化。几何校验、PNG 透明边界、材质/贴图引用与确定性重建由 `--check` 检查；720p 下的最终层次和标牌朝向仍交由实际 Ogre 画面验收。
+
 ## 重建与验证
 
 ```bash
@@ -118,6 +137,6 @@ python3 tools/generate_crossfire_assets.py
 python3 tools/generate_crossfire_assets.py --check
 ```
 
-生成器写入本目录 mesh/manifest、`media/materials/crossfire.material` 和 `media/textures/crossfire/*.png`；不修改运行二进制、共享 shader 或旧 sample。`--check` 在临时目录重建后逐字节对比提交资源，同时检查有限数值、非退化三角形、面绕序、单位法线/切线、法线切线正交、材质引用、地砖变体的几何一致性、PNG 字节一致性及 Fx 纯透明边缘；不会改写被验证的资产。新增文本使用 UTF-8、CRLF。
+生成器写入本目录 mesh/manifest、`media/materials/crossfire.material` 和 `media/textures/crossfire/*.png`；不修改运行二进制、共享 shader 或旧 sample。`--check` 在临时目录重建后逐字节对比提交资源，同时检查有限数值、非退化三角形、面绕序、单位法线/切线、法线切线正交、材质引用、地砖/核心变体的几何一致性、PNG 字节一致性及 Fx/区域牌纯透明边缘；不会改写被验证的资产。新增文本使用 UTF-8、CRLF。
 
 离线几何/材质检查只能说明资源结构成立。最终尺寸感、灯光、材质表现、接地、游戏命中与构图应以实际 Ogre 窗口为准；这些原创样段资产没有自动获得作者的美术或体验验收。

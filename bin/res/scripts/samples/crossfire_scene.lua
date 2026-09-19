@@ -14,7 +14,7 @@ local restoreElapsed=0
 local restoreComplete=false
 local equipmentNames={
  tile="floor",tile_service="floor",tile_coolant="floor",tile_interlock="floor",base="floor",deck_marks="floor",deck_marks_08="floor",deck_marks_09="floor",service_trench="floor",
- core="中继核心",cover="掩体",wall="围墙",edge="场地护栏",gate="门厅",
+ core="中继核心",core_coolant="中继核心",core_interlock="中继核心",cover="掩体",wall="围墙",edge="场地护栏",gate="门厅",
  console="控制台",vent="通风设备",dock="检修台",pipe="管线",service_elbow="管线",
  relay_tower="中继塔",cooling_stack="冷却设备",rear_plinth="维护平台",
  sector_07="区域标牌",sector_08="区域标牌",sector_09="区域标牌",
@@ -31,7 +31,7 @@ local function asset(mesh,x,z,yaw,y)
  a:setPosition(Vector3(x,y or 0,z)); a:setRotation(Vector3(0,yaw or 0,0)); a:SetMass(0)
  moduleCount=moduleCount+1
  surfaceKinds[a:GetObjId()]=equipmentNames[mesh]
- if mesh=="core" then corePositions[#corePositions+1]={x=x,y=y or 0,z=z} end
+ if mesh=="core" or mesh=="core_coolant" or mesh=="core_interlock" then corePositions[#corePositions+1]={x=x,y=y or 0,z=z} end
  if mesh=="cooling_stack" then coolingPositions[#coolingPositions+1]={x=x,y=y or 0,z=z} end
  return a
 end
@@ -48,6 +48,12 @@ local function visual(width,depth,x,y,z,yaw,material,pitch)
  a:setPosition(Vector3(x,y,z));a:setRotation(Vector3(pitch or 0,yaw or 0,0))
  a:setMaterial("Crossfire/"..material)
  return a
+end
+local function zonePanel(width,height,x,y,z,material,yaw)
+ -- Plane U is local +Z and V is local +X. This maps U to world +X,
+ -- V downwards and the normal toward the court, preserving the 3:1 artwork.
+ local a=visual(width,height,x,y,z,0,material)
+ a:setRotation(Vector3(0,yaw or 90,-90))
 end
 local function status(width,depth,x,y,z,yaw,family,pitch)
  local a=visual(width,depth,x,y,z,yaw,family.."Idle",pitch)
@@ -124,6 +130,14 @@ local function surfaceDetails(index)
   visual(7.8,2.0,0,.009,-2.45,0,"InterlockBus")
   visual(7.8,2.0,0,.009,2.45,180,"InterlockBus")
  end
+ if index>1 then
+  local family=index==2 and "ZoneCoolant" or "ZoneInterlock"
+  -- Mounted on the inner rear wall and the front of the existing core base.
+  -- These are equipment labels: no pointer hit target, body or navigation role.
+  for _,x in ipairs({-4.4,4.4}) do zonePanel(3.6,1.2,x,1.35,11.625,family.."Wide") end
+  -- Small plaques follow a flat face of the twelve-sided base, above its braces.
+  for _,p in ipairs(corePositions) do zonePanel(.36,.36,p.x-.3246,p.y+.90,p.z-1.2113,family.."Badge",105) end
+ end
  -- The circuit remains visible beside a central result panel. It is a physical
  -- indicator strip, not a movement path or an invented emissive light pool.
  for _,x in ipairs({-9.25,9.25}) do
@@ -184,7 +198,7 @@ end
 local function coolantWorks()
  -- Offset machinery gives a sheltered left approach and a different right bend.
  -- Neither cooling stack occupies the authored (-5,6)/(7,4) firing positions.
- asset("core",-2,0)
+ asset("core_coolant",-2,0)
  asset("cooling_stack",-7.4,2.6)
  asset("cooling_stack",5.6,-.7)
  asset("cover",1.1,-3.4,90)
@@ -202,7 +216,7 @@ local function coolantWorks()
 end
 local function relayInterlock()
  -- The paired central machines split the arena into two open outer approaches.
- asset("core",-3,0); asset("core",3,0)
+ asset("core_interlock",-3,0); asset("core_interlock",3,0)
  asset("cover",0,-4.4)
  asset("cover",0,2.6,90)
  asset("deck_marks_09",-6.4,-4.8,0,.015)

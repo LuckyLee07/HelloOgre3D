@@ -37,7 +37,8 @@
         0.6835,
         1.47
       ],
-      "sha256": "1ca7a4e266aba84945dda825ef8a2d6bb5b4527717e7231f1b9fe4e6da2fdad5"
+      "sha256": "1ca7a4e266aba84945dda825ef8a2d6bb5b4527717e7231f1b9fe4e6da2fdad5",
+      "geometry_sha256": "e5e9fea708558e0d4ff1a54f47a6a2dc4fe1e6f0e46fb784ec2f654a27eaced6"
     },
     {
       "file": "drone_b.mesh",
@@ -74,7 +75,8 @@
         0.6835,
         1.47
       ],
-      "sha256": "9fa2e0ae48b55c272adda63129e464f51e7e3b281f5ee198b947a018241a1f89"
+      "sha256": "9fa2e0ae48b55c272adda63129e464f51e7e3b281f5ee198b947a018241a1f89",
+      "geometry_sha256": "73adf342181600f5179e0d288fc82fc20ab8a5f5b6bc9e9ec2001f5c1416af2b"
     },
     {
       "file": "sentinel.mesh",
@@ -113,7 +115,8 @@
         1.478854,
         1.8865
       ],
-      "sha256": "3635b80fe0381fe94435a57c84c5728d856153dd81fae72a85d8bc78edfb631e"
+      "sha256": "3635b80fe0381fe94435a57c84c5728d856153dd81fae72a85d8bc78edfb631e",
+      "geometry_sha256": "0bd81e0a8449c1a0ccabaea28aeb069a2d09c71ff5470c8674d6f945ae235d6b"
     },
     {
       "file": "tile.mesh",
@@ -140,7 +143,8 @@
         0.24,
         4.0
       ],
-      "sha256": "09a2b2bbe1488697190eead7312709fdbfb6b2f7fd002c255832d6ac2e8726a2"
+      "sha256": "09a2b2bbe1488697190eead7312709fdbfb6b2f7fd002c255832d6ac2e8726a2",
+      "geometry_sha256": "e474ed9ac8ab4ed4d0aa1d0060ba7782c6f7d094727b096571459f8c2e73d448"
     },
     {
       "file": "tile_service.mesh",
@@ -168,7 +172,8 @@
         0.24,
         4.0
       ],
-      "sha256": "3b5bfeecde6acd5180925a6e602ad131088a04dfcde284e87cfd2c027956ea48"
+      "sha256": "3b5bfeecde6acd5180925a6e602ad131088a04dfcde284e87cfd2c027956ea48",
+      "geometry_sha256": "e474ed9ac8ab4ed4d0aa1d0060ba7782c6f7d094727b096571459f8c2e73d448"
     },
     {
       "file": "tile_coolant.mesh",
@@ -196,7 +201,8 @@
         0.24,
         4.0
       ],
-      "sha256": "b52fdbb34b0f3b6b19037fc0132fd4c03517dcc5a48c99eb197c401b10a623e6"
+      "sha256": "b52fdbb34b0f3b6b19037fc0132fd4c03517dcc5a48c99eb197c401b10a623e6",
+      "geometry_sha256": "e474ed9ac8ab4ed4d0aa1d0060ba7782c6f7d094727b096571459f8c2e73d448"
     },
     {
       "file": "tile_interlock.mesh",
@@ -224,7 +230,8 @@
         0.24,
         4.0
       ],
-      "sha256": "1e4f6da130ff6014fdc9a6d8833a91ee2c104b38a39d62c9f114f973ab97a628"
+      "sha256": "1e4f6da130ff6014fdc9a6d8833a91ee2c104b38a39d62c9f114f973ab97a628",
+      "geometry_sha256": "e474ed9ac8ab4ed4d0aa1d0060ba7782c6f7d094727b096571459f8c2e73d448"
     },
     {
       "file": "wall.mesh",
@@ -256,7 +263,8 @@
         2.39,
         0.8
       ],
-      "sha256": "89dd3482097f3b74eef5256af20b688363fe97c2072675812ddaef0bc1c69cd2"
+      "sha256": "89dd3482097f3b74eef5256af20b688363fe97c2072675812ddaef0bc1c69cd2",
+      "geometry_sha256": "0c1c8acf4c3d74fc65ea9bdd3877a4f7957733416276bb98bad035b83bb0cc97"
     },
     {
       "file": "cover.mesh",
@@ -286,7 +294,8 @@
         0.95,
         0.98
       ],
-      "sha256": "2e53c8e9891a8e6de6e9d8a979568fe3e408ac2e528199b167c5683db2e789fd"
+      "sha256": "2e53c8e9891a8e6de6e9d8a979568fe3e408ac2e528199b167c5683db2e789fd",
+      "geometry_sha256": "06cbdafad05c361dfba532d939d96e74faf0b4ba4ea25d269566e948ed0e819a"
     },
     {
       "file": "core.mesh",
@@ -317,7 +326,74 @@
         3.7,
         3.4
       ],
-      "sha256": "ebae7714c663ede9fcf6cfe71880ea1ed93b974c8f48b743a4ff73f3adf051f8"
+      "sha256": "ebae7714c663ede9fcf6cfe71880ea1ed93b974c8f48b743a4ff73f3adf051f8",
+      "geometry_sha256": "0946b18f5efa9c8ae9c20924633bb0f7074ba4488124c29d68ac0e1cd22dccd2"
+    },
+    {
+      "file": "core_coolant.mesh",
+      "vertices": 3240,
+      "triangles": 1696,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/FacilityMetal",
+        "Crossfire/Slate",
+        "Crossfire/CoolantCasing",
+        "Crossfire/CoolantSignal",
+        "Crossfire/CoolantCrown",
+        "Crossfire/CoolantPipe"
+      ],
+      "bounds_min": [
+        -1.7,
+        0.0,
+        -1.7
+      ],
+      "bounds_max": [
+        1.7,
+        3.7,
+        1.7
+      ],
+      "pivot": "ground",
+      "geometry_source": "core.mesh",
+      "size": [
+        3.4,
+        3.7,
+        3.4
+      ],
+      "sha256": "0d5faa3faf07abda2fb6884527686d1751ef273358f80642ecebac7f1b021955",
+      "geometry_sha256": "0946b18f5efa9c8ae9c20924633bb0f7074ba4488124c29d68ac0e1cd22dccd2"
+    },
+    {
+      "file": "core_interlock.mesh",
+      "vertices": 3240,
+      "triangles": 1696,
+      "materials": [
+        "Crossfire/Graphite",
+        "Crossfire/FacilityMetal",
+        "Crossfire/Slate",
+        "Crossfire/InterlockCasing",
+        "Crossfire/InterlockSignal",
+        "Crossfire/InterlockCrown",
+        "Crossfire/InterlockBand"
+      ],
+      "bounds_min": [
+        -1.7,
+        0.0,
+        -1.7
+      ],
+      "bounds_max": [
+        1.7,
+        3.7,
+        1.7
+      ],
+      "pivot": "ground",
+      "geometry_source": "core.mesh",
+      "size": [
+        3.4,
+        3.7,
+        3.4
+      ],
+      "sha256": "a8f79f85aa93f0b49e80dc78933b9214e9dd5a31fdf3068b38a80dc8d1d58832",
+      "geometry_sha256": "0946b18f5efa9c8ae9c20924633bb0f7074ba4488124c29d68ac0e1cd22dccd2"
     },
     {
       "file": "gate.mesh",
@@ -349,7 +425,8 @@
         3.7,
         1.5685
       ],
-      "sha256": "0e38ec97cd2ad0d00bd87c4faf7032fa95c42f3c25c8fac9b5ff0a4a0b510d45"
+      "sha256": "0e38ec97cd2ad0d00bd87c4faf7032fa95c42f3c25c8fac9b5ff0a4a0b510d45",
+      "geometry_sha256": "79cc7dd6d52a95f8d5d9a5935625afc745b5ca6d59c9f09d2ad914db426b4845"
     },
     {
       "file": "pipe.mesh",
@@ -377,7 +454,8 @@
         0.37,
         0.64
       ],
-      "sha256": "f947f40f32accbf0175dca1f64c71a6c45410dca67b6e3bd14327d46655e02c3"
+      "sha256": "f947f40f32accbf0175dca1f64c71a6c45410dca67b6e3bd14327d46655e02c3",
+      "geometry_sha256": "dddb117d9390bac36d51fe39caa9d20c4b2e949b3cefcb9678286079e4cb1c6c"
     },
     {
       "file": "edge.mesh",
@@ -406,7 +484,8 @@
         0.65,
         0.756
       ],
-      "sha256": "ea38a7f35686650a45ce5e9cd15c2dec9f2efccea56c2a2c65061454336fe336"
+      "sha256": "ea38a7f35686650a45ce5e9cd15c2dec9f2efccea56c2a2c65061454336fe336",
+      "geometry_sha256": "5a19fed17f644e6808d2285cfc927344a6ab9c508836300dc67e2f81bbd5c609"
     },
     {
       "file": "console.mesh",
@@ -437,7 +516,8 @@
         1.314,
         0.9
       ],
-      "sha256": "78ad68a394e1ea6d78cd6d4a050b2d8aaff0907814913d8fb5a7fd0454269365"
+      "sha256": "78ad68a394e1ea6d78cd6d4a050b2d8aaff0907814913d8fb5a7fd0454269365",
+      "geometry_sha256": "795ee33c172330f09b3d2f5de6697c49b59b0669148bec75e6a582a3e3cd1d36"
     },
     {
       "file": "dock.mesh",
@@ -467,7 +547,8 @@
         0.362,
         2.4
       ],
-      "sha256": "4a6995cd796a8121525fa5176e52998fec77319c8ef4c2174eef2993f1e284a6"
+      "sha256": "4a6995cd796a8121525fa5176e52998fec77319c8ef4c2174eef2993f1e284a6",
+      "geometry_sha256": "2948d6ae90cd8e7e941a51fb45ac2596517cbf86be66329091212133a3afd5de"
     },
     {
       "file": "vent.mesh",
@@ -496,7 +577,8 @@
         0.7625,
         1.6
       ],
-      "sha256": "7de07141d356a775f663c1f7ce5f112a97339ce4fed9bb2b318c1c24e9bf228b"
+      "sha256": "7de07141d356a775f663c1f7ce5f112a97339ce4fed9bb2b318c1c24e9bf228b",
+      "geometry_sha256": "01aca9a0ef71df8fbc92bbca4fe7236b78ff4ae15da6ea57092f40f52f263522"
     },
     {
       "file": "deck_marks.mesh",
@@ -525,7 +607,8 @@
         0.006,
         3.0
       ],
-      "sha256": "d7763bb6a7a3820eda6567498c453cf35bac2fc170a5077375f0821579f53f09"
+      "sha256": "d7763bb6a7a3820eda6567498c453cf35bac2fc170a5077375f0821579f53f09",
+      "geometry_sha256": "b1ef28bc9b2266d46f1a628bf207d4bf1be34e1c20b2af5d72020cec6b08a17a"
     },
     {
       "file": "base.mesh",
@@ -553,7 +636,8 @@
         0.55,
         24.4
       ],
-      "sha256": "c73e8141d045bc527c5dc6327be0c63276a356c9022537c8ae434b627477bf43"
+      "sha256": "c73e8141d045bc527c5dc6327be0c63276a356c9022537c8ae434b627477bf43",
+      "geometry_sha256": "aa696d7b9f574d5929328cc1264a40a38d69f09600eb03318a68041131f9a5e3"
     },
     {
       "file": "deck_marks_08.mesh",
@@ -581,7 +665,8 @@
         0.006,
         3.0
       ],
-      "sha256": "c81298afca8f42b3b9a374990a7af5567c8ca358024c980b9479b9857e52e260"
+      "sha256": "c81298afca8f42b3b9a374990a7af5567c8ca358024c980b9479b9857e52e260",
+      "geometry_sha256": "7395cb8b0157840cb069e726426f392d2a63392c808f0e3c99ce502cc915dfdb"
     },
     {
       "file": "deck_marks_09.mesh",
@@ -609,7 +694,8 @@
         0.006,
         3.0
       ],
-      "sha256": "4750e6355e2d67d6d3713dab5fe85cdc322b09e3fab4829267539dd9a257b9af"
+      "sha256": "4750e6355e2d67d6d3713dab5fe85cdc322b09e3fab4829267539dd9a257b9af",
+      "geometry_sha256": "c072c3ffc65d73d7f6b9e89f058ad5a829adfed6469a393d53da6f43ca809c8d"
     },
     {
       "file": "relay_tower.mesh",
@@ -617,12 +703,12 @@
       "triangles": 2108,
       "materials": [
         "Crossfire/Graphite",
-        "Crossfire/Structure",
-        "Crossfire/Slate",
-        "Crossfire/StructureTrim",
-        "Crossfire/Steel",
-        "Crossfire/FacilitySignal",
-        "Crossfire/FacilityTeal"
+        "Crossfire/RelayCasing",
+        "Crossfire/FacilityFrame",
+        "Crossfire/FacilityMetal",
+        "Crossfire/InterlockSignal",
+        "Crossfire/DishCeramic",
+        "Crossfire/InterlockBand"
       ],
       "bounds_min": [
         -1.6,
@@ -642,7 +728,8 @@
         5.965,
         2.8
       ],
-      "sha256": "b93679844b45c9e304eba2215835395b37d9d526d5a165dad8f54307c4430036"
+      "sha256": "2f3c6631957f69a990119d4a5fca634f7f04197523d51f9cd5787d0967efea3e",
+      "geometry_sha256": "d789b4cee954ef0840bd3cd57787750ac3ae063a700af2c1b78518de547caa7b"
     },
     {
       "file": "cooling_stack.mesh",
@@ -650,12 +737,12 @@
       "triangles": 2404,
       "materials": [
         "Crossfire/Graphite",
-        "Crossfire/Slate",
-        "Crossfire/Structure",
-        "Crossfire/Steel",
-        "Crossfire/StructureTrim",
+        "Crossfire/FacilityFrame",
+        "Crossfire/CoolantCasing",
+        "Crossfire/FacilityMetal",
+        "Crossfire/CoolantCrown",
         "Crossfire/Rubber",
-        "Crossfire/FacilityTeal"
+        "Crossfire/CoolantPipe"
       ],
       "bounds_min": [
         -1.25,
@@ -673,7 +760,8 @@
         2.93,
         2.5
       ],
-      "sha256": "81a29427b8f02c3d8a882becb6123cf04ef008cc3fde5721bde073e7caa64a5d"
+      "sha256": "0205778c89c0f1fa19d87b56eefeea59a172496cb8311d18203e1b39c37d5aec",
+      "geometry_sha256": "f955e05b62d0b9f6f2500ab116a208530b0ef8dc697e544e02c9786e5fcda174"
     },
     {
       "file": "service_trench.mesh",
@@ -702,7 +790,8 @@
         0.049,
         6.0
       ],
-      "sha256": "52ded7ed3cbce83811e7d2f98eff9bd63ffd3e4621748f33793728294b38a78a"
+      "sha256": "52ded7ed3cbce83811e7d2f98eff9bd63ffd3e4621748f33793728294b38a78a",
+      "geometry_sha256": "1d74625834813d5fb2acccbc3a5e1b8f587cb18abc8b97592eb4a90b0a9d6213"
     },
     {
       "file": "service_elbow.mesh",
@@ -730,7 +819,8 @@
         0.36,
         1.19
       ],
-      "sha256": "224b8996fe6f764e744c2cce7c6ddd50e096a0f25dbb21f230b6e3f1b0edd87c"
+      "sha256": "224b8996fe6f764e744c2cce7c6ddd50e096a0f25dbb21f230b6e3f1b0edd87c",
+      "geometry_sha256": "5806e2676c6f8045b3536a7055490000aa6ceeb2d3c987d254bcf02b9a64652e"
     },
     {
       "file": "sector_07.mesh",
@@ -760,7 +850,8 @@
         0.92,
         0.149
       ],
-      "sha256": "d822b6e0191e3fc0f0a6e5d7c35f96458e9f00fd594c85e22f8851f12a2149e7"
+      "sha256": "d822b6e0191e3fc0f0a6e5d7c35f96458e9f00fd594c85e22f8851f12a2149e7",
+      "geometry_sha256": "7a4c96fc81da53dc0dd9fe1ff9343d9d9374983604686f0aa0d584ae47db4d11"
     },
     {
       "file": "sector_08.mesh",
@@ -790,7 +881,8 @@
         0.92,
         0.149
       ],
-      "sha256": "3217c9cd999c0247538b842eed45d992ec86b985ec4670210baaf05584a9446d"
+      "sha256": "3217c9cd999c0247538b842eed45d992ec86b985ec4670210baaf05584a9446d",
+      "geometry_sha256": "6b01a4ab0a810169afd73a140ff11b783d5d890aeec0e6d20e61342dca178e29"
     },
     {
       "file": "sector_09.mesh",
@@ -820,7 +912,8 @@
         0.92,
         0.149
       ],
-      "sha256": "748c91bc53b48b66c783bcf01cdaea6b3e61b8a31a970b36d53da82662c38a3e"
+      "sha256": "748c91bc53b48b66c783bcf01cdaea6b3e61b8a31a970b36d53da82662c38a3e",
+      "geometry_sha256": "61065c7c7657f8eab208acd8576c479c285c6ec7a0e86d626e584a4d41f0b5b9"
     },
     {
       "file": "rear_plinth.mesh",
@@ -848,7 +941,8 @@
         0.65,
         3.8375
       ],
-      "sha256": "b6757adcc2dbfce59249800dddf946431bb9e48dae15318626f4a0e02b3b09d4"
+      "sha256": "b6757adcc2dbfce59249800dddf946431bb9e48dae15318626f4a0e02b3b09d4",
+      "geometry_sha256": "ee9e7e8dcf2ec46d208ffb133cee1be66d4b25e84b531b3aa34ace7fb365afd4"
     },
     {
       "file": "court_margin_side.mesh",
@@ -876,7 +970,8 @@
         0.042,
         24.0
       ],
-      "sha256": "6430146ebcce518007c9f3906927ea7a66764c9b7e310bb896efa13e95f9cc80"
+      "sha256": "6430146ebcce518007c9f3906927ea7a66764c9b7e310bb896efa13e95f9cc80",
+      "geometry_sha256": "3f36e0e4029d8941960faf7660b0a4146cf4b82b7a90f3a3e00a246f6cc373fe"
     },
     {
       "file": "court_margin_front.mesh",
@@ -904,7 +999,8 @@
         0.042,
         1.0
       ],
-      "sha256": "2dbab1d5e6b23365583744d54d5bcf560004c60879ebb8fe7e35b43a55ff08ad"
+      "sha256": "2dbab1d5e6b23365583744d54d5bcf560004c60879ebb8fe7e35b43a55ff08ad",
+      "geometry_sha256": "d9fc4c9dfad5c197c071085e0c0f9ba740a20f1d8d5221137686bfaeb8b12e82"
     },
     {
       "file": "court_margin_rear.mesh",
@@ -932,7 +1028,8 @@
         0.042,
         1.5
       ],
-      "sha256": "ac910c21132eb3da6b0a28c2fd8e2e2fc18d77137835c299ec48c7d5da240378"
+      "sha256": "ac910c21132eb3da6b0a28c2fd8e2e2fc18d77137835c299ec48c7d5da240378",
+      "geometry_sha256": "ef81f86f2eedf08521312be0c8c2dc295c3989859aa0e2c3c1b5d8e93c4b0a40"
     }
   ],
   "surfaces": [
@@ -1031,6 +1128,30 @@
       "width": 256,
       "height": 256,
       "sha256": "f31287803a9283874f59d8377fb97a59ed068df8d7364dd0b5a0fdfd587f077c"
+    },
+    {
+      "file": "textures/crossfire/zone_coolant_wide.png",
+      "width": 768,
+      "height": 256,
+      "sha256": "0851b486bfa902e7a281cd3477145d65cdaa420875119df1fed868e25298a4c1"
+    },
+    {
+      "file": "textures/crossfire/zone_coolant_badge.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "b72c4c6a8187341a9ea810189aff8ec7376a3e6a4e61b66206e6b3cf9542f4a9"
+    },
+    {
+      "file": "textures/crossfire/zone_interlock_wide.png",
+      "width": 768,
+      "height": 256,
+      "sha256": "d17edd42f5e475ac3117c43bd4e12629fde6fd2be8e449e78d8949e4352d55ba"
+    },
+    {
+      "file": "textures/crossfire/zone_interlock_badge.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "6be009c78d22fa847c2f00b8b2fa5149779959d682c1caff319c19b3783fea43"
     }
   ]
 }

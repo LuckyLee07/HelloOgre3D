@@ -64,6 +64,20 @@ PALETTE = {
     "CoreCasing": ((0.40, 0.47, 0.47), (0.08, 0.10, 0.10), 28),
     "CoreCrown": ((0.57, 0.64, 0.61), (0.18, 0.21, 0.20), 52),
     "CoreMetal": ((0.28, 0.35, 0.37), (0.24, 0.29, 0.31), 72),
+    # Facility finishes never remap actor materials. Broad colour blocks and
+    # a restrained metal crown distinguish machinery at the fixed game scale.
+    "FacilityFrame": ((0.068, 0.102, 0.12), (0.075, 0.10, 0.12), 32),
+    "FacilityMetal": ((0.33, 0.42, 0.45), (0.25, 0.30, 0.32), 64),
+    "CoolantCasing": ((0.25, 0.39, 0.45), (0.075, 0.12, 0.14), 32),
+    "CoolantCrown": ((0.48, 0.57, 0.58), (0.27, 0.31, 0.32), 64),
+    "CoolantPipe": ((0.115, 0.33, 0.35), (0.08, 0.15, 0.16), 32),
+    "CoolantSignal": ((0.20, 0.49, 0.47), (0.02, 0.055, 0.05), 20),
+    "DishCeramic": ((0.60, 0.64, 0.60), (0.14, 0.16, 0.15), 44),
+    "RelayCasing": ((0.29, 0.35, 0.37), (0.06, 0.08, 0.09), 28),
+    "InterlockCasing": ((0.35, 0.39, 0.48), (0.10, 0.12, 0.17), 36),
+    "InterlockCrown": ((0.50, 0.54, 0.62), (0.22, 0.25, 0.30), 56),
+    "InterlockBand": ((0.205, 0.275, 0.37), (0.065, 0.09, 0.13), 32),
+    "InterlockSignal": ((0.35, 0.47, 0.58), (0.04, 0.055, 0.075), 20),
 }
 
 
@@ -385,6 +399,18 @@ def core():
     return m
 
 
+def core_variant(region):
+    replacements = {
+        "coolant": {"CoreCasing": "CoolantCasing", "CoreCrown": "CoolantCrown",
+                    "CoreMetal": "FacilityMetal", "FacilityTeal": "CoolantPipe",
+                    "FacilitySignal": "CoolantSignal"},
+        "interlock": {"CoreCasing": "InterlockCasing", "CoreCrown": "InterlockCrown",
+                      "CoreMetal": "FacilityMetal", "FacilityTeal": "InterlockBand",
+                      "FacilitySignal": "InterlockSignal"},
+    }
+    return remap_materials(core(), replacements[region])
+
+
 def gate():
     m = Mesh()
     for x in (-2.22, 2.22):
@@ -522,7 +548,7 @@ def base():
 def relay_tower():
     m = Mesh()
     hull(m, 3.2, 2.8, 0.34, (0, 0.17, 0), 0.08, "Graphite", 0.42)
-    hull(m, 2.60, 2.25, 0.78, (0, 0.66, 0), 0.10, "Porcelain", 0.34)
+    hull(m, 2.60, 2.25, 0.78, (0, 0.66, 0), 0.10, "RelayCasing", 0.34)
     hull(m, 1.38, 1.35, 2.79, (0, 2.42, 0.10), 0.08, "Slate", 0.28)
     for x in (-0.50, 0.50):
         beam(m, (x, 1.05, 0.25), (x, 3.86, 0.25), 0.15, 0.28, "Ivory")
@@ -536,7 +562,7 @@ def relay_tower():
     bowl = [(-0.43, 1.27), (-0.35, 1.01), (-0.165, 0.69), (-0.015, 0.37),
             (0.065, 0.13), (0, 0.13), (-0.08, 0.34), (-0.23, 0.66),
             (-0.42, 0.96), (-0.52, 1.22), (-0.43, 1.27)]
-    lathe(m, bowl, (0, 4.68, -0.08), "Porcelain", 32, axis="z", caps=False)
+    lathe(m, bowl, (0, 4.68, -0.08), "DishCeramic", 32, axis="z", caps=False)
     ring(m, 1.285, 1.19, 0.075, (0, 4.68, -0.575), "Steel", 32, axis="z")
     for a in (math.pi/2, math.pi*7/6, math.pi*11/6):
         x,y=math.cos(a),math.sin(a)
@@ -548,7 +574,9 @@ def relay_tower():
     box(m, (0.24, 0.10, 0.022), (-0.79, 0.75, -1.19), 0.009, "Signal")
     for x in (0.29, 0.48, 0.67, 0.86):
         box(m, (0.08, 0.36, 0.055), (x, 0.63, -1.15), 0.015, "Graphite")
-    return remap_materials(m, ENVIRONMENT_MATERIALS)
+    return remap_materials(m, {"Slate": "FacilityFrame", "Ivory": "FacilityFrame",
+                              "Steel": "FacilityMetal", "Teal": "InterlockBand",
+                              "Signal": "InterlockSignal"})
 
 
 def cooling_stack():
@@ -575,7 +603,9 @@ def cooling_stack():
         ring(m,0.16,0.112,0.09,(x,0.83,0),"Steel",12)
     box(m,(0.56,0.19,0.09),(0,0.52,-1.02),0.025,"Graphite")
     box(m,(0.32,0.055,0.025),(0,0.53,-1.075),0.008,"Teal")
-    return remap_materials(m, ENVIRONMENT_MATERIALS)
+    return remap_materials(m, {"Porcelain": "CoolantCasing", "Ivory": "CoolantCrown",
+                              "Slate": "FacilityFrame", "Steel": "FacilityMetal",
+                              "Teal": "CoolantPipe"})
 
 
 def service_trench():
@@ -674,6 +704,10 @@ BUILDERS = [
     ("wall.mesh", wall, {"pivot": "ground", "front": "+Z"}),
     ("cover.mesh", cover, {"pivot": "ground"}),
     ("core.mesh", core, {"pivot": "ground"}),
+    ("core_coolant.mesh", lambda: core_variant("coolant"),
+     {"pivot": "ground", "geometry_source": "core.mesh"}),
+    ("core_interlock.mesh", lambda: core_variant("interlock"),
+     {"pivot": "ground", "geometry_source": "core.mesh"}),
     ("gate.mesh", gate, {"pivot": "ground", "front": "+Z",
                          "collision_note": "Open passage; do not use one convex hull as a traversable gate."}),
     ("pipe.mesh", pipe, {"pivot": "ground", "length_axis": "X"}),
@@ -866,6 +900,53 @@ def weapon_signal_maps():
     return {'fx_charge.png':charge,'fx_cooling.png':cooling}
 
 
+def region_sign_maps():
+    """Code-native facility plaques, never tactical route/threat graphics.
+
+    U reads left-to-right and V top-to-bottom. Solid pipes and paired nodes sit
+    on a dark clipped-corner plate; no text raster, dashed stroke or glow field.
+    The badges simplify the same grammar for their smaller projected size.
+    """
+    maps = {}
+    for region in ("coolant", "interlock"):
+        ink = (139, 177, 179, 235) if region == "coolant" else (153, 167, 190, 235)
+        for shape, width in (("wide", 768), ("badge", 256)):
+            surface = Surface(width, 256)
+            plate = (17, 28, 34, 232)
+            surface.rect(24, 12, width-24, 244, plate)
+            surface.rect(12, 24, width-12, 232, plate)
+            if region == "coolant":
+                # A return circuit passes through three broad exchanger fins.
+                # The two short outward branches are physical pipe ports.
+                left, right = (144, 624) if shape == "wide" else (58, 198)
+                top, bottom = 77, 179
+                stroke = 22 if shape == "wide" else 16
+                for a, b in (((left, top), (right, top)), ((right, top), (right, bottom)),
+                             ((right, bottom), (left, bottom)), ((left, bottom), (left, top))):
+                    surface.line(a, b, stroke, ink)
+                spread = 56 if shape == "wide" else 30
+                for x in (width//2-spread, width//2, width//2+spread):
+                    surface.line((x, 49), (x, 207), stroke, ink)
+                port = 68 if shape == "wide" else 24
+                surface.line((left-port, 128), (left, 128), stroke, ink)
+                surface.line((right, 128), (right+port, 128), stroke, ink)
+            else:
+                # Two solid keyed blocks with a closed, double-bar interlock.
+                # Filled nodes read differently from the coolant's open pipes.
+                centres = (226, 542) if shape == "wide" else (76, 180)
+                half = 48 if shape == "wide" else 25
+                stroke = 22 if shape == "wide" else 16
+                for y in (92, 164):
+                    surface.line((centres[0]+half, y), (centres[1]-half, y), stroke, ink)
+                for x in centres:
+                    surface.rect(x-half+9, 54, x+half-9, 202, ink)
+                    surface.rect(x-half, 66, x+half, 190, ink)
+                    # A dark broad key slot identifies the mechanical coupling.
+                    surface.rect(x-9, 106, x+9, 150, plate)
+            maps[f'zone_{region}_{shape}.png'] = surface
+    return maps
+
+
 def surface_maps():
     # The floor is painted metal, not simulated PBR: broad polish/wear fields and
     # inset service-panel paint sit in albedo; existing geometry supplies depth.
@@ -944,6 +1025,7 @@ def surface_maps():
             'power_strip.png':strip, 'power_column.png':column, 'power_ring.png':ring_map}
     maps.update(effect_maps())
     maps.update(weapon_signal_maps())
+    maps.update(region_sign_maps())
     return maps
 
 
@@ -962,6 +1044,10 @@ OVERLAYS = {
     'CoreOffline': ('power_ring.png', (.10,.14,.16,1)),
     'FxRotor': ('fx_rotor.png', (1,1,1,1)),
     'Cooling': ('fx_cooling.png', (1,1,1,1)),
+    'ZoneCoolantWide': ('zone_coolant_wide.png', (1,1,1,1)),
+    'ZoneCoolantBadge': ('zone_coolant_badge.png', (1,1,1,1)),
+    'ZoneInterlockWide': ('zone_interlock_wide.png', (1,1,1,1)),
+    'ZoneInterlockBadge': ('zone_interlock_badge.png', (1,1,1,1)),
 }
 
 
@@ -988,7 +1074,8 @@ def material_text():
                   '\tset $shininess "' + str(shininess) + '"']
         if name in ("FloorPanel", "DeckService", "DeckCoolant", "DeckInterlock"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/deck_panel.png']
-        elif name in ("Structure", "StructureTrim", "CoreCasing", "CoreCrown"):
+        elif name in ("Structure", "StructureTrim", "CoreCasing", "CoreCrown",
+                      "CoolantCasing", "RelayCasing", "DishCeramic", "InterlockCasing"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/structure_coating.png']
         elif name in ("Porcelain", "Ivory"):
             lines += ['\tset_texture_alias diffuseMap textures/crossfire/coating.png']
@@ -1006,6 +1093,15 @@ def material_text():
 
 def write_text(path, text):
     path.write_bytes(text.replace("\r\n", "\n").replace("\n", "\r\n").encode("utf-8"))
+
+
+def geometry_signature(mesh):
+    # Includes every vertex attribute and oriented triangle, independently of
+    # material grouping. Material variants retain their actual physics source.
+    triangles = sorted(tuple(ids[i:i+3]) for ids in mesh.groups.values()
+                       for i in range(0, len(ids), 3))
+    data = json.dumps([mesh.vertices, triangles], separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(data).hexdigest()
 
 
 def main():
@@ -1026,6 +1122,7 @@ def main():
             info["bounds_min"] = [round(x, 6) for x in info["bounds_min"]]
             info["bounds_max"] = [round(x, 6) for x in info["bounds_max"]]
             info["sha256"] = hashlib.sha256((serializer.OUT / filename).read_bytes()).hexdigest()
+            info["geometry_sha256"] = geometry_signature(mesh)
             manifest.append(info)
             if args.check:
                 assert (OUT / filename).read_bytes() == (serializer.OUT / filename).read_bytes(), filename
@@ -1034,7 +1131,7 @@ def main():
         if not args.check:
             TEXTURES.mkdir(parents=True, exist_ok=True)
         for filename, surface in surface_maps().items():
-            if filename.startswith("fx_"):
+            if filename.startswith(("fx_", "zone_")):
                 # Clean transparent borders are required for the alpha-blended
                 # pool; a box-shaped halo must not survive downsampling.
                 for y in range(surface.height):
@@ -1054,12 +1151,21 @@ def main():
             variant = tile_variant(name)
             assert variant.vertices == original.vertices
             assert list(variant.groups.values()) == list(original.groups.values())
+        original_core = core()
+        for region in ("coolant", "interlock"):
+            variant = core_variant(region)
+            assert variant.vertices == original_core.vertices
+            assert list(variant.groups.values()) == list(original_core.groups.values())
+            assert geometry_signature(variant) == geometry_signature(original_core)
+        generated_textures = {item['file'] for item in textures}
+        for texture, tint in OVERLAYS.values():
+            assert "textures/crossfire/"+texture in generated_textures, texture
         manifest_text = json.dumps({"generator": "tools/generate_crossfire_assets.py", "units": "metres",
                                     "assets": manifest, "surfaces": textures}, indent=2) + "\n"
         if args.check:
             assert (OUT / "manifest.json").read_text() == manifest_text, "manifest.json"
             assert (ROOT / "media/materials/crossfire.material").read_text() == material_text(), "crossfire.material"
-            print("PASS: geometry, winding, material references, unchanged tile collision geometry and deterministic meshes/surface PNGs.")
+            print("PASS: geometry, winding, material/texture references, identical tile/core variant geometry and deterministic meshes/surface PNGs.")
         else:
             write_text(OUT / "manifest.json", manifest_text)
             write_text(ROOT / "media/materials/crossfire.material", material_text())

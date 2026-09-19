@@ -29,6 +29,11 @@ local function levelInfo(ctx)
  local index=math.floor(clamp(ctx.level or 1,1,3))
  return (ctx.levels or {})[index] or {},index
 end
+local function precisionGoal(ctx,level)
+ local goal=type(ctx.precision)=="table" and ctx.precision or {}
+ return goal,math.max(0,number(goal.damageLimit,60)),
+  math.max(0,number(goal.timeLimitMs,number(level.parMs,22000)))
+end
 local function collection(ctx)
  if ctx.completedCount~=nil then return math.floor(clamp(ctx.completedCount,0,3)) end
  local count=0
@@ -146,11 +151,14 @@ function Hud:Title(ctx)
  local captionX=math.max(x+w+44,self.width-350)
  local captionW=self.width-captionX-24
  self:Frame("scene_caption_panel",captionX-12,self.height-210,captionW+24,178,"panel",nil,nil,4)
- self:Text("scene_kicker",captionX,self.height-197,captionW,22,"中继站 "..(level.id or "07").." / "..string.format("第 %02d / 03 关",index),9,5)
- self:Text("scene_name",captionX,self.height-167,captionW,34,self:Wrap("scene_name",level.name or "维修庭院",captionW,14,1),14,5)
- self:Text("scene_description",captionX,self.height-125,captionW,42,self:Wrap("scene_description",level.description or "一座哨卫，两条路线，寻找侧翼。",captionW,9,2),9,5)
- local goal=ctx.precision or {damageLimit=60,timeLimitMs=level.parMs or 22000}
- local goalText=string.format("精确协同：双机存活\n损伤不超过 %d · %g 秒内",goal.damageLimit,goal.timeLimitMs/1000)
+ self:Text("scene_number",captionX+4,self.height-194,54,42,level.id or string.format("%02d",index+6),24,5)
+ self:Frame("scene_divider",captionX+66,self.height-198,1,50,"rule",nil,nil,4)
+ self:Text("scene_kicker",captionX+80,self.height-198,captionW-80,20,string.format("第 %02d / 03 关",index),9,5,true)
+ self:Text("scene_name",captionX+80,self.height-174,captionW-80,28,self:Wrap("scene_name",level.name or "维修庭院",captionW-80,14,1),14,5)
+ self:Frame("scene_rule",captionX,self.height-140,captionW,1,"rule",nil,nil,4)
+ self:Text("scene_description",captionX,self.height-132,captionW,42,self:Wrap("scene_description",level.description or "一座哨卫，两条路线，寻找侧翼。",captionW,9,2),9,5)
+ local _,damageLimit,timeLimitMs=precisionGoal(ctx,level)
+ local goalText=string.format("精确协同 / 双机存活\n损伤≤%g · %g 秒内",damageLimit,timeLimitMs/1000)
  self:Text("scene_goal",captionX,self.height-78,captionW,42,self:Wrap("scene_goal",goalText,captionW,9,2),9,5,true)
  self:Text("title_footer",24,self.height-36,420,22,"1 / 2 / 3 选关   ENTER 开始   "..collection(ctx).." / 3 已收复",9,7)
 end
@@ -345,11 +353,24 @@ function Hud:Result(ctx)
  local detail=ctx.resultDetail or (complete and "三处中继站已收复，重新挑战可以改进你的路线。" or (victory and "从侧面打开了局面。" or "两机分路，趁哨卫蓄力时换位。"))
  self:Text("result_detail",x+30,y+118,w-60,42,self:Wrap("result_detail",detail,w-60,9,2),9,11)
  self:Frame("result_rule",x+30,y+169,w-60,1,"rule",nil,nil,10)
- local goal=ctx.precision or {damageLimit=60,timeLimitMs=level.parMs or 22000}
- local goalText=string.format("精确协同：双机存活 · 损伤不超过 %d · %g 秒内",goal.damageLimit,goal.timeLimitMs/1000)
- self:Text("result_medal_label",x+30,y+191,w-60,21,self:Wrap("result_medal_label",goalText,w-60,9,1),9,11)
- self:Text("result_medal",x+30,y+216,w-135,32,victory and (({[1]="中继站已收复",[2]="配合默契",[3]="精确协同"})[ctx.medal or 1]) or "寻找新的进攻角度",14,11)
- self:Medal("result_medal_pip",x+w-88,y+224,victory and ctx.medal or 0,11)
+ local goal,damageLimit,timeLimitMs=precisionGoal(ctx,level)
+ self:Text("result_medal_label",x+30,y+175,w-60,20,"精确协同目标",9,11,true)
+ local criteria={{key="team",label="双机存活",met=goal.fullTeam},
+  {key="damage",label=string.format("损伤≤%g",damageLimit),met=goal.withinDamage},
+  {key="time",label=string.format("%g秒内",timeLimitMs/1000),met=goal.withinTime}}
+ local cellW=math.floor((w-80)/3)
+ for i,item in ipairs(criteria) do
+  local cx=x+30+(i-1)*(cellW+10)
+  -- Each fact is independent of medal/result. Missing snapshots are unknown,
+  -- and words accompany every color so success is not conveyed by color alone.
+  local status=item.met==true and "已达成" or (item.met==false and "未达成" or "未记录")
+  local color=item.met==true and "cyan" or (item.met==false and "amber" or "rule")
+  self:Frame("precision_"..item.key.."_mark",cx+2,y+205,6,6,color,nil,nil,11)
+  self:Text("precision_"..item.key,cx+14,y+198,cellW-14,21,
+   self:Wrap("precision_"..item.key,item.label.." "..status,cellW-14,9,1),9,11)
+ end
+ self:Text("result_medal",x+30,y+225,w-135,29,victory and (({[1]="中继站已收复",[2]="配合默契",[3]="精确协同"})[ctx.medal or 1]) or "寻找新的进攻角度",14,11)
+ self:Medal("result_medal_pip",x+w-88,y+236,victory and ctx.medal or 0,11)
  self:Text("result_stats",x+30,y+260,w-60,24,self:Wrap("result_stats",ctx.stats or "",w-60,9,1),9,11)
  self:Frame("review_rule",x+30,y+290,w-60,1,"rule",nil,nil,10)
  local review=ctx.review or {}
@@ -362,17 +383,19 @@ function Hud:Result(ctx)
  end
  self:Button("result_next",x+30,y+412,w-60,40,victory and (index<3 and "ENTER  /  前往下一关" or "ENTER  /  返回选关") or "R  /  重试本关",victory and "next" or "restart",true,10)
  self:Button("result_retry",x+30,y+460,(w-72)/2,30,victory and "R  重玩本关" or "H  操作说明",victory and "restart" or "help",false,10)
- self:Button("result_menu",x+42+(w-72)/2,y+460,(w-72)/2,30,"返回选关","menu",false,10)
+ local finalVictory=victory and index==3
+ self:Button("result_menu",x+42+(w-72)/2,y+460,(w-72)/2,30,finalVictory and "H  操作说明" or "返回选关",finalVictory and "help" or "menu",false,10)
 end
 function Hud:Modal(ctx)
  local help=ctx.overlay=="help"
+ local returnLabel=ctx.screen=="title" and "返回选关" or (ctx.result and "返回报告" or "返回规划")
  local w,h=help and 596 or 520,help and 510 or 446
  local x,y=math.floor((self.width-w)/2),math.floor((self.height-h)/2)
  self:Frame("overlay_shade",0,0,self.width,self.height,"shade",nil,nil,12)
  self:Region(0,0,self.width,self.height,"block")
  self:Frame("overlay_panel",x,y,w,h,"solid",nil,nil,13)
  self:Frame("overlay_accent",x,y,w,3,"cyan",nil,nil,14)
- self:Text("overlay_kicker",x+30,y+22,w-130,22,help and "两台无人机 / 同步行动" or (ctx.screen=="title" and "偏好设置" or "任务已暂停"),9,15)
+ self:Text("overlay_kicker",x+30,y+22,w-130,22,help and "两台无人机 / 同步行动" or (ctx.screen=="title" and "偏好设置" or (ctx.result and "任务已结束" or "任务已暂停")),9,15)
  self:Button("overlay_close",x+w-80,y+18,50,30,"ESC","close",false,14)
  self:Text("overlay_title",x+30,y+54,w-60,44,help and "操作说明" or "设置",24,15)
  if help then
@@ -389,11 +412,11 @@ function Hud:Modal(ctx)
   end
   self:Frame("guide_rule",x+30,y+395,w-60,1,"rule",nil,nil,14)
   self:Text("guide_controls",x+30,y+409,w-60,42,"空格 暂停 / 执行   E 推进 2 秒   R 重试\n1 / 2 选机   X 原地待命   鼠标点击 移动 / 目标",9,15)
-  self:Button("guide_return",x+30,y+459,w-60,36,ctx.screen=="title" and "关闭说明 / 返回选关" or "关闭说明 / 返回规划","close",true,14)
+  self:Button("guide_return",x+30,y+459,w-60,36,"关闭说明 / "..returnLabel,"close",true,14)
  else
   local settings=ctx.settings or {}
   local volume=clamp(settings.volume or .65,0,1)
-  self:Text("settings_detail",x+30,y+106,w-60,22,ctx.saveError and "设置本次有效，当前目录无法保存。" or (ctx.screen=="title" and "偏好设置会在下次启动时保留。" or "关闭后保持暂停，按空格继续执行。"),9,15)
+  self:Text("settings_detail",x+30,y+106,w-60,22,ctx.saveError and "设置本次有效，当前目录无法保存。" or (ctx.screen=="title" and "偏好设置会在下次启动时保留。" or (ctx.result and "关闭后返回行动报告。" or "关闭后保持暂停，按空格继续执行。")),9,15)
   self:Text("volume_label",x+30,y+146,272,29,"音量  "..math.floor(volume*100+.5).."%",14,15)
   self:Button("volume_mute",x+w-157,y+141,127,32,ctx.muted and "M  恢复声音" or "M  静音","mute",false,14)
   self:Button("volume_down",x+30,y+186,44,34,"-","volumeDown",false,14,volume>0)
@@ -405,7 +428,7 @@ function Hud:Modal(ctx)
   self:Text("hints_detail",x+30,y+284,w-190,22,"显示初次路线规划提示。",9,15)
   self:Button("hints",x+w-154,y+252,124,40,settings.hints==false and "关闭" or "开启","hints",false,14)
   self:Frame("settings_rule",x+30,y+315,w-60,1,"rule",nil,nil,14)
-  self:Button("settings_return",x+30,y+335,w-60,42,ctx.screen=="title" and "返回选关" or "返回规划","close",true,14)
+  self:Button("settings_return",x+30,y+335,w-60,42,returnLabel,"close",true,14)
   self:Button("settings_menu",x+30,y+396,(w-72)/2,32,"返回选关","menu",false,14)
   self:Button("settings_quit",x+42+(w-72)/2,y+396,(w-72)/2,32,"退出游戏","quit",false,14)
  end
