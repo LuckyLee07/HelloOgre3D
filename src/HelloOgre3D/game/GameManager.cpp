@@ -535,6 +535,8 @@ void GameManager::SetSimulationPaused(bool paused)
 				player->ResetTransientInput();
 		}
 	}
+	if (paused != m_simulationPaused && m_pObjectManager != nullptr)
+		m_pObjectManager->SetTransientParticlesPaused(paused);
 	m_simulationPaused = paused;
 	UpdateMouseLookState();
 }

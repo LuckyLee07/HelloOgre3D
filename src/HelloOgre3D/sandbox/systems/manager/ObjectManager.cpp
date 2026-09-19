@@ -1041,6 +1041,14 @@ bool ObjectManager::realRemoveObject(BaseObject* pObject)
 	return false;
 }
 
+void ObjectManager::SetTransientParticlesPaused(bool paused)
+{
+	ObjectLifecycleSystem::UpdateContext context;
+	context.objects = &m_registry->Objects();
+	context.removedSceneNodes = &m_remSceneNodes;
+	m_objectLifecycleSystem.SetTransientParticlesPaused(paused, context);
+}
+
 int ObjectManager::ClearProjectiles()
 {
 	// Snapshot ids because removing a bullet mutates both the registry and block index.

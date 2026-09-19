@@ -9,8 +9,29 @@
 #include "systems/service/SceneFactory.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
+#include "OgreParticleSystem.h"
+#include "OgreParticleSystemManager.h"
+#include "objects/BlockObject.h"
 
 #include <algorithm>
+
+namespace
+{
+	void SetParticleSpeedInSubtree(Ogre::SceneNode* node, Ogre::Real speed)
+	{
+		if (node == nullptr) return;
+		for (unsigned short i = 0; i < node->numAttachedObjects(); ++i)
+		{
+			Ogre::MovableObject* object = node->getAttachedObject(i);
+			if (object->getMovableType() == Ogre::ParticleSystemFactory::FACTORY_TYPE_NAME)
+				static_cast<Ogre::ParticleSystem*>(object)->setSpeedFactor(speed);
+		}
+		auto children = node->getChildIterator();
+		while (children.hasMoreElements())
+			SetParticleSpeedInSubtree(dynamic_cast<Ogre::SceneNode*>(children.getNext()), speed);
+	}
+
+}
 
 ObjectLifecycleSystem::UpdateContext::UpdateContext()
 	: objects(nullptr)
@@ -70,6 +91,25 @@ void ObjectLifecycleSystem::UpdateObjects(int deltaMilliseconds, const UpdateCon
 	}
 	if (context.perfEnabled && timing != nullptr)
 		timing->objectLoopMs = RuntimeStallProfiler::ElapsedMsSince(objectLoopStartMicros);
+}
+
+void ObjectLifecycleSystem::SetTransientParticlesPaused(bool paused, const UpdateContext& context)
+{
+	// Bullet, MuzzleFlash and impact templates use Ogre's default speed 1.
+	// No node pointers or pause state survive lifecycle cleanup.
+	const Ogre::Real speed = paused ? Ogre::Real(0) : Ogre::Real(1);
+	if (context.objects != nullptr)
+	{
+		for (const auto& entry : *context.objects)
+		{
+			BaseObject* object = entry.second;
+			if (object != nullptr && object->GetObjType() == BaseObject::OBJ_TYPE_BULLET)
+				SetParticleSpeedInSubtree(static_cast<BlockObject*>(object)->GetSceneNode(), speed);
+		}
+	}
+	if (context.removedSceneNodes != nullptr)
+		for (const auto& pending : *context.removedSceneNodes)
+			SetParticleSpeedInSubtree(pending.first, speed);
 }
 
 void ObjectLifecycleSystem::CleanupRemovedSceneNodes(int deltaMilliseconds, const UpdateContext& context)

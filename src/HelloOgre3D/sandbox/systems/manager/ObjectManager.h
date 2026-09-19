@@ -85,6 +85,8 @@ public:
 
 	bool removeObjectById(int objid);
 	int ClearProjectiles();
+	// Only particle systems owned by bullets and registered transient nodes.
+	void SetTransientParticlesPaused(bool paused);
 	BaseObject* getObjectById(int objid);
 
 	void markNodeRemInSeconds(Ogre::SceneNode* pSceneNode, float seconds);

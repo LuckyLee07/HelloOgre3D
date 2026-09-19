@@ -269,6 +269,9 @@ function Hud:Actors(ctx)
 end
 local states={OFFLINE="已失联",READY="待命",MOVING="移动中",MOVE="移动中",ATTACK="交战中",FIRING="开火中",IDLE="待命",CHARGING="蓄力中",TRACKING="瞄准中",LOCKING="蓄力中",COOLING="冷却中",COVERING="寻找射界",["OUT OF RANGE"]="超出射程",
  ["MOVE / QUEUED"]="已规划移动",["TARGET / QUEUED"]="已指定目标",["HOLD / QUEUED"]="已规划待命"}
+-- Command presentation comes from the sample; the HUD never infers it from
+-- pause state, locomotion or target visibility.
+local orderStates={queued="待执行",moving="移动中",suspended="已暂停",attack="交战中",hold="原地待命"}
 function Hud:Battle(ctx)
  local y=self.height-96
  local cardW=self.width>=1100 and 196 or 176
@@ -284,7 +287,8 @@ function Hud:Battle(ctx)
   self:Frame(key.."_selected",x+4,y,cardW-4,selected and 3 or 1,selected and identity or "rule")
   self:Text(key.."_name",x+12,y+5,90,21,i==1 and "01 VEGA" or "02 ROOK",9,5,not alive)
   if selected then self:Text(key.."_selection",x+cardW-61,y+5,52,21,"已选中",9,5) end
-  local state=not alive and "已失联" or (a.order or a.state or "READY")
+  local orderText=type(a.orderText)=="string" and a.orderText~="" and a.orderText or nil
+  local state=not alive and "已失联" or (orderText or orderStates[a.orderState] or a.order or a.state or "READY")
   state=states[state] or state
   self:Text(key.."_status",x+12,y+26,cardW-22,20,self:Wrap(key.."_status",state,cardW-22,9,1),9,5,not alive)
   local detail=not alive and "本关无法继续指挥" or (a.targetName and ("目标 "..a.targetName) or (selected and "点地面规划路线" or "点击 / 按 "..i.." 选择"))
@@ -299,8 +303,18 @@ function Hud:Battle(ctx)
  self:Region(x,y,w,76,"block")
  local selected=(ctx.allies or {})[ctx.selected or 1] or {}
  local tutorial=(not ctx.settings or ctx.settings.hints~=false) and ctx.tutorial or nil
- local first=tutorial and (tutorial.title or "规划路线") or ctx.fireHint or selected.fireState or "点地面移动，点哨卫指定攻击。"
- local detail=tutorial and (tutorial.detail or "点地面规划路线，再按空格执行。") or ctx.cursorHint or ctx.hint or "1 / 2 选机 · 空格 执行 / 暂停"
+ local feedback=type(ctx.feedback)=="table" and ctx.feedback or nil
+ local notice=feedback and type(feedback.text)=="string" and feedback.text~="" and feedback.text or nil
+ -- Short-lived command feedback uses the first row, keeping an obstruction
+ -- alert/inspect action and the automatic-fire instruction visible below it.
+ local first=notice or (tutorial and (tutorial.title or "规划路线")) or ctx.fireHint or selected.fireState or "点地面移动，点哨卫指定攻击。"
+ if notice then
+  local kind=feedback.kind
+  local error=kind=="error" or kind=="warning" or kind=="rejected" or kind=="interrupted"
+  local color=error and "amber" or (kind=="success" and "cyan" or "blue")
+  self:Frame("feedback_accent",x+5,y+5,3,20,color,nil,nil,5)
+ end
+ local detail=tutorial and (tutorial.detail or "点地面规划路线，再按空格执行。") or ctx.cursorHint or (not notice and ctx.hint) or "1 / 2 选机 · 空格 执行 / 暂停"
  self:Text("fire_reason",x+12,y+5,w-24,21,self:Wrap("fire_reason",first,w-24,9,1),9)
  if ctx.alert then
   self:Frame("alert_accent",x+12,y+28,3,20,"amber")

@@ -13,6 +13,7 @@ local effects,signals=nil,nil
 local visualClock,outcomeAge,reportOpen=0,0,false
 local hud,selected,paused,result,serial,restart= nil,1,true,nil,0,false
 local hint="Assign VEGA and ROOK opposite routes. Orange arc = the protected front."
+local feedback,feedbackRemainingMs=nil,0
 local profile=nil
 local saveError=false
 local level,screen,overlay=1,"title",nil
@@ -53,87 +54,148 @@ local function sound(name,pos,gain,priority)
  if pos then local p=SandboxCamera:WorldToScreen(pos); pan=math.max(-.75,math.min(.75,(p.x/GameManager:getScreenWidth()-.5)*1.4)) end
  SandboxAudio:PlayLayer("res/audio/crossfire/"..name..".wav",gain or .5,pan,priority or 1)
 end
+local function clearFeedback()
+ feedback,feedbackRemainingMs=nil,0
+end
+local function setFeedback(message,kind)
+ hint=message
+ feedback={text=message,kind=kind or "info"}
+ feedbackRemainingMs=kind=="error" and 4000 or 2000
+end
+local function advanceFeedback(uiMs)
+ if not feedback or overlay then return end
+ feedbackRemainingMs=math.max(0,feedbackRemainingMs-uiMs)
+ if feedbackRemainingMs==0 then
+  if hint==feedback.text then hint=nil end
+  clearFeedback()
+ end
+end
+local function unitName(index) return index==2 and "ROOK" or "VEGA" end
 local function selectUnit(index)
  local a=find(ids[index]); if not a or a:GetHealth()<=0 then return end
  selected=index; inspection=nil; sound("select",nil,.35,2)
- hint=(index==1 and "VEGA" or "ROOK").." 已选中 · 点地面移动，点哨卫指定攻击"
+ setFeedback(unitName(index).." 已选中 · 点地面移动，点哨卫指定攻击","success")
  print("[CrossfireSelect] slot="..index)
 end
-local function apply(index,order)
- local a=find(ids[index]); if not a or a:GetHealth()<=0 then return false end
- serial=serial+1
- local bb=board(a)
- if order.kind=="attack" then
-  local target=find(order.target)
-  if not target or target:GetHealth()<=0 or not a:GetAIComponent():CanSeeEnemy(order.target) then
-   hint="目标被设备遮挡或已摧毁 · 先移动到开阔处"
-   print("[CrossfireOrder] agent="..a:GetObjId().." kind=attack result=unavailable tick="..now())
-   return false
+-- Validation is read-only. Paused batches validate every entry before any
+-- blackboard/serial mutation, then commit in the same Lua call without a step.
+local function validMovePosition(pos)
+ if type(pos)~="table" and type(pos)~="userdata" then return false end
+ local ok,x,y,z=pcall(function() return pos.x,pos.y,pos.z end)
+ local function finite(n) return type(n)=="number" and n==n and n~=math.huge and n~=-math.huge end
+ return ok and finite(x) and finite(y) and finite(z)
+end
+local function validate(index,value)
+ if index~=1 and index~=2 or type(value)~="table" or
+  (value.kind~="move" and value.kind~="attack" and value.kind~="hold") then
+  return nil,"invalid_plan","指令无效 · 请重新下令"
+ end
+ local a=find(ids[index])
+ if not a or a:GetHealth()<=0 then return nil,"unavailable","无人机已失联 · 请选择另一台" end
+ if value.kind=="move" and not validMovePosition(value.pos) then
+  return nil,"invalid_plan","移动落点无效 · 请重新点地面"
+ end
+ if value.kind=="attack" then
+  local target=type(value.target)=="number" and value.target>0 and value.target==math.floor(value.target) and find(value.target) or nil
+  if not target or target:GetHealth()<=0 or not a:GetAIComponent():CanSeeEnemy(value.target) then
+   return nil,"unavailable","目标被设备遮挡或已摧毁 · 先移动到开阔处"
   end
-  local distance=target:GetPosition()-a:GetPosition(); distance.y=0
+  local distance=target:GetPosition()-a:GetPosition();distance.y=0
   -- Guard's authored firing radius is 18 m; visibility extends to 22 m.
   if distance:squaredLength()>18*18 then
-   hint="目标超出射程 · 先靠近到开阔处"
-   print("[CrossfireOrder] agent="..a:GetObjId().." kind=attack result=out_of_range tick="..now())
-   return false
+   return nil,"out_of_range","目标超出射程 · 先靠近到开阔处"
   end
  end
+ return a
+end
+local function reject(index,value,reason,message)
+ setFeedback(unitName(index).." · "..message,"error")
+ local kind=type(value)=="table" and tostring(value.kind) or "unknown"
+ print("[CrossfireOrder] agent="..(ids[index] or 0).." kind="..kind.." result="..reason.." tick="..now())
+end
+local function commit(a,value)
+ serial=serial+1
+ local bb=board(a)
  bb:SetInt("command.serial",serial)
  bb:SetString("command.status","accepted")
- if order.kind=="move" then
-  bb:SetVec3("movePos",order.pos); bb:SetInt("crossfire.target",-1)
- elseif order.kind=="attack" then
-  a:GetAIComponent():ClearMovePosition(); bb:Remove("movePos")
-  bb:SetInt("crossfire.target",order.target)
+ if value.kind=="move" then
+  bb:SetVec3("movePos",value.pos);bb:SetInt("crossfire.target",-1)
+ elseif value.kind=="attack" then
+  a:GetAIComponent():ClearMovePosition();bb:Remove("movePos")
+  bb:SetInt("crossfire.target",value.target)
  else
-  a:GetAIComponent():ClearMovePosition(); bb:Remove("movePos")
-  bb:SetInt("crossfire.target",-1); bb:SetString("command.status","completed")
+  a:GetAIComponent():ClearMovePosition();bb:Remove("movePos")
+  bb:SetInt("crossfire.target",-1);bb:SetString("command.status","completed")
  end
- print("[CrossfireOrder] agent="..a:GetObjId().." kind="..order.kind.." result=accepted serial="..serial.." tick="..now())
+ print("[CrossfireOrder] agent="..a:GetObjId().." kind="..value.kind.." result=accepted serial="..serial.." tick="..now())
+end
+local function apply(index,value)
+ local a,reason,message=validate(index,value)
+ if not a then reject(index,value,reason,message);return false end
+ commit(a,value)
  return true
 end
 local function order(index,value)
- local a=find(ids[index]); if not a or a:GetHealth()<=0 or result or screen~="battle" or overlay then return end
- inspection=nil
+ if result or screen~="battle" or overlay then return false end
  if paused then
+  local a,reason,message=validate(index,value)
+  if not a then reject(index,value,reason,message);return false end
   planned[index]=value
-  hint=(index==1 and "VEGA" or "ROOK").." · "..({move="移动",attack="指定攻击",hold="原地待命"})[value.kind].."已规划 · 按空格执行"
+  setFeedback(unitName(index).." · "..({move="移动",attack="指定攻击",hold="原地待命"})[value.kind].."已规划 · 按空格执行","success")
   print("[CrossfirePlan] slot="..index.." kind="..value.kind.." tick="..now())
  else
-  if not apply(index,value) then return end
-  hint="指令已执行 · 按空格暂停，调整下一步"
+  if not apply(index,value) then return false end
+  setFeedback("指令已执行 · 按空格暂停，调整下一步","success")
  end
+ inspection=nil
  sound("order",value.pos,.4,2)
+ return true
 end
 local function togglePause()
- if result or screen~="battle" or overlay then return end
- stepUntil=nil;inspection=nil
+ if result or screen~="battle" or overlay then return false end
  if paused then
   if started==nil and not planned[1] and not planned[2] and not physicsTest then
-   hint="先点地面规划路线，再按空格执行或 E 推进"
+   setFeedback("先点地面规划路线，再按空格执行或 E 推进","error")
    print("[CrossfireInput] execute=blocked reason=no_plan")
-   return
+   return false
   end
-  -- All staged orders commit before the same next simulation tick.
-  local accepted=true
-  for i=1,2 do if planned[i] and not apply(i,planned[i]) then accepted=false end end
-  planned={}; paused=false
+  local batch={}
+  for i=1,2 do
+   if planned[i] then
+    local a,reason,message=validate(i,planned[i])
+    if not a then
+     reject(i,planned[i],reason,message)
+     print("[CrossfireInput] execute=blocked reason=invalid_plan slot="..i)
+     return false
+    end
+    batch[#batch+1]={actor=a,value=planned[i]}
+   end
+  end
+  for _,entry in ipairs(batch) do commit(entry.actor,entry.value) end
+  planned={};paused=false
   if started==nil then started=now() end
   sound("start",nil,.45,2)
-  if accepted then hint="正在执行 · 随时按空格暂停" end
- else paused=true; hint="时间已暂停 · 可调整两机路线或目标，再按空格同时执行" end
+  setFeedback(#batch>0 and "正在执行 · 随时按空格暂停" or "继续执行原有指令 · 随时按空格暂停","success")
+ else
+  paused=true
+  setFeedback("时间已暂停 · 可调整两机路线或目标，再按空格同时执行","info")
+ end
+ stepUntil=nil;inspection=nil
  GameManager:SetSimulationPaused(paused)
  print("[CrossfirePause] paused="..tostring(paused).." tick="..now())
+ return true
 end
 local function stepExecution()
- if result or screen~="battle" or overlay then return end
- if paused then togglePause() end
- if paused then return end
+ if result or screen~="battle" or overlay then return false end
+ if paused and not togglePause() then return false end
+ if paused then return false end
  stepUntil=now()+2000
- hint="推进 2 秒后自动暂停 · 随时按空格提前暂停"
+ setFeedback("推进 2 秒后自动暂停 · 随时按空格提前暂停","success")
  print("[CrossfireStep] event=started tick="..now().." until="..stepUntil.." level="..level)
+ return true
 end
 local function spawn()
+ clearFeedback()
  GameManager:SetSimulationPaused(false)
  ids,planned,observed={},{},{}
  visualClock,outcomeAge,reportOpen=0,0,false
@@ -193,6 +255,7 @@ local function spawn()
  end
 end
 local function queueLevel(index,targetScreen,reason)
+ clearFeedback()
  stepUntil=nil;inspection=nil
  paused=true; overlay=nil; GameManager:SetSimulationPaused(true)
  transition={level=index,screen=targetScreen,reason=reason}
@@ -223,13 +286,13 @@ local function action(name)
   local inspected=alert
   stepUntil=nil;paused=true;GameManager:SetSimulationPaused(true)
   selectUnit(inspected.slot);inspection=inspected
-  hint=inspected.detail
+  setFeedback(inspected.detail,"info")
   print("[CrossfireInspect] slot="..inspected.slot.." reason="..inspected.state.." target="..inspected.target.." first="..inspected.first.." tick="..now())
  elseif name=="start" and screen=="title" then
   screen="battle"; overlay=nil; if transition then transition.screen="battle" end
   sound("start",nil,.4,2)
   print("[CrossfireScreen] screen=battle level="..level.." tick="..now())
- elseif name=="restart" then restart=true; overlay=nil;stepUntil=nil;inspection=nil
+ elseif name=="restart" then restart=true; overlay=nil;stepUntil=nil;inspection=nil;clearFeedback()
  elseif name=="report" then showReport()
  elseif name=="next" and result=="VICTORY" and reportOpen then
   queueLevel(level<#Levels and level+1 or 1,level<#Levels and "battle" or "title","next")
@@ -261,6 +324,35 @@ local function pathPreview(a,p,color)
  DebugDrawer:drawCircle(dest,.5,24,color,false)
  drawLine(dest+Vector3(-.18,0,0),dest+Vector3(.18,0,0),color)
  drawLine(dest+Vector3(0,0,-.18),dest+Vector3(0,0,.18),color)
+end
+local function commandView(pending,hasMove,hasTarget,isPaused,phase)
+ if pending then
+  return "queued","待执行 · "..({move="移动",attack="攻击",hold="待命"})[pending.kind]
+ elseif hasMove then
+  return isPaused and "suspended" or "moving",isPaused and "已暂停 · 移动" or "移动中"
+ elseif hasTarget then
+  local combat={TRACKING="瞄准中",LOCKING="蓄力中",FIRING="开火中",COOLING="冷却中"}
+  return isPaused and "suspended" or "attack",isPaused and "已暂停 · 交火" or (combat[phase] or "准备交火")
+ end
+ return "hold",phase=="BLOCKED" and "指令中断" or "待命"
+end
+local function tutorialFor(orders)
+ local first,second=orders[1],orders[2]
+ local kinds={move="移动",attack="攻击",hold="待命"}
+ local step=not first and 1 or (not second and 2 or 3)
+ if not first and not second then
+  return {step=1,done1=false,done2=false,title="1 · 给 VEGA 规划路线",
+   detail="选中 VEGA，再点设备旁的空地。鼠标处会显示路线。"}
+ elseif not first or not second then
+  local ready=first and 1 or 2;local missing=first and 2 or 1
+  local kind=orders[ready].kind
+  local detail=kind=="move" and (unitName(ready).." 移动已规划；给 "..unitName(missing).." 选择另一侧空地。") or
+   (unitName(ready).." "..kinds[kind].."已规划；为 "..unitName(missing).." 选择位置或目标。")
+  return {step=step,done1=first~=nil,done2=second~=nil,
+   title=step.." · 给 "..unitName(missing).." 下达指令",detail=detail}
+ end
+ return {step=3,done1=true,done2=true,title="3 · 两机同时执行",
+  detail="待执行：VEGA "..kinds[first.kind].." · ROOK "..kinds[second.kind].."。空格执行 / E 推进2秒。"}
 end
 local function presentation()
  local ctx={allies={},actors={},selected=selected,paused=paused,result=result,hint=hint,muted=muted,
@@ -297,7 +389,7 @@ local function presentation()
    end
    local status=bb:GetString("command.status")
    if i<3 and status=="failed" and old.status~="failed" then
-    hint=(i==1 and "VEGA" or "ROOK").." 指令中断 · 重新选择落点或可见哨卫"
+    setFeedback(unitName(i).." 指令中断 · 重新选择落点或可见哨卫","error")
    end
    if status~="" and status~=old.status and i<3 then
     print("[CrossfireCommand] slot="..i.." status="..status.." target="..bb:GetInt("crossfire.target",-1).." level="..level)
@@ -367,10 +459,14 @@ local function presentation()
      elseif report.state=="clear" then old.reportState=nil end
     else
      old.stalledAt=nil
-     if moving then item.fireState=paused and "路线已规划 · 按空格执行" or "移动中";item.targetName=nil end
+     if moving then
+      item.fireState=planned[i] and "路线已规划 · 按空格执行" or (paused and "移动已暂停 · 按空格继续" or "移动中")
+      item.targetName=nil
+     end
     end
     reviewActors[#reviewActors+1]={slot=i,name=item.name,hp=hp,moving=moving,shots=shot,report=report and not report.reference and report or nil}
     item.order=planned[i] and (planned[i].kind=="move" and "MOVE / QUEUED" or (planned[i].kind=="attack" and "TARGET / QUEUED" or "HOLD / QUEUED")) or nil
+    item.orderState,item.orderText=commandView(planned[i],bb:Has("movePos"),item.targetName~=nil,paused,item.state)
     ctx.allies[#ctx.allies+1]=item
    end
    ctx.actors[#ctx.actors+1]=item
@@ -401,6 +497,7 @@ local function presentation()
   elseif living==0 then result="DEFEAT" end
   if result then
    paused=true;GameManager:SetSimulationPaused(true);planned={};stepUntil=nil;inspection=nil
+   SandboxObjects:ClearProjectiles()
    outcomeAge=0;reportOpen=false
    print("[CrossfireOutcome] phase=reveal result="..result.." tick="..now())
    signals:HideAll()
@@ -451,18 +548,14 @@ local function presentation()
   end
  end
  ctx.result=result;ctx.resultReveal=result and not reportOpen;ctx.outcomeAge=outcomeAge;ctx.paused=paused;ctx.hint=hint;ctx.selected=selected
+ ctx.feedback=feedback and {text=feedback.text,kind=feedback.kind} or nil
  ctx.stepRemaining=stepUntil and math.max(0,stepUntil-now()) or nil
  ctx.alert=not result and alert or nil;ctx.inspection=inspection;ctx.review=reviewSummary
  ctx.medal,ctx.medalText,ctx.newBest=medal,result=="DEFEAT" and "FIND A NEW ANGLE" or medalText,newBest
  ctx.completedCount=profile:CompletedCount();ctx.enemiesAlive=enemiesAlive;ctx.saveError=saveError
  ctx.nextLabel=level<#Levels and "ENTER / NEXT RELAY" or "ENTER / BACK TO OPERATIONS"
  ctx.resultDetail=string.format("%d 次有效侧击 · %d 次正面挡弹",flankHits,blockedShots)..(result=="DEFEAT" and "\n检查红色射线，绕开护盾与残骸再攻击。" or (newBest and " · 新纪录" or ""))
- if profile.hints and not started and screen=="battle" and not result then
-  local first,second=planned[1]~=nil,planned[2]~=nil
-  ctx.tutorial={step=not first and 1 or (not second and 2 or 3),done1=first,done2=second,
-   title=not first and "1 · 给 VEGA 规划路线" or (not second and "2 · 给 ROOK 另一条路线" or "3 · 两机同时执行"),
-   detail=not first and "选中 VEGA，再点设备旁的空地。鼠标处会显示路线。" or (not second and "点 ROOK 或按 2，再点哨卫另一侧的空地。" or "按空格持续执行，或按 E 推进 2 秒。")}
- end
+ if profile.hints and not started and screen=="battle" and not result then ctx.tutorial=tutorialFor(planned) end
  ctx.precision=Profile.Precision(now()-(started or now()),damage,living,Levels[level].parMs)
  ctx.stats=string.format("%d / 2 台存活 · %.1f 秒 · 承受 %d 损伤",living,(now()-(started or now()))/1000,damage)
  hud:Update(ctx)
@@ -533,10 +626,11 @@ function Sandbox_Update(deltaMs,uiDeltaMs)
  if physicsTest then physicsTest:Update(deltaMs) end
  if stepUntil and not paused and now()>=stepUntil and not result then
   local deadline=stepUntil;stepUntil=nil;paused=true;GameManager:SetSimulationPaused(true)
-  hint="2 秒已结束 · 调整计划，或按 E 继续推进"
+  setFeedback("2 秒已结束 · 调整计划，或按 E 继续推进","info")
   print("[CrossfireStep] event=finished tick="..now().." until="..deadline.." level="..level)
  end
  local uiMs=math.max(0,math.min(100,tonumber(uiDeltaMs) or deltaMs or 0))
+ advanceFeedback(uiMs)
  if result and not overlay then
   outcomeAge=outcomeAge+uiMs
   visualClock=visualClock+uiMs
@@ -587,13 +681,11 @@ function EventHandle_Mouse(ctype,x,y,button)
   selectUnit(nearest)
  else
   if nearest and nearest>2 then
-   local a=find(ids[selected])
-   if a and a:GetAIComponent():CanSeeEnemy(ids[nearest]) then order(selected,{kind="attack",target=ids[nearest]})
-   else hint="目标被设备遮挡 · 先点地面移动到开阔处" end
+   order(selected,{kind="attack",target=ids[nearest]})
   else
    local ground=Feedback.Ground(x,y,find(ids[selected]))
    if ground.ok then order(selected,{kind="move",pos=ground.pos})
-   else hint=ground.text;print("[CrossfireInput] move=rejected reason=surface x="..x.." y="..y) end
+   else setFeedback(ground.text,"error");print("[CrossfireInput] move=rejected reason=surface x="..x.." y="..y) end
   end
  end
  return true

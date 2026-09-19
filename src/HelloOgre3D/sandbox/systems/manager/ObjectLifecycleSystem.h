@@ -31,6 +31,7 @@ public:
 	};
 
 	void UpdateObjects(int deltaMilliseconds, const UpdateContext& context);
+	void SetTransientParticlesPaused(bool paused, const UpdateContext& context);
 	void CleanupRemovedSceneNodes(int deltaMilliseconds, const UpdateContext& context);
 
 private:
