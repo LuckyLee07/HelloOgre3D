@@ -260,6 +260,16 @@ function Hud:Endpoints(ctx)
   end
  end
 end
+function Hud:Outcome(ctx)
+ local victory=ctx.result=="VICTORY"
+ local w=584;local x=math.floor((self.width-w)/2);local y=self.height-122
+ self:Region(0,0,self.width,self.height,"block")
+ self:Frame("outcome_panel",x,y,w,102,"panel",nil,nil,8)
+ self:Frame("outcome_edge",x,y,w,3,victory and "cyan" or "amber",nil,nil,9)
+ self:Text("outcome_title",x+22,y+8,w-44,42,victory and "中继站已收复" or "小队已失联",24,10)
+ self:Text("outcome_detail",x+22,y+57,w-224,22,victory and "防线已解除 · 正在恢复供电" or "行动结束 · 调整路线后再试",9,10)
+ self:Button("outcome_report",x+w-184,y+53,162,32,"ENTER 查看报告","report",false,10)
+end
 function Hud:Result(ctx)
  local level,index=levelInfo(ctx)
  local victory=ctx.result=="VICTORY"
@@ -349,7 +359,9 @@ function Hud:Update(ctx)
  self:Header(ctx,title)
  if title then self:Title(ctx)
  elseif not ctx.result then self:Endpoints(ctx); self:Actors(ctx); self:Battle(ctx) end
- if ctx.result and not title then self:Result(ctx) end
+ if ctx.result and not title then
+  if ctx.resultReveal then self:Outcome(ctx) else self:Result(ctx) end
+ end
  if ctx.overlay then self:Modal(ctx) end
  for _,node in pairs(self.frames) do
   if not node.used and node.visible then node.object:setVisible(false); node.visible=false end

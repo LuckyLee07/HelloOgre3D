@@ -1,5 +1,7 @@
 # docs 索引
 
+[2026-09-19 Crossfire 动态场景与战斗演出](dev-design/plans/2026-09-19-crossfire-motion-finish.md)：冷却风扇、事件特效池、收复供电序列与战场结算过渡。
+
 [2026-09-19 Crossfire 场景与战斗节奏](dev-design/plans/2026-09-19-crossfire-scene-rhythm.md)：三关表面细节与收复供电状态、两秒推进、受阻定位和结算复盘。
 
 [2026-09-19 Crossfire 射界与美术精修](dev-design/plans/2026-09-19-crossfire-readable-combat.md)：真实枪口/首阻挡查询、设备表面拾取、持续中文策略、近景双机识别与残骸表现的实施与分项验证。

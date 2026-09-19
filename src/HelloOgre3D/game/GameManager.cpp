@@ -256,7 +256,9 @@ void GameManager::Update(int deltaMilliseconds)
 		H3D_PROFILE_SCOPE("Lua::Sandbox_Update");
 		if (perfEnabled)
 			stageStartMicros = RuntimeStallProfiler::NowMicroseconds();
-		m_pScriptVM->callFunction("Sandbox_Update", "i", m_simulationPaused ? 0 : deltaMilliseconds);
+		// The optional second value lets sample UI finish a transition while gameplay is frozen.
+		// Existing Lua callbacks ignore it; their simulation delta remains unchanged.
+		m_pScriptVM->callFunction("Sandbox_Update", "ii", m_simulationPaused ? 0 : deltaMilliseconds, deltaMilliseconds);
 		if (perfEnabled)
 		{
 			perfTiming.sandboxLuaMs = RuntimeStallProfiler::ElapsedMsSince(stageStartMicros);

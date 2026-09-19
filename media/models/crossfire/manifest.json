@@ -981,6 +981,36 @@
       "width": 256,
       "height": 256,
       "sha256": "3cc0743c8c0b1af15c8935aaa5bdb937e30086be17692ae112ece272cbfeb6aa"
+    },
+    {
+      "file": "textures/crossfire/fx_muzzle.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "b6717b262f92678615f03fbd6e7d4d849e94ca526ed2242a42c3cdbe7aa16ba2"
+    },
+    {
+      "file": "textures/crossfire/fx_shield.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "219d3525f739b83a001e55fe5dc2341a199d5b0403627f5a5ecef37213f58ebb"
+    },
+    {
+      "file": "textures/crossfire/fx_hit.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "6b770853dea9e5cc3681dc6ef88768bd4b0e0554dddf8b231df1410e25f03361"
+    },
+    {
+      "file": "textures/crossfire/fx_burst.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "9ea43a82cad130851d25651d55ec2102a4b7c8372a7775918ad21ba1abf9a87a"
+    },
+    {
+      "file": "textures/crossfire/fx_rotor.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "1346c326c870356d0f896037a238f085375407e4a66521332b32e54dde81538d"
     }
   ]
 }

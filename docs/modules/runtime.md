@@ -47,7 +47,7 @@
   FGUI 消费掉的事件提前 return，**UI 优先于 sample** 的次序不可颠倒。
 - `GameManager:getTimeInMillis()` 返回的是**启动至今的仿真时间**（非墙钟 epoch），
   sample 初始化期间可能为 **0**——用它做时间戳时不要拿 `>0` 当有效性判据。
-- `GameManager:SetSimulationPaused(bool)` / `IsSimulationPaused()` 在应用时钟边界暂停：不推进 `m_SimulationTime`、Lua `__tick__`、ObjectManager/AI 或 Bullet；`Sandbox_Update(0)` 与 UI 输入继续响应。暂停入口清理 PlayerController 瞬时按键，恢复不累计暂停期间的补帧。sample 的阶段/命令更新也必须受自身暂停状态约束，不能因 UI 继续 tick 而偷偷推进战斗。Sandbox19 的准备、Esc 菜单和结算共同使用此契约；退出请求走 `GameManager:RequestQuit()`。
+- `GameManager:SetSimulationPaused(bool)` / `IsSimulationPaused()` 在应用时钟边界暂停：不推进 `m_SimulationTime`、Lua `__tick__`、ObjectManager/AI 或 Bullet；`Sandbox_Update(simDeltaMs, uiDeltaMs)` 与 UI 输入继续响应：暂停时首参为 0，第二参保留当前更新步 delta，旧 Lua 回调忽略额外参数。第二参只供视觉/UI 收尾，不可计入战斗时间、AI 或成绩。暂停入口清理 PlayerController 瞬时按键，恢复不累计暂停期间的补帧。sample 的阶段/命令更新也必须受自身暂停状态约束，不能因 UI 继续 tick 而偷偷推进战斗。Sandbox19 的准备、Esc 菜单和结算共同使用此契约；退出请求走 `GameManager:RequestQuit()`。
 - 声音当前仅支持 PCM 16-bit、单/双声道、8–96kHz、单文件不超过 2MiB；缓存最多 32 个路径。播放新短音会停止上一段，音量缩放 PCM，静音调用 StopAll；没有混音、空间声或音乐播放合同。Lua 不持有原生音频对象，runtime 析构停止声音；sample 重开另行清掉事件采样并 StopAll。
 - Windows 音频动态装载 `winmm.dll` 并调用异步 PlaySound；Apple 分支使用 NSSound，其他平台 `IsAvailable=false`。API 可用与 Play 返回成功都不能证明扬声器听感、事件时序或平台验收；macOS arm64 Release 已实际构建并运行 Sandbox19，但本轮没有扬声器听感证据。
 - Windows `HELLO_WINDOW_BACKGROUND=1` 使用 `initialise(false)` 后创建 `hidden=false` 的无边框 D3D9 工具窗口；窗口坐标计算到整个虚拟桌面范围之外，Ogre 的 `noActivate` 参数在创建时设置 `WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`，显示使用 `SW_SHOWNOACTIVATE`，因此 D3D9 可渲染且不会覆盖或激活用户桌面。InputManager 按环境开关跳过 OIS 硬件输入初始化，日志应包含 `hidden=false noActivate=true offscreen=true foregroundUnchanged=true` 与 `background=true physical-input=disabled`。后台窗口不能用来验收真实键鼠输入；2026-09-11 修正后的 10 秒与 40 秒 Windows Release smoke 均通过，1280×800 实际位置为 `-3264,-864`。

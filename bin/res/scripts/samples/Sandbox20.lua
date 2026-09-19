@@ -4,8 +4,11 @@ local Hud=require("res.scripts.samples.crossfire_hud.lua")
 local Levels=require("res.scripts.samples.crossfire_encounters.lua")
 local Feedback=require("res.scripts.samples.crossfire_feedback.lua")
 local Review=require("res.scripts.samples.crossfire_review.lua")
+local Effects=require("res.scripts.samples.crossfire_effects.lua")
 local Profile=require("res.scripts.samples.crossfire_profile.lua")
-local ids,planned,shadows,observed,effects={},{},{},{},{}
+local ids,planned,shadows,observed={},{},{},{}
+local effects=nil
+local visualClock,outcomeAge,reportOpen=0,0,false
 local hud,selected,paused,result,serial,restart= nil,1,true,nil,0,false
 local hint="Assign VEGA and ROOK opposite routes. Orange arc = the protected front."
 local profile=nil
@@ -31,6 +34,12 @@ local function find(id)
  for i=0,all:size()-1 do if all[i]:GetObjId()==id then return all[i] end end
 end
 local function board(a) return a:GetAIComponent():GetBlackboard() end
+local function logEffects(event)
+ if not effects then return end
+ local state=effects:Stats()
+ print(string.format("[CrossfireEffects] event=%s capacity=%d active=%d peak=%d emitted=%d reused=%d evicted=%d visualMs=%d tick=%d",
+  event,state.capacity,state.active,state.peak,state.emitted,state.reused,state.evicted,visualClock,now()))
+end
 local function sound(name,pos,gain,priority)
  if silent or muted or not SandboxAudio then return end
  local pan=0
@@ -118,7 +127,9 @@ local function stepExecution()
 end
 local function spawn()
  GameManager:SetSimulationPaused(false)
- ids,planned,observed,effects={},{},{},{}
+ ids,planned,observed={},{},{}
+ visualClock,outcomeAge,reportOpen=0,0,false
+ if effects then effects:Reset();logEffects("reset") end
  selected,paused,result,serial,started=1,true,nil,0,nil
  stepUntil=nil;review=Review.New();alert=nil;inspection=nil;reviewSummary=nil;alertKey=""
  Scene.SetOutcome(nil)
@@ -189,6 +200,12 @@ local function saveSettings()
  if saveError then hint="设置已生效，本次未能写入保存文件" end
  print(string.format("[CrossfireSettings] volume=%.2f muted=%s hints=%s",profile.volume,tostring(muted),tostring(profile.hints)))
 end
+local function showReport()
+ if not result or reportOpen then return end
+ reportOpen=true
+ logEffects("report")
+ print("[CrossfireOutcome] phase=report result="..result.." elapsedUiMs="..outcomeAge.." tick="..now())
+end
 local function action(name)
  if name=="pause" then togglePause()
  elseif name=="step" then stepExecution()
@@ -203,7 +220,8 @@ local function action(name)
   sound("start",nil,.4,2)
   print("[CrossfireScreen] screen=battle level="..level.." tick="..now())
  elseif name=="restart" then restart=true; overlay=nil;stepUntil=nil;inspection=nil
- elseif name=="next" and result=="VICTORY" then
+ elseif name=="report" then showReport()
+ elseif name=="next" and result=="VICTORY" and reportOpen then
   queueLevel(level<#Levels and level+1 or 1,level<#Levels and "battle" or "title","next")
  elseif name=="menu" then queueLevel(level,"title","menu")
  elseif name=="level1" or name=="level2" or name=="level3" then
@@ -222,7 +240,6 @@ end
 local function drawLine(a,b,color) DebugDrawer:drawLine(a,b,color) end
 local cyan=ColourValue(.24,.85,.82,.9)
 local amber=ColourValue(1,.48,.15,.95)
-local white=ColourValue(1,.91,.68,1)
 local function pathPreview(a,p,color)
  local path=std.vector_Ogre__Vector3_()
  if SandboxNav:FindPath("default",a:GetPosition(),p,path) then
@@ -249,11 +266,11 @@ local function presentation()
    local shot,blocked,hit=bb:GetInt("crossfire.shotCount",0),bb:GetInt("crossfire.blockedCount",0),bb:GetInt("crossfire.hitCount",0)
    if shot>old.shot then
     sound("shot",pos,i>2 and .52 or .35,1)
-    effects[#effects+1]={kind="muzzle",pos=pos+a:GetForward()*(i>2 and 1.12 or .9)+Vector3(0,i>2 and .20 or .23,0),at=now(),forward=a:GetForward()}
+    effects:Emit("muzzle",a:GetWeaponComponent():GetMuzzlePosition(),a:GetForward(),visualClock)
    end
    if blocked>old.blocked or hit>old.hit then
     sound(blocked>old.blocked and "shield" or "hit",pos,.55,2)
-    effects[#effects+1]={kind=blocked>old.blocked and "shield" or "hit",pos=bb:GetVec3("crossfire.lastImpactPosition"),at=now()}
+    effects:Emit(blocked>old.blocked and "shield" or "hit",bb:GetVec3("crossfire.lastImpactPosition"),nil,visualClock)
    end
    if hp<=0 and old.hp>0 then
     if i==selected and i<3 then
@@ -261,7 +278,7 @@ local function presentation()
      if survivor and survivor:GetHealth()>0 then selected=other end
     end
     sound("destroy",pos,.65,3)
-    effects[#effects+1]={kind="destroy",pos=pos,at=now()}
+    effects:Emit("destroy",pos,nil,visualClock)
     print("[CrossfireDestroyed] slot="..i.." id="..id.." tick="..now())
    end
    local status=bb:GetString("command.status")
@@ -348,29 +365,13 @@ local function presentation()
   DebugDrawer:drawCircle(Vector3(p.x,.12,p.z),.48,28,amber,false)
   drawLine(Vector3(p.x,.12,p.z),point+Vector3(0,.55,0),amber)
  end
- for i=#effects,1,-1 do
-  local e=effects[i];local t=(now()-e.at)/300
-  if t>1 then table.remove(effects,i)
-  elseif e.kind=="muzzle" then
-   if t<.28 then
-    drawLine(e.pos-e.forward*.12,e.pos+e.forward*.6,white)
-    drawLine(e.pos+Vector3(-.16,0,0),e.pos+Vector3(.16,0,0),white)
-   end
-  else
-   local radius=(e.kind=="destroy" and 1.4 or .65)*t
-   local color=e.kind=="shield" and amber or white
-   for k=1,7 do
-    local angle=k*2.399
-    local v=Vector3(math.cos(angle),.25+(k%3)*.3,math.sin(angle))
-    drawLine(e.pos+v*radius,e.pos+v*(radius+.15*(1-t)),color)
-   end
-  end
- end
  if not result and not physicsTest and screen=="battle" then
   if enemiesAlive==0 then result="VICTORY"
   elseif living==0 then result="DEFEAT" end
   if result then
-   paused=true;GameManager:SetSimulationPaused(true);planned={};effects={};stepUntil=nil;inspection=nil
+   paused=true;GameManager:SetSimulationPaused(true);planned={};stepUntil=nil;inspection=nil
+   outcomeAge=0;reportOpen=false
+   print("[CrossfireOutcome] phase=reveal result="..result.." tick="..now())
    Scene.SetOutcome(result)
    sound(result=="VICTORY" and "win" or "lose",nil,.65,4)
    local elapsed=now()-(started or now())
@@ -402,7 +403,7 @@ local function presentation()
    else ctx.cursorHint="点击选择 "..Feedback.Name(ids[actorIndex],ids) end
   end
  end
- ctx.result=result;ctx.paused=paused;ctx.hint=hint;ctx.selected=selected
+ ctx.result=result;ctx.resultReveal=result and not reportOpen;ctx.outcomeAge=outcomeAge;ctx.paused=paused;ctx.hint=hint;ctx.selected=selected
  ctx.stepRemaining=stepUntil and math.max(0,stepUntil-now()) or nil
  ctx.alert=not result and alert or nil;ctx.inspection=inspection;ctx.review=reviewSummary
  ctx.medal,ctx.medalText,ctx.newBest=medal,result=="DEFEAT" and "FIND A NEW ANGLE" or medalText,newBest
@@ -431,6 +432,7 @@ function Sandbox_Initialize()
  Scene.Create(level)
  for i=1,4 do shadows[i]=Scene.Shadow() end
  hud=Hud.New()
+ effects=Effects.New()
  spawn()
  if os.getenv("HELLO_CROSSFIRE_PHYSICS_TEST")=="1" then
   physicsTest=require("res.scripts.samples.crossfire_physics_selftest.lua").New({ids=ids,find=find})
@@ -443,7 +445,7 @@ function Sandbox_Initialize()
  print("[CrossfireScreen] screen="..screen.." level="..level.." completed="..profile:CompletedCount())
  presentation()
 end
-function Sandbox_Update(deltaMs)
+function Sandbox_Update(deltaMs,uiDeltaMs)
  if not hud or #ids<3 then return end
  if restart or transition then
   local requested=transition
@@ -451,15 +453,17 @@ function Sandbox_Update(deltaMs)
   GameManager:SetSimulationPaused(false)
   SandboxAudio:StopAll();SandboxObjects:ClearProjectiles()
   -- Drop every Lua-held actor reference before destruction and nav replacement.
-  ids,planned,observed,effects={},{},{},{}
+  ids,planned,observed={},{},{}
   ObjectManager:clearAllObjects(MGR_OBJ_AGENT,true)
   if TeamBlackboard then TeamBlackboard:Reset() end
   if requested and requested.level~=level then
    shadows={}
+   effects:Release();effects=nil
    ObjectManager:clearAllObjects(MGR_OBJ_BLOCK,true)
    level=requested.level
    Scene.Create(level)
    for i=1,4 do shadows[i]=Scene.Shadow() end
+   effects=Effects.New()
   end
   for _,shadow in ipairs(shadows) do shadow:setPosition(Vector3(0,-10,0)) end
   if requested then screen=requested.screen end
@@ -475,8 +479,16 @@ function Sandbox_Update(deltaMs)
   hint="2 秒已结束 · 调整计划，或按 E 继续推进"
   print("[CrossfireStep] event=finished tick="..now().." until="..deadline.." level="..level)
  end
+ local uiMs=math.max(0,math.min(100,tonumber(uiDeltaMs) or deltaMs or 0))
+ if result and not overlay then
+  outcomeAge=outcomeAge+uiMs
+  visualClock=visualClock+uiMs
+  if outcomeAge>=900 then showReport() end
+ elseif not result then visualClock=visualClock+math.max(0,deltaMs or 0) end
+ Scene.UpdateVisuals(deltaMs,overlay and 0 or uiMs,overlay and "menu" or screen,paused)
  Scene.Camera(zoom)
  presentation()
+ effects:Update(visualClock)
 end
 function EventHandle_Keyboard(keycode,pressed)
  -- InputManager emits key-up for held keys on focus loss as well.
@@ -501,7 +513,8 @@ function EventHandle_Keyboard(keycode,pressed)
  elseif keycode==OIS.KC_1 then action("select1")
  elseif keycode==OIS.KC_2 then action("select2")
  elseif keycode==OIS.KC_R then action("restart")
- elseif keycode==OIS.KC_RETURN and result=="VICTORY" then action("next")
+ elseif keycode==OIS.KC_RETURN and result then
+  if not reportOpen then action("report") elseif result=="VICTORY" then action("next") end
  elseif keycode==OIS.KC_X then order(selected,{kind="hold"}) end
  return true
 end

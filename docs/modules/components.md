@@ -29,7 +29,7 @@
 - `AgentLocomotion::ForceToSeparate` 保留 OpenSteer 邻域与常规 1/d 权重；距离小于 1mm 时限制权重，完全重合时按对象 id 选择相反水平力，避免 0/0。`HELLO_LOCOMOTION_SELF_TEST=1` 在 Sandbox19 验证真实绑定的边界行为，见 [稳定性记录](../stability-2026-09-06.md)。
 
 - `IComponent`：onAttach/onDetach/update；`getUpdateOrder()` 显式声明组件更新顺序；`getOwner`/`FindComponent<T>()`/`GetSandboxServices()`。
-- Crossfire 实弹的 `CrossfireProjectileComponent` 保存来源 ID/队伍/伤害/射向快照，不持射手裸指针。墙体与 Agent 共用一次性消费、友军无伤、4 秒 TTL；仅 crossfire 弹禁重力。被击刚体朝向判断正面 120° 盾，命中沿 SetHealth 并写 Blackboard 反馈。RenderComponent 的机器人微动只改最终显示，不改变物理真源。验证入口 `python3 tools/run_crossfire_gate.py --mode physics`。
+- Crossfire 实弹的 `CrossfireProjectileComponent` 保存来源 ID/队伍/伤害/射向快照，不持射手裸指针。墙体与 Agent 共用一次性消费、友军无伤、4 秒 TTL；仅 crossfire 弹禁重力。被击刚体朝向判断正面 120° 盾，命中沿 SetHealth 并写 Blackboard 反馈。RenderComponent 的机器人微动只改最终显示，不改变物理真源：Crossfire 无人机悬浮幅度 0.04 m、3.2 m/s 时倾斜上限 6°，实际开火后 170 ms 内回收最多 0.09 m 的后坐；规划时依仿真时钟冻结。验证入口 `python3 tools/run_crossfire_gate.py --mode physics`。
 - 各组件 public API（ShootBullet/ApplyForce/GetEntity/...）。`WeaponComponent::DoShootBullet` 在真实发射入口创建短寿命 `MuzzleFlash`，并继续通过原有 ObjectFactory 生成物理子弹；粒子节点登记到 ObjectManager 的延迟清理队列，重开时和 `BulletImpact` 一并清除。该反馈作用于所有武器路径，不能由 Sandbox19 HUD 伪造。
 
 ## 5. 约束与红线

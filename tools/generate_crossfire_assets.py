@@ -723,6 +723,84 @@ class Surface:
                 +chunk(b'IDAT', zlib.compress(raw, 9))+chunk(b'IEND', b''))
 
 
+def effect_maps():
+    """Analytic, antialiased transient shapes with an empty transparent border.
+
+    RGBA stores straight alpha; even transparent texels retain the effect hue,
+    avoiding black filtering fringes. UV centre is (.5,.5); muzzle is V-long.
+    """
+    maps = {}
+    for kind in ('muzzle', 'shield', 'hit', 'burst', 'rotor'):
+        surface = Surface(256, 256)
+        for y in range(256):
+            for x in range(256):
+                u, v = (x-127.5)/128, (y-127.5)/128
+                radius = math.hypot(u, v)
+                angle = math.atan2(v, u)
+                edge = max(0, min(1, (.96-radius)/.045))
+                if kind == 'muzzle':
+                    # A narrow longitudinal flash and shorter side jets. The
+                    # silhouette is symmetric so the same map works for either
+                    # projected forward sign without an inverted flame tip.
+                    long_jet = max(0, 1-abs(u)/(.025+.20*max(0,1-abs(v)/.90))) * max(0,1-abs(v)/.90)
+                    side_jet = max(0, 1-abs(v)/(.025+.09*max(0,1-abs(u)/.49))) * max(0,1-abs(u)/.49)
+                    core = math.exp(-(u/.095)**2-(v/.19)**2)
+                    halo = math.exp(-(u/.22)**2-(v/.43)**2)*.17
+                    alpha = min(1, max(long_jet*1.65,side_jet*.95,core)+halo)*edge
+                    hot = min(1, core*1.65)
+                    colour = (255, round(160+91*hot), round(57+160*hot))
+                elif kind == 'shield':
+                    # Six detached orange-gold facets read as shield impact,
+                    # separate from the cold, concentrated hull-hit spark.
+                    sector = ((angle+math.pi/6) % (math.pi/3))-math.pi/6
+                    hex_radius = .61*math.cos(math.pi/6)/math.cos(sector)
+                    arc = max(0,1-abs(radius-hex_radius)/.055)
+                    gap = min(1,max(0,(.44-abs(sector))/.045))
+                    spokes = max(0,1-abs(sector)/.038)*max(0,1-abs(radius-.76)/.12)
+                    halo = math.exp(-((radius-.53)/.17)**2)*.16
+                    alpha = min(1,arc*gap*.96+spokes*.60+halo)*edge
+                    hot = min(1, arc)
+                    colour = (255,round(145+79*hot),round(42+62*hot))
+                elif kind == 'hit':
+                    # A short four-way cross with diagonal splinters; compact
+                    # enough that actual actor silhouettes remain legible.
+                    axis = max(abs(u),abs(v))
+                    near_axis = min(abs(u),abs(v))
+                    jet = max(0,1-near_axis/(.017+.065*max(0,1-axis/.77)))*max(0,1-axis/.77)
+                    diagonal = max(0,1-abs(abs(u)-abs(v))/.023)*max(0,1-radius/.53)*.37
+                    core = math.exp(-(radius/.13)**2)
+                    alpha = min(1,max(jet*1.4,diagonal)+core*.8)*edge
+                    colour = (round(170+85*core),255,round(225+30*core))
+                elif kind == 'burst':
+                    # An angular hot core, broken shock collar and eight broad
+                    # shards. No diffuse grey/smoke rectangle around the effect.
+                    rays = abs(math.cos(angle*4))**12
+                    lobe = .52+.26*rays
+                    flare = max(0,1-radius/lobe)**1.45
+                    collar = max(0,1-abs(radius-(.58+.035*math.cos(angle*8)))/.038)
+                    collar *= .20+.35*abs(math.sin(angle*4))
+                    shards = rays*max(0,1-abs(radius-.65)/.21)*.62
+                    core = math.exp(-(radius/.20)**2)
+                    alpha = min(1,max(flare*1.7,shards,collar)+core*.50)*edge
+                    hot = min(1,core*1.8)
+                    colour = (255,round(116+131*hot),round(39+154*hot))
+                else:
+                    # A circular dark fan well masks the stationary source mesh
+                    # blades without altering its physical mesh. The real hub
+                    # projects through this plane, and the outer ring stays clear.
+                    sweep = (angle+.70*radius) % (2*math.pi/3)
+                    angular = min(1,max(0,(sweep-.12)/.035),max(0,(.78-sweep)/.035))
+                    radial = min(1,max(0,(radius-.22)/.045),max(0,(.91-radius)/.045))
+                    blade = angular*radial
+                    rim = max(0,1-abs(radius-.93)/.022)*.20
+                    shine = blade*(.82+.18*math.cos(sweep*4))
+                    alpha = edge
+                    colour = (round(30+104*shine+25*rim),round(45+111*shine+25*rim),round(51+102*shine+22*rim))
+                surface.pixel(x,y,(*colour,round(max(0,min(1,alpha))*255)))
+        maps['fx_'+kind+'.png'] = surface
+    return maps
+
+
 def surface_maps():
     # The floor is painted metal, not simulated PBR: broad polish/wear fields and
     # inset service-panel paint sit in albedo; existing geometry supplies depth.
@@ -795,9 +873,11 @@ def surface_maps():
             column.pixel(x,y,strip.pixels[start:start+4])
     ring_map=Surface(256,256)
     ring_map.ring(128,128,112,20,(255,255,255,255),12)
-    return {'deck_panel.png':panel, 'coating.png':coat, 'service_pad.png':service,
+    maps = {'deck_panel.png':panel, 'coating.png':coat, 'service_pad.png':service,
             'coolant_pad.png':coolant, 'interlock_bus.png':interlock,
             'power_strip.png':strip, 'power_column.png':column, 'power_ring.png':ring_map}
+    maps.update(effect_maps())
+    return maps
 
 
 OVERLAYS = {
@@ -813,7 +893,15 @@ OVERLAYS = {
     'CoreIdle': ('power_ring.png', (.43,.32,.15,1)),
     'CoreOnline': ('power_ring.png', (.19,.89,.72,1)),
     'CoreOffline': ('power_ring.png', (.10,.14,.16,1)),
+    'FxRotor': ('fx_rotor.png', (1,1,1,1)),
 }
+
+
+# The bounded transient pool switches four opacity stages. Shape and hue remain
+# stable during decay, so it reads as one event instead of four unrelated sprites.
+for effect in ("Muzzle", "Shield", "Hit", "Burst"):
+    for stage, alpha in enumerate((1.0, .64, .30, .10), 1):
+        OVERLAYS["Fx"+effect+str(stage)] = ("fx_"+effect.lower()+".png", (1,1,1,alpha))
 
 
 def material_text():
@@ -871,6 +959,13 @@ def main():
         if not args.check:
             TEXTURES.mkdir(parents=True, exist_ok=True)
         for filename, surface in surface_maps().items():
+            if filename.startswith("fx_"):
+                # Clean transparent borders are required for the alpha-blended
+                # pool; a box-shaped halo must not survive downsampling.
+                for y in range(surface.height):
+                    for x in range(surface.width):
+                        if min(x,y,surface.width-1-x,surface.height-1-y)<4:
+                            assert surface.pixels[(y*surface.width+x)*4+3]==0, filename
             data = surface.png()
             if args.check:
                 assert (TEXTURES/filename).read_bytes() == data, filename

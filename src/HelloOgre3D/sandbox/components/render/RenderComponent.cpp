@@ -317,21 +317,21 @@ void RenderComponent::RenderInterpolated(float alpha)
 			if (!blackboard->GetBool("crossfire.sentinel"))
 			{
 				// The sample clock freezes while planning. Never advance cosmetic motion from wall time.
-				position.y += 0.025f * std::sin(static_cast<float>(clockMs) * 0.0035f + owner->GetObjId() * 0.7f);
+				position.y += 0.040f * std::sin(static_cast<float>(clockMs) * 0.0035f + owner->GetObjId() * 0.7f);
 				Ogre::Vector3 velocity = orientation.Inverse() * agent->GetVelocity();
 				velocity.y = 0.0f;
 				const float speed = velocity.length();
 				if (speed > 3.2f) velocity *= 3.2f / speed;
-				orientation = orientation * Ogre::Quaternion(Ogre::Degree(velocity.z * (3.4f / 3.2f)), Ogre::Vector3::UNIT_X)
-					* Ogre::Quaternion(Ogre::Degree(-velocity.x * (3.4f / 3.2f)), Ogre::Vector3::UNIT_Z);
+				orientation = orientation * Ogre::Quaternion(Ogre::Degree(velocity.z * (6.0f / 3.2f)), Ogre::Vector3::UNIT_X)
+					* Ogre::Quaternion(Ogre::Degree(-velocity.x * (6.0f / 3.2f)), Ogre::Vector3::UNIT_Z);
 			}
 			if (blackboard->Has("crossfire.lastShotMs"))
 			{
 				const int shotAgeMs = clockMs - blackboard->GetInt("crossfire.lastShotMs");
-				if (shotAgeMs >= 0 && shotAgeMs < 130)
+				if (shotAgeMs >= 0 && shotAgeMs < 170)
 				{
-					const float recovery = 1.0f - static_cast<float>(shotAgeMs) / 130.0f;
-					position -= agent->GetForward() * (0.055f * recovery * recovery);
+					const float recovery = 1.0f - static_cast<float>(shotAgeMs) / 170.0f;
+					position -= agent->GetForward() * (0.090f * recovery * recovery);
 				}
 			}
 		}

@@ -9,6 +9,9 @@ local statusVisuals={}
 local corePositions={}
 local coolingPositions={}
 local visualOutcome="uninitialised"
+local rotorVisuals={}
+local restoreElapsed=0
+local restoreComplete=false
 local equipmentNames={
  tile="floor",tile_service="floor",tile_coolant="floor",tile_interlock="floor",base="floor",deck_marks="floor",deck_marks_08="floor",deck_marks_09="floor",service_trench="floor",
  core="中继核心",cover="掩体",wall="围墙",edge="场地护栏",gate="门厅",
@@ -48,15 +51,65 @@ local function visual(width,depth,x,y,z,yaw,material,pitch)
 end
 local function status(width,depth,x,y,z,yaw,family,pitch)
  local a=visual(width,depth,x,y,z,yaw,family.."Idle",pitch)
- statusVisuals[#statusVisuals+1]={object=a,family=family}
+ -- Energise low front strips first, then the core, gate and rear machinery.
+ local delay=math.floor(math.max(0,math.min(1,(z+11.17)/25.12))*900+.5)
+ statusVisuals[#statusVisuals+1]={object=a,family=family,delay=delay,state="Idle"}
+end
+local function setIndicator(entry,suffix)
+ if entry.state==suffix then return end
+ entry.object:setMaterial("Crossfire/"..entry.family..suffix)
+ entry.state=suffix
+end
+local function resetRotors()
+ for _,entry in ipairs(rotorVisuals) do
+  entry.angle=entry.startAngle
+  entry.object:setRotation(Vector3(0,entry.angle,0))
+ end
 end
 function Scene.SetOutcome(outcome)
  local nextOutcome=(outcome=="VICTORY" or outcome=="DEFEAT") and outcome or nil
+ -- A live same-court retry also arrives as nil -> nil; restore the original
+ -- visual phase without emitting a duplicate state transition or touching bodies.
+ if nextOutcome==nil then resetRotors() end
  if visualOutcome==nextOutcome then return end
  visualOutcome=nextOutcome
- local suffix=outcome=="VICTORY" and "Online" or (outcome=="DEFEAT" and "Offline" or "Idle")
- for _,entry in ipairs(statusVisuals) do entry.object:setMaterial("Crossfire/"..entry.family..suffix) end
+ restoreElapsed=0;restoreComplete=false
+ for _,entry in ipairs(statusVisuals) do
+  local suffix=nextOutcome=="DEFEAT" and "Offline" or "Idle"
+  if nextOutcome=="VICTORY" and entry.delay==0 then suffix="Online" end
+  setIndicator(entry,suffix)
+ end
  print("[CrossfireSceneState] outcome="..(nextOutcome or "idle"))
+end
+local function finiteDelta(value)
+ local delta=tonumber(value) or 0
+ if delta~=delta or delta<=0 or delta==math.huge then return 0 end
+ return delta
+end
+function Scene.UpdateVisuals(simDeltaMs,uiDeltaMs,screen,paused)
+ -- UI delta is supplied by GameManager. Menus/title deliberately freeze both
+ -- clocks; callers pass a non-battle screen while an overlay is open.
+ if screen~="battle" or visualOutcome=="DEFEAT" then return end
+ local delta=0
+ if visualOutcome=="VICTORY" then
+  if restoreComplete then return end
+  delta=math.min(900-restoreElapsed,finiteDelta(uiDeltaMs))
+  restoreElapsed=restoreElapsed+delta
+  for _,entry in ipairs(statusVisuals) do
+   if entry.delay<=restoreElapsed then setIndicator(entry,"Online") end
+  end
+  if restoreElapsed>=900 then
+   restoreComplete=true
+   print("[CrossfireScenePower] elapsedMs=900 lit="..#statusVisuals.." total="..#statusVisuals)
+  end
+ elseif not paused then
+  delta=finiteDelta(simDeltaMs)
+ end
+ if delta<=0 then return end
+ for _,entry in ipairs(rotorVisuals) do
+  entry.angle=(entry.angle+delta*entry.speed)%360
+  entry.object:setRotation(Vector3(0,entry.angle,0))
+ end
 end
 local function surfaceDetails(index)
  -- Every added surface is a no-body plane, below deck markings or mounted on
@@ -80,7 +133,14 @@ local function surfaceDetails(index)
  for _,x in ipairs({-7.5,-4.5,4.5,7.5}) do status(1.4,.16,x,.055,10.78,0,"Power") end
  for _,x in ipairs({-1.90,1.90}) do status(.16,1.70,x,1.61,10.79,0,"Column",-90) end
  for _,p in ipairs(corePositions) do status(1.90,1.90,p.x,p.y+3.195,p.z,0,"Core") end
- for _,p in ipairs(coolingPositions) do status(2.14,2.14,p.x,p.y+2.845,p.z,0,"Core") end
+ for i,p in ipairs(coolingPositions) do
+  status(2.14,2.14,p.x,p.y+2.845,p.z,0,"Core")
+  -- The dark circular well covers the old stationary blade paint while its
+  -- centre hub and outer ring remain real geometry. Only this thin face rotates.
+  local angle=(i*43)%360
+  local rotor=visual(1.50,1.50,p.x,p.y+2.837,p.z,angle,"FxRotor")
+  rotorVisuals[#rotorVisuals+1]={object=rotor,angle=angle,startAngle=angle,speed=.036}
+ end
 end
 local function commonCourt(index)
  -- All three encounters keep the same single walking layer and deployment area.
@@ -164,7 +224,8 @@ function Scene.Create(index)
  surfaceKinds={}
  -- The caller has destroyed the previous court's blocks before Create. Drop
  -- every manager-owned visual reference now; same-court retries use SetOutcome.
- statusVisuals={};corePositions={};coolingPositions={};visualOutcome="uninitialised"
+ statusVisuals={};corePositions={};coolingPositions={};rotorVisuals={}
+ visualOutcome="uninitialised";restoreElapsed=0;restoreComplete=false
  SandboxScene:SetAmbientLight(Vector3(.38,.43,.47))
  -- Blocks are recreated on level changes; this one scene-manager-owned light is
  -- deliberately reused so repeated selection does not accumulate illumination.

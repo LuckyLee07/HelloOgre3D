@@ -24,7 +24,10 @@ def main():
     parser.add_argument('--launcher-default', action='store_true', help='require the launcher to choose Sandbox20 without environment selection')
     parser.add_argument('--width', type=int, default=1280)
     parser.add_argument('--height', type=int, default=800)
+    parser.add_argument('--capture-ms', help='Optional comma-separated render capture times for focused visual verification.')
     args = parser.parse_args()
+    if args.capture_ms and (not re.fullmatch(r'\d+(,\d+)*', args.capture_ms) or len(args.capture_ms.split(',')) > 240):
+        parser.error('--capture-ms requires at most 240 comma-separated integer milliseconds')
     output = Path(tempfile.mkdtemp(prefix='crossfire-gate-' + time.strftime('%Y%m%d-%H%M%S') + '-', dir=ROOT / 'tmp'))
     all_ok = True
     summary = {'executable': str(args.executable.resolve()), 'runs': {}}
@@ -89,6 +92,8 @@ def main():
             env['HELLO_RENDER_CAPTURE_MS'] = '6500,37000,39000'
         if mode == 'interface':
             env['HELLO_RENDER_CAPTURE_MS'] = '500,2300,5300,7300,9000,12300,16800'
+        if args.capture_ms:
+            env['HELLO_RENDER_CAPTURE_MS'] = args.capture_ms
         if args.launcher_default:
             env.pop('HELLO_SANDBOX_SAMPLE')
             env.pop('HELLO_SAMPLE_PRESET')
@@ -213,6 +218,18 @@ def main():
                 flank_hits='blocked=0 damage=10.0' in text,
                 natural_victory='[CrossfireMatch] result=VICTORY' in text,
                 retries_clean=text.count('[CrossfireRestart] cleared=true') == 2 and text.count('[Crossfire] ready') == 3,
+            )
+        if mode in ('controls', 'campaign', 'front', 'natural'):
+            reveals = re.findall(r'\[CrossfireOutcome\] phase=reveal result=(VICTORY|DEFEAT) tick=(\d+)', text)
+            reports = re.findall(r'\[CrossfireOutcome\] phase=report result=(VICTORY|DEFEAT) elapsedUiMs=(\d+) tick=(\d+)', text)
+            pools = [tuple(map(int,m)) for m in re.findall(r'\[CrossfireEffects\] event=report capacity=(\d+) active=(\d+) peak=(\d+) emitted=(\d+) reused=(\d+) evicted=(\d+)', text)]
+            checks.update(
+                outcome_reveal_then_report=bool(reveals) and len(reveals)==len(reports) and all(
+                    (outcome,tick)==reveals[i] and 900<=int(age)<=1000 for i,(outcome,age,tick) in enumerate(reports)),
+                bounded_effects_expired=len(pools)==len(reports) and all(
+                    capacity==28 and active==0 and 0<peak<=28 and emitted>0 and reused>0 and evicted==0
+                    for capacity,active,peak,emitted,reused,evicted in pools),
+                power_sequence=('result=VICTORY' not in text or text.count('[CrossfireScenePower] elapsedMs=900')==text.count('[CrossfireMatch] result=VICTORY')),
             )
         if mode == 'controls':
             checks['empty_execute_blocked'] = '[CrossfireInput] execute=blocked reason=no_plan' in text

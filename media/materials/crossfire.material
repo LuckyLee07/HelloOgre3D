@@ -499,3 +499,462 @@ material Crossfire/CoreOffline
 		}
 	}
 }
+
+material Crossfire/FxRotor
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_rotor.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxMuzzle1
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1.0
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_muzzle.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxMuzzle2
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.64
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_muzzle.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxMuzzle3
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.3
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_muzzle.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxMuzzle4
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_muzzle.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxShield1
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1.0
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_shield.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxShield2
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.64
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_shield.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxShield3
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.3
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_shield.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxShield4
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_shield.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxHit1
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1.0
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_hit.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxHit2
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.64
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_hit.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxHit3
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.3
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_hit.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxHit4
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_hit.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxBurst1
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 1.0
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_burst.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxBurst2
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.64
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_burst.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxBurst3
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.3
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_burst.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material Crossfire/FxBurst4
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_hardware none
+			scene_blend alpha_blend
+			depth_check on
+			depth_write off
+			vertex_program_ref relay_overlay_vs {}
+			fragment_program_ref relay_overlay_fs
+			{
+				param_named tint float4 1 1 1 0.1
+			}
+			texture_unit overlayMap
+			{
+				texture textures/crossfire/fx_burst.png
+				tex_address_mode clamp
+				filtering trilinear
+			}
+		}
+	}
+}
