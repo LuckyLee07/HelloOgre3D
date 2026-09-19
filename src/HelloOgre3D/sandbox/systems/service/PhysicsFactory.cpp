@@ -152,16 +152,20 @@ btConvexHullShape* PhysicsFactory::CreateSimplifiedConvexHull(Ogre::Mesh* meshPt
 
 	SceneFactory::GetMeshInfo(meshPtr, vertex_count, vertices, index_count, indices);
 
-	// 使用 Bullet3 提供的凸包计算工具
-	btConvexHullShape* hullShape = new btConvexHullShape();
-	hullShape->setMargin(0.01f);
-	hullShape->setSafeMargin(0.01f);
-
-	// 将 Ogre 的顶点数据转换成 Bullet3 的顶点数据
+	// This Bullet version recalculates the full AABB on every addPoint.
+	// Supply the complete point array to avoid quadratic mesh loading work.
+	btAlignedObjectArray<btVector3> points;
+	points.resize(static_cast<int>(vertex_count));
 	for (size_t i = 0; i < vertex_count; ++i) {
 		const Ogre::Vector3& vertex = vertices[i];
-		hullShape->addPoint(btVector3(vertex.x, vertex.y, vertex.z));
+		points[static_cast<int>(i)] = btVector3(vertex.x, vertex.y, vertex.z);
 	}
+	btConvexHullShape* hullShape = new btConvexHullShape(
+		points.size() ? &points[0].getX() : nullptr, points.size(), sizeof(btVector3));
+	hullShape->setMargin(0.01f);
+	hullShape->setSafeMargin(0.01f);
+	// Preserve the source hull bounds previously calculated after setting margins.
+	if (points.size()) hullShape->recalcLocalAabb();
 
 	delete[] vertices;
 	delete[] indices;
@@ -172,11 +176,10 @@ btConvexHullShape* PhysicsFactory::CreateSimplifiedConvexHull(Ogre::Mesh* meshPt
 	hull->buildHull(margin);
 
 	// 创建一个新的 btConvexHullShape，以保存精细化后的凸包数据
-	btConvexHullShape* simplifiedHullShape = new btConvexHullShape();
 	const btVector3* const btVertices = hull->getVertexPointer();
-	for (int i = 0; i < hull->numVertices(); ++i) {
-		simplifiedHullShape->addPoint(btVertices[i]);
-	}
+	btConvexHullShape* simplifiedHullShape = new btConvexHullShape(
+		hull->numVertices() ? &btVertices[0].getX() : nullptr, hull->numVertices(), sizeof(btVector3));
+	// Keep the final margin change after AABB construction, as before.
 	simplifiedHullShape->setMargin(0.01f);
 
 	// 释放资源

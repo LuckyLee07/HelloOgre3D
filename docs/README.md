@@ -1,5 +1,7 @@
 # docs 索引
 
+[2026-09-19 Crossfire 切关响应优化](dev-design/plans/2026-09-19-crossfire-transition-latency.md)：批量凸包创建保留碰撞语义，同机三关切换长帧约降 86%；[性能对照](perf/crossfire-transition-20260919.md)与实机/旧样例证据。
+
 [2026-09-19 Crossfire 三关品质统一](dev-design/plans/2026-09-19-crossfire-three-court-quality.md)：冷却/联锁设施材料与区域标识、选关层级、结算目标逐项反馈，以及同路线无截图性能基线。
 
 [2026-09-19 Crossfire 战术窗口与重试反馈](dev-design/plans/2026-09-19-crossfire-tactical-decisions.md)：锁定对象提示、开局附近射界、具体单机复盘与奖章目标；保留现有战斗规则，补普通输入路线对照和原生鼠标换位验证。

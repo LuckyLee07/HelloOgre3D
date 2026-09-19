@@ -139,7 +139,7 @@
       "name": "物理系统（Bullet 世界 / 碰撞）",
       "doc_path": "docs/modules/systems-physics.md",
       "source_paths": ["src/HelloOgre3D/sandbox/systems/physics", "src/HelloOgre3D/sandbox/components/physics"],
-      "constraints_summary": "PhysicsWorld 包装 btDiscreteDynamicsWorld(stepWorld/碰撞/raycast)；PhysicsComponent 持有 btRigidBody(PhysicsFactory 建)，通过 SandboxServices.physics 和 onSandboxServicesChanged 注册到 PhysicsWorld，m_addedWorld 是 non-owning 观察指针，不再 g_GameManager 兜底；位置真源：有刚体则 Bullet 权威 RenderComponent 同步；PhysicsFactory 复合形状当前只支持单子形状；力经 Locomotion→ApplyForce→stepWorld",
+      "constraints_summary": "PhysicsWorld 包装 btDiscreteDynamicsWorld(stepWorld/碰撞/raycast)；PhysicsComponent 持有 btRigidBody(PhysicsFactory 建)，通过 SandboxServices.physics 和 onSandboxServicesChanged 注册到 PhysicsWorld，m_addedWorld 是 non-owning 观察指针，不再 g_GameManager 兜底；位置真源：有刚体则 Bullet 权威 RenderComponent 同步；PhysicsFactory 复合形状当前只支持单子形状；凸包批量构造避免addPoint逐顶点AABB扫描，保留margin/AABB原顺序且不共享形状；PhysicsComponent注销后删除body/motion state/顶层shape；力经 Locomotion→ApplyForce→stepWorld",
       "tags": ["physics", "bullet", "collision", "物理", "刚体", "碰撞"],
       "verify": { "sample": ["Sandbox1", "Sandbox8"], "gate": [] },
       "related_docs": ["docs/design/architecture-improvement-plan.md"]
